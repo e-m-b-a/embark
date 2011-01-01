@@ -180,7 +180,9 @@ class LogReader:
         # inotify.rm_watch(self.wd)
         logger.info("Log reader cleaned up for %s", self.firmware_id)
 
-    def process_line(self, inp, pat):
+    @classmethod
+    # def process_line(self, inp, pat):
+    def process_line(cls, inp, pat):
 
         """
                   Regex function for lambda
@@ -261,7 +263,9 @@ class LogReader:
             lambda x: [self.update_phase(x), self.test_list2.append(x)]
         )
 
-    def inotify_events(self, path):
+    @classmethod
+    def inotify_events(cls, path):
+        # def inotify_events(self, path):
         inotify = INotify()
         watch_flags = flags.CREATE | flags.DELETE | flags.MODIFY | flags.DELETE_SELF | flags.CLOSE_NOWRITE | flags.CLOSE_WRITE
         try:

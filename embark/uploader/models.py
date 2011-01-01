@@ -103,8 +103,8 @@ class FirmwareFile(models.Model):
     def get_abs_folder_path(self):
         return f"/app/embark/{settings.MEDIA_ROOT}/{self.pk}"
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    # def __init__(self, *args, **kwargs):
+    #    super().__init__(*args, **kwargs)
         # self.file_name = self.file.name
 
     def __str__(self):
@@ -198,8 +198,8 @@ class Firmware(models.Model):
         :return:
         """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    # def __init__(self, *args, **kwargs):
+    #    super().__init__(*args, **kwargs)
 
     def __str__(self):
         return f"{self.id}({self.firmware})"
@@ -255,6 +255,7 @@ class Result(models.Model):
     firmware = models.ForeignKey(Firmware, on_delete=models.CASCADE, help_text='')
     architecture_verified = models.CharField(blank=True, null=True, max_length=100, help_text='')
     os_verified = models.CharField(blank=True, null=True, max_length=100, help_text='')
+    emba_command = models.CharField(blank=True, null=True, max_length=300, help_text='')
     files = models.IntegerField(default=0, help_text='')
     directories = models.IntegerField(default=0, help_text='')
     entropy_value = models.FloatField(default=0.0, help_text='')
@@ -301,8 +302,8 @@ class DeleteFirmware(models.Model):
     class Meta:
         app_label = 'uploader'
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    # def __init__(self, *args, **kwargs):
+    #    super().__init__(*args, **kwargs)
 
 
 class ResourceTimestamp(models.Model):

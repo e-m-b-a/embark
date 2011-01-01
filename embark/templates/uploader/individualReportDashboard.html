@@ -1,6 +1,13 @@
 {% extends "uploader/home.html" %}
 {% block maincontent %}
 
+<style>
+tbody tr td:first-child {
+  float: left;
+  min-width: 350px;
+}
+</style>
+
 <div>
   <h1><center>Firmware security scanning details</center></h1>
 </div>
@@ -44,6 +51,7 @@
               <button type="submit" class="btn" >Main dashboard</button>
             </form>
             </div>
+            <br>
             <tbody id="detail_body"></tbody>
           </table>
           <div>

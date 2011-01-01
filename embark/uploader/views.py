@@ -391,7 +391,8 @@ def get_load(request):
     try:
         query_set = ResourceTimestamp.objects.all()
         result = {}
-        for k in model_to_dict(query_set[0]).keys():
+        # for k in model_to_dict(query_set[0]).keys():
+        for k in model_to_dict(query_set[0]):
             result[k] = tuple(model_to_dict(d)[k] for d in query_set)
         return JsonResponse(data=result, status=HTTPStatus.OK)
     except ResourceTimestamp.DoesNotExist:
@@ -449,6 +450,7 @@ def get_accumulated_reports(request):
         result = model_to_dict(result)
         # Pop firmware object_id
         result.pop('firmware', None)
+        result.pop('emba_command', None)
 
         # Get counts for all strcpy_bin values
         strcpy_bin = json.loads(result.pop('strcpy_bin', '{}'))
@@ -469,7 +471,9 @@ def get_accumulated_reports(request):
             if field not in data:
                 data[field] = {'sum': 0, 'count': 0}
             data[field]['count'] += 1
-            data[field]['sum'] += result[field]
+            # logger.info("result-field %s", result[field])
+            if result[field] is not None:
+                data[field]['sum'] += result[field]
 
     for field in data:
         if field not in charfields:

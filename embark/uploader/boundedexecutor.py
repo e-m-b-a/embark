@@ -72,7 +72,10 @@ class BoundedExecutor:
             # read f50_aggregator and store it into a Result form
             logger.info('Reading report from: %s', csv_log_location)
             if Path(csv_log_location).exists:
-                cls.csv_read(primary_key, csv_log_location)
+                cls.csv_read(primary_key, csv_log_location, cmd)
+            else:
+                logger.error("CSV file %s for report: %s not generated", csv_log_location, primary_key)
+                logger.error("EMBA run was probably not successful!")
 
             # take care of cleanup
             if active_analyzer_dir:
@@ -80,6 +83,7 @@ class BoundedExecutor:
 
         except Exception as ex:
             # fail
+            logger.error("EMBA run was probably not successful!")
             logger.error("run_emba_cmd error: %s", ex)
 
             # finalize db entry
@@ -168,12 +172,13 @@ class BoundedExecutor:
         emba_fut = BoundedExecutor.submit(cls.run_emba_cmd, emba_cmd, firmware_flags.pk, active_analyzer_dir)
 
         # start log_reader TODO: cancel future and return future
-        log_read_fut = BoundedExecutor.submit(LogReader, firmware_flags.pk)
+        # log_read_fut = BoundedExecutor.submit(LogReader, firmware_flags.pk)
+        BoundedExecutor.submit(LogReader, firmware_flags.pk)
 
         return emba_fut
 
     @classmethod
-    def submit(cls, fn, *args, **kwargs):
+    def submit(cls, function_cmd, *args, **kwargs):
         """
         same as concurrent.futures.Executor#submit, but with queue
 
@@ -182,13 +187,16 @@ class BoundedExecutor:
         return: future on success, None on full queue
         """
 
+        logger.info("submit fn: %s", function_cmd)
+        logger.info("submit cls: %s", cls)
+
         # check if semaphore can be acquired, if not queue is full
         queue_not_full = semaphore.acquire(blocking=False)
         if not queue_not_full:
             logger.error("Executor queue full")
             return None
         try:
-            future = executor.submit(fn, *args, **kwargs)
+            future = executor.submit(function_cmd, *args, **kwargs)
         except Exception as error:
             logger.error("Executor task could not be submitted")
             semaphore.release()
@@ -204,7 +212,7 @@ class BoundedExecutor:
         executor.shutdown(wait)
 
     @classmethod
-    def csv_read(cls, pk, path):
+    def csv_read(cls, primary_key, path, cmd):
         """
         This job reads the F50_aggregator file and stores its content into the Result model
         """
@@ -236,8 +244,8 @@ class BoundedExecutor:
             entropy_value = entropy_value.strip('.')
 
         res = Result(
-            firmware=Firmware.objects.get(id=pk),
-            # emba_command=res_dict["emba_command"],
+            firmware=Firmware.objects.get(id=primary_key),
+            emba_command=cmd.replace("cd /app/emba/ && ", ""),
             architecture_verified=res_dict.get("architecture_verified", ''),
             # os_unverified=res_dict.get("os_unverified", ''),
             os_verified=res_dict.get("os_verified", ''),

@@ -114,7 +114,7 @@ get_individual_report().then(function (returnData) {
         "Architecture detected": returnData.architecture_verified,
         "Entropy value": returnData.entropy_value,
         "Path to logs": returnData.path_to_logs.replace(/\/app\/emba/,""),
-        "EMBA command": "TODO",
+        "EMBA command": returnData.emba_command,
         "Files detected": returnData.files,
         "Directories detected": returnData.directories,
         "Certificates detected": returnData.certificates,
