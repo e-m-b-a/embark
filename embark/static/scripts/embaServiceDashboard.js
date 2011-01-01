@@ -51,7 +51,12 @@ socket.onmessage = function (event) {
                 }
                 module_array[idx] = data[id][length - 1].module
                 phase_array[idx] = data[id][length - 1].phase
-                makeProgress(data[id][length - 1].percentage, id)
+                if (Number(data[id][length - 1].percentage) > Number(1)) {
+                  console.log("progress bar overload detected: " + data[id][length - 1].percentage)
+                  makeProgress(1.00, id)
+                } else {
+                  makeProgress(data[id][length - 1].percentage, id)
+                }
             }
     }
     catch(error){
