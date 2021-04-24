@@ -20,6 +20,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
+
+# TODO: Move this to .env file
 SECRET_KEY = 'django-insecure-3vwtv++oulw75(9qch!ry4-0u38xqj=lw$!#u7#6$8nq%dkv51'
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -75,6 +77,7 @@ WSGI_APPLICATION = 'embark.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
+# TODO: We don't need sql we need mongo. So this can be removed
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
