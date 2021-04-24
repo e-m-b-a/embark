@@ -14,3 +14,10 @@ def home(request):
 def about(request):
     html_body = get_template('uploader/about.html')
     return HttpResponse(html_body.render())
+
+
+def upload_file(request):
+    """
+    Uploading method
+    """
+    pass
