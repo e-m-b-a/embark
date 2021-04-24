@@ -12,9 +12,10 @@ services:
         - ${LOG}/:/log
         - /var/run/docker.sock:/var/run/docker.sock
         - /tmp/:/tmp/
+        - ./embark/:/app/embark/
     network_mode: "host"
     ports:
       - '8000:8000'
-    command: uwsgi --wsgi-file /app/embark/embark/wsgi.py  --http :8000 --workers=2 ---master --threads=5 --enable-threads --lazy-apps --py-autoreload 10 --harakiri=60 --single-interpreter --reload-mercy=120 --worker-reload-mercy=120 --thunder-lock --max-requests=1000 --vacuum --ignore-sigpipe --ignore-write-errors --disable-write-exception --buffer-size 10000
+    command: './embark/entrypoint.sh'
     environment:
         - USER

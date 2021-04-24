@@ -19,8 +19,4 @@ RUN yes | sudo ./installer.sh -D -F  && \
 
 EXPOSE 8000
 
-
-ENTRYPOINT [ "/bin/bash" ]
-CMD uwsgi --wsgi-file /app/embark/embark/wsgi.py  --http :8001 --workers=2 ---master --threads=5 --enable-threads --lazy-apps --py-autoreload 10 --harakiri=60 --single-interpreter --reload-mercy=120 --worker-reload-mercy=120 --thunder-lock --max-requests=1000 --vacuum --ignore-sigpipe --ignore-write-errors --disable-write-exception --buffer-size 10000
-
-
+CMD  ./embark/entrypoint.sh
