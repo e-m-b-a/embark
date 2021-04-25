@@ -1,6 +1,6 @@
 # This workflow tests the project for proper linting
 
-name: Lint [PEP8]
+name: Lint with pycodestyle (former pep8) [ Python 3.7 ]
 
 on: push
 
@@ -22,9 +22,10 @@ jobs:
 
     - name: Install dependencies [pip]
       run: |
+        cd embark
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-    - name: run linter [pycodesytle (former PEP8)]
+    - name: run linter [pycodestyle (former PEP8)]
       run: pycodestyle .
 

@@ -1,6 +1,6 @@
 # This workflow will run the Python testcases
 
-name: Build and Test [Python 3.x]
+name: Test [Python 3.7]
 
 on: push
 
@@ -22,6 +22,7 @@ jobs:
 
     - name: Install dependencies [pip]
       run: |
+        cd embark
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
