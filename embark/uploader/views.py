@@ -20,4 +20,6 @@ def upload_file(request):
     """
     Uploading method
     """
-    pass
+    html_body = get_template('uploader/index.html')
+    return HttpResponse(html_body.render())
+

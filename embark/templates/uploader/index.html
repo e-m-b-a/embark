@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Index</title>
+    <script src="{% static 'Scripts/fileUpload.js' %}"></script> 
+    <link rel="stylesheet" href="{% static 'Content/CSS/root.css' %}">
+   <!--  <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"> -->
+</head>
+<body>
+<div id="mainDiv">   
+    <div id="fileDropDiv" ondrop="fileDropEventHandler(event)" ondragover="dragOverHandler(event)" onchange="fileUpload(this)">
+        <header class="titleText">Upload a firmware image or archive</header>
+        <p class="subText">Supported archive types : zip,tar,tar.gz</p>
+        <label for="file-input">
+            <img src="{% static 'Content/Images/fileUpload.jpg'%}"/>
+        </label>
+        <input id="file-input" type="file" multiple/>
+    </div>
+</div>
+<br>
+</body>
+</html>
