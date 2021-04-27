@@ -4,10 +4,6 @@
 3. Management dashboard for overall reporting on service
 
 
-## Docker instructions
-See `docker.md`
-
-
 
 ## Setting up emba repo
 1. Change directory to root of the repository i.e `amos-ss2021-emba-service`
