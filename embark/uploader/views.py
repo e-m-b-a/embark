@@ -23,3 +23,8 @@ def upload_file(request):
     html_body = get_template('uploader/index.html')
     return HttpResponse(html_body.render())
 
+def save_file(request):
+    if request.method == 'POST':
+        print(request.POST['FILE'])
+    return "success"
+

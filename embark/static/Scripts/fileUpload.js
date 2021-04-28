@@ -20,12 +20,33 @@ function fileUpload(filesUploaded){
 }
 
 /** This function saves the file to local directory. */
+/**Under development */
 async function saveFile(fileData){
 
-      let formData = new FormData();
-      formData.append("file",fileData);
-      alert(fileData.name);
+      var myBlob = new Blob([fileData], {type: fileData.type});
+      localStorage.setItem(fileData.name, myBlob);
+      console.log(localStorage.myBlob);
+      //alert();
+      alert(fileData.name + "Saved");
+      
+      /* var formData = new FormData()
+      formData.append('file',fileData);
+      $.ajax({
+        type: 'POST',
+        url:  'save_file',
+        data: {
+          csrfmiddlewaretoken: csrftoken,
+          file:formData
+        },
+        processData: false,
+        contentType: false,
+        success: function(data) {
+            console.log(data);
+        }
+    }); */
+      
   }
+
 
 
   
