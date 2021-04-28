@@ -1,0 +1,21 @@
+version: "3"
+services:
+  emba:
+    image: emba:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    privileged: true
+    volumes:
+        - ${FIRMWARE}/:/firmware
+        - ${LOG}/:/log
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp/:/tmp/
+        - ./embark/:/app/embark/
+    network_mode: "host"
+    ports:
+      - '8000:8000'
+    command: './embark/entrypoint.sh'
+    environment:
+        - USER

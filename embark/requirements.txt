@@ -1,0 +1,5 @@
+Django
+uWSGI
+ipython
+django-dotenv
+pycodestyle
