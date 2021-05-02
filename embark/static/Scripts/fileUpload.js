@@ -1,9 +1,15 @@
 /*Event Which is Responsible for the action after you drag and drop the files from your local folder*/
+/**ev - Event information from the drag and drop of Files */
 function fileDropEventHandler(ev) {
+  try {
     for (let index = 0; index < ev.dataTransfer.items.length; index++) {
-        let file = ev.dataTransfer.items[index].getAsFile();
-        saveFile(file);
-    }
+      let file = ev.dataTransfer.items[index].getAsFile();
+      saveFile(file);
+  }   
+  } catch (error) {
+    alert(error.message);
+  }
+    
 }
 
 /* The following event calls prevent default to turn off the browsers default drag and drop handler */
@@ -12,39 +18,37 @@ function dragOverHandler(ev) {
 }
 
 /* The following event handles the upload of a file*/
+/**file uploaded - Pased from the html to upload the file */
 function fileUpload(filesUploaded){
-  for (let index = 0; index < filesUploaded.lastElementChild.files.length; index++) {
-    let file = filesUploaded.lastElementChild.files[index];
-    saveFile(file); 
+  try{
+    for (let index = 0; index < filesUploaded.lastElementChild.files.length; index++) {
+      let file = filesUploaded.lastElementChild.files[index];
+      saveFile(file); 
+    }
+  }catch (error) {
+    alert(error.message);
   }
 }
 
 /** This function saves the file to local directory. */
-/**Under development */
+/* fileData - Information of the uploaded file*/
 async function saveFile(fileData){
-
-      var myBlob = new Blob([fileData], {type: fileData.type});
-      localStorage.setItem(fileData.name, myBlob);
-      console.log(localStorage.myBlob);
-      //alert();
-      alert(fileData.name + "Saved");
-      
-      /* var formData = new FormData()
+  try {
+    var formData = new FormData()
       formData.append('file',fileData);
       $.ajax({
         type: 'POST',
         url:  'save_file',
-        data: {
-          csrfmiddlewaretoken: csrftoken,
-          file:formData
-        },
+        data: formData,
         processData: false,
         contentType: false,
         success: function(data) {
-            console.log(data);
+            alert(""+data);
         }
-    }); */
-      
+    }); 
+    } catch(error){
+        alert(error.message);
+    }
   }
 
 
