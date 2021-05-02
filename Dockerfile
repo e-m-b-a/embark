@@ -11,11 +11,21 @@ ADD . /app
 
 ADD embark/requirements.txt /app/embark/requirements.txt
 
-
 RUN yes | sudo ./emba/installer.sh -D -F  && \
     sudo pip3 install uwsgi -I --no-cache-dir && \
     pip3 install --user --no-warn-script-location -r /app/embark/requirements.txt && \
     mkdir /app/embark/logs
+
+
+RUN sudo apt-get update && \
+    sudo apt-get install -y apt-utils && \
+    sudo apt-get install -y default-libmysqlclient-dev && \
+    sudo apt-get install -y mysql-client && \
+    sudo apt-get install -y python-mysqldb && \
+    sudo apt-get install -y build-essential && \
+    sudo apt-get install -y python3-dev && \
+    sudo apt-get install -y libssl-dev && \
+    sudo apt-get install -y swig
 
 EXPOSE 8000
 
