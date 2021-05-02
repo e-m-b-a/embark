@@ -1,5 +1,14 @@
 version: "3"
 services:
+  auth-db:
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "password"
+    network_mode: "host"
+      ports:
+        - '3306:3306'
   emba:
     image: emba:latest
     build:
