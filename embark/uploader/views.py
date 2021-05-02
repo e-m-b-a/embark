@@ -22,6 +22,7 @@ def about(request):
     return HttpResponse(html_body.render())
 
 # Function which renders the uploader html
+@csrf_exempt
 def upload_file(request):
 
     html_body = get_template('uploader/index.html')
@@ -39,4 +40,8 @@ def save_file(request):
     except Exception  as error:
         return HttpResponse("Firware Couldn't be uploaded")
 
+#Function to render data fields
+def firmwaredetails(request):
+    html_body = get_template('uploader/dataFields.html')
+    return HttpResponse(html_body.render())
 

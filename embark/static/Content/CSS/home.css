@@ -10,14 +10,14 @@ body{
 	overflow-x: hidden;
 }
 .container{
-	position: relative;
+	position: fixed;
 	width: 100%;
 }
 .navigation{
 	position: fixed;
 	width: 300px;
 	height: 100%;
-	background: #4056A1;
+	background: #1B1734;
 	transition: 0.5s;
 	overflow: hidden;
 }
@@ -34,7 +34,7 @@ body{
 }
 .navigation ul li:hover
 {
-	background: #6b7cc2;
+	background: #3860BE;
 }
 .navigation ul li:nth-child(1):hover{
 	background: transparent;
@@ -45,7 +45,7 @@ body{
 	width: 100%;
 	display: flex;
 	text-decoration: none;
-	color: white;
+	color:#EEEEEE;
 }
 .navigation ul li a .icon, .embarklogo{
 	position: relative;
@@ -56,7 +56,7 @@ body{
 	text-align: center;
 }
 .navigation ul li a .icon .fa{
-	color: white;
+	color: #EEEEEE;
 	font-size: 24px;
 }
 .navigation ul li a .title, .brandname{
@@ -72,7 +72,7 @@ body{
 
 .logo{
 	width: 300px;
-	background: #4056A1;
+	background: #1B1734;
 	position: relative;
 }
 .embarklogo{
@@ -82,7 +82,7 @@ body{
 	padding-top: 10px;
 	padding-left: 10px;
 }
-.section1, .section2, .section3, .section4, .section5 {
+.section1, .section2, .section3, .section4, .section5, .section6 {
 	height: 100vh;
 	display: flex;
 	justify-content: center;
@@ -90,12 +90,12 @@ body{
 	font-size: 10em;
 	text-transform: uppercase;
 	font-weight: 700;
-	color: #F13C20;
+	color: #000000;
 }
 .main{
 	position: absolute;
 	width: calc(100% - 300px);
 	left: 300px;
 	min-height: 100vh;
-	background: #C5CBE3
+	background: #E2E2E2
 }

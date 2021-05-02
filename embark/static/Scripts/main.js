@@ -1,10 +1,26 @@
 function uploader(){
 $.ajax({
-    url:"upload",
+    url:"upload/",
     datatype:"html",
-    type: "POST",
+    type: "GET",
     success: function(data) {
         console.log(data);
-        $('#uploader').html(html);
+        document.getElementById("uploader").innerHTML =
+        data;
+        // $('#uploader').html(data);
     }
   });}
+
+  function fwdetails(){
+    $.ajax({
+        url:"firmwaredetails/",
+        datatype:"html",
+        type: "GET",
+        success: function(data) {
+            console.log(data);
+            document.getElementById("details").innerHTML =
+            data;
+        }
+      });
+
+  }

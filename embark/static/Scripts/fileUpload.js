@@ -38,7 +38,7 @@ async function saveFile(fileData){
       formData.append('file',fileData);
       $.ajax({
         type: 'POST',
-        url:  'save_file',
+        url:  'upload/save_file',
         data: formData,
         processData: false,
         contentType: false,
@@ -49,6 +49,14 @@ async function saveFile(fileData){
     } catch(error){
         alert(error.message);
     }
+  }
+
+  function saveDataFields(){
+    var x = document.forms["dataFields"]["version"].value;
+      if (x == "") {
+         alert("Enter the version");
+      return false;
+  }
   }
 
 

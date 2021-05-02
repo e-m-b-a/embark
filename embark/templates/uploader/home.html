@@ -5,11 +5,11 @@
 	<title>EMBArk</title>
 	<link rel="stylesheet" type="text/css" href="{% static 'Content/CSS/home.css' %}">
 	<script src="https://kit.fontawesome.com/67d45e2d15.js" crossorigin="anonymous"></script>
-	<script src="{% static 'Scripts/main.js' %}"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
+	<script src="{% static 'Scripts/main.js' %}"></script>
+	<script src="{% static 'Scripts/fileUpload.js' %}"></script>
 </head>
-<body>
 	<div class="container">
 		<div class="navigation">
 			<ul>
@@ -26,9 +26,15 @@
 					</a>
 				</li>
 				<li>
-					<a onclick="uploader()">
+					<a href="#uploader" onclick="uploader()">
 						<span class="icon"><i class="fas fa-upload" aria-hidden = "true"></i> </span>
 						<span class="title">Uploader</span>
+					</a>
+				</li>
+				<li>
+					<a href="#details" onclick="fwdetails()">
+						<span class="icon"><i class="fas fa-file-alt" aria-hidden="true"></i></span>
+						<span class="title">Firmware details</span>
 					</a>
 				</li>
 				<li>
@@ -49,9 +55,9 @@
 	<div class="main">
 			<section class="section1" id="home">Home</section>
 			<section class="section2" id="dashboard">Dashboard</section>
-			<section class="section3" id="uploader">Uploader</section>
-			<section class="section4" id="service">Service</section>
-			<section class="section5" id="reports">Reports</section>
+			<section class="section3" id="uploader"></section>
+			<section class "section4" id="details"></section>
+			<section class="section5" id="service">Service</section>
+			<section class="section6" id="reports">Reports</section>
 	</div>
-</body>
 </html>
