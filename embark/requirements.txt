@@ -3,6 +3,9 @@ uWSGI
 ipython
 django-dotenv
 pycodestyle
+channels
+rx
+hypercorn
 mysqlclient
 pymongo
 mongoengine
