@@ -3,4 +3,3 @@ uWSGI
 ipython
 django-dotenv
 pycodestyle
-shutil
