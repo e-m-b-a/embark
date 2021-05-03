@@ -1,4 +1,3 @@
-import pytest
 from django.test import TestCase
 
 from .boundedExecutor import boundedExecutor
