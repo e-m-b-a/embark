@@ -25,7 +25,7 @@ def about(request):
 @csrf_exempt
 def upload_file(request):
 
-    html_body = get_template('uploader/index.html')
+    html_body = get_template('uploader/fileUpload.html')
     return HttpResponse(html_body.render())
 
 #Function which saves the file .
@@ -35,8 +35,9 @@ def upload_file(request):
 def save_file(request):
     try:
         fs = FileSystemStorage()
-        file = fs.save(request.FILES['file'].name,request.FILES['file'])
-        return HttpResponse("Firmware has been successfully saved")
+        for file in request.FILES.getlist('file'):
+            fs.save(file.name,file)
+        return HttpResponse("Firmwares has been successfully saved")
     except Exception  as error:
         return HttpResponse("Firware Couldn't be uploaded")
 

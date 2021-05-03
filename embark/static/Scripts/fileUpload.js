@@ -1,40 +1,17 @@
-/*Event Which is Responsible for the action after you drag and drop the files from your local folder*/
-/**ev - Event information from the drag and drop of Files */
-function fileDropEventHandler(ev) {
-  try {
-    for (let index = 0; index < ev.dataTransfer.items.length; index++) {
-      let file = ev.dataTransfer.items[index].getAsFile();
-      saveFile(file);
-  }   
-  } catch (error) {
-    alert(error.message);
-  }
-    
-}
 
 /* The following event calls prevent default to turn off the browsers default drag and drop handler */
 function dragOverHandler(ev) {
   ev.preventDefault();
 }
 
-/* The following event handles the upload of a file*/
-/**file uploaded - Pased from the html to upload the file */
-function fileUpload(filesUploaded){
-  try{
-    for (let index = 0; index < filesUploaded.lastElementChild.files.length; index++) {
-      let file = filesUploaded.lastElementChild.files[index];
-      saveFile(file); 
-    }
-  }catch (error) {
-    alert(error.message);
-  }
-}
-
 /** This function saves the file to local directory. */
-/* fileData - Information of the uploaded file*/
-async function saveFile(fileData){
+/* fileData - Information of the uploaded file or Files*/
+async function saveFiles(fileData){
   try {
     var formData = new FormData()
+    for (let index = 0; index < fileData.length; index++) {
+      formData.append('file',fileData[index]);
+    }
       formData.append('file',fileData);
       $.ajax({
         type: 'POST',

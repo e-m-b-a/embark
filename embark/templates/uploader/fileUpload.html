@@ -2,7 +2,7 @@
     {% load static %}
     <link rel="stylesheet" href="{% static 'Content/CSS/root.css' %}">
     <div class="main"> 
-    <div id="fileDropDiv" ondrop="fileDropEventHandler(event)" ondragover="dragOverHandler(event)" onchange="fileUpload(this)">
+    <div id="fileDropDiv" ondrop="saveFiles(event.dataTransfer.items)" ondragover="dragOverHandler(event)" onchange="saveFiles(this.lastElementChild.files)">
         <p class="titleText">Upload a firmware image or archive</p>
         <p class="subText">Supported archive types : zip,tar,tar.gz</p>
         <label for="file-input">
