@@ -1,4 +1,4 @@
 #!/bin/bash
 
-uwsgi --wsgi-file /app/embark/embark/wsgi.py --http :8000 --workers=2
-hypercorn embark.asgi:application -b 127.0.0.1:8001
+uwsgi --wsgi-file /app/embark/embark/wsgi.py --http :8000 --workers=2 &
+daphne embark.asgi:application -p 8001 -b '0.0.0.0'

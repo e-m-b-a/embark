@@ -9,7 +9,6 @@ https://docs.djangoproject.com/en/3.2/howto/deployment/asgi/
 
 import os
 
-
 from django.core.asgi import get_asgi_application
 
 asgi_application = get_asgi_application()
@@ -26,4 +25,3 @@ application = ProtocolTypeRouter({
     'http': asgi_application,
     'websocket': AuthMiddlewareStack(URLRouter(ws_urlpatterns))
 })
-

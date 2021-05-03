@@ -39,18 +39,18 @@
 
         socket.onopen = function(e) {
         alert("[open] Connection established");
-        alert("Sending to server");
-        socket.send("My name is John");
         };
 
         socket.onmessage = function (event){
+            console.log("HELLO")
             var data = JSON.parse(event.data);
             console.log(data);
-            document.querySelector('#app').innerText = data.message;
+            //document.querySelector('#app').innerText = data.message;
         }
         socket.onclose = function(event) {
             console.error('Chat socket closed unexpectedly');
         };
+        // count lines of emba log
         var i = 0;
         function makeProgress(){
             if(i < 100){

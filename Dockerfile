@@ -1,8 +1,8 @@
 FROM kalilinux/kali-rolling
-ENV PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/.local/bin
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DJANGO_SETTINGS_MODULE=embark.settings
+ENV PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/.local/bin
 
 RUN apt-get update && \ 
     apt-get -y upgrade && \
