@@ -1,0 +1,14 @@
+
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'Content/CSS/root.css' %}">
+    <div class="main"> 
+    <div id="fileDropDiv" ondrop="saveFiles(event.dataTransfer.items)" ondragover="dragOverHandler(event)" onchange="saveFiles(this.lastElementChild.files)">
+        <p class="titleText">Upload a firmware image or archive</p>
+        <p class="subText">Supported archive types : zip,tar,tar.gz</p>
+        <label for="file-input">
+            <span class="icon"><i class="fas fa-cloud-upload-alt" aria-hidden="true"></i></span>
+            {% comment %} <img src="{% static 'Content/Images/fileUpload.jpg'%}"/> {% endcomment %}
+        </label>
+        <input id="file-input" type="file" multiple/>
+    </div>
+    </div>
