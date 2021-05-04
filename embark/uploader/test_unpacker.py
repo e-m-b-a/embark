@@ -29,7 +29,8 @@ class unpacker_test(TestCase):
         f.close()
 
         # check for error
-        self.assertFalse(self.unpacker.unpack(f.name))
+        with self.assertRaises(ValueError):
+            self.unpacker.unpack(f.name)
 
         # delete file
         os.remove(archive_name)

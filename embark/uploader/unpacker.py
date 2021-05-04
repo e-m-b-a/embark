@@ -47,7 +47,7 @@ class unpacker:
             :param file_location: file location of the archive
             :param extract_dir: output directory where the archive contents are saved
 
-            :return: Boolean determining status
+            :return: True on success, Value error on wrong format, Exception otherwise
         """
 
         try:
