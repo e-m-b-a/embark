@@ -28,6 +28,6 @@ services:
       - '8001:8001'
     env_file:
       - .env
-    command: './embark/entrypoint.sh'
+    command: './entrypoint.sh'
     environment:
         - USER

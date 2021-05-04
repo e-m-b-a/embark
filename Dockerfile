@@ -32,4 +32,4 @@ RUN sudo apt-get update && \
 EXPOSE 8000
 EXPOSE 8001
 
-CMD  ./embark/entrypoint.sh
+CMD  ./entrypoint.sh
