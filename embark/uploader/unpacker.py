@@ -74,4 +74,3 @@ class unpacker:
         """
 
         return [name for (name, extensions, description) in shutil.get_unpack_formats()]
-

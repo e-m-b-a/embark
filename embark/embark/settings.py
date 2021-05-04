@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
-import os
+
 from pathlib import Path
 import os
 import sys
@@ -149,7 +149,7 @@ STATICFILES_DIRS = [
 ]
 
 # Added for FIle storage to get the path to save Firmware images.
-MEDIA_ROOT = os.path.join(BASE_DIR, 'static/content','uploadedFirmwareImages') # media directory in the root directory
+MEDIA_ROOT = os.path.join(BASE_DIR, 'static/content', 'uploadedFirmwareImages')  # media directory in the root directory
 MEDIA_URL = '/uploadedFirmwareImages/'
 
 # Default primary key field type
