@@ -1,5 +1,14 @@
 version: "3"
 services:
+  auth-db:
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    env_file:
+      - .env
+    network_mode: "host"
+    ports:
+      - '3306:3306'
   emba:
     image: emba:latest
     build:
@@ -16,6 +25,9 @@ services:
     network_mode: "host"
     ports:
       - '8000:8000'
-    command: './embark/entrypoint.sh'
+      - '8001:8001'
+    env_file:
+      - .env
+    command: './entrypoint.sh'
     environment:
         - USER
