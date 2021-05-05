@@ -4,3 +4,5 @@ ipython
 django-dotenv
 pycodestyle
 mysqlclient
+pymongo
+mongoengine
