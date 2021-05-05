@@ -42,9 +42,9 @@ def save_file(request):
     try:
         fs = FileSystemStorage()
         for file in request.FILES.getlist('file'):
-            fs.save(file.name,file)
+            fs.save(file.name, file)
         return HttpResponse("Firmwares has been successfully saved")
-    except Exception  as error:
+    except Exception as error:
         return HttpResponse("Firware Couldn't be uploaded")
 
     fs = FileSystemStorage()
