@@ -25,8 +25,9 @@ services:
     network_mode: "host"
     ports:
       - '8000:8000'
+      - '8001:8001'
     env_file:
       - .env
-    command: './embark/entrypoint.sh'
+    command: './entrypoint.sh'
     environment:
         - USER

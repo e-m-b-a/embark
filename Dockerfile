@@ -6,8 +6,10 @@ RUN apt-get update && \
     apt-get -y upgrade && \
     apt-get -y install wget kmod procps sudo
 
-WORKDIR /app
+
 ADD . /app
+
+WORKDIR /app/embark
 
 ADD embark/requirements.txt /app/embark/requirements.txt
 
@@ -28,5 +30,7 @@ RUN sudo apt-get update && \
     sudo apt-get install -y swig
 
 EXPOSE 8000
+# Opening on extra port for our ASGI setup
+EXPOSE 8001
 
-CMD  ./embark/entrypoint.sh
+CMD  ./entrypoint.sh
