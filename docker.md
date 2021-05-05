@@ -1,6 +1,11 @@
 
 **NOTE: Make sure you have already cloned original `emba` repository in the `emba` directory**
 
+**NOTE: If you are using docker desktop on a Mac or windows machine. Remove line `network_mode: host` from docker-compose.yml**
+
+**NOTE: For now our compose file is compatible with docker-compose version `1.27.x`. `1.28.x` and `1.29.x` are already available and by default you will end up with latest version unless you specify explicitly while installing. Please install version`1.27.x` untill we fix this**
+
+
 ### Building and running containers
 
 Build your image  
