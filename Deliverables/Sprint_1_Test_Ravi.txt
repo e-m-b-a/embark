@@ -1,0 +1,6 @@
+Sprint_1:
+1.Developed the html and css for file upload .
+2. Developed the scripting functionalites to upload the files through drag and drop and choose files.
+3. Test cases:
+1. Drag and drop single and multiple files which gives an alert box containing the file name 
+2. On click of the image upload single and multiple files which gives an alert box containing the file name.
