@@ -1,0 +1,120 @@
+.uploadRow {
+    width: 100vw;
+    height: 100vh;
+    margin-top: 10vh;
+}
+
+/* Styles for the slider */
+/* The switch - the box around the slider */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 10px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* The slider */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    bottom: -3px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+input:checked+.slider {
+    background-color: #9AC83B;
+}
+
+input:focus+.slider {
+    box-shadow: 0 0 1px #9AC83B;
+}
+
+input:checked+.slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+.togLbl {
+    padding: 0;
+}
+
+.togSwitch {
+    margin-top: 4px;
+    padding: 0;
+}
+
+/* Styles for the dataform fields */
+
+.txtField {
+    width: 80%;
+}
+
+.dataRow {
+    border-style: solid;
+    border-color: #EEE;
+    height: 90vh;
+    overflow: scroll;
+    overflow-x: hidden;
+    padding: 20px;
+    padding-right: 5px;
+    font-size: small;
+}
+
+/* Styles for file upload */
+
+#fileDropDiv>input {
+    display: none;
+}
+
+.titleText {
+    font-size: large;
+    justify-content: center;
+}
+
+.subText {
+    font-size: medium;
+    justify-content: center;
+}
+
+.fileuploadIcon {
+    font-family: "font Awesome";
+    font-weight: 500;
+    color: #3296B9
+}
+
+.uploadIcon {
+    padding: 40%;
+}

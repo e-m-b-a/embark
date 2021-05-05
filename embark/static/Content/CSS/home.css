@@ -1,19 +1,23 @@
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap');
-*{
+
+* {
 	margin: 0;
 	padding: 0;
 	box-sizing: border-box;
 	font-family: 'Poppins', sans-serif;
 }
-body{
+
+body {
 	overflow-x: hidden;
 }
-.container{
+
+.container {
 	position: fixed;
 	width: 100%;
 }
-.navigation{
+
+.navigation {
 	position: fixed;
 	width: 300px;
 	height: 100%;
@@ -21,33 +25,48 @@ body{
 	transition: 0.5s;
 	overflow: hidden;
 }
-.navigation ul{
+
+.container-fluid,
+.row,
+.col {
+	padding: 0;
+	margin: 0;
+}
+
+.navigation ul {
 	position: absolute;
 	top: 0;
 	left: 0;
 	width: 100%;
 }
-.navigation ul li{
+
+.navigation ul li {
 	position: relative;
 	width: 100%;
 	list-style: none;
 }
-.navigation ul li:hover
-{
+
+.navigation ul li:hover {
 	background: #3860BE;
 }
-.navigation ul li:nth-child(1):hover{
+
+.navigation ul li:nth-child(1):hover {
 	background: transparent;
 }
-.navigation ul li a, .logo a, .brandname{
+
+.navigation ul li a,
+.logo a,
+.brandname {
 	position: relative;
 	display: block;
 	width: 100%;
 	display: flex;
 	text-decoration: none;
-	color:#EEEEEE;
+	color: #EEEEEE;
 }
-.navigation ul li a .icon, .embarklogo{
+
+.navigation ul li a .icon,
+.embarklogo {
 	position: relative;
 	display: block;
 	min-width: 60px;
@@ -55,11 +74,14 @@ body{
 	line-height: 60px;
 	text-align: center;
 }
-.navigation ul li a .icon .fa{
+
+.navigation ul li a .icon .fa {
 	color: #EEEEEE;
 	font-size: 24px;
 }
-.navigation ul li a .title, .brandname{
+
+.navigation ul li a .title,
+.brandname {
 	position: relative;
 	display: block;
 	padding: 0 10px;
@@ -70,19 +92,26 @@ body{
 	font-size: large;
 }
 
-.logo{
+.logo {
 	width: 300px;
 	background: #1B1734;
 	position: relative;
 }
-.embarklogo{
+
+.embarklogo {
 	height: 50px;
 	min-width: 40px;
 	margin-right: 10px;
 	padding-top: 10px;
 	padding-left: 10px;
 }
-.section1, .section2, .section3, .section4, .section5, .section6 {
+
+.section1,
+.section2,
+.section3,
+.section4,
+.section5,
+.section6 {
 	height: 100vh;
 	display: flex;
 	justify-content: center;
@@ -92,7 +121,16 @@ body{
 	font-weight: 700;
 	color: #000000;
 }
-.main{
+
+.section3 {
+	justify-content: unset;
+}
+
+.brandname {
+	margin-top: 10px;
+}
+
+.main {
 	position: absolute;
 	width: calc(100% - 300px);
 	left: 300px;

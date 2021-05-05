@@ -1,14 +1,129 @@
 
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'Content/CSS/root.css' %}">
-    <div class="main"> 
-    <div id="fileDropDiv" ondrop="saveFiles(event.dataTransfer.items)" ondragover="dragOverHandler(event)" onchange="saveFiles(this.lastElementChild.files)">
-        <p class="titleText">Upload a firmware image or archive</p>
-        <p class="subText">Supported archive types : zip,tar,tar.gz</p>
-        <label for="file-input">
-            <span class="icon"><i class="fas fa-cloud-upload-alt" aria-hidden="true"></i></span>
-            {% comment %} <img src="{% static 'Content/Images/fileUpload.jpg'%}"/> {% endcomment %}
-        </label>
-        <input id="file-input" type="file" multiple/>
+<div class="row uploadRow">
+    <div class="col-sm">
+        <div id="fileDropDiv" ondrop="saveFiles(event.dataTransfer.items)" ondragover="dragOverHandler(event)" onchange="saveFiles(this.lastElementChild.files)">
+            <p class="titleText">Upload a firmware image or archive</p>
+            <p class="subText">Supported archive types : zip,tar,tar.gz</p>
+            <label for="file-input">
+                <span class="uploadIcon"><i class="fas fa-cloud-upload-alt fileuploadIcon" aria-hidden="true"></i></span>
+                {% comment %} <img src="{% static 'Content/Images/fileUpload.jpg'%}"/> {% endcomment %}
+            </label>
+            <input id="file-input" type="file" multiple/>
+        </div>
     </div>
+    <div class="col-sm">
+        <div class="row dataRow">
+            <div class="col col-sm-8">
+                <form name="dataFields" onsubmit="return saveDataFields()">
+                    <div class="form-group">
+                        <label for="version">Firmware version</label>
+                        <input type="text" class="form-control txtField" id="version" placeholder="Firmware Version" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="vendor">Firmware vendor</label>
+                        <input type="text" class="form-control txtField" id="vendor" placeholder="Firmware vendor" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="device">Device</label>
+                        <input type="text" class="form-control txtField" id="device" placeholder="Device" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="notes">Testing notes</label>
+                        <input type="text" class="form-control txtField" id="notes" placeholder="Testing notes" required>
+                    </div>
+
+                    <!--Datafields for expert mode-->
+                    <div class="form-group">
+                        <label for="fwarchitecture">Select architecture of the linux firware</label>
+                        <select class="form-select" aria-label="firmware_architecture" required>
+                            <option selected value="1">MIPS</option>
+                            <option value="2">ARM</option>
+                            <option value="3">x86</option>
+                            <option value="4">x64</option>
+                            <option value="5">PPC</option>
+                        </select>
+                    </div>
+
+                    <div id="expertOptions" style="display:none;">
+                        <div class="form-check">
+                            <input class="form-check-input active" type="checkbox" value="expmode" id="cweChecker" checked required>
+                            <label class="form-check-label" for="cweChecker">
+                            Enable CWE
+                            </label>
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input active" type="checkbox" value="expmode" id="deepExtraction" checked required>
+                            <label class="form-check-label" for="deepExtraction">
+                            Deep Extraction
+                            </label>
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input active" type="checkbox" value="expmode" id="runInDOcker" checked  required>
+                            <label class="form-check-label" for="runInDOcker">
+                            Run EMBA in Docker Container
+                            </label>
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input active" type="checkbox" value="expmode" id="logPathCheck" checked required>
+                            <label class="form-check-label" for="logPathCheck">
+                            Ignore Log Path Check
+                            </label>
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input active" type="checkbox" value="expmode" id="logFile" checked required>
+                            <label class="form-check-label" for="logFile">
+                            Create grep-able Log File in [log_path]/fw_grep.log
+                            </label>
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input active" type="checkbox" value="expmode" id="rlpath" checked required>
+                            <label class="form-check-label" for="rlpath">
+                            Print Only Relative Paths
+                            </label>
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input active" type="checkbox" value="expmode" id="colorcode" checked required>
+                            <label class="form-check-label" for="colorcode">
+                            Add ANSI Color Codes to Log
+                            </label>
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input active" type="checkbox" value="expmode" id="webReport" checked required>
+                            <label class="form-check-label" for="webReport">
+                            Web Reporter
+                            </label>
+                        </div>
+                        </div>
+
+                    <!--Todo: checkbox for E-->
+
+                    <button type="button submit" class="btn btn-light">Analyse</button>
+                    <button type="button" class="btn btn-danger">Cancel</button>
+
+                </form>
+            </div>
+            <div class="col col-sm-4">
+                <div class="form-group">
+                    <div class="row">
+                        <div class="col-sm-7 togLbl">
+                            <label for="expertMode">Expert mode</label>
+                        </div>
+                        <div class="col-sm-5 togSwitch">
+                            <label class="switch">
+                                <input id="expertModeSwitch" type="checkbox" onclick="expertModeOn()">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
