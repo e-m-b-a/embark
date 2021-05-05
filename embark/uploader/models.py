@@ -18,8 +18,3 @@ class Firmware(Document):
     relative_paths = BooleanField(required=True, default=False)
     ANSI_color = BooleanField(required=True, default=False)
     web_reporter = BooleanField(required=True, default=False)
-    
-
-
-
-# Create your models here.
