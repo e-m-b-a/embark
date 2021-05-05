@@ -29,12 +29,16 @@ async function saveFiles(fileData){
   }
 
   function saveDataFields(){
-    var x = document.forms["dataFields"]["version"].value;
+    try {
+      var x = document.forms["dataFields"]["version"].value;
       if (x == "") {
          alert("Enter the version");
-      return false;
+    }
+    }catch (error) {
+      alert(error.message);
+    }
   }
-  }
+  
 
 
 

@@ -1,3 +1,4 @@
+
 <div class="row uploadRow">
     <div class="col-sm">
         <div id="fileDropDiv" ondrop="saveFiles(event.dataTransfer.items)" ondragover="dragOverHandler(event)" onchange="saveFiles(this.lastElementChild.files)">
@@ -13,7 +14,7 @@
     <div class="col-sm">
         <div class="row dataRow">
             <div class="col col-sm-8">
-                <form name="dataFields" onsubmit="return saveDataFields()" method="post"> {% csrf_token %}
+                <form name="dataFields" onsubmit="return saveDataFields()">
                     <div class="form-group">
                         <label for="version">Firmware version</label>
                         <input type="text" class="form-control txtField" id="version" placeholder="Firmware Version" required>
