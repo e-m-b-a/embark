@@ -30,6 +30,7 @@ RUN sudo apt-get update && \
     sudo apt-get install -y swig
 
 EXPOSE 8000
+# Opening on extra port for our ASGI setup
 EXPOSE 8001
 
 CMD  ./entrypoint.sh
