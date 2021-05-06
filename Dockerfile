@@ -7,8 +7,7 @@ RUN apt-get update && \
     apt-get -y install wget kmod procps sudo && \
     sudo apt-get install -y apt-utils && \
     sudo apt-get install -y default-libmysqlclient-dev && \
-    sudo apt-get install -y mysql-client && \
-    sudo apt-get install -y python3-mysqldb && \
+    sudo apt-get install -y default-mysql-client && \
     sudo apt-get install -y build-essential && \
     sudo apt-get install -y python3-dev && \
     sudo apt-get install -y libssl-dev && \
