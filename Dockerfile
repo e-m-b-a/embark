@@ -13,7 +13,7 @@ WORKDIR /app/embark
 
 ADD embark/requirements.txt /app/embark/requirements.txt
 
-RUN yes | sudo ./emba/installer.sh -D -F  && \
+RUN yes | sudo /app/emba/installer.sh -D -F  && \
     sudo pip3 install uwsgi -I --no-cache-dir && \
     pip3 install --user --no-warn-script-location -r /app/embark/requirements.txt && \
     mkdir /app/embark/logs
