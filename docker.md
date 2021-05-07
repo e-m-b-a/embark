@@ -28,7 +28,7 @@ We are not maintaining a central copy for now. Till then please main your own co
 1. Build your image  
 `docker-compose build`
    
-2. Before bringing your containers up doing this your env file should look like:
+2. Before bringing your containers up rename `template.env -> .env` and edit `.env` file should to look like:
 ```
 DATABASE_NAME=<Name you are going to give your db>
 DATABASE_USER=root
