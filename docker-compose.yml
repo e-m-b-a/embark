@@ -5,7 +5,7 @@ services:
     command: --default-authentication-plugin=mysql_native_password
     restart: always
     env_file:
-      - template.env
+      - .env
     network_mode: "host"
     ports:
       - '3306:3306'
@@ -27,7 +27,7 @@ services:
       - '8000:8000'
       - '8001:8001'
     env_file:
-      - template.env
+      - .env
     command: './entrypoint.sh'
     environment:
         - USER
