@@ -38,11 +38,32 @@ class unpacker:
             with open(os.path.join(work_dir, filename), 'wb') as f_out:
                 shutil.copyfileobj(f_in, f_out)
 
-    # TODO: maybe make unique
+    @staticmethod
+    def pack(base_name, archive_format, root_dir, base_dir):
+        """
+            pack function
+
+            :param base_name: name of the file to create, excluding format-specific extension
+            :param archive_format: archive format used to pack the directory
+            :param root_dir: directory acting as root directory of the archive,
+                             all paths in the archive will be relative to it
+            :param base_dir: directory archiving is started from, relative to root_dir
+
+            :return: name of archive on success
+        """
+
+        # TODO: check location
+        shutil.make_archive(base_name, archive_format, root_dir, base_dir)
+
+        # alternative if single files be zipped:
+        # with tarfile
+
+
     @staticmethod
     def unpack(file_location, extract_dir=None):
         """
             unpack function
+            names non unique, since db takes care of that issue
 
             :param file_location: file location of the archive
             :param extract_dir: output directory where the archive contents are saved
@@ -74,3 +95,5 @@ class unpacker:
         """
 
         return [name for (name, extensions, description) in shutil.get_unpack_formats()]
+
+
