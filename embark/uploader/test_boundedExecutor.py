@@ -8,7 +8,7 @@ class test_boundedExecutor(TestCase):
     def setUp(self):
         self.boundExecutor = boundedExecutor(bound=2, max_workers=2)
 
-    # TODO: maybe add timeout
+    # TODO: add timeout
     def test_non_blocking_overflow(self):
 
         fut_list = []

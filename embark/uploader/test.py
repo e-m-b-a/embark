@@ -1,13 +1,6 @@
-from django.test import TestCase
+from boundedExecutor import boundedExecutor
 
 
-class TestCase(TestCase):
+boundExecutor = boundedExecutor(bound=2, max_workers=2)
 
-    def setUp(self):
-        print("Running tests")
-
-    def test_sum(self):
-        assert sum([1, 2, 3]) == 6, "Should be 6"
-
-    def test_sum_tuple(self):
-        assert sum((1, 2, 3)) == 6, "Should be 6"
+boundExecutor.submit(boundExecutor.run_shell_cmd, "./../../emba/scratch.sh")
