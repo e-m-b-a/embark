@@ -17,8 +17,23 @@ class boundedExecutor:
         self.emba_log_location = "/app/emba/log_%s"
 
     def run_shell_cmd(self, cmd):
+
         # TODO emba.log analyzer needs to be started
-        emba_process = Popen(cmd, shell=True).wait()
+        emba_process = Popen(cmd, shell=True)
+        emba_process.wait()
+
+        if emba_process.returncode == 0:
+            # display help
+            print("display help")
+            pass
+        elif emba_process.returncode == 1:
+            # error occured consult log
+            print("error occured consult log")
+            pass
+        else:
+            # dunno
+            print("dunno")
+            pass
 
     def submit_firmware(self, firmware):
 
