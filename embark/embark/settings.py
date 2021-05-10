@@ -93,16 +93,16 @@ DATABASES = {
 }
 
 # For Test Environment we're going to use sqlite3 to speed up the test
-if 'test' in sys.argv:
-    PASSWORD_HASHERS = (
-        'django.contrib.auth.hashers.MD5PasswordHasher',
+# if 'test' in sys.argv:
+PASSWORD_HASHERS = (
+    'django.contrib.auth.hashers.MD5PasswordHasher',
     )
-    DEBUG = False
-    DATABASES = dict()
-    DATABASES['default'] = {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': str(BASE_DIR / 'test_db.sqlite3'),
-        'CONN_MAX_AGE': 60
+    # DEBUG = False
+DATABASES = dict()
+DATABASES['default'] = {
+    'ENGINE': 'django.db.backends.sqlite3',
+    'NAME': str(BASE_DIR / 'test_db.sqlite3'),
+    'CONN_MAX_AGE': 60
     }
 
 
