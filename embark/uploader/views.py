@@ -13,6 +13,7 @@ from django.core.files.storage import FileSystemStorage
 
 
 # home page test view TODO: change name accordingly
+from . import boundedExecutor
 from .unpacker import unpacker
 
 
@@ -24,6 +25,13 @@ def home(request):
 # additional page test view TODO: change name accordingly
 def about(request):
     html_body = get_template('uploader/about.html')
+    return HttpResponse(html_body.render())
+
+
+# additional page test view TODO: change name accordingly
+def start(request):
+    html_body = get_template('uploader/about.html')
+    boundedExecutor.submit_firmware("test")
     return HttpResponse(html_body.render())
 
 

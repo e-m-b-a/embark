@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from .boundedExecutor import boundedExecutor
+from . import boundedExecutor
 
 
 class test_boundedExecutor(TestCase):

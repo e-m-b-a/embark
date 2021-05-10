@@ -3,6 +3,8 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from subprocess import Popen
 from threading import BoundedSemaphore
 
+from django.conf import settings
+
 
 class boundedExecutor:
     """
@@ -20,7 +22,7 @@ class boundedExecutor:
 
         # emba directories
         self.emba_script_location = "/app/emba/emba.sh"
-        self.emba_log_location = "/app/emba/log_%s"
+        self.emba_log_location = "/app/emba/log_{}"
 
     """
         run shell commands from python script as subprocess, waits for termination and evaluates returncode
@@ -31,6 +33,8 @@ class boundedExecutor:
     """
 
     def run_shell_cmd(self, cmd):
+
+        logging.info(cmd)
 
         # TODO emba.log analyzer needs to be started
         emba_process = Popen(cmd, shell=True)
@@ -71,16 +75,15 @@ class boundedExecutor:
     def submit_firmware(self, firmware):
 
         # TODO extract information from parameter / define proper interface
-        image_file_location = 0
-        image_file_name = "img"
-        log_file_location = 0
+        image_file_name = "DIR300B5_FW214WWB01.bin"
+        image_file_location = settings.MEDIA_ROOT + image_file_name
 
         # evaluate meta information
-        real_emba_log_location = (self.emba_log_location, image_file_name)
-        emba_flags = "-D -i -g -s -z -W"
+        real_emba_log_location = self.emba_log_location.format(image_file_name)
+        emba_flags = "-i -g -s -z -W"
 
         # build command
-        emba_cmd = ("%s -f %s -l %s %s", real_emba_log_location, image_file_location, log_file_location, emba_flags)
+        emba_cmd = "{} -f {} -l {} {}".format(self.emba_script_location, image_file_location, real_emba_log_location, emba_flags)
 
         # submit command to executorthreadpool
         emba_fut = self.executor.submit(self.run_shell_cmd, emba_cmd)
