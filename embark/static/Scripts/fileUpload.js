@@ -3,10 +3,23 @@ function dragOverHandler(ev) {
   ev.preventDefault();
 }
 
+/** This function binds file name to div. */
+function showFiles(fileData) {
+  try {
+    document.getElementById("uploadedFileNames").style.display = 'block';
+    document.querySelector(".fileText").innerHTML = fileData[0].name
+      
+  } catch (error) {
+    alert(error.message);
+  }
+  
+}
+
 /** This function saves the file to local directory. */
 /* fileData - Information of the uploaded file or Files*/
-async function saveFiles(fileData) {
+async function saveFiles() {
   try {
+      var fileData = document.getElementById('file-input').files;
     var formData = new FormData()
     for (let index = 0; index < fileData.length; index++) {
       formData.append('file', fileData[index]);
@@ -33,6 +46,7 @@ async function saveFiles(fileData) {
       contentType: false,
       success: function (data) {
         alert("" + data);
+        document.getElementById("uploadedFileNames").style.display = 'none';
       }
     });
   } catch (error) {
@@ -40,8 +54,11 @@ async function saveFiles(fileData) {
   }
 }
 
+
 function saveDataFields() {
   try {
+
+    var form = document.getElementById('form');
     var x = document.forms["dataFields"]["version"].value;
     if (x == "") {
       alert("Enter the version");

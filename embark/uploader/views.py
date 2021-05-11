@@ -15,7 +15,7 @@ from django.core.files.storage import FileSystemStorage
 # home page test view TODO: change name accordingly
 from .unpacker import unpacker
 
-
+@csrf_exempt
 def home(request):
     html_body = get_template('uploader/home.html')
     return HttpResponse(html_body.render())

@@ -104,7 +104,7 @@ input:checked+.slider:before {
     justify-content: center;
 }
 
-.subText {
+.subText,.fileText {
     font-size: medium;
     justify-content: center;
 }
@@ -117,4 +117,8 @@ input:checked+.slider:before {
 
 .uploadIcon {
     padding: 40%;
+}
+/*Uploaded Files*/
+#uploadedFileNames{
+    display: none;
 }
