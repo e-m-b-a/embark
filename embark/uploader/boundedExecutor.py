@@ -1,4 +1,5 @@
 import logging
+import subprocess
 from concurrent.futures.thread import ThreadPoolExecutor
 from subprocess import Popen
 from threading import BoundedSemaphore
@@ -26,41 +27,39 @@ class boundedExecutor:
 
     """
         run shell commands from python script as subprocess, waits for termination and evaluates returncode
-        
+
         :param cmd: shell command to be executed
-        
-        :return: 
+
+        :return:
     """
 
     def run_shell_cmd(self, cmd):
 
         logging.info(cmd)
 
-        # TODO emba.log analyzer needs to be started
-        emba_process = Popen(cmd, shell=True)
-        emba_process.wait()
+        # get return code to evaluate: 0 = success, 1 = failure,
+        # see emba.sh for further information
+        try:
+            # run emba_process and wait for completion
 
-        # get return code to evaluate: 0 = display help, 1 = failure
-        # TODO: propagate returncode to frontend
-        if emba_process.returncode == 0:
-            # display help
-            print("display help")
-            pass
-        elif emba_process.returncode == 1:
-            # error occured consult log
-            print("error occured consult log")
-            pass
-        else:
-            # dunno
-            print("dunno")
-            pass
+            # TODO emba.log need to be informed
+            emba_process = subprocess.run(cmd, shell=True, check=True)
+
+            # success
+            logging.info("cmd run successful")
+            logging.info(emba_process.returncode)
+            # TODO: inform asgi to propagate success to frontend
+
+        except Exception as ex:
+            logging.error("{0}".format(ex))
+            # TODO: inform asgi to propagate error to frontend
 
     """
         run_shell_cmd but elevated
 
         :param cmd: shell command to be executed elevated
 
-        :return: 
+        :return:
     """
     def run_shell_cmd_elavated(self, cmd):
         self.run_shell_cmd("sudo" + cmd)
@@ -75,22 +74,20 @@ class boundedExecutor:
     def submit_firmware(self, firmware):
 
         # TODO extract information from parameter / define proper interface
-        image_file_name = "DIR300B5_FW214WWB01.bin"
-        image_file_location = settings.MEDIA_ROOT + image_file_name
+        image_file_name = "/DIR300B5_FW214WWB01.bin"
+        # image_file_location = settings.MEDIA_ROOT + image_file_name
+        image_file_location = "/app/firmware" + image_file_name
 
         # evaluate meta information
-        real_emba_log_location = self.emba_log_location.format(image_file_name)
-        emba_flags = "-i -g -s -z -W"
+        real_emba_log_location = self.emba_log_location.format("1")
+        emba_flags = "-t -g -s -z -W"
 
         # build command
-        emba_cmd = "{} -f {} -l {} {}".format(self.emba_script_location, image_file_location, real_emba_log_location, emba_flags)
+        emba_cmd = "{0} -f {1} -l {2} {3}".format(self.emba_script_location, image_file_location,
+                                                  real_emba_log_location, emba_flags)
 
-        # submit command to executorthreadpool
+        # submit command to executor threadpool
         emba_fut = self.executor.submit(self.run_shell_cmd, emba_cmd)
-
-        if not emba_fut:
-            # TODO handle full queue / where handle full queue
-            return emba_fut
 
         return emba_fut
 
@@ -98,7 +95,7 @@ class boundedExecutor:
         same as concurrent.futures.Executor#submit, but with queue
 
         params: see concurrent.futures.Executor#submit
-        
+
         return: future on success, None on full queue
     """
 

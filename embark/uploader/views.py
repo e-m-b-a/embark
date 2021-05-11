@@ -28,11 +28,13 @@ def about(request):
     return HttpResponse(html_body.render())
 
 
-# additional page test view TODO: change name accordingly
+# TODO: have the right trigger, this is just for testing purpose
 def start(request):
     html_body = get_template('uploader/about.html')
-    boundedExecutor.submit_firmware("test")
-    return HttpResponse(html_body.render())
+    if boundedExecutor.submit_firmware("test"):
+        return HttpResponse(html_body.render())
+    else:
+        return HttpResponse("queue full")
 
 
 # Function which renders the uploader html
