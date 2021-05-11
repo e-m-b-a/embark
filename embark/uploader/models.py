@@ -32,31 +32,31 @@ class Firmware(models.Model):
         path = f"{self.id}/{self.title}"
         command = f"{path}"
         if self.version:
-            command = command + "-X" + str([self.version])
+            command = command + " -X " + str([self.version])
         if self.vendor:
-            command = command + "-Y" + str([self.vendor])
+            command = command + " -Y " + str([self.vendor])
         if self.device:
-            command = command + "-Z" + str([self.device])
+            command = command + " -Z " + str([self.device])
         if self.notes:
-            command = command + "-N" + str([self.notes])
+            command = command + " -N " + str([self.notes])
         if self.firmware_Architecture:
-            command = command + "-a" + str([self.firmware_Architecture])
+            command = command + " -a " + str([self.firmware_Architecture])
         if self.cwe_checker:
             command = command + " -c"
         if self.docker_container:
-            command = command + "-D"
+            command = command + " -D"
         if self.deep_extraction:
-            command = command + "-x"
+            command = command + " -x"
         if self.log_path:
-            command = command + "-i"
+            command = command + " -i"
         if self.grep_able_log:
-            command = command + "-g"
+            command = command + " -g"
         if self.relative_paths:
-            command = command + "-s"
+            command = command + " -s"
         if self.ANSI_color:
-            command = command + "-z"
+            command = command + " -z"
         if self.web_reporter:
-            command = command + "-W"
+            command = command + " -W"
         if self.emulation_test:
-            command = command + "-E"
+            command = command + " -E"
     return command
