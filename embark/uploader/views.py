@@ -13,6 +13,7 @@ from django.core.files.storage import FileSystemStorage
 
 
 # home page test view TODO: change name accordingly
+from . import boundedExecutor
 from .unpacker import unpacker
 
 
@@ -25,6 +26,15 @@ def home(request):
 def about(request):
     html_body = get_template('uploader/about.html')
     return HttpResponse(html_body.render())
+
+
+# TODO: have the right trigger, this is just for testing purpose
+def start(request):
+    html_body = get_template('uploader/about.html')
+    if boundedExecutor.submit_firmware("test"):
+        return HttpResponse(html_body.render())
+    else:
+        return HttpResponse("queue full")
 
 
 # Function which renders the uploader html
