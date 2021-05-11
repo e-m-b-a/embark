@@ -59,4 +59,5 @@ class Firmware(models.Model):
             command = command + " -W"
         if self.emulation_test:
             command = command + " -E"
+        command = command + " -t" #running emba
     return command
