@@ -14,14 +14,14 @@ class Role(ChoiceIntEnum):
 
 
 class Team(models.Model):
-    name = models.CharField(max_length=150, unique=True)
+    name = models.CharField(max_length=150, unique=True, help_text='Name of the team')
     is_active = models.BooleanField(
         default=True,
         help_text='Whether this Team is active or not'
         ,
     )
-    created = models.DateTimeField(auto_now_add=True)
-    modified = models.DateTimeField(auto_now=True)
+    created = models.DateTimeField(auto_now_add=True, help_text='Date time when this entry was created')
+    modified = models.DateTimeField(auto_now=True, help_text='Date time when this entry was modified')
 
 
 class User(AbstractUser):
@@ -31,8 +31,8 @@ class User(AbstractUser):
                   'Unselect this instead of deleting accounts.'
         ,
     )
-    created = models.DateTimeField(auto_now_add=True)
-    modified = models.DateTimeField(auto_now=True)
+    created = models.DateTimeField(auto_now_add=True, help_text='Date time when this entry was created')
+    modified = models.DateTimeField(auto_now=True, help_text='Date time when this entry was modified')
 
 
 class TeamMember(models.Model):
@@ -44,5 +44,5 @@ class TeamMember(models.Model):
         help_text='Whether this team member is active or not'
         ,
     )
-    created = models.DateTimeField(auto_now_add=True)
-    modified = models.DateTimeField(auto_now=True)
+    created = models.DateTimeField(auto_now_add=True, help_text='Date time when this entry was created')
+    modified = models.DateTimeField(auto_now=True, help_text='Date time when this entry was modified')

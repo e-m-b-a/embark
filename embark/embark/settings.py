@@ -109,6 +109,45 @@ if 'test' in sys.argv:
     }
 
 
+LOG_LEVEL = os.environ.get('DJANGO_LOG_LEVEL', 'DEBUG').upper()
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'console': {
+            'format': '%(name)-12s %(levelname)-8s %(message)s',
+            'datefmt': "%Y-%m-%d %H:%M:%S"
+        },
+        'file': {
+            'format': '%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+             'datefmt': "%Y-%m-%d %H:%M:%S"
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'console'
+        },
+        'file': {
+            'level': LOG_LEVEL,
+            'class': 'logging.FileHandler',
+            'formatter': 'file',
+            'filename': os.path.join(BASE_DIR + '/logs/web.log'),
+        }
+    },
+    'loggers': {
+        'web': {
+            'level': LOG_LEVEL,
+            'handlers': ['file'],
+            'class': 'logging.handlers.RotatingFileHandler',
+            'maxBytes': 1024 * 1024 * 10,  # 10 MB
+            'backupCount': 2,
+        },
+    }
+}
+
+
+
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
 
