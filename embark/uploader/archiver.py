@@ -5,7 +5,7 @@ import re
 import shutil
 
 
-class unpacker:
+class archiver:
     """
        Class unpacker
        This class use shutil function to unpack files
@@ -58,7 +58,6 @@ class unpacker:
         # alternative if single files be zipped:
         # with tarfile
 
-
     @staticmethod
     def unpack(file_location, extract_dir=None):
         """
@@ -95,5 +94,3 @@ class unpacker:
         """
 
         return [name for (name, extensions, description) in shutil.get_unpack_formats()]
-
-

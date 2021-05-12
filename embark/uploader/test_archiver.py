@@ -3,19 +3,19 @@ import shutil
 
 from django.test import TestCase
 
-from .unpacker import unpacker
+from .archiver import archiver
 import unittest as ut
 
 
 class unpacker_test(TestCase):
 
     def setUp(self):
-        self.unpacker = unpacker
+        self.archiver = archiver
 
     def test_supported_formats(self):
         expected_formats = ["zip", "tar", "gztar"]
 
-        supported_formats = self.unpacker.get_supported_formats()
+        supported_formats = self.archiver.get_supported_formats()
 
         for expected_format in expected_formats:
             assert supported_formats.__contains__(expected_format)
@@ -30,7 +30,7 @@ class unpacker_test(TestCase):
 
         # check for error
         with self.assertRaises(ValueError):
-            self.unpacker.unpack(f.name)
+            self.archiver.unpack(f.name)
 
         # delete file
         os.remove(archive_name)
@@ -46,14 +46,14 @@ class unpacker_test(TestCase):
             log_file = open(folder_name + "/" + log_name, "a")
             log_file.close()
 
-        unpacker.pack(folder_name, 'zip', folder_name, '.')
+        archiver.pack(folder_name, 'zip', folder_name, '.')
 
         for log_name in log_names:
             os.remove(folder_name + "/" + log_name)
         os.rmdir(folder_name)
 
         # unzip archive and assert existance of file
-        self.assertTrue(self.unpacker.unpack("./archive.zip"))
+        self.assertTrue(self.archiver.unpack("./archive.zip"))
         for log_name in log_names:
             self.assertTrue(os.path.isfile(log_name))
 

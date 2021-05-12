@@ -14,7 +14,7 @@ from django.core.files.storage import FileSystemStorage
 
 # home page test view TODO: change name accordingly
 from . import boundedExecutor
-from .unpacker import unpacker
+from .archiver import archiver
 
 
 def home(request):
@@ -55,7 +55,7 @@ def save_file(request):
         try:
             real_filename = fs.save(file.name, file)
 
-            unpacker.unpack(os.path.join(settings.MEDIA_ROOT, real_filename), settings.MEDIA_ROOT)
+            archiver.unpack(os.path.join(settings.MEDIA_ROOT, real_filename), settings.MEDIA_ROOT)
             fs.delete(file.name)
 
             return HttpResponse("Firmwares has been successfully saved")
