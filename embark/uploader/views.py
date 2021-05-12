@@ -46,7 +46,7 @@ def save_file(request):
         return HttpResponse("Firmwares has been successfully saved")
     except Exception as error:
         return HttpResponse("Firware Couldn't be uploaded")
-
+    
     fs = FileSystemStorage()
     for file in request.FILES.getlist('file'):
         try:
@@ -63,3 +63,12 @@ def save_file(request):
 
         except Exception as error:
             return HttpResponse("Firmware could not be uploaded")
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def save_metadata(request):
+    try:
+        data = request.POST
+        print(data)
+    except Exception as error:
+        return HttpResponse("Something went wrong when updating metadata")
