@@ -5,6 +5,7 @@ from . import views
 urlpatterns = [
     path('', views.home, name='embark-home'),
     path('about/', views.about, name='embark-about'),
+    path('start/', views.start, name='embark-start'),
     path('upload/', views.upload_file, name='embark-File'),
     path('upload/save_file', views.save_file, name='embark-FileSave'),
     path('upload/metadata', views.save_metadata, name='Saves metadata to table'),

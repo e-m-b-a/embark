@@ -3,19 +3,19 @@ import shutil
 
 from django.test import TestCase
 
-from .unpacker import unpacker
+from .archiver import archiver
 import unittest as ut
 
 
 class unpacker_test(TestCase):
 
     def setUp(self):
-        self.unpacker = unpacker
+        self.archiver = archiver
 
     def test_supported_formats(self):
         expected_formats = ["zip", "tar", "gztar"]
 
-        supported_formats = self.unpacker.get_supported_formats()
+        supported_formats = self.archiver.get_supported_formats()
 
         for expected_format in expected_formats:
             assert supported_formats.__contains__(expected_format)
@@ -30,7 +30,7 @@ class unpacker_test(TestCase):
 
         # check for error
         with self.assertRaises(ValueError):
-            self.unpacker.unpack(f.name)
+            self.archiver.unpack(f.name)
 
         # delete file
         os.remove(archive_name)
@@ -38,20 +38,26 @@ class unpacker_test(TestCase):
     def test_archive_file(self):
 
         folder_name = "./archive"
-        image_name = "img.bin"
+        log_names = ["log"+str(i)+".bin" for i in range(10)]
 
         # create archive
         os.mkdir(folder_name)
-        f = open(folder_name + "/" + image_name, "a")
-        f.close()
-        shutil.make_archive(folder_name, 'zip', folder_name)
-        os.remove(folder_name + "/" + image_name)
+        for log_name in log_names:
+            log_file = open(folder_name + "/" + log_name, "a")
+            log_file.close()
+
+        archiver.pack(folder_name, 'zip', folder_name, '.')
+
+        for log_name in log_names:
+            os.remove(folder_name + "/" + log_name)
         os.rmdir(folder_name)
 
         # unzip archive and assert existance of file
-        self.assertTrue(self.unpacker.unpack("./archive.zip"))
-        self.assertTrue(os.path.isfile("img.bin"))
+        self.assertTrue(self.archiver.unpack("./archive.zip"))
+        for log_name in log_names:
+            self.assertTrue(os.path.isfile(log_name))
 
         # cleanup
         os.remove("./archive.zip")
-        os.remove("img.bin")
+        for log_name in log_names:
+            os.remove(log_name)
