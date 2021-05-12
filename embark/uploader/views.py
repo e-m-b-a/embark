@@ -15,6 +15,7 @@ from django.core.files.storage import FileSystemStorage
 # home page test view TODO: change name accordingly
 from .unpacker import unpacker
 
+
 @csrf_exempt
 def home(request):
     html_body = get_template('uploader/home.html')
@@ -46,7 +47,7 @@ def save_file(request):
         return HttpResponse("Firmwares has been successfully saved")
     except Exception as error:
         return HttpResponse("Firware Couldn't be uploaded")
-    
+
     fs = FileSystemStorage()
     for file in request.FILES.getlist('file'):
         try:
@@ -63,6 +64,7 @@ def save_file(request):
 
         except Exception as error:
             return HttpResponse("Firmware could not be uploaded")
+
 
 @csrf_exempt
 @require_http_methods(["POST"])

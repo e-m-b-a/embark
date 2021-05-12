@@ -93,11 +93,11 @@ DATABASES = {
 }
 
 # For Test Environment we're going to use sqlite3 to speed up the test
-# if 'test' in sys.argv:
-PASSWORD_HASHERS = (
-    'django.contrib.auth.hashers.MD5PasswordHasher',
+if 'test' in sys.argv:
+    PASSWORD_HASHERS = (
+        'django.contrib.auth.hashers.MD5PasswordHasher',
     )
-    # DEBUG = False
+DEBUG = False
 DATABASES = dict()
 DATABASES['default'] = {
     'ENGINE': 'django.db.backends.sqlite3',
@@ -148,9 +148,11 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 
+
 # Added for FIle storage to get the path to save Firmware images.
-MEDIA_ROOT = os.path.join( 'uploadedFirmwareImages')  # media directory in the root directory
+MEDIA_ROOT = os.path.join('uploadedFirmwareImages') # media directory in the root directory
 MEDIA_URL = '/uploadedFirmwareImages/'
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
