@@ -66,11 +66,11 @@ def save_file(request):
             return HttpResponse("Firmware could not be uploaded")
 
 
-@csrf_exempt
-@require_http_methods(["POST"])
-def save_metadata(request):
-    try:
-        data = request.POST
-        print(data)
-    except Exception as error:
-        return HttpResponse("Something went wrong when updating metadata")
+# @csrf_exempt
+# @require_http_methods(["POST"])
+# def save_metadata(request):
+#     try:
+#         data = request.POST
+#         print(data)
+#     except Exception as error:
+#         return HttpResponse("Something went wrong when updating metadata")

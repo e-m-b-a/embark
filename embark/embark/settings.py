@@ -103,7 +103,7 @@ DATABASES['default'] = {
     'ENGINE': 'django.db.backends.sqlite3',
     'NAME': str(BASE_DIR / 'test_db.sqlite3'),
     'CONN_MAX_AGE': 60
-    }
+}
 
 
 # Password validation
@@ -150,7 +150,7 @@ STATICFILES_DIRS = [
 
 
 # Added for FIle storage to get the path to save Firmware images.
-MEDIA_ROOT = os.path.join('uploadedFirmwareImages') # media directory in the root directory
+MEDIA_ROOT = os.path.join('uploadedFirmwareImages')  # media directory in the root directory
 MEDIA_URL = '/uploadedFirmwareImages/'
 
 
