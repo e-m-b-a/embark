@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
-from embark.lib.choice_enum import ChoiceIntEnum
+from lib.choice_enum import ChoiceIntEnum
 import enum
 
 

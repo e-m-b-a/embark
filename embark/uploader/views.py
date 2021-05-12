@@ -1,5 +1,5 @@
 import os
-import sys
+import json
 
 from django.conf import settings
 from django.template.loader import get_template
@@ -72,7 +72,7 @@ def save_file(request):
 @require_http_methods(["POST"])
 def save_metadata(request):
     try:
-        data = request.POST
+        data = json.loads(request.body.decode(encoding='UTF-8'))
         print(data)
     except Exception as error:
         return HttpResponse("Something went wrong when updating metadata")

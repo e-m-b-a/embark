@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'uploader',
-    'user'
+    'users'
 ]
 
 AUTH_USER_MODEL = 'users.User'
@@ -132,7 +132,7 @@ LOGGING = {
             'level': LOG_LEVEL,
             'class': 'logging.FileHandler',
             'formatter': 'file',
-            'filename': os.path.join(BASE_DIR + '/logs/web.log'),
+            'filename': str(BASE_DIR / 'logs/web.log'),
         }
     },
     'loggers': {

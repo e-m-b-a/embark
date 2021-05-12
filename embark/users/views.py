@@ -1,4 +1,5 @@
 import logging
+import json
 
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -6,7 +7,7 @@ from django.views.decorators.http import require_http_methods
 
 from django.contrib.auth import authenticate, login
 
-from embark.users.models import User
+from users.models import User
 
 logger = logging.getLogger('web')
 
@@ -15,9 +16,10 @@ logger = logging.getLogger('web')
 @require_http_methods(["POST"])
 def signin(request):
     try:
+        body = json.loads(request.body.decode(encoding='UTF-8'))
         try:
-            username = request.POST['email']
-            password = request.POST['password']
+            username = body['email']
+            password = body['password']
         except KeyError:
             logger.exception('Missing keys from data- Username and password')
             return HttpResponse("User data is invalid")
@@ -40,10 +42,11 @@ def signin(request):
 @require_http_methods(["POST"])
 def signup(request):
     try:
+        body = json.loads(request.body.decode(encoding='UTF-8'))
         try:
-            username = request.POST['email']
-            password = request.POST['password']
-            confirm_password = request.POST['confirm_password']
+            username = body['email']
+            password = body['password']
+            confirm_password = body['confirm_password']
         except KeyError:
             logger.exception('Missing keys from data- Username, password and confirm_password')
             return HttpResponse("User data is invalid")
