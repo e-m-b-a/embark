@@ -80,7 +80,7 @@ class boundedExecutor:
 
         # evaluate meta information
         real_emba_log_location = self.emba_log_location.format("1")
-        emba_flags = "-t -g -s -z -W"
+        emba_flags = "-t -g -s -z -W -F"
 
         # build command
         emba_cmd = "{0} -f {1} -l {2} {3}".format(self.emba_script_location, image_file_location,

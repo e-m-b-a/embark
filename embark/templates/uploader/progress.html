@@ -31,6 +31,8 @@
 
     <!-- jQuery Script -->
     <script>
+
+        // example for websocket setup in frontent TODO: remove the whole file later
         const socket = new WebSocket(
             'ws://'
             + '127.0.0.1:8001'
@@ -42,7 +44,6 @@
         };
 
         socket.onmessage = function (event){
-            console.log("HELLO")
             var data = JSON.parse(event.data);
             console.log(data);
             //document.querySelector('#app').innerText = data.message;

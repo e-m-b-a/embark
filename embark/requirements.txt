@@ -6,7 +6,6 @@ pycodestyle
 channels
 rx
 daphne
-Twisted[tls,http2]
 inotify_simple
 inotify-simple
 hypercorn
