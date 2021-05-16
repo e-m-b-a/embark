@@ -8,24 +8,29 @@ function showFiles(fileData) {
   try {
     document.getElementById("uploadedFileNames").style.display = 'block';
     document.querySelector(".fileText").innerHTML = fileData[0].name
-      
+
   } catch (error) {
     alert(error.message);
   }
-  
+
 }
 
 /** This function saves the file to local directory. */
 /* fileData - Information of the uploaded file or Files*/
 async function saveFiles() {
   try {
-      var fileData = document.getElementById('file-input').files;
+    var fileData = document.getElementById('file-input').files;
     var formData = new FormData()
     for (let index = 0; index < fileData.length; index++) {
       formData.append('file', fileData[index]);
     }
     formData.append('file', fileData);
     $.ajax({
+      type: 'POST',
+      url: 'upload/save_file',
+      data: formData,
+      processData: false,
+      contentType: false,
       xhr: function () {
         var xhr = new window.XMLHttpRequest();
 
@@ -39,11 +44,6 @@ async function saveFiles() {
         });
         return xhr;
       },
-      type: 'POST',
-      url: 'upload/save_file',
-      data: formData,
-      processData: false,
-      contentType: false,
       success: function (data) {
         alert("" + data);
         document.getElementById("uploadedFileNames").style.display = 'none';
@@ -54,15 +54,11 @@ async function saveFiles() {
   }
 }
 
-
 function saveDataFields() {
   try {
-
-    var form = document.getElementById('form');
-    var x = document.forms["dataFields"]["version"].value;
-    if (x == "") {
-      alert("Enter the version");
-    }
+    var docln = document.getElementById('firmwareDataForm').elements.length;
+    console.log(docln)
+    alert("form data saved successfully");
   } catch (error) {
     alert(error.message);
   }

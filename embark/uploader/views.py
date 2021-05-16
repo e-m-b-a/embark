@@ -15,6 +15,7 @@ from django.core.files.storage import FileSystemStorage
 # home page test view TODO: change name accordingly
 from .unpacker import unpacker
 
+
 @csrf_exempt
 def home(request):
     html_body = get_template('uploader/home.html')
@@ -68,3 +69,13 @@ def save_file(request):
 
         except Exception as error:
             return HttpResponse("Firmware could not be uploaded")
+
+
+# @csrf_exempt
+# @require_http_methods(["POST"])
+# def save_metadata(request):
+#     try:
+#         data = request.POST
+#         print(data)
+#     except Exception as error:
+#         return HttpResponse("Something went wrong when updating metadata")
