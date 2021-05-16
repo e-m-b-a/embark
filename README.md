@@ -21,7 +21,8 @@ Furthermore *Embark* is improves the data provision by aggregating the various *
 ## Setup
 1. Change directory to root of the repository i.e `amos-ss2021-emba-service`
 2. Clone original `emba` repository (`git clone https://github.com/e-m-b-a/emba.git`)
-3. Setup docker containers(See docker instructions)
+3. Run `./emba/installer.sh -F` to force install all the dependencies on host. This enables functionalities like CVE Search.  
+4. Setup docker containers(See docker instructions)
 
 
 ## Docker
