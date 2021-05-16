@@ -122,3 +122,6 @@ input:checked+.slider:before {
 #uploadedFileNames{
     display: none;
 }
+.statusTile{
+    background-color: #3296B9;
+}
