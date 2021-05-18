@@ -83,7 +83,7 @@ You should get a response like this:
 ### Updating code
 Whenever you change any code in `embark`(django project). You will have to make it live. Since all our code is mounted through compose.
 Developers just need to run the following command -  
-`docker-compose restart`
+`docker-compose restart emba`
 
 
 ### Exec inside the containers
