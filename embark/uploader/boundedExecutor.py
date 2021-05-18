@@ -61,6 +61,7 @@ class boundedExecutor:
 
         :return:
     """
+
     def run_shell_cmd_elavated(self, cmd):
         self.run_shell_cmd("sudo" + cmd)
 
@@ -71,6 +72,7 @@ class boundedExecutor:
 
         return: emba process future on success, None on failure
     """
+
     def submit_firmware(self, firmware):
 
         # TODO extract information from parameter / define proper interface
