@@ -51,7 +51,7 @@ When prompted for a password enter the value in `MYSQL_ROOT_PASSWORD`
 `Create database <value in DATABASE_NAME>`
 
 5. Restart your containers. This additional step is neccessary since there is no dependency between the containers. And django would try to connect to DB not there yet and fail.  
-`docker-compose restart`
+`docker-compose restart emba`
 
 6. Exec into your emba-django container  
 `docker exec -it amos-ss2021-emba-service_emba_1 bash`
