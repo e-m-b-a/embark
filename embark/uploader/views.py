@@ -39,6 +39,11 @@ def upload_file(request):
     html_body = get_template('uploader/fileUpload.html')
     return HttpResponse(html_body.render())
 
+@csrf_exempt
+def serviceDashboard(request):
+    html_body = get_template('uploader/embaServiceDashboard.html')
+    return HttpResponse(html_body.render())
+
 
 # Function which saves the file .
 # request - Post request
