@@ -1,3 +1,20 @@
-<div class="container-fluid">
-
+ {% load static %}
+ <link rel="stylesheet" type="text/css" href="{% static 'content/css/login.css' %}">
+ <div class="container-fluid">
+    <div class="login-form-container">
+        <div class="login">
+            <form action="#" class="login-form">
+            <h2 class="title">Sign in</h2>
+            <div class="input-field">
+                <i class="fa fa-user"></i>
+                <input type="text" placeholder="Username" />
+            </div>
+            <div class="input-field">
+                <i class="fa fa-lock"></i>
+                <input type="text" placeholder="Username" />
+            </div>
+            <input type="submit" class="btn solid" value="Login" />
+            </form> 
+        </div>
+    </div>
 </div>

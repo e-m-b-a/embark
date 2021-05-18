@@ -54,7 +54,8 @@ async function saveFiles() {
   }
 }
 
-function saveDataFields() {
+function saveDataFields(e) {
+  e.preventDefault();
   try {
     var docln = document.getElementById('firmwareDataForm').elements.length;
     console.log(docln)
