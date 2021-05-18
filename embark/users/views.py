@@ -35,6 +35,7 @@ def signin(request):
             logger.debug(f'User could not be authenticated')
             return HttpResponse("User data is invalid")
     except Exception as error:
+        logger.exception('Wide exception in Signup')
         return HttpResponse("Something went wrong when logging the user in")
 
 
@@ -68,7 +69,8 @@ def signup(request):
             return HttpResponse("Signup complete. User Logged in")
         else:
             return HttpResponse("Invalid signup data")
-    except Exception as error:
+    except Exception as e:
+        logger.exception('Wide exception in Signup')
         return HttpResponse("Something went wrong when signing up the user")
 
 
