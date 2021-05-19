@@ -12,7 +12,6 @@ function showFiles(fileData) {
   } catch (error) {
     alert(error.message);
   }
-
 }
 
 /** This function saves the file to local directory. */
@@ -27,7 +26,7 @@ async function saveFiles() {
     formData.append('file', fileData);
     $.ajax({
       type: 'POST',
-      url: 'upload/save_file',
+      url: 'home/upload/save_file',
       data: formData,
       processData: false,
       contentType: false,
