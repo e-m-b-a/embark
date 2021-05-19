@@ -1,6 +1,11 @@
 from django.db import models
+from django import forms
 
-from . import forms
+
+class BooleanFieldExpertModeForm(forms.BooleanField):
+    def __init__(self, input_formats=None, *args, **kwargs):
+        self.expert_mode = kwargs.pop('expert_mode', True)
+        super(BooleanFieldExpertModeForm, self).__init__(*args, **kwargs)
 
 
 class BooleanFieldExpertMode(models.BooleanField):
@@ -9,7 +14,7 @@ class BooleanFieldExpertMode(models.BooleanField):
         super(BooleanFieldExpertMode, self).__init__(*args, **kwargs)
 
     def formfield(self, **kwargs):
-        defaults = {'form_class': forms.BooleanFieldExpertMode}
+        defaults = {'form_class': BooleanFieldExpertModeForm}
         defaults.update(kwargs)
         return models.Field.formfield(self, **defaults)
 

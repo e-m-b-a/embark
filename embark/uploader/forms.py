@@ -4,13 +4,7 @@ import django
 from django import forms, template
 from django.forms import CheckboxInput
 
-from . import models
-
-
-class BooleanFieldExpertMode(forms.BooleanField):
-    def __init__(self, input_formats=None, *args, **kwargs):
-        self.expert_mode = kwargs.pop('expert_mode', True)
-        super(BooleanFieldExpertMode, self).__init__(*args, **kwargs)
+from uploader import models
 
 
 class FirmwareForm(forms.ModelForm):
@@ -33,6 +27,6 @@ class FirmwareForm(forms.ModelForm):
             if isinstance(field.field.widget, django.forms.widgets.CheckboxInput):
                 field.field.widget.attrs['class'] = 'form-check-input active'
 
-            if isinstance(field.field, BooleanFieldExpertMode):
+            if isinstance(field.field, models.BooleanFieldExpertModeForm):
                 field.expert_mode = field.field.expert_mode
                 field.required = False
