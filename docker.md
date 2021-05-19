@@ -3,6 +3,8 @@
 
 **NOTE: If you are using docker desktop on a Mac or windows machine. Remove line `network_mode: host` from docker-compose.yml**
 
+**NOTE: If you are using docker desktop windows machine. The database host inside env would be `host.docker.internal`**
+
 **NOTE: For now our compose file is compatible with docker-compose version `1.27.x`. `1.28.x` and `1.29.x` are already available and by default you will end up with latest version unless you specify explicitly while installing. Please install version`1.27.x` untill we fix this**
 
 
@@ -33,7 +35,7 @@ We are not maintaining a central copy for now. Till then please main your own co
 DATABASE_NAME=<Name you are going to give your db>
 DATABASE_USER=root
 DATABASE_PASSWORD=<value of MYSQL_ROOT_PASSWORD>
-DATABASE_HOST=0.0.0.0
+DATABASE_HOST=0.0.0.0(or host.docker.internal for windows)
 DATABASE_PORT=3306
 MYSQL_ROOT_PASSWORD=<This should be set>
 ```
