@@ -1,0 +1,21 @@
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'content/css/login.css' %}">
+<script src="https://kit.fontawesome.com/67d45e2d15.js" crossorigin="anonymous"></script>
+<div class="container-fluid">
+    <div class="login-form-container">
+        <div class="login">
+            <form action="http://54.164.50.22:8000/signin" class="login-form">
+            <h2 class="title">Sign in</h2>
+            <div class="input-field">
+                <i class="fa fa-user"></i>
+                <input type="text" placeholder="Username" required/>
+            </div>
+            <div class="input-field">
+                <i class="fa fa-lock"></i>
+                <input type="password" placeholder="Password" required/>
+            </div>
+            <input type="submit" class="btn solid" value="Login" />
+            </form> 
+        </div>
+    </div>
+</div>
