@@ -27,6 +27,9 @@ class FirmwareForm(forms.ModelForm):
             if isinstance(field.field.widget, django.forms.widgets.CheckboxInput):
                 field.field.widget.attrs['class'] = 'form-check-input active'
 
-            if isinstance(field.field, models.BooleanFieldExpertModeForm):
+            print(field.field)
+
+            try:
                 field.expert_mode = field.field.expert_mode
-                field.required = False
+            except:
+                pass

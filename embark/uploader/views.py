@@ -73,10 +73,12 @@ def upload_file(request):
     form = FirmwareForm()
     return render(request, 'uploader/fileUpload.html', {'form': form})
 
+
 @csrf_exempt
 def serviceDashboard(request):
     html_body = get_template('uploader/embaServiceDashboard.html')
     return HttpResponse(html_body.render())
+
 
 # Function which saves the file .
 # request - Post request
@@ -100,6 +102,7 @@ def save_file(request):
 
         except Exception as error:
             return HttpResponse("Firmware could not be uploaded")
+
 
 def progress(request):
     return render(request, 'uploader/progress.html', context={'text': 'Hello World'})
