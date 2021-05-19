@@ -1,3 +1,4 @@
+
 <div class="row uploadRow">
     <div class="col-sm">
     <div class="row uploadIconRow">
@@ -24,97 +25,44 @@
     <div class="col-sm">
         <div class="row dataRow">
             <div class="col col-sm-8">
-                <form name="dataFields" onsubmit="return saveDataFields()"  method="post" id="firmwareDataForm">
-                    <div class="form-group">
-                        <label for="version">Firmware version</label>
-                        <input type="text" class="form-control txtField" id="version" placeholder="Firmware Version" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="vendor">Firmware vendor</label>
-                        <input type="text" class="form-control txtField" id="vendor" placeholder="Firmware vendor" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="device">Device</label>
-                        <input type="text" class="form-control txtField" id="device" placeholder="Device" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="notes">Testing notes</label>
-                        <input type="text" class="form-control txtField" id="notes" placeholder="Testing notes" required>
-                    </div>
+                <form action="/upload/" method="POST" id="post-form" >
 
-                    <!--Datafields for expert mode-->
-                    <div class="form-group">
-                        <label for="fwarchitecture">Select architecture of the linux firware</label>
-                        <select class="form-select" aria-label="firmware_architecture" required>
-                            <option selected value="1">MIPS</option>
-                            <option value="2">ARM</option>
-                            <option value="3">x86</option>
-                            <option value="4">x64</option>
-                            <option value="5">PPC</option>
-                        </select>
-                    </div>
+                    {% csrf_token %}
+                    {% load filters %}
+                    <!-- Iterate over all fields and set expmode on fields in expert mode -->
+                    {% for field in form %}
 
-                    <div id="expertOptions" style="display:none;">
-                        <div class="form-check">
-                            <input class="form-check-input active" type="checkbox" value="expmode" id="cweChecker" checked required>
-                            <label class="form-check-label" for="cweChecker">
-                            Enable CWE
-                            </label>
-                        </div>
+                        {% if field.expert_mode %}
+                            <div class="form-group" value="expmode" style="display:none;">
+                                {% if field.field.widget|is_checkbox %}
+                                    {{ field }}
+                                    {{ field.label_tag }}
+                                {% else %}
+                                    {{ field.label_tag }}
+                                    {{ field }}
+                                {% endif %}
+                                {% if field.help_text %}
+                                    <small class="form-text text-muted" value="help_text" style="display:none;">{{ field.help_text }}</small>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="form-group" >
+                                 {% if field.field.widget|is_checkbox %}
+                                    {{ field }}
+                                    {{ field.label_tag }}
+                                {% else %}
+                                    {{ field.label_tag }}
+                                    {{ field }}
+                                {% endif %}
+                                {% if field.help_text %}
+                                    <small class="form-text text-muted" value="help_text" style="display:none;">{{ field.help_text }}</small>
+                                {% endif %}
+                            </div>
+                        {% endif %}
 
-                        <div class="form-check">
-                            <input class="form-check-input active" type="checkbox" value="expmode" id="deepExtraction" checked required>
-                            <label class="form-check-label" for="deepExtraction">
-                            Deep Extraction
-                            </label>
-                        </div>
+                    {% endfor %}
 
-                        <div class="form-check">
-                            <input class="form-check-input active" type="checkbox" value="expmode" id="runInDOcker" checked  required>
-                            <label class="form-check-label" for="runInDOcker">
-                            Run EMBA in Docker Container
-                            </label>
-                        </div>
-
-                        <div class="form-check">
-                            <input class="form-check-input active" type="checkbox" value="expmode" id="logPathCheck" checked required>
-                            <label class="form-check-label" for="logPathCheck">
-                            Ignore Log Path Check
-                            </label>
-                        </div>
-
-                        <div class="form-check">
-                            <input class="form-check-input active" type="checkbox" value="expmode" id="logFile" checked required>
-                            <label class="form-check-label" for="logFile">
-                            Create grep-able Log File in [log_path]/fw_grep.log
-                            </label>
-                        </div>
-
-                        <div class="form-check">
-                            <input class="form-check-input active" type="checkbox" value="expmode" id="rlpath" checked required>
-                            <label class="form-check-label" for="rlpath">
-                            Print Only Relative Paths
-                            </label>
-                        </div>
-
-                        <div class="form-check">
-                            <input class="form-check-input active" type="checkbox" value="expmode" id="colorcode" checked required>
-                            <label class="form-check-label" for="colorcode">
-                            Add ANSI Color Codes to Log
-                            </label>
-                        </div>
-
-                        <div class="form-check">
-                            <input class="form-check-input active" type="checkbox" value="expmode" id="webReport" checked required>
-                            <label class="form-check-label" for="webReport">
-                            Web Reporter
-                            </label>
-                        </div>
-                        </div>
-
-                    <!--Todo: checkbox for E-->
-
-                    <button type="button submit" class="btn btn-light">Analyse</button>
+                    <button type="submit" class="btn btn-light">Analyse</button>
                     <button type="button" class="btn btn-danger">Cancel</button>
 
                 </form>
@@ -131,9 +79,22 @@
                                 <span class="slider round"></span>
                             </label>
                         </div>
+
+                        <div class="col-sm-7 togLbl">
+                            <label for="helpText">Display Help</label>
+                        </div>
+                        <div class="col-sm-5 togSwitch">
+                            <label class="switch">
+                                <input id="helpTextSwitch" type="checkbox" onclick="helpTextOn()">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script src="static/scripts/main.js"></script>
