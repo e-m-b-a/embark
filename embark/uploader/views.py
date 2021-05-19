@@ -1,3 +1,4 @@
+from django.shortcuts import render
 import os
 import json
 
@@ -66,13 +67,3 @@ def save_file(request):
 
         except Exception as error:
             return HttpResponse("Firmware could not be uploaded")
-
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def save_metadata(request):
-    try:
-        data = json.loads(request.body.decode(encoding='UTF-8'))
-        print(data)
-    except Exception as error:
-        return HttpResponse("Something went wrong when updating metadata")
