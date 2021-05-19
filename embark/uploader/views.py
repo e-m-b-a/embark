@@ -38,6 +38,7 @@ def about(request):
 def upload_file(request):
     html_body = get_template('uploader/fileUpload.html')
     return HttpResponse(html_body.render())
+ 
 
 @csrf_exempt
 def serviceDashboard(request):
