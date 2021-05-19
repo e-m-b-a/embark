@@ -98,13 +98,13 @@ if 'test' in sys.argv:
     PASSWORD_HASHERS = (
         'django.contrib.auth.hashers.MD5PasswordHasher',
     )
-# DEBUG = False
-DATABASES = dict()
-DATABASES['default'] = {
-    'ENGINE': 'django.db.backends.sqlite3',
-    'NAME': str(BASE_DIR / 'test_db.sqlite3'),
-    'CONN_MAX_AGE': 60
-}
+    # DEBUG = False
+    DATABASES = dict()
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': str(BASE_DIR / 'test_db.sqlite3'),
+        'CONN_MAX_AGE': 60
+    }
 
 LOG_LEVEL = os.environ.get('DJANGO_LOG_LEVEL', 'DEBUG').upper()
 LOGGING = {
