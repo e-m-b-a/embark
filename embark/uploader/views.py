@@ -18,6 +18,13 @@ from . import boundedExecutor
 from .archiver import archiver
 
 
+@csrf_exempt
+def login(request):
+    html_body = get_template('uploader/login.html')
+    return HttpResponse(html_body.render())
+
+
+@csrf_exempt
 def home(request):
     html_body = get_template('uploader/home.html')
     return HttpResponse(html_body.render())
@@ -45,6 +52,12 @@ def upload_file(request):
     return HttpResponse(html_body.render())
 
 
+@csrf_exempt
+def serviceDashboard(request):
+    html_body = get_template('uploader/embaServiceDashboard.html')
+    return HttpResponse(html_body.render())
+
+
 # Function which saves the file .
 # request - Post request
 @csrf_exempt
@@ -67,3 +80,8 @@ def save_file(request):
 
         except Exception as error:
             return HttpResponse("Firmware could not be uploaded")
+
+          
+def progress(request):
+    return render(request, 'uploader/progress.html', context={'text': 'Hello World'})
+

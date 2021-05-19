@@ -12,8 +12,9 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 
 	<!--Styling sheets-->
-	<link rel="stylesheet" type="text/css" href="{% static 'Content/CSS/home.css' %}">
-	<link rel="stylesheet" href="{% static 'Content/CSS/fileUpload.css' %}">
+	<link rel="stylesheet" type="text/css" href="{% static 'content/css/home.css' %}">
+	<link rel="stylesheet" type="text/css" href="{% static 'content/css/fileUpload.css' %}">
+	<link rel="stylesheet" type="text/css" href="{% static 'content/css/serviceDashboard.css' %}">
 
 	<!--script for fonts/icons-->
 	<script src="https://kit.fontawesome.com/67d45e2d15.js" crossorigin="anonymous"></script>
@@ -27,8 +28,9 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
 	<!--javascript files-->
-	<script src="{% static 'Scripts/main.js' %}"></script>
-	<script src="{% static 'Scripts/fileUpload.js' %}"></script>
+	<script src="https://www.w3schools.com/lib/w3.js"></script>
+	<script src="{% static 'scripts/main.js' %}"></script>
+	<script src="{% static 'scripts/fileUpload.js' %}"></script>
 
 </head>
 	<div class="container-fluid">
@@ -40,7 +42,7 @@
 					<ul>
 						<li>
 							<a class="active" href="#home" onclick="">
-								<span class="brandlogo"><img src="{% static 'Content/Images/Embark_red.png'%}" alt="embark" class="embarklogo"></span>
+								<span class="brandlogo"><img src="{% static 'content/images/Embark_red.png'%}" alt="embark" class="embarklogo"></span>
 								<span class="brandname"><h2>EMBArk</h2></span>
 							</a>
 						</li>
@@ -56,14 +58,8 @@
 								<span class="title">Uploader</span>
 							</a>
 						</li>
-						{% comment %} <li>
-							<a href="#details" onclick="fwdetails()">
-								<span class="icon"><i class="fas fa-file-alt" aria-hidden="true"></i></span>
-								<span class="title">Firmware Details</span>
-							</a>
-						</li> {% endcomment %}
 						<li>
-							<a href="#service" onclick="">
+							<a href="#service" onclick="loadServiceDasboard()">
 								<span class="icon"><i class="fas fa-binoculars" aria-hidden="true"></i></span>
 								<span class="title">Service</span>
 							</a>
@@ -85,7 +81,7 @@
 		<section class="section1" id="home">Home</section>
 		<section class="section2" id="dashboard">Dashboard</section>
 		<section class="section3" id="uploader">Uploader</section>
-		{% comment %} <section class "section4" id="details">Details</section>			 {% endcomment %}
+		{% comment %} <section class="section4" id="details">Details</section>			 {% endcomment %}
 		<section class="section5" id="service">Service</section>
 		<section class="section6" id="reports">Reports</section>
 	</div>

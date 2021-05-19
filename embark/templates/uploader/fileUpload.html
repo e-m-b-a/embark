@@ -1,20 +1,30 @@
-
 <div class="row uploadRow">
     <div class="col-sm">
-        <div id="fileDropDiv" ondrop="saveFiles(event.dataTransfer.items)" ondragover="dragOverHandler(event)" onchange="saveFiles(this.lastElementChild.files)">
+    <div class="row uploadIconRow">
+        <div id="fileDropDiv" ondrop="showFiles(event.dataTransfer.items)" ondragover="dragOverHandler(event)" onchange="showFiles(this.lastElementChild.files)">
             <p class="titleText">Upload a firmware image or archive</p>
             <p class="subText">Supported archive types : zip,tar,tar.gz</p>
             <label for="file-input">
                 <span class="uploadIcon"><i class="fas fa-cloud-upload-alt fileuploadIcon" aria-hidden="true"></i></span>
-                {% comment %} <img src="{% static 'Content/Images/fileUpload.jpg'%}"/> {% endcomment %}
+                {% comment %} <img src="{% static 'content/images/fileUpload.jpg'%}"/> {% endcomment %}
             </label>
             <input id="file-input" type="file" multiple/>
         </div>
     </div>
+        <div id="uploadedFileNames" class="row">
+            <p class="fileText"></p>
+        </div>
+        <div class="row uploadBtnRow">
+            <button type="submit" class="btn btn-light" onclick="saveFiles()">Save Firmware Image</button>
+        </div>
+        <div class="progress row" id="progress-wrapper">
+            <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+        </div> 
+    </div>
     <div class="col-sm">
         <div class="row dataRow">
             <div class="col col-sm-8">
-                <form name="dataFields" onsubmit="return saveDataFields()">
+                <form name="dataFields" onsubmit="return saveDataFields()"  method="post" id="firmwareDataForm">
                     <div class="form-group">
                         <label for="version">Firmware version</label>
                         <input type="text" class="form-control txtField" id="version" placeholder="Firmware Version" required>
