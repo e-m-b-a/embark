@@ -81,7 +81,6 @@ def save_file(request):
         except Exception as error:
             return HttpResponse("Firmware could not be uploaded")
 
-          
+     
 def progress(request):
     return render(request, 'uploader/progress.html', context={'text': 'Hello World'})
-
