@@ -97,7 +97,7 @@ if 'test' in sys.argv:
     PASSWORD_HASHERS = (
         'django.contrib.auth.hashers.MD5PasswordHasher',
     )
-#DEBUG = False
+# DEBUG = False
 DATABASES = dict()
 DATABASES['default'] = {
     'ENGINE': 'django.db.backends.sqlite3',
