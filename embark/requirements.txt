@@ -3,4 +3,11 @@ uWSGI
 ipython
 django-dotenv
 pycodestyle
+channels
+rx
+daphne
+inotify_simple
+inotify-simple
 mysqlclient
+pymongo
+mongoengine

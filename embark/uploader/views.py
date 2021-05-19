@@ -1,3 +1,4 @@
+from django.shortcuts import render
 import os
 import sys
 
@@ -13,7 +14,8 @@ from django.core.files.storage import FileSystemStorage
 
 
 # home page test view TODO: change name accordingly
-from .unpacker import unpacker
+from . import boundedExecutor
+from .archiver import archiver
 
 
 @csrf_exempt
@@ -34,6 +36,15 @@ def about(request):
     return HttpResponse(html_body.render())
 
 
+# TODO: have the right trigger, this is just for testing purpose
+def start(request):
+    html_body = get_template('uploader/about.html')
+    if boundedExecutor.submit_firmware("test"):
+        return HttpResponse(html_body.render())
+    else:
+        return HttpResponse("queue full")
+
+
 # Function which renders the uploader html
 @csrf_exempt
 def upload_file(request):
@@ -52,20 +63,13 @@ def serviceDashboard(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def save_file(request):
-    try:
-        fs = FileSystemStorage()
-        for file in request.FILES.getlist('file'):
-            fs.save(file.name, file)
-        return HttpResponse("Firmwares has been successfully saved")
-    except Exception as error:
-        return HttpResponse("Firware Couldn't be uploaded")
 
     fs = FileSystemStorage()
     for file in request.FILES.getlist('file'):
         try:
             real_filename = fs.save(file.name, file)
 
-            unpacker.unpack(os.path.join(settings.MEDIA_ROOT, real_filename), settings.MEDIA_ROOT)
+            archiver.unpack(os.path.join(settings.MEDIA_ROOT, real_filename), settings.MEDIA_ROOT)
             fs.delete(file.name)
 
             return HttpResponse("Firmwares has been successfully saved")
@@ -86,3 +90,6 @@ def save_file(request):
 #         print(data)
 #     except Exception as error:
 #         return HttpResponse("Something went wrong when updating metadata")
+# progress page
+def progress(request):
+    return render(request, 'uploader/progress.html', context={'text': 'Hello World'})
