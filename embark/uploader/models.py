@@ -1,5 +1,4 @@
 from django.db import models
-from mongoengine import Document
 
 
 class Firmware(models.Model):
@@ -60,4 +59,4 @@ class Firmware(models.Model):
         if self.emulation_test:
             command = command + " -E"
         command = command + " -t"  # running emba
-    return command
+        return command

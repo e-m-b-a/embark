@@ -1,6 +1,6 @@
 from django.shortcuts import render
 import os
-import sys
+import json
 
 from django.conf import settings
 from django.template.loader import get_template
@@ -82,14 +82,5 @@ def save_file(request):
             return HttpResponse("Firmware could not be uploaded")
 
 
-# @csrf_exempt
-# @require_http_methods(["POST"])
-# def save_metadata(request):
-#     try:
-#         data = request.POST
-#         print(data)
-#     except Exception as error:
-#         return HttpResponse("Something went wrong when updating metadata")
-# progress page
 def progress(request):
     return render(request, 'uploader/progress.html', context={'text': 'Hello World'})
