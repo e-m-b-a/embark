@@ -58,7 +58,7 @@ When prompted for a password enter the value in `MYSQL_ROOT_PASSWORD`
 
 7. Run migrations
 ```
-python3 manage.py makemigrations
+python3 manage.py makemigrations uploader users
 python3 manage.py migrate
 ```
 
