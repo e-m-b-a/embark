@@ -72,5 +72,3 @@ def signup(request):
     except Exception as e:
         logger.exception('Wide exception in Signup')
         return HttpResponse("Something went wrong when signing up the user")
-
-

@@ -14,7 +14,6 @@ from pathlib import Path
 import os
 import sys
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -30,7 +29,6 @@ SECRET_KEY = 'django-insecure-3vwtv++oulw75(9qch!ry4-0u38xqj=lw$!#u7#6$8nq%dkv51
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-
 
 # Application definition
 
@@ -108,7 +106,6 @@ if 'test' in sys.argv:
         'CONN_MAX_AGE': 60
     }
 
-
 LOG_LEVEL = os.environ.get('DJANGO_LOG_LEVEL', 'DEBUG').upper()
 LOGGING = {
     'version': 1,
@@ -120,7 +117,7 @@ LOGGING = {
         },
         'file': {
             'format': '%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-             'datefmt': "%Y-%m-%d %H:%M:%S"
+            'datefmt': "%Y-%m-%d %H:%M:%S"
         },
     },
     'handlers': {
@@ -146,8 +143,6 @@ LOGGING = {
     }
 }
 
-
-
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
 
@@ -166,7 +161,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
@@ -179,7 +173,6 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
