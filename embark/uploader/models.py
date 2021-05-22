@@ -1,5 +1,7 @@
+from django.conf import settings
 from django.db import models
 from django import forms
+from django.utils.datetime_safe import datetime
 
 
 class BooleanFieldExpertModeForm(forms.BooleanField):
@@ -36,29 +38,41 @@ class CharFieldExpertMode(models.CharField):
         return models.Field.formfield(self, **defaults)
 
 
+class FirmwareFile(models.Model):
+
+    MAX_LENGTH = 127
+
+    file_name = models.CharField(help_text='', blank=True, max_length=MAX_LENGTH)
+    upload_date = models.DateTimeField(default=datetime.now, blank=True)
+
+    def get_abs_path(self):
+        return "/app/embark/{0}/{1}".format(settings.MEDIA_ROOT, self.file_name)
+
+
 class Firmware(models.Model):
 
     MAX_LENGTH = 127
 
-    title = CharFieldExpertMode(help_text='', blank=True, max_length=MAX_LENGTH)
+    firmware = CharFieldExpertMode(help_text='', blank=False, max_length=MAX_LENGTH)
 
     version = CharFieldExpertMode(
         help_text='Firmware version (double quote your input)', verbose_name=u"Firmware version", max_length=MAX_LENGTH,
-        expert_mode=False)
+        blank=True, expert_mode=False)
     vendor = CharFieldExpertMode(
         help_text='Firmware vendor (double quote your input)', verbose_name=u"Firmware vendor", max_length=MAX_LENGTH,
-        expert_mode=False)
+        blank=True, expert_mode=False)
     device = CharFieldExpertMode(
-        help_text='Device (double quote your input)', verbose_name=u"Device", max_length=MAX_LENGTH, expert_mode=False)
+        help_text='Device (double quote your input)', verbose_name=u"Device", max_length=MAX_LENGTH, blank=True,
+        expert_mode=False,)
     notes = CharFieldExpertMode(
         help_text='Testing notes (double quote your input)', verbose_name=u"Testing notes", max_length=MAX_LENGTH,
-        expert_mode=True)
+        blank=True, expert_mode=True)
 
     firmware_Architecture = CharFieldExpertMode(
         choices=[('MIPS', 'MIPS'), ('ARM', 'ARM'), ('x86', 'x86'), ('x64', 'x64'), ('PPC', 'PPC')],
         verbose_name=u"Select architecture of the linux firmware",
         help_text='Architecture of the linux firmware [MIPS, ARM, x86, x64, PPC] -a will be added',
-        max_length=MAX_LENGTH, blank=True, expert_mode=True)
+        max_length=MAX_LENGTH, blank=True, expert_mode=False)
 
     cwe_checker = BooleanFieldExpertMode(
         help_text='Enables cwe-checker,-c will be added', default=False, expert_mode=True, blank=True)
@@ -72,15 +86,21 @@ class Firmware(models.Model):
         help_text='Create grep-able log file in [log_path]/fw_grep.log, -g will be added', default=True,
         expert_mode=True, blank=True)
     relative_paths = BooleanFieldExpertMode(
-        help_text='Prints only relative paths, -s will be added', default=False, expert_mode=True, blank=True)
+        help_text='Prints only relative paths, -s will be added', default=True, expert_mode=True, blank=True)
     ANSI_color = BooleanFieldExpertMode(
-        help_text='Adds ANSI color codes to log, -z will be added', default=False, expert_mode=True, blank=True)
+        help_text='Adds ANSI color codes to log, -z will be added', default=True, expert_mode=True, blank=True)
     web_reporter = BooleanFieldExpertMode(
         help_text='Activates web report creation in log path, -W will be added', default=True, expert_mode=True,
         blank=True)
     emulation_test = BooleanFieldExpertMode(
         help_text='Enables automated qemu emulation tests, -E will be added', default=False, expert_mode=True,
         blank=True)
+    dependency_check = BooleanFieldExpertMode(
+        help_text=' Checks dependencies but ignore errors, -F will be added', default=True, expert_mode=True,
+        blank=True)
+    multi_threaded = BooleanFieldExpertMode(
+        help_text='Activate multi threading (destroys regular console output), -t will be added', default=True,
+        expert_mode=True, blank=True)
 
     class Meta:
         app_label = 'uploader'
@@ -92,19 +112,22 @@ class Firmware(models.Model):
 
         :return:
     """
-    def to_shell(self):
-        path = f"{self.id}/{self.title}"
-        command = f"{path}"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def get_flags(self):
+        command = ""
         if self.version:
-            command = command + " -X " + str([self.version])
+            command = command + " -X " + str(self.version)
         if self.vendor:
-            command = command + " -Y " + str([self.vendor])
+            command = command + " -Y " + str(self.vendor)
         if self.device:
-            command = command + " -Z " + str([self.device])
+            command = command + " -Z " + str(self.device)
         if self.notes:
-            command = command + " -N " + str([self.notes])
+            command = command + " -N " + str(self.notes)
         if self.firmware_Architecture:
-            command = command + " -a " + str([self.firmware_Architecture])
+            command = command + " -a " + str(self.firmware_Architecture)
         if self.cwe_checker:
             command = command + " -c"
         if self.docker_container:
@@ -123,5 +146,9 @@ class Firmware(models.Model):
             command = command + " -W"
         if self.emulation_test:
             command = command + " -E"
-        command = command + " -t"  # running emba
+        if self.dependency_check:
+            command = command + " -F"
+        if self.multi_threaded:
+            command = command + " -t"
+        # running emba
         return command

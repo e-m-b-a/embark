@@ -73,20 +73,21 @@ class boundedExecutor:
         return: emba process future on success, None on failure
     """
 
-    def submit_firmware(self, firmware):
+    def submit_firmware(self, firmware_flags, firmware_file):
 
         # TODO extract information from parameter / define proper interface
-        image_file_name = "/DIR300B5_FW214WWB01.bin"
-        # image_file_location = settings.MEDIA_ROOT + image_file_name
-        image_file_location = "/app/firmware" + image_file_name
+        emba_flags = firmware_flags.get_flags()
+
+        image_file_location = firmware_file.get_abs_path()
 
         # evaluate meta information
         real_emba_log_location = self.emba_log_location.format("1")
-        emba_flags = "-t -g -s -z -W -F"
 
         # build command
         emba_cmd = "{0} -f {1} -l {2} {3}".format(self.emba_script_location, image_file_location,
                                                   real_emba_log_location, emba_flags)
+
+        print(emba_cmd)
 
         # submit command to executor threadpool
         emba_fut = self.executor.submit(self.run_shell_cmd, emba_cmd)

@@ -1,3 +1,4 @@
+from django import forms
 from django.shortcuts import render
 import os
 import json
@@ -21,6 +22,7 @@ from django.core.files.storage import FileSystemStorage
 from . import boundedExecutor
 from .archiver import archiver
 from .forms import FirmwareForm
+from .models import Firmware, FirmwareFile
 
 
 @csrf_exempt
@@ -61,15 +63,21 @@ def upload_file(request):
 
         if form.is_valid():
             logging.info("Posted Form is valid")
+            form.save()
 
-            title = form.cleaned_data['version']
-            logging.info(title)
-            # form.save()
-            return HttpResponse("Uploaded")
+            firmware_file = form.cleaned_data['firmware']
+            firmware_flags = Firmware.objects.latest('id')
+
+            if boundedExecutor.submit_firmware(firmware_flags=firmware_flags, firmware_file=firmware_file):
+                return HttpResponse("Success")
+            else:
+                return HttpResponse("queue full")
         else:
             logging.info("Posted Form is unvalid")
+            print(form.errors)
             return HttpResponse("Unvalid Form")
 
+    FirmwareForm.base_fields['firmware'] = forms.ModelChoiceField(queryset=FirmwareFile.objects) # .values_list('file_name')
     form = FirmwareForm()
     return render(request, 'uploader/fileUpload.html', {'form': form})
 
@@ -93,6 +101,9 @@ def save_file(request):
 
             archiver.unpack(os.path.join(settings.MEDIA_ROOT, real_filename), settings.MEDIA_ROOT)
             fs.delete(file.name)
+
+            ff = FirmwareFile(file_name=file.name.rsplit('.', 1)[0]+".*")
+            ff.save()
 
             return HttpResponse("Firmwares has been successfully saved")
 
