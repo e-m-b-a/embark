@@ -72,7 +72,7 @@ def upload_file(request):
 
             # inject into bounded Executor
             if boundedExecutor.submit_firmware(firmware_flags=firmware_flags, firmware_file=firmware_file):
-                return HttpResponse("Success")
+                return HttpResponseRedirect("../../home/#uploader")
             else:
                 return HttpResponse("queue full")
         else:

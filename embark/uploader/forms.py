@@ -16,7 +16,6 @@ class FirmwareForm(forms.ModelForm):
                   'docker_container', 'deep_extraction', 'log_path', 'grep_able_log', 'relative_paths', 'ANSI_color',
                   'web_reporter', 'emulation_test')
 
-
     def __init__(self, *args, **kwargs):
 
         super(FirmwareForm, self).__init__(*args, **kwargs)
