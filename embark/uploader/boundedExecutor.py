@@ -1,10 +1,12 @@
 import logging
+import shutil
 import subprocess
 from concurrent.futures.thread import ThreadPoolExecutor
-from subprocess import Popen
 from threading import BoundedSemaphore
 
 from django.conf import settings
+
+from uploader import archiver
 
 
 class boundedExecutor:
@@ -23,7 +25,6 @@ class boundedExecutor:
 
         # emba directories
         self.emba_script_location = "/app/emba/emba.sh"
-        self.emba_log_location = "/app/emba/log_{}"
 
     """
         run shell commands from python script as subprocess, waits for termination and evaluates returncode
@@ -42,12 +43,11 @@ class boundedExecutor:
         try:
             # run emba_process and wait for completion
 
-            # TODO emba.log need to be informed
-            emba_process = subprocess.run(cmd, shell=True, check=True)
+            # TODO: progress bar needs to be started
+            emba_process = subprocess.call(cmd, shell=True)
 
             # success
-            logging.info("cmd run successful")
-            logging.info(emba_process.returncode)
+            logging.info("Success: {0}".format(cmd))
             # TODO: inform asgi to propagate success to frontend
 
         except Exception as ex:
@@ -75,22 +75,27 @@ class boundedExecutor:
 
     def submit_firmware(self, firmware_flags, firmware_file):
 
-        # TODO extract information from parameter / define proper interface
+        # unpack firmware file to </app/embark/uploadedFirmwareImages/active_{ID}/>
+        active_analyzer_dir = "/app/embark/{0}/active_{1}/".format(settings.MEDIA_ROOT, firmware_flags.id)
+        archiver.unpack(firmware_file.file.path, active_analyzer_dir)
+
+        # get emba flags from command parser
         emba_flags = firmware_flags.get_flags()
 
-        image_file_location = firmware_file.get_abs_path()
+        # TODO: Maybe check if file or dir
+        image_file_location = "{0}*".format(active_analyzer_dir)
 
         # evaluate meta information
-        real_emba_log_location = self.emba_log_location.format("1")
+        emba_log_location = "/app/embark/{0}/active_{1}/".format(settings.LOG_ROOT, firmware_flags.id)
 
         # build command
         emba_cmd = "{0} -f {1} -l {2} {3}".format(self.emba_script_location, image_file_location,
-                                                  real_emba_log_location, emba_flags)
-
-        print(emba_cmd)
+                                                  emba_log_location, emba_flags)
 
         # submit command to executor threadpool
         emba_fut = self.executor.submit(self.run_shell_cmd, emba_cmd)
+        # take care of cleanup
+        emba_fut.add_done_callback(lambda x: shutil.rmtree(active_analyzer_dir))
 
         return emba_fut
 

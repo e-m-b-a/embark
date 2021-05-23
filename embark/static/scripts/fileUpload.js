@@ -26,7 +26,7 @@ async function saveFiles() {
     formData.append('file', fileData);
     $.ajax({
       type: 'POST',
-      url: 'home/home/upload/save_file',
+      url: 'upload/save_file',
       data: formData,
       processData: false,
       contentType: false,

@@ -65,9 +65,12 @@ def upload_file(request):
             logging.info("Posted Form is valid")
             form.save()
 
+            # get relevant data
+            # TODO: make clean db access
             firmware_file = form.cleaned_data['firmware']
             firmware_flags = Firmware.objects.latest('id')
 
+            # inject into bounded Executor
             if boundedExecutor.submit_firmware(firmware_flags=firmware_flags, firmware_file=firmware_file):
                 return HttpResponse("Success")
             else:
@@ -77,7 +80,8 @@ def upload_file(request):
             print(form.errors)
             return HttpResponse("Unvalid Form")
 
-    FirmwareForm.base_fields['firmware'] = forms.ModelChoiceField(queryset=FirmwareFile.objects) # .values_list('file_name')
+    FirmwareForm.base_fields['firmware'] = forms.ModelChoiceField(queryset=FirmwareFile.objects)
+    # .values_list('file_name')
     form = FirmwareForm()
     return render(request, 'uploader/fileUpload.html', {'form': form})
 
@@ -94,21 +98,17 @@ def serviceDashboard(request):
 @require_http_methods(["POST"])
 def save_file(request):
 
-    fs = FileSystemStorage()
     for file in request.FILES.getlist('file'):
         try:
-            real_filename = fs.save(file.name, file)
 
-            archiver.unpack(os.path.join(settings.MEDIA_ROOT, real_filename), settings.MEDIA_ROOT)
-            fs.delete(file.name)
+            archiver.check_extensions(file.name)
 
-            ff = FirmwareFile(file_name=file.name.rsplit('.', 1)[0]+".*")
-            ff.save()
+            firmware_file = FirmwareFile(file=file)
+            firmware_file.save()
 
             return HttpResponse("Firmwares has been successfully saved")
 
         except ValueError:
-            fs.delete(file.name)
             return HttpResponse("Firmware format not supported")
 
         except Exception as error:

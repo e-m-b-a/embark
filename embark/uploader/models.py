@@ -40,13 +40,17 @@ class CharFieldExpertMode(models.CharField):
 
 class FirmwareFile(models.Model):
 
+    def get_storage_path(self, filename):
+        # file will be uploaded to MEDIA_ROOT/<filename>
+        return '{0}'.format(filename)
+
     MAX_LENGTH = 127
 
-    file_name = models.CharField(help_text='', blank=True, max_length=MAX_LENGTH)
+    file = models.FileField(upload_to=get_storage_path)
     upload_date = models.DateTimeField(default=datetime.now, blank=True)
 
     def get_abs_path(self):
-        return "/app/embark/{0}/{1}".format(settings.MEDIA_ROOT, self.file_name)
+        return "/app/embark/{0}/{1}".format(settings.MEDIA_ROOT, self.file.name)
 
 
 class Firmware(models.Model):
@@ -66,7 +70,7 @@ class Firmware(models.Model):
         expert_mode=False,)
     notes = CharFieldExpertMode(
         help_text='Testing notes (double quote your input)', verbose_name=u"Testing notes", max_length=MAX_LENGTH,
-        blank=True, expert_mode=True)
+        blank=True, expert_mode=False)
 
     firmware_Architecture = CharFieldExpertMode(
         choices=[('MIPS', 'MIPS'), ('ARM', 'ARM'), ('x86', 'x86'), ('x64', 'x64'), ('PPC', 'PPC')],

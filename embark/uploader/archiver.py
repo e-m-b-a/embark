@@ -54,7 +54,6 @@ class archiver:
 
         # TODO: check location
         shutil.make_archive(base_name, archive_format, root_dir, base_dir)
-
         # alternative if single files be zipped:
         # with tarfile
 
@@ -88,9 +87,39 @@ class archiver:
     @staticmethod
     def get_supported_formats():
         """
-            returning supported formats
+            lists all supported formats for unpacking
 
-            :return: list of all supported formats for unpacking
+            :return: enumeration of supported formats as list of strings
         """
 
         return [name for (name, extensions, description) in shutil.get_unpack_formats()]
+
+    @staticmethod
+    def get_supported_extensions():
+        """
+            list all supported extensions for unpacking
+
+            :return: enumeration of supported extensions as list of strings
+        """
+
+        extensions_list = [extensions for (name, extensions, description) in shutil.get_unpack_formats()]
+        flat_list = [item for sublist in extensions_list for item in sublist]
+
+        return flat_list
+
+    @classmethod
+    def check_extensions(cls, file_name):
+        """
+            checks file for extension integrity
+
+            :param file_name: file to be checked
+
+            :return: True if extension is supported, ValueError otherwise
+        """
+
+        ext = ".{0}".format(file_name.rsplit(".", 1)[1])
+        if cls.get_supported_extensions().__contains__(ext):
+            return True
+
+        logging.error("Format .%s is not supported", ext)
+        raise ValueError
