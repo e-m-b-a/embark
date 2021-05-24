@@ -20,9 +20,11 @@ from django.core.files.storage import FileSystemStorage
 
 # home page test view TODO: change name accordingly
 from . import boundedExecutor
-from .archiver import archiver
+from .archiver import Archiver
 from .forms import FirmwareForm
 from .models import Firmware, FirmwareFile
+
+logger = logging.getLogger('web')
 
 
 @csrf_exempt
@@ -62,7 +64,7 @@ def upload_file(request):
         form = FirmwareForm(request.POST)
 
         if form.is_valid():
-            logging.info("Posted Form is valid")
+            logger.info("Posted Form is valid")
             form.save()
 
             # get relevant data
@@ -76,8 +78,7 @@ def upload_file(request):
             else:
                 return HttpResponse("queue full")
         else:
-            logging.info("Posted Form is unvalid")
-            print(form.errors)
+            logger.error("Posted Form is unvalid")
             return HttpResponse("Unvalid Form")
 
     FirmwareForm.base_fields['firmware'] = forms.ModelChoiceField(queryset=FirmwareFile.objects)
@@ -101,7 +102,7 @@ def save_file(request):
     for file in request.FILES.getlist('file'):
         try:
 
-            archiver.check_extensions(file.name)
+            Archiver.check_extensions(file.name)
 
             firmware_file = FirmwareFile(file=file)
             firmware_file.save()

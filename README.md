@@ -50,11 +50,11 @@ Configuration can be found in `embark/manage.py`
 
 Example:
 ```console
-import logging
+logger = logging.getLogger('web')
 
 [...]
 
-logging.info("log message")
+logger.info("log message")
 ```
 
 For further reading see [how to logging](https://docs.python.org/3/howto/logging.html).

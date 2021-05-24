@@ -42,7 +42,7 @@ class FirmwareFile(models.Model):
 
     def get_storage_path(self, filename):
         # file will be uploaded to MEDIA_ROOT/<filename>
-        return '{0}'.format(filename)
+        return f"{filename}"
 
     MAX_LENGTH = 127
 
@@ -50,7 +50,7 @@ class FirmwareFile(models.Model):
     upload_date = models.DateTimeField(default=datetime.now, blank=True)
 
     def get_abs_path(self):
-        return "/app/embark/{0}/{1}".format(settings.MEDIA_ROOT, self.file.name)
+        return f"/app/embark/{settings.MEDIA_ROOT}/{self.file.name}"
 
 
 class Firmware(models.Model):

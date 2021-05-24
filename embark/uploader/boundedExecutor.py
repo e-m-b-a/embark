@@ -6,12 +6,14 @@ from threading import BoundedSemaphore
 
 from django.conf import settings
 
-from uploader import archiver
+from .archiver import Archiver
+
+logger = logging.getLogger('web')
 
 
-class boundedExecutor:
+class BoundedExecutor:
     """
-        class boundedExecutor
+        class BoundedExecutor
         This class is a wrapper of ExecuterThreadPool to enable a limited queue
         Used to handle concurrent emba analysis as well as emba.log analyzer
     """
@@ -36,7 +38,7 @@ class boundedExecutor:
 
     def run_shell_cmd(self, cmd):
 
-        logging.info(cmd)
+        logger.info(f"Starting: {cmd}")
 
         # get return code to evaluate: 0 = success, 1 = failure,
         # see emba.sh for further information
@@ -47,11 +49,11 @@ class boundedExecutor:
             emba_process = subprocess.call(cmd, shell=True)
 
             # success
-            logging.info("Success: {0}".format(cmd))
+            logger.info(f"Success: {cmd}")
             # TODO: inform asgi to propagate success to frontend
 
         except Exception as ex:
-            logging.error("{0}".format(ex))
+            logger.error(f"{ex}")
             # TODO: inform asgi to propagate error to frontend
 
     """
@@ -76,21 +78,20 @@ class boundedExecutor:
     def submit_firmware(self, firmware_flags, firmware_file):
 
         # unpack firmware file to </app/embark/uploadedFirmwareImages/active_{ID}/>
-        active_analyzer_dir = "/app/embark/{0}/active_{1}/".format(settings.MEDIA_ROOT, firmware_flags.id)
-        archiver.unpack(firmware_file.file.path, active_analyzer_dir)
+        active_analyzer_dir = f"/app/embark/{settings.MEDIA_ROOT}/active_{firmware_flags.id}/"
+        Archiver.unpack(firmware_file.file.path, active_analyzer_dir)
 
         # get emba flags from command parser
         emba_flags = firmware_flags.get_flags()
 
         # TODO: Maybe check if file or dir
-        image_file_location = "{0}*".format(active_analyzer_dir)
+        image_file_location = f"{active_analyzer_dir}*"
 
         # evaluate meta information
-        emba_log_location = "/app/embark/{0}/active_{1}/".format(settings.LOG_ROOT, firmware_flags.id)
+        emba_log_location = f"/app/embark/{settings.LOG_ROOT}/active_{firmware_flags.id}/"
 
         # build command
-        emba_cmd = "{0} -f {1} -l {2} {3}".format(self.emba_script_location, image_file_location,
-                                                  emba_log_location, emba_flags)
+        emba_cmd = f"{self.emba_script_location} -f {image_file_location} -l {emba_log_location} {emba_flags}"
 
         # submit command to executor threadpool
         emba_fut = self.executor.submit(self.run_shell_cmd, emba_cmd)
@@ -112,13 +113,13 @@ class boundedExecutor:
         # check if semaphore can be acquired, if not queue is full
         queue_not_full = self.semaphore.acquire(blocking=False)
         if not queue_not_full:
-            logging.error("Executor queue full")
+            logger.error(f"Executor queue full")
             return None
 
         try:
             future = self.executor.submit(fn, *args, **kwargs)
         except Exception as e:
-            logging.error("Executor task could not be submitted")
+            logger.error(f"Executor task could not be submitted")
             self.semaphore.release()
             raise e
         else:

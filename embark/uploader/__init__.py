@@ -1,5 +1,5 @@
-from .archiver import archiver
-from .boundedExecutor import boundedExecutor
+from .archiver import Archiver
+from .boundedExecutor import BoundedExecutor
 
-arch = archiver()
-boundedExecutor = boundedExecutor(2, 2)
+arch = Archiver()
+boundedExecutor = BoundedExecutor(2, 2)

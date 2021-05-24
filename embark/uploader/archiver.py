@@ -4,8 +4,10 @@ import os
 import re
 import shutil
 
+logger = logging.getLogger('web')
 
-class archiver:
+
+class Archiver:
     """
        Class unpacker
        This class use shutil function to unpack files
@@ -74,13 +76,13 @@ class archiver:
                 shutil.unpack_archive(file_location, extract_dir)
             else:
                 shutil.unpack_archive(file_location)
-            logging.debug("Unpacked file successful: %s", file_location)
+            logger.info("Unpacked file successful: %s", file_location)
             return True
         except shutil.ReadError:
-            logging.error("Format .%s is not supported", file_location.split(".", 1)[1])
+            logging.error(f"Format {file_location.split('.', 1)[1]} is not supported")
             raise ValueError
         except Exception as ex:
-            logging.error("Undefined Error during unpacking file: %s", file_location)
+            logging.error(f"Undefined Error during unpacking file: {file_location}", )
             logging.error(ex)
             raise ex
 
@@ -117,9 +119,9 @@ class archiver:
             :return: True if extension is supported, ValueError otherwise
         """
 
-        ext = ".{0}".format(file_name.rsplit(".", 1)[1])
+        ext = f".{file_name.rsplit('.', 1)[1]}"
         if cls.get_supported_extensions().__contains__(ext):
             return True
 
-        logging.error("Format .%s is not supported", ext)
+        logger.error(f"Format {ext} is not supported")
         raise ValueError
