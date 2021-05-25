@@ -4,15 +4,31 @@
 <div class="container-fluid">
     <div class="login-form-container">
         <div class="login">
-            <form action="http://54.164.50.22:8000/signin" class="login-form">
+            <form action = "/signin" class="login-form" method="POST" novalidate>
             <h2 class="title">Sign in</h2>
             <div class="input-field">
                 <i class="fa fa-user"></i>
-                <input type="text" placeholder="Username" required/>
+                <input type="email" placeholder="Username" name="email" required/>
+                {% if error_message %}
+                <div class="invalid-feedback alert alert-warning alert-dismissible fade show" role="alert">
+                    <strong>Holy guacamole!</strong> You should check in on some of those fields below.
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                {% endif %}
             </div>
             <div class="input-field">
                 <i class="fa fa-lock"></i>
-                <input type="password" placeholder="Password" required/>
+                <input type="password" placeholder="Password" name="password" required/>
+                {% if error_message %}
+                <div class="invalid-feedback alert alert-warning alert-dismissible fade show" role="alert">
+                    <strong>Holy guacamole!</strong> You should check in on some of those fields below.
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                {% endif %}
             </div>
             <input type="submit" class="btn solid" value="Login" />
             </form> 

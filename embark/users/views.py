@@ -2,42 +2,52 @@ import logging
 import json
 
 from django.http import HttpResponse
+from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from django.contrib.auth import authenticate, login
+import django.contrib.messages as messages
 
-from users.models import User
+from .models import User
 
 logger = logging.getLogger('web')
 
 
 @csrf_exempt
-@require_http_methods(["POST"])
+@require_http_methods(["GET","POST"])
 def signin(request):
-    try:
-        body = json.loads(request.body.decode(encoding='UTF-8'))
+    if request.method == "POST":
+        logger.debug(request.POST)
+        logger.debug(request.body)
+        data = {k:v[0] for k,v in dict(request.POST).items()}
+        logger.debug(data)
         try:
-            username = body['email']
-            password = body['password']
-        except KeyError:
-            logger.exception('Missing keys from data- Username and password')
-            return HttpResponse("User data is invalid")
+            body = {k:v[0] for k,v in dict(request.POST).items()}
+            try:
+                username = body['email']
+                password = body['password']
+            except KeyError:
+                logger.exception('Missing keys from data- Username and password')
+                return HttpResponse("User data is invalid")
 
-        logger.debug(f'Found user name and password')
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            logger.debug(f'User authenticated')
-            login(request, user)
-            logger.debug(f'User logged in')
-            return HttpResponse("Logged in")
-        else:
-            logger.debug(f'User could not be authenticated')
-            return HttpResponse("User data is invalid")
-    except Exception as error:
-        logger.exception('Wide exception in Signup')
-        return HttpResponse("Something went wrong when logging the user in")
-
+            logger.debug(f'Found user name and password')
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                logger.debug(f'User authenticated')
+                login(request, user)
+                logger.debug(f'User logged in')
+                return redirect('embark-home')
+            else:
+                logger.debug(f'User could not be authenticated')
+                messages.info(request, "Invalid user data")
+                return render(request, 'uploader/login.html',  {'error_message': True})
+        except Exception as error:
+            logger.exception('Wide exception in Signup')
+            messages.info(request, "Invalid user data")
+            return render(request, 'uploader/login.html',  {'error_message': True})
+    else:
+        return render(request, 'login.html')
 
 @csrf_exempt
 @require_http_methods(["POST"])
