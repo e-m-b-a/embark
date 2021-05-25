@@ -64,11 +64,32 @@ function loadServiceDasboard() {
 
 function expertModeOn() {
     try {
-        var expertDiv = document.getElementById("expertOptions");
-        if (expertDiv.style.display === "none") {
-            expertDiv.style.display = "block";
-        } else {
-            expertDiv.style.display = "none";
+        var expertOptions = document.querySelectorAll('[value="expmode"]');
+
+        for(i = 0; i < expertOptions.length; i++){
+            var expertDiv = expertOptions[i];
+            if (expertDiv.style.display === "none") {
+                expertDiv.style.display = "block";
+            } else {
+                expertDiv.style.display = "none";
+            }
+        }
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+function helpTextOn() {
+    try {
+        var expertOptions = document.querySelectorAll('[value="help_text"]');
+
+        for(i = 0; i < expertOptions.length; i++){
+            var expertDiv = expertOptions[i];
+            if (expertDiv.style.display === "none") {
+                expertDiv.style.display = "block";
+            } else {
+                expertDiv.style.display = "none";
+            }
         }
     } catch (error) {
         alert(error.message);

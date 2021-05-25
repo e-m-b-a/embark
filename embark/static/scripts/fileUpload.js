@@ -12,7 +12,6 @@ function showFiles(fileData) {
   } catch (error) {
     alert(error.message);
   }
-
 }
 
 /** This function saves the file to local directory. */
@@ -36,8 +35,6 @@ async function saveFiles() {
 
         xhr.upload.addEventListener('progress', function (e) {
           if (e.lengthComputable) {
-            console.log(e.total);
-            console.log(e.loaded);
 
             var percent = Math.round(e.loaded / e.total * 100);
 
