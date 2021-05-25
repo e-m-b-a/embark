@@ -1,3 +1,4 @@
+from django import forms
 from django.shortcuts import render
 import os
 import json
@@ -19,8 +20,11 @@ from django.core.files.storage import FileSystemStorage
 
 # home page test view TODO: change name accordingly
 from . import boundedExecutor
-from .archiver import archiver
+from .archiver import Archiver
 from .forms import FirmwareForm
+from .models import Firmware, FirmwareFile
+
+logger = logging.getLogger('web')
 
 
 @csrf_exempt
@@ -60,16 +64,25 @@ def upload_file(request):
         form = FirmwareForm(request.POST)
 
         if form.is_valid():
-            logging.info("Posted Form is valid")
+            logger.info("Posted Form is valid")
+            form.save()
 
-            title = form.cleaned_data['version']
-            logging.info(title)
-            # form.save()
-            return HttpResponse("Uploaded")
+            # get relevant data
+            # TODO: make clean db access
+            firmware_file = form.cleaned_data['firmware']
+            firmware_flags = Firmware.objects.latest('id')
+
+            # inject into bounded Executor
+            if boundedExecutor.submit_firmware(firmware_flags=firmware_flags, firmware_file=firmware_file):
+                return HttpResponseRedirect("../../home/#uploader")
+            else:
+                return HttpResponse("queue full")
         else:
-            logging.info("Posted Form is unvalid")
+            logger.error("Posted Form is unvalid")
             return HttpResponse("Unvalid Form")
 
+    FirmwareForm.base_fields['firmware'] = forms.ModelChoiceField(queryset=FirmwareFile.objects)
+    # .values_list('file_name')
     form = FirmwareForm()
     return render(request, 'uploader/fileUpload.html', {'form': form})
 
@@ -86,18 +99,17 @@ def serviceDashboard(request):
 @require_http_methods(["POST"])
 def save_file(request):
 
-    fs = FileSystemStorage()
     for file in request.FILES.getlist('file'):
         try:
-            real_filename = fs.save(file.name, file)
 
-            archiver.unpack(os.path.join(settings.MEDIA_ROOT, real_filename), settings.MEDIA_ROOT)
-            fs.delete(file.name)
+            Archiver.check_extensions(file.name)
+
+            firmware_file = FirmwareFile(file=file)
+            firmware_file.save()
 
             return HttpResponse("Firmwares has been successfully saved")
 
         except ValueError:
-            fs.delete(file.name)
             return HttpResponse("Firmware format not supported")
 
         except Exception as error:

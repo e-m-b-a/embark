@@ -12,7 +12,7 @@ class FirmwareForm(forms.ModelForm):
     class Meta:
         model = models.Firmware
 
-        fields = ('version', 'vendor', 'device', 'notes', 'firmware_Architecture', 'cwe_checker',
+        fields = ('firmware', 'version', 'vendor', 'device', 'notes', 'firmware_Architecture', 'cwe_checker',
                   'docker_container', 'deep_extraction', 'log_path', 'grep_able_log', 'relative_paths', 'ANSI_color',
                   'web_reporter', 'emulation_test')
 
@@ -26,8 +26,6 @@ class FirmwareForm(forms.ModelForm):
 
             if isinstance(field.field.widget, django.forms.widgets.CheckboxInput):
                 field.field.widget.attrs['class'] = 'form-check-input active'
-
-            print(field.field)
 
             try:
                 field.expert_mode = field.field.expert_mode
