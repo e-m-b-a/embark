@@ -27,7 +27,7 @@ def login(request):
 @csrf_exempt
 def home(request):
     html_body = get_template('uploader/home.html')
-    return HttpResponse(html_body.render())
+    return render(request, 'uploader/home.html')
 
 
 # additional page test view TODO: change name accordingly

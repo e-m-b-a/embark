@@ -113,3 +113,7 @@ form {
     display: grid;
     grid-template-columns: 1fr;
 }
+
+.alert {
+    width: max-content;
+}
