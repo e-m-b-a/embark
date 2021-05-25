@@ -15,15 +15,15 @@ logger = logging.getLogger('web')
 
 
 @csrf_exempt
-@require_http_methods(["GET","POST"])
+@require_http_methods(["GET", "POST"])
 def signin(request):
     if request.method == "POST":
-        logger.debug(request.POST)
-        logger.debug(request.body)
-        data = {k:v[0] for k,v in dict(request.POST).items()}
-        logger.debug(data)
+        # logger.debug(request.POST)
+        # logger.debug(request.body)
+        # data = {k: v[0] for k, v in dict(request.POST).items()}
+        # logger.debug(data)
         try:
-            body = {k:v[0] for k,v in dict(request.POST).items()}
+            body = {k: v[0] for k, v in dict(request.POST).items()}
             try:
                 username = body['email']
                 password = body['password']
@@ -41,13 +41,14 @@ def signin(request):
             else:
                 logger.debug(f'User could not be authenticated')
                 messages.info(request, "Invalid user data")
-                return render(request, 'uploader/login.html',  {'error_message': True})
+                return render(request, 'uploader/login.html', {'error_message': True})
         except Exception as error:
             logger.exception('Wide exception in Signup')
             messages.info(request, "Invalid user data")
-            return render(request, 'uploader/login.html',  {'error_message': True})
+            return render(request, 'uploader/login.html', {'error_message': True})
     else:
         return render(request, 'login.html')
+
 
 @csrf_exempt
 @require_http_methods(["POST"])
