@@ -98,13 +98,13 @@ if 'test' in sys.argv:
     PASSWORD_HASHERS = (
         'django.contrib.auth.hashers.MD5PasswordHasher',
     )
-# DEBUG = False
-DATABASES = dict()
-DATABASES['default'] = {
-    'ENGINE': 'django.db.backends.sqlite3',
-    'NAME': str(BASE_DIR / 'test_db.sqlite3'),
-    'CONN_MAX_AGE': 60
-}
+    # DEBUG = False
+    DATABASES = dict()
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': str(BASE_DIR / 'test_db.sqlite3'),
+        'CONN_MAX_AGE': 60
+    }
 
 LOG_LEVEL = os.environ.get('DJANGO_LOG_LEVEL', 'DEBUG').upper()
 LOGGING = {
@@ -172,7 +172,7 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = False
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
@@ -187,6 +187,8 @@ STATICFILES_DIRS = [
 # Added for FIle storage to get the path to save Firmware images.
 MEDIA_ROOT = os.path.join('uploadedFirmwareImages')  # media directory in the root directory
 MEDIA_URL = '/uploadedFirmwareImages/'
+LOG_ROOT = os.path.join('emba_logs')  # media directory in the root directory
+LOG_URL = '/emba_logs/'
 
 
 # Default primary key field type

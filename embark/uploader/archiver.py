@@ -4,8 +4,10 @@ import os
 import re
 import shutil
 
+logger = logging.getLogger('web')
 
-class archiver:
+
+class Archiver:
     """
        Class unpacker
        This class use shutil function to unpack files
@@ -54,7 +56,6 @@ class archiver:
 
         # TODO: check location
         shutil.make_archive(base_name, archive_format, root_dir, base_dir)
-
         # alternative if single files be zipped:
         # with tarfile
 
@@ -75,22 +76,52 @@ class archiver:
                 shutil.unpack_archive(file_location, extract_dir)
             else:
                 shutil.unpack_archive(file_location)
-            logging.debug("Unpacked file successful: %s", file_location)
+            logger.info("Unpacked file successful: %s", file_location)
             return True
         except shutil.ReadError:
-            logging.error("Format .%s is not supported", file_location.split(".", 1)[1])
+            logging.error(f"Format {file_location.split('.', 1)[1]} is not supported")
             raise ValueError
         except Exception as ex:
-            logging.error("Undefined Error during unpacking file: %s", file_location)
+            logging.error(f"Undefined Error during unpacking file: {file_location}", )
             logging.error(ex)
             raise ex
 
     @staticmethod
     def get_supported_formats():
         """
-            returning supported formats
+            lists all supported formats for unpacking
 
-            :return: list of all supported formats for unpacking
+            :return: enumeration of supported formats as list of strings
         """
 
         return [name for (name, extensions, description) in shutil.get_unpack_formats()]
+
+    @staticmethod
+    def get_supported_extensions():
+        """
+            list all supported extensions for unpacking
+
+            :return: enumeration of supported extensions as list of strings
+        """
+
+        extensions_list = [extensions for (name, extensions, description) in shutil.get_unpack_formats()]
+        flat_list = [item for sublist in extensions_list for item in sublist]
+
+        return flat_list
+
+    @classmethod
+    def check_extensions(cls, file_name):
+        """
+            checks file for extension integrity
+
+            :param file_name: file to be checked
+
+            :return: True if extension is supported, ValueError otherwise
+        """
+
+        ext = f".{file_name.rsplit('.', 1)[1]}"
+        if cls.get_supported_extensions().__contains__(ext):
+            return True
+
+        logger.error(f"Format {ext} is not supported")
+        raise ValueError

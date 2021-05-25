@@ -1,12 +1,12 @@
 from django.test import TestCase
 
-from .boundedExecutor import boundedExecutor
+from .boundedExecutor import BoundedExecutor
 
 
 class test_boundedExecutor(TestCase):
 
     def setUp(self):
-        self.executor = boundedExecutor(bound=2, max_workers=2)
+        self.executor = BoundedExecutor(bound=2, max_workers=2)
 
     # TODO: add timeout
     def test_non_blocking_overflow(self):
