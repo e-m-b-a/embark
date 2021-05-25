@@ -1,63 +1,86 @@
-
-.tile {  
+.tile {
     width: 100%;
     display: inline-block;
     box-sizing: border-box;
-    background: #fff;		
+    background: #fff;
     padding: 10px;
     margin-bottom: 10px;
 }
-    
+
 .title {
     margin-top: 0px;
     font-size: 60px;
 }
 
 
-h3{
+h3 {
     font-weight: 300;
     line-height: 1.3em;
 }
 
-p{
+p {
     font-size: xxx-large;
     font-weight: 100 !important;
 }
+
 .coldiv {
     width: 100%;
 }
 
 body {
-	font-size: 14px;
-	line-height: 1.5em;
-	font-weight: 300;
+    font-size: 14px;
+    line-height: 1.5em;
+    font-weight: 300;
 }
 
-.radio-custom:checked + .radio-custom-label:before {
+.radio-custom:checked+.radio-custom-label:before {
     content: "\f00c";
     font-family: 'FontAwesome';
     color: blue;
 }
 
-.radio-custom + .radio-custom-label:before {
+.radio-custom+.radio-custom-label:before {
     border-radius: 50%;
 }
-.statusTile{
+
+.statusTile {
     background-color: lavender;
-    	
-}
-.statusTile:hover {
-    background : blue;
-}
-.statusEMba{
-    display: flex;
-}
-.headerText{
-    margin: 5px;
-}
-.log {
-    width: 50%;
-    margin: 4px;
+
 }
 
-  
+/* .statusTile:hover {
+    background: blue;
+} */
+
+.statusEMba {
+    display: flex;
+}
+
+.headerText {
+    margin: 5px;
+}
+
+.log_phase {
+    font-size: small;
+    margin-bottom: 5px;
+}
+
+.progress {
+    height: auto;
+    padding: 5px;
+}
+
+.log {
+    width: 100%;
+    margin: 3px;
+}
+
+.sub-container {
+    height: 100vh;
+    background-color: lavender;
+}
+
+/* .mainService {
+    width: 100%;
+    height: 100%;
+} */
