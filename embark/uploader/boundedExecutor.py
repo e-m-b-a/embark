@@ -88,7 +88,7 @@ class BoundedExecutor:
         image_file_location = f"{active_analyzer_dir}*"
 
         # evaluate meta information
-        emba_log_location = f"/app/embark/{settings.LOG_ROOT}/active_{firmware_flags.id}/"
+        emba_log_location = f"/app/emba/{settings.LOG_ROOT}/"
 
         # build command
         emba_cmd = f"{self.emba_script_location} -f {image_file_location} -l {emba_log_location} {emba_flags}"
