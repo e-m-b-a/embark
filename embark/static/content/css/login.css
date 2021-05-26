@@ -87,7 +87,7 @@ form {
     font-weight: 500;
 }
 
-.btn {
+.btn-login {
     width: 150px;
     height: 49px;
     outline: none;
@@ -101,7 +101,7 @@ form {
     transition: all 0.5s;
 }
 
-.btn:hover {
+.btn-login:hover {
     background-color: #1B1734;
 }
 
@@ -116,4 +116,9 @@ form {
 
 .alert {
     width: max-content;
+    position: absolute;
+    margin: auto;
+    left: 0;
+    right: 0;
+
 }

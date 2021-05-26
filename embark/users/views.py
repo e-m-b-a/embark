@@ -18,10 +18,10 @@ logger = logging.getLogger('web')
 @require_http_methods(["GET", "POST"])
 def signin(request):
     if request.method == "POST":
-        logger.debug(request.POST)
-        logger.debug(request.body)
-        data = {k: v[0] for k, v in dict(request.POST).items()}
-        logger.debug(data)
+        # logger.debug(request.POST)
+        # logger.debug(request.body)
+        # data = {k: v[0] for k, v in dict(request.POST).items()}
+        # logger.debug(data)
         try:
             body = {k: v[0] for k, v in dict(request.POST).items()}
             try:
