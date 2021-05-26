@@ -85,7 +85,7 @@ class Firmware(models.Model):
     deep_extraction = BooleanFieldExpertMode(
         help_text='Enable deep extraction, -x will be added', default=False, expert_mode=True, blank=True)
     log_path = BooleanFieldExpertMode(
-        help_text='Ignores log path check, -i will be added', default=True, expert_mode=True, blank=True)
+        help_text='Ignores log path check, -i will be added', default=False, expert_mode=True, blank=True)
     grep_able_log = BooleanFieldExpertMode(
         help_text='Create grep-able log file in [log_path]/fw_grep.log, -g will be added', default=True,
         expert_mode=True, blank=True)

@@ -4,6 +4,7 @@ import logging
 import os
 import re
 import sys
+import time
 
 import rx
 import rx.operators as ops
@@ -41,7 +42,6 @@ class WSConsumer(WebsocketConsumer):
     def connect(self):
         # accept socket connection
         self.accept()
-
         # if file does not exist create it otherwise delete its content
 
         open(self.path_new, 'w+')
@@ -65,7 +65,7 @@ class WSConsumer(WebsocketConsumer):
     def update_status(self, stream_item_list):
         # progress percentage TODO: improve percentage calculation
         self.module_count += 1
-        percentage = self.module_count / 34
+        percentage = self.module_count / 35
         self.status_msg["module"] = stream_item_list[0]
         self.status_msg["percentage"] = percentage
 
@@ -81,7 +81,7 @@ class WSConsumer(WebsocketConsumer):
                  :exit condition: Not in this Function, but if emba.sh has terminated this process is also killed
                  :return: None
        """
-
+        # time.sleep(2)
         while True:
 
             # look for new events
@@ -122,7 +122,7 @@ class WSConsumer(WebsocketConsumer):
                   :return: None
         """
 
-        with open(self.path_new, 'a') as diff_file:
+        with open(self.path_new, 'a+') as diff_file:
             diff_file.write(diff)
 
     def get_diff(self):

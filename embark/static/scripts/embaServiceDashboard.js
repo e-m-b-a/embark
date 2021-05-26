@@ -10,18 +10,20 @@ function embaProgress() {
     var current_module = "no module"
     var current_phase = "no phase"
 
+    // this method is called when the connection is established
     socket.onopen = function (e) {
         console.log("[open] Connection established");
     };
 
     // this method is called whenever a message from the backend arrives
     socket.onmessage = function (event) {
+
         var data = JSON.parse(event.data);
-        if(current_phase !== data.phase){
+        if (current_phase !== data.phase) {
             //console.log(data.phase)
             livelog_phase(data.phase)
         }
-        if(current_module !== data.module){
+        if (current_module !== data.module) {
             livelog_module(data.module)
         }
         current_phase = data.phase
@@ -44,16 +46,16 @@ function embaProgress() {
     }
 
     //log the current phase live
-    function livelog_phase(phase){
-        var ul =  document.getElementById("log_phase");
+    function livelog_phase(phase) {
+        var ul = document.getElementById("log_phase");
         var li = document.createElement("li");
         li.appendChild(document.createTextNode(phase));
         ul.appendChild(li);
     }
 
     //log current phase live
-    function livelog_module(module){
-        var ul =  document.getElementById("log_module");
+    function livelog_module(module) {
+        var ul = document.getElementById("log_module");
         var li = document.createElement("li");
         li.appendChild(document.createTextNode(module));
         ul.appendChild(li);
