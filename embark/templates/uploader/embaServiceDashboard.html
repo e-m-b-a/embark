@@ -1,52 +1,22 @@
-<head>
-        <link rel="stylesheet" href="../../static/content/css/serviceDashboard.css">
-        <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"> -->
-      </head>
-<div>
-        <!-- <div class="row">
-                <div class="coldiv">
-                        <a class="tile row">
-                                <label for="radio-1" class="radio-custom-label title">Disk Space Available</label>
-                               <!--  <h3 class="title">Disk Space Available</h3>
-                                 <input id="radio-1" class="radio-custom"  type="radio" checked>
-                                
-                        </a>
-                </div>
-        </div>
-        <div class="row">
-                <div class="coldiv">
-                        <a class="tile row">
-                                <label for="radio-2" class="radio-custom-label title">Start EMBA in Docker Mode</label>
-                               <!--  <h3 class="title">Disk Space Available</h3>
-                                <input id="radio-2" class="radio-custom"  type="radio" checked>
-                                
-                        </a>
-                </div>
-        </div> -->
-        <div class="row">
-                <div class="coldiv">
-                        <a class="tile row statusTile">
-                                <span class="headerText">Firmware Image</span>
-                                <div class="progress row" id="progress-wrapper">
-                                        <div id="pBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
-                                        <br>
-                                </div>
-                                <div class="row statusEMba">
-                                        <div class="log tile moduleLog">
-                                                Module Log<br>
-                                                Module Log<br>
-                                                Module Log<br>
-                                                Module Log<br>
-                                                Module Log<br>
-                                                Module Log<br>
-                                                 </div>
-                                        <div class="log tile phaseLog"> Phase Log</div>
-                                </div>
-                        </a>
-                </div>
-        </div>
-</div>
+<div class="container-fluid sub-container">
+    <div class="row">
+            <div class="coldiv">
+                    <a class="tile row statusTile">
+                            <!--<span class="headerText">Firmware Image</span>-->
+                            <div class="progress row" id="progress-wrapper">
+                                    <div id="pBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                                    <br>
+                            </div>
 
-<div>
-    
+                            <div class="row statusEMba">
+                                <div class="col-sm log tile moduleLog">
+                                        <ul class="log_phase" id="log_phase"> </ul>
+                                </div>
+                                <div class="col-sm log tile phaseLog">
+                                        <ul class="log_phase" id="log_module"> </ul>
+                                </div>
+                            </div>
+                    </a>
+            </div>
+    </div>
 </div>

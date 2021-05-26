@@ -16,7 +16,7 @@
             <p class="fileText"></p>
         </div>
         <div class="row uploadBtnRow">
-            <button type="submit" class="btn btn-light" onclick="saveFiles()">Save Firmware Image</button>
+            <button type="submit" class="btn btn-light" onclick="saveFiles()" >Save Firmware Image</button>
         </div>
         <div class="progress row" id="progress-wrapper">
             <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
@@ -25,7 +25,7 @@
     <div class="col-sm">
         <div class="row dataRow">
             <div class="col col-sm-8">
-                <form action="/home/upload/" method="POST" id="post-form" >
+                <form action="/home/upload/" method="POST" id="post-form">
 
                     {% csrf_token %}
                     {% load filters %}
@@ -63,6 +63,7 @@
                     {% endfor %}
 
                     <button type="submit" class="btn btn-light">Analyse</button>
+                    <button type="button" class="btn btn-danger" onclick="embaProgress();">Show Progress</button>
                     <button type="button" class="btn btn-danger">Cancel</button>
 
                 </form>
