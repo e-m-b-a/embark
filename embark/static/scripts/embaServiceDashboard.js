@@ -3,7 +3,7 @@ function embaProgress() {
     // example for websocket setup in frontent TODO: remove the whole file later
     const socket = new WebSocket(
         'ws://'
-        + '127.0.0.1:8001'
+        + location.hostname + ':8001'
         + '/ws/progress'
     );
 
