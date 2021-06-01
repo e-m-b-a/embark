@@ -1,15 +1,20 @@
+from django.conf import settings
+
 from django import forms
 import os
 import logging
+from pathlib import Path
 
-from django.conf import settings
 from django.shortcuts import render
-from django.template.context_processors import csrf
 from django.template.loader import get_template
 from django.http import HttpResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
+
+
+
+from .archiver import Archiver
 
 # TODO: Add required headers like type of requests allowed later.
 
@@ -81,14 +86,22 @@ def download_zipped(request, analyze_id):
 
 @csrf_exempt
 @login_required(login_url='/' + settings.LOGIN_URL)
-def upload_file(request):
+def start_analysis(request):
     """
-    delivering rendered uploader html
+    View to submit form for flags to run emba with
+    if: form is valid
+        checks if queue is not full
+            starts emba process redirects to uploader page
+        else: return Queue full
+    else: returns Invalid form error
+    Args:
+        request:
 
-    :params request: HTTP request
+    Returns:
 
-    :return: rendered ReportDashboard on success or HttpResponse on failure
     """
+    # Safely create emba_logs directory
+    Path(f'/app/emba/{settings.LOG_ROOT}').mkdir(parents=True, exist_ok=True)
 
     if request.method == 'POST':
         form = FirmwareForm(request.POST)
@@ -106,9 +119,9 @@ def upload_file(request):
             if BoundedExecutor.submit_firmware(firmware_flags=firmware_flags, firmware_file=firmware_file):
                 return HttpResponseRedirect("../../home/upload")
             else:
-                return HttpResponse("queue full")
+                return HttpResponse("Queue full")
         else:
-            logger.error("Posted Form is invalid")
+            logger.error("Posted Form is Invalid")
             logger.error(form.errors)
             return HttpResponse("Invalid Form")
 
