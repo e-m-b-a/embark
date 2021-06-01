@@ -1,6 +1,8 @@
 import logging
 import shutil
 import subprocess
+
+from pathlib import Path
 from concurrent.futures.thread import ThreadPoolExecutor
 from threading import BoundedSemaphore
 
@@ -129,7 +131,10 @@ class BoundedExecutor:
         image_file_location = f"{active_analyzer_dir}*"
 
         # evaluate meta information
+        # Safely create log dir
+
         emba_log_location = f"/app/emba/{settings.LOG_ROOT}/"
+        Path(emba_log_location).mkdir(parents=True, exist_ok=True)
         firmware_flags.path_to_logs = emba_log_location
         firmware_flags.save()
 

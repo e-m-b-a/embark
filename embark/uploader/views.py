@@ -1,9 +1,6 @@
-from django.conf import settings
-
 from django import forms
 import os
 import logging
-from pathlib import Path
 
 from django.shortcuts import render
 from django.template.loader import get_template
@@ -11,6 +8,8 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
+
+import os
 
 
 
@@ -24,6 +23,7 @@ from .boundedExecutor import BoundedExecutor
 from .archiver import Archiver
 from .forms import FirmwareForm, DeleteFirmwareForm
 from .models import Firmware, FirmwareFile
+from embark.logreader import LogReader
 
 logger = logging.getLogger('web')
 
@@ -50,6 +50,11 @@ def about(request):
 
 
 # TODO: have the right trigger, this is just for testing purpose
+def start(request):
+    # id = Firmware.objects.all()
+    LogReader(1)
+    return HttpResponse("hi")
+
 def download_zipped(request, analyze_id):
     """
     download zipped log directory
@@ -80,7 +85,7 @@ def download_zipped(request, analyze_id):
         return HttpResponse(f"Firmware with ID: {analyze_id} does not exist in DB")
     except Exception as ex:
         logger.error(f"Error occured while querying for Firmware object with ID: {analyze_id}")
-        logger.warning(f"{ex}")
+        logger.error(f"{ex}")
         return HttpResponse(f"Error occured while querying for Firmware object with ID: {analyze_id}")
 
 
@@ -101,7 +106,6 @@ def start_analysis(request):
 
     """
     # Safely create emba_logs directory
-    Path(f'/app/emba/{settings.LOG_ROOT}').mkdir(parents=True, exist_ok=True)
 
     if request.method == 'POST':
         form = FirmwareForm(request.POST)
