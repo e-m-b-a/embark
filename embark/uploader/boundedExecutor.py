@@ -89,6 +89,8 @@ class BoundedExecutor:
 
         # evaluate meta information
         emba_log_location = f"/app/emba/{settings.LOG_ROOT}/"
+        firmware_flags.path_to_logs = emba_log_location
+        firmware_flags.save()
 
         # build command
         emba_cmd = f"{self.emba_script_location} -f {image_file_location} -l {emba_log_location} {emba_flags}"

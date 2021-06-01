@@ -14,6 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.core.files.storage import FileSystemStorage
 
+from .archiver import Archiver
 
 # TODO: Add required headers like type of requests allowed later.
 
@@ -49,11 +50,31 @@ def about(request):
 
 # TODO: have the right trigger, this is just for testing purpose
 def start(request):
-    html_body = get_template('uploader/about.html')
-    if boundedExecutor.submit_firmware("test"):
-        return HttpResponse(html_body.render())
-    else:
-        return HttpResponse("queue full")
+
+    try:
+        analyze_id = 1
+
+        firmware = Firmware.objects.get(pk=analyze_id)
+
+        if os.path.exists(firmware.path_to_logs):
+            archive_path = Archiver.pack(firmware.path_to_logs, 'zip', firmware.path_to_logs, '.')
+            logger.debug(f"Archive {archive_path} created")
+            with open(archive_path, 'rb') as requested_log_dir:
+                response = HttpResponse(requested_log_dir.read(), content_type="application/zip")
+                response['Content-Disposition'] = 'inline; filename=' + archive_path
+                return response
+
+        logger.warning(f"Firmware with ID: {analyze_id} does not exist")
+        return HttpResponse(f"Firmware with ID: {analyze_id} does not exist")
+
+    except Firmware.DoesNotExist as ex:
+        logger.warning(f"Firmware with ID: {analyze_id} does not exist in DB")
+        logger.warning(f"{ex}")
+        return HttpResponse(f"Firmware with ID: {analyze_id} does not exist in DB")
+    except Exception as ex:
+        logger.error(f"Error occured while querying for Firmware object with ID: {analyze_id}")
+        logger.warning(f"{ex}")
+        return HttpResponse(f"Error occured while querying for Firmware object with ID: {analyze_id}")
 
 
 # Function which renders the uploader html
@@ -79,10 +100,11 @@ def upload_file(request):
                 return HttpResponse("queue full")
         else:
             logger.error("Posted Form is unvalid")
+            logger.error(form.errors)
             return HttpResponse("Unvalid Form")
 
+    # set available options for firmware
     FirmwareForm.base_fields['firmware'] = forms.ModelChoiceField(queryset=FirmwareFile.objects)
-    # .values_list('file_name')
     form = FirmwareForm()
     return render(request, 'uploader/fileUpload.html', {'form': form})
 

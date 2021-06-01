@@ -38,6 +38,28 @@ class CharFieldExpertMode(models.CharField):
         return models.Field.formfield(self, **defaults)
 
 
+class DownloadFile(models.Model):
+
+    def get_storage_path(self, filename):
+        # file will be uploaded to MEDIA_ROOT/<filename>
+        return f"{filename}"
+
+    MAX_LENGTH = 127
+
+    file = models.FileField(upload_to=get_storage_path)
+    upload_date = models.DateTimeField(default=datetime.now, blank=True)
+
+    def get_abs_path(self):
+        return f"/app/embark/{settings.MEDIA_ROOT}/{self.file.name}"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.file_name = self.file.name
+
+    def __str__(self):
+        return self.file.name
+
+
 class FirmwareFile(models.Model):
 
     def get_storage_path(self, filename):
@@ -51,6 +73,13 @@ class FirmwareFile(models.Model):
 
     def get_abs_path(self):
         return f"/app/embark/{settings.MEDIA_ROOT}/{self.file.name}"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.file_name = self.file.name
+
+    def __str__(self):
+        return self.file.name
 
 
 class Firmware(models.Model):
@@ -106,6 +135,8 @@ class Firmware(models.Model):
         help_text='Activate multi threading (destroys regular console output), -t will be added', default=True,
         expert_mode=True, blank=True)
 
+    path_to_logs = models.FilePathField(default="/", blank=True)
+
     class Meta:
         app_label = 'uploader'
 
@@ -119,6 +150,9 @@ class Firmware(models.Model):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.id}({self.firmware})"
 
     def get_flags(self):
         command = ""
