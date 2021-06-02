@@ -1,6 +1,7 @@
 from django import forms
 from django.shortcuts import render
 import os
+from os import path
 import json
 import logging
 import sys
@@ -105,9 +106,11 @@ def save_file(request):
             Archiver.check_extensions(file.name)
 
             firmware_file = FirmwareFile(file=file)
-            firmware_file.save()
-
-            return HttpResponse("Firmwares has been successfully saved")
+            if(path.exists(firmware_file.get_abs_path())):
+                return HttpResponse("File Exists")
+            else:
+                firmware_file.save()
+                return HttpResponse("Firmwares has been successfully saved")
 
         except ValueError:
             return HttpResponse("Firmware format not supported")
