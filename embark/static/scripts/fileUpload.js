@@ -53,7 +53,7 @@ async function postFiles(formData) {
         if(data == "File Exists"){
           var fileData = document.getElementById('file-input').files[0];
           var formData = new FormData()
-          var res = confirm("A File with the same name exists ,Do you want to Change?");
+          var res = confirm("A File with the same name exists ,Click ok to rename and save it");
           if (res == true) {
             var fileName = prompt("Please enter the new File name", fileData.inputFileName);
             if (fileName != null) {
