@@ -50,6 +50,14 @@ def about(request):
 
 # TODO: have the right trigger, this is just for testing purpose
 def download_zipped(request, analyze_id):
+    """
+    download zipped log directory
+
+    :params request: HTTP request
+    :params analyze_id: analyzed firmware id
+
+    :return: HttpResponse with zipped log directory on success or HttpResponse including error message
+    """
 
     try:
         firmware = Firmware.objects.get(pk=analyze_id)
@@ -75,9 +83,15 @@ def download_zipped(request, analyze_id):
         return HttpResponse(f"Error occured while querying for Firmware object with ID: {analyze_id}")
 
 
-# Function which renders the uploader html
 @csrf_exempt
 def upload_file(request):
+    """
+    delivering rendered uploader html
+
+    :params request: HTTP request
+
+    :return: rendered ReportDashboard on success or HttpResponse on failure
+    """
 
     if request.method == 'POST':
         form = FirmwareForm(request.POST)
@@ -114,6 +128,14 @@ def serviceDashboard(request):
 
 
 def reportDashboard(request):
+    """
+    delivering ReportDashboard with finished_firmwares as dictionary
+
+    :params request: HTTP request
+
+    :return: rendered ReportDashboard
+    """
+
     finished_firmwares = Firmware.objects.all().filter(finished=True)
     logger.debug(f"firmwares: \n {finished_firmwares}")
     return render(request, 'uploader/ReportDashboard.html', {'finished_firmwares': finished_firmwares})
@@ -124,6 +146,13 @@ def reportDashboard(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def save_file(request):
+    """
+    file saving on POST requests with attached file
+
+    :params request: HTTP request
+
+    :return: HttpResponse including the status
+    """
 
     for file in request.FILES.getlist('file'):
         try:

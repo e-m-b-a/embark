@@ -12,7 +12,9 @@ from .models import Firmware
 
 logger = logging.getLogger('web')
 
+# maximum concurrent running workers
 max_workers = 2
+# maximum queue bound
 max_queue = 2
 
 # assign the threadpool max_worker_threads
@@ -24,23 +26,24 @@ semaphore = BoundedSemaphore(max_queue + max_workers)
 emba_script_location = "/app/emba/emba.sh"
 
 
-"""
+class BoundedExecutor:
+    """
     class BoundedExecutor
     This class is a wrapper of ExecuterThreadPool to enable a limited queue
     Used to handle concurrent emba analysis as well as emba.log analyzer
-"""
-
-
-class BoundedExecutor:
     """
+
+    @classmethod
+    def run_emba_cmd(cls, cmd, primary_key=None, active_analyzer_dir=None):
+        """
         run shell commands from python script as subprocess, waits for termination and evaluates returncode
 
         :param cmd: shell command to be executed
+        :param primary_key: primary key for firmware entry db identification
+        :param active_analyzer_dir: active analyzer dir for deletion afterwards
 
         :return:
-    """
-    @classmethod
-    def run_emba_cmd(cls, cmd, primary_key=None, active_analyzer_dir=None):
+        """
 
         logger.info(f"Starting: {cmd}")
 
@@ -83,26 +86,30 @@ class BoundedExecutor:
                 firmware.failed = True
                 firmware.save()
 
-    """
-        run_shell_cmd but elevated
-
-        :param cmd: shell command to be executed elevated
-
-        :return:
-    """
     @classmethod
     def run_emba_cmd_elavated(cls, cmd, primary_key, active_analyzer_dir):
+        """
+        run_shell_cmd but elevated
+
+        param cmd: shell command to be executed elevated
+        param primary_key: primary key for firmware entry db identification
+        param active_analyzer_dir: active analyzer dir for deletion afterwards
+
+        :return:
+        """
+
         cls.run_emba_cmd(f"sudo {cmd}", primary_key, active_analyzer_dir)
 
-    """
-        submit firmware + metadata for emba execution
-
-        params: firmware object (TODO)
-
-        return: emba process future on success, None on failure
-    """
     @classmethod
     def submit_firmware(cls, firmware_flags, firmware_file):
+        """
+        submit firmware + metadata for emba execution
+
+        params firmware_flags: firmware model with flags and metadata
+        params firmware_file: firmware file model to be analyzed
+
+        return: emba process future on success, None on failure
+        """
 
         # unpack firmware file to </app/embark/uploadedFirmwareImages/active_{ID}/>
         active_analyzer_dir = f"/app/embark/{settings.MEDIA_ROOT}/active_{firmware_flags.id}/"
@@ -127,15 +134,15 @@ class BoundedExecutor:
 
         return emba_fut
 
-    """
+    @classmethod
+    def submit(cls, fn, *args, **kwargs):
+        """
         same as concurrent.futures.Executor#submit, but with queue
 
         params: see concurrent.futures.Executor#submit
 
         return: future on success, None on full queue
-    """
-    @classmethod
-    def submit(cls, fn, *args, **kwargs):
+        """
 
         # check if semaphore can be acquired, if not queue is full
         queue_not_full = semaphore.acquire(blocking=False)
@@ -153,7 +160,8 @@ class BoundedExecutor:
             future.add_done_callback(lambda x: semaphore.release())
             return future
 
-    """See concurrent.futures.Executor#shutdown"""
     @classmethod
     def shutdown(cls, wait=True):
+        """See concurrent.futures.Executor#shutdown"""
+
         executor.shutdown(wait)

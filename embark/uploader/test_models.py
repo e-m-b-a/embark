@@ -10,6 +10,9 @@ class test_models(TestCase):
 
     # TODO: add timeout
     def test_get_flags_all_true(self):
+        """
+        test get_flags() if all flags set to String/True
+        """
 
         firmware = Firmware(firmware=self.fw_file)
 
@@ -34,6 +37,9 @@ class test_models(TestCase):
         self.assertEqual(firmware.get_flags(), expected_string)
 
     def test_get_flags_all_false(self):
+        """
+        test get_flags() if all flags set to None/False
+        """
 
         firmware = Firmware(firmware=self.fw_file)
 
