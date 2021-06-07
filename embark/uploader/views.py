@@ -20,7 +20,7 @@ from .archiver import Archiver
 
 
 # home page test view TODO: change name accordingly
-from . import boundedExecutor
+from .boundedExecutor import BoundedExecutor
 from .archiver import Archiver
 from .forms import FirmwareForm
 from .models import Firmware, FirmwareFile
@@ -49,11 +49,9 @@ def about(request):
 
 
 # TODO: have the right trigger, this is just for testing purpose
-def start(request):
+def download_zipped(request, analyze_id):
 
     try:
-        analyze_id = 1
-
         firmware = Firmware.objects.get(pk=analyze_id)
 
         if os.path.exists(firmware.path_to_logs):
@@ -94,7 +92,7 @@ def upload_file(request):
             firmware_flags = Firmware.objects.latest('id')
 
             # inject into bounded Executor
-            if boundedExecutor.submit_firmware(firmware_flags=firmware_flags, firmware_file=firmware_file):
+            if BoundedExecutor.submit_firmware(firmware_flags=firmware_flags, firmware_file=firmware_file):
                 return HttpResponseRedirect("../../home/#uploader")
             else:
                 return HttpResponse("queue full")
@@ -115,6 +113,12 @@ def serviceDashboard(request):
     return HttpResponse(html_body.render())
 
 
+def reportDashboard(request):
+    finished_firmwares = Firmware.objects.all().filter(finished=True)
+    logger.debug(f"firmwares: \n {finished_firmwares}")
+    return render(request, 'uploader/ReportDashboard.html', {'finished_firmwares': finished_firmwares})
+
+
 # Function which saves the file .
 # request - Post request
 @csrf_exempt
@@ -123,7 +127,6 @@ def save_file(request):
 
     for file in request.FILES.getlist('file'):
         try:
-
             Archiver.check_extensions(file.name)
 
             firmware_file = FirmwareFile(file=file)

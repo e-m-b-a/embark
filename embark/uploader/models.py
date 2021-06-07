@@ -88,6 +88,7 @@ class Firmware(models.Model):
 
     firmware = CharFieldExpertMode(help_text='', blank=False, max_length=MAX_LENGTH)
 
+    # emba basic flags
     version = CharFieldExpertMode(
         help_text='Firmware version (double quote your input)', verbose_name=u"Firmware version", max_length=MAX_LENGTH,
         blank=True, expert_mode=False)
@@ -101,12 +102,12 @@ class Firmware(models.Model):
         help_text='Testing notes (double quote your input)', verbose_name=u"Testing notes", max_length=MAX_LENGTH,
         blank=True, expert_mode=False)
 
+    # emba expert flags
     firmware_Architecture = CharFieldExpertMode(
         choices=[('MIPS', 'MIPS'), ('ARM', 'ARM'), ('x86', 'x86'), ('x64', 'x64'), ('PPC', 'PPC')],
         verbose_name=u"Select architecture of the linux firmware",
         help_text='Architecture of the linux firmware [MIPS, ARM, x86, x64, PPC] -a will be added',
         max_length=MAX_LENGTH, blank=True, expert_mode=False)
-
     cwe_checker = BooleanFieldExpertMode(
         help_text='Enables cwe-checker,-c will be added', default=False, expert_mode=True, blank=True)
     docker_container = BooleanFieldExpertMode(
@@ -135,7 +136,12 @@ class Firmware(models.Model):
         help_text='Activate multi threading (destroys regular console output), -t will be added', default=True,
         expert_mode=True, blank=True)
 
+    # embark meta data
     path_to_logs = models.FilePathField(default="/", blank=True)
+    start_date = models.DateTimeField(default=datetime.now, blank=True)
+    end_date = models.DateTimeField(default=datetime.min, blank=True)
+    finished = models.BooleanField(default=False, blank=False)
+    failed = models.BooleanField(default=False, blank=False)
 
     class Meta:
         app_label = 'uploader'
