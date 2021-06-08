@@ -184,6 +184,7 @@ def log_streamer(request, from_=0, file_path=str(settings.BASE_DIR / 'logs/web.l
                     f.seek(start, 2)
                     filestart = False
                     result = f.read()
+                    print(result)
                     last = f.tell()
                     t = loader.get_template('uploader/log.html')
                     yield t.render({"result": result})
@@ -202,8 +203,9 @@ def log_streamer(request, from_=0, file_path=str(settings.BASE_DIR / 'logs/web.l
             with open(file_path) as f:
                 f.seek(last)
                 result = f.read()
+                print(result)
                 if result:
-                    t = loader.get_template('django_live_log/main.html')
+                    t = loader.get_template('uploader/log.html')
                     yield t.render(
                         {"result": result + "<script>$('html,body').animate({ scrollTop: $(document).height() }, 'slow');</script>"})
                 last = f.tell()
