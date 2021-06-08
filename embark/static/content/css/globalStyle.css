@@ -37,10 +37,14 @@ body {
 
 /*Progress bars*/
 .progress {
-    height: 30px;
-    padding: 5px;
+    height: 20px;
     margin-top: 10px;
     background-color: #b8cedb;
+    border-radius: 30px;
+}
+
+.progress-bar {
+    background-color: #009999;
 }
 
 /* text styles */
