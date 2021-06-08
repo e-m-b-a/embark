@@ -38,6 +38,28 @@ class CharFieldExpertMode(models.CharField):
         return models.Field.formfield(self, **defaults)
 
 
+class DownloadFile(models.Model):
+
+    def get_storage_path(self, filename):
+        # file will be uploaded to MEDIA_ROOT/<filename>
+        return f"{filename}"
+
+    MAX_LENGTH = 127
+
+    file = models.FileField(upload_to=get_storage_path)
+    upload_date = models.DateTimeField(default=datetime.now, blank=True)
+
+    def get_abs_path(self):
+        return f"/app/embark/{settings.MEDIA_ROOT}/{self.file.name}"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.file_name = self.file.name
+
+    def __str__(self):
+        return self.file.name
+
+
 class FirmwareFile(models.Model):
 
     def get_storage_path(self, filename):
@@ -52,6 +74,13 @@ class FirmwareFile(models.Model):
     def get_abs_path(self):
         return f"/app/embark/{settings.MEDIA_ROOT}/{self.file.name}"
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.file_name = self.file.name
+
+    def __str__(self):
+        return self.file.name
+
 
 class Firmware(models.Model):
 
@@ -59,6 +88,7 @@ class Firmware(models.Model):
 
     firmware = CharFieldExpertMode(help_text='', blank=False, max_length=MAX_LENGTH)
 
+    # emba basic flags
     version = CharFieldExpertMode(
         help_text='Firmware version (double quote your input)', verbose_name=u"Firmware version", max_length=MAX_LENGTH,
         blank=True, expert_mode=False)
@@ -72,12 +102,12 @@ class Firmware(models.Model):
         help_text='Testing notes (double quote your input)', verbose_name=u"Testing notes", max_length=MAX_LENGTH,
         blank=True, expert_mode=False)
 
+    # emba expert flags
     firmware_Architecture = CharFieldExpertMode(
         choices=[('MIPS', 'MIPS'), ('ARM', 'ARM'), ('x86', 'x86'), ('x64', 'x64'), ('PPC', 'PPC')],
         verbose_name=u"Select architecture of the linux firmware",
         help_text='Architecture of the linux firmware [MIPS, ARM, x86, x64, PPC] -a will be added',
         max_length=MAX_LENGTH, blank=True, expert_mode=False)
-
     cwe_checker = BooleanFieldExpertMode(
         help_text='Enables cwe-checker,-c will be added', default=False, expert_mode=True, blank=True)
     docker_container = BooleanFieldExpertMode(
@@ -106,6 +136,13 @@ class Firmware(models.Model):
         help_text='Activate multi threading (destroys regular console output), -t will be added', default=True,
         expert_mode=True, blank=True)
 
+    # embark meta data
+    path_to_logs = models.FilePathField(default="/", blank=True)
+    start_date = models.DateTimeField(default=datetime.now, blank=True)
+    end_date = models.DateTimeField(default=datetime.min, blank=True)
+    finished = models.BooleanField(default=False, blank=False)
+    failed = models.BooleanField(default=False, blank=False)
+
     class Meta:
         app_label = 'uploader'
 
@@ -119,6 +156,9 @@ class Firmware(models.Model):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.id}({self.firmware})"
 
     def get_flags(self):
         command = ""
