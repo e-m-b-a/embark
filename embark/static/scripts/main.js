@@ -30,43 +30,43 @@
 //     }
 // }
 
-function uploader() {
-    try {
-        $.ajax({
-            url: "upload/",
-            datatype: "html",
-            type: "GET",
-            success: function (data) {
-                document.getElementById("uploader").innerHTML =
-                    data;
-            }
-        });
-    } catch (error) {
-        alert(error.message);
-    }
-}
+// function uploader() {
+//     try {
+//         $.ajax({
+//             url: "upload/",
+//             datatype: "html",
+//             type: "GET",
+//             success: function (data) {
+//                 document.getElementById("uploader").innerHTML =
+//                     data;
+//             }
+//         });
+//     } catch (error) {
+//         alert(error.message);
+//     }
+// }
 
-function loadServiceDasboard() {
-    try {
-        $.ajax({
-            url: "serviceDashboard/",
-            datatype: "html",
-            type: "GET",
-            success: function (data) {
-                document.getElementById("service").innerHTML =
-                    data;
-            }
-        });
-    } catch (error) {
-        alert(error.message);
-    }
-}
+// function loadServiceDasboard() {
+//     try {
+//         $.ajax({
+//             url: "serviceDashboard/",
+//             datatype: "html",
+//             type: "GET",
+//             success: function (data) {
+//                 document.getElementById("service").innerHTML =
+//                     data;
+//             }
+//         });
+//     } catch (error) {
+//         alert(error.message);
+//     }
+// }
 
 function expertModeOn() {
     try {
         var expertOptions = document.querySelectorAll('[value="expmode"]');
 
-        for(i = 0; i < expertOptions.length; i++){
+        for (i = 0; i < expertOptions.length; i++) {
             var expertDiv = expertOptions[i];
             if (expertDiv.style.display === "none") {
                 expertDiv.style.display = "block";
@@ -83,7 +83,7 @@ function helpTextOn() {
     try {
         var expertOptions = document.querySelectorAll('[value="help_text"]');
 
-        for(i = 0; i < expertOptions.length; i++){
+        for (i = 0; i < expertOptions.length; i++) {
             var expertDiv = expertOptions[i];
             if (expertDiv.style.display === "none") {
                 expertDiv.style.display = "block";

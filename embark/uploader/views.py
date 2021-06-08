@@ -81,7 +81,8 @@ def upload_file(request):
             logger.error("Posted Form is unvalid")
             return HttpResponse("Unvalid Form")
 
-    FirmwareForm.base_fields['firmware'] = forms.ModelChoiceField(queryset=FirmwareFile.objects)
+    FirmwareForm.base_fields['firmware'] = forms.ModelChoiceField(queryset=FirmwareFile.objects, empty_label='Select firmware')
+    # FirmwareForm.base_fields['firmware_Architecture'] = forms.TypedChoiceField(choices=[(None, 'Select architecture of the linux firmware'),('MIPS', 'MIPS'), ('ARM', 'ARM'), ('x86', 'x86'), ('x64', 'x64'), ('PPC', 'PPC')],empty_value='Architecture')
     # .values_list('file_name')
     form = FirmwareForm()
     return render(request, 'uploader/fileUpload.html', {'form': form})
@@ -118,3 +119,14 @@ def save_file(request):
 
 def progress(request):
     return render(request, 'uploader/progress.html', context={'text': 'Hello World'})
+
+
+@csrf_exempt
+def mainDashboard(request):
+    html_body = get_template('uploader/mainDashboard.html')
+    return HttpResponse(html_body.render())
+
+@csrf_exempt
+def reports(request):
+    html_body = get_template('uploader/reports.html')
+    return HttpResponse(html_body.render())
