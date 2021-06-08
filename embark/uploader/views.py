@@ -126,6 +126,7 @@ def mainDashboard(request):
     html_body = get_template('uploader/mainDashboard.html')
     return HttpResponse(html_body.render())
 
+
 @csrf_exempt
 def reports(request):
     html_body = get_template('uploader/reports.html')
