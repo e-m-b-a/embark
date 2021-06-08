@@ -23,7 +23,7 @@ def signin(request):
         # data = {k: v[0] for k, v in dict(request.POST).items()}
         # logger.debug(data)
         try:
-            body = {k: v[0] for k, v in dict(request.POST).items()}
+            body = json.loads(request.body.decode(encoding='UTF-8'))
             try:
                 username = body['email']
                 password = body['password']

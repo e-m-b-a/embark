@@ -190,7 +190,7 @@ STATICFILES_DIRS = [
 
 
 # URL of Login-Page
-LOGIN_URL = ''
+LOGIN_URL = '/'
 
 # Added for FIle storage to get the path to save Firmware images.
 MEDIA_ROOT = os.path.join('uploadedFirmwareImages')  # media directory in the root directory
