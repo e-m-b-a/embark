@@ -1,20 +1,18 @@
 from django import forms
-from django.shortcuts import render
-import os
-import json
 import logging
-import sys
 
 from django.conf import settings
+
 from django.shortcuts import render
-from django.template.context_processors import csrf
 from django.template.loader import get_template
 from django.http import HttpResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from django.core.files.storage import FileSystemStorage
 
-from .archiver import Archiver
+
+import os, time
+from django.http import StreamingHttpResponse
+from django.template import loader
 
 # TODO: Add required headers like type of requests allowed later.
 
@@ -172,3 +170,49 @@ def save_file(request):
 
 def progress(request):
     return render(request, 'uploader/progress.html', context={'text': 'Hello World'})
+
+
+def log_streamer(request, from_=0, file_path=str(settings.BASE_DIR / 'logs/web.log')):
+    try:
+        file_path = file_path
+        mtime = os.path.getmtime(file_path)
+        with open(file_path) as f:
+            start = -int(from_) or -2000
+            filestart = True
+            while filestart:
+                try:
+                    f.seek(start, 2)
+                    filestart = False
+                    result = f.read()
+                    last = f.tell()
+                    t = loader.get_template('uploader/log.html')
+                    yield t.render({"result": result})
+                except IOError:
+                    start += 50
+        reset = 0
+        while True:
+            newmtime = os.path.getmtime(file_path)
+            if newmtime == mtime:
+                time.sleep(1)
+                reset += 1
+                if reset >= 15:
+                    yield "<!-- empty -->"
+                continue
+            mtime = newmtime
+            with open(file_path) as f:
+                f.seek(last)
+                result = f.read()
+                if result:
+                    t = loader.get_template('django_live_log/main.html')
+                    yield t.render(
+                        {"result": result + "<script>$('html,body').animate({ scrollTop: $(document).height() }, 'slow');</script>"})
+                last = f.tell()
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+
+
+def get_logs(request):
+    response = StreamingHttpResponse(log_streamer(request))
+    response['X-Accel-Buffering'] = "no"
+    return response
