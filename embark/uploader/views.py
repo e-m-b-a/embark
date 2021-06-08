@@ -35,7 +35,7 @@ def login(request):
 
 
 @csrf_exempt
-@login_required(login_url=settings.LOGIN_URL)
+@login_required(login_url='/' + settings.LOGIN_URL)
 def home(request):
     html_body = get_template('uploader/home.html')
     form = FirmwareForm()
@@ -60,7 +60,7 @@ def start(request):
 
 # Function which renders the uploader html
 @csrf_exempt
-@login_required(login_url=settings.LOGIN_URL)
+@login_required(login_url='/' + settings.LOGIN_URL)
 def upload_file(request):
 
     if request.method == 'POST':
@@ -91,7 +91,7 @@ def upload_file(request):
 
 
 @csrf_exempt
-@login_required(login_url=settings.LOGIN_URL)
+@login_required(login_url='/' + settings.LOGIN_URL)
 def service_dashboard(request):
     html_body = get_template('uploader/embaServiceDashboard.html')
     return HttpResponse(html_body.render())
@@ -101,7 +101,7 @@ def service_dashboard(request):
 # request - Post request
 @csrf_exempt
 @require_http_methods(["POST"])
-@login_required(login_url=settings.LOGIN_URL)
+@login_required(login_url='/' + settings.LOGIN_URL)
 def save_file(request):
 
     for file in request.FILES.getlist('file'):

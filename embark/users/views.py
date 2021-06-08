@@ -1,6 +1,7 @@
 import logging
 import json
 
+
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_exempt
@@ -23,7 +24,10 @@ def signin(request):
         # data = {k: v[0] for k, v in dict(request.POST).items()}
         # logger.debug(data)
         try:
-            body = json.loads(request.body.decode(encoding='UTF-8'))
+            try:
+                body = json.loads(request.body.decode(encoding='UTF-8'))
+            except json.JSONDecodeError:
+                body = {k: v[0] for k, v in dict(request.POST).items()}
             try:
                 username = body['email']
                 password = body['password']
