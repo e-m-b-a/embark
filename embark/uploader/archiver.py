@@ -55,7 +55,7 @@ class Archiver:
         """
 
         # TODO: check location
-        shutil.make_archive(base_name, archive_format, root_dir, base_dir)
+        return shutil.make_archive(base_name, archive_format, root_dir, base_dir)
         # alternative if single files be zipped:
         # with tarfile
 

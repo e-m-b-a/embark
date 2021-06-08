@@ -62,6 +62,22 @@
 //     }
 // }
 
+function loadReportDashboard() {
+    try {
+        $.ajax({
+            url: "reportDashboard/",
+            datatype: "html",
+            type: "GET",
+            success: function (data) {
+                document.getElementById("reports").innerHTML =
+                    data;
+            }
+        });
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
 function expertModeOn() {
     try {
         var expertOptions = document.querySelectorAll('[value="expmode"]');
