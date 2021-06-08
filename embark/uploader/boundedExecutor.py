@@ -62,22 +62,9 @@ class BoundedExecutor:
             if active_analyzer_dir:
                 shutil.rmtree(active_analyzer_dir)
 
-            # finalize db entry
-            if primary_key:
-                firmware = Firmware.objects.get(pk=primary_key)
-                firmware.end_date = datetime.now()
-                firmware.finished = True
-                firmware.save()
-
-            # success
-            logger.info(f"Successful cleaned up: {cmd}")
-
         except Exception as ex:
+            # fail
             logger.error(f"{ex}")
-
-            # take care of cleanup
-            if active_analyzer_dir:
-                shutil.rmtree(active_analyzer_dir)
 
             # finalize db entry
             if primary_key:
@@ -85,6 +72,21 @@ class BoundedExecutor:
                 firmware.end_date = datetime.now()
                 firmware.failed = True
                 firmware.save()
+
+        else:
+            # finalize db entry
+            if primary_key:
+                firmware = Firmware.objects.get(pk=primary_key)
+                firmware.end_date = datetime.now()
+                firmware.finished = True
+                firmware.save()
+
+            logger.info(f"Successful cleaned up: {cmd}")
+
+        finally:
+            # take care of cleanup
+            if active_analyzer_dir:
+                shutil.rmtree(active_analyzer_dir)
 
     @classmethod
     def run_emba_cmd_elavated(cls, cmd, primary_key, active_analyzer_dir):
