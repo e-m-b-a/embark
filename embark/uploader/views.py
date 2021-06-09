@@ -133,7 +133,7 @@ def service_dashboard(request):
     return HttpResponse(html_body.render())
 
 
-def reportDashboard(request):
+def report_dashboard(request):
     """
     delivering ReportDashboard with finished_firmwares as dictionary
 
@@ -144,7 +144,7 @@ def reportDashboard(request):
 
     finished_firmwares = Firmware.objects.all().filter(finished=True)
     logger.debug(f"firmwares: \n {finished_firmwares}")
-    return render(request, 'uploader/ReportDashboard.html', {'finished_firmwares': finished_firmwares})
+    return render(request, 'uploader/reportDashboard.html', {'finished_firmwares': finished_firmwares})
 
 
 # Function which saves the file .
@@ -176,8 +176,9 @@ def save_file(request):
         except Exception as error:
             return HttpResponse("Firmware could not be uploaded")
 
+
 @csrf_exempt
-def mainDashboard(request):
+def main_dashboard(request):
     html_body = get_template('uploader/mainDashboard.html')
     return HttpResponse(html_body.render())
 
