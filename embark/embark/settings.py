@@ -74,6 +74,11 @@ TEMPLATES = [
     },
 ]
 
+CSRF_COOKIE_SAMESITE = 'Strict'
+SESSION_COOKIE_SAMESITE = 'Strict'
+CSRF_COOKIE_HTTPONLY = False  # False since we will grab it via universal-cookies
+SESSION_COOKIE_HTTPONLY = True
+
 WSGI_APPLICATION = 'embark.wsgi.application'
 
 # Database
@@ -183,6 +188,9 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 
+
+# URL of Login-Page
+LOGIN_URL = ''
 
 # Added for FIle storage to get the path to save Firmware images.
 MEDIA_ROOT = os.path.join('uploadedFirmwareImages')  # media directory in the root directory

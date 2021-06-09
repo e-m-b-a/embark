@@ -1,8 +1,5 @@
-import logging
-
 import django
-from django import forms, template
-from django.forms import CheckboxInput
+from django import forms
 
 from uploader import models
 
@@ -21,11 +18,18 @@ class FirmwareForm(forms.ModelForm):
         super(FirmwareForm, self).__init__(*args, **kwargs)
 
         for field in self.visible_fields():
+
             if isinstance(field.field.widget, django.forms.widgets.TextInput):
                 field.field.widget.attrs['class'] = 'form-control txtField'
 
             if isinstance(field.field.widget, django.forms.widgets.CheckboxInput):
                 field.field.widget.attrs['class'] = 'form-check-input active'
+
+            try:
+                if field.field.readonly:
+                    field.field.widget.attrs["disabled"] = "disabled"
+            except:
+                pass
 
             try:
                 field.expert_mode = field.field.expert_mode

@@ -11,15 +11,17 @@ from django.template.context_processors import csrf
 from django.template.loader import get_template
 from django.http import HttpResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.core.files.storage import FileSystemStorage
 
+from .archiver import Archiver
 
 # TODO: Add required headers like type of requests allowed later.
 
 
 # home page test view TODO: change name accordingly
-from . import boundedExecutor
+from .boundedExecutor import BoundedExecutor
 from .archiver import Archiver
 from .forms import FirmwareForm
 from .models import Firmware, FirmwareFile
@@ -34,6 +36,7 @@ def login(request):
 
 
 @csrf_exempt
+@login_required(login_url='/' + settings.LOGIN_URL)
 def home(request):
     html_body = get_template('uploader/home.html')
     form = FirmwareForm()
@@ -48,17 +51,50 @@ def about(request):
 
 
 # TODO: have the right trigger, this is just for testing purpose
-def start(request):
-    html_body = get_template('uploader/about.html')
-    if boundedExecutor.submit_firmware("test"):
-        return HttpResponse(html_body.render())
-    else:
-        return HttpResponse("queue full")
+def download_zipped(request, analyze_id):
+    """
+    download zipped log directory
+
+    :params request: HTTP request
+    :params analyze_id: analyzed firmware id
+
+    :return: HttpResponse with zipped log directory on success or HttpResponse including error message
+    """
+
+    try:
+        firmware = Firmware.objects.get(pk=analyze_id)
+
+        if os.path.exists(firmware.path_to_logs):
+            archive_path = Archiver.pack(firmware.path_to_logs, 'zip', firmware.path_to_logs, '.')
+            logger.debug(f"Archive {archive_path} created")
+            with open(archive_path, 'rb') as requested_log_dir:
+                response = HttpResponse(requested_log_dir.read(), content_type="application/zip")
+                response['Content-Disposition'] = 'inline; filename=' + archive_path
+                return response
+
+        logger.warning(f"Firmware with ID: {analyze_id} does not exist")
+        return HttpResponse(f"Firmware with ID: {analyze_id} does not exist")
+
+    except Firmware.DoesNotExist as ex:
+        logger.warning(f"Firmware with ID: {analyze_id} does not exist in DB")
+        logger.warning(f"{ex}")
+        return HttpResponse(f"Firmware with ID: {analyze_id} does not exist in DB")
+    except Exception as ex:
+        logger.error(f"Error occured while querying for Firmware object with ID: {analyze_id}")
+        logger.warning(f"{ex}")
+        return HttpResponse(f"Error occured while querying for Firmware object with ID: {analyze_id}")
 
 
-# Function which renders the uploader html
 @csrf_exempt
+@login_required(login_url='/' + settings.LOGIN_URL)
 def upload_file(request):
+    """
+    delivering rendered uploader html
+
+    :params request: HTTP request
+
+    :return: rendered ReportDashboard on success or HttpResponse on failure
+    """
 
     if request.method == 'POST':
         form = FirmwareForm(request.POST)
@@ -73,35 +109,58 @@ def upload_file(request):
             firmware_flags = Firmware.objects.latest('id')
 
             # inject into bounded Executor
-            if boundedExecutor.submit_firmware(firmware_flags=firmware_flags, firmware_file=firmware_file):
+            if BoundedExecutor.submit_firmware(firmware_flags=firmware_flags, firmware_file=firmware_file):
                 return HttpResponseRedirect("../../home/#uploader")
             else:
                 return HttpResponse("queue full")
         else:
             logger.error("Posted Form is unvalid")
+            logger.error(form.errors)
             return HttpResponse("Unvalid Form")
 
+    # set available options for firmware
     FirmwareForm.base_fields['firmware'] = forms.ModelChoiceField(queryset=FirmwareFile.objects)
-    # .values_list('file_name')
     form = FirmwareForm()
     return render(request, 'uploader/fileUpload.html', {'form': form})
 
 
 @csrf_exempt
-def serviceDashboard(request):
+@login_required(login_url='/' + settings.LOGIN_URL)
+def service_dashboard(request):
     html_body = get_template('uploader/embaServiceDashboard.html')
     return HttpResponse(html_body.render())
+
+
+def reportDashboard(request):
+    """
+    delivering ReportDashboard with finished_firmwares as dictionary
+
+    :params request: HTTP request
+
+    :return: rendered ReportDashboard
+    """
+
+    finished_firmwares = Firmware.objects.all().filter(finished=True)
+    logger.debug(f"firmwares: \n {finished_firmwares}")
+    return render(request, 'uploader/ReportDashboard.html', {'finished_firmwares': finished_firmwares})
 
 
 # Function which saves the file .
 # request - Post request
 @csrf_exempt
 @require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
 def save_file(request):
+    """
+    file saving on POST requests with attached file
+
+    :params request: HTTP request
+
+    :return: HttpResponse including the status
+    """
 
     for file in request.FILES.getlist('file'):
         try:
-
             Archiver.check_extensions(file.name)
 
             firmware_file = FirmwareFile(file=file)
@@ -114,7 +173,3 @@ def save_file(request):
 
         except Exception as error:
             return HttpResponse("Firmware could not be uploaded")
-
-
-def progress(request):
-    return render(request, 'uploader/progress.html', context={'text': 'Hello World'})
