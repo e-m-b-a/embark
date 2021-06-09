@@ -1,0 +1,26 @@
+<div class="row reportRow">
+   <div class="col-sm">
+        <div class="row dataRow">
+            <div class="col col-sm">
+
+                {% csrf_token %}
+                <!-- Iterate over all fields and set expmode on fields in expert mode -->
+                {% for firmware in finished_firmwares %}
+                    <div class="form-group" >
+                        {{ firmware.firmware}}
+                        {{ firmware.firmware.label_tag }}
+                        {{ firmware.path_to_logs }}
+                        {{ firmware.path_to_logs.label_tag }}
+                        {{ firmware.start_date }}
+                        {{ firmware.start_date.label_tag }}
+                        <form action={% url 'embark-download' firmware.pk %} method='GET'>
+                            <button type="submit" class="btn btn-light" >Download Logs</button>
+                        </form>
+
+
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
