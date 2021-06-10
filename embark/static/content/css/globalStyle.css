@@ -1,0 +1,133 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap');
+
+html {
+    --scrollbarBG: #d7e4ee;
+    --thumbBG: #b8cedb;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 700;
+}
+
+body {
+    overflow-x: hidden;
+}
+
+.container {
+    position: fixed;
+    width: 100%;
+}
+
+.col {
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.container-fluid,
+.row {
+    padding: 0;
+    margin: 0;
+}
+
+/*Progress bars*/
+.progress {
+    height: 20px;
+    margin-top: 10px;
+    background-color: #b8cedb;
+    border-radius: 30px;
+}
+
+.progress-bar {
+    background-color: #009999;
+}
+
+/* text styles */
+.mainText {
+    font-size: large;
+    margin-bottom: 10px;
+}
+
+.subText {
+    font-size: medium;
+}
+
+.text {
+    font-size: medium;
+}
+
+/* button styles */
+.btn {
+    width: fit-content;
+    font-weight: normal;
+    border-radius: 30px;
+    font: 'arial';
+    line-height: 1;
+    font-size: medium;
+    color: #FFFFFF;
+    margin: 5px;
+    padding: 10px;
+}
+
+.btn:hover {
+    cursor: pointer;
+}
+
+/* submit button */
+button[type="submit"] {
+    background: #493791;
+    color: #FFFFFF;
+}
+
+button[type="submit"]:hover {
+    background: #1b1534;
+    color: #FFFFFF;
+}
+
+/* general button */
+
+button[type="button"] {
+    background: #7b919d;
+    color: #FFFFFF;
+}
+
+button[type="button"]:hover {
+    background: #525d63;
+    color: #FFFFFF;
+}
+
+/* reset /cancel / delete buttons */
+
+button[type="reset"],
+button[type="delete"] {
+    background: #e3141b;
+    color: #FFFFFF;
+}
+
+button[type="reset"]:hover,
+button[type="delete"]:hover {
+    background: #870005;
+    color: #FFFFFF;
+}
+
+/* form field styles */
+
+/* scrollbar */
+::-webkit-scrollbar {
+    width: 11px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--scrollbarBG);
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: var(--thumbBG);
+    border-radius: 6px;
+    border: 3px solid var(--scrollbarBG);
+}

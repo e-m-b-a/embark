@@ -123,7 +123,7 @@ class Firmware(models.Model):
 
     # emba expert flags
     firmware_Architecture = CharFieldExpertMode(
-        choices=[('MIPS', 'MIPS'), ('ARM', 'ARM'), ('x86', 'x86'), ('x64', 'x64'), ('PPC', 'PPC')],
+        choices=[(None, 'Select architecture'), ('MIPS', 'MIPS'), ('ARM', 'ARM'), ('x86', 'x86'), ('x64', 'x64'), ('PPC', 'PPC')],
         verbose_name=u"Select architecture of the linux firmware",
         help_text='Architecture of the linux firmware [MIPS, ARM, x86, x64, PPC] -a will be added',
         max_length=MAX_LENGTH, blank=True, expert_mode=True)

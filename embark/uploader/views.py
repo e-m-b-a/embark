@@ -118,8 +118,10 @@ def upload_file(request):
             logger.error(form.errors)
             return HttpResponse("Unvalid Form")
 
-    # set available options for firmware
-    FirmwareForm.base_fields['firmware'] = forms.ModelChoiceField(queryset=FirmwareFile.objects)
+    FirmwareForm.base_fields['firmware'] = forms.ModelChoiceField(queryset=FirmwareFile.objects, empty_label='Select firmware')
+    # FirmwareForm.base_fields['firmware_Architecture'] = forms.TypedChoiceField(choices=[(None, 'Select architecture of the linux firmware'),('MIPS', 'MIPS'), ('ARM', 'ARM'), ('x86', 'x86'), ('x64', 'x64'), ('PPC', 'PPC')],empty_value='Architecture')
+    # .values_list('file_name')
+
     form = FirmwareForm()
     return render(request, 'uploader/fileUpload.html', {'form': form})
 
@@ -131,7 +133,7 @@ def service_dashboard(request):
     return HttpResponse(html_body.render())
 
 
-def reportDashboard(request):
+def report_dashboard(request):
     """
     delivering ReportDashboard with finished_firmwares as dictionary
 
@@ -142,7 +144,7 @@ def reportDashboard(request):
 
     finished_firmwares = Firmware.objects.all().filter(finished=True)
     logger.debug(f"firmwares: \n {finished_firmwares}")
-    return render(request, 'uploader/ReportDashboard.html', {'finished_firmwares': finished_firmwares})
+    return render(request, 'uploader/reportDashboard.html', {'finished_firmwares': finished_firmwares})
 
 
 # Function which saves the file .
@@ -173,3 +175,15 @@ def save_file(request):
 
         except Exception as error:
             return HttpResponse("Firmware could not be uploaded")
+
+
+@csrf_exempt
+def main_dashboard(request):
+    html_body = get_template('uploader/mainDashboard.html')
+    return HttpResponse(html_body.render())
+
+
+@csrf_exempt
+def reports(request):
+    html_body = get_template('uploader/reports.html')
+    return HttpResponse(html_body.render())
