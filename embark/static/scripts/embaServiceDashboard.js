@@ -19,15 +19,15 @@ function connect() {
 
         var data = JSON.parse(event.data);
         console.log(data);
-        if (current_phase !== data.phase) {
-            //console.log(data.phase)
-            livelog_phase(data.phase)
-        }
-        if (current_module !== data.module) {
-            livelog_module(data.module)
-        }
-        current_phase = data.phase
-        current_module = data.module
+        // if (current_phase !== data.phase) {
+        //     //console.log(data.phase)
+        //     livelog_phase(data.phase)
+        // }
+        // if (current_module !== data.module) {
+        //     livelog_module(data.module)
+        // }
+        // current_phase = data.phase
+        // current_module = data.module
 
         makeProgress(data.percentage)
     }
@@ -36,9 +36,6 @@ function connect() {
     socket.onclose = function (event) {
         console.log(event.reason)
         console.error('Chat socket closed unexpectedly');
-        // setTimeout(function () {
-        //     connect();
-        // }, 1000);
     };
 
     socket.onerror = function(err) {
@@ -48,9 +45,9 @@ function connect() {
 }
 
 function embaProgress() {
-    console.log("Maxi geht steil")
 
-    setInterval(function(){ socket.send("Hello"); console.log("Maxi geht steiler"); }, 3000);
+    console.log("Messaging started")
+    setInterval(function(){ socket.send("Hello"); }, 3000);
     // this method is called when the connection is established
 }
 

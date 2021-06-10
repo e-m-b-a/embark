@@ -6,9 +6,9 @@ services:
     restart: always
     env_file:
       - .env
-    network_mode: "host"
     ports:
       - '3306:3306'
+
   emba:
     image: emba:latest
     build:
@@ -22,7 +22,6 @@ services:
         - /var/run/docker.sock:/var/run/docker.sock
         - /tmp/:/tmp/
         - ./embark/:/app/embark/
-    network_mode: "host"
     ports:
       - '8000:8000'
       - '8001:8001'
@@ -31,3 +30,9 @@ services:
     command: './entrypoint.sh'
     environment:
         - USER
+
+  redis:
+    image: "redis:5"
+    restart: always
+    ports:
+      - '6379:6379'

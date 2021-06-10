@@ -24,6 +24,8 @@ class LogReader:
         # global module count and status_msg directory
         self.module_count = 0
         self.firmware_id = firmware_id
+        self.room_group_name = 'updatesgroup'
+        self.channel_layer = get_channel_layer()
         self.status_msg = {
             "percentage": 0.0,
             "module": "",
@@ -42,28 +44,25 @@ class LogReader:
         self.status_msg["module"] = stream_item_list[0]
         self.status_msg["percentage"] = percentage
         tmp_mes = self.status_msg
-        logger.debug(tmp_mes)
         self.process_map[self.firmware_id].append(tmp_mes)
-
-        # THIS CALL DOESN'T INVOKE THE METHOD IN CONSUMERS -> TRIGGER NOT WORKING
-        channel_layer = get_channel_layer()
-        logger.debug(channel_layer)
-        async_to_sync(channel_layer.group_send)(
-            'updatesgroup',
-            {"type": 'send_message_to_frontend', "message": "BBBBBBBH"})
-        # self.process_map.append(tmp_mes)
+        async_to_sync(self.channel_layer.group_send)(
+            self.room_group_name, {
+                "type": 'send.message',
+                "message": self.process_map
+            }
+        )
 
     # update dictionary with phase changes
     def update_phase(self, stream_item_list):
         self.status_msg["phase"] = stream_item_list[1]
         tmp_mes = self.status_msg
         self.process_map[self.firmware_id].append(tmp_mes)
-        # THIS CALL DOESN'T INVOKE THE METHOD IN CONSUMERS -> TRIGGER NOT WORKING
-        channel_layer = get_channel_layer()
-        logger.debug(channel_layer)
-        async_to_sync(channel_layer.group_send)(
-            'updatesgroup',
-            {'type': 'send_message_to_frontend', 'message': "AAAAAAA"})
+        async_to_sync(self.channel_layer.group_send)(
+            self.room_group_name, {
+                'type': 'send.message',
+                'message': self.process_map
+            }
+        )
 
     def read_loop(self):
 
@@ -74,7 +73,7 @@ class LogReader:
                  :return: None
        """
         while True:
-            #logger.debug(process_map)
+            # logger.debug(process_map)
             firmware = Firmware.objects.get(pk=self.firmware_id)
             open(f"{firmware.path_to_logs}/emba_new.log", 'w+')
             # logger.debug(firmware)
