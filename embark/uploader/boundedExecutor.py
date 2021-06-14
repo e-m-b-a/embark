@@ -3,7 +3,7 @@ import shutil
 import subprocess
 
 from pathlib import Path
-from concurrent.futures.thread import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from threading import BoundedSemaphore
 
 from django.utils.datetime_safe import datetime
@@ -11,13 +11,14 @@ from django.conf import settings
 
 from .archiver import Archiver
 from .models import Firmware
+from embark.logreader import LogReader
 
 logger = logging.getLogger('web')
 
 # maximum concurrent running workers
-max_workers = 2
+max_workers = 4
 # maximum queue bound
-max_queue = 2
+max_queue = 0
 
 # assign the threadpool max_worker_threads
 executor = ThreadPoolExecutor(max_workers=max_workers)
@@ -63,6 +64,8 @@ class BoundedExecutor:
             # take care of cleanup
             if active_analyzer_dir:
                 shutil.rmtree(active_analyzer_dir)
+
+            # TODO: cancel future
 
         except Exception as ex:
             # fail
@@ -133,7 +136,7 @@ class BoundedExecutor:
         # evaluate meta information
         # Safely create log dir
 
-        emba_log_location = f"/app/emba/{settings.LOG_ROOT}/"
+        emba_log_location = f"/app/emba/{settings.LOG_ROOT}/{firmware_flags.pk}/"
         Path(emba_log_location).mkdir(parents=True, exist_ok=True)
         firmware_flags.path_to_logs = emba_log_location
         firmware_flags.save()
@@ -142,8 +145,9 @@ class BoundedExecutor:
         emba_cmd = f"{emba_script_location} -f {image_file_location} -l {emba_log_location} {emba_flags}"
 
         # submit command to executor threadpool
-        emba_fut = executor.submit(cls.run_emba_cmd, emba_cmd, firmware_flags.pk, active_analyzer_dir)
+        emba_fut = BoundedExecutor.submit(cls.run_emba_cmd, emba_cmd, firmware_flags.pk, active_analyzer_dir)
 
+        log_read_fut = BoundedExecutor.submit(LogReader, firmware_flags.pk)
         return emba_fut
 
     @classmethod
@@ -161,7 +165,6 @@ class BoundedExecutor:
         if not queue_not_full:
             logger.error(f"Executor queue full")
             return None
-
         try:
             future = executor.submit(fn, *args, **kwargs)
         except Exception as e:

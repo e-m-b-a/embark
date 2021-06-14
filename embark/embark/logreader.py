@@ -19,7 +19,9 @@ logger = logging.getLogger('web')
 class LogReader:
 
     def __init__(self, firmware_id):
-        super().__init__()
+
+        logger.debug(f"DBG")
+
         # self.room_group_name = 'status_updates_group'
         # global module count and status_msg directory
         self.module_count = 0
@@ -33,7 +35,7 @@ class LogReader:
         }
         # self.channel_layer = get_channel_layer()
         self.process_map = {}
-        # start processing
+
         self.read_loop()
 
     # update our dict whenever a new module is being processed
@@ -72,17 +74,21 @@ class LogReader:
                  :exit condition: Not in this Function, but if emba.sh has terminated this process is also killed
                  :return: None
        """
+
+        logger.debug(f"read loop started for {self.firmware_id}")
+
         while True:
             # logger.debug(process_map)
             firmware = Firmware.objects.get(pk=self.firmware_id)
-            open(f"{firmware.path_to_logs}/emba_new.log", 'w+')
+            open(f"{firmware.path_to_logs}emba_new.log", 'w+')
             # logger.debug(firmware)
             if firmware.id not in self.process_map.keys():
                 # if file does not exist create it otherwise delete its content
                 self.process_map[firmware.id] = []
 
             # look for new events
-            got_event = self.inotify_events(f"{firmware.path_to_logs}/emba.log")
+            logger.debug(f"{firmware.path_to_logs}emba.log")
+            got_event = self.inotify_events(f"{firmware.path_to_logs}emba.log")
             for eve in got_event:
                 for flag in flags.from_mask(eve.mask):
                     # Ignore irrelevant flags TODO: add other possible flags
@@ -119,7 +125,7 @@ class LogReader:
                   :return: None
         """
 
-        with open(f"{log_path}/emba_new.log", 'a+') as diff_file:
+        with open(f"{log_path}emba_new.log", 'a+') as diff_file:
             diff_file.write(diff)
 
     def get_diff(self, log_path):
@@ -132,8 +138,8 @@ class LogReader:
         """
 
         # open the two files to get diff from
-        old_file = open(f"{log_path}/emba.log")
-        new_file = open(f"{log_path}/emba_new.log")
+        old_file = open(f"{log_path}emba.log")
+        new_file = open(f"{log_path}emba_new.log")
 
         diff = difflib.ndiff(old_file.readlines(), new_file.readlines())
         return ''.join(x[2:] for x in diff if x.startswith('- '))
@@ -185,9 +191,10 @@ class LogReader:
         inotify = INotify()
         # TODO: add/remove flags to watch
         watch_flags = flags.CREATE | flags.DELETE | flags.MODIFY | flags.DELETE_SELF | flags.CLOSE_NOWRITE | flags.CLOSE_WRITE
+        logger.debug(f"path: {path}")
         try:
             # add watch on file
             inotify.add_watch(path, watch_flags)
             return inotify.read()
-        except:
+        except Exception as e:
             return []
