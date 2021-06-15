@@ -1,3 +1,4 @@
+import copy
 import difflib
 import re
 
@@ -19,8 +20,6 @@ logger = logging.getLogger('web')
 class LogReader:
 
     def __init__(self, firmware_id):
-
-        logger.debug(f"DBG")
 
         # self.room_group_name = 'status_updates_group'
         # global module count and status_msg directory
@@ -45,8 +44,11 @@ class LogReader:
         percentage = self.module_count / 35
         self.status_msg["module"] = stream_item_list[0]
         self.status_msg["percentage"] = percentage
-        tmp_mes = self.status_msg
+
+        tmp_mes = copy.deepcopy(self.status_msg)
+
         self.process_map[self.firmware_id].append(tmp_mes)
+
         async_to_sync(self.channel_layer.group_send)(
             self.room_group_name, {
                 "type": 'send.message',
@@ -57,7 +59,7 @@ class LogReader:
     # update dictionary with phase changes
     def update_phase(self, stream_item_list):
         self.status_msg["phase"] = stream_item_list[1]
-        tmp_mes = self.status_msg
+        tmp_mes = copy.deepcopy(self.status_msg)
         self.process_map[self.firmware_id].append(tmp_mes)
         async_to_sync(self.channel_layer.group_send)(
             self.room_group_name, {
@@ -87,7 +89,7 @@ class LogReader:
                 self.process_map[firmware.id] = []
 
             # look for new events
-            logger.debug(f"{firmware.path_to_logs}emba.log")
+            # logger.debug(f"{firmware.path_to_logs}emba.log")
             got_event = self.inotify_events(f"{firmware.path_to_logs}emba.log")
             for eve in got_event:
                 for flag in flags.from_mask(eve.mask):
@@ -191,7 +193,7 @@ class LogReader:
         inotify = INotify()
         # TODO: add/remove flags to watch
         watch_flags = flags.CREATE | flags.DELETE | flags.MODIFY | flags.DELETE_SELF | flags.CLOSE_NOWRITE | flags.CLOSE_WRITE
-        logger.debug(f"path: {path}")
+        # logger.debug(f"path: {path}")
         try:
             # add watch on file
             inotify.add_watch(path, watch_flags)

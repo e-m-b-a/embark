@@ -55,7 +55,6 @@ class BoundedExecutor:
         try:
             # run emba_process and wait for completion
 
-            # TODO: progress bar needs to be started
             emba_process = subprocess.call(cmd, shell=True)
 
             # success

@@ -53,7 +53,8 @@ class WSConsumer(WebsocketConsumer):
     def send_message(self, event):
         # Receive message from room group
         message = event['message']
-        self.pm = message
+        logger.debug(message)
+        # self.pm = message
         # Send message to WebSocket
         self.send(json.dumps(message, sort_keys=False))
         # self.send(text_data=json.dumps({
