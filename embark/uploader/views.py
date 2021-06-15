@@ -7,10 +7,9 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
+from django.conf import settings
 
 import os
-
-
 
 from .archiver import Archiver
 
@@ -47,12 +46,6 @@ def about(request):
     html_body = get_template('uploader/about.html')
     return HttpResponse(html_body.render())
 
-
-# TODO: have the right trigger, this is just for testing purpose
-def start(request):
-    # id = Firmware.objects.all()
-    LogReader(1)
-    return HttpResponse("hi")
 
 def download_zipped(request, analyze_id):
     """

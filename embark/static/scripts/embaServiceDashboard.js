@@ -1,11 +1,17 @@
+// TODO frontend is currently doing nothing with the data from backend. Merge this Branch with Ravi's work
+
+// start socket connection just once
 var socket = new WebSocket(
         'ws://'
         + location.hostname + ':8001'
         + '/ws/progress/'
 );
 
+// for log implementation which is currently commented out
 var current_module = "no module"
 var current_phase = "no phase"
+
+// called when a websocket connection is established
 socket.onopen = function (e) {
     console.log("[open] Connection established");
 };
@@ -25,28 +31,29 @@ socket.onmessage = function (event) {
     // current_phase = data.phase
     // current_module = data.module
 
-    makeProgress(data.percentage)
+    // makeProgress(data.percentage)
 }
-// this method is called when the websocket connection is closed
 
+// this method is called when the websocket connection is closed
 socket.onclose = function (event) {
     console.log(event.reason)
     console.error('Chat socket closed unexpectedly');
 };
 
+// this method is called when a error occurs
 socket.onerror = function(err) {
     console.error('Socket encountered error: ', err.message, 'Closing socket');
     socket.close();
 };
 
-
+// TODO impement this method. -> send a refresh request once page is loaded
 function embaProgress() {
-
     console.log("Messaging started")
     setInterval(function(){ socket.send("Hello"); }, 3000);
     // this method is called when the connection is established
 }
 
+// TODO make this work with Ravis changes
 // method for progressBar progress
 function makeProgress(percent) {
     var p = percent * 100;

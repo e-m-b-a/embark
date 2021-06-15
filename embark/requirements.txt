@@ -7,10 +7,7 @@ channels
 rx
 daphne
 inotify_simple
-inotify-simple
 mysqlclient
 pymongo
 mongoengine
-channels_redis
-channels-redis
 msgpack==0.6.2

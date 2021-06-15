@@ -206,6 +206,8 @@ REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 ASGI_APPLICATION = 'embark.asgi.application'
+
+# redis/channel layers setup
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',

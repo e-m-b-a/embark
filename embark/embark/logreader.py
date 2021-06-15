@@ -21,20 +21,25 @@ class LogReader:
 
     def __init__(self, firmware_id):
 
-        # self.room_group_name = 'status_updates_group'
         # global module count and status_msg directory
         self.module_count = 0
         self.firmware_id = firmware_id
+
+        # set variables for channels communication
         self.room_group_name = 'updatesgroup'
         self.channel_layer = get_channel_layer()
+
+        # status update dict (appended to processmap)
         self.status_msg = {
             "percentage": 0.0,
             "module": "",
             "phase": "",
         }
-        # self.channel_layer = get_channel_layer()
+
+        # global map for storing messages from all processes
         self.process_map = {}
 
+        # start processing
         self.read_loop()
 
     # update our dict whenever a new module is being processed
@@ -45,10 +50,13 @@ class LogReader:
         self.status_msg["module"] = stream_item_list[0]
         self.status_msg["percentage"] = percentage
 
+        # get copy of the current status message
         tmp_mes = copy.deepcopy(self.status_msg)
 
+        # append it to the data structure
         self.process_map[self.firmware_id].append(tmp_mes)
 
+        # send it to room group
         async_to_sync(self.channel_layer.group_send)(
             self.room_group_name, {
                 "type": 'send.message',
@@ -59,8 +67,13 @@ class LogReader:
     # update dictionary with phase changes
     def update_phase(self, stream_item_list):
         self.status_msg["phase"] = stream_item_list[1]
+
+        # get copy of the current status message
         tmp_mes = copy.deepcopy(self.status_msg)
+        # append it to the data structure
         self.process_map[self.firmware_id].append(tmp_mes)
+
+        # send it to room group
         async_to_sync(self.channel_layer.group_send)(
             self.room_group_name, {
                 'type': 'send.message',
@@ -77,19 +90,20 @@ class LogReader:
                  :return: None
        """
 
-        logger.debug(f"read loop started for {self.firmware_id}")
+        logger.info(f"read loop started for {self.firmware_id}")
 
         while True:
-            # logger.debug(process_map)
+            # get firmware for id which the BoundedExecutor gave the log_reader
             firmware = Firmware.objects.get(pk=self.firmware_id)
+
+            # if file does not exist create it otherwise delete its content
             open(f"{firmware.path_to_logs}emba_new.log", 'w+')
-            # logger.debug(firmware)
+
+            # create an entry for the id in the process map
             if firmware.id not in self.process_map.keys():
-                # if file does not exist create it otherwise delete its content
                 self.process_map[firmware.id] = []
 
             # look for new events
-            # logger.debug(f"{firmware.path_to_logs}emba.log")
             got_event = self.inotify_events(f"{firmware.path_to_logs}emba.log")
             for eve in got_event:
                 for flag in flags.from_mask(eve.mask):
@@ -187,7 +201,6 @@ class LogReader:
         )
 
         # TODO: add more observers for more information
-        # TODO: trigger send data maybe in another place
 
     def inotify_events(self, path):
         inotify = INotify()

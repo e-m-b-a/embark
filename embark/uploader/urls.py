@@ -9,7 +9,6 @@ urlpatterns = [
     path(settings.LOGIN_URL, views.login, name='embark-login'),
     path('home/', views.home, name='embark-home'),
     path('home/about/', views.about, name='embark-about'),
-    path('home/upload/', views.upload_file, name='embark-upload'),
     path('home/upload/', views.start_analysis, name='embark-start-analysis'),
     path('home/delete/', views.delete_file, name='embark-delete'),
     path('home/upload/save_file', views.save_file, name='embark-FileSave'),

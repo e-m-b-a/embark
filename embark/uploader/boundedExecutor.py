@@ -53,8 +53,8 @@ class BoundedExecutor:
         # get return code to evaluate: 0 = success, 1 = failure,
         # see emba.sh for further information
         try:
-            # run emba_process and wait for completion
 
+            # run emba_process and wait for completion
             emba_process = subprocess.call(cmd, shell=True)
 
             # success
@@ -63,8 +63,6 @@ class BoundedExecutor:
             # take care of cleanup
             if active_analyzer_dir:
                 shutil.rmtree(active_analyzer_dir)
-
-            # TODO: cancel future
 
         except Exception as ex:
             # fail
@@ -132,9 +130,7 @@ class BoundedExecutor:
         # TODO: Maybe check if file or dir
         image_file_location = f"{active_analyzer_dir}*"
 
-        # evaluate meta information
-        # Safely create log dir
-
+        # evaluate meta information and safely create log dir
         emba_log_location = f"/app/emba/{settings.LOG_ROOT}/{firmware_flags.pk}/"
         Path(emba_log_location).mkdir(parents=True, exist_ok=True)
         firmware_flags.path_to_logs = emba_log_location
@@ -146,7 +142,9 @@ class BoundedExecutor:
         # submit command to executor threadpool
         emba_fut = BoundedExecutor.submit(cls.run_emba_cmd, emba_cmd, firmware_flags.pk, active_analyzer_dir)
 
+        # start log_reader TODO: cancel future and return future
         log_read_fut = BoundedExecutor.submit(LogReader, firmware_flags.pk)
+
         return emba_fut
 
     @classmethod
