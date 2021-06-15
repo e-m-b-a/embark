@@ -9,8 +9,8 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
-
-import os, time
+import os
+import time
 from django.http import StreamingHttpResponse
 from django.template import loader
 
@@ -18,10 +18,10 @@ from django.template import loader
 
 
 # home page test view TODO: change name accordingly
-from .boundedExecutor import BoundedExecutor
-from .archiver import Archiver
-from .forms import FirmwareForm
-from .models import Firmware, FirmwareFile
+from uploader.boundedExecutor import BoundedExecutor
+from uploader.archiver import Archiver
+from uploader.forms import FirmwareForm
+from uploader.models import Firmware, FirmwareFile
 
 logger = logging.getLogger('web')
 
@@ -172,9 +172,17 @@ def progress(request):
     return render(request, 'uploader/progress.html', context={'text': 'Hello World'})
 
 
-def log_streamer(request, from_=0, file_path=str(settings.BASE_DIR / 'logs/web.log')):
+def log_streamer(request):
     try:
-        file_path = file_path
+        firmware_id = request.GET.get('id')
+        from_ = request.GET.get('offset')
+        try:
+            firmware = Firmware.objects.get(id=int(firmware_id))
+        except Firmware.DoesNotExist:
+            logger.error(f"Firmware with id: {firmware_id}. Does not exist.")
+            return
+
+        file_path = f"/app/emba/{settings.LOG_ROOT}/{firmware.id}/emba.log"
         mtime = os.path.getmtime(file_path)
         with open(file_path) as f:
             start = -int(from_) or -2000
@@ -184,7 +192,6 @@ def log_streamer(request, from_=0, file_path=str(settings.BASE_DIR / 'logs/web.l
                     f.seek(start, 2)
                     filestart = False
                     result = f.read()
-                    print(result)
                     last = f.tell()
                     t = loader.get_template('uploader/log.html')
                     yield t.render({"result": result})
@@ -203,18 +210,20 @@ def log_streamer(request, from_=0, file_path=str(settings.BASE_DIR / 'logs/web.l
             with open(file_path) as f:
                 f.seek(last)
                 result = f.read()
-                print(result)
                 if result:
                     t = loader.get_template('uploader/log.html')
-                    yield t.render(
-                        {"result": result + "<script>$('html,body').animate({ scrollTop: $(document).height() }, 'slow');</script>"})
+                    yield result + "<script>$('html,body').animate(" \
+                                   "{ scrollTop: $(document).height() }, 'slow');</script>"
                 last = f.tell()
     except Exception as e:
-        import traceback
-        print(traceback.format_exc())
+        logger.exception('Wide exception in logstreamer')
+        return False
 
 
 def get_logs(request):
+    generator = log_streamer(request)
+    if type(generator) is bool:
+        return HttpResponse('Error in Streaming logs')
     response = StreamingHttpResponse(log_streamer(request))
     response['X-Accel-Buffering'] = "no"
     return response
