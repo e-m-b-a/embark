@@ -174,13 +174,16 @@ def progress(request):
 
 def log_streamer(request):
     try:
-        firmware_id = request.GET.get('id')
-        from_ = request.GET.get('offset')
+        firmware_id = request.GET.get('id', None)
+        from_ = int(request.GET.get('offset', 0))
+
+        if firmware_id is None:
+            return False
         try:
             firmware = Firmware.objects.get(id=int(firmware_id))
         except Firmware.DoesNotExist:
             logger.error(f"Firmware with id: {firmware_id}. Does not exist.")
-            return
+            return False
 
         file_path = f"/app/emba/{settings.LOG_ROOT}/{firmware.id}/emba.log"
         mtime = os.path.getmtime(file_path)
@@ -222,6 +225,16 @@ def log_streamer(request):
 
 @require_http_methods(["GET"])
 def get_logs(request):
+    """
+    View takes a get request with following params:
+    1. id: id for firmware
+    2. offset: offset in log file
+    Args:
+        request: HTTPRequest instance
+
+    Returns:
+
+    """
     generator = log_streamer(request)
     if type(generator) is bool:
         return HttpResponse('Error in Streaming logs')
