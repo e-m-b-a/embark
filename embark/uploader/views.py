@@ -220,6 +220,7 @@ def log_streamer(request):
         return False
 
 
+@require_http_methods(["GET"])
 def get_logs(request):
     generator = log_streamer(request)
     if type(generator) is bool:
