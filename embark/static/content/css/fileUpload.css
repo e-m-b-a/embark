@@ -1,7 +1,6 @@
 .uploadRow {
-    width: 100vw;
     height: 100vh;
-    margin-top: 10vh;
+    padding-top: 30px;
 }
 
 /* Styles for the slider */
@@ -28,7 +27,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #ccc;
+    background-color: #b8cedb;
     -webkit-transition: .4s;
     transition: .4s;
 }
@@ -45,11 +44,11 @@
 }
 
 input:checked+.slider {
-    background-color: #9AC83B;
+    background-color: #009999;
 }
 
 input:focus+.slider {
-    box-shadow: 0 0 1px #9AC83B;
+    box-shadow: 0 0 1px #009999;
 }
 
 input:checked+.slider:before {
@@ -78,52 +77,60 @@ input:checked+.slider:before {
 
 /* Styles for the dataform fields */
 
-.txtField {
+.formTxtField,
+.dropdownSelect {
     width: 80%;
+    height: 2rem;
+    border: 1px solid #b8cedb;
+    border-radius: .25rem;
+    padding: 6px 12px 6px 12px;
 }
 
 .dataRow {
-    border-style: solid;
-    border-color: #EEE;
+    border-left-style: solid;
+    border-color: #b8cedb;
     height: 90vh;
     overflow: scroll;
     overflow-x: hidden;
     padding: 20px;
+    padding-top: 0px;
     padding-right: 5px;
     font-size: small;
 }
 
 /* Styles for file upload */
 
-#fileDropDiv>input {
+.fileDrop>input {
     display: none;
-}
-
-.titleText {
-    font-size: large;
-    justify-content: center;
-}
-
-.subText,
-.fileText {
-    font-size: medium;
-    justify-content: center;
 }
 
 .fileuploadIcon {
     font-family: "font Awesome";
-    font-weight: 500;
-    color: #3296B9
+    color: #009999
 }
 
-.uploadIcon {
-    padding-left: 40%;
+.uploadIconRow {
+    display: block;
 }
 
 /*Uploaded Files*/
-#uploadedFileNames {
+.uploadedFile {
     display: none;
 }
-.statusTile{
-    background-color: #3296B9;
+
+.statusTile {
+    background-color: #009999;
+}
+
+.iconLabel {
+    display: block;
+    text-align: center;
+}
+
+.uploadBtnRow {
+    justify-content: center;
+}
+
+.expertModeOptions {
+    padding-left: 20px;
 }
