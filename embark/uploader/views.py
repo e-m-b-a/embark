@@ -244,7 +244,7 @@ def get_logs(request):
     response = StreamingHttpResponse(log_streamer(request))
     response['X-Accel-Buffering'] = "no"
     return response
- 
+
 
 @csrf_exempt
 def main_dashboard(request):
