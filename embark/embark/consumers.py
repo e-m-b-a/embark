@@ -15,6 +15,8 @@ from uploader.models import Firmware
 
 import logging
 
+from . import test_logreader
+
 logger = logging.getLogger('web')
 
 
@@ -39,12 +41,12 @@ class WSConsumer(WebsocketConsumer):
 
         # called when received data from frontend
         # TODO: implement this for processing client input at backend -> page refresh should be here
+
     def receive(self, text_data=None, bytes_data=None):
         pass
 
     # called when websocket connection is closed
     def disconnect(self, close_code):
-        logger.debug(self.pm)
         async_to_sync(self.channel_layer.group_discard)(
             self.room_group_name,
             self.channel_name
@@ -54,6 +56,30 @@ class WSConsumer(WebsocketConsumer):
     def send_message(self, event):
         # Receive message and extract data from room group
         message = event['message']
-
+        logger.debug(message)
         # Send message to WebSocket
         self.send(json.dumps(message, sort_keys=False))
+
+    # for testing the channel layers communication
+    def tes_message(self, event):
+
+        message = event['message']
+        extracted_message = message['content']
+        logger.debug(extracted_message)
+        return_mes = "Fail"
+
+        if extracted_message == "Ping":
+            return_mes = "Pong"
+
+        async_to_sync(self.channel_layer.group_send)(
+            self.room_group_name, {
+                "type": 'tes.handlemes',
+                "message": return_mes
+            }
+        )
+
+    # for testing the channel layers communication
+    def tes_handlemes(self, event):
+
+        message = event['message']
+        test_logreader.set_stuff(message)

@@ -16,6 +16,9 @@ from channels.layers import get_channel_layer
 
 logger = logging.getLogger('web')
 
+# global map for storing messages from all processes
+process_map = {}
+
 
 class LogReader:
 
@@ -36,9 +39,6 @@ class LogReader:
             "phase": "",
         }
 
-        # global map for storing messages from all processes
-        self.process_map = {}
-
         # start processing
         self.read_loop()
 
@@ -54,13 +54,14 @@ class LogReader:
         tmp_mes = copy.deepcopy(self.status_msg)
 
         # append it to the data structure
-        self.process_map[self.firmware_id].append(tmp_mes)
+        global process_map
+        process_map[self.firmware_id].append(tmp_mes)
 
         # send it to room group
         async_to_sync(self.channel_layer.group_send)(
             self.room_group_name, {
                 "type": 'send.message',
-                "message": self.process_map
+                "message": process_map
             }
         )
 
@@ -71,13 +72,15 @@ class LogReader:
         # get copy of the current status message
         tmp_mes = copy.deepcopy(self.status_msg)
         # append it to the data structure
-        self.process_map[self.firmware_id].append(tmp_mes)
+
+        global process_map
+        process_map[self.firmware_id].append(tmp_mes)
 
         # send it to room group
         async_to_sync(self.channel_layer.group_send)(
             self.room_group_name, {
                 'type': 'send.message',
-                'message': self.process_map
+                'message': process_map
             }
         )
 
@@ -100,8 +103,9 @@ class LogReader:
             open(f"{firmware.path_to_logs}emba_new.log", 'w+')
 
             # create an entry for the id in the process map
-            if firmware.id not in self.process_map.keys():
-                self.process_map[firmware.id] = []
+            global process_map
+            if firmware.id not in process_map.keys():
+                process_map[firmware.id] = []
 
             # look for new events
             got_event = self.inotify_events(f"{firmware.path_to_logs}emba.log")

@@ -10,6 +10,7 @@ var socket = new WebSocket(
 // for log implementation which is currently commented out
 var current_module = "no module"
 var current_phase = "no phase"
+var cur_len = 0
 
 // called when a websocket connection is established
 socket.onopen = function (e) {
@@ -21,6 +22,16 @@ socket.onmessage = function (event) {
 
     var data = JSON.parse(event.data);
     console.log(data);
+
+    if(cur_len !== Object.keys(data).length){
+
+        var htmlToAdd = '<div class="row"><div class="coldiv"><a class="tile row statusTile"><div class="row statusEMba"><div class="col-sm log tile moduleLog"><ul class="log_phase" id="log_phase'+ Object.keys(data)[cur_len] +'"> </ul></div><div class="col-sm log tile phaseLog"><ul class="log_phase" id="log_module'+Object.keys(data)[cur_len]+'"> </ul></div></div></a></div></div>'
+        document.getElementById("add_to_me").insertAdjacentHTML('afterend',htmlToAdd);
+
+        cur_len += 1
+    }
+
+
     // if (current_phase !== data.phase) {
     //     //console.log(data.phase)
     //     livelog_phase(data.phase)
