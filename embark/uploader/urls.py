@@ -10,6 +10,7 @@ urlpatterns = [
     path('home/', views.home, name='embark-home'),
     path('home/about/', views.about, name='embark-about'),
     path('home/upload/', views.upload_file, name='embark-upload'),
+    path('home/delete/', views.delete_file, name='embark-delete'),
     path('home/upload/save_file', views.save_file, name='embark-FileSave'),
     path('home/serviceDashboard/', views.service_dashboard, name='embark-ServiceDashboard'),
     path('home/mainDashboard/', views.main_dashboard, name='embark-MainDashboard'),

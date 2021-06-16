@@ -1,9 +1,6 @@
 from django import forms
-from django.shortcuts import render
 import os
-import json
 import logging
-import sys
 
 from django.conf import settings
 from django.shortcuts import render
@@ -13,9 +10,6 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
-from django.core.files.storage import FileSystemStorage
-
-from .archiver import Archiver
 
 # TODO: Add required headers like type of requests allowed later.
 
@@ -23,7 +17,7 @@ from .archiver import Archiver
 # home page test view TODO: change name accordingly
 from .boundedExecutor import BoundedExecutor
 from .archiver import Archiver
-from .forms import FirmwareForm
+from .forms import FirmwareForm, DeleteFirmwareForm
 from .models import Firmware, FirmwareFile
 
 logger = logging.getLogger('web')
@@ -110,20 +104,20 @@ def upload_file(request):
 
             # inject into bounded Executor
             if BoundedExecutor.submit_firmware(firmware_flags=firmware_flags, firmware_file=firmware_file):
-                return HttpResponseRedirect("../../home/#uploader")
+                return HttpResponseRedirect("../../home/upload")
             else:
                 return HttpResponse("queue full")
         else:
-            logger.error("Posted Form is unvalid")
+            logger.error("Posted Form is invalid")
             logger.error(form.errors)
-            return HttpResponse("Unvalid Form")
+            return HttpResponse("Invalid Form")
 
-    FirmwareForm.base_fields['firmware'] = forms.ModelChoiceField(queryset=FirmwareFile.objects, empty_label='Select firmware')
-    # FirmwareForm.base_fields['firmware_Architecture'] = forms.TypedChoiceField(choices=[(None, 'Select architecture of the linux firmware'),('MIPS', 'MIPS'), ('ARM', 'ARM'), ('x86', 'x86'), ('x64', 'x64'), ('PPC', 'PPC')],empty_value='Architecture')
-    # .values_list('file_name')
+    FirmwareForm.base_fields['firmware'] = forms.ModelChoiceField(queryset=FirmwareFile.objects)
+    DeleteFirmwareForm.base_fields['firmware'] = forms.ModelChoiceField(queryset=FirmwareFile.objects)
 
-    form = FirmwareForm()
-    return render(request, 'uploader/fileUpload.html', {'form': form})
+    analyze_form = FirmwareForm()
+    delete_form = DeleteFirmwareForm()
+    return render(request, 'uploader/fileUpload.html', {'analyze_form': analyze_form, 'delete_form': delete_form})
 
 
 @csrf_exempt
@@ -163,9 +157,13 @@ def save_file(request):
 
     for file in request.FILES.getlist('file'):
         try:
+
             Archiver.check_extensions(file.name)
 
-            firmware_file = FirmwareFile(file=file)
+            firmware_file = FirmwareFile()
+            firmware_file.save()
+
+            firmware_file.file = file
             firmware_file.save()
 
             return HttpResponse("Firmwares has been successfully saved")
@@ -174,6 +172,7 @@ def save_file(request):
             return HttpResponse("Firmware format not supported")
 
         except Exception as error:
+            logger.error(error)
             return HttpResponse("Firmware could not be uploaded")
 
 
@@ -187,3 +186,33 @@ def main_dashboard(request):
 def reports(request):
     html_body = get_template('uploader/reports.html')
     return HttpResponse(html_body.render())
+
+
+@require_http_methods(["POST"])
+def delete_file(request):
+    """
+    file deletion on POST requests with attached present firmware file
+
+    :params request: HTTP request
+
+    :return: HttpResponse including the status
+    """
+
+    if request.method == 'POST':
+        form = DeleteFirmwareForm(request.POST)
+
+        if form.is_valid():
+            logger.info(f"Form {form} is valid")
+
+            # get relevant data
+            firmware_file = form.cleaned_data['firmware']
+            firmware_file.delete()
+
+            return HttpResponseRedirect("../../home/upload")
+
+        else:
+            logger.error(f"Form {form} is invalid")
+            logger.error(f"{form.errors}")
+            return HttpResponse("invalid Form")
+
+    return HttpResponseRedirect("../../home/upload")

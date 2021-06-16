@@ -1,8 +1,12 @@
 import logging
+import os
+import shutil
 
 from django.conf import settings
 from django.db import models
 from django import forms
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
 from django.utils.datetime_safe import datetime
 
 logger = logging.getLogger('web')
@@ -80,7 +84,7 @@ class FirmwareFile(models.Model):
     """
     def get_storage_path(self, filename):
         # file will be uploaded to MEDIA_ROOT/<filename>
-        return f"{filename}"
+        return os.path.join(f"{self.pk}", filename)
 
     MAX_LENGTH = 127
 
@@ -88,7 +92,10 @@ class FirmwareFile(models.Model):
     upload_date = models.DateTimeField(default=datetime.now, blank=True)
 
     def get_abs_path(self):
-        return f"/app/embark/{settings.MEDIA_ROOT}/{self.file.name}"
+        return f"/app/embark/{settings.MEDIA_ROOT}/{self.pk}/{self.file.name}"
+
+    def get_abs_folder_path(self):
+        return f"/app/embark/{settings.MEDIA_ROOT}/{self.pk}"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -98,10 +105,22 @@ class FirmwareFile(models.Model):
         return self.file.name
 
 
+@receiver(pre_delete, sender=FirmwareFile)
+def delete_img_pre_delete_post(sender, instance, *args, **kwargs):
+    """
+    callback function
+    delete the firmwarefile and folder structure in storage on recieve
+    """
+    if instance.file:
+        logger = logging.getLogger('web')
+        logger.debug(instance.get_abs_folder_path())
+        shutil.rmtree(instance.get_abs_folder_path(), ignore_errors=True)
+
+
 class Firmware(models.Model):
     """
     class Firmware
-    Model to firmware to be analyzed, basic/expert emba flags and metadata on the analyze process
+    Model of firmware to be analyzed, basic/expert emba flags and metadata on the analyze process
     """
     MAX_LENGTH = 127
 
@@ -166,6 +185,14 @@ class Firmware(models.Model):
     class Meta:
         app_label = 'uploader'
 
+    """
+        build shell command from input fields
+
+        :params: None
+
+        :return:
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -214,3 +241,20 @@ class Firmware(models.Model):
             command = command + " -t"
         # running emba
         return command
+
+
+class DeleteFirmware(models.Model):
+    """
+    class DeleteFirmware
+    Model of firmware to be selected for deletion
+    """
+
+    MAX_LENGTH = 127
+
+    firmware = CharFieldExpertMode(help_text='', blank=False, max_length=MAX_LENGTH)
+
+    class Meta:
+        app_label = 'uploader'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)

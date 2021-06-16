@@ -24,17 +24,43 @@
         </div>
         <div class="progress" id="progress-wrapper">
             <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
-        </div> 
-    </div>
-    <div class="col-sm">
-        <div class="row dataRow">
-            <div class="col col-sm-8">
-                <form action="/home/upload/" method="POST" id="post-form">
+        </div>
+
+        <span style="display:inline-block; "></span>
+
+        <div class="row deleteIconRow">
+            <div id="fileDelDiv">
+                <p align="center" class="mainText">Select and Delete a firmware image or archive</p>
+                <form action="/home/delete/" method="POST" id="delete-form" onsubmit="window.confirmDelete(event)">
 
                     {% csrf_token %}
                     {% load filters %}
                     <!-- Iterate over all fields and set expmode on fields in expert mode -->
-                    {% for field in form %}
+                    {% for field in delete_form %}
+
+                        <div id="firmwareToDelete" class="form-group" >
+                                {{ field.label_tag }}
+                                {{ field }}
+                        </div>
+
+                    {% endfor %}
+
+                    <div class="row deleteBtnRow">
+                        <button type="delete" class="btn">Delete</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm">
+        <div class="row dataRow">
+            <div class="col col-sm-8">
+                <form action="/home/upload/" method="POST" id="analyze-form">
+
+                    {% csrf_token %}
+                    {% load filters %}
+                    <!-- Iterate over all fields and set expmode on fields in expert mode -->
+                    {% for field in analyze_form %}
 
                         {% if field.expert_mode %}
                             <div class="form-group expertModeOptions" value="expmode" style="display:none;">
@@ -90,7 +116,7 @@
                         </div>
                         <div class="col-sm-5 togSwitch">
                             <label class="switch">
-                                <input id="helpTextSwitch" type="checkbox" onclick="helpTextOn()">
+                                <input id="helpTextSwitch" type="checkbox" onclick="mytest()">
                                 <span class="slider round"></span>
                             </label>
                         </div>
