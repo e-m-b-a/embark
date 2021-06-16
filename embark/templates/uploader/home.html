@@ -12,9 +12,11 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 
 	<!--Styling sheets-->
+	<link rel="stylesheet" type="text/css" href="{% static 'content/css/globalStyle.css' %}">
 	<link rel="stylesheet" type="text/css" href="{% static 'content/css/home.css' %}">
 	<link rel="stylesheet" type="text/css" href="{% static 'content/css/fileUpload.css' %}">
 	<link rel="stylesheet" type="text/css" href="{% static 'content/css/serviceDashboard.css' %}">
+	<link rel="stylesheet" type="text/css" href="{% static 'content/css/mainDashboard.css' %}">
 
 	<!--script for fonts/icons-->
 	<script src="https://kit.fontawesome.com/67d45e2d15.js" crossorigin="anonymous"></script>
@@ -42,34 +44,31 @@
 					<!--Navigation menu items-->
 					<ul>
 						<li>
-							<a class="active" href="#home" onclick="">
+							<a class="active" href="{% url 'embark-home' %}" onclick="">
 								<span class="brandlogo"><img src="{% static 'content/images/Embark_red.png'%}" alt="embark" class="embarklogo"></span>
 								<span class="brandname"><h2>EMBArk</h2></span>
 							</a>
 						</li>
 						<li>
-							<a href="#dashboard" onclick="">
+							<a href="{% url 'embark-MainDashboard' %}" onclick="">
 								<span class="icon"><i class="fas fa-tachometer-alt" aria-hidden="true"></i></span>
 								<span class="title">Dashboard</span>
 							</a>
 						</li>
 						<li>
-							<a href="#uploader" >
-								<script type="text/javascript">
-								   uploader();
-								</script>
+							<a href="{% url 'embark-upload' %}" data-link>
 								<span class="icon"><i class="fas fa-upload" aria-hidden = "true"></i> </span>
 								<span class="title">Uploader</span>
 							</a>
 						</li>
 						<li>
-							<a href="#service" onclick="loadServiceDasboard()">
+							<a href="{% url 'embark-ServiceDashboard' %}" >
 								<span class="icon"><i class="fas fa-binoculars" aria-hidden="true"></i></span>
 								<span class="title">Service</span>
 							</a>
 						</li>
 						<li>
-							<a href="#reports" onclick="loadReportDashboard()">
+							<a href="{% url 'embark-ReportDashboard' %}">
 								<span class="icon"><i class="fas fa-chart-pie" aria-hidden="true"></i></span>
 								<span class="title">Reports</span>
 							</a>
@@ -82,11 +81,13 @@
 	
 	<!--Main container-->
 	<div class="main col col-sm-10">
-		<section class="section1" id="home">Home</section>
+		{% comment %} <section class="section1" id="home">Home</section>
 		<section class="section2" id="dashboard">Dashboard</section>
-		<section class="section3" id="uploader">Uploader</section>
+		<section class="section3" id="uploader">Uploader</section> {% endcomment %}
 		{% comment %} <section class="section4" id="details">Details</section>			 {% endcomment %}
-		<section class="section5" id="service">Service</section>
-		<section class="section6" id="reports">Reports</section>
+		{% comment %} <section class="section5" id="service">Service</section>
+		<section class="section6" id="reports">Reports</section> {% endcomment %}
+		{% block maincontent %}
+		{% endblock %}
 	</div>
 </html>

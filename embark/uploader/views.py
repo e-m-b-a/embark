@@ -1,9 +1,6 @@
 from django import forms
-from django.shortcuts import render
 import os
-import json
 import logging
-import sys
 
 from django.conf import settings
 from django.shortcuts import render
@@ -13,9 +10,6 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
-from django.core.files.storage import FileSystemStorage
-
-from .archiver import Archiver
 
 # TODO: Add required headers like type of requests allowed later.
 
@@ -23,7 +17,7 @@ from .archiver import Archiver
 # home page test view TODO: change name accordingly
 from .boundedExecutor import BoundedExecutor
 from .archiver import Archiver
-from .forms import FirmwareForm
+from .forms import FirmwareForm, DeleteFirmwareForm
 from .models import Firmware, FirmwareFile
 
 logger = logging.getLogger('web')
@@ -110,18 +104,20 @@ def upload_file(request):
 
             # inject into bounded Executor
             if BoundedExecutor.submit_firmware(firmware_flags=firmware_flags, firmware_file=firmware_file):
-                return HttpResponseRedirect("../../home/#uploader")
+                return HttpResponseRedirect("../../home/upload")
             else:
                 return HttpResponse("queue full")
         else:
-            logger.error("Posted Form is unvalid")
+            logger.error("Posted Form is invalid")
             logger.error(form.errors)
-            return HttpResponse("Unvalid Form")
+            return HttpResponse("Invalid Form")
 
-    # set available options for firmware
     FirmwareForm.base_fields['firmware'] = forms.ModelChoiceField(queryset=FirmwareFile.objects)
-    form = FirmwareForm()
-    return render(request, 'uploader/fileUpload.html', {'form': form})
+    DeleteFirmwareForm.base_fields['firmware'] = forms.ModelChoiceField(queryset=FirmwareFile.objects)
+
+    analyze_form = FirmwareForm()
+    delete_form = DeleteFirmwareForm()
+    return render(request, 'uploader/fileUpload.html', {'analyze_form': analyze_form, 'delete_form': delete_form})
 
 
 @csrf_exempt
@@ -131,7 +127,7 @@ def service_dashboard(request):
     return HttpResponse(html_body.render())
 
 
-def reportDashboard(request):
+def report_dashboard(request):
     """
     delivering ReportDashboard with finished_firmwares as dictionary
 
@@ -142,7 +138,7 @@ def reportDashboard(request):
 
     finished_firmwares = Firmware.objects.all().filter(finished=True)
     logger.debug(f"firmwares: \n {finished_firmwares}")
-    return render(request, 'uploader/ReportDashboard.html', {'finished_firmwares': finished_firmwares})
+    return render(request, 'uploader/reportDashboard.html', {'finished_firmwares': finished_firmwares})
 
 
 # Function which saves the file .
@@ -161,15 +157,64 @@ def save_file(request):
 
     for file in request.FILES.getlist('file'):
         try:
-            Archiver.check_extensions(file.name)
+            is_archive = Archiver.check_extensions(file.name)
 
-            firmware_file = FirmwareFile(file=file)
+            # ensure primary key for file saving exists
+            firmware_file = FirmwareFile(is_archive=is_archive)
             firmware_file.save()
 
-            return HttpResponse("Firmwares has been successfully saved")
+            # save file in <media-root>/pk/firmware
+            firmware_file.file = file
+            firmware_file.save()
 
-        except ValueError:
-            return HttpResponse("Firmware format not supported")
+            if is_archive:
+                return HttpResponse("Firmwares has been successfully saved")
+            else:
+                return HttpResponse("Firmware file not supported by archiver (binary file ?). \n"
+                                    "Use on your own risk.")
 
         except Exception as error:
+            logger.error(error)
             return HttpResponse("Firmware could not be uploaded")
+
+
+@csrf_exempt
+def main_dashboard(request):
+    html_body = get_template('uploader/mainDashboard.html')
+    return HttpResponse(html_body.render())
+
+
+@csrf_exempt
+def reports(request):
+    html_body = get_template('uploader/reports.html')
+    return HttpResponse(html_body.render())
+
+
+@require_http_methods(["POST"])
+def delete_file(request):
+    """
+    file deletion on POST requests with attached present firmware file
+
+    :params request: HTTP request
+
+    :return: HttpResponse including the status
+    """
+
+    if request.method == 'POST':
+        form = DeleteFirmwareForm(request.POST)
+
+        if form.is_valid():
+            logger.info(f"Form {form} is valid")
+
+            # get relevant data
+            firmware_file = form.cleaned_data['firmware']
+            firmware_file.delete()
+
+            return HttpResponseRedirect("../../home/upload")
+
+        else:
+            logger.error(f"Form {form} is invalid")
+            logger.error(f"{form.errors}")
+            return HttpResponse("invalid Form")
+
+    return HttpResponseRedirect("../../home/upload")
