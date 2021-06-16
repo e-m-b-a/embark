@@ -157,19 +157,21 @@ def save_file(request):
 
     for file in request.FILES.getlist('file'):
         try:
+            is_archive = Archiver.check_extensions(file.name)
 
-            Archiver.check_extensions(file.name)
-
-            firmware_file = FirmwareFile()
+            # ensure primary key for file saving exists
+            firmware_file = FirmwareFile(file=file, is_archive=is_archive)
             firmware_file.save()
 
+            # save file in <media-root>/pk/firmware
             firmware_file.file = file
             firmware_file.save()
 
-            return HttpResponse("Firmwares has been successfully saved")
-
-        except ValueError:
-            return HttpResponse("Firmware format not supported")
+            if is_archive:
+                return HttpResponse("Firmwares has been successfully saved")
+            else:
+                return HttpResponse("Firmware file not supported by archiver (binary file ?). \n"
+                                    "Use on your own risk.")
 
         except Exception as error:
             logger.error(error)

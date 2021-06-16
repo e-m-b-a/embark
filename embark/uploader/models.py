@@ -89,6 +89,7 @@ class FirmwareFile(models.Model):
     MAX_LENGTH = 127
 
     file = models.FileField(upload_to=get_storage_path)
+    is_archive = models.BooleanField(default=False)
     upload_date = models.DateTimeField(default=datetime.now, blank=True)
 
     def get_abs_path(self):
