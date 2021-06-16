@@ -160,7 +160,7 @@ def save_file(request):
             is_archive = Archiver.check_extensions(file.name)
 
             # ensure primary key for file saving exists
-            firmware_file = FirmwareFile(file=file, is_archive=is_archive)
+            firmware_file = FirmwareFile(is_archive=is_archive)
             firmware_file.save()
 
             # save file in <media-root>/pk/firmware
