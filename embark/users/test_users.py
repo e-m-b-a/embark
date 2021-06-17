@@ -24,7 +24,7 @@ class TestUsers(TestCase):
 
     def test_signin_wrong_password(self):
         """
-        Right password would render the same page again with 200 status code
+        Wrong password would render the same page again with 200 status code
         Returns:
 
         """
