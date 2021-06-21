@@ -55,7 +55,7 @@
     <div class="col-sm">
         <div class="row dataRow">
             <div class="col col-sm-8">
-                <form action="/home/upload/" method="POST" id="analyze-form">
+                <form action="{% url 'embark-start-analysis' refreshed=2 %}" method="POST" id="analyze-form">
 
                     {% csrf_token %}
                     {% load filters %}

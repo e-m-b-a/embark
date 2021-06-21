@@ -80,10 +80,19 @@ def download_zipped(request, analyze_id):
         logger.error(f"{ex}")
         return HttpResponse(f"Error occured while querying for Firmware object with ID: {analyze_id}")
 
+# @csrf_exempt
+# @login_required(login_url='/' + settings.LOGIN_URL)
+# def refresh_upload(request):
+#     start_analysis(request, True)
+#
+# @csrf_exempt
+# @login_required(login_url='/' + settings.LOGIN_URL)
+# def analysis(request):
+#     start_analysis(request, False)
 
 @csrf_exempt
 @login_required(login_url='/' + settings.LOGIN_URL)
-def start_analysis(request):
+def start_analysis(request, refreshed):
     """
     View to submit form for flags to run emba with
     if: form is valid
@@ -113,7 +122,10 @@ def start_analysis(request):
 
             # inject into bounded Executor
             if BoundedExecutor.submit_firmware(firmware_flags=firmware_flags, firmware_file=firmware_file):
-                return HttpResponseRedirect("../../home/upload")
+                if refreshed == 1:
+                    return HttpResponseRedirect("../../upload/1/")
+                else:
+                    return HttpResponseRedirect("../../serviceDashboard/")
             else:
                 return HttpResponse("Queue full")
         else:
@@ -126,7 +138,12 @@ def start_analysis(request):
 
     analyze_form = FirmwareForm()
     delete_form = DeleteFirmwareForm()
-    return render(request, 'uploader/fileUpload.html', {'analyze_form': analyze_form, 'delete_form': delete_form})
+
+    if refreshed == 1:
+        return render(request, 'uploader/fileUpload.html', {'analyze_form': analyze_form, 'delete_form': delete_form})
+    else:
+        html_body = get_template('uploader/embaServiceDashboard.html')
+        return HttpResponse(html_body.render())
 
 
 @csrf_exempt
@@ -155,7 +172,7 @@ def report_dashboard(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def save_file(request):
+def save_file(request, refreshed):
     """
     file saving on POST requests with attached file
 

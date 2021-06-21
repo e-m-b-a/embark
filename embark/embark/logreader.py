@@ -1,6 +1,7 @@
 import copy
 import difflib
 import re
+import time
 
 import rx
 import rx.operators as ops
@@ -40,6 +41,7 @@ class LogReader:
         }
 
         # start processing
+        time.sleep(1)
         self.read_loop()
 
     # update our dict whenever a new module is being processed
@@ -109,6 +111,7 @@ class LogReader:
 
             # look for new events
             got_event = self.inotify_events(f"{firmware.path_to_logs}emba.log")
+
             for eve in got_event:
                 for flag in flags.from_mask(eve.mask):
                     # Ignore irrelevant flags TODO: add other possible flags
@@ -210,7 +213,6 @@ class LogReader:
         inotify = INotify()
         # TODO: add/remove flags to watch
         watch_flags = flags.CREATE | flags.DELETE | flags.MODIFY | flags.DELETE_SELF | flags.CLOSE_NOWRITE | flags.CLOSE_WRITE
-        # logger.debug(f"path: {path}")
         try:
             # add watch on file
             inotify.add_watch(path, watch_flags)
