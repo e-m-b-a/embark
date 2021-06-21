@@ -39,3 +39,14 @@ class FirmwareForm(forms.ModelForm):
                 field.expert_mode = field.field.expert_mode
             except:
                 pass
+
+
+class DeleteFirmwareForm(forms.ModelForm):
+
+    class Meta:
+        model = models.DeleteFirmware
+
+        fields = ('firmware', )
+
+    def __init__(self, *args, **kwargs):
+        super(DeleteFirmwareForm, self).__init__(*args, **kwargs)

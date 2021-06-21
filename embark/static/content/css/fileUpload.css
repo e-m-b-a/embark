@@ -100,6 +100,12 @@ input:checked+.slider:before {
 
 /* Styles for file upload */
 
+.deleteIconRow {
+    border-top-style: solid;
+    border-color: #b8cedb;
+    padding: 40px;
+}
+
 .fileDrop>input {
     display: none;
 }
@@ -128,6 +134,14 @@ input:checked+.slider:before {
 }
 
 .uploadBtnRow {
+    justify-content: center;
+}
+
+.deleteIconRow {
+    justify-content: center;
+}
+
+.deleteBtnRow {
     justify-content: center;
 }
 

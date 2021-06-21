@@ -115,7 +115,12 @@ class BoundedExecutor:
 
         # unpack firmware file to </app/embark/uploadedFirmwareImages/active_{ID}/>
         active_analyzer_dir = f"/app/embark/{settings.MEDIA_ROOT}/active_{firmware_flags.id}/"
-        Archiver.unpack(firmware_file.file.path, active_analyzer_dir)
+
+        if firmware_file.is_archive:
+            Archiver.unpack(firmware_file.file.path, active_analyzer_dir)
+            # TODO: maybe descent in directory structure
+        else:
+            Archiver.copy(firmware_file.file.path, active_analyzer_dir)
 
         # get emba flags from command parser
         emba_flags = firmware_flags.get_flags()
