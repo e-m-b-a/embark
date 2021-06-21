@@ -27,8 +27,7 @@ class unpacker_test(TestCase):
 
     def test_format_check(self):
         self.assertTrue(self.archiver.check_extensions("testfile.zip"))
-        with self.assertRaises(ValueError):
-            self.assertRaises(self.archiver.check_extensions("testfile.bin"))
+        self.assertFalse(self.archiver.check_extensions("testfile.bin"))
 
     def test_false_file(self):
 

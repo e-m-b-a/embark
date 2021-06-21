@@ -18,20 +18,16 @@ h3 {
     line-height: 1.3em;
 }
 
-p {
-    font-size: xxx-large;
-    font-weight: 100 !important;
-}
 
 .coldiv {
     width: 100%;
 }
 
-body {
+/* body {
     font-size: 14px;
     line-height: 1.5em;
     font-weight: 300;
-}
+} */
 
 .radio-custom:checked+.radio-custom-label:before {
     content: "\f00c";
@@ -65,10 +61,10 @@ body {
     margin-bottom: 5px;
 }
 
-.progress {
+/* .progress {
     height: auto;
     padding: 5px;
-}
+} */
 
 .log {
     width: 100%;

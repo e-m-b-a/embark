@@ -55,7 +55,7 @@ class Archiver:
         """
 
         # TODO: check location
-        shutil.make_archive(base_name, archive_format, root_dir, base_dir)
+        return shutil.make_archive(base_name, archive_format, root_dir, base_dir)
         # alternative if single files be zipped:
         # with tarfile
 
@@ -119,9 +119,23 @@ class Archiver:
             :return: True if extension is supported, ValueError otherwise
         """
 
-        ext = f".{file_name.rsplit('.', 1)[1]}"
-        if cls.get_supported_extensions().__contains__(ext):
-            return True
+        for ext in cls.get_supported_extensions():
+            if file_name.endswith(ext):
+                return True
 
-        logger.error(f"Format {ext} is not supported")
-        raise ValueError
+        logger.info(f"Format for {file_name} is not supported by archiver")
+        return False
+
+    @classmethod
+    def copy(cls, src, dst):
+        """
+            copy file from src to dst
+
+            :param src: src file to be copied
+            :param dst: location to be copied to
+
+            :return: path on success
+        """
+
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        return shutil.copy(src, dst)

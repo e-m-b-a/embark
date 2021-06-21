@@ -1,64 +1,133 @@
+import logging
+import os
+import shutil
+
 from django.conf import settings
 from django.db import models
 from django import forms
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
 from django.utils.datetime_safe import datetime
+
+logger = logging.getLogger('web')
 
 
 class BooleanFieldExpertModeForm(forms.BooleanField):
+    """
+    class BooleanFieldExpertModeForm
+    Extension of forms.BooleanField to support expert_mode and readonly option for BooleanFields in Forms
+    """
     def __init__(self, input_formats=None, *args, **kwargs):
         self.expert_mode = kwargs.pop('expert_mode', True)
+        self.readonly = kwargs.pop('readonly', False)
         super(BooleanFieldExpertModeForm, self).__init__(*args, **kwargs)
 
 
 class BooleanFieldExpertMode(models.BooleanField):
+    """
+    class BooleanFieldExpertModeForm
+    Extension of models.BooleanField to support expert_mode and readonly for BooleanFields option for Models
+    """
     def __init__(self, *args, **kwargs):
         self.expert_mode = kwargs.pop('expert_mode', True)
+        self.readonly = kwargs.pop('readonly', False)
         super(BooleanFieldExpertMode, self).__init__(*args, **kwargs)
 
     def formfield(self, **kwargs):
-        defaults = {'form_class': BooleanFieldExpertModeForm, 'expert_mode': self.expert_mode}
+        defaults = {'form_class': BooleanFieldExpertModeForm, 'expert_mode': self.expert_mode, 'readonly': self.readonly}
         defaults.update(kwargs)
         return models.Field.formfield(self, **defaults)
 
 
 class CharFieldExpertModeForm(forms.CharField):
+    """
+    class BooleanFieldExpertModeForm
+    Extension of forms.CharField to support expert_mode and readonly for CharField option for Forms
+    """
     def __init__(self, input_formats=None, *args, **kwargs):
         self.expert_mode = kwargs.pop('expert_mode', True)
+        self.readonly = kwargs.pop('readonly', False)
         super(CharFieldExpertModeForm, self).__init__(*args, **kwargs)
 
 
+class TypedChoiceFieldExpertModeForm(forms.TypedChoiceField):
+    """
+    class BooleanFieldExpertModeForm
+    Extension of forms.TypedChoiceField to support expert_mode and readonly for TypedChoiceField option for Forms
+    """
+    def __init__(self, input_formats=None, *args, **kwargs):
+        self.expert_mode = kwargs.pop('expert_mode', True)
+        self.readonly = kwargs.pop('readonly', False)
+        super(TypedChoiceFieldExpertModeForm, self).__init__(*args, **kwargs)
+
+
 class CharFieldExpertMode(models.CharField):
+    """
+    class CharFieldExpertMode
+    Extension of models.BooleanField to support expert_mode and readonly for CharField option for Models
+    """
     def __init__(self, *args, **kwargs):
         self.expert_mode = kwargs.pop('expert_mode', True)
+        self.readonly = kwargs.pop('readonly', False)
         super(CharFieldExpertMode, self).__init__(*args, **kwargs)
 
     def formfield(self, **kwargs):
-        defaults = {'form_class': CharFieldExpertModeForm, 'expert_mode': self.expert_mode}
+        defaults = {'form_class': CharFieldExpertModeForm, 'choices_form_class': TypedChoiceFieldExpertModeForm, 'expert_mode': self.expert_mode, 'readonly': self.readonly}
         defaults.update(kwargs)
         return models.Field.formfield(self, **defaults)
 
 
 class FirmwareFile(models.Model):
-
+    """
+    class FirmwareFile
+    Model to store zipped or bin firmware file and upload date
+    """
     def get_storage_path(self, filename):
         # file will be uploaded to MEDIA_ROOT/<filename>
-        return f"{filename}"
+        return os.path.join(f"{self.pk}", filename)
 
     MAX_LENGTH = 127
 
     file = models.FileField(upload_to=get_storage_path)
+    is_archive = models.BooleanField(default=False)
     upload_date = models.DateTimeField(default=datetime.now, blank=True)
 
     def get_abs_path(self):
-        return f"/app/embark/{settings.MEDIA_ROOT}/{self.file.name}"
+        return f"/app/embark/{settings.MEDIA_ROOT}/{self.pk}/{self.file.name}"
+
+    def get_abs_folder_path(self):
+        return f"/app/embark/{settings.MEDIA_ROOT}/{self.pk}"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.file_name = self.file.name
+
+    def __str__(self):
+        return self.file.name
+
+
+@receiver(pre_delete, sender=FirmwareFile)
+def delete_img_pre_delete_post(sender, instance, *args, **kwargs):
+    """
+    callback function
+    delete the firmwarefile and folder structure in storage on recieve
+    """
+    if instance.file:
+        logger = logging.getLogger('web')
+        logger.debug(instance.get_abs_folder_path())
+        shutil.rmtree(instance.get_abs_folder_path(), ignore_errors=True)
 
 
 class Firmware(models.Model):
-
+    """
+    class Firmware
+    Model of firmware to be analyzed, basic/expert emba flags and metadata on the analyze process
+    """
     MAX_LENGTH = 127
 
     firmware = CharFieldExpertMode(help_text='', blank=False, max_length=MAX_LENGTH)
 
+    # emba basic flags
     version = CharFieldExpertMode(
         help_text='Firmware version (double quote your input)', verbose_name=u"Firmware version", max_length=MAX_LENGTH,
         blank=True, expert_mode=False)
@@ -67,21 +136,22 @@ class Firmware(models.Model):
         blank=True, expert_mode=False)
     device = CharFieldExpertMode(
         help_text='Device (double quote your input)', verbose_name=u"Device", max_length=MAX_LENGTH, blank=True,
-        expert_mode=False,)
+        expert_mode=False)
     notes = CharFieldExpertMode(
         help_text='Testing notes (double quote your input)', verbose_name=u"Testing notes", max_length=MAX_LENGTH,
         blank=True, expert_mode=False)
 
+    # emba expert flags
     firmware_Architecture = CharFieldExpertMode(
-        choices=[('MIPS', 'MIPS'), ('ARM', 'ARM'), ('x86', 'x86'), ('x64', 'x64'), ('PPC', 'PPC')],
+        choices=[(None, 'Select architecture'), ('MIPS', 'MIPS'), ('ARM', 'ARM'), ('x86', 'x86'), ('x64', 'x64'), ('PPC', 'PPC')],
         verbose_name=u"Select architecture of the linux firmware",
         help_text='Architecture of the linux firmware [MIPS, ARM, x86, x64, PPC] -a will be added',
-        max_length=MAX_LENGTH, blank=True, expert_mode=False)
-
+        max_length=MAX_LENGTH, blank=True, expert_mode=True)
     cwe_checker = BooleanFieldExpertMode(
         help_text='Enables cwe-checker,-c will be added', default=False, expert_mode=True, blank=True)
     docker_container = BooleanFieldExpertMode(
-        help_text='Run emba in docker container, -D will be added', default=False, expert_mode=True, blank=True)
+        help_text='Run emba in docker container, -D will be added', default=True, expert_mode=True, blank=True,
+        readonly=True)
     deep_extraction = BooleanFieldExpertMode(
         help_text='Enable deep extraction, -x will be added', default=False, expert_mode=True, blank=True)
     log_path = BooleanFieldExpertMode(
@@ -106,6 +176,13 @@ class Firmware(models.Model):
         help_text='Activate multi threading (destroys regular console output), -t will be added', default=True,
         expert_mode=True, blank=True)
 
+    # embark meta data
+    path_to_logs = models.FilePathField(default="/", blank=True)
+    start_date = models.DateTimeField(default=datetime.now, blank=True)
+    end_date = models.DateTimeField(default=datetime.min, blank=True)
+    finished = models.BooleanField(default=False, blank=False)
+    failed = models.BooleanField(default=False, blank=False)
+
     class Meta:
         app_label = 'uploader'
 
@@ -120,7 +197,15 @@ class Firmware(models.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def __str__(self):
+        return f"{self.id}({self.firmware})"
+
     def get_flags(self):
+        """
+        build shell command from input fields
+
+        :return: string formatted input flags for emba
+        """
         command = ""
         if self.version:
             command = command + " -X " + str(self.version)
@@ -134,8 +219,9 @@ class Firmware(models.Model):
             command = command + " -a " + str(self.firmware_Architecture)
         if self.cwe_checker:
             command = command + " -c"
-        if self.docker_container:
-            command = command + " -D"
+        # TODO: check if already adapted to use-case
+        # if self.docker_container:
+        #     command = command + " -D"
         if self.deep_extraction:
             command = command + " -x"
         if self.log_path:
@@ -156,3 +242,20 @@ class Firmware(models.Model):
             command = command + " -t"
         # running emba
         return command
+
+
+class DeleteFirmware(models.Model):
+    """
+    class DeleteFirmware
+    Model of firmware to be selected for deletion
+    """
+
+    MAX_LENGTH = 127
+
+    firmware = CharFieldExpertMode(help_text='', blank=False, max_length=MAX_LENGTH)
+
+    class Meta:
+        app_label = 'uploader'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)

@@ -32,7 +32,7 @@ async function postFiles(formData) {
     //formData.append('file', fileData);
     $.ajax({
       type: 'POST',
-      url: 'upload/save_file',
+      url: 'save_file',
       data: formData,
       processData: false,
       contentType: false,
