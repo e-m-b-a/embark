@@ -80,15 +80,6 @@ def download_zipped(request, analyze_id):
         logger.error(f"{ex}")
         return HttpResponse(f"Error occured while querying for Firmware object with ID: {analyze_id}")
 
-# @csrf_exempt
-# @login_required(login_url='/' + settings.LOGIN_URL)
-# def refresh_upload(request):
-#     start_analysis(request, True)
-#
-# @csrf_exempt
-# @login_required(login_url='/' + settings.LOGIN_URL)
-# def analysis(request):
-#     start_analysis(request, False)
 
 @csrf_exempt
 @login_required(login_url='/' + settings.LOGIN_URL)

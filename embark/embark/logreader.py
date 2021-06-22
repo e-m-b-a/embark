@@ -33,6 +33,10 @@ class LogReader:
         self.room_group_name = 'updatesgroup'
         self.channel_layer = get_channel_layer()
 
+        # for testing
+        self.test_list1 = []
+        self.test_list2 = []
+
         # status update dict (appended to processmap)
         self.status_msg = {
             "percentage": 0.0,
@@ -42,7 +46,8 @@ class LogReader:
 
         # start processing
         time.sleep(1)
-        self.read_loop()
+        if firmware_id > 0:
+            self.read_loop()
 
     # update our dict whenever a new module is being processed
     def update_status(self, stream_item_list):
@@ -57,15 +62,17 @@ class LogReader:
 
         # append it to the data structure
         global process_map
-        process_map[self.firmware_id].append(tmp_mes)
+        if self.firmware_id > 0:
+            process_map[self.firmware_id].append(tmp_mes)
 
         # send it to room group
-        async_to_sync(self.channel_layer.group_send)(
-            self.room_group_name, {
-                "type": 'send.message',
-                "message": process_map
-            }
-        )
+        if self.firmware_id > 0:
+            async_to_sync(self.channel_layer.group_send)(
+                self.room_group_name, {
+                    "type": 'send.message',
+                    "message": process_map
+                }
+            )
 
     # update dictionary with phase changes
     def update_phase(self, stream_item_list):
@@ -76,15 +83,17 @@ class LogReader:
         # append it to the data structure
 
         global process_map
-        process_map[self.firmware_id].append(tmp_mes)
+        if self.firmware_id > 0:
+            process_map[self.firmware_id].append(tmp_mes)
 
         # send it to room group
-        async_to_sync(self.channel_layer.group_send)(
-            self.room_group_name, {
-                'type': 'send.message',
-                'message': process_map
-            }
-        )
+        if self.firmware_id > 0:
+            async_to_sync(self.channel_layer.group_send)(
+                self.room_group_name, {
+                    'type': 'send.message',
+                    'message': process_map
+                }
+            )
 
     def read_loop(self):
 
@@ -194,7 +203,7 @@ class LogReader:
             ops.map(lambda b: b.split(" ")),
             ops.filter(lambda c: c[1] == 'finished')
         ).subscribe(
-            lambda x: self.update_status(x)
+            lambda x: [self.update_status(x), self.test_list1.append(x)]
         )
 
         # observer for phase messages
@@ -204,7 +213,7 @@ class LogReader:
             ops.map(lambda v: v.split(" ", 1)),
             ops.filter(lambda w: w[1])
         ).subscribe(
-            lambda x: self.update_phase(x)
+            lambda x: [self.update_phase(x), self.test_list2.append(x)]
         )
 
         # TODO: add more observers for more information
@@ -219,3 +228,7 @@ class LogReader:
             return inotify.read()
         except Exception as e:
             return []
+
+    def produce_test_output(self, inp):
+        self.input_processing(inp)
+        return self.test_list1, self.test_list2

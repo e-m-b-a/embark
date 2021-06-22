@@ -132,7 +132,7 @@ class BoundedExecutor:
 
         # evaluate meta information and safely create log dir
         emba_log_location = f"/app/emba/{settings.LOG_ROOT}/{firmware_flags.pk}/"
-        #Path(emba_log_location).mkdir(parents=True, exist_ok=True)
+
         firmware_flags.path_to_logs = emba_log_location
         firmware_flags.save()
 
@@ -144,7 +144,6 @@ class BoundedExecutor:
 
         # start log_reader TODO: cancel future and return future
         log_read_fut = BoundedExecutor.submit(LogReader, firmware_flags.pk)
-        #Path(emba_log_location).mkdir(parents=True, exist_ok=True)
 
         return emba_fut
 
