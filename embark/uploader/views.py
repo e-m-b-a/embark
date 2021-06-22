@@ -1,6 +1,8 @@
 from django import forms
 import logging
 
+from django.conf import settings
+
 from django.shortcuts import render
 from django.template.loader import get_template
 from django.http import HttpResponse, HttpResponseRedirect
@@ -13,15 +15,23 @@ import os
 
 from .archiver import Archiver
 
+
+import time
+from django.http import StreamingHttpResponse
+from django.template import loader
+
 # TODO: Add required headers like type of requests allowed later.
-
-
 # home page test view TODO: change name accordingly
 from .boundedExecutor import BoundedExecutor
 from .archiver import Archiver
 from .forms import FirmwareForm, DeleteFirmwareForm
 from .models import Firmware, FirmwareFile
 from embark.logreader import LogReader
+
+from uploader.boundedExecutor import BoundedExecutor
+from uploader.archiver import Archiver
+from uploader.forms import FirmwareForm
+from uploader.models import Firmware, FirmwareFile
 
 logger = logging.getLogger('web')
 
@@ -193,6 +203,77 @@ def save_file(request, refreshed):
         except Exception as error:
             logger.error(error)
             return HttpResponse("Firmware could not be uploaded")
+
+
+def log_streamer(request):
+    try:
+        firmware_id = request.GET.get('id', None)
+        from_ = int(request.GET.get('offset', 0))
+
+        if firmware_id is None:
+            return False
+        try:
+            firmware = Firmware.objects.get(id=int(firmware_id))
+        except Firmware.DoesNotExist:
+            logger.error(f"Firmware with id: {firmware_id}. Does not exist.")
+            return False
+
+        file_path = f"/app/emba/{settings.LOG_ROOT}/{firmware.id}/emba.log"
+        mtime = os.path.getmtime(file_path)
+        with open(file_path) as f:
+            start = -int(from_) or -2000
+            filestart = True
+            while filestart:
+                try:
+                    f.seek(start, 2)
+                    filestart = False
+                    result = f.read()
+                    last = f.tell()
+                    t = loader.get_template('uploader/log.html')
+                    yield t.render({"result": result})
+                except IOError:
+                    start += 50
+        reset = 0
+        while True:
+            newmtime = os.path.getmtime(file_path)
+            if newmtime == mtime:
+                time.sleep(1)
+                reset += 1
+                if reset >= 15:
+                    yield "<!-- empty -->"
+                continue
+            mtime = newmtime
+            with open(file_path) as f:
+                f.seek(last)
+                result = f.read()
+                if result:
+                    t = loader.get_template('uploader/log.html')
+                    yield result + "<script>$('html,body').animate(" \
+                                   "{ scrollTop: $(document).height() }, 'slow');</script>"
+                last = f.tell()
+    except Exception as e:
+        logger.exception('Wide exception in logstreamer')
+        return False
+
+
+@require_http_methods(["GET"])
+def get_logs(request):
+    """
+    View takes a get request with following params:
+    1. id: id for firmware
+    2. offset: offset in log file
+    Args:
+        request: HTTPRequest instance
+
+    Returns:
+
+    """
+    generator = log_streamer(request)
+    if type(generator) is bool:
+        return HttpResponse('Error in Streaming logs')
+    response = StreamingHttpResponse(log_streamer(request))
+    response['X-Accel-Buffering'] = "no"
+    return response
 
 
 @csrf_exempt
