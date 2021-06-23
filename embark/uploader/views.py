@@ -30,8 +30,8 @@ from embark.logreader import LogReader
 
 from uploader.boundedExecutor import BoundedExecutor
 from uploader.archiver import Archiver
-from uploader.forms import FirmwareForm
-from uploader.models import Firmware, FirmwareFile
+from uploader.forms import FirmwareForm, DeleteFirmwareForm
+from uploader.models import Firmware, FirmwareFile, DeleteFirmware
 
 logger = logging.getLogger('web')
 
