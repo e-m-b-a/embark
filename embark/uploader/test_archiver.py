@@ -1,10 +1,8 @@
 import os
-import shutil
 
 from django.test import TestCase
 
 from .archiver import Archiver
-import unittest as ut
 
 
 class unpacker_test(TestCase):

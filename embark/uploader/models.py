@@ -244,6 +244,38 @@ class Firmware(models.Model):
         return command
 
 
+class Result(models.Model):
+    firmware = models.ForeignKey(Firmware, on_delete=models.CASCADE, help_text='')
+    architecture_verified = models.CharField(blank=True, null=True, max_length=100, help_text='')
+    os_verified = models.CharField(blank=True, null=True, max_length=100, help_text='')
+    files = models.IntegerField(default=0, help_text='')
+    directories = models.IntegerField(default=0, help_text='')
+    entropy_value = models.FloatField(default=0.0, help_text='')
+    shell_scripts = models.IntegerField(default=0, help_text='')
+    shell_script_vulns = models.IntegerField(default=0, help_text='')
+    yara_rules_match = models.IntegerField(default=0, help_text='')
+    kernel_modules = models.IntegerField(default=0, help_text='')
+    kernel_modules_lic = models.IntegerField(default=0, help_text='')
+    interesting_files = models.IntegerField(default=0, help_text='')
+    post_files = models.IntegerField(default=0, help_text='')
+    canary = models.IntegerField(default=0, help_text='')
+    canary_per = models.IntegerField(default=0, help_text='')
+    relro = models.IntegerField(default=0, help_text='')
+    relro_per = models.IntegerField(default=0, help_text='')
+    nx = models.IntegerField(default=0, help_text='')
+    nx_per = models.IntegerField(default=0, help_text='')
+    pie = models.IntegerField(default=0, help_text='')
+    pie_per = models.IntegerField(default=0, help_text='')
+    stripped = models.IntegerField(default=0, help_text='')
+    stripped_per = models.IntegerField(default=0, help_text='')
+    strcpy = models.IntegerField(default=0, help_text='')
+    versions_identified = models.IntegerField(default=0, help_text='')
+    cve_high = models.IntegerField(default=0, help_text='')
+    cve_medium = models.IntegerField(default=0, help_text='')
+    cve_low = models.IntegerField(default=0, help_text='')
+    exploits = models.IntegerField(default=0, help_text='')
+
+
 class DeleteFirmware(models.Model):
     """
     class DeleteFirmware
@@ -259,3 +291,14 @@ class DeleteFirmware(models.Model):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+
+class ResourceTimestamp(models.Model):
+    """
+    class ResourceTimestamp
+    Model to store zipped or bin firmware file and upload date
+    """
+
+    timestamp = models.DateTimeField(default=datetime.now)
+    cpu_percentage = models.FloatField(default=0.0)
+    memory_percentage = models.FloatField(default=0.0)

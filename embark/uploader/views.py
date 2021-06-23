@@ -1,24 +1,40 @@
 from django import forms
 import os
+from os import path
+import json
 import logging
 
 from django.conf import settings
+
 from django.shortcuts import render
-from django.template.context_processors import csrf
 from django.template.loader import get_template
 from django.http import HttpResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
+from django.conf import settings
+
+import os
+
+from .archiver import Archiver
+
+
+import time
+from django.http import StreamingHttpResponse
+from django.template import loader
 
 # TODO: Add required headers like type of requests allowed later.
-
-
 # home page test view TODO: change name accordingly
 from .boundedExecutor import BoundedExecutor
 from .archiver import Archiver
 from .forms import FirmwareForm, DeleteFirmwareForm
 from .models import Firmware, FirmwareFile
+from embark.logreader import LogReader
+
+from uploader.boundedExecutor import BoundedExecutor
+from uploader.archiver import Archiver
+from uploader.forms import FirmwareForm, DeleteFirmwareForm
+from uploader.models import Firmware, FirmwareFile, DeleteFirmware
 
 logger = logging.getLogger('web')
 
@@ -44,7 +60,6 @@ def about(request):
     return HttpResponse(html_body.render())
 
 
-# TODO: have the right trigger, this is just for testing purpose
 def download_zipped(request, analyze_id):
     """
     download zipped log directory
@@ -75,20 +90,27 @@ def download_zipped(request, analyze_id):
         return HttpResponse(f"Firmware with ID: {analyze_id} does not exist in DB")
     except Exception as ex:
         logger.error(f"Error occured while querying for Firmware object with ID: {analyze_id}")
-        logger.warning(f"{ex}")
+        logger.error(f"{ex}")
         return HttpResponse(f"Error occured while querying for Firmware object with ID: {analyze_id}")
 
 
 @csrf_exempt
 @login_required(login_url='/' + settings.LOGIN_URL)
-def upload_file(request):
+def start_analysis(request, refreshed):
     """
-    delivering rendered uploader html
+    View to submit form for flags to run emba with
+    if: form is valid
+        checks if queue is not full
+            starts emba process redirects to uploader page
+        else: return Queue full
+    else: returns Invalid form error
+    Args:
+        request:
 
-    :params request: HTTP request
+    Returns:
 
-    :return: rendered ReportDashboard on success or HttpResponse on failure
     """
+    # Safely create emba_logs directory
 
     if request.method == 'POST':
         form = FirmwareForm(request.POST)
@@ -104,11 +126,14 @@ def upload_file(request):
 
             # inject into bounded Executor
             if BoundedExecutor.submit_firmware(firmware_flags=firmware_flags, firmware_file=firmware_file):
-                return HttpResponseRedirect("../../home/upload")
+                if refreshed == 1:
+                    return HttpResponseRedirect("../../upload/1/")
+                else:
+                    return HttpResponseRedirect("../../serviceDashboard/")
             else:
-                return HttpResponse("queue full")
+                return HttpResponse("Queue full")
         else:
-            logger.error("Posted Form is invalid")
+            logger.error("Posted Form is Invalid")
             logger.error(form.errors)
             return HttpResponse("Invalid Form")
 
@@ -117,7 +142,12 @@ def upload_file(request):
 
     analyze_form = FirmwareForm()
     delete_form = DeleteFirmwareForm()
-    return render(request, 'uploader/fileUpload.html', {'analyze_form': analyze_form, 'delete_form': delete_form})
+
+    if refreshed == 1:
+        return render(request, 'uploader/fileUpload.html', {'analyze_form': analyze_form, 'delete_form': delete_form})
+    else:
+        html_body = get_template('uploader/embaServiceDashboard.html')
+        return HttpResponse(html_body.render())
 
 
 @csrf_exempt
@@ -146,7 +176,7 @@ def report_dashboard(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def save_file(request):
+def save_file(request, refreshed):
     """
     file saving on POST requests with attached file
 
@@ -167,6 +197,13 @@ def save_file(request):
             firmware_file.file = file
             firmware_file.save()
 
+#             # not used for now since files get stored in different locations
+#             firmware_file = FirmwareFile(file=file)
+#             if(path.exists(firmware_file.get_abs_path())):
+#                 return HttpResponse("File Exists")
+#             else:
+#                 firmware_file.save()
+#                 return HttpResponse("Firmwares has been successfully saved")
             if is_archive:
                 return HttpResponse("Firmwares has been successfully saved")
             else:
@@ -176,6 +213,77 @@ def save_file(request):
         except Exception as error:
             logger.error(error)
             return HttpResponse("Firmware could not be uploaded")
+
+
+def log_streamer(request):
+    try:
+        firmware_id = request.GET.get('id', None)
+        from_ = int(request.GET.get('offset', 0))
+
+        if firmware_id is None:
+            return False
+        try:
+            firmware = Firmware.objects.get(id=int(firmware_id))
+        except Firmware.DoesNotExist:
+            logger.error(f"Firmware with id: {firmware_id}. Does not exist.")
+            return False
+
+        file_path = f"/app/emba/{settings.LOG_ROOT}/{firmware.id}/emba.log"
+        mtime = os.path.getmtime(file_path)
+        with open(file_path) as f:
+            start = -int(from_) or -2000
+            filestart = True
+            while filestart:
+                try:
+                    f.seek(start, 2)
+                    filestart = False
+                    result = f.read()
+                    last = f.tell()
+                    t = loader.get_template('uploader/log.html')
+                    yield t.render({"result": result})
+                except IOError:
+                    start += 50
+        reset = 0
+        while True:
+            newmtime = os.path.getmtime(file_path)
+            if newmtime == mtime:
+                time.sleep(1)
+                reset += 1
+                if reset >= 15:
+                    yield "<!-- empty -->"
+                continue
+            mtime = newmtime
+            with open(file_path) as f:
+                f.seek(last)
+                result = f.read()
+                if result:
+                    t = loader.get_template('uploader/log.html')
+                    yield result + "<script>$('html,body').animate(" \
+                                   "{ scrollTop: $(document).height() }, 'slow');</script>"
+                last = f.tell()
+    except Exception as e:
+        logger.exception('Wide exception in logstreamer')
+        return False
+
+
+@require_http_methods(["GET"])
+def get_logs(request):
+    """
+    View takes a get request with following params:
+    1. id: id for firmware
+    2. offset: offset in log file
+    Args:
+        request: HTTPRequest instance
+
+    Returns:
+
+    """
+    generator = log_streamer(request)
+    if type(generator) is bool:
+        return HttpResponse('Error in Streaming logs')
+    response = StreamingHttpResponse(log_streamer(request))
+    response['X-Accel-Buffering'] = "no"
+    return response
 
 
 @csrf_exempt

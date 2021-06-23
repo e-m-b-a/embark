@@ -2,28 +2,54 @@
 {% block maincontent %}
 <div class="row reportRow">
    <div class="col-sm">
-        <div class="row dataRow">
-            <div class="col col-sm">
 
-                {% csrf_token %}
-                <!-- Iterate over all fields and set expmode on fields in expert mode -->
-                {% for firmware in finished_firmwares %}
-                    <div class="form-group" >
-                        {{ firmware.firmware}}
-                        {{ firmware.firmware.label_tag }}
-                        {{ firmware.path_to_logs }}
-                        {{ firmware.path_to_logs.label_tag }}
-                        {{ firmware.start_date }}
-                        {{ firmware.start_date.label_tag }}
+        {% csrf_token %}
+        <!-- Iterate over all fields and set expmode on fields in expert mode -->
+
+        <table class="table" id="report-table">
+            <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Name</th>
+                <th scope="col">Architecture</th>
+                <th scope="col">Start Date</th>
+                <th scope="col">End Date</th>
+                <th scope="col">Actions</th>
+                <th scope="col"></th>
+            </tr>
+            </thead>
+
+            <tbody>
+            {% for firmware in finished_firmwares %}
+                <tr>
+                    <td>{{ firmware.pk}}</td>
+                    <td>{{ firmware.firmware}}</td>
+                    <td>{{ firmware.firmware_Architecture }}</td>
+                    <td>{{ firmware.start_date }}</td>
+                    <td>{{ firmware.end_date }}</td>
+                    <td>
                         <form action={% url 'embark-download' firmware.pk %} method='GET'>
-                            <button type="submit" class="btn btn-light" >Download Logs</button>
+                            <button type="submit" class="btn" >Download Logs</button>
                         </form>
+                    </td>
+                    <td>
+                        <form action={% url 'embark-download' firmware.pk %} method='GET'>
+                            <button type="submit" class="btn" >Run Emba</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
 
-
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
     </div>
 </div>
+{% endblock %}
+
+{% block js %}
+    <script>
+        $(document).ready(function() {
+            $('#report-table').DataTable();
+        } );
+    </script>
 {% endblock %}
