@@ -204,7 +204,7 @@ def save_file(request, refreshed):
 #             else:
 #                 firmware_file.save()
 #                 return HttpResponse("Firmwares has been successfully saved")
-           if is_archive:
+            if is_archive:
                 return HttpResponse("Firmwares has been successfully saved")
             else:
                 return HttpResponse("Firmware file not supported by archiver (binary file ?). \n"
