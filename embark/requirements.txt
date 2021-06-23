@@ -11,3 +11,5 @@ inotify-simple
 mysqlclient
 pymongo
 mongoengine
+django-apscheduler
+psutil

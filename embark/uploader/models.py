@@ -291,3 +291,14 @@ class DeleteFirmware(models.Model):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+
+class ResourceTimestamp(models.Model):
+    """
+    class ResourceTimestamp
+    Model to store zipped or bin firmware file and upload date
+    """
+
+    timestamp = models.DateTimeField(default=datetime.now)
+    cpu_percentage = models.FloatField(default=0.0)
+    memory_percentage = models.FloatField(default=0.0)
