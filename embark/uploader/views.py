@@ -1,4 +1,7 @@
 from django import forms
+import os
+from os import path
+import json
 import logging
 
 from django.conf import settings
@@ -194,6 +197,13 @@ def save_file(request, refreshed):
             firmware_file.file = file
             firmware_file.save()
 
+#             # not used for now since files get stored in different locations
+#             firmware_file = FirmwareFile(file=file)
+#             if(path.exists(firmware_file.get_abs_path())):
+#                 return HttpResponse("File Exists")
+#             else:
+#                 firmware_file.save()
+#                 return HttpResponse("Firmwares has been successfully saved")
             if is_archive:
                 return HttpResponse("Firmwares has been successfully saved")
             else:

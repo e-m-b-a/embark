@@ -14,16 +14,22 @@ function showFiles(fileData) {
   }
 }
 
-/** This function saves the file to local directory. */
-/* fileData - Information of the uploaded file or Files*/
-async function saveFiles() {
-  try {
+function saveFiles() {
     var fileData = document.getElementById('file-input').files;
     var formData = new FormData()
     for (let index = 0; index < fileData.length; index++) {
+      fileData[index].inputFileName = fileData[index].name;
       formData.append('file', fileData[index]);
+
     }
-    formData.append('file', fileData);
+    postFiles(formData);
+}
+
+/** This function saves the file to local directory. */
+/* fileData - Information of the uploaded file or Files*/
+async function postFiles(formData) {
+  try {
+    //formData.append('file', fileData);
     $.ajax({
       type: 'POST',
       url: 'save_file',
@@ -44,8 +50,28 @@ async function saveFiles() {
         return xhr;
       },
       success: function (data) {
+        if(data == "File Exists"){
+          var fileData = document.getElementById('file-input').files[0];
+          var formData = new FormData()
+          var res = confirm("A File with the same name exists ,Click ok to rename and save it");
+          if (res == true) {
+            var fileName = prompt("Please enter the new File name", fileData.inputFileName);
+            if (fileName != null) {
+              const myRenamedFile = new File([fileData], fileName);
+               //fileData.inputFileName=fileName;
+               formData.append('file',myRenamedFile);
+              postFiles(formData);
+            }
+          }else{
+            alert("The file is not saved");
+            location.reload();
+          }
+        }else{
         alert("" + data);
-        document.getElementById("uploadedFileNames").style.display = 'none';
+        location.reload()
+        //document.getElementById("uploadedFileNames").style.display = 'none';
+        location.reload();
+        }
       }
     });
   } catch (error) {
