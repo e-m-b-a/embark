@@ -1,7 +1,9 @@
 import logging
 import shutil
 import subprocess
-from concurrent.futures.thread import ThreadPoolExecutor
+
+from pathlib import Path
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from threading import BoundedSemaphore
 
 from django.utils.datetime_safe import datetime
@@ -9,13 +11,14 @@ from django.conf import settings
 
 from .archiver import Archiver
 from .models import Firmware
+from embark.logreader import LogReader
 
 logger = logging.getLogger('web')
 
 # maximum concurrent running workers
-max_workers = 2
+max_workers = 4
 # maximum queue bound
-max_queue = 2
+max_queue = 0
 
 # assign the threadpool max_worker_threads
 executor = ThreadPoolExecutor(max_workers=max_workers)
@@ -50,9 +53,8 @@ class BoundedExecutor:
         # get return code to evaluate: 0 = success, 1 = failure,
         # see emba.sh for further information
         try:
-            # run emba_process and wait for completion
 
-            # TODO: progress bar needs to be started
+            # run emba_process and wait for completion
             emba_process = subprocess.call(cmd, shell=True)
 
             # success
@@ -128,8 +130,9 @@ class BoundedExecutor:
         # TODO: Maybe check if file or dir
         image_file_location = f"{active_analyzer_dir}*"
 
-        # evaluate meta information
-        emba_log_location = f"/app/emba/{settings.LOG_ROOT}/"
+        # evaluate meta information and safely create log dir
+        emba_log_location = f"/app/emba/{settings.LOG_ROOT}/{firmware_flags.pk}/"
+
         firmware_flags.path_to_logs = emba_log_location
         firmware_flags.save()
 
@@ -137,7 +140,10 @@ class BoundedExecutor:
         emba_cmd = f"{emba_script_location} -f {image_file_location} -l {emba_log_location} {emba_flags}"
 
         # submit command to executor threadpool
-        emba_fut = executor.submit(cls.run_emba_cmd, emba_cmd, firmware_flags.pk, active_analyzer_dir)
+        emba_fut = BoundedExecutor.submit(cls.run_emba_cmd, emba_cmd, firmware_flags.pk, active_analyzer_dir)
+
+        # start log_reader TODO: cancel future and return future
+        log_read_fut = BoundedExecutor.submit(LogReader, firmware_flags.pk)
 
         return emba_fut
 
@@ -156,7 +162,6 @@ class BoundedExecutor:
         if not queue_not_full:
             logger.error(f"Executor queue full")
             return None
-
         try:
             future = executor.submit(fn, *args, **kwargs)
         except Exception as e:
