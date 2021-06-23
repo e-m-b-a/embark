@@ -1,5 +1,4 @@
 from django import forms
-import os
 import logging
 
 from django.conf import settings
@@ -10,6 +9,11 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
+from django.conf import settings
+
+import os
+
+from .archiver import Archiver
 
 
 import time
@@ -18,6 +22,11 @@ from django.template import loader
 
 # TODO: Add required headers like type of requests allowed later.
 # home page test view TODO: change name accordingly
+from .boundedExecutor import BoundedExecutor
+from .archiver import Archiver
+from .forms import FirmwareForm, DeleteFirmwareForm
+from .models import Firmware, FirmwareFile
+from embark.logreader import LogReader
 
 from uploader.boundedExecutor import BoundedExecutor
 from uploader.archiver import Archiver
@@ -48,7 +57,6 @@ def about(request):
     return HttpResponse(html_body.render())
 
 
-# TODO: have the right trigger, this is just for testing purpose
 def download_zipped(request, analyze_id):
     """
     download zipped log directory
@@ -79,20 +87,27 @@ def download_zipped(request, analyze_id):
         return HttpResponse(f"Firmware with ID: {analyze_id} does not exist in DB")
     except Exception as ex:
         logger.error(f"Error occured while querying for Firmware object with ID: {analyze_id}")
-        logger.warning(f"{ex}")
+        logger.error(f"{ex}")
         return HttpResponse(f"Error occured while querying for Firmware object with ID: {analyze_id}")
 
 
 @csrf_exempt
 @login_required(login_url='/' + settings.LOGIN_URL)
-def upload_file(request):
+def start_analysis(request, refreshed):
     """
-    delivering rendered uploader html
+    View to submit form for flags to run emba with
+    if: form is valid
+        checks if queue is not full
+            starts emba process redirects to uploader page
+        else: return Queue full
+    else: returns Invalid form error
+    Args:
+        request:
 
-    :params request: HTTP request
+    Returns:
 
-    :return: rendered ReportDashboard on success or HttpResponse on failure
     """
+    # Safely create emba_logs directory
 
     if request.method == 'POST':
         form = FirmwareForm(request.POST)
@@ -108,11 +123,14 @@ def upload_file(request):
 
             # inject into bounded Executor
             if BoundedExecutor.submit_firmware(firmware_flags=firmware_flags, firmware_file=firmware_file):
-                return HttpResponseRedirect("../../home/upload")
+                if refreshed == 1:
+                    return HttpResponseRedirect("../../upload/1/")
+                else:
+                    return HttpResponseRedirect("../../serviceDashboard/")
             else:
-                return HttpResponse("queue full")
+                return HttpResponse("Queue full")
         else:
-            logger.error("Posted Form is invalid")
+            logger.error("Posted Form is Invalid")
             logger.error(form.errors)
             return HttpResponse("Invalid Form")
 
@@ -121,7 +139,12 @@ def upload_file(request):
 
     analyze_form = FirmwareForm()
     delete_form = DeleteFirmwareForm()
-    return render(request, 'uploader/fileUpload.html', {'analyze_form': analyze_form, 'delete_form': delete_form})
+
+    if refreshed == 1:
+        return render(request, 'uploader/fileUpload.html', {'analyze_form': analyze_form, 'delete_form': delete_form})
+    else:
+        html_body = get_template('uploader/embaServiceDashboard.html')
+        return HttpResponse(html_body.render())
 
 
 @csrf_exempt
@@ -150,7 +173,7 @@ def report_dashboard(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def save_file(request):
+def save_file(request, refreshed):
     """
     file saving on POST requests with attached file
 

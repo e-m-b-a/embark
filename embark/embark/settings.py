@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 from pathlib import Path
 import os
 import sys
+import channels.layers
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -198,7 +199,8 @@ MEDIA_ROOT = os.path.join('uploadedFirmwareImages')  # media directory in the ro
 MEDIA_URL = '/uploadedFirmwareImages/'
 LOG_ROOT = os.path.join('emba_logs')  # media directory in the root directory
 LOG_URL = '/emba_logs/'
-
+REDIS_HOST = os.environ.get('REDIS_HOST', 'host.docker.internal')
+REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
@@ -221,3 +223,13 @@ APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
 # that supports multiple background worker processes instead (e.g. Dramatiq, Celery, Django-RQ,
 # etc. See: https://djangopackages.org/grids/g/workers-queues-tasks/ for popular options).
 APSCHEDULER_RUN_NOW_TIMEOUT = 25  # Seconds
+
+# redis/channel layers setup
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [(REDIS_HOST, REDIS_PORT)],
+        },
+    },
+}
