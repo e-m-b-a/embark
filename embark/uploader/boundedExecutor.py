@@ -1,4 +1,5 @@
 import logging
+import os
 import shutil
 import subprocess
 
@@ -124,14 +125,22 @@ class BoundedExecutor:
         else:
             Archiver.copy(firmware_file.file.path, active_analyzer_dir)
 
+        # find emba start_file
+        emba_startfile = os.listdir(active_analyzer_dir)
+        if len(emba_startfile) == 1:
+            image_file_location = f"{active_analyzer_dir}{emba_startfile.pop()}"
+            logger.error(f"{image_file_location}")
+        else:
+            logger.error(f"Uploaded file: {firmware_file} doesnt comply with processable files.\n zip folder with no "
+                         f"extra directory in between.")
+            shutil.rmtree(active_analyzer_dir)
+            return None
+
         # get emba flags from command parser
         emba_flags = firmware_flags.get_flags()
 
-        # TODO: Maybe check if file or dir
-        image_file_location = f"{active_analyzer_dir}*"
-
         # evaluate meta information and safely create log dir
-        emba_log_location = f"/app/emba/{settings.LOG_ROOT}/{firmware_flags.pk}/"
+        emba_log_location = f"/app/emba/{settings.LOG_ROOT}/{firmware_flags.pk}"
 
         firmware_flags.path_to_logs = emba_log_location
         firmware_flags.save()
