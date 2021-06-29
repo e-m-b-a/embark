@@ -131,3 +131,32 @@ button[type="delete"]:hover {
     border-radius: 6px;
     border: 3px solid var(--scrollbarBG);
 }
+
+/* Search bar styles */
+.searchBar {
+    padding: 3px;
+    border: solid 1px #E4E4E4;
+    border-radius: 6px;
+    background-color: #fff;
+}
+
+.searchBar input {
+    border: 0;
+    box-shadow: none;
+}
+
+.searchBar button {
+    margin: 2px 0 0 0;
+    background: none;
+    box-shadow: none;
+    border: 0;
+    color: #666666;
+    padding: 6 8px 6 8px;
+    border-left: solid 1px #ccc;
+}
+
+.searchBar button:hover {
+    border: 0;
+    box-shadow: none;
+    border-left: solid 1px #ccc;
+}
