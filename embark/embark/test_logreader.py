@@ -2,7 +2,7 @@ from django.test import TestCase
 from . import logreader
 import logging
 
-from uploader.models import Firmware
+from uploader.models import Firmware, FirmwareFile
 
 logger = logging.getLogger('web')
 
@@ -22,7 +22,7 @@ class test_logreader(TestCase):
         self.log_list.append(self.log_string4)
 
         # creat DB entry
-        test_file = open("test.bin", "w")
+        test_file = FirmwareFile.objects.create()
         firmware = Firmware(firmware=test_file)
         firmware.pk = -1
         firmware.save()

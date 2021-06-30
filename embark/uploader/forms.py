@@ -14,7 +14,6 @@ class FirmwareForm(forms.ModelForm):
                   'web_reporter', 'emulation_test', 'dependency_check', 'multi_threaded')
 
     def __init__(self, *args, **kwargs):
-
         super(FirmwareForm, self).__init__(*args, **kwargs)
 
         for field in self.visible_fields():
@@ -40,6 +39,8 @@ class FirmwareForm(forms.ModelForm):
             except:
                 pass
 
+        self.fields['firmware'] = forms.ModelChoiceField(queryset=models.FirmwareFile.objects)
+
 
 class DeleteFirmwareForm(forms.ModelForm):
 
@@ -50,3 +51,5 @@ class DeleteFirmwareForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(DeleteFirmwareForm, self).__init__(*args, **kwargs)
+
+        self.fields['firmware'] = forms.ModelChoiceField(queryset=models.FirmwareFile.objects)

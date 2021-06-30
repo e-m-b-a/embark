@@ -100,10 +100,10 @@ class FirmwareFile(models.Model):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.file_name = self.file.name
+        # self.file_name = self.file.name
 
     def __str__(self):
-        return self.file.name
+        return f"{self.file.name.replace('/', ' - ')}"
 
 
 @receiver(pre_delete, sender=FirmwareFile)
@@ -123,7 +123,7 @@ class Firmware(models.Model):
     """
     MAX_LENGTH = 127
 
-    firmware = CharFieldExpertMode(help_text='', blank=False, max_length=MAX_LENGTH)
+    firmware = models.ForeignKey(FirmwareFile, on_delete=models.RESTRICT, help_text='', null=True)
 
     # emba basic flags
     version = CharFieldExpertMode(
@@ -282,7 +282,7 @@ class DeleteFirmware(models.Model):
 
     MAX_LENGTH = 127
 
-    firmware = CharFieldExpertMode(help_text='', blank=False, max_length=MAX_LENGTH)
+    firmware = models.ForeignKey(FirmwareFile, on_delete=models.CASCADE, help_text='', null=True)
 
     class Meta:
         app_label = 'uploader'
