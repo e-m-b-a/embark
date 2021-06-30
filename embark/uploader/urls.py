@@ -16,5 +16,7 @@ urlpatterns = [
     path('home/serviceDashboard/', views.service_dashboard, name='embark-ServiceDashboard'),
     path('home/mainDashboard/', views.main_dashboard, name='embark-MainDashboard'),
     path('home/reportDashboard/', views.report_dashboard, name='embark-ReportDashboard'),
-    path('download_zipped/<int:analyze_id>/', views.download_zipped, name='embark-download')
+    path('download_zipped/<int:analyze_id>/', views.download_zipped, name='embark-download'),
+
+    path('get_load/', views.get_load, name='embark-get-load')
 ]

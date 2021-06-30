@@ -1,3 +1,5 @@
+from http import HTTPStatus
+
 from django import forms
 import os
 from os import path
@@ -5,10 +7,11 @@ import json
 import logging
 
 from django.conf import settings
+from django.forms import model_to_dict
 
 from django.shortcuts import render
 from django.template.loader import get_template
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
@@ -25,16 +28,12 @@ from django.template import loader
 
 # TODO: Add required headers like type of requests allowed later.
 # home page test view TODO: change name accordingly
-from .boundedExecutor import BoundedExecutor
-from .archiver import Archiver
-from .forms import FirmwareForm, DeleteFirmwareForm
-from .models import Firmware, FirmwareFile
 from embark.logreader import LogReader
 
 from uploader.boundedExecutor import BoundedExecutor
 from uploader.archiver import Archiver
 from uploader.forms import FirmwareForm, DeleteFirmwareForm
-from uploader.models import Firmware, FirmwareFile, DeleteFirmware
+from uploader.models import Firmware, FirmwareFile, DeleteFirmware, ResourceTimestamp
 
 logger = logging.getLogger('web')
 
@@ -167,7 +166,6 @@ def report_dashboard(request):
     """
 
     finished_firmwares = Firmware.objects.all().filter(finished=True)
-    logger.debug(f"firmwares: \n {finished_firmwares}")
     return render(request, 'uploader/reportDashboard.html', {'finished_firmwares': finished_firmwares})
 
 
@@ -326,3 +324,17 @@ def delete_file(request):
             return HttpResponse("invalid Form")
 
     return HttpResponseRedirect("../../home/upload")
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_load(request):
+    try:
+        query_set = ResourceTimestamp.objects.all()
+        result = {}
+        for k in model_to_dict(query_set[0]).keys():
+            result[k] = tuple(model_to_dict(d)[k] for d in query_set)
+        return JsonResponse(data=result, status=HTTPStatus.OK)
+    except ResourceTimestamp.DoesNotExist:
+        logger.error(f'ResourceTimestamps not found in database')
+        return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)

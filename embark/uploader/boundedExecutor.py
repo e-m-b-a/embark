@@ -129,7 +129,6 @@ class BoundedExecutor:
         emba_startfile = os.listdir(active_analyzer_dir)
         if len(emba_startfile) == 1:
             image_file_location = f"{active_analyzer_dir}{emba_startfile.pop()}"
-            logger.error(f"{image_file_location}")
         else:
             logger.error(f"Uploaded file: {firmware_file} doesnt comply with processable files.\n zip folder with no "
                          f"extra directory in between.")

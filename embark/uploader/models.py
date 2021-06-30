@@ -113,8 +113,6 @@ def delete_img_pre_delete_post(sender, instance, *args, **kwargs):
     delete the firmwarefile and folder structure in storage on recieve
     """
     if instance.file:
-        logger = logging.getLogger('web')
-        logger.debug(instance.get_abs_folder_path())
         shutil.rmtree(instance.get_abs_folder_path(), ignore_errors=True)
 
 
