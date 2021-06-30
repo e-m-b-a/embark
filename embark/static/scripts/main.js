@@ -62,23 +62,26 @@
 //     }
 // }
 
-function loadReportDashboard() {
-    try {
-        $.ajax({
-            url: "reportDashboard/",
-            datatype: "html",
-            type: "GET",
-            success: function (data) {
-                document.getElementById("reports").innerHTML =
-                    data;
-            }
-        });
-    } catch (error) {
-        alert(error.message);
-    }
-}
+//function loadReportDashboard() {
+//    try {
+//        $.ajax({
+//            url: "reportDashboard/",
+//            datatype: "html",
+//            type: "GET",
+//            success: function (data) {
+//                document.getElementById("reports").innerHTML =
+//                    data;
+//            }
+//        });
+//    } catch (error) {
+//        alert(error.message);
+//    }
+//}
 
 function expertModeOn() {
+    /*
+    Function to enable the expertmode and show hidden expert mode fields in forms
+    */
     try {
         var expertOptions = document.querySelectorAll('[value="expmode"]');
 
@@ -96,6 +99,9 @@ function expertModeOn() {
 }
 
 function helpTextOn() {
+    /*
+    Function to display the individual helptext of form fields below
+    */
     try {
         var expertOptions = document.querySelectorAll('[value="help_text"]');
 
@@ -109,5 +115,19 @@ function helpTextOn() {
         }
     } catch (error) {
         alert(error.message);
+    }
+}
+
+
+function confirmDelete(event) {
+    /*
+    Function to show a window on confirmation screen asking the user to progress
+    */
+    var isValid = confirm(`Are you sure to delete the following firmware file: ${event.target.elements.firmware.value} ?`);
+    if (!isValid) {
+        event.preventDefault();
+        alert("deletion cancelled");
+    } else {
+        alert(`firmware file deleted: ${event.target.elements.firmware.value}`);
     }
 }

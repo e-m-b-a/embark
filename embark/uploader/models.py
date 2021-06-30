@@ -1,8 +1,12 @@
 import logging
+import os
+import shutil
 
 from django.conf import settings
 from django.db import models
 from django import forms
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
 from django.utils.datetime_safe import datetime
 
 logger = logging.getLogger('web')
@@ -80,32 +84,46 @@ class FirmwareFile(models.Model):
     """
     def get_storage_path(self, filename):
         # file will be uploaded to MEDIA_ROOT/<filename>
-        return f"{filename}"
+        return os.path.join(f"{self.pk}", filename)
 
     MAX_LENGTH = 127
 
     file = models.FileField(upload_to=get_storage_path)
+    is_archive = models.BooleanField(default=False)
     upload_date = models.DateTimeField(default=datetime.now, blank=True)
 
     def get_abs_path(self):
-        return f"/app/embark/{settings.MEDIA_ROOT}/{self.file.name}"
+        return f"/app/embark/{settings.MEDIA_ROOT}/{self.pk}/{self.file.name}"
+
+    def get_abs_folder_path(self):
+        return f"/app/embark/{settings.MEDIA_ROOT}/{self.pk}"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.file_name = self.file.name
+        # self.file_name = self.file.name
 
     def __str__(self):
-        return self.file.name
+        return f"{self.file.name.replace('/', ' - ')}"
+
+
+@receiver(pre_delete, sender=FirmwareFile)
+def delete_img_pre_delete_post(sender, instance, *args, **kwargs):
+    """
+    callback function
+    delete the firmwarefile and folder structure in storage on recieve
+    """
+    if instance.file:
+        shutil.rmtree(instance.get_abs_folder_path(), ignore_errors=True)
 
 
 class Firmware(models.Model):
     """
     class Firmware
-    Model to firmware to be analyzed, basic/expert emba flags and metadata on the analyze process
+    Model of firmware to be analyzed, basic/expert emba flags and metadata on the analyze process
     """
     MAX_LENGTH = 127
 
-    firmware = CharFieldExpertMode(help_text='', blank=False, max_length=MAX_LENGTH)
+    firmware = models.ForeignKey(FirmwareFile, on_delete=models.RESTRICT, help_text='', null=True)
 
     # emba basic flags
     version = CharFieldExpertMode(
@@ -166,6 +184,14 @@ class Firmware(models.Model):
     class Meta:
         app_label = 'uploader'
 
+    """
+        build shell command from input fields
+
+        :params: None
+
+        :return:
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -214,3 +240,63 @@ class Firmware(models.Model):
             command = command + " -t"
         # running emba
         return command
+
+
+class Result(models.Model):
+    firmware = models.ForeignKey(Firmware, on_delete=models.CASCADE, help_text='')
+    architecture_verified = models.CharField(blank=True, null=True, max_length=100, help_text='')
+    os_verified = models.CharField(blank=True, null=True, max_length=100, help_text='')
+    files = models.IntegerField(default=0, help_text='')
+    directories = models.IntegerField(default=0, help_text='')
+    entropy_value = models.FloatField(default=0.0, help_text='')
+    shell_scripts = models.IntegerField(default=0, help_text='')
+    shell_script_vulns = models.IntegerField(default=0, help_text='')
+    yara_rules_match = models.IntegerField(default=0, help_text='')
+    kernel_modules = models.IntegerField(default=0, help_text='')
+    kernel_modules_lic = models.IntegerField(default=0, help_text='')
+    interesting_files = models.IntegerField(default=0, help_text='')
+    post_files = models.IntegerField(default=0, help_text='')
+    canary = models.IntegerField(default=0, help_text='')
+    canary_per = models.IntegerField(default=0, help_text='')
+    relro = models.IntegerField(default=0, help_text='')
+    relro_per = models.IntegerField(default=0, help_text='')
+    nx = models.IntegerField(default=0, help_text='')
+    nx_per = models.IntegerField(default=0, help_text='')
+    pie = models.IntegerField(default=0, help_text='')
+    pie_per = models.IntegerField(default=0, help_text='')
+    stripped = models.IntegerField(default=0, help_text='')
+    stripped_per = models.IntegerField(default=0, help_text='')
+    strcpy = models.IntegerField(default=0, help_text='')
+    versions_identified = models.IntegerField(default=0, help_text='')
+    cve_high = models.IntegerField(default=0, help_text='')
+    cve_medium = models.IntegerField(default=0, help_text='')
+    cve_low = models.IntegerField(default=0, help_text='')
+    exploits = models.IntegerField(default=0, help_text='')
+
+
+class DeleteFirmware(models.Model):
+    """
+    class DeleteFirmware
+    Model of firmware to be selected for deletion
+    """
+
+    MAX_LENGTH = 127
+
+    firmware = models.ForeignKey(FirmwareFile, on_delete=models.CASCADE, help_text='', null=True)
+
+    class Meta:
+        app_label = 'uploader'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class ResourceTimestamp(models.Model):
+    """
+    class ResourceTimestamp
+    Model to store zipped or bin firmware file and upload date
+    """
+
+    timestamp = models.DateTimeField(default=datetime.now)
+    cpu_percentage = models.FloatField(default=0.0)
+    memory_percentage = models.FloatField(default=0.0)

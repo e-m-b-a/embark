@@ -3,11 +3,14 @@ uWSGI
 ipython
 django-dotenv
 pycodestyle
-channels
+channels==3.0.3
 rx
 daphne
 inotify_simple
-inotify-simple
 mysqlclient
 pymongo
 mongoengine
+msgpack
+channels_redis
+django-apscheduler
+psutil
