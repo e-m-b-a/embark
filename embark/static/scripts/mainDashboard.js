@@ -1,35 +1,37 @@
 let loadChart = document.getElementById('loadChart').getContext('2d');
 
-get_load().then(function(returndata) {
+get_load().then(function (returndata) {
 
     let lineChart = new Chart(loadChart, {
         type: 'line', // bar, horizontalBar, pie, line, doughnut, radar, polarArea
         data: {
             labels: returndata.time,
             datasets: [{
-                label: 'CPU',
-                data: returndata.cpu,
-                borderColor:'rgba(255, 127, 64, 1)',
-                backgroundColor:'rgba(255, 127, 64, 0.2)',
-                borderWidth: 2,
-                hoverBorderWidth: 8,
-                hoverBorderColor: 'rgba(255, 127, 64, 1)',
-                fill: true,
-                cubicInterpolationMode: 'monotone'
-            },
-            {
-                label: 'MEM',
-                data: returndata.mem,
-                borderColor:'rgba(64,127,255,1)',
-                backgroundColor:'rgba(64,127,255, 0.2)',
-                borderWidth: 2,
-                hoverBorderWidth: 8,
-                hoverBorderColor:'rgba(64,127,255,1)',
-                fill: true,
-                cubicInterpolationMode: 'monotone'
-            }]
+                    label: 'CPU',
+                    data: returndata.cpu,
+                    borderColor: 'rgba(255, 127, 64, 1)',
+                    backgroundColor: 'rgba(255, 127, 64, 0.2)',
+                    borderWidth: 2,
+                    hoverBorderWidth: 8,
+                    hoverBorderColor: 'rgba(255, 127, 64, 1)',
+                    fill: true,
+                    cubicInterpolationMode: 'monotone'
+                },
+                {
+                    label: 'MEM',
+                    data: returndata.mem,
+                    borderColor: 'rgba(64,127,255,1)',
+                    backgroundColor: 'rgba(64,127,255, 0.2)',
+                    borderWidth: 2,
+                    hoverBorderWidth: 8,
+                    hoverBorderColor: 'rgba(64,127,255,1)',
+                    fill: true,
+                    cubicInterpolationMode: 'monotone'
+                }
+            ]
         },
         options: {
+            resonsive: true,
             title: {
                 display: false,
                 text: 'CPU / Memory utilization percentage',
@@ -51,10 +53,10 @@ get_load().then(function(returndata) {
                 }
             },
             scales: {
-              y: {
-                min: 0,
-                max: 100,
-              }
+                y: {
+                    min: 0,
+                    max: 100,
+                }
             },
             tooltips: {
                 enabled: true
@@ -66,7 +68,7 @@ get_load().then(function(returndata) {
 function get_load() {
     let url = window.location.origin + "/get_load/";
 
-    return $.getJSON(url).then(function(data){
+    return $.getJSON(url).then(function (data) {
 
         return {
             time: data.timestamp,

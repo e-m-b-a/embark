@@ -39,7 +39,7 @@ class FirmwareForm(forms.ModelForm):
             except:
                 pass
 
-        self.fields['firmware'] = forms.ModelChoiceField(queryset=models.FirmwareFile.objects)
+        self.base_fields['firmware'] = forms.ModelChoiceField(queryset=models.FirmwareFile.objects, empty_label= 'Select firmware')
 
 
 class DeleteFirmwareForm(forms.ModelForm):
@@ -52,4 +52,4 @@ class DeleteFirmwareForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(DeleteFirmwareForm, self).__init__(*args, **kwargs)
 
-        self.fields['firmware'] = forms.ModelChoiceField(queryset=models.FirmwareFile.objects)
+        self.base_fields['firmware'] = forms.ModelChoiceField(queryset=models.FirmwareFile.objects, empty_label='Select firmware to delete')

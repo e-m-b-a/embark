@@ -145,6 +145,10 @@ input:checked+.slider:before {
     justify-content: center;
 }
 
-.expertModeOptions {
+/* .expertModeOptions {
+    padding-left: 20px;
+} */
+
+input[type="checkbox"] {
     padding-left: 20px;
 }

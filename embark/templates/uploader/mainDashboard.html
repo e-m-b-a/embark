@@ -2,29 +2,43 @@
 {% block maincontent %}
 <div class="cardBox">
     <div class="card">
-        <div class="card-title cardName">Total firmwares analyzed</div>
+        <div class="card-title cardName firmwareAnalysed">Total firmwares analyzed</div>
         <div class="card-body cardValue"></div>
     </div>
     <div class="card">
-        <div class="card-title cardName">Total files</div>
+        <div class="card-title cardName totalFiles">Total files</div>
         <div class="card-body cardValue"></div>
     </div>
     <div class="card">
-        <div class="card-title cardName">Total directories</div>
+        <div class="card-title cardName totalDirectories">Total directories</div>
         <div class="card-body cardValue"></div>
     </div>
     <div class="card">
-        <div class="card-title cardName">Total binaries</div>
+        <div class="card-title cardName totalBinaries">Total binaries</div>
         <div class="card-body cardValue"></div>
     </div>
     <div class="card">
-        <div class="card-title cardName">Total CWE</div>
+        <div class="card-title cardName totalCwe">Total CWE</div>
         <div class="card-body cardValue"></div>
     </div>
 </div>
 
-<div class="container">
-    <canvas id="loadChart"></canvas>
+<div class="dataCard">
+    <div class="row dataCardRow">
+        <div class="card card-left">
+            {% comment %} <canvas class="system-overload" id="loadChart"></canvas> {% endcomment %}
+        </div>
+        <div class="card card-right">
+        <!-- here goes the right side data-->
+        <!--Top 5 stropy binaries-->
+        </div>
+    </div>
+    <div class="dataCardRow-bottom">
+        <div class="card card-bottom">
+        <!--System overload details over last 24hr/week/month-->
+        <canvas class="system-overload" id="loadChart"></canvas>
+        </div>
+    </div>
 </div>
 
 {% load static %}

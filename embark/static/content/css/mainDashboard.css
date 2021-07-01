@@ -1,8 +1,60 @@
 .cardBox {
     position: relative;
     width: 100%;
-    padding: 10px;
+    padding: 10px 10px 0 10px;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     grid-gap: 20px;
+    height: 125px !important;
+}
+
+.card-body {
+    background: #def2ff;
+    color: #0000;
+    text-align: center;
+}
+
+.card-title {
+    margin: 0px;
+    display: block;
+    text-align: center;
+
+}
+
+.dataCardRow {
+    margin: 10px;
+    height: 300px !important;
+    display: grid;
+    grid-template-columns: 65% auto;
+    gap: 10px;
+}
+
+.dataCardRow-bottom {
+    display: grid;
+    grid-template-columns: 100%;
+    margin: 10px;
+}
+
+/* .card-left {
+    padding: 15px;
+    width: 59.5%;
+    height: 300px !important;
+}
+
+.card-right {
+    padding-right: 10px;
+    width: 39%;
+    margin-left: 18px;
+    height: 300px !important;
+} */
+
+.card-bottom {
+    height: 275px !important;
+}
+
+canvas {
+    height: 250px !important;
+    width: auto !important;
+    margin: 5px;
+
 }
