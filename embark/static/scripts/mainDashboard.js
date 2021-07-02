@@ -32,13 +32,14 @@ get_load().then(function (returndata) {
         },
         options: {
             resonsive: true,
+            maintainAspectRatio: false,
             title: {
                 display: false,
                 text: 'CPU / Memory utilization percentage',
                 fontSize: 25
             },
             legend: {
-                display: true,
+                display: false,
                 position: 'right',
                 labels: {
                     fontColor: '#000'
@@ -46,16 +47,29 @@ get_load().then(function (returndata) {
             },
             layout: {
                 padding: {
-                    left: 50,
+                    left: 0,
                     right: 0,
                     bottom: 0,
                     top: 0
                 }
             },
             scales: {
+                x: {
+                    ticks: {
+                        display: true,
+                        autoSkip: false,
+                        maxRotation: 0,
+                        minRotation: 0,
+                        callback: function(val, index) {
+                            // Hide the label of every 2nd dataset
+                            return index % 20 === 0 ? this.getLabelForValue(val).split('T')[1].split('.')[0] : '';
+                          },
+                    }
+                },
                 y: {
                     min: 0,
                     max: 100,
+                    stepSize: 5
                 }
             },
             tooltips: {
