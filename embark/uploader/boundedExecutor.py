@@ -140,6 +140,8 @@ class BoundedExecutor:
 
         # evaluate meta information and safely create log dir
         emba_log_location = f"/app/emba/{settings.LOG_ROOT}/{firmware_flags.pk}"
+        log_path = Path(emba_log_location)
+        log_path.mkdir(parents=True, exist_ok=True)
 
         firmware_flags.path_to_logs = emba_log_location
         firmware_flags.save()
