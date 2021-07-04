@@ -25,7 +25,7 @@ socket.onmessage = function (event) {
 
     if(cur_len !== Object.keys(data).length){
 
-        var htmlToAdd = '<div class="row"><div class="coldiv"><a class="tile row statusTile"><div class="row statusEMba"><div class="col-sm log tile moduleLog"><ul class="log_phase" id="log_phase_'+ Object.keys(data)[cur_len] +'"> </ul></div><div class="col-sm log tile phaseLog"><ul class="log_phase" id="log_module_'+Object.keys(data)[cur_len]+'"> </ul></div></div><button type="submit" class="btn" id="'+Object.keys(data)[cur_len]+'" onclick="pythonAjax(this.id)" >Upload</button></a></div></div>'
+        var htmlToAdd = '<div class="row"><div class="coldiv"><a class="tile row statusTile"><div class="progress" id="progress-wrapper"><div id="pBar_'+ Object.keys(data)[cur_len] +'" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div><br><div class="row statusEMba"><div class="col-sm log tile moduleLog"><ul class="log_phase" id="log_phase_'+ Object.keys(data)[cur_len] +'"> </ul></div><div class="col-sm log tile phaseLog"><ul class="log_phase" id="log_module_'+Object.keys(data)[cur_len]+'"> </ul></div></div><button type="submit" class="btn" id="'+Object.keys(data)[cur_len]+'" onclick="pythonAjax(this.id)" >Upload</button></a></div></div>'
         document.getElementById("add_to_me").insertAdjacentHTML('afterend',htmlToAdd);
 
         cur_len += 1
@@ -40,7 +40,7 @@ socket.onmessage = function (event) {
      current_phase = data.phase
      current_module = data.module
 
-     makeProgress(data.percentage)
+     makeProgress(data.percentage,Object.keys(data)[cur_len])
 }
 
 // this method is called when the websocket connection is closed
@@ -64,10 +64,11 @@ function embaProgress() {
 
 // TODO make this work with Ravis changes
 // method for progressBar progress
-function makeProgress(percent) {
+function makeProgress(percent,cur_ID) {
     var p = percent * 100;
     var rounded = p.toFixed(2);
-    $('#pBar').attr('aria-valuenow', rounded).css('width', rounded + '%').text(rounded + '%')
+    id = "#pBar_"+ cur_ID;
+    $(id).attr('aria-valuenow', rounded).css('width', rounded + '%').text(rounded + '%')
 }
 
 //log the current phase live
