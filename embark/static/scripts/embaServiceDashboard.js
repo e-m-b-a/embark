@@ -25,24 +25,22 @@ socket.onmessage = function (event) {
 
     if(cur_len !== Object.keys(data).length){
 
-        var htmlToAdd = '<div class="row"><div class="coldiv"><a class="tile row statusTile"><div class="row statusEMba"><div class="col-sm log tile moduleLog"><ul class="log_phase" id="log_phase'+ Object.keys(data)[cur_len] +'"> </ul></div><div class="col-sm log tile phaseLog"><ul class="log_phase" id="log_module'+Object.keys(data)[cur_len]+'"> </ul></div></div></a></div></div>'
+        var htmlToAdd = '<div class="row"><div class="coldiv"><a class="tile row statusTile"><div class="row statusEMba"><div class="col-sm log tile moduleLog"><ul class="log_phase" id="log_phase_'+ Object.keys(data)[cur_len] +'"> </ul></div><div class="col-sm log tile phaseLog"><ul class="log_phase" id="log_module_'+Object.keys(data)[cur_len]+'"> </ul></div></div><button type="submit" class="btn" id="'+Object.keys(data)[cur_len]+'" onclick="pythonAjax(this.id)" >Upload</button></a></div></div>'
         document.getElementById("add_to_me").insertAdjacentHTML('afterend',htmlToAdd);
 
         cur_len += 1
     }
+    if (current_phase !== data.phase) {
+        //console.log(data.phase)
+         livelog_phase(data.phase,Object.keys(data)[cur_len])
+     }
+    if (current_module !== data.module) {
+         livelog_module(data.module,Object.keys(data)[cur_len])
+     }
+     current_phase = data.phase
+     current_module = data.module
 
-
-    // if (current_phase !== data.phase) {
-    //     //console.log(data.phase)
-    //     livelog_phase(data.phase)
-    // }
-    // if (current_module !== data.module) {
-    //     livelog_module(data.module)
-    // }
-    // current_phase = data.phase
-    // current_module = data.module
-
-    // makeProgress(data.percentage)
+     makeProgress(data.percentage)
 }
 
 // this method is called when the websocket connection is closed
@@ -73,17 +71,44 @@ function makeProgress(percent) {
 }
 
 //log the current phase live
-function livelog_phase(phase) {
-    var ul = document.getElementById("log_phase");
+function livelog_phase(phase,cur_ID) {
+    var id = "log_phase_"+cur_ID;
+    var ul = document.getElementById(id);
     var li = document.createElement("li");
     li.appendChild(document.createTextNode(phase));
     ul.appendChild(li);
 }
 
 //log current phase live
-function livelog_module(module) {
-    var ul = document.getElementById("log_module");
+function livelog_module(module,cur_ID) {
+    var id = "log_module_"+cur_ID;
+    var ul = document.getElementById(id);
     var li = document.createElement("li");
     li.appendChild(document.createTextNode(module));
     ul.appendChild(li);
+}
+
+
+/**
+ * 
+ * @param {*} currentID Id of the contaniner which is passed backend to pull information
+ */
+function pythonAjax(currentID) {
+    
+    try {
+        //formData.append('file', fileData);
+        $.ajax({
+          type: 'POST',
+          url: 'function_Name',
+          data: currentID,
+          processData: false,
+          contentType: false,
+          success: function (data) {
+            location.reload();
+            }
+          
+        });
+      } catch (error) {
+        errorAlert(error.message);
+      }
 }
