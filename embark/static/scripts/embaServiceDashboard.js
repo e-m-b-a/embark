@@ -8,8 +8,10 @@ var socket = new WebSocket(
 );
 
 // for log implementation which is currently commented out
-var current_module = "no module"
-var current_phase = "no phase"
+var module_array = []
+var phase_array = []
+//var current_module = "no module"
+//var current_phase = "no phase"
 var cur_len = 0
 
 // called when a websocket connection is established
@@ -27,20 +29,31 @@ socket.onmessage = function (event) {
 
         var htmlToAdd = '<div class="row"><div class="coldiv"><a class="tile row statusTile"><div class="progress" id="progress-wrapper"><div id="pBar_'+ Object.keys(data)[cur_len] +'" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div><br><div class="row statusEMba"><div class="col-sm log tile moduleLog"><ul class="log_phase" id="log_phase_'+ Object.keys(data)[cur_len] +'"> </ul></div><div class="col-sm log tile phaseLog"><ul class="log_phase" id="log_module_'+Object.keys(data)[cur_len]+'"> </ul></div></div><button type="submit" class="btn" id="'+Object.keys(data)[cur_len]+'" onclick="pythonAjax(this.id)" >Upload</button></a></div></div>'
         document.getElementById("add_to_me").insertAdjacentHTML('afterend',htmlToAdd);
+        console.log("log_phase_"+ Object.keys(data)[cur_len])
+
+        module_array.push("no module");
+        phase_array.push("no phase");
 
         cur_len += 1
     }
-    if (current_phase !== data.phase) {
-        //console.log(data.phase)
-         livelog_phase(data.phase,Object.keys(data)[cur_len])
-     }
-    if (current_module !== data.module) {
-         livelog_module(data.module,Object.keys(data)[cur_len])
-     }
-     current_phase = data.phase
-     current_module = data.module
 
-     makeProgress(data.percentage,Object.keys(data)[cur_len])
+    for(let idx = 0; idx < cur_len; idx++ ){
+
+        let id = Object.keys(data)[idx]
+        length = data[id].length
+        if (phase_array[idx] !== data[id][length-1].phase) {
+            console.log(data[id][length-1].phase)
+            livelog_phase(data[id][length-1].phase, id)
+        }
+        if (module_array[idx] !== data[id][length-1].module) {
+             livelog_module(data[id][length-1].module, id)
+        }
+        module_array[idx] = data[id][length-1].module
+        phase_array[idx] = data[id][length-1].phase
+
+        makeProgress(data[id][length-1].percentage, id)
+    }
+
 }
 
 // this method is called when the websocket connection is closed
@@ -73,7 +86,8 @@ function makeProgress(percent,cur_ID) {
 
 //log the current phase live
 function livelog_phase(phase,cur_ID) {
-    var id = "log_phase_"+cur_ID;
+    var id = "log_phase_" + cur_ID;
+    console.log(id)
     var ul = document.getElementById(id);
     var li = document.createElement("li");
     li.appendChild(document.createTextNode(phase));
@@ -82,17 +96,23 @@ function livelog_phase(phase,cur_ID) {
 
 //log current phase live
 function livelog_module(module,cur_ID) {
-    var id = "log_module_"+cur_ID;
-    var ul = document.getElementById(id);
-    var li = document.createElement("li");
-    li.appendChild(document.createTextNode(module));
-    ul.appendChild(li);
+    var id = "#log_module_"+cur_ID;
+
+    var $List = $(id);
+    var $entry = $('<li>'+module+'</li>');
+
+    $List.append($entry);
+
+    // var ul = document.getElementById(id);
+    // var li = document.createElement("li");
+    // li.appendChild(document.createTextNode(module));
+    // ul.appendChild(li);
 }
 
 
 /**
  * 
- * @param {*} currentID Id of the contaniner which is passed backend to pull information
+ * @param {*} currentID Id of the container which is passed backend to pull information
  */
 function pythonAjax(currentID) {
     
