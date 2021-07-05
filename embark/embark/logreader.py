@@ -1,5 +1,6 @@
 import copy
 import difflib
+import pathlib
 import re
 import time
 
@@ -28,10 +29,15 @@ class LogReader:
         # global module count and status_msg directory
         self.module_count = 0
         self.firmware_id = firmware_id
+        self.firmware_id_str = str(self.firmware_id)
 
         # set variables for channels communication
         self.room_group_name = 'updatesgroup'
         self.channel_layer = get_channel_layer()
+
+        # variables for cleanup
+        self.finish = False
+        self.wd = None
 
         # for testing
         self.test_list1 = []
@@ -53,7 +59,11 @@ class LogReader:
     def update_status(self, stream_item_list):
         # progress percentage TODO: improve percentage calculation
         self.module_count += 1
-        percentage = self.module_count / 35
+
+        # calculate percentage
+        percentage = self.module_count / 34
+
+        # set attributes of current message
         self.status_msg["module"] = stream_item_list[0]
         self.status_msg["percentage"] = percentage
 
@@ -63,16 +73,22 @@ class LogReader:
         # append it to the data structure
         global process_map
         if self.firmware_id > 0:
-            process_map[self.firmware_id].append(tmp_mes)
+            found = False
+            for mes in process_map[self.firmware_id_str]:
+                if mes["phase"] == tmp_mes["phase"] and mes["module"] == tmp_mes["module"]:
+                    found = True
 
-        # send it to room group
-        if self.firmware_id > 0:
-            async_to_sync(self.channel_layer.group_send)(
-                self.room_group_name, {
-                    "type": 'send.message',
-                    "message": process_map
-                }
-            )
+            if not found:
+                process_map[self.firmware_id_str].append(tmp_mes)
+
+                # send it to room group
+                if self.firmware_id > 0:
+                    async_to_sync(self.channel_layer.group_send)(
+                        self.room_group_name, {
+                            "type": 'send.message',
+                            "message": process_map
+                        }
+                    )
 
     # update dictionary with phase changes
     def update_phase(self, stream_item_list):
@@ -80,20 +96,28 @@ class LogReader:
 
         # get copy of the current status message
         tmp_mes = copy.deepcopy(self.status_msg)
-        # append it to the data structure
 
+        # append it to the data structure
         global process_map
         if self.firmware_id > 0:
-            process_map[self.firmware_id].append(tmp_mes)
+            found = False
+            for mes in process_map[self.firmware_id_str]:
+                if mes["phase"] == tmp_mes["phase"] and mes["module"] == tmp_mes["module"]:
+                    found = True
 
-        # send it to room group
-        if self.firmware_id > 0:
-            async_to_sync(self.channel_layer.group_send)(
-                self.room_group_name, {
-                    'type': 'send.message',
-                    'message': process_map
-                }
-            )
+            if not found:
+                process_map[self.firmware_id_str].append(tmp_mes)
+
+                # send it to room group
+                if self.firmware_id > 0:
+                    async_to_sync(self.channel_layer.group_send)(
+                        self.room_group_name, {
+                            'type': 'send.message',
+                            'message': process_map
+                        }
+                    )
+        if "Test ended" in stream_item_list[1]:
+            self.finish = True
 
     def read_loop(self):
 
@@ -106,20 +130,23 @@ class LogReader:
 
         logger.info(f"read loop started for {self.firmware_id}")
 
-        while True:
+        while not self.finish:
+
             # get firmware for id which the BoundedExecutor gave the log_reader
             firmware = Firmware.objects.get(pk=self.firmware_id)
 
             # if file does not exist create it otherwise delete its content
-            open(f"{firmware.path_to_logs}emba_new.log", 'w+')
+            pat = f"/app/emba/{settings.LOG_ROOT}/emba_new_{self.firmware_id}.log"
+            if not pathlib.Path(pat).exists():
+                open(pat, 'w+')
 
             # create an entry for the id in the process map
             global process_map
-            if firmware.id not in process_map.keys():
-                process_map[firmware.id] = []
+            if self.firmware_id_str not in process_map.keys():
+                process_map[self.firmware_id_str] = []
 
             # look for new events
-            got_event = self.inotify_events(f"{firmware.path_to_logs}emba.log")
+            got_event = self.inotify_events(f"{firmware.path_to_logs}/emba.log")
 
             for eve in got_event:
                 for flag in flags.from_mask(eve.mask):
@@ -134,6 +161,18 @@ class LogReader:
                         self.input_processing(tmp)
                         # copy diff to tmp file
                         self.copy_file_content(tmp, firmware.path_to_logs)
+
+        self.cleanup()
+        return
+
+    def cleanup(self):
+
+        """
+            Called when logreader should be cleaned up
+        """
+        # inotify = INotify()
+        # inotify.rm_watch(self.wd)
+        logger.info(f"Log reader cleaned up for {self.firmware_id}")
 
     def process_line(self, inp, pat):
 
@@ -157,7 +196,7 @@ class LogReader:
                   :return: None
         """
 
-        with open(f"{log_path}emba_new.log", 'a+') as diff_file:
+        with open(f"/app/emba/{settings.LOG_ROOT}/emba_new_{self.firmware_id}.log", 'a+') as diff_file:
             diff_file.write(diff)
 
     def get_diff(self, log_path):
@@ -170,8 +209,8 @@ class LogReader:
         """
 
         # open the two files to get diff from
-        old_file = open(f"{log_path}emba.log")
-        new_file = open(f"{log_path}emba_new.log")
+        old_file = open(f"{log_path}/emba.log")
+        new_file = open(f"/app/emba/{settings.LOG_ROOT}/emba_new_{self.firmware_id}.log")
 
         diff = difflib.ndiff(old_file.readlines(), new_file.readlines())
         return ''.join(x[2:] for x in diff if x.startswith('- '))

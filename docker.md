@@ -14,9 +14,12 @@ Refer to `template.env`, you will see the following env variables
 1. DATABASE_NAME: Name of the sql database
 2. DATABASE_USER: User of the database
 3. DATABASE_PASSWORD: For for logging in to the database
-4. DATABASE_HOST: host of the database
-5. DATABASE_PORT: port
-6. MYSQL_ROOT_PASSWORD: Root password. Always equal to DATABASE_PASSWORD for our dev setups
+4. DATABASE_HOST: Host for MySQL database
+5. DATABASE_PORT: Port for MySQL database
+6. MYSQL_ROOT_PASSWORD: Root password to connect to mysql server
+7. MYSQL_DATABASE: Database that gets created on container startup. Same as DATABASE_NAME
+8. REDIS_HOST: Host for Redis DB
+9. REDIS_PORT: Port for Redis DB
 ``` 
 
 We are not maintaining a central copy for now. Till then please main your own copy wherever you setup your dev environment.
@@ -35,30 +38,19 @@ We are not maintaining a central copy for now. Till then please main your own co
 DATABASE_NAME=<Name you are going to give your db>
 DATABASE_USER=root
 DATABASE_PASSWORD=<value of MYSQL_ROOT_PASSWORD>
-DATABASE_HOST=0.0.0.0(or host.docker.internal for windows)
+DATABASE_HOST=0.0.0.0(or host.docker.internal for windows or MacOs)
 DATABASE_PORT=3306
+REDIS_HOST=0.0.0.0(or host.docker.internal for windows or MacOs)
+REDIS_PORT=6379
 MYSQL_ROOT_PASSWORD=<This should be set>
+MYSQL_DATABASE=<Same as DATABASE_NAME>
 ```
 
 3. Bring your containers up  
 `docker-compose up -d`
-
    
-4. Now you can exec into the mysql container and create your database.
-```
-docker exec -it amos-ss2021-emba-service_auth-db_1 bash
-mysql -p
-```
-When prompted for a password enter the value in `MYSQL_ROOT_PASSWORD`  
-`Create database <value in DATABASE_NAME>`
-
-5. Restart your containers. This additional step is neccessary since there is no dependency between the containers. And django would try to connect to DB not there yet and fail.  
-`docker-compose restart emba`
-
-6. Exec into your emba-django container  
-`docker exec -it amos-ss2021-emba-service_emba_1 bash`
-
-7. Run migrations
+### Run migrations
+To run migrations for any changes in django db models
 ```
 python3 manage.py makemigrations uploader users
 python3 manage.py migrate

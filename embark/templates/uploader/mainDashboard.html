@@ -3,44 +3,73 @@
 <div class="cardBox">
     <div class="card">
         <div class="card-title cardName firmwareAnalysed">Total firmwares analyzed</div>
-        <div class="card-body cardValue"></div>
+        <div class="card-body cardValue" id="firmwareAnalysed"></div>
     </div>
     <div class="card">
         <div class="card-title cardName totalFiles">Total files</div>
-        <div class="card-body cardValue"></div>
+        <div class="card-body cardValue" id="totalFiles"></div>
     </div>
     <div class="card">
         <div class="card-title cardName totalDirectories">Total directories</div>
-        <div class="card-body cardValue"></div>
+        <div class="card-body cardValue" id="totalDirectories"></div>
     </div>
     <div class="card">
         <div class="card-title cardName totalBinaries">Total binaries</div>
-        <div class="card-body cardValue"></div>
+        <div class="card-body cardValue" id="totalBinaries"></div>
     </div>
     <div class="card">
-        <div class="card-title cardName totalCwe">Total CWE</div>
-        <div class="card-body cardValue"></div>
+        <div class="card-title cardName totalCve">Total CVE</div>
+        <div class="card-body cardValue" id="totalCve"></div>
+    </div>
+    <div class="card">
+        <div class="card-title cardName totalIssues">Total Issues</div>
+        <div class="card-body cardValue" id="totalIssues"></div>
     </div>
 </div>
 
 <div class="dataCard">
     <div class="row dataCardRow">
         <div class="card card-left">
-            {% comment %} <canvas class="system-overload" id="loadChart"></canvas> {% endcomment %}
+            <canvas class="aggregatedReport" id="accumulatedCvePie"></canvas>
         </div>
         <div class="card card-right">
-        <!-- here goes the right side data-->
-        <!--Top 5 stropy binaries-->
+            <canvas class="aggregatedReport" id="accumulatedDonut"></canvas>
         </div>
+
     </div>
     <div class="dataCardRow-bottom">
         <div class="card card-bottom">
-        <!--System overload details over last 24hr/week/month-->
-        <canvas class="system-overload" id="loadChart"></canvas>
+            <label for="accumulatedEntropy">Average Entropy Value:</label>
+            <meter id="accumulatedEntropy"
+                   min="0" max="8"
+                   value="0">
+            </meter>
         </div>
     </div>
 </div>
 
+<div class="dataCard">
+    <div class="row dataCardRow-bottom">
+        <div class="card card-bottom">
+            <canvas class="system-overload" id="loadChart"></canvas>
+        </div>
+    </div>
+</div>
+
+
+<div class="dataCard">
+    <div class="row dataCardRow">
+        <div class="card card-left">
+            <canvas class="aggregatedReport" id="accumulatedArchitecture"></canvas>
+        </div>
+        <div class="card card-right">
+            <canvas class="aggregatedReport" id="accumulatedOs"></canvas>
+        </div>
+    </div>
+</div>
+
+
 {% load static %}
 <script type="text/javascript" src="{% static 'scripts/mainDashboard.js' %}"></script>
+<script type="text/javascript" src="{% static 'scripts/accumulatedReports.js' %}"></script>
 {% endblock %}
