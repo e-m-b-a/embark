@@ -1,18 +1,22 @@
+import csv
 import logging
 import os
 import shutil
 import subprocess
+import re
+import json
 
 from pathlib import Path
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from threading import BoundedSemaphore
 
 from django.utils.datetime_safe import datetime
 from django.conf import settings
 
-from .archiver import Archiver
-from .models import Firmware
+from uploader.archiver import Archiver
+from uploader.models import Firmware, Result
 from embark.logreader import LogReader
+
 
 logger = logging.getLogger('web')
 
@@ -27,7 +31,7 @@ executor = ThreadPoolExecutor(max_workers=max_workers)
 semaphore = BoundedSemaphore(max_queue + max_workers)
 
 # emba directories
-emba_script_location = "/app/emba/emba.sh"
+emba_script_location = "cd /app/emba/ && ./emba.sh"
 
 
 class BoundedExecutor:
@@ -60,6 +64,14 @@ class BoundedExecutor:
 
             # success
             logger.info(f"Success: {cmd}")
+
+            # get csv log location
+            csv_log_location = f"/app/emba/{settings.LOG_ROOT}/{primary_key}/f50_base_aggregator.csv"
+
+            # read f50_aggregator and store it into a Result form
+            logger.info(f'Reading report from:')
+            if Path(csv_log_location).exists:
+                cls.csv_read(primary_key, csv_log_location)
 
             # take care of cleanup
             if active_analyzer_dir:
@@ -139,6 +151,7 @@ class BoundedExecutor:
         emba_flags = firmware_flags.get_flags()
 
         # evaluate meta information and safely create log dir
+
         emba_log_location = f"/app/emba/{settings.LOG_ROOT}/{firmware_flags.pk}"
         log_path = Path(emba_log_location)
         log_path.mkdir(parents=True, exist_ok=True)
@@ -187,3 +200,70 @@ class BoundedExecutor:
         """See concurrent.futures.Executor#shutdown"""
 
         executor.shutdown(wait)
+
+    @classmethod
+    def csv_read(cls, pk, path):
+        """
+        This job reads the F50_aggregator file and stores its content into the Result model
+        """
+
+        with open(path, newline='\n') as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=';')
+            csv_list = []
+            for row in csv_reader:
+                csv_list.append(row)
+                res_dict = {}
+                for ele in csv_list:
+                    if len(ele) == 2:
+                        res_dict[ele[0]] = ele[1]
+                    elif len(ele) == 3:
+                        if not ele[0] in res_dict.keys():
+                            res_dict[ele[0]] = {}
+                        res_dict[ele[0]][ele[1]] = ele[2]
+                    else:
+                        pass
+
+        logger.info(res_dict)
+        res_dict.pop('FW_path', None)
+
+        entropy_value = res_dict.get("entropy_value", 0)
+        if type(entropy_value) is str:
+            entropy_value = re.findall(r'(\d+\.?\d*)', ' 7.55 bits per byte.')[0]
+            entropy_value = entropy_value.strip('.')
+
+        res = Result(
+            firmware=Firmware.objects.get(id=pk),
+            # emba_command=res_dict["emba_command"],
+            architecture_verified=res_dict.get("architecture_verified", ''),
+            # os_unverified=res_dict.get("os_unverified", ''),
+            os_verified=res_dict.get("os_verified", ''),
+            files=int(res_dict.get("files", 0)),
+            directories=int(res_dict.get("directories", 0)),
+            entropy_value=float(entropy_value),
+            shell_scripts=int(res_dict.get("shell_scripts", 0)),
+            shell_script_vulns=int(res_dict.get("shell_script_vulns", 0)),
+            kernel_modules=int(res_dict.get("kernel_modules", 0)),
+            kernel_modules_lic=int(res_dict.get("kernel_modules_lic", 0)),
+            interesting_files=int(res_dict.get("interesting_files", 0)),
+            post_files=int(res_dict.get("post_files", 0)),
+            canary=int(res_dict.get("canary", 0)),
+            canary_per=int(res_dict.get("canary_per", 0)),
+            relro=int(res_dict.get("relro", 0)),
+            relro_per=int(res_dict.get("relro_per", 0)),
+            nx=int(res_dict.get("nx", 0)),
+            nx_per=int(res_dict.get("nx_per", 0)),
+            pie=int(res_dict.get("pie", 0)),
+            pie_per=int(res_dict.get("pie_per", 0)),
+            stripped=int(res_dict.get("stripped", 0)),
+            stripped_per=int(res_dict.get("stripped_per", 0)),
+            bins_checked=int(res_dict.get("bins_checked", 0)),
+            strcpy=int(res_dict.get("strcpy", 0)),
+            strcpy_bin=json.dumps(res_dict.get("strcpy_bin", {})),
+            versions_identified=int(res_dict.get("versions_identified", 0)),
+            cve_high=int(res_dict.get("cve_high", 0)),
+            cve_medium=int(res_dict.get("cve_medium", 0)),
+            cve_low=int(res_dict.get("cve_low", 0)),
+            exploits=int(res_dict.get("exploits", 0)),
+        )
+        res.save()
+        return res

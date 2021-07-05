@@ -1,4 +1,4 @@
-let loadChart = document.getElementById('loadChart').getContext('2d');
+var loadChart = document.getElementById('loadChart').getContext('2d');
 
 get_load().then(function (returndata) {
 
@@ -31,7 +31,7 @@ get_load().then(function (returndata) {
             ]
         },
         options: {
-            resonsive: true,
+            responsive: true,
             maintainAspectRatio: false,
             title: {
                 display: false,

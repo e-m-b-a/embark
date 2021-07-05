@@ -243,6 +243,9 @@ class Firmware(models.Model):
 
 
 class Result(models.Model):
+    # TODO missing: emba_command, os_unverified, bins_checked, strcpy_bin
+    # TODO different: FW_path/firmware
+
     firmware = models.ForeignKey(Firmware, on_delete=models.CASCADE, help_text='')
     architecture_verified = models.CharField(blank=True, null=True, max_length=100, help_text='')
     os_verified = models.CharField(blank=True, null=True, max_length=100, help_text='')
@@ -272,6 +275,8 @@ class Result(models.Model):
     cve_medium = models.IntegerField(default=0, help_text='')
     cve_low = models.IntegerField(default=0, help_text='')
     exploits = models.IntegerField(default=0, help_text='')
+    bins_checked = models.IntegerField(default=0, help_text='')
+    strcpy_bin = models.TextField(default='{}')
 
 
 class DeleteFirmware(models.Model):

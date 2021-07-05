@@ -18,5 +18,7 @@ urlpatterns = [
     path('home/reportDashboard/', views.report_dashboard, name='embark-ReportDashboard'),
     path('download_zipped/<int:analyze_id>/', views.download_zipped, name='embark-download'),
 
-    path('get_load/', views.get_load, name='embark-get-load')
+    path('get_load/', views.get_load, name='embark-get-load'),
+    path('get_individual_report/', views.get_individual_report, name='embark-get-individual-report'),
+    path('get_accumulated_reports/', views.get_accumulated_reports, name='embark-get-accumulated-reports')
 ]

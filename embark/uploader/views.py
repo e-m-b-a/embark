@@ -1,39 +1,27 @@
-from http import HTTPStatus
+from django.conf import settings
 
 from django import forms
-import os
-from os import path
-import json
-import logging
-
-from django.conf import settings
 from django.forms import model_to_dict
+
+import json
+import os
+import time
+import logging
+from http import HTTPStatus
 
 from django.shortcuts import render
 from django.template.loader import get_template
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
-from django.conf import settings
 
-import os
-
-from .archiver import Archiver
-
-
-import time
-from django.http import StreamingHttpResponse
 from django.template import loader
-
-# TODO: Add required headers like type of requests allowed later.
-# home page test view TODO: change name accordingly
-from embark.logreader import LogReader
 
 from uploader.boundedExecutor import BoundedExecutor
 from uploader.archiver import Archiver
 from uploader.forms import FirmwareForm, DeleteFirmwareForm
-from uploader.models import Firmware, FirmwareFile, DeleteFirmware, ResourceTimestamp
+from uploader.models import Firmware, FirmwareFile, DeleteFirmware, Result, ResourceTimestamp
 
 logger = logging.getLogger('web')
 
@@ -314,14 +302,14 @@ def delete_file(request):
             firmware_file = form.cleaned_data['firmware']
             firmware_file.delete()
 
-            return HttpResponseRedirect("../../home/upload/1")
+            return HttpResponseRedirect("../../home/upload/1/")
 
         else:
             logger.error(f"Form {form} is invalid")
             logger.error(f"{form.errors}")
             return HttpResponse("invalid Form")
 
-    return HttpResponseRedirect("../../home/upload/1")
+    return HttpResponseRedirect("../../home/upload/1/")
 
 
 @csrf_exempt
@@ -336,3 +324,65 @@ def get_load(request):
     except ResourceTimestamp.DoesNotExist:
         logger.error(f'ResourceTimestamps not found in database')
         return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_individual_report(request):
+    firmware_id = request.GET.get('id', None)
+    if not firmware_id:
+        logger.error('Bad request for get_individual_report')
+        return JsonResponse(data={'error': 'Bad request'}, status=HTTPStatus.BAD_REQUEST)
+    try:
+        result = Result.objects.get(firmware_id=int(firmware_id))
+        result = model_to_dict(result)
+        result['strcpy_bin'] = json.loads(result['strcpy_bin'])
+        return JsonResponse(data=result, status=HTTPStatus.OK)
+    except Result.DoesNotExist:
+        logger.error(f'Report for firmware_id: {firmware_id} not found in database')
+        return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_accumulated_reports(request):
+    """
+    Sends accumulated results for main dashboard
+    Args:
+        request:
+    Returns:
+        data = {
+            'architecture_verified': {'arch_1': count, ....},
+            'os_verified': {'os_1': count, .....},
+            'all int fields in Result Model': {'sum': float/int, 'count': int, 'mean': float/int}
+        }
+    """
+    results = Result.objects.all()
+    top_5_entropies = results.order_by('-entropy_value')[:5]
+    charfields = ['architecture_verified', 'os_verified']
+    data = {}
+    for result in results:
+        result = model_to_dict(result)
+        result.pop('firmware', None)
+        result.pop('strcpy_bin', None)
+        for charfield in charfields:
+            if charfield not in data:
+                data[charfield] = {}
+
+            value = result.pop(charfield)
+            if value not in data[charfield]:
+                data[charfield][value] = 0
+            data[charfield][value] += 1
+        for field in result:
+            if field not in data:
+                data[field] = {'sum': 0, 'count': 0}
+            data[field]['count'] += 1
+            data[field]['sum'] += result[field]
+
+    for field in data:
+        if field not in charfields:
+            data[field]['mean'] = data[field]['sum']/data[field]['count']
+    data['total_firmwares'] = len(results)
+    data['top_entropies'] = [{'name': r.firmware.firmware.file.name, 'entropy_value': r.entropy_value} for r in
+                             top_5_entropies]
+    return JsonResponse(data=data, status=HTTPStatus.OK)
