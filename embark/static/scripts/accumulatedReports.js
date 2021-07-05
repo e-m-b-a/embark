@@ -1,4 +1,9 @@
-var accumulatedDonut = document.getElementById('accumulatedDonut').getContext('2d');
+var nxpie = document.getElementById('nxpie').getContext('2d');
+var piepie = document.getElementById('piepie').getContext('2d');
+var relropie = document.getElementById('relropie').getContext('2d');
+var canarypie = document.getElementById('canarypie').getContext('2d');
+var strippedpie = document.getElementById('strippedpie').getContext('2d');
+
 var accumulatedCvePie = document.getElementById('accumulatedCvePie').getContext('2d');
 var accumulatedEntropy = document.getElementById('accumulatedEntropy');
 
@@ -84,72 +89,230 @@ get_accumulated_reports().then(function (returnData) {
         }
     });
 
+    let nxpiechart = new Chart(nxpie, {
+        type: 'pie',
+        data: {
+            labels: [
+                'Binaries with NX',
+                'Binaries without NX',
+            ],
+            datasets: [
+                {
+                    labels: ['binaries with NX', 'binaries without NX'],
+                    data: [returnData.nx['mean'], (returnData.bins_checked['mean'] - returnData.nx['mean'])],
+                    backgroundColor: ['#493791', '#291771'],
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            title: {
+                display: false,
+                text: 'Binary Protections',
+                fontSize: 25
+            },
+            legend: {
+                position: 'top',
+                labels: {
+                    fontColor: '#000'
+                }
+            },
+        }
+    });
 
+    let piepiechart = new Chart(piepie, {
+        type: 'pie',
+        data: {
+            labels: [
+                'Binaries with PIE',
+                'Binaries without PIE',
+            ],
+            datasets: [
+                {
+                    labels: ['binaries with PIE', 'binaries without PIE'],
+                    data: [returnData.pie['mean'], (returnData.bins_checked['mean'] - returnData.pie['mean'])],
+                    backgroundColor: ['#1b1534', '#000014'],
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            title: {
+                display: false,
+                text: 'Binary Protections',
+                fontSize: 25
+            },
+            legend: {
+                position: 'top',
+                labels: {
+                    fontColor: '#000'
+                }
+            },
+        }
+    });
 
-    let doughnutChart = new Chart(accumulatedDonut, {
-                type: 'doughnut',
-                data: {
-                    datasets: [
-                        {
-                            labels: ['binaries with NX', 'binaries without NX'],
-                            data: [returnData.nx['mean'], (returnData.bins_checked['mean'] - returnData.nx['mean'])],
-                            backgroundColor: ['#493791', '#291771'],
-                        },
-                        {
-                            label: 'PIE',
-                            data: [returnData.pie['mean'], (returnData.bins_checked['mean'] - returnData.pie['mean'])],
-                            backgroundColor: ['#1b1534', '#000014'],
-                        },
-                        {
-                            label: 'RELRO',
-                            data: [returnData.relro['mean'], (returnData.bins_checked['mean'] - returnData.relro['mean'])],
-                            backgroundColor: ['#7b919d', '#5b717d'],
-                        },
-                        {
-                            label: 'CANARY',
-                            data: [returnData.canary['mean'], (returnData.bins_checked['mean'] - returnData.canary['mean'])],
-                            backgroundColor: ['#525d63', '#323d43'],
-                        },
-                        {
-                            label: 'Stripped',
-                            data: [returnData.stripped['mean'], (returnData.bins_checked['mean'] - returnData.stripped['mean'])],
-                            backgroundColor: ['#009999', '#005050'],
-                        },
-                    ],
+    let relropiechart = new Chart(relropie, {
+        type: 'pie',
+        data: {
+            labels: [
+                'Binaries with RELRO',
+                'Binaries without RELRO',
+            ],
+            datasets: [
+                {
+                    labels: ['binaries with RELRO', 'binaries without RELRO'],
+                    data: [returnData.relro['mean'], (returnData.bins_checked['mean'] - returnData.relro['mean'])],
+                    backgroundColor: ['#7b919d', '#5b717d'],
                 },
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            title: {
+                display: false,
+                text: 'Binary Protections',
+                fontSize: 25
+            },
+            legend: {
+                position: 'top',
+                labels: {
+                    fontColor: '#000'
+                }
+            },
+        }
+    });
 
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                title: {
-                    display: false,
-                    text: 'Binary Protections',
-                    fontSize: 25
+    let canarypiechart = new Chart(canarypie, {
+        type: 'pie',
+        data: {
+            labels: [
+                'Binaries with CANARY',
+                'Binaries without CANARY',
+            ],
+            datasets: [
+                {
+                    labels: ['binaries with CANARY', 'binaries without CANARY'],
+                    data: [returnData.canary['mean'], (returnData.bins_checked['mean'] - returnData.canary['mean'])],
+                    backgroundColor: ['#525d63', '#323d43'],
                 },
-                legend: {
-                    position: 'top',
-                    labels: {
-                        fontColor: '#000'
-                    }
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            title: {
+                display: false,
+                text: 'Binary Protections',
+                fontSize: 25
+            },
+            legend: {
+                position: 'top',
+                labels: {
+                    fontColor: '#000'
+                }
+            },
+        }
+    })
+
+    let strippedpiechart = new Chart(strippedpie, {
+        type: 'pie',
+        data: {
+            labels: [
+                'Binaries with STRIPPED',
+                'Binaries without STRIPPED',
+            ],
+            datasets: [
+                {
+                    labels: ['binaries with STRIPPED', 'binaries without STRIPPED'],
+                    data: [returnData.stripped['mean'], (returnData.bins_checked['mean'] - returnData.stripped['mean'])],
+                    backgroundColor: ['#009999', '#005050'],
                 },
-                layout: {
-                    padding: {
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        top: 0
-                    }
-                },
-                tooltips: {
-                              callbacks: {
-                                label: function(item, data) {
-                                console.log(data.labels, item);
-                                    return data.datasets[item.datasetIndex].label;
-                                }
-                            }
-                        }
-            }
-            });
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            title: {
+                display: false,
+                text: 'Binary Protections',
+                fontSize: 25
+            },
+            legend: {
+                position: 'top',
+                labels: {
+                    fontColor: '#000'
+                }
+            },
+        }
+    });
+
+    // let doughnutChart = new Chart(accumulatedDonut, {
+    //             type: 'doughnut',
+    //             data: {
+    //                 datasets: [
+    //                     {
+    //                         labels: ['binaries with NX', 'binaries without NX'],
+    //                         data: [returnData.nx['mean'], (returnData.bins_checked['mean'] - returnData.nx['mean'])],
+    //                         backgroundColor: ['#493791', '#291771'],
+    //                     },
+    //                     {
+    //                         label: 'PIE',
+    //                         data: [returnData.pie['mean'], (returnData.bins_checked['mean'] - returnData.pie['mean'])],
+    //                         backgroundColor: ['#1b1534', '#000014'],
+    //                     },
+    //                     {
+    //                         label: 'RELRO',
+    //                         data: [returnData.relro['mean'], (returnData.bins_checked['mean'] - returnData.relro['mean'])],
+    //                         backgroundColor: ['#7b919d', '#5b717d'],
+    //                     },
+    //                     {
+    //                         label: 'CANARY',
+    //                         data: [returnData.canary['mean'], (returnData.bins_checked['mean'] - returnData.canary['mean'])],
+    //                         backgroundColor: ['#525d63', '#323d43'],
+    //                     },
+    //                     {
+    //                         label: 'Stripped',
+    //                         data: [returnData.stripped['mean'], (returnData.bins_checked['mean'] - returnData.stripped['mean'])],
+    //                         backgroundColor: ['#009999', '#005050'],
+    //                     },
+    //                 ],
+    //             },
+    //
+    //         options: {
+    //             responsive: true,
+    //             maintainAspectRatio: false,
+    //             title: {
+    //                 display: false,
+    //                 text: 'Binary Protections',
+    //                 fontSize: 25
+    //             },
+    //             legend: {
+    //                 position: 'top',
+    //                 labels: {
+    //                     fontColor: '#000'
+    //                 }
+    //             },
+    //             layout: {
+    //                 padding: {
+    //                     left: 0,
+    //                     right: 0,
+    //                     bottom: 0,
+    //                     top: 0
+    //                 }
+    //             },
+    //             tooltips: {
+    //                           callbacks: {
+    //                             label: function(item, data) {
+    //                             console.log(data.labels, item);
+    //                                 return data.datasets[item.datasetIndex].label;
+    //                             }
+    //                         }
+    //                     }
+    //         }
+    //         });
 
 
 
