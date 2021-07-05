@@ -7,6 +7,11 @@
     margin-bottom: 10px;
 }
 
+.containerCSS {
+    width: 100%;
+    padding: 15px;
+}
+
 .title {
     margin-top: 0px;
     font-size: 60px;
@@ -23,30 +28,14 @@ h3 {
     width: 100%;
 }
 
-/* body {
-    font-size: 14px;
-    line-height: 1.5em;
-    font-weight: 300;
-} */
-
-.radio-custom:checked+.radio-custom-label:before {
-    content: "\f00c";
-    font-family: 'FontAwesome';
-    color: blue;
-}
-
-.radio-custom+.radio-custom-label:before {
-    border-radius: 50%;
+.containerCSS div {
+    width: inherit;
 }
 
 .statusTile {
     background-color: lavender;
-
 }
 
-/* .statusTile:hover {
-    background: blue;
-} */
 
 .statusEMba {
     display: flex;
@@ -59,24 +48,46 @@ h3 {
 .log_phase {
     font-size: small;
     margin-bottom: 5px;
+    overflow-y: scroll;
 }
 
-/* .progress {
-    height: auto;
-    padding: 5px;
-} */
+.progress {
+    padding: 0%;
+}
+
+.progress-bar {
+    width: 0%;
+
+}
 
 .log {
     width: 100%;
     margin: 3px;
+
 }
 
 .sub-container {
     height: 100vh;
-    background-color: lavender;
 }
 
-/* .mainService {
-    width: 100%;
-    height: 100%;
+.logUL {
+    height: 100px;
+    max-height: 300px;
+    overflow-y: auto;
+    --scrollbarBG: #d7e4ee;
+    --thumbBG: #b8cedb;
+}
+
+/* ::-webkit-scrollbar {
+    width: 11px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--scrollbarBG);
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: var(--thumbBG);
+    border-radius: 6px;
+    border: 3px solid var(--scrollbarBG);
 } */
