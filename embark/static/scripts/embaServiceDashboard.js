@@ -75,7 +75,7 @@ function embaProgress() {
 // method for progressBar progress
 function makeProgress(percent, cur_ID) {
     var p = percent * 100;
-    var rounded = p.toFixed(2);
+    var rounded = Math.round(p);
     id = "#pBar_" + cur_ID;
     $(id).attr('aria-valuenow', rounded).css('width', rounded + '%').text(rounded + '%')
 }
