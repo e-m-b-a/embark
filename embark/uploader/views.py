@@ -7,6 +7,7 @@ import json
 import os
 import time
 import logging
+from operator import itemgetter
 from http import HTTPStatus
 
 from django.shortcuts import render
@@ -379,10 +380,19 @@ def get_accumulated_reports(request):
     top_5_entropies = results.order_by('-entropy_value')[:5]
     charfields = ['architecture_verified', 'os_verified']
     data = {}
+    strcpy_bins = {}
     for result in results:
         result = model_to_dict(result)
+        # Pop firmware object_id
         result.pop('firmware', None)
-        result.pop('strcpy_bin', None)
+
+        # Get counts for all strcpy_bin values
+        strcpy_bin = json.loads(result.pop('strcpy_bin', '{}'))
+        for key in strcpy_bin:
+            if key not in strcpy_bins:
+                strcpy_bins[key] = 0
+            strcpy_bins[key] += int(strcpy_bin[key])
+
         for charfield in charfields:
             if charfield not in data:
                 data[charfield] = {}
@@ -403,4 +413,9 @@ def get_accumulated_reports(request):
     data['total_firmwares'] = len(results)
     data['top_entropies'] = [{'name': r.firmware.firmware.file.name, 'entropy_value': r.entropy_value} for r in
                              top_5_entropies]
+
+    # Taking top 10 most commonly occurring strcpy_bin values
+    strcpy_bins = dict(sorted(strcpy_bins.items(), key=itemgetter(1), reverse=True)[:10])
+    data['top_strcpy_bins'] = strcpy_bins
+
     return JsonResponse(data=data, status=HTTPStatus.OK)

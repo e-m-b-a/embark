@@ -17,15 +17,17 @@ var totalBinaries = document.getElementById('totalBinaries');
 var totalCve= document.getElementById('totalCve');
 var totalIssues = document.getElementById('totalIssues')
 
+var topBinaryTypes = document.getElementById('topBinaryTypes')
+
 
 
 function getRandomColors(num) {
-    var r = Math.round (Math.random () * 255);
-    var g = Math.round (Math.random () * 255);
-    var b = Math.round (Math.random () * 255);
     var colors = [];
     for (var i = 0; i < num; i++ ) {
-        colors.push(`rgb (${r}, ${g}, ${b})`)
+        var r = Math.round (Math.random () * 255);
+        var g = Math.round (Math.random () * 255);
+        var b = Math.round (Math.random () * 255);
+        colors.push(`rgba(${r}, ${g}, ${b})`)
     }
     return colors;
 }
@@ -251,48 +253,89 @@ get_accumulated_reports().then(function (returnData) {
 
     var archLabels = Object.keys(returnData.architecture_verified);
     var archCounts = Object.values(returnData.architecture_verified);
-
-    var colors = [];
-    for (var i = 0; i < archLabels.length; i++ ) {
-        var r = Math.round (Math.random () * 255);
-        var g = Math.round (Math.random () * 255);
-        var b = Math.round (Math.random () * 255);
-        colors.push(`rgb (${r}, ${g}, ${b})`)
-    }
     let architectureBarChart = new Chart(accumulatedArchitecture, {
         type: 'bar',
         data: {
                   labels: archLabels,
                   datasets: [{
                     label: 'Architecture Distribution',
+                    labels: archLabels,
                     data: archCounts,
-                    borderWidth: 1
-                  }]
+                    borderWidth: 1,
+                    backgroundColor: getRandomColors(archLabels.length)
+                  }],
+                  options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        title: {
+                            display: true,
+                            text: 'Architecture Distribution',
+                            fontSize: 20
+                        },
+                        tooltips: {
+                            enabled: true
+                        }
+                    }
             },
-        backgroundColor: colors
     });
 
     var osLabels = Object.keys(returnData.os_verified);
     var osCounts = Object.values(returnData.os_verified);
-
-    var colors_2 = [];
-    for (var i = 0; i < archLabels.length; i++ ) {
-        var r = Math.round (Math.random () * 255);
-        var g = Math.round (Math.random () * 255);
-        var b = Math.round (Math.random () * 255);
-        colors_2.push(`rgb (${r}, ${g}, ${b})`)
-    }
     let osBarChart = new Chart(accumulatedOs, {
         type: 'bar',
         data: {
                   labels: osLabels,
                   datasets: [{
                     label: 'OS Distribution',
+                    labels: osLabels,
                     data: osCounts,
-                    borderWidth: 1
-                  }]
+                    borderWidth: 1,
+                    backgroundColor: getRandomColors(osLabels.length)
+                  }],
+                  options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        title: {
+                            display: true,
+                            text: 'OS Distribution',
+                            fontSize: 20
+                        },
+                        tooltips: {
+                            enabled: true
+                        }
+                    }
             },
-        backgroundColor: colors_2
+
+    });
+
+
+    var topBinaryLabels = Object.keys(returnData.top_strcpy_bins);
+    var topBinaryCounts = Object.values(returnData.top_strcpy_bins);
+    let topBinaryBar = new Chart(topBinaryTypes, {
+        type: 'bar',
+        data: {
+                  labels: topBinaryLabels,
+                  datasets: [{
+                    label: 'Top strcpy Binaries',
+                    labels: topBinaryLabels,
+                    data: topBinaryCounts,
+                    borderWidth: 1,
+                    backgroundColor: getRandomColors(topBinaryLabels.length)
+                  }],
+                  options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        title: {
+                            display: true,
+                            text: 'Top strcpy Binaries',
+                            fontSize: 20
+                        },
+                        tooltips: {
+                            enabled: true
+                        }
+                    }
+            },
+
     });
 
 });
