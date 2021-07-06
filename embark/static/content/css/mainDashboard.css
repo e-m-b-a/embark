@@ -64,6 +64,13 @@
 .card-bottom {
     height: 275px !important;
 }
+.dataCardRowNew {
+    margin: 10px;
+    height: 300px !important;
+    display: grid;
+    grid-template-columns: 19.5% 19.5% 19.5% 19.5% 19.5%;
+    gap: 10px;
+}
 
 canvas {
     height: 250px !important;
