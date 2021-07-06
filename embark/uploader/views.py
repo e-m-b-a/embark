@@ -155,6 +155,19 @@ def report_dashboard(request):
     return render(request, 'uploader/reportDashboard.html', {'finished_firmwares': finished_firmwares})
 
 
+@csrf_exempt
+def individual_report_dashboard(request, analyze_id):
+    """
+    delivering individualReportDashboard
+
+    :params request: HTTP request
+
+    :return: rendered individualReportDashboard
+    """
+    html_body = get_template('uploader/individualReportDashboard.html')
+    return HttpResponse(html_body.render())
+
+
 # Function which saves the file .
 # request - Post request
 @csrf_exempt
@@ -328,16 +341,21 @@ def get_load(request):
 
 @csrf_exempt
 @require_http_methods(["GET"])
-def get_individual_report(request):
-    firmware_id = request.GET.get('id', None)
+def get_individual_report(request, analyze_id):
+    firmware_id = analyze_id
     if not firmware_id:
         logger.error('Bad request for get_individual_report')
         return JsonResponse(data={'error': 'Bad request'}, status=HTTPStatus.BAD_REQUEST)
     try:
         result = Result.objects.get(firmware_id=int(firmware_id))
-        result = model_to_dict(result)
-        result['strcpy_bin'] = json.loads(result['strcpy_bin'])
-        return JsonResponse(data=result, status=HTTPStatus.OK)
+        firmware_object = Firmware.objects.get(pk=int(firmware_id))
+
+        return_dict = dict(model_to_dict(result), **model_to_dict(firmware_object))
+
+        return_dict['name'] = firmware_object.firmware.file.name
+        return_dict['strcpy_bin'] = json.loads(return_dict['strcpy_bin'])
+
+        return JsonResponse(data=return_dict, status=HTTPStatus.OK)
     except Result.DoesNotExist:
         logger.error(f'Report for firmware_id: {firmware_id} not found in database')
         return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)

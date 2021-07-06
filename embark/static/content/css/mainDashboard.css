@@ -48,6 +48,19 @@
     height: 300px !important;
 } */
 
+.dataCardRow-right-large {
+    padding: 15px;
+    width: 59.5%;
+    height: 200px !important;
+}
+
+.dataCardColumn {
+    margin: 10px;
+    display: grid;
+    grid-template-rows: 50% auto;
+    gap: 10px;
+}
+
 .card-bottom {
     height: 275px !important;
 }

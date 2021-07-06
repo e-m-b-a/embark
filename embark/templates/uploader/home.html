@@ -10,6 +10,7 @@
 
 	<!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap4.min.css"/>
 
 	<!--Styling sheets-->
 	<link rel="stylesheet" type="text/css" href="{% static 'content/css/globalStyle.css' %}">
@@ -17,13 +18,15 @@
 	<link rel="stylesheet" type="text/css" href="{% static 'content/css/fileUpload.css' %}">
 	<link rel="stylesheet" type="text/css" href="{% static 'content/css/serviceDashboard.css' %}">
 	<link rel="stylesheet" type="text/css" href="{% static 'content/css/mainDashboard.css' %}">
+	<link rel="stylesheet" type="text/css" href="{% static 'content/css/individualReportDashboard.css' %}">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
 
 
 	<!--DataTables styling sheets-->
-	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.25/b-1.7.1/b-colvis-1.7.1/b-html5-1.7.1/date-1.1.0/fh-3.1.9/r-2.2.9/sc-2.0.4/sp-1.3.0/sl-1.3.3/datatables.min.css"/>
+	<link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap4.min.css"/>
 
-	<!--<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css"/>-->
+	<!--DataCharts styling sheets-->
+	<script src=https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.4.0/chart.min.js></script>
 
 	<!--script for fonts/icons-->
 	<script src="https://kit.fontawesome.com/67d45e2d15.js" crossorigin="anonymous"></script>
@@ -45,14 +48,9 @@
 	<script src="{% static 'scripts/embaServiceDashboard.js' %}"></script>
 	<script src="{% static 'scripts/alertBox.js' %}"></script>
 
-
-	<!--DataTables styling sheets-->
-	<script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.25/b-1.7.1/b-colvis-1.7.1/b-html5-1.7.1/date-1.1.0/fh-3.1.9/r-2.2.9/sc-2.0.4/sp-1.3.0/sl-1.3.3/datatables.min.js"></script>
-
-	<!--DataCharts styling sheets-->
-	<script src=https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.4.0/chart.min.js></script>
-
-	<!--<script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.10.25/b-1.7.1/b-colvis-1.7.1/b-html5-1.7.1/fh-3.1.9/r-2.2.9/sc-2.0.4/sp-1.3.0/datatables.min.js"></script>-->
+	<!--DataTables script sheets-->
+	<script type="text/javascript" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap4.min.js"></script>
 
 	{% block js %}{% endblock %}
 

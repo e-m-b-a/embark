@@ -1,0 +1,25 @@
+.canvasReport {
+    height: auto !important;
+    width: auto !important;
+    margin: 5px;
+}
+
+.dataCardColumnReport {
+    margin: 10px;
+    display: grid;
+    grid-template-rows: 50% auto;
+    gap: 10px;
+}
+
+.dataCardRowReport {
+    margin: 10px;
+    display: grid;
+    grid-template-columns: 65% auto;
+    height: auto !important;
+    gap: 10px;
+}
+
+.dataCardReport {
+    height: auto !important;
+    width: auto !important;
+}
