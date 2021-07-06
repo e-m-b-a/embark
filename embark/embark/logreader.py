@@ -11,7 +11,7 @@ import logging
 from channels.generic.websocket import WebsocketConsumer
 
 from django.conf import settings
-from uploader.models import Firmware
+from uploader.models import Firmware, FirmwareFile
 from inotify_simple import INotify, flags
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
@@ -30,6 +30,10 @@ class LogReader:
         self.module_count = 0
         self.firmware_id = firmware_id
         self.firmware_id_str = str(self.firmware_id)
+        try:
+            self.firmwarefile = Firmware.objects.get(pk=firmware_id).firmware.__str__()
+        except Exception as e:
+            logger.info(e)
 
         # set variables for channels communication
         self.room_group_name = 'updatesgroup'
@@ -45,6 +49,7 @@ class LogReader:
 
         # status update dict (appended to processmap)
         self.status_msg = {
+            "firmwarename": self.firmwarefile,
             "percentage": 0.0,
             "module": "",
             "phase": "",

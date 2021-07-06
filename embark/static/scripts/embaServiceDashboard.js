@@ -26,7 +26,7 @@ socket.onmessage = function (event) {
 
     if (cur_len !== Object.keys(data).length) {
         /* var htmlToAdd = '<div class="row"><div class="coldiv"><a class="tile row statusTile"><div class="progress" id="progress-wrapper"><div id="pBar_' + Object.keys(data)[cur_len] + '" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div><br><div class="row statusEMba"><div class="col-sm log tile moduleLog"><ul class="log_phase" id="log_phase_' + Object.keys(data)[cur_len] + '"> </ul></div><div class="col-sm log tile phaseLog"><ul class="log_phase" id="log_module_' + Object.keys(data)[cur_len] + '"> </ul></div></div><button type="submit" class="btn" id="' + Object.keys(data)[cur_len] + '" onclick="pythonAjax(this.id)" >Upload</button></a></div></div>' */
-        var htmlToAdd = '<div class="row containerCSS"><div class="row"><div class="col-sm log tile moduleLog"><ul class="log_phase logUL" id="log_phase_' + Object.keys(data)[cur_len] + '"> </ul > </div><div class="col-sm log tile phaseLog"><ul class="log_phase logUL" id="log_module_' + Object.keys(data)[cur_len] + '"> </ul></div></div><div class="row"><div class="progress col-sm-11" id="progress-wrapper"><div id="pBar_' + Object.keys(data)[cur_len] + '" class="progress-bar" role="progressbar" aria-valuenow: "0" aria - valuemin: "0"aria - valuemax= "100" > 0 % </div></div><div class="col-sm"><button type="submit" class="btn" id="' + Object.keys(data)[cur_len] + '" onclick="cancelLog(this.id)" >Cancel</button></div></div></div>'
+        var htmlToAdd = '<div class="row containerCSS" id="Container_' + Object.keys(data)[cur_len] + '"\n > <div class="title">\n <span>'+data[Object.keys(data)[cur_len]][0]["firmwarename"].split(".")[0]+'</span></div>\n<div class="row"><div class="col-sm log tile moduleLog"><ul class="log_phase logUL" id="log_phase_' + Object.keys(data)[cur_len] + '"> </ul > </div><div class="col-sm log tile phaseLog"><ul class="log_phase logUL" id="log_module_' + Object.keys(data)[cur_len] + '"> </ul></div></div><div class="row"><div class="progress col-sm-11" id="progress-wrapper"><div id="pBar_' + Object.keys(data)[cur_len] + '" class="progress-bar" role="progressbar" aria-valuenow: "0" aria - valuemin: "0"aria - valuemax= "100" > 0 % </div></div><div class="col-sm"><button type="submit" class="btn" id="' + Object.keys(data)[cur_len] + '" onclick="cancelLog(this.id)" >Cancel</button></div></div></div>'
         document.getElementById("add_to_me").insertAdjacentHTML('afterend', htmlToAdd);
         console.log("log_phase_" + Object.keys(data)[cur_len])
         module_array.push("no module");
@@ -82,12 +82,10 @@ function makeProgress(percent, cur_ID) {
 
 //log the current phase live
 function livelog_phase(phase, cur_ID) {
-    var id = "log_phase_" + cur_ID;
-    console.log(id)
-    var ul = document.getElementById(id);
-    var li = document.createElement("li");
-    li.appendChild(document.createTextNode(phase));
-    ul.appendChild(li);
+    var id = "#log_phase_" + cur_ID;
+    var $List = $(id);
+    var $entry = $('<li>' + phase + '</li>');
+    $List.append($entry);
 }
 
 //log current phase live
@@ -96,10 +94,6 @@ function livelog_module(module, cur_ID) {
     var $List = $(id);
     var $entry = $('<li>' + module + '</li>');
     $List.append($entry);
-    // var ul = document.getElementById(id);
-    // var li = document.createElement("li");
-    // li.appendChild(document.createTextNode(module));
-    // ul.appendChild(li);
 }
 
 
@@ -109,13 +103,13 @@ function livelog_module(module, cur_ID) {
  */
 function cancelLog(currentID) {
 
+
     try {
-        $.get("../../logs", {
-                id: currentID
-            })
-            .done(function (data) {
-                alert("Data Loaded: " + data);
-            });
+        var idOfDIV = "#Container_" + currentID;
+        $(idOfDIV).remove();
+        //currentID.parentNode.parentNode.parentNode.parentNode.removeChild(currentID.parentNode.parentNode.parentNode);
+
+
     } catch (error) {
         errorAlert(error.message);
     }
