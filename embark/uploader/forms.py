@@ -14,7 +14,6 @@ class FirmwareForm(forms.ModelForm):
                   'web_reporter', 'emulation_test', 'dependency_check', 'multi_threaded')
 
     def __init__(self, *args, **kwargs):
-
         super(FirmwareForm, self).__init__(*args, **kwargs)
 
         for field in self.visible_fields():
@@ -40,6 +39,8 @@ class FirmwareForm(forms.ModelForm):
             except:
                 pass
 
+        self.base_fields['firmware'] = forms.ModelChoiceField(queryset=models.FirmwareFile.objects, empty_label='Select firmware')
+
 
 class DeleteFirmwareForm(forms.ModelForm):
 
@@ -50,3 +51,8 @@ class DeleteFirmwareForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(DeleteFirmwareForm, self).__init__(*args, **kwargs)
+        for field in self.visible_fields():
+            if isinstance(field.field.widget, django.forms.widgets.Select):
+                field.field.widget.attrs['class'] = 'form-control select dropdownSelect'
+
+        self.base_fields['firmware'] = forms.ModelChoiceField(queryset=models.FirmwareFile.objects, empty_label='Select firmware to delete')

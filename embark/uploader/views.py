@@ -1,42 +1,39 @@
-from django import forms
-import os
-from os import path
-import json
-import logging
-
 from django.conf import settings
+
+from django import forms
+from django.forms import model_to_dict
+
+import json
+import os
+import time
+import logging
+from operator import itemgetter
+from http import HTTPStatus
 
 from django.shortcuts import render
 from django.template.loader import get_template
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import logout
 from django.views.decorators.http import require_http_methods
-from django.conf import settings
 
-import os
-
-from .archiver import Archiver
-
-
-import time
-from django.http import StreamingHttpResponse
 from django.template import loader
-
-# TODO: Add required headers like type of requests allowed later.
-# home page test view TODO: change name accordingly
-from .boundedExecutor import BoundedExecutor
-from .archiver import Archiver
-from .forms import FirmwareForm, DeleteFirmwareForm
-from .models import Firmware, FirmwareFile
-from embark.logreader import LogReader
 
 from uploader.boundedExecutor import BoundedExecutor
 from uploader.archiver import Archiver
 from uploader.forms import FirmwareForm, DeleteFirmwareForm
-from uploader.models import Firmware, FirmwareFile, DeleteFirmware
+from uploader.models import Firmware, FirmwareFile, DeleteFirmware, Result, ResourceTimestamp
+from django.views.decorators.cache import cache_control
 
 logger = logging.getLogger('web')
+
+
+@csrf_exempt
+@require_http_methods(['GET'])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def check_login(request):
+    return HttpResponse('')
 
 
 @csrf_exempt
@@ -48,16 +45,15 @@ def login(request):
 @csrf_exempt
 @login_required(login_url='/' + settings.LOGIN_URL)
 def home(request):
-    html_body = get_template('uploader/home.html')
-    form = FirmwareForm()
-    render(request, 'uploader/fileUpload.html', {'form': form})
-    return HttpResponse(html_body.render())
+    html_body = get_template('uploader/mainDashboard.html')
+    return HttpResponse(html_body.render({'username': request.user.username}))
 
 
-# additional page test view TODO: change name accordingly
-def about(request):
-    html_body = get_template('uploader/about.html')
-    return HttpResponse(html_body.render())
+@csrf_exempt
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+def logout_view(request):
+    request.session.flush()
+    logout(request)
 
 
 def download_zipped(request, analyze_id):
@@ -110,19 +106,20 @@ def start_analysis(request, refreshed):
     Returns:
 
     """
-    # Safely create emba_logs directory
 
+    # Safely create emba_logs directory
     if request.method == 'POST':
         form = FirmwareForm(request.POST)
 
         if form.is_valid():
             logger.info("Posted Form is valid")
-            form.save()
+            firmware_flags = form.save()
 
             # get relevant data
             # TODO: make clean db access
-            firmware_file = form.cleaned_data['firmware']
-            firmware_flags = Firmware.objects.latest('id')
+            firmware_file = FirmwareFile.objects.get(pk=firmware_flags.firmware.pk)
+
+            logger.info(firmware_file)
 
             # inject into bounded Executor
             if BoundedExecutor.submit_firmware(firmware_flags=firmware_flags, firmware_file=firmware_file):
@@ -136,9 +133,6 @@ def start_analysis(request, refreshed):
             logger.error("Posted Form is Invalid")
             logger.error(form.errors)
             return HttpResponse("Invalid Form")
-
-    FirmwareForm.base_fields['firmware'] = forms.ModelChoiceField(queryset=FirmwareFile.objects)
-    DeleteFirmwareForm.base_fields['firmware'] = forms.ModelChoiceField(queryset=FirmwareFile.objects)
 
     analyze_form = FirmwareForm()
     delete_form = DeleteFirmwareForm()
@@ -157,6 +151,7 @@ def service_dashboard(request):
     return HttpResponse(html_body.render())
 
 
+@login_required(login_url='/' + settings.LOGIN_URL)
 def report_dashboard(request):
     """
     delivering ReportDashboard with finished_firmwares as dictionary
@@ -167,8 +162,20 @@ def report_dashboard(request):
     """
 
     finished_firmwares = Firmware.objects.all().filter(finished=True)
-    logger.debug(f"firmwares: \n {finished_firmwares}")
     return render(request, 'uploader/reportDashboard.html', {'finished_firmwares': finished_firmwares})
+
+
+@csrf_exempt
+def individual_report_dashboard(request, analyze_id):
+    """
+    delivering individualReportDashboard
+
+    :params request: HTTP request
+
+    :return: rendered individualReportDashboard
+    """
+    html_body = get_template('uploader/individualReportDashboard.html')
+    return HttpResponse(html_body.render())
 
 
 # Function which saves the file .
@@ -190,9 +197,9 @@ def save_file(request, refreshed):
             is_archive = Archiver.check_extensions(file.name)
 
             # ensure primary key for file saving exists
-            firmware_file = FirmwareFile(is_archive=is_archive)
-            firmware_file.save()
+            firmware_file = FirmwareFile.objects.create()
 
+            firmware_file.is_archive = is_archive
             # save file in <media-root>/pk/firmware
             firmware_file.file = file
             firmware_file.save()
@@ -267,6 +274,7 @@ def log_streamer(request):
 
 
 @require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
 def get_logs(request):
     """
     View takes a get request with following params:
@@ -287,18 +295,21 @@ def get_logs(request):
 
 
 @csrf_exempt
+@login_required(login_url='/' + settings.LOGIN_URL)
 def main_dashboard(request):
     html_body = get_template('uploader/mainDashboard.html')
     return HttpResponse(html_body.render())
 
 
 @csrf_exempt
+@login_required(login_url='/' + settings.LOGIN_URL)
 def reports(request):
     html_body = get_template('uploader/reports.html')
     return HttpResponse(html_body.render())
 
 
 @require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
 def delete_file(request):
     """
     file deletion on POST requests with attached present firmware file
@@ -318,11 +329,109 @@ def delete_file(request):
             firmware_file = form.cleaned_data['firmware']
             firmware_file.delete()
 
-            return HttpResponseRedirect("../../home/upload")
+            return HttpResponseRedirect("../../home/upload/1/")
 
         else:
             logger.error(f"Form {form} is invalid")
             logger.error(f"{form.errors}")
             return HttpResponse("invalid Form")
 
-    return HttpResponseRedirect("../../home/upload")
+    return HttpResponseRedirect("../../home/upload/1/")
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def get_load(request):
+    try:
+        query_set = ResourceTimestamp.objects.all()
+        result = {}
+        for k in model_to_dict(query_set[0]).keys():
+            result[k] = tuple(model_to_dict(d)[k] for d in query_set)
+        return JsonResponse(data=result, status=HTTPStatus.OK)
+    except ResourceTimestamp.DoesNotExist:
+        logger.error(f'ResourceTimestamps not found in database')
+        return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def get_individual_report(request, analyze_id):
+    firmware_id = analyze_id
+    if not firmware_id:
+        logger.error('Bad request for get_individual_report')
+        return JsonResponse(data={'error': 'Bad request'}, status=HTTPStatus.BAD_REQUEST)
+    try:
+        result = Result.objects.get(firmware_id=int(firmware_id))
+        firmware_object = Firmware.objects.get(pk=int(firmware_id))
+
+        return_dict = dict(model_to_dict(result), **model_to_dict(firmware_object))
+
+        return_dict['name'] = firmware_object.firmware.file.name
+        return_dict['strcpy_bin'] = json.loads(return_dict['strcpy_bin'])
+
+        return JsonResponse(data=return_dict, status=HTTPStatus.OK)
+    except Result.DoesNotExist:
+        logger.error(f'Report for firmware_id: {firmware_id} not found in database')
+        return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def get_accumulated_reports(request):
+    """
+    Sends accumulated results for main dashboard
+    Args:
+        request:
+    Returns:
+        data = {
+            'architecture_verified': {'arch_1': count, ....},
+            'os_verified': {'os_1': count, .....},
+            'all int fields in Result Model': {'sum': float/int, 'count': int, 'mean': float/int}
+        }
+    """
+    results = Result.objects.all()
+    top_5_entropies = results.order_by('-entropy_value')[:5]
+    charfields = ['architecture_verified', 'os_verified']
+    data = {}
+    strcpy_bins = {}
+    for result in results:
+        result = model_to_dict(result)
+        # Pop firmware object_id
+        result.pop('firmware', None)
+
+        # Get counts for all strcpy_bin values
+        strcpy_bin = json.loads(result.pop('strcpy_bin', '{}'))
+        for key in strcpy_bin:
+            if key not in strcpy_bins:
+                strcpy_bins[key] = 0
+            strcpy_bins[key] += int(strcpy_bin[key])
+
+        for charfield in charfields:
+            if charfield not in data:
+                data[charfield] = {}
+
+            value = result.pop(charfield)
+            if value not in data[charfield]:
+                data[charfield][value] = 0
+            data[charfield][value] += 1
+        for field in result:
+            if field not in data:
+                data[field] = {'sum': 0, 'count': 0}
+            data[field]['count'] += 1
+            data[field]['sum'] += result[field]
+
+    for field in data:
+        if field not in charfields:
+            data[field]['mean'] = data[field]['sum']/data[field]['count']
+    data['total_firmwares'] = len(results)
+    data['top_entropies'] = [{'name': r.firmware.firmware.file.name, 'entropy_value': r.entropy_value} for r in
+                             top_5_entropies]
+
+    # Taking top 10 most commonly occurring strcpy_bin values
+    strcpy_bins = dict(sorted(strcpy_bins.items(), key=itemgetter(1), reverse=True)[:10])
+    data['top_strcpy_bins'] = strcpy_bins
+
+    return JsonResponse(data=data, status=HTTPStatus.OK)

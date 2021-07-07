@@ -1,94 +1,230 @@
 /* navigation menu */
 .navigation {
 	position: fixed;
-	width: 300px;
+	width: 80px;
 	height: 100%;
 	background: #1b1534;
-	transition: 0.5s;
-	overflow: hidden;
-}
-
-.navigation ul {
-	position: absolute;
 	top: 0;
 	left: 0;
+	transition: all 0.5s ease;
+	padding: 6px;
+}
+
+.navigation.active {
+	width: 300px;
+}
+
+.navigation .logo-content {
+	height: 60px;
 	width: 100%;
+	padding: 0;
+}
+
+.navigation .logo-content .logo {
+	display: flex;
+	width: 100%;
+	text-decoration: none;
+	color: #EEEEEE;
+	height: 50px;
+	align-items: center;
+	left: 0;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.navigation.active .logo-content .logo {
+	opacity: 1;
+	pointer-events: none;
+}
+
+.logo-content .logo img {
+	height: 50px;
+	min-width: 50px;
+	margin-right: 5px;
+	margin-top: 10px;
+	object-fit: cover;
+	margin-left: 10px;
+}
+
+.logo-content .logo a {
+	display: flex;
+	text-decoration: none;
+}
+
+.logo-content .logo .brandname {
+	font-size: 20px;
+	margin-left: 10px;
+	color: #EEEEEE;
+	font-weight: 400;
+	margin-top: 15px;
+	position: relative;
+	width: 100%;
+	display: flex;
+	line-height: 50px;
+}
+
+.navigation #menuBtn {
+	position: absolute;
+	color: #EEEEEE;
+	font-size: 24px;
+	left: 50%;
+	top: 10px;
+	height: 60px;
+	width: 60px;
+	text-align: center;
+	line-height: 40px;
+	transform: translateX(-50%)
+}
+
+.navigation.active #menuBtn {
+	left: 90%;
+}
+
+.navigation ul li i {
+	min-width: 50px;
+	height: 50px;
+	text-align: center;
+	border-radius: 5px;
+	color: #EEEEEE;
+	font-size: 20px;
+	line-height: 50px;
 }
 
 .navigation ul li {
 	position: relative;
 	width: 100%;
 	list-style: none;
+	line-height: 50px;
 }
 
-.navigation ul li:hover {
-	background: #4d217a;
+.navigation ul li:active {
+	background: #4f418c;
+	border-radius: 12px;
 }
 
-.navigation ul li:nth-child(1):hover {
-	background: transparent;
-}
-
-.navigation ul li a,
-.logo a,
-.brandname {
-	position: relative;
-	display: block;
-	width: 100%;
+.navigation ul li a {
 	display: flex;
 	text-decoration: none;
 	color: #EEEEEE;
+	align-items: center;
+	border-radius: 5px;
+	transition: all 0.4s ease;
+	margin-left: 10px;
 }
 
-.navigation ul li a .icon,
-.embarklogo {
-	position: relative;
-	display: block;
-	min-width: 60px;
-	height: 60px;
-	line-height: 60px;
+.navigation .nav-link {
+	margin-left: 10px;
+	opacity: 0;
+	pointer-events: none;
+	transition: all 0.5s ease;
+}
+
+.navigation.active .nav-link {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.navigation ul li:hover {
+	background: #4f418c;
+	border-radius: 12px;
+}
+
+.navigation ul li .nav-tooltip {
+	position: absolute;
+	left: 135px;
+	top: 0;
+	transform: translate(-50%, -50%);
+	border-radius: 6px;
+	height: 35px;
+	width: 122px;
+	background: #EEEEEE;
+	line-height: 35px;
 	text-align: center;
+	box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+	transition: 0s;
+	opacity: 0;
+	pointer-events: none;
 }
 
-.navigation ul li a .icon .fa {
+.navigation ul li:hover .nav-tooltip {
+	display: none;
+	transition: all 0.5s ease;
+	opacity: 1;
+	top: 50%;
+}
+
+/* profile */
+
+.navigation .profile-content {
+	position: absolute;
 	color: #EEEEEE;
-	font-size: 24px;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	background: #30294d;
 }
 
-.navigation ul li a .title,
-.brandname {
+.navigation .profile-content .profile {
 	position: relative;
-	display: block;
-	padding: 0 10px;
+	padding: 10px 6px;
 	height: 60px;
-	line-height: 60px;
-	white-space: nowrap;
-	font-family: 'Arial Narrow';
-	font-size: 18px;
 }
 
-.logo {
-	width: 300px;
-	background: #1b1534;
-	position: relative;
+.navigation.active .profile .profile-details {
+	opacity: 1;
+	pointer-events: auto;
 }
 
-.embarklogo {
-	height: 50px;
-	min-width: 40px;
-	margin-right: 10px;
-	padding-top: 10px;
-	padding-left: 10px;
+.profile-content .profile .profile-details {
+	display: flex;
+	align-items: center;
+	margin-left: 10px;
+	opacity: 0;
+	pointer-events: none;
 }
 
-.brandname {
-	margin-top: 10px;
+
+.profile .profile-details .user-id {
+	font-size: 12px;
+}
+
+.profile .profile-details i {
+	height: 45px;
+	width: 45px;
+	object-fit: cover;
+	border-radius: 12px;
+	line-height: 45px;
+	font-size: 30px;
+}
+
+.profile #log-out {
+	position: absolute;
+	left: 50%;
+	bottom: 5px;
+	transform: translateX(-50%);
+	min-width: 50px;
+	line-height: 45px;
+	font-size: 20px;
+	border-radius: 12px;
+	text-align: center;
+	color: #EEEEEE;
+}
+
+.navigation.active .profile #log-out {
+	left: 88%;
+
 }
 
 .main {
 	position: absolute;
+	min-height: 100vh;
+	left: 80px;
+	width: calc(100% - 80px);
+	transition: all 0.5s ease;
+	padding: 15px;
+}
+
+.navigation.active~.main {
 	width: calc(100% - 300px);
 	left: 300px;
-	min-height: 100vh;
-	background: #d7e4ee;
 }

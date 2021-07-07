@@ -1,12 +1,13 @@
 from django.test import TestCase
 
-from .models import Firmware
+from .models import Firmware, FirmwareFile
 
 
 class test_models(TestCase):
 
     def setUp(self):
-        self.fw_file = None
+        self.fw_file = FirmwareFile.objects.create()
+        self.fw_file.save()
 
     # TODO: add timeout
     def test_get_flags_all_true(self):

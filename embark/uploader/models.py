@@ -100,10 +100,10 @@ class FirmwareFile(models.Model):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.file_name = self.file.name
+        # self.file_name = self.file.name
 
     def __str__(self):
-        return self.file.name
+        return f"{self.file.name.replace('/', ' - ')}"
 
 
 @receiver(pre_delete, sender=FirmwareFile)
@@ -113,8 +113,6 @@ def delete_img_pre_delete_post(sender, instance, *args, **kwargs):
     delete the firmwarefile and folder structure in storage on recieve
     """
     if instance.file:
-        logger = logging.getLogger('web')
-        logger.debug(instance.get_abs_folder_path())
         shutil.rmtree(instance.get_abs_folder_path(), ignore_errors=True)
 
 
@@ -125,7 +123,7 @@ class Firmware(models.Model):
     """
     MAX_LENGTH = 127
 
-    firmware = CharFieldExpertMode(help_text='', blank=False, max_length=MAX_LENGTH)
+    firmware = models.ForeignKey(FirmwareFile, on_delete=models.RESTRICT, help_text='', null=True)
 
     # emba basic flags
     version = CharFieldExpertMode(
@@ -245,6 +243,9 @@ class Firmware(models.Model):
 
 
 class Result(models.Model):
+    # TODO missing: emba_command, os_unverified, bins_checked, strcpy_bin
+    # TODO different: FW_path/firmware
+
     firmware = models.ForeignKey(Firmware, on_delete=models.CASCADE, help_text='')
     architecture_verified = models.CharField(blank=True, null=True, max_length=100, help_text='')
     os_verified = models.CharField(blank=True, null=True, max_length=100, help_text='')
@@ -274,6 +275,8 @@ class Result(models.Model):
     cve_medium = models.IntegerField(default=0, help_text='')
     cve_low = models.IntegerField(default=0, help_text='')
     exploits = models.IntegerField(default=0, help_text='')
+    bins_checked = models.IntegerField(default=0, help_text='')
+    strcpy_bin = models.TextField(default='{}')
 
 
 class DeleteFirmware(models.Model):
@@ -284,7 +287,7 @@ class DeleteFirmware(models.Model):
 
     MAX_LENGTH = 127
 
-    firmware = CharFieldExpertMode(help_text='', blank=False, max_length=MAX_LENGTH)
+    firmware = models.ForeignKey(FirmwareFile, on_delete=models.CASCADE, help_text='', null=True)
 
     class Meta:
         app_label = 'uploader'

@@ -1,8 +1,97 @@
 .cardBox {
     position: relative;
     width: 100%;
-    padding: 10px;
+    padding: 10px 10px 0 10px;
     display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-gap: 10px;
+    height: 125px !important;
+}
+
+.card-body {
+    background: #def2ff;
+    color: #2a225c;
+    text-align: center;
+}
+
+.cardBox>.card {
+    padding: 0;
+}
+
+.card-title,
+.cardDataName {
+    margin: 0px;
+    display: block;
+    text-align: center;
+    height: 30%;
+    padding: 5px;
+}
+
+.card {
+    padding: 15px;
+}
+
+.card-wide {
+    height: 400px;
+    max-height: 400px;
+}
+
+.card-left {
+    height: 600px;
+}
+
+.card-right {
+    height: 600px;
+    grid-template-rows: 30% auto;
+    grid-gap: 10px;
+}
+
+.card-pie {
+    height: 350px;
+}
+
+.title-row {
+    height: 10%;
+    justify-content: center;
+}
+
+.graphData {
+    height: 90%;
+}
+
+canvas {
+    width: auto !important;
+    margin: 5px;
+}
+
+.topEntropyGraph {
+    margin-top: 30px;
+}
+
+meter {
+    width: 100%
+}
+
+/* each data row styles */
+
+.cardRow {
+    margin: 10px;
+    display: grid;
+    grid-gap: 10px;
+}
+
+.dataCardRow {
+    grid-template-columns: 60% auto;
+}
+
+.dataCardRow2 {
     grid-template-columns: repeat(5, 1fr);
-    grid-gap: 20px;
+}
+
+.dataCardRow4 {
+    grid-template-columns: 50% auto;
+}
+
+.dataCardRow5 canvas {
+    max-height: 350px !important;
 }
