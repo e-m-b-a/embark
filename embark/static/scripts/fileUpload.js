@@ -7,7 +7,8 @@ function dragOverHandler(ev) {
 function showFiles(fileData) {
   try {
     document.getElementById("uploadedFileNames").style.display = 'block';
-    document.querySelector(".fileText").innerHTML = fileData[0].name
+    document.querySelector(".fileName").innerHTML = fileData[0].name;
+    $("#uploadFirmware-btn").attr("disabled", false);
 
   } catch (error) {
     errorAlert(error.message);
@@ -15,14 +16,20 @@ function showFiles(fileData) {
 }
 
 function saveFiles() {
-    var fileData = document.getElementById('file-input').files;
-    var formData = new FormData()
-    for (let index = 0; index < fileData.length; index++) {
-      fileData[index].inputFileName = fileData[index].name;
-      formData.append('file', fileData[index]);
+  var progressBar = document.getElementById("progress-wrapper");
+  if (progressBar.style.display == "none") {
+    progressBar.style.display = "block";
+  } else {
+    progressBar.style.display = "none";
+  }
+  var fileData = document.getElementById('file-input').files;
+  var formData = new FormData()
+  for (let index = 0; index < fileData.length; index++) {
+    fileData[index].inputFileName = fileData[index].name;
+    formData.append('file', fileData[index]);
 
-    }
-    postFiles(formData);
+  }
+  postFiles(formData);
 }
 
 /** This function saves the file to local directory. */
@@ -50,7 +57,7 @@ async function postFiles(formData) {
         return xhr;
       },
       success: function (data) {
-        if(data == "File Exists"){
+        if (data == "File Exists") {
           var fileData = document.getElementById('file-input').files[0];
           var formData = new FormData()
           var res = confirm("A File with the same name exists ,Click ok to rename and save it");
@@ -58,19 +65,19 @@ async function postFiles(formData) {
             var fileName = prompt("Please enter the new File name", fileData.inputFileName);
             if (fileName != null) {
               const myRenamedFile = new File([fileData], fileName);
-               //fileData.inputFileName=fileName;
-               formData.append('file',myRenamedFile);
+              //fileData.inputFileName=fileName;
+              formData.append('file', myRenamedFile);
               postFiles(formData);
             }
-          }else{
+          } else {
             errorAlert("The file is not saved");
             location.reload();
           }
-        }else{
-        successAlert("" + data);
-        location.reload()
-        //document.getElementById("uploadedFileNames").style.display = 'none';
-        location.reload();
+        } else {
+          successAlert("" + data);
+          location.reload()
+          //document.getElementById("uploadedFileNames").style.display = 'none';
+          location.reload();
         }
       }
     });

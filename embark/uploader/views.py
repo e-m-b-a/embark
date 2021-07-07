@@ -15,6 +15,7 @@ from django.template.loader import get_template
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import logout
 from django.views.decorators.http import require_http_methods
 
 from django.template import loader
@@ -23,8 +24,16 @@ from uploader.boundedExecutor import BoundedExecutor
 from uploader.archiver import Archiver
 from uploader.forms import FirmwareForm, DeleteFirmwareForm
 from uploader.models import Firmware, FirmwareFile, DeleteFirmware, Result, ResourceTimestamp
+from django.views.decorators.cache import cache_control
 
 logger = logging.getLogger('web')
+
+
+@csrf_exempt
+@require_http_methods(['GET'])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def check_login(request):
+    return HttpResponse('')
 
 
 @csrf_exempt
@@ -36,16 +45,15 @@ def login(request):
 @csrf_exempt
 @login_required(login_url='/' + settings.LOGIN_URL)
 def home(request):
-    html_body = get_template('uploader/home.html')
-    form = FirmwareForm()
-    render(request, 'uploader/fileUpload.html', {'form': form})
-    return HttpResponse(html_body.render())
+    html_body = get_template('uploader/mainDashboard.html')
+    return HttpResponse(html_body.render({'username': request.user.username}))
 
 
-# additional page test view TODO: change name accordingly
-def about(request):
-    html_body = get_template('uploader/about.html')
-    return HttpResponse(html_body.render())
+@csrf_exempt
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+def logout_view(request):
+    request.session.flush()
+    logout(request)
 
 
 def download_zipped(request, analyze_id):
@@ -143,6 +151,7 @@ def service_dashboard(request):
     return HttpResponse(html_body.render())
 
 
+@login_required(login_url='/' + settings.LOGIN_URL)
 def report_dashboard(request):
     """
     delivering ReportDashboard with finished_firmwares as dictionary
@@ -265,6 +274,7 @@ def log_streamer(request):
 
 
 @require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
 def get_logs(request):
     """
     View takes a get request with following params:
@@ -285,18 +295,21 @@ def get_logs(request):
 
 
 @csrf_exempt
+@login_required(login_url='/' + settings.LOGIN_URL)
 def main_dashboard(request):
     html_body = get_template('uploader/mainDashboard.html')
     return HttpResponse(html_body.render())
 
 
 @csrf_exempt
+@login_required(login_url='/' + settings.LOGIN_URL)
 def reports(request):
     html_body = get_template('uploader/reports.html')
     return HttpResponse(html_body.render())
 
 
 @require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
 def delete_file(request):
     """
     file deletion on POST requests with attached present firmware file
@@ -328,6 +341,7 @@ def delete_file(request):
 
 @csrf_exempt
 @require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
 def get_load(request):
     try:
         query_set = ResourceTimestamp.objects.all()
@@ -342,6 +356,7 @@ def get_load(request):
 
 @csrf_exempt
 @require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
 def get_individual_report(request, analyze_id):
     firmware_id = analyze_id
     if not firmware_id:
@@ -364,6 +379,7 @@ def get_individual_report(request, analyze_id):
 
 @csrf_exempt
 @require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
 def get_accumulated_reports(request):
     """
     Sends accumulated results for main dashboard

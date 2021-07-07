@@ -5,53 +5,55 @@
 
         {% csrf_token %}
         <!-- Iterate over all fields and set expmode on fields in expert mode -->
-
-         <div class="col-sm-4 input-group float-right">
-            <input type="text" class="form-control input-lg" placeholder="Search..." id="mySearchText"/>
-            <span class="input-group-btn">
-                <button class="btn btn-info btn-sm" type="button" id="mySearchButton">
-                    <i class="fas fa-search"></i>
-                </button>
-            </span>
-        </div>
-
-        <table class="table table-striped table-light table-hover" id="report-table">
-            <thead>
-            <tr>
-                <th scope="col">ID</th>
-                <th scope="col">Name</th>
-                <th scope="col">Architecture</th>
-                <th scope="col">Start Date</th>
-                <th scope="col">End Date</th>
-                <th scope="col">Actions</th>
-            </tr>
-            </thead>
-
-            <tbody>
-            {% for firmware in finished_firmwares %}
+{% comment %}
+            <div class="col-sm-4 input-group float-right searchBar">
+                <input type="text" class="form-control input-lg" placeholder="Search..." id="mySearchText"/>
+                <span class="input-group-btn">
+                    <button class="btn btn-info btn-sm" type="button" id="mySearchButton">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </span>
+            </div> {% endcomment %}
+            {% include "uploader/searchBar.html" %}
+        <div class="tableData">
+            <table class="table table-striped table-light table-hover" id="report-table">
+                <thead>
                 <tr>
-                    <td>{{ firmware.pk}}</td>
-                    <td>{{ firmware.firmware}}</td>
-                    <td>{{ firmware.firmware_Architecture }}</td>
-                    <td>{{ firmware.start_date }}</td>
-                    <td>{{ firmware.end_date }}</td>
-                    <td>
-                        <div class="row">
-                            <form action={% url 'embark-download' firmware.pk %} method='GET'>
-                                <button type="submit" class="btn" >Download Logs</button>
-                            </form>
-                            <form action={% url 'embark-download' firmware.pk %} method='GET'>
-                                <button type="submit" class="btn" >Run Emba</button>
-                            </form>
-                            <form action={% url 'embark-IndividualReportDashboard' firmware.pk %} method='GET'>
-                                <button type="submit" class="btn" >Detail View</button>
-                            </form>
-                        </div>
-                    </td>
+                    <th scope="col">ID</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Architecture</th>
+                    <th scope="col">Start Date</th>
+                    <th scope="col">End Date</th>
+                    <th scope="col">Actions</th>
                 </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+
+                <tbody>
+                {% for firmware in finished_firmwares %}
+                    <tr>
+                        <td>{{ firmware.pk}}</td>
+                        <td>{{ firmware.firmware}}</td>
+                        <td>{{ firmware.firmware_Architecture }}</td>
+                        <td>{{ firmware.start_date }}</td>
+                        <td>{{ firmware.end_date }}</td>
+                        <td>
+                            <div class="row">
+                                <form action={% url 'embark-download' firmware.pk %} method='GET'>
+                                    <button type="submit" class="btn" >Download Logs</button>
+                                </form>
+                                <form action={% url 'embark-download' firmware.pk %} method='GET'>
+                                    <button type="submit" class="btn" >Run Emba</button>
+                                </form>
+                                <form action={% url 'embark-IndividualReportDashboard' firmware.pk %} method='GET'>
+                                    <button type="submit" class="btn" >Detail View</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
     </div>
 </div>

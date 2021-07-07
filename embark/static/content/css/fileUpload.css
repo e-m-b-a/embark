@@ -104,6 +104,7 @@ input:checked+.slider:before {
     border-top-style: solid;
     border-color: #b8cedb;
     padding: 40px;
+    justify-content: center;
 }
 
 .fileDrop>input {
@@ -137,18 +138,35 @@ input:checked+.slider:before {
     justify-content: center;
 }
 
-.deleteIconRow {
-    justify-content: center;
-}
-
 .deleteBtnRow {
     justify-content: center;
 }
 
-/* .expertModeOptions {
-    padding-left: 20px;
-} */
 
-input[type="checkbox"] {
-    padding-left: 20px;
+.fileName {
+    display: block;
+    align-items: center;
+}
+
+.deleteFirmware {
+    display: flex;
+    align-items: baseline;
+}
+
+.deleteFirmware>select {
+    margin-left: 10px;
+    width: 60%;
+}
+
+.form-group>.form-check-input {
+    left: 22px;
+}
+
+.form-group>label {
+    padding-left: 30px;
+}
+
+.progress-wrapper {
+    display: none;
+    margin-top: 10px;
 }

@@ -10,71 +10,88 @@
 
 .card-body {
     background: #def2ff;
-    color: #0000;
+    color: #2a225c;
     text-align: center;
 }
 
-.card-title {
+.cardBox>.card {
+    padding: 0;
+}
+
+.card-title,
+.cardDataName {
     margin: 0px;
     display: block;
     text-align: center;
-
+    height: 30%;
+    padding: 5px;
 }
 
-.dataCardRow {
-    margin: 10px;
-    height: 300px !important;
-    display: grid;
-    grid-template-columns: 65% auto;
-    gap: 10px;
-}
-
-.dataCardRow-bottom {
-    display: grid;
-    grid-template-columns: 100%;
-    margin: 10px;
-}
-
-/* .card-left {
+.card {
     padding: 15px;
-    width: 59.5%;
-    height: 300px !important;
+}
+
+.card-wide {
+    height: 400px;
+    max-height: 400px;
+}
+
+.card-left {
+    height: 600px;
 }
 
 .card-right {
-    padding-right: 10px;
-    width: 39%;
-    margin-left: 18px;
-    height: 300px !important;
-} */
-
-.dataCardRow-right-large {
-    padding: 15px;
-    width: 59.5%;
-    height: 200px !important;
+    height: 600px;
+    grid-template-rows: 30% auto;
+    grid-gap: 10px;
 }
 
-.dataCardColumn {
-    margin: 10px;
-    display: grid;
-    grid-template-rows: 50% auto;
-    gap: 10px;
+.card-pie {
+    height: 350px;
 }
 
-.card-bottom {
-    height: 275px !important;
+.title-row {
+    height: 10%;
+    justify-content: center;
 }
-.dataCardRowNew {
-    margin: 10px;
-    height: 300px !important;
-    display: grid;
-    grid-template-columns: 19.5% 19.5% 19.5% 19.5% 19.5%;
-    gap: 10px;
+
+.graphData {
+    height: 90%;
 }
 
 canvas {
-    height: 250px !important;
     width: auto !important;
     margin: 5px;
+}
 
+.topEntropyGraph {
+    margin-top: 30px;
+}
+
+meter {
+    width: 100%
+}
+
+/* each data row styles */
+
+.cardRow {
+    margin: 10px;
+    display: grid;
+    grid-gap: 10px;
+}
+
+.dataCardRow {
+    grid-template-columns: 60% auto;
+}
+
+.dataCardRow2 {
+    grid-template-columns: repeat(5, 1fr);
+}
+
+.dataCardRow4 {
+    grid-template-columns: 50% auto;
+}
+
+.dataCardRow5 canvas {
+    max-height: 350px !important;
 }

@@ -4,6 +4,7 @@
 html {
     --scrollbarBG: #d7e4ee;
     --thumbBG: #b8cedb;
+    background: #d7e4ee;
 }
 
 * {

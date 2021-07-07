@@ -2,7 +2,7 @@
 {% block maincontent %}
 <div class="cardBox">
     <div class="card">
-        <div class="card-title cardName firmwareAnalysed">Total firmwares analyzed</div>
+        <div class="card-title cardName firmwareAnalysed">Total firmwares</div>
         <div class="card-body cardValue" id="firmwareAnalysed"></div>
     </div>
     <div class="card">
@@ -28,43 +28,72 @@
 </div>
 
 <div class="dataCard">
-    <div class="row dataCardRow">
+    <div class="row cardRow dataCardRow">
         <div class="card card-left">
             <canvas class="aggregatedReport" id="accumulatedCvePie"></canvas>
         </div>
-        <div class="card card-right">
-            <label for="accumulatedEntropy">Average Entropy Value:</label>
+        <div class="card card-right" id="entropy">
+            <label for="accumulatedEntropy" id="entropyMeterLabel">Average Entropy Value:</label>
             <meter id="accumulatedEntropy"
                    min="0" max="8"
-                   value="0">
+                   value="0"
+                   high="6"
+                   low="3">
             </meter>
-        </div>
-
-    </div>
-</div>
-<div class="dataCard">
-    <div class="row dataCardRowNew">
-        <div class="card">
-            <canvas class="aggregatedReport" id="nxpie"></canvas>
-        </div>
-       <div class="card">
-            <canvas class="aggregatedReport" id="piepie"></canvas>
-        </div>
-        <div class="card">
-            <canvas class="aggregatedReport" id="relropie"></canvas>
-        </div>
-       <div class="card">
-            <canvas class="aggregatedReport" id="canarypie"></canvas>
-        </div>
-       <div class="card">
-            <canvas class="aggregatedReport" id="strippedpie"></canvas>
+            <div class="topEntropyGraph">
+            <canvas class="aggregatedReport topEntropies" id="topEntropies"></canvas>
+            </div>
         </div>
     </div>
 </div>
+<div class="dataCard">
+    <div class="row cardRow dataCardRow2">
+        <div class="card card-pie">
+            <div class="row graphData">
+                <canvas class="aggregatedReport" id="nxpie"></canvas>
+            </div>
+            <div class="row title-row">
+                <div class="card-title cardDataName">NX</div>
+            </div>
+        </div>
+        <div class="card card-pie">
+            <div class="row graphData">
+                <canvas class="aggregatedReport" id="piepie"></canvas>
+            </div>
+            <div class="row title-row">
+                <div class="card-title cardDataName">PIE</div>
+            </div>
+        </div>
+        <div class="card card-pie">
+            <div class="row graphData">
+                <canvas class="aggregatedReport" id="relropie"></canvas>
+            </div>
+            <div class="row title-row">
+                <div class="card-title cardDataName">RELRO</div>
+            </div>
+        </div>
+        <div class="card card-pie">
+            <div class="row graphData">
+                <canvas class="aggregatedReport" id="canarypie"></canvas>
+            </div>
+            <div class="row title-row">
+                <div class="card-title cardDataName">CANARY</div>
+            </div>
+        </div>
+        <div class="card card-pie">
+            <div class="row graphData">
+                <canvas class="aggregatedReport" id="strippedpie"></canvas>
+            </div>
+            <div class="row title-row">
+                <div class="card-title cardDataName">Stripped</div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="dataCard">
-    <div class="row dataCardRow-bottom">
-        <div class="card card-bottom">
+    <div class="row cardRow dataCardRow3">
+        <div class="card card-wide">
             <canvas class="system-overload" id="loadChart"></canvas>
         </div>
     </div>
@@ -72,16 +101,16 @@
 
 
 <div class="dataCard">
-    <div class="row dataCardRow">
-        <div class="card card-left">
+    <div class="row cardRow dataCardRow4">
+        <div class="card">
             <canvas class="aggregatedReport" id="accumulatedArchitecture"></canvas>
         </div>
-        <div class="card card-right">
+        <div class="card">
             <canvas class="aggregatedReport" id="accumulatedOs"></canvas>
         </div>
     </div>
-    <div class="row dataCardRow-bottom">
-        <div class="card card-bottom">
+    <div class="row cardRow dataCardRow5">
+        <div class="card card-wide">
             <canvas class="aggregatedReport" id="topBinaryTypes"></canvas>
         </div>
     </div>

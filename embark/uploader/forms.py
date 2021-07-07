@@ -51,5 +51,8 @@ class DeleteFirmwareForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(DeleteFirmwareForm, self).__init__(*args, **kwargs)
+        for field in self.visible_fields():
+            if isinstance(field.field.widget, django.forms.widgets.Select):
+                field.field.widget.attrs['class'] = 'form-control select dropdownSelect'
 
         self.base_fields['firmware'] = forms.ModelChoiceField(queryset=models.FirmwareFile.objects, empty_label='Select firmware to delete')

@@ -1,3 +1,5 @@
+check_login();
+
 var loadChart = document.getElementById('loadChart').getContext('2d');
 
 get_load().then(function (returndata) {
@@ -90,4 +92,10 @@ function get_load() {
             mem: data.memory_percentage
         }
     })
+}
+
+function check_login() {
+    let url = window.location.origin + "/check_login/";
+
+    return $.getJSON(url);
 }
