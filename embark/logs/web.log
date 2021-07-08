@@ -3715,3 +3715,6 @@ django.db.utils.ProgrammingError: (1146, "Table 'authenticate.users_user' doesn'
 2021-07-08 10:48:59 web          DEBUG    Found user name and password
 2021-07-08 10:48:59 web          DEBUG    User authenticated
 2021-07-08 10:48:59 web          DEBUG    User logged in
+2021-07-08 10:54:55 web          INFO     Added job 'resource_tracker'.
+2021-07-08 10:54:55 web          INFO     Added weekly job: 'delete_old_job_executions'.
+2021-07-08 10:54:55 web          INFO     Starting scheduler for tracking...

@@ -1,4 +1,4 @@
-var accumulatedCvePie = document.getElementById('accumulatedCvePie').getContext('2d');
+var accumulatedCveDoughnut = document.getElementById('accumulatedCveDoughnut').getContext('2d');
 
 var nxpie = document.getElementById('nxpie').getContext('2d');
 var piepie = document.getElementById('piepie').getContext('2d');
@@ -8,8 +8,8 @@ var strippedpie = document.getElementById('strippedpie').getContext('2d');
 
 get_individual_report().then(function (returnData) {
 
-    let cvePieChart = new Chart(accumulatedCvePie, {
-        type: 'pie',
+    let cvedoughnutChart = new Chart(accumulatedCveDoughnut, {
+        type: 'doughnut',
         data: {
             labels: [
                 'CVE-High',
