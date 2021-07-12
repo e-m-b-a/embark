@@ -491,7 +491,7 @@ get_accumulated_reports().then(function (returnData) {
             plugins: {
                 title: {
                     display: true,
-                    text: 'OS Distribution',
+                    text: 'Top strcpy Binaries',
                     position: 'top',
                     color: 666,
                     padding: {
@@ -535,7 +535,7 @@ get_accumulated_reports().then(function (returnData) {
     }
 
     let topEntropyBar = new Chart(topEntropies, {
-            type: 'bar',
+            type: 'doughnut',
             data: {
                 labels: topEntropyLabels,
                 datasets: [{

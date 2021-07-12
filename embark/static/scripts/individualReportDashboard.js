@@ -131,17 +131,6 @@ function make_chart(html_chart, label_1, label_2, color_1, color_2, data_cmp, da
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            // title: {
-            //     display: true,
-            //     text: title,
-            //     fontSize: 25
-            // },
-            // legend: {
-            //     position: 'top',
-            //     labels: {
-            //         fontColor: '#000'
-            //     }
-            // },
             plugins: {
                 title: {
                     display: true,
