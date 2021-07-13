@@ -28,6 +28,7 @@
        typeAnimated: true,
        buttons: {
            close: function () {
+               location.reload();
            }
        }
    });
