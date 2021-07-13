@@ -1,10 +1,6 @@
 check_login();
 
-try {
-    var loadChart = document.getElementById('loadChart').getContext('2d');
-} catch (error) {
-
-}
+var loadChart = document.getElementById('loadChart').getContext('2d');
 
 /**
  * Develops Chart after loading the required data
@@ -105,7 +101,7 @@ function get_load() {
             }
         })    
     } catch (error) {
-        errorAlert(error.message);    
+        // errorAlert(error.message);
     }
     
 }
