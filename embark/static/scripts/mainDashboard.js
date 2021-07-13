@@ -1,7 +1,10 @@
 check_login();
 
-var loadChart = document.getElementById('loadChart').getContext('2d');
+try {
+    var loadChart = document.getElementById('loadChart').getContext('2d');
+} catch (error) {
 
+}
 
 /**
  * Develops Chart after loading the required data
