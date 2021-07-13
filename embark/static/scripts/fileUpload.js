@@ -86,7 +86,7 @@ async function postFiles(formData) {
             location.reload();
           }
         } else {
-          location.reload();
+          /* location.reload(); */
           successAlert("" + data);
         }
       }
