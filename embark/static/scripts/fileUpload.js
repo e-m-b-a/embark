@@ -18,7 +18,8 @@ function showFiles(fileData) {
     $("#uploadFirmware-btn").attr("disabled", false);
 
   } catch (error) {
-    errorAlert(error.message);
+    console.log(error.message);
+    //errorAlert(error.message);
   }
 }
 
