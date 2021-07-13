@@ -19,7 +19,7 @@ function showFiles(fileData) {
 
   } catch (error) {
     console.log(error.message);
-    //errorAlert(error.message);
+    // console.log(error.message);
   }
 }
 
@@ -82,7 +82,7 @@ async function postFiles(formData) {
               postFiles(formData);
             }
           } else {
-            errorAlert("The file is not saved");
+            // console.log("The file is not saved");
             location.reload();
           }
         } else {
@@ -92,6 +92,6 @@ async function postFiles(formData) {
       }
     });
   } catch (error) {
-    errorAlert(error.message);
+    // console.log(error.message);
   }
 }

@@ -101,7 +101,7 @@ function get_load() {
             }
         })    
     } catch (error) {
-        // errorAlert(error.message);
+        // console.log(error.message);
     }
     
 }

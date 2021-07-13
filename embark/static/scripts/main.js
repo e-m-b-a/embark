@@ -29,7 +29,7 @@ function expertModeOn() {
             }
         }
     } catch (error) {
-        errorAlert(error.message);
+        // console.log(error.message);
     }
 }
 
@@ -50,7 +50,7 @@ function helpTextOn() {
             }
         }
     } catch (error) {
-        errorAlert(error.message);
+        // console.log(error.message);
     }
 }
 
@@ -63,7 +63,7 @@ function confirmDelete(event) {
     var isValid = confirm(`Are you sure to delete the following firmware file: ${event.target.elements.firmware.value} ?`);
     if (!isValid) {
         event.preventDefault();
-        errorAlert("deletion cancelled");
+        // console.log("deletion cancelled");
     } else {
         successAlert(`firmware file deleted: ${event.target.elements.firmware.value}`);
     }

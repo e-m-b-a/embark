@@ -54,7 +54,7 @@ socket.onmessage = function (event) {
             }
     }
     catch(error){
-        errorAlert(error.message);
+        // console.log(error.message);
     }
 }
 
@@ -133,6 +133,6 @@ function cancelLog(currentID) {
         var idOfDIV = "#Container_" + currentID;
         $(idOfDIV).remove();
     } catch (error) {
-        errorAlert(error.message);
+        // console.log(error.message);
     }
 }

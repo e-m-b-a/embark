@@ -38,7 +38,7 @@ function getRandomColors(num) {
             }
             return colors;    
     } catch (error) {
-        errorAlert(error.message);
+        // console.log(error.message);
         location.reload();
     }
     
@@ -615,7 +615,7 @@ function get_accumulated_reports() {
         return data;
         })    
     } catch (error) {
-        errorAlert(error.message);
+        // console.log(error.message);
         location.reload();
     }
     
