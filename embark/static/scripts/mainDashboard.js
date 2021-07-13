@@ -2,6 +2,10 @@ check_login();
 
 var loadChart = document.getElementById('loadChart').getContext('2d');
 
+
+/**
+ * Develops Chart after loading the required data
+ */
 get_load().then(function (returndata) {
 
     let lineChart = new Chart(loadChart, {
@@ -81,19 +85,32 @@ get_load().then(function (returndata) {
     });
 });
 
+/**
+ * Get Load of Time , CPU and Memory Percentage
+ * @returns Object of the Time,cpu and memory Percentage
+ */
 function get_load() {
-    let url = window.location.origin + "/get_load/";
+    try {
+        let url = window.location.origin + "/get_load/";
 
-    return $.getJSON(url).then(function (data) {
+        return $.getJSON(url).then(function (data) {
 
-        return {
-            time: data.timestamp,
-            cpu: data.cpu_percentage,
-            mem: data.memory_percentage
-        }
-    })
+            return {
+                time: data.timestamp,
+                cpu: data.cpu_percentage,
+                mem: data.memory_percentage
+            }
+        })    
+    } catch (error) {
+        errorAlert(error.message);    
+    }
+    
 }
 
+/**
+ * Validates the Login
+ * @returns  HTTP Response 
+ */
 function check_login() {
     let url = window.location.origin + "/check_login/";
 

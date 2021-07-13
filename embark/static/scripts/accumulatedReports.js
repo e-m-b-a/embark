@@ -22,19 +22,32 @@ var entropyMeterLabel = document.getElementById('entropyMeterLabel');
 var topBinaryTypes = document.getElementById('topBinaryTypes').getContext('2d');
 
 
-
+/**
+ * Get Random Colors for the Charts .
+ * @param {*} num Number of Colors required for the chart
+ * @returns Array of colors with RGB values
+ */
 function getRandomColors(num) {
-    var colors = [];
-    for (var i = 0; i < num; i++) {
-        var r = Math.round(Math.random() * 255);
-        var g = Math.round(Math.random() * 255);
-        var b = Math.round(Math.random() * 255);
-        colors.push(`rgba(${r}, ${g}, ${b})`)
+    try {
+            var colors = [];
+            for (var i = 0; i < num; i++) {
+                var r = Math.round(Math.random() * 255);
+                var g = Math.round(Math.random() * 255);
+                var b = Math.round(Math.random() * 255);
+                colors.push(`rgba(${r}, ${g}, ${b})`)
+            }
+            return colors;    
+    } catch (error) {
+        errorAlert(error.message);
+        location.reload();
     }
-    return colors;
+    
 }
 
 
+/**
+ * Develop Charts from the Analysed data .
+ */
 get_accumulated_reports().then(function (returnData) {
 
     accumulatedEntropy.setAttribute('value', returnData.entropy_value['mean']);
@@ -589,12 +602,21 @@ get_accumulated_reports().then(function (returnData) {
 
 });
 
-
+/**
+ * Gets Accumulated data of all firmware scans analysed.
+ * @returns Data for the Graphs
+ */
 function get_accumulated_reports() {
-    let url = window.location.origin + "/get_accumulated_reports/";
 
-    return $.getJSON(url).then(function (data) {
+    try {
+        let url = window.location.origin + "/get_accumulated_reports/";
+        return $.getJSON(url).then(function (data) {
         console.log(data);
         return data;
-    })
+        })    
+    } catch (error) {
+        errorAlert(error.message);
+        location.reload();
+    }
+    
 }

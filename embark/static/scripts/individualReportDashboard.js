@@ -6,6 +6,9 @@ var relropie = document.getElementById('relropie').getContext('2d');
 var canarypie = document.getElementById('canarypie').getContext('2d');
 var strippedpie = document.getElementById('strippedpie').getContext('2d');
 
+/**
+ * Generates Reports after you complete receiving the data for Individual Fimware
+ */
 get_individual_report().then(function (returnData) {
 
     let cvedoughnutChart = new Chart(accumulatedCveDoughnut, {
@@ -108,6 +111,10 @@ get_individual_report().then(function (returnData) {
     }
 });
 
+/**
+ * Gets data to generate Reports for Individual Firmware
+ * @returns data of the Nalysed Individual firmware
+ */
 function get_individual_report() {
     let report_index = window.location.href.substring(window.location.href.lastIndexOf('/') + 1);
     let url = window.location.origin + "/get_individual_report/" + report_index;
@@ -117,6 +124,17 @@ function get_individual_report() {
     })
 }
 
+/**
+ * Develops Chart 
+ * @param {*} html_chart Type of Chart
+ * @param {*} label_1 Labels
+ * @param {*} label_2 Labels
+ * @param {*} color_1 Colors
+ * @param {*} color_2 Colors
+ * @param {*} data_cmp Data to be plotted
+ * @param {*} data_strcpy 
+ * @param {*} title Title of The chart
+ */
 function make_chart(html_chart, label_1, label_2, color_1, color_2, data_cmp, data_strcpy, title) {
     let chart = new Chart(html_chart, {
         type: 'pie',

@@ -1,9 +1,16 @@
-/* The following event calls prevent default to turn off the browsers default drag and drop handler */
+
+/**
+ * The following event calls prevent default to turn off the browsers default drag and drop handler
+ * @param {*} ev Event
+ */
 function dragOverHandler(ev) {
   ev.preventDefault();
 }
 
-/** This function binds file name to div. */
+/**
+ * This function binds file name to div.
+ * @param {*} fileData File Data Uploaded
+ */
 function showFiles(fileData) {
   try {
     document.getElementById("uploadedFileNames").style.display = 'block';
@@ -15,25 +22,30 @@ function showFiles(fileData) {
   }
 }
 
+/**
+ * Checks for any Multiple uploads and the Passes to save 
+ */
 function saveFiles() {
-  var progressBar = document.getElementById("progress-wrapper");
-  if (progressBar.style.display == "none") {
-    progressBar.style.display = "block";
-  } else {
-    progressBar.style.display = "none";
-  }
-  var fileData = document.getElementById('file-input').files;
-  var formData = new FormData()
-  for (let index = 0; index < fileData.length; index++) {
-    fileData[index].inputFileName = fileData[index].name;
-    formData.append('file', fileData[index]);
+    var progressBar = document.getElementById("progress-wrapper");
+    if (progressBar.style.display == "none") {
+      progressBar.style.display = "block";
+    } else {
+      progressBar.style.display = "none";
+    }
+    var fileData = document.getElementById('file-input').files;
+    var formData = new FormData()
+    for (let index = 0; index < fileData.length; index++) {
+      fileData[index].inputFileName = fileData[index].name;
+      formData.append('file', fileData[index]);
 
-  }
+    }
   postFiles(formData);
 }
 
-/** This function saves the file to local directory. */
-/* fileData - Information of the uploaded file or Files*/
+/**
+ * Makes Ajax call and save files locally
+ * @param {*} formData Information of the uploaded file or Files
+ */
 async function postFiles(formData) {
   try {
     //formData.append('file', fileData);
@@ -65,7 +77,6 @@ async function postFiles(formData) {
             var fileName = prompt("Please enter the new File name", fileData.inputFileName);
             if (fileName != null) {
               const myRenamedFile = new File([fileData], fileName);
-              //fileData.inputFileName=fileName;
               formData.append('file', myRenamedFile);
               postFiles(formData);
             }
@@ -75,23 +86,10 @@ async function postFiles(formData) {
           }
         } else {
           successAlert("" + data);
-          location.reload()
-          //document.getElementById("uploadedFileNames").style.display = 'none';
           location.reload();
         }
       }
     });
-  } catch (error) {
-    errorAlert(error.message);
-  }
-}
-
-function saveDataFields(e) {
-  e.preventDefault();
-  try {
-    var docln = document.getElementById('firmwareDataForm').elements.length;
-    console.log(docln)
-    successAlert("form data saved successfully");
   } catch (error) {
     errorAlert(error.message);
   }

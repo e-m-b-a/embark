@@ -1,3 +1,7 @@
+
+/**
+ * Activate Navigation Menu
+ */
 function navToolTip() {
     let menuBtn = document.querySelector("#menuBtn");
     let navigation = document.querySelector(".navigation");
@@ -8,10 +12,11 @@ function navToolTip() {
 
 }
 
+
+/**
+ * To toggle expert mode option during analysing the Firmware
+ */
 function expertModeOn() {
-    /*
-    Function to enable the expertmode and show hidden expert mode fields in forms
-    */
     try {
         var expertOptions = document.querySelectorAll('[value="expmode"]');
 
@@ -28,10 +33,11 @@ function expertModeOn() {
     }
 }
 
+/**
+ * To display the individual helptext of form fields below
+ */
 function helpTextOn() {
-    /*
-    Function to display the individual helptext of form fields below
-    */
+
     try {
         var expertOptions = document.querySelectorAll('[value="help_text"]');
 
@@ -48,11 +54,12 @@ function helpTextOn() {
     }
 }
 
-
+/**
+ * To show a window on confirmation screen asking the user to progress
+ * @param {*} event Event Object which provides the firmware Value
+ */
 function confirmDelete(event) {
-    /*
-    Function to show a window on confirmation screen asking the user to progress
-    */
+    
     var isValid = confirm(`Are you sure to delete the following firmware file: ${event.target.elements.firmware.value} ?`);
     if (!isValid) {
         event.preventDefault();
