@@ -41,8 +41,8 @@
                                 <form action={% url 'embark-download' firmware.pk %} method='GET'>
                                     <button type="submit" class="btn" >Download Logs</button>
                                 </form>
-                                <form action={% url 'embark-download' firmware.pk %} method='GET'>
-                                    <button type="submit" class="btn" >Run Emba</button>
+                                <form action={% url 'embark-html-report' firmware.pk 'index.html' %} method='GET'>
+                                    <button type="submit" class="btn" >Open Report</button>
                                 </form>
                                 <form action={% url 'embark-IndividualReportDashboard' firmware.pk %} method='GET'>
                                     <button type="submit" class="btn" >Detail View</button>

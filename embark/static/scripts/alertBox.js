@@ -28,13 +28,14 @@
        typeAnimated: true,
        buttons: {
            close: function () {
+               location.reload();
            }
        }
    });
   }
  
   /**
-   * For any input which is required by user .
+   * For any input which is required to be entered by user .
    * @param {*} message Display message to user 
    */
   function promptAlert(message) {

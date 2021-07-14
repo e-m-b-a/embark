@@ -1,25 +1,28 @@
-.canvasReport {
-    height: auto !important;
-    width: auto !important;
-    margin: 5px;
-}
-
-.dataCardColumnReport {
-    margin: 10px;
+.leftCol {
+    grid-template-rows: 65% auto;
     display: grid;
-    grid-template-rows: 50% auto;
-    gap: 10px;
+    grid-gap: 10px;
+    max-height: 100%;
 }
 
-.dataCardRowReport {
-    margin: 10px;
+.dataCardIRRow1 {
+    grid-template-columns: 40% auto;
+    grid-gap: 10px;
     display: grid;
-    grid-template-columns: 65% auto;
-    height: auto !important;
-    gap: 10px;
+    margin-bottom: 10px;
 }
 
-.dataCardReport {
-    height: auto !important;
-    width: auto !important;
+.dataCardIRRow2 {
+    grid-template-columns: repeat(4, 1fr);
+    display: grid;
+    grid-gap: 10px;
+    height: 350px;
+}
+
+.IRReportCard {
+    max-height: 350px;
+}
+
+.IRReportCard1 {
+    max-height: 450px;
 }

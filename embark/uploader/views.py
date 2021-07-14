@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from django.conf import settings
 
 from django import forms
@@ -138,17 +140,17 @@ def start_analysis(request, refreshed):
     delete_form = DeleteFirmwareForm()
 
     if refreshed == 1:
-        return render(request, 'uploader/fileUpload.html', {'analyze_form': analyze_form, 'delete_form': delete_form})
+        return render(request, 'uploader/fileUpload.html', {'analyze_form': analyze_form, 'delete_form': delete_form, 'username': request.user.username})
     else:
         html_body = get_template('uploader/embaServiceDashboard.html')
-        return HttpResponse(html_body.render())
+        return HttpResponse(html_body.render({'username': request.user.username}))
 
 
 @csrf_exempt
 @login_required(login_url='/' + settings.LOGIN_URL)
 def service_dashboard(request):
     html_body = get_template('uploader/embaServiceDashboard.html')
-    return HttpResponse(html_body.render())
+    return HttpResponse(html_body.render({'username': request.user.username}))
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -162,7 +164,7 @@ def report_dashboard(request):
     """
 
     finished_firmwares = Firmware.objects.all().filter(finished=True)
-    return render(request, 'uploader/reportDashboard.html', {'finished_firmwares': finished_firmwares})
+    return render(request, 'uploader/reportDashboard.html', {'finished_firmwares': finished_firmwares, 'username': request.user.username})
 
 
 @csrf_exempt
@@ -175,7 +177,7 @@ def individual_report_dashboard(request, analyze_id):
     :return: rendered individualReportDashboard
     """
     html_body = get_template('uploader/individualReportDashboard.html')
-    return HttpResponse(html_body.render())
+    return HttpResponse(html_body.render({'username': request.user.username}))
 
 
 # Function which saves the file .
@@ -298,14 +300,49 @@ def get_logs(request):
 @login_required(login_url='/' + settings.LOGIN_URL)
 def main_dashboard(request):
     html_body = get_template('uploader/mainDashboard.html')
-    return HttpResponse(html_body.render())
+    return HttpResponse(html_body.render({'username': request.user.username}))
 
 
 @csrf_exempt
 @login_required(login_url='/' + settings.LOGIN_URL)
 def reports(request):
     html_body = get_template('uploader/reports.html')
+    return HttpResponse(html_body.render({'username': request.user.username}))
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def html_report(request, analyze_id, hmtl_file):
+
+    report_path = Path(f'/app/emba{request.path}')
+
+    html_body = get_template(report_path)
     return HttpResponse(html_body.render())
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def html_report_resource(request, analyze_id, img_file):
+
+    content_type = "text/plain"
+
+    if img_file.endswith(".css"):
+        content_type = "text/css"
+    elif img_file.endswith(".svg"):
+        content_type = "image/svg+xml"
+    elif img_file.endswith(".png"):
+        content_type = "image/png"
+
+    resource_path = Path(f'/app/emba{request.path}')
+
+    try:
+        with open(resource_path, "rb") as f:
+            return HttpResponse(f.read(), content_type=content_type)
+    except IOError as ex:
+        logger.error(ex)
+    logger.error(request.path)
 
 
 @require_http_methods(["POST"])

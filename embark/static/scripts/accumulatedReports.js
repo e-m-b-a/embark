@@ -22,19 +22,32 @@ var entropyMeterLabel = document.getElementById('entropyMeterLabel');
 var topBinaryTypes = document.getElementById('topBinaryTypes').getContext('2d');
 
 
-
+/**
+ * Get Random Colors for the Charts .
+ * @param {*} num Number of Colors required for the chart
+ * @returns Array of colors with RGB values
+ */
 function getRandomColors(num) {
-    var colors = [];
-    for (var i = 0; i < num; i++) {
-        var r = Math.round(Math.random() * 255);
-        var g = Math.round(Math.random() * 255);
-        var b = Math.round(Math.random() * 255);
-        colors.push(`rgba(${r}, ${g}, ${b})`)
+    try {
+            var colors = [];
+            for (var i = 0; i < num; i++) {
+                var r = Math.round(Math.random() * 255);
+                var g = Math.round(Math.random() * 255);
+                var b = Math.round(Math.random() * 255);
+                colors.push(`rgba(${r}, ${g}, ${b})`)
+            }
+            return colors;    
+    } catch (error) {
+        // console.log(error.message);
+        location.reload();
     }
-    return colors;
+    
 }
 
 
+/**
+ * Develop Charts from the Analysed data .
+ */
 get_accumulated_reports().then(function (returnData) {
 
     accumulatedEntropy.setAttribute('value', returnData.entropy_value['mean']);
@@ -45,14 +58,6 @@ get_accumulated_reports().then(function (returnData) {
     totalBinaries.textContent = returnData.bins_checked['sum'];
     totalCve.textContent = returnData.cve_medium['sum'] + returnData.cve_low['sum'] + returnData.cve_high['sum'];
     totalIssues.textContent = returnData.exploits['sum'];
-
-    // var topEntropies = returnData.top_entropies;
-
-    // for (var i = 0; i < 5; i++) {
-    //     var topEntropyHtml = '< label for = "accumulatedEntropy"> ' + topEntropies[i]["name"] + ' </label> <meter id = "accumulatedEntropy" min = "0" max = "8" value = ' + topEntropies[i]["entropy_value"] + '></meter>';
-    //     document.getElementById("topEntropy").innerAdjacentHTML('afterend', topEntropyHtml);
-
-    // }
 
     let cvePieChart = new Chart(accumulatedCvePie, {
         type: 'pie',
@@ -76,28 +81,38 @@ get_accumulated_reports().then(function (returnData) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            title: {
-                display: false,
-                text: 'CVE Data',
-                fontSize: 25
-            },
-            legend: {
-                display: false,
-                position: 'right',
-                labels: {
-                    fontColor: '#000'
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'CVE Data',
+                    position: 'top',
+                    color: 666,
+                    padding: {
+                        top: 15,
+                        bottom: 10
+                    },
+                    font: {
+                        size: 24
+                    }
+                },
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        fontColor: '#000'
+                    }
+                },
+                layout: {
+                    padding: {
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        top: 0
+                    }
+                },
+                tooltips: {
+                    enabled: true
                 }
-            },
-            layout: {
-                padding: {
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    top: 0
-                }
-            },
-            tooltips: {
-                enabled: true
             }
         }
     });
@@ -118,17 +133,39 @@ get_accumulated_reports().then(function (returnData) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            title: {
-                display: false,
-                text: 'Binary Protections',
-                fontSize: 25
-            },
-            legend: {
-                position: 'top',
-                labels: {
-                    fontColor: '#000'
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'NX',
+                    position: 'top',
+                    color: 666,
+                    padding: {
+                        top: 15,
+                        bottom: 10
+                    },
+                    font: {
+                        size: 24
+                    }
+                },
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        fontColor: '#000'
+                    }
+                },
+                layout: {
+                    padding: {
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        top: 0
+                    }
+                },
+                tooltips: {
+                    enabled: true
                 }
-            },
+            }
         }
     });
 
@@ -148,17 +185,39 @@ get_accumulated_reports().then(function (returnData) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            title: {
-                display: false,
-                text: 'Binary Protections',
-                fontSize: 25
-            },
-            legend: {
-                position: 'top',
-                labels: {
-                    fontColor: '#000'
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'PIE',
+                    position: 'top',
+                    color: 666,
+                    padding: {
+                        top: 15,
+                        bottom: 10
+                    },
+                    font: {
+                        size: 24
+                    }
+                },
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        fontColor: '#000'
+                    }
+                },
+                layout: {
+                    padding: {
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        top: 0
+                    }
+                },
+                tooltips: {
+                    enabled: true
                 }
-            },
+            }
         }
     });
 
@@ -178,17 +237,39 @@ get_accumulated_reports().then(function (returnData) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            title: {
-                display: false,
-                text: 'Binary Protections',
-                fontSize: 25
-            },
-            legend: {
-                position: 'top',
-                labels: {
-                    fontColor: '#000'
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'RELRO',
+                    position: 'top',
+                    color: 666,
+                    padding: {
+                        top: 15,
+                        bottom: 10
+                    },
+                    font: {
+                        size: 24
+                    }
+                },
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        fontColor: '#000'
+                    }
+                },
+                layout: {
+                    padding: {
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        top: 0
+                    }
+                },
+                tooltips: {
+                    enabled: true
                 }
-            },
+            }
         }
     });
 
@@ -208,17 +289,39 @@ get_accumulated_reports().then(function (returnData) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            title: {
-                display: false,
-                text: 'Binary Protections',
-                fontSize: 25
-            },
-            legend: {
-                position: 'top',
-                labels: {
-                    fontColor: '#000'
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'CANARY',
+                    position: 'top',
+                    color: 666,
+                    padding: {
+                        top: 15,
+                        bottom: 10
+                    },
+                    font: {
+                        size: 24
+                    }
+                },
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        fontColor: '#000'
+                    }
+                },
+                layout: {
+                    padding: {
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        top: 0
+                    }
+                },
+                tooltips: {
+                    enabled: true
                 }
-            },
+            }
         }
     })
 
@@ -230,7 +333,7 @@ get_accumulated_reports().then(function (returnData) {
                 'Binaries without Stripped',
             ],
             datasets: [{
-                labels: ['binaries with STRIPPED', 'binaries without STRIPPED'],
+                labels: ['binaries with Stripped', 'binaries without Stripped'],
                 data: [returnData.stripped['mean'], (returnData.bins_checked['mean'] - returnData.stripped['mean'])],
                 backgroundColor: ['#009999', '#005050'],
             }, ],
@@ -238,17 +341,39 @@ get_accumulated_reports().then(function (returnData) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            title: {
-                display: false,
-                text: 'Binary Protections',
-                fontSize: 25
-            },
-            legend: {
-                position: 'top',
-                labels: {
-                    fontColor: '#000'
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Stripped',
+                    position: 'top',
+                    color: 666,
+                    padding: {
+                        top: 15,
+                        bottom: 10
+                    },
+                    font: {
+                        size: 24
+                    }
+                },
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        fontColor: '#000'
+                    }
+                },
+                layout: {
+                    padding: {
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        top: 0
+                    }
+                },
+                tooltips: {
+                    enabled: true
                 }
-            },
+            }
         }
     });
 
@@ -264,20 +389,45 @@ get_accumulated_reports().then(function (returnData) {
                 data: archCounts,
                 borderWidth: 1,
                 backgroundColor: getRandomColors(archLabels.length)
-            }],
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
                 title: {
                     display: true,
                     text: 'Architecture Distribution',
-                    fontSize: 20
+                    position: 'top',
+                    color: 666,
+                    padding: {
+                        top: 15,
+                        bottom: 10
+                    },
+                    font: {
+                        size: 24
+                    }
+                },
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        fontColor: '#000'
+                    }
+                },
+                layout: {
+                    padding: {
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        top: 0
+                    }
                 },
                 tooltips: {
                     enabled: true
                 }
             }
-        },
+        }
     });
 
     var osLabels = Object.keys(returnData.os_verified);
@@ -292,21 +442,45 @@ get_accumulated_reports().then(function (returnData) {
                 data: osCounts,
                 borderWidth: 1,
                 backgroundColor: getRandomColors(osLabels.length)
-            }],
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
                 title: {
                     display: true,
                     text: 'OS Distribution',
-                    fontSize: 20
+                    position: 'top',
+                    color: 666,
+                    padding: {
+                        top: 15,
+                        bottom: 10
+                    },
+                    font: {
+                        size: 24
+                    }
+                },
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        fontColor: '#000'
+                    }
+                },
+                layout: {
+                    padding: {
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        top: 0
+                    }
                 },
                 tooltips: {
                     enabled: true
                 }
             }
         },
-
     });
 
 
@@ -322,14 +496,39 @@ get_accumulated_reports().then(function (returnData) {
                 data: topBinaryCounts,
                 borderWidth: 1,
                 backgroundColor: getRandomColors(topBinaryLabels.length)
-            }],
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
                 title: {
                     display: true,
                     text: 'Top strcpy Binaries',
-                    fontSize: 20
+                    position: 'top',
+                    color: 666,
+                    padding: {
+                        top: 15,
+                        bottom: 10
+                    },
+                    font: {
+                        size: 24
+                    }
+                },
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        fontColor: '#000'
+                    }
+                },
+                layout: {
+                    padding: {
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        top: 0
+                    }
                 },
                 tooltips: {
                     enabled: true
@@ -349,40 +548,75 @@ get_accumulated_reports().then(function (returnData) {
     }
 
     let topEntropyBar = new Chart(topEntropies, {
-        type: 'bar',
-        data: {
-            labels: topEntropyLabels,
-            datasets: [{
-                label: 'Firmwares with top entropies',
+            type: 'doughnut',
+            data: {
                 labels: topEntropyLabels,
-                data: topEntropyValues,
-                borderWidth: 1,
-                backgroundColor: getRandomColors(topEntropyLabels.length)
-            }],
+                datasets: [{
+                    label: 'Firmwares with top entropies',
+                    labels: topEntropyLabels,
+                    data: topEntropyValues,
+                    borderWidth: 1,
+                    backgroundColor: getRandomColors(topEntropyLabels.length)
+                }]
+            },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                title: {
-                    display: true,
-                    text: 'Firmwares with top entropies',
-                    fontSize: 20
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Firmwares with top entropies',
+                        position: 'top',
+                        color: 666,
+                        padding: {
+                            top: 15,
+                            bottom: 10
+                        },
+                        font: {
+                            size: 24
+                        }
+                    },
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            fontColor: '#000'
+                        }
+                    },
+                    layout: {
+                        padding: {
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            top: 0
+                        }
+                    },
+                    tooltips: {
+                        enabled: true
+                    },
                 },
-                tooltips: {
-                    enabled: true
-                }
             }
         },
 
-    });
+    );
 
 });
 
-
+/**
+ * Gets Accumulated data of all firmware scans analysed.
+ * @returns Data for the Graphs
+ */
 function get_accumulated_reports() {
-    let url = window.location.origin + "/get_accumulated_reports/";
 
-    return $.getJSON(url).then(function (data) {
+    try {
+        let url = window.location.origin + "/get_accumulated_reports/";
+        return $.getJSON(url).then(function (data) {
         console.log(data);
         return data;
-    })
+        })    
+    } catch (error) {
+        // console.log(error.message);
+        location.reload();
+    }
+    
 }

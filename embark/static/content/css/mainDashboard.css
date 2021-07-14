@@ -42,8 +42,9 @@
 
 .card-right {
     height: 600px;
-    grid-template-rows: 30% auto;
+    grid-template-rows: 80% auto;
     grid-gap: 10px;
+    display: grid;
 }
 
 .card-pie {
@@ -55,21 +56,19 @@
     justify-content: center;
 }
 
-.graphData {
-    height: 90%;
-}
-
 canvas {
     width: auto !important;
     margin: 5px;
 }
 
-.topEntropyGraph {
-    margin-top: 30px;
+#entropyMeterLabel {
+    text-align: center;
+    padding-top: 15px;
+    border-top: 1px solid #b8cedb;
 }
 
 meter {
-    width: 100%
+    width: 100%;
 }
 
 /* each data row styles */

@@ -63,7 +63,7 @@ ROOT_URLCONF = 'embark.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [BASE_DIR / 'templates', '/app/emba/emba_logs'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
