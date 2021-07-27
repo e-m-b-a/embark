@@ -7,10 +7,10 @@
 
 ## About
 
-*Embark* is being developed to provide the firmware security analyzer *[emba](https://github.com/e-m-b-a/emba)* as a containerized service, to ease 
+*Embark* is being developed to provide the firmware security analyzer *[emba](https://github.com/e-m-b-a/emba)* as a containerized service and to ease 
 accessibility to *emba* regardless of system and operating system.
 
-Furthermore *Embark* improves the data provision by aggregating the various scanning results in a nice dashboard.
+Furthermore *Embark* improves the data provision by aggregating the various scanning results in a aggregated management dashboard.
 
 ## Setup
 1. Change directory to root of the repository i.e `embark`
