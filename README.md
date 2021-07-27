@@ -1,4 +1,4 @@
-# Siemens Energy EMBA Project (AMOS SS 2021) <br> (Embark)
+# Siemens Energy EMBArk Project (AMOS SS 2021) <br>
 
 
 <p align="center">
