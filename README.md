@@ -1,4 +1,4 @@
-# EMBArk - the firmware security scanning enterprise environment <br>
+# EMBArk - The firmware security scanning environment <br>
 
 
 <p align="center">
