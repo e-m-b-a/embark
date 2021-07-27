@@ -16,7 +16,7 @@ Furthermore *Embark* improves the data provision by aggregating the various scan
 1. Change directory to root of the repository i.e `embark`
 2. Clone original `emba` repository (`git clone https://github.com/e-m-b-a/emba.git`)
 3. Run `cd emba && ./installer.sh -F` to force install all the dependencies on host. This enables functionalities like CVE Search.  
-4. Setup docker containers (See [docker instructions](https://github.com/e-m-b-a/embark/blob/main/docker.md))
+4. Setup docker containers (See [build instructions](https://github.com/e-m-b-a/embark/wiki/Build-Deployment_Documentation))
 
 You can inspect the emba repository [emba](https://github.com/e-m-b-a/emba) and get more [information about usage of *emba* in the wiki](https://github.com/e-m-b-a/emba/wiki/Usage). Additionally you should check the [embark wiki](https://github.com/e-m-b-a/embark/wiki).
 
