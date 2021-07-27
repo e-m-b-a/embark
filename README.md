@@ -19,10 +19,10 @@ accessibility to *emba* regardless of system and operating system.
 Furthermore *Embark* is improves the data provision by aggregating the various *emba* outputs in a fancy dashboard.
 
 ## Setup
-1. Change directory to root of the repository i.e `amos-ss2021-emba-service`
+1. Change directory to root of the repository i.e `embark`
 2. Clone original `emba` repository (`git clone https://github.com/e-m-b-a/emba.git`)
-3. Run `./emba/installer.sh -F` to force install all the dependencies on host. This enables functionalities like CVE Search.  
-4. Setup docker containers(See docker instructions)
+3. Run `cd emba && ./installer.sh -F` to force install all the dependencies on host. This enables functionalities like CVE Search.  
+4. Setup docker containers (See [docker instructions](https://github.com/e-m-b-a/embark/blob/main/docker.md))
 
 
 ## Docker
