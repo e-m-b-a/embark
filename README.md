@@ -1,4 +1,4 @@
-# Siemens Energy EMBArk Project (AMOS SS 2021) <br>
+# EMBArk - the emba enterprise environment <br>
 
 
 <p align="center">
@@ -61,3 +61,7 @@ For further reading see [how to logging](https://docs.python.org/3/howto/logging
 
 
 You can inspect the emba repository [emba](https://github.com/e-m-b-a/emba) and get more [information about usage of *emba* in the wiki](https://github.com/e-m-b-a/emba/wiki/Usage).
+
+## Sponsor and history
+This project was originally sponsored by Siemens Energy as [AMOS project](https://oss.cs.fau.de/teaching/the-amos-project/) in cooperation with the [FAU](https://oss.cs.fau.de/)
+See also: https://github.com/amosproj/amos2021ss01-emba-service
