@@ -5,12 +5,6 @@
   <img src="./helpers/embark.svg" alt="" width="250"/>
 </p>
 
-- [About](#About)
-- [Setup](#Setup)
-- [Docker](#Docker)
-- [Pipelines](#Pipelines)
-- [Logging](#Logging)
-
 ## About
 
 *Embark* is being developed to provide the firmware security analyzer *[emba](https://github.com/e-m-b-a/emba)* as a containerized service, to ease 
