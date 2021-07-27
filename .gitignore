@@ -9,6 +9,7 @@ embark/dir-combined.yara
 embark/emba_logs/
 embark/uploader/migrations/
 embark/users/migrations/
+embark/logs/
 
 # other stuff
 *.zip
