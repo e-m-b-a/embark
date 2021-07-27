@@ -28,4 +28,4 @@ You can inspect the emba repository [emba](https://github.com/e-m-b-a/emba) and 
 ## Sponsor and history
 This project was originally sponsored by [Siemens Energy](https://www.siemens-energy.com/) as [AMOS project](https://oss.cs.fau.de/teaching/the-amos-project/) in cooperation with the [FAU](https://oss.cs.fau.de/)
 
-See also: https://github.com/amosproj/amos2021ss01-emba-service
+See also the [emba AMOS project](https://github.com/amosproj/amos2021ss01-emba-service) and [AMOS](https://github.com/amosproj)
