@@ -2,7 +2,7 @@
 
 
 <p align="center">
-  <img src="./helpers/embark.svg" alt="" width="250"/>
+  <img src="./documentation/embark.svg" alt="" width="250"/>
 </p>
 
 ## About
