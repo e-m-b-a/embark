@@ -32,6 +32,9 @@ services:
     command: './entrypoint.sh'
     environment:
         - USER
+    depends_on:
+        - auth-db
+        - redis
 
   redis:
     image: "redis:5"
