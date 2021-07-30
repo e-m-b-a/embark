@@ -1,6 +1,7 @@
 #!/bin/bash
 
 export DJANGO_SETTINGS_MODULE=embark.settings
+python3 manage.py makemigrations users uploader
 python3 manage.py migrate
 python3 manage.py runapscheduler --test &
 uwsgi --wsgi-file /app/embark/embark/wsgi.py --http :8000 --processes 2 --threads 10 &
