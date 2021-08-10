@@ -77,7 +77,7 @@ get_individual_report().then(function (returnData) {
         '#7b919d', '#5b717d', returnData.bins_checked, returnData.pie, 'PIE')
     make_chart(canarypie, 'Binaries with CANARY', 'Binaries without CANARY',
         '#525d63', '#323d43', returnData.bins_checked, returnData.canary, 'CANARY')
-    make_chart(strippedpie, 'Binaries with Stripped', 'Binaries without Stripped',
+    make_chart(strippedpie, 'Stripped binaries', 'Unstripped binaries',
         '#009999', '#005050', returnData.bins_checked, returnData.stripped, 'Stripped')
 
     let data_to_display = {
@@ -91,14 +91,16 @@ get_individual_report().then(function (returnData) {
         "Files detected": returnData.files,
         "Directories detected": returnData.directories,
         "Binaries checked": returnData.bins_checked,
+        "Versions identified": returnData.versions_identified,
         "Exploits identified": returnData.exploits,
         "Entropy value": returnData.entropy_value,
         "Path to logs": returnData.path_to_logs,
-        "EMBA command used": "TODO",
+        "Metasploit modules": returnData.metasploit_modules,
+        "EMBA command": "TODO",
     }
 
     for (const [key, value] of Object.entries(returnData.strcpy_bin)) {
-        data_to_display["strcpy bin: " + key] = value
+        data_to_display["STRCPY binary: " + key] = value
     }
 
     const table = document.getElementById("detail_body");
@@ -182,7 +184,6 @@ function make_chart(html_chart, label_1, label_2, color_1, color_2, data_cmp, da
                     enabled: true
                 }
             }
-
         }
     });
 }

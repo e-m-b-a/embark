@@ -275,6 +275,7 @@ class Result(models.Model):
     cve_medium = models.IntegerField(default=0, help_text='')
     cve_low = models.IntegerField(default=0, help_text='')
     exploits = models.IntegerField(default=0, help_text='')
+    metasploit_modules = models.IntegerField(default=0, help_text='')
     bins_checked = models.IntegerField(default=0, help_text='')
     strcpy_bin = models.TextField(default='{}')
 

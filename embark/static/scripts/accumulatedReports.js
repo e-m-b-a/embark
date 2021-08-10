@@ -136,7 +136,7 @@ get_accumulated_reports().then(function (returnData) {
             plugins: {
                 title: {
                     display: true,
-                    text: 'NX',
+                    text: 'No eXecute',
                     position: 'top',
                     color: 666,
                     padding: {
@@ -173,8 +173,8 @@ get_accumulated_reports().then(function (returnData) {
         type: 'pie',
         data: {
             labels: [
-                'Binaries with PIE',
-                'Binaries without PIE',
+                'PIE binaries',
+                'Not PIE binaries',
             ],
             datasets: [{
                 labels: ['binaries with PIE', 'binaries without PIE'],
@@ -188,7 +188,7 @@ get_accumulated_reports().then(function (returnData) {
             plugins: {
                 title: {
                     display: true,
-                    text: 'PIE',
+                    text: 'Position Independent (PIE)',
                     position: 'top',
                     color: 666,
                     padding: {
@@ -277,8 +277,8 @@ get_accumulated_reports().then(function (returnData) {
         type: 'pie',
         data: {
             labels: [
-                'Binaries with CANARY',
-                'Binaries without CANARY',
+                'Binaries with stack canaries',
+                'Binaries without stack canaries',
             ],
             datasets: [{
                 labels: ['binaries with CANARY', 'binaries without CANARY'],
@@ -292,7 +292,7 @@ get_accumulated_reports().then(function (returnData) {
             plugins: {
                 title: {
                     display: true,
-                    text: 'CANARY',
+                    text: 'Stack canaries',
                     position: 'top',
                     color: 666,
                     padding: {
@@ -329,8 +329,8 @@ get_accumulated_reports().then(function (returnData) {
         type: 'pie',
         data: {
             labels: [
-                'Binaries with Stripped',
-                'Binaries without Stripped',
+                'Stripped binaries',
+                'Not stripped binaries',
             ],
             datasets: [{
                 labels: ['binaries with Stripped', 'binaries without Stripped'],
@@ -344,7 +344,7 @@ get_accumulated_reports().then(function (returnData) {
             plugins: {
                 title: {
                     display: true,
-                    text: 'Stripped',
+                    text: 'Debugging information',
                     position: 'top',
                     color: 666,
                     padding: {
@@ -491,7 +491,7 @@ get_accumulated_reports().then(function (returnData) {
         data: {
             labels: topBinaryLabels,
             datasets: [{
-                label: 'Top strcpy Binaries',
+                label: 'Number of STRCPY used',
                 labels: topBinaryLabels,
                 data: topBinaryCounts,
                 borderWidth: 1,
@@ -504,7 +504,7 @@ get_accumulated_reports().then(function (returnData) {
             plugins: {
                 title: {
                     display: true,
-                    text: 'Top strcpy Binaries',
+                    text: 'Binaries with weak functions',
                     position: 'top',
                     color: 666,
                     padding: {
