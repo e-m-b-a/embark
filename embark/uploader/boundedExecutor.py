@@ -266,6 +266,8 @@ class BoundedExecutor:
             cve_low=int(res_dict.get("cve_low", 0)),
             exploits=int(res_dict.get("exploits", 0)),
             metasploit_modules=int(res_dict.get("metasploit_modules", 0)),
+            certificates=int(res_dict.get("certificates", 0)),
+            certificates_outdated=int(res_dict.get("certificates_outdated", 0)),
         )
         res.save()
         return res
