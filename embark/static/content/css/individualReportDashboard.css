@@ -1,12 +1,12 @@
 .leftCol {
-    grid-template-rows: 65% auto;
+    grid-template-rows: 25% auto;
     display: grid;
     grid-gap: 10px;
     max-height: 100%;
 }
 
 .dataCardIRRow1 {
-    grid-template-columns: 40% auto;
+    grid-template-columns: 30% auto;
     grid-gap: 10px;
     display: grid;
     margin-bottom: 10px;

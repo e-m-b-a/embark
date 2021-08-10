@@ -165,7 +165,7 @@ class Firmware(models.Model):
         help_text='Activates web report creation in log path, -W will be added', default=True, expert_mode=True,
         blank=True)
     emulation_test = BooleanFieldExpertMode(
-        help_text='Enables automated qemu emulation tests, -E will be added', default=False, expert_mode=True,
+        help_text='Enables automated qemu emulation tests, -E will be added', default=True, expert_mode=True,
         blank=True)
     dependency_check = BooleanFieldExpertMode(
         help_text=' Checks dependencies but ignore errors, -F will be added', default=True, expert_mode=True,

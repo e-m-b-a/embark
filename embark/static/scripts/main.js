@@ -9,9 +9,7 @@ function navToolTip() {
     menuBtn.onclick = function () {
         navigation.classList.toggle("active");
     }
-
 }
-
 
 /**
  * To toggle expert mode option during analysing the Firmware
@@ -29,7 +27,7 @@ function expertModeOn() {
             }
         }
     } catch (error) {
-        // console.log(error.message);
+        console.log(error.message);
     }
 }
 
@@ -50,7 +48,7 @@ function helpTextOn() {
             }
         }
     } catch (error) {
-        // console.log(error.message);
+        console.log(error.message);
     }
 }
 
@@ -63,7 +61,7 @@ function confirmDelete(event) {
     var isValid = confirm(`Are you sure to delete the following firmware file: ${event.target.elements.firmware.value} ?`);
     if (!isValid) {
         event.preventDefault();
-        // console.log("deletion cancelled");
+          console.log("deletion cancelled");
     } else {
         successAlert(`firmware file deleted: ${event.target.elements.firmware.value}`);
     }

@@ -10,8 +10,8 @@ services:
     ports:
       - '3306:3306'
 
-  emba:
-    image: emba:latest
+  embark:
+    image: embark:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -25,7 +25,7 @@ services:
         - ./embark/:/app/embark/
     network_mode: "host"
     ports:
-      - '8000:8000'
+      - '80:80'
       - '8001:8001'
     env_file:
       - .env

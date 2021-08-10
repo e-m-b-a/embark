@@ -24,7 +24,7 @@ function showFiles(fileData) {
 }
 
 /**
- * Checks for any Multiple uploads and the Passes to save 
+ * Checks for any Multiple uploads and the Passes to save
  */
 function saveFiles() {
     var progressBar = document.getElementById("progress-wrapper");

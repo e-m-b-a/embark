@@ -1,14 +1,29 @@
 {% extends "uploader/home.html" %}
 {% block maincontent %}
 
+<div>
+  <h1><center>Firmware security scanning details</center></h1>
+</div>
 <div class="dataCard">
     <div class="row dataCardIRRow1">
         <div class="leftCol">
             <div class="card">
                 <canvas class="aggregatedReport" id="accumulatedCveDoughnut"></canvas>
             </div>
-            <div class="card IRReportCard1">
+            <div class="card IRReportCard">
                 <canvas class="aggregatedReport" id="nxpie"></canvas>
+            </div>
+            <div class="card IRReportCard">
+              <canvas class="aggregatedReport" id="piepie"></canvas>
+            </div>
+            <div class="card IRReportCard">
+              <canvas class="aggregatedReport" id="relropie"></canvas>
+            </div>
+            <div class="card IRReportCard">
+              <canvas class="aggregatedReport" id="canarypie"></canvas>
+            </div>
+            <div class="card IRReportCard">
+              <canvas class="aggregatedReport" id="strippedpie"></canvas>
             </div>
         </div>
 
@@ -18,20 +33,6 @@
             </table>
         </div>
     </div> 
-    <div class="row dataCardIRRow2">
-        <div class="card IRReportCard">
-            <canvas class="aggregatedReport" id="piepie"></canvas>
-        </div>
-        <div class="card IRReportCard">
-            <canvas class="aggregatedReport" id="relropie"></canvas>
-        </div>
-        <div class="card IRReportCard">
-            <canvas class="aggregatedReport" id="canarypie"></canvas>
-        </div>
-        <div class="card IRReportCard">
-            <canvas class="aggregatedReport" id="strippedpie"></canvas>
-        </div>
-    </div>
 </div>
 
 {% load static %}

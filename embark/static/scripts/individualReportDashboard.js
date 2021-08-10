@@ -81,20 +81,20 @@ get_individual_report().then(function (returnData) {
         '#009999', '#005050', returnData.bins_checked, returnData.stripped, 'Stripped')
 
     let data_to_display = {
-        "firmware name": returnData.name,
-        "start date": returnData.start_date.replace('T', ' - '),
-        "end date": returnData.end_date.replace('T', ' - '),
-        "architecture verified": returnData.architecture_verified,
-        "vendor": returnData.vendor,
-        "version": returnData.version,
-        "notes": returnData.notes,
-        "files": returnData.files,
-        "directories": returnData.directories,
-        "bins checked": returnData.bins_checked,
-        "exploits": returnData.exploits,
-        "entropy_value": returnData.entropy_value,
-        "path to logs": returnData.path_to_logs,
-        "emba command": "./emba.sh -f /app/embark/uploadedFirmwareImages/active_2/170.pdf -l /app/emba/emba_logs/2  -g -s -z -W -F -t",
+        "Firmware name": returnData.name,
+        "Start date": returnData.start_date.replace('T', ' - '),
+        "End date": returnData.end_date.replace('T', ' - '),
+        "Architecture detected": returnData.architecture_verified,
+        "Vendor": returnData.vendor,
+        "Version": returnData.version,
+        "Notes": returnData.notes,
+        "Files detected": returnData.files,
+        "Directories detected": returnData.directories,
+        "Binaries checked": returnData.bins_checked,
+        "Exploits identified": returnData.exploits,
+        "Entropy value": returnData.entropy_value,
+        "Path to logs": returnData.path_to_logs,
+        "EMBA command used": "TODO",
     }
 
     for (const [key, value] of Object.entries(returnData.strcpy_bin)) {
@@ -125,14 +125,14 @@ function get_individual_report() {
 }
 
 /**
- * Develops Chart 
+ * Develops Chart
  * @param {*} html_chart Type of Chart
  * @param {*} label_1 Labels
  * @param {*} label_2 Labels
  * @param {*} color_1 Colors
  * @param {*} color_2 Colors
  * @param {*} data_cmp Data to be plotted
- * @param {*} data_strcpy 
+ * @param {*} data_strcpy
  * @param {*} title Title of The chart
  */
 function make_chart(html_chart, label_1, label_2, color_1, color_2, data_cmp, data_strcpy, title) {

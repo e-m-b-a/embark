@@ -1,5 +1,5 @@
 
-/** Error alert - Displays Alert message if something is failed 
+/** Error alert - Displays Alert message if something is failed
  * @param {*} message - message to be shown to user
  */
  function errorAlert(message) {
@@ -13,9 +13,9 @@
            }
        }
    });
-     
+
   }
- 
+
   /**
    * Success Alert - Display success message to user
    * @param {*} message - Display message  to be shown to user
@@ -33,10 +33,10 @@
        }
    });
   }
- 
+
   /**
    * For any input which is required to be entered by user .
-   * @param {*} message Display message to user 
+   * @param {*} message Display message to user
    */
   function promptAlert(message) {
     $.confirm({
