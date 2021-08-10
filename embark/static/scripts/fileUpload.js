@@ -18,8 +18,7 @@ function showFiles(fileData) {
     $("#uploadFirmware-btn").attr("disabled", false);
 
   } catch (error) {
-    console.log(error.message);
-    // console.log(error.message);
+      console.log(error.message);
   }
 }
 
@@ -82,7 +81,7 @@ async function postFiles(formData) {
               postFiles(formData);
             }
           } else {
-            // console.log("The file is not saved");
+            console.log("The file is not saved");
             location.reload();
           }
         } else {
@@ -92,6 +91,6 @@ async function postFiles(formData) {
       }
     });
   } catch (error) {
-    // console.log(error.message);
+      console.log(error.message);
   }
 }
