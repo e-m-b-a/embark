@@ -228,7 +228,7 @@ class BoundedExecutor:
 
         entropy_value = res_dict.get("entropy_value", 0)
         if type(entropy_value) is str:
-            #entropy_value = re.findall(r'(\d+\.?\d*)', ' 7.55 bits per byte.')[0]
+            # entropy_value = re.findall(r'(\d+\.?\d*)', ' 7.55 bits per byte.')[0]
             entropy_value = re.findall(r'(\d+\.?\d*)', entropy_value)[0]
             entropy_value = entropy_value.strip('.')
 
