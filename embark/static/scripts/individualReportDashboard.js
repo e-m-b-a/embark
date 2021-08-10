@@ -69,13 +69,13 @@ get_individual_report().then(function (returnData) {
         }
     });
 
-    make_chart(relropie, 'Binaries with RELRO', 'Binaries without RELRO',
+    make_chart(relropie, 'Binaries without RELRO', 'Binaries with RELRO',
         '#493791', '#291771', returnData.bins_checked, returnData.relro, 'RELRO')
-    make_chart(nxpie, 'Binaries with NX', 'Binaries without NX',
+    make_chart(nxpie, 'Binaries without NX', 'Binaries with NX',
         '#1b1534', '#000014', returnData.bins_checked, returnData.nx, 'NX')
-    make_chart(piepie, 'Binaries with PIE', 'Binaries without PIE',
+    make_chart(piepie, 'Binaries without PIE', 'Binaries with PIE',
         '#7b919d', '#5b717d', returnData.bins_checked, returnData.pie, 'PIE')
-    make_chart(canarypie, 'Binaries with CANARY', 'Binaries without CANARY',
+    make_chart(canarypie, 'Binaries without CANARY', 'Binaries with CANARY',
         '#525d63', '#323d43', returnData.bins_checked, returnData.canary, 'CANARY')
     make_chart(strippedpie, 'Stripped binaries', 'Unstripped binaries',
         '#009999', '#005050', returnData.bins_checked, returnData.stripped, 'Stripped')
@@ -84,18 +84,31 @@ get_individual_report().then(function (returnData) {
         "Firmware name": returnData.name,
         "Start date": returnData.start_date.replace('T', ' - '),
         "End date": returnData.end_date.replace('T', ' - '),
+        "Operating sytem detected": returnData.os_verified,
         "Architecture detected": returnData.architecture_verified,
+        "Entropy value": returnData.entropy_value,
         "Vendor": returnData.vendor,
         "Version": returnData.version,
         "Notes": returnData.notes,
         "Files detected": returnData.files,
         "Directories detected": returnData.directories,
+        "Certificates detected": returnData.certificates,
+        "Outdated certificates detected": returnData.certificates_outdated,
+        "Shell scripts detected": returnData.shell_scripts,
+        "Shell script issues": returnData.shell_script_vulns,
         "Binaries checked": returnData.bins_checked,
         "Versions identified": returnData.versions_identified,
         "Exploits identified": returnData.exploits,
-        "Entropy value": returnData.entropy_value,
-        "Path to logs": returnData.path_to_logs,
         "Metasploit modules": returnData.metasploit_modules,
+        "High CVE": returnData.cve_high,
+        "Medium CVE": returnData.cve_medium,
+        "Low CVE": returnData.cve_low,
+        "NX disabled binaries": returnData.nx,
+        "RELRO disabled binaries": returnData.relro,
+        "PIE disabled binaries": returnData.pie,
+        "Stack canaries disabled binaries": returnData.canary,
+        "Stripped binaries": returnData.stripped,
+        "Path to logs": returnData.path_to_logs,
         "EMBA command": "TODO",
     }
 

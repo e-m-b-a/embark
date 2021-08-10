@@ -121,8 +121,8 @@ get_accumulated_reports().then(function (returnData) {
         type: 'pie',
         data: {
             labels: [
-                'Binaries with NX',
                 'Binaries without NX',
+                'Binaries with NX',
             ],
             datasets: [{
                 labels: ['binaries with NX', 'binaries without NX'],
@@ -173,8 +173,8 @@ get_accumulated_reports().then(function (returnData) {
         type: 'pie',
         data: {
             labels: [
-                'PIE binaries',
                 'Not PIE binaries',
+                'PIE enabled binaries',
             ],
             datasets: [{
                 labels: ['binaries with PIE', 'binaries without PIE'],
@@ -225,8 +225,8 @@ get_accumulated_reports().then(function (returnData) {
         type: 'pie',
         data: {
             labels: [
-                'Binaries with RELRO',
                 'Binaries without RELRO',
+                'Binaries with RELRO',
             ],
             datasets: [{
                 labels: ['binaries with RELRO', 'binaries without RELRO'],
@@ -277,8 +277,8 @@ get_accumulated_reports().then(function (returnData) {
         type: 'pie',
         data: {
             labels: [
-                'Binaries with stack canaries',
                 'Binaries without stack canaries',
+                'Binaries with stack canaries',
             ],
             datasets: [{
                 labels: ['binaries with CANARY', 'binaries without CANARY'],

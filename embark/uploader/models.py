@@ -173,6 +173,9 @@ class Firmware(models.Model):
     multi_threaded = BooleanFieldExpertMode(
         help_text='Activate multi threading (destroys regular console output), -t will be added', default=True,
         expert_mode=True, blank=True)
+    fw_remove = BooleanFieldExpertMode(
+        help_text='Remove extracted firmware file/directory after testint, -r will be added', default=True,
+        expert_mode=True, blank=True)
 
     # embark meta data
     path_to_logs = models.FilePathField(default="/", blank=True)
@@ -238,6 +241,8 @@ class Firmware(models.Model):
             command = command + " -F"
         if self.multi_threaded:
             command = command + " -t"
+        if self.fw_remove:
+            command = command + " -r"
         # running emba
         return command
 
@@ -252,6 +257,8 @@ class Result(models.Model):
     files = models.IntegerField(default=0, help_text='')
     directories = models.IntegerField(default=0, help_text='')
     entropy_value = models.FloatField(default=0.0, help_text='')
+    certificates = models.IntegerField(default=0, help_text='')
+    certificates_outdated = models.IntegerField(default=0, help_text='')
     shell_scripts = models.IntegerField(default=0, help_text='')
     shell_script_vulns = models.IntegerField(default=0, help_text='')
     yara_rules_match = models.IntegerField(default=0, help_text='')
