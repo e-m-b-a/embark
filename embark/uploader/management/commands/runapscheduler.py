@@ -30,9 +30,9 @@ def resource_tracker():
     memory_percentage = psutil.virtual_memory().percent
 
     # inform user about high load
-    #if cpu_percentage > CPU_UPPER_BOUND:
+    # if cpu_percentage > CPU_UPPER_BOUND:
     #    logger.warning(f"High CPU usage: {cpu_percentage}%")
-    #if memory_percentage > MEMORY_UPPER_BOUND:
+    # if memory_percentage > MEMORY_UPPER_BOUND:
     #    logger.warning(f"High Memory usage: {memory_percentage}%")
 
     # save timestamps in db
