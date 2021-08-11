@@ -146,9 +146,9 @@ class Firmware(models.Model):
         help_text='Architecture of the linux firmware [MIPS, ARM, x86, x64, PPC] -a will be added',
         max_length=MAX_LENGTH, blank=True, expert_mode=True)
     cwe_checker = BooleanFieldExpertMode(
-        help_text='Enables cwe-checker,-c will be added', default=False, expert_mode=True, blank=True)
+        help_text='Enables cwe-checker,-c will be added (docker mode currently not supported)', default=False, expert_mode=True, blank=True)
     docker_container = BooleanFieldExpertMode(
-        help_text='Run emba in docker container, -D will be added', default=True, expert_mode=True, blank=True,
+        help_text='Run emba in docker container, -D will be added (currently not supported)', default=True, expert_mode=True, blank=True,
         readonly=True)
     deep_extraction = BooleanFieldExpertMode(
         help_text='Enable deep extraction, -x will be added', default=False, expert_mode=True, blank=True)

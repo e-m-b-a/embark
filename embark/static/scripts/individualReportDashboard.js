@@ -84,12 +84,14 @@ get_individual_report().then(function (returnData) {
         "Firmware name": returnData.name,
         "Start date": returnData.start_date.replace('T', ' - '),
         "End date": returnData.end_date.replace('T', ' - '),
-        "Operating sytem detected": returnData.os_verified,
-        "Architecture detected": returnData.architecture_verified,
-        "Entropy value": returnData.entropy_value,
         "Vendor": returnData.vendor,
         "Version": returnData.version,
         "Notes": returnData.notes,
+        "Operating sytem detected": returnData.os_verified,
+        "Architecture detected": returnData.architecture_verified,
+        "Entropy value": returnData.entropy_value,
+        "Path to logs": returnData.path_to_logs,
+        "EMBA command": "TODO",
         "Files detected": returnData.files,
         "Directories detected": returnData.directories,
         "Certificates detected": returnData.certificates,
@@ -108,8 +110,6 @@ get_individual_report().then(function (returnData) {
         "PIE disabled binaries": returnData.pie,
         "Stack canaries disabled binaries": returnData.canary,
         "Stripped binaries": returnData.stripped,
-        "Path to logs": returnData.path_to_logs,
-        "EMBA command": "TODO",
     }
 
     for (const [key, value] of Object.entries(returnData.strcpy_bin)) {
