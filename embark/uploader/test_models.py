@@ -33,6 +33,7 @@ class test_models(TestCase):
         firmware.emulation_test = True
         firmware.dependency_check = True
         firmware.multi_threaded = True
+        firmware.fw_remove = True
 
         expected_string = " -X version -Y vendor -Z device -N notes -a x64 -c -x -i -g -s -z -W -E -F -t -r"
         self.assertEqual(firmware.get_flags(), expected_string)
@@ -60,6 +61,7 @@ class test_models(TestCase):
         firmware.emulation_test = False
         firmware.dependency_check = False
         firmware.multi_threaded = False
+        firmware.fw_remove = False
 
         expected_string = ""
         self.assertEqual(firmware.get_flags(), expected_string)
