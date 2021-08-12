@@ -51,39 +51,40 @@ reset_docker() {
   echo -e "\n$GREEN""$BOLD""Reset EMBArk docker images""$NC"
 
   docker images
+  docker container ls -a
 
   if docker images | grep -qE "^embark[[:space:]]*latest"; then
     echo -e "\n$GREEN""$BOLD""Found EMBArk docker environment - removing it""$NC"
-    CONTAINER_ID=$(docker container ls -a | grep -E "embark:latest" | awk '{print $1}')
+    CONTAINER_ID=$(docker container ls -a | grep -E "embark_embark_1" | awk '{print $1}')
     echo -e "$GREEN""$BOLD""Stop EMBArk docker container""$NC"
     docker container stop "$CONTAINER_ID"
     echo -e "$GREEN""$BOLD""Remove EMBArk docker container""$NC"
-    docker container rm "$CONTAINER_ID"
+    docker container rm "$CONTAINER_ID" -f
     echo -e "$GREEN""$BOLD""Remove EMBArk docker image""$NC"
-    docker image rm embark:latest
+    docker image rm embark:latest -f
   fi
 
   if docker images | grep -qE "^mysql[[:space:]]*latest"; then
     echo -e "\n$GREEN""$BOLD""Found mysql docker environment - removing it""$NC"
-    CONTAINER_ID=$(docker container ls -a | grep -E "mysql:latest" | awk '{print $1}')
+    CONTAINER_ID=$(docker container ls -a | grep -E "embark_auth-db_1" | awk '{print $1}')
 
     echo -e "$GREEN""$BOLD""Stop mysql docker container""$NC"
     docker container stop "$CONTAINER_ID"
     echo -e "$GREEN""$BOLD""Remove mysql docker container""$NC"
-    docker container rm "$CONTAINER_ID"
+    docker container rm "$CONTAINER_ID" -f
     echo -e "$GREEN""$BOLD""Remove mysql docker image""$NC"
-    docker image rm mysql:latest
+    docker image rm mysql:latest -f
   fi
 
   if docker images | grep -qE "^redis[[:space:]]*5"; then
     echo -e "\n$GREEN""$BOLD""Found redis docker environment - removing it""$NC"
-    CONTAINER_ID=$(docker container ls -a | grep -E "redis:5" | awk '{print $1}')
+    CONTAINER_ID=$(docker container ls -a | grep -E "embark_redis_1" | awk '{print $1}')
     echo -e "$GREEN""$BOLD""Stop redis docker container""$NC"
     docker container stop "$CONTAINER_ID"
     echo -e "$GREEN""$BOLD""Remove redis docker container""$NC"
-    docker container rm "$CONTAINER_ID"
+    docker container rm "$CONTAINER_ID" -f
     echo -e "$GREEN""$BOLD""Remove redis docker image""$NC"
-    docker image rm redis:5
+    docker image rm redis:5 -f
   fi
 }
 
@@ -137,7 +138,9 @@ install_embark() {
   fi
 
   echo -e "$GREEN""$BOLD""Testing EMBArk installation""$NC"
-  if curl -XGET 'http://127.0.0.1' | grep -q embark; then
+  # need to wait a few seconds until everyting is up and running
+  sleep 5
+  if curl -XGET 'http://0.0.0.0:80' | grep -q embark; then
     echo -e "$GREEN""$BOLD""Finished installing EMBArk""$NC"
   else
     echo -e "$ORANGE""$BOLD""Failed installing EMBArk - check the output from the installation process""$NC"
@@ -152,6 +155,7 @@ install_debs() {
   apt-get install -y git
   apt-get install -y docker.io
   apt-get install -y docker-compose
+  apt-get install -y pycodestyle
 }
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
@@ -194,6 +198,10 @@ install_debs
 install_emba
 
 if [[ "$EMBA_ONLY" -ne 1 ]]; then
+
+  if ! [[ -d embark/logs ]]; then
+    mkdir embark/logs
+  fi
 
   if [[ "$REFORCE" -eq 1 ]]; then
     reset_docker

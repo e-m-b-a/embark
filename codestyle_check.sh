@@ -62,7 +62,7 @@ pycodestyle_check(){
     echo -e "\\n""$ORANGE""pycodestyle found!""$NC""\\n"
     PYCODESTYLE="/usr/lib/python3/dist-packages/pycodestyle.py"
   else
-    echo -e "\\n""$ORANGE""pycodestyle not found!""$NC""\\n""$ORANGE""Install shellcheck via 'apt-get install shellcheck'!""$NC\\n"
+    echo -e "\\n""$ORANGE""pycodestyle not found!""$NC""\\n""$ORANGE""Install pycodestyle via 'apt-get install pycodestyle'!""$NC\\n"
     exit 1
   fi
 
