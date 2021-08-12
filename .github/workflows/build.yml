@@ -22,7 +22,9 @@ jobs:
 
     - name: Install dependencies [pip]
       run: |
-        cd embark && mkdir logs && touch logs/web.log
+        cd embark
+        mkdir logs && touch logs/web.log
+        mkdir -p embark/logs && touch embark/logs/web.log
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
