@@ -185,6 +185,10 @@ fi
 install_emba
 
 if [[ "$EMBA_ONLY" -ne 1 ]]; then
+
+  apt-get install -y docker.io
+  apt-get install -y docker-compose
+
   if [[ "$REFORCE" -eq 1 ]]; then
     reset_docker
   fi
