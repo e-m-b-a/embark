@@ -79,8 +79,8 @@ pycodestyle_check(){
 }
 
 pytester(){
-  echo -e "[*] Test project with pytest"
-  pytest
+  echo -e "[*] Test project with pytest (not supported)"
+  #pytest
 }
 
 pylinter(){
