@@ -147,6 +147,13 @@ install_embark() {
   echo -e "curl -XPOST 'http://0.0.0.0:80/signup' -d '{\"email\": \"test@gmail.com\", \"password\": \"test\", \"confirm_password\": \"test\"}'"
 }
 
+install_debs() {
+  echo -e "\n$GREEN""$BOLD""Install debian packages for EMBArk installation""$NC"
+  apt-get install -y git
+  apt-get install -y docker.io
+  apt-get install -y docker-compose
+}
+
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
 echo -e "$ORANGE""$BOLD""WARNING: This script can harm your environment!""$NC"
 
@@ -182,12 +189,11 @@ if ! [[ $EUID -eq 0 ]] && [[ $LIST_DEP -eq 0 ]] ; then
   exit 1
 fi
 
+install_debs
+
 install_emba
 
 if [[ "$EMBA_ONLY" -ne 1 ]]; then
-
-  apt-get install -y docker.io
-  apt-get install -y docker-compose
 
   if [[ "$REFORCE" -eq 1 ]]; then
     reset_docker
