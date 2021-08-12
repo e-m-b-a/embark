@@ -137,10 +137,14 @@ install_embark() {
   fi
 
   echo -e "$GREEN""$BOLD""Testing EMBArk installation""$NC"
-  curl -XGET 'http://0.0.0.0:80'
+  if curl -XGET 'http://127.0.0.1' | grep -q embark; then
+    echo -e "$GREEN""$BOLD""Finished installing EMBArk""$NC"
+  else
+    echo -e "$ORANGE""$BOLD""Failed installing EMBArk - check the output from the installation process""$NC"
+  fi
 
   echo -e "$GREEN""$BOLD""Setup your initial user with:""$NC"
-  echo "curl -XPOST \'http\:\/\/0.0.0.0:80\/signup\' -d \'\{\"email\": \"test@gmail.com\", \"password\": \"test\", \"confirm_password\": \"test\"\}\'"
+  echo -e "curl -XPOST 'http://0.0.0.0:80/signup' -d '{\"email\": \"test@gmail.com\", \"password\": \"test\", \"confirm_password\": \"test\"}'"
 }
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
