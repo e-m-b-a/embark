@@ -29,6 +29,8 @@ function expertModeOn() {
     } catch (error) {
         console.log(error.message);
     }
+    /* we enable the help text automatically in expert mode */
+    helpTextOn()
 }
 
 /**
