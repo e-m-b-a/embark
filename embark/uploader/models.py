@@ -173,7 +173,7 @@ class Firmware(models.Model):
     multi_threaded = BooleanFieldExpertMode(
         help_text='Activate multi threading (destroys regular console output), -t will be added', default=True,
         expert_mode=True, blank=True)
-    fw_remove = BooleanFieldExpertMode(
+    firmware_remove = BooleanFieldExpertMode(
         help_text='Remove extracted firmware file/directory after testint, -r will be added', default=True,
         expert_mode=True, blank=True)
 
@@ -241,7 +241,7 @@ class Firmware(models.Model):
             command = command + " -F"
         if self.multi_threaded:
             command = command + " -t"
-        if self.fw_remove:
+        if self.firmware_remove:
             command = command + " -r"
         # running emba
         return command
