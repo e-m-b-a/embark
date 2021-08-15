@@ -33,8 +33,8 @@
                 <tbody>
                 {% for firmware in finished_firmwares %}
                     <tr>
-                        <td>{{ firmware.pk}}</td>
-                        <td>{{ firmware.firmware}}</td>
+                        <td>{{ firmware.pk }}</td>
+                        <td>{{ firmware.firmware }}</td>
                         <td>{{ firmware.vendor }}</td>
                         <td>{{ firmware.device }}</td>
                         <td>{{ firmware.version }}</td>
@@ -50,6 +50,9 @@
                                 </form>
                                 <form action={% url 'embark-IndividualReportDashboard' firmware.pk %} method='GET'>
                                     <button type="submit" class="btn" >Detail View</button>
+                                </form>
+                                <form action={% url 'embark-start-analysis' 1 %} method='GET'>
+                                    <button type="submit" class="btn" >Rescan/delete</button>
                                 </form>
                             </div>
                         </td>

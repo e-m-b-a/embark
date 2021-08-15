@@ -8,10 +8,10 @@
     <div class="row dataCardIRRow1">
         <div class="leftCol">
             <div class="card">
-                <canvas class="aggregatedReport" id="accumulatedCveDoughnut"></canvas>
+              <canvas class="aggregatedReport" id="accumulatedCveDoughnut"></canvas>
             </div>
             <div class="card IRReportCard">
-                <canvas class="aggregatedReport" id="nxpie"></canvas>
+              <canvas class="aggregatedReport" id="nxpie"></canvas>
             </div>
             <div class="card IRReportCard">
               <canvas class="aggregatedReport" id="piepie"></canvas>
@@ -28,9 +28,24 @@
         </div>
 
         <div class="card dataCardIR">
-            <table class="table table-striped table-borderless">
-                <tbody id="detail_body"></tbody>
-            </table>
+          <table class="table table-striped table-borderless">
+          <div class="row">
+            <!-- placeholder for the buttons. Need to fix the report id -->
+            <form action={% url 'embark-download' 1 %} method='GET'>
+              <button type="submit" class="btn" >Download Logs (todo)</button>
+            </form>
+            <form action={% url 'embark-html-report' 1 'index.html' %} method='GET'>
+              <button type="submit" class="btn" >Open Report (todo)</button>
+            </form>
+            <form action={% url 'embark-start-analysis' 1 %} method='GET'>
+              <button type="submit" class="btn" >Rescan/delete</button>
+            </form>
+            <form action={% url 'embark-MainDashboard' %} method='GET'>
+              <button type="submit" class="btn" >Main dashboard</button>
+            </form>
+          </div>
+            <tbody id="detail_body"></tbody>
+          </table>
         </div>
     </div> 
 </div>

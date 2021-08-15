@@ -18,11 +18,11 @@
 
   /**
    * Success Alert - Display success message to user
-   * @param {*} message - Display message  to be shown to user
+   * @param {*} message - Display message to be shown to user
    */
   function successAlert(message) {
     $.confirm({
-       title:  'Success!',
+       title:  'Success',
        content: message,
        type: 'green',
        typeAnimated: true,
@@ -40,7 +40,7 @@
    */
   function promptAlert(message) {
     $.confirm({
-      title: 'Prompt!',
+      title: 'Prompt',
       content: '' +
       '<form action="" class="formName">' +
       '<div class="form-group">' +

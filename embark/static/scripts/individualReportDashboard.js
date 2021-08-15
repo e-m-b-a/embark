@@ -5,6 +5,16 @@ var piepie = document.getElementById('piepie').getContext('2d');
 var relropie = document.getElementById('relropie').getContext('2d');
 var canarypie = document.getElementById('canarypie').getContext('2d');
 var strippedpie = document.getElementById('strippedpie').getContext('2d');
+var report_id = get_report_id();
+
+/**
+ * get the id of the current report -> we use this for the buttons and the entropy graph
+ */
+function get_report_id() {
+  let report_id = window.location.pathname.split("/").pop();
+  console.log(report_id);
+  return report_id;
+}
 
 /**
  * Generates Reports after you complete receiving the data for Individual Fimware
@@ -81,7 +91,8 @@ get_individual_report().then(function (returnData) {
         '#009999', '#005050', returnData.bins_checked, returnData.stripped, 'Stripped')
 
     let data_to_display = {
-        "Firmware name": returnData.name,
+        "Firmware name": returnData.name.replace(/\d\//,""),
+        "Firmware ID": returnData.name.replace(/\/.*$/,""),
         "Start date": returnData.start_date.replace('T', ' - '),
         "End date": returnData.end_date.replace('T', ' - '),
         "Vendor": returnData.vendor,
@@ -90,7 +101,7 @@ get_individual_report().then(function (returnData) {
         "Operating sytem detected": returnData.os_verified,
         "Architecture detected": returnData.architecture_verified,
         "Entropy value": returnData.entropy_value,
-        "Path to logs": returnData.path_to_logs,
+        "Path to logs": returnData.path_to_logs.replace(/\/app\/emba/,""),
         "EMBA command": "TODO",
         "Files detected": returnData.files,
         "Directories detected": returnData.directories,
