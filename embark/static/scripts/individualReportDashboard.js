@@ -5,15 +5,26 @@ var piepie = document.getElementById('piepie').getContext('2d');
 var relropie = document.getElementById('relropie').getContext('2d');
 var canarypie = document.getElementById('canarypie').getContext('2d');
 var strippedpie = document.getElementById('strippedpie').getContext('2d');
-var report_id = get_report_id();
+
+let report_id = window.location.pathname.split("/").pop();
+let entropy_url = "/emba_logs/12345/html-report/style/entropy.png".replace(/12345/,report_id);
+document.getElementById("entropy").src = entropy_url;
 
 /**
  * get the id of the current report -> we use this for the buttons and the entropy graph
  */
-function get_report_id() {
+function get_report_url() {
   let report_id = window.location.pathname.split("/").pop();
-  console.log(report_id);
-  return report_id;
+  let report_url = "/emba_logs/12345/html-report/index.html".replace(/12345/,report_id);
+  window.location.href = report_url;
+  console.log(report_url);
+}
+
+function get_dl_report_url() {
+  let report_id = window.location.pathname.split("/").pop();
+  let report_url = "/download_zipped/12345".replace(/12345/,report_id);
+  window.location.href = report_url;
+  console.log(report_url);
 }
 
 /**
