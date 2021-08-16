@@ -54,7 +54,8 @@ socket.onmessage = function (event) {
             }
     }
     catch(error){
-        console.log(error.message);
+        //console.log(error.message);
+        console.log(error);
     }
 }
 
@@ -62,15 +63,16 @@ socket.onmessage = function (event) {
  * This method is called when the websocket connection is closed
  *  */
 socket.onclose = function (event) {
-    console.log(event.reason)
-    console.error('Chat socket closed unexpectedly');
+    //console.log(event.reason)
+    console.error('Chat socket closed unexpectedly', event);
 };
 
 /**
- * this method is called when a error occurs
+ * this method is called when an error occurs
  *  */
 socket.onerror = function (err) {
-    console.error('Socket encountered error: ', err.message, 'Closing socket');
+    //console.error('Socket encountered error: ', err.message, 'Closing socket');
+    console.error('Socket encountered error: ', err);
     socket.close();
 };
 
@@ -131,6 +133,7 @@ function cancelLog(currentID) {
         var idOfDIV = "#Container_" + currentID;
         $(idOfDIV).remove();
     } catch (error) {
-        console.log(error.message);
+        //console.log(error.message);
+        console.log(error);
     }
 }
