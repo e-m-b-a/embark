@@ -13,6 +13,8 @@
 
 # Description: Installer for EMBArk
 
+export DEBIAN_FRONTEND=noninteractive
+
 GREEN='\033[0;32m'
 ORANGE='\033[0;33m'
 BOLD='\033[1m'
