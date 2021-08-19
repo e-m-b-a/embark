@@ -22,13 +22,13 @@ Furthermore *EMBArk* improves the data provision by aggregating the various scan
 ## Setup - automated
 1. Change directory to root of the repository i.e `embark`
 2. Run `sudo ./installer.sh -r` to force install all the dependencies on host. This rebuilds the complete docker environment including a fresh emba installation.
-3. Further details are available in the wiki (See [build instructions](https://github.com/e-m-b-a/embark/wiki/Build-Deployment_Documentation))
+3. Further details are available in the wiki (See [build instructions](https://github.com/e-m-b-a/embark/wiki/Build-EMBArk))
 
 ## Setup - manual
 1. Change directory to root of the repository i.e `embark`
 2. Clone original `emba` repository (`git clone https://github.com/e-m-b-a/emba.git`)
 3. Run `cd emba && sudo ./installer.sh -F` to force install all the dependencies on host. This enables functionalities like CVE Search.  
-4. Setup docker containers (See [build instructions](https://github.com/e-m-b-a/embark/wiki/Build-Deployment_Documentation))
+4. Setup docker containers (See [build instructions](https://github.com/e-m-b-a/embark/wiki/Build-EMBArk))
 
 You can inspect the [EMBA](https://github.com/e-m-b-a/emba) repository and get more [information about usage of *emba* in the wiki](https://github.com/e-m-b-a/emba/wiki/Usage). Additionally you should check the [EMBArk wiki](https://github.com/e-m-b-a/embark/wiki).
 
