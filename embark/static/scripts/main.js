@@ -1,4 +1,4 @@
-
+help_TextOn();
 /**
  * Activate Navigation Menu
  */
