@@ -126,7 +126,7 @@ get_accumulated_reports().then(function (returnData) {
             ],
             datasets: [{
                 labels: ['binaries with NX', 'binaries without NX'],
-                data: [returnData.nx['mean'], (returnData.bins_checked['mean'] - returnData.nx['mean'])],
+                data: [returnData.nx['sum'], (returnData.bins_checked['sum'] - returnData.nx['sum'])],
                 backgroundColor: ['#493791', '#291771'],
             }, ],
         },
@@ -178,7 +178,7 @@ get_accumulated_reports().then(function (returnData) {
             ],
             datasets: [{
                 labels: ['binaries with PIE', 'binaries without PIE'],
-                data: [returnData.pie['mean'], (returnData.bins_checked['mean'] - returnData.pie['mean'])],
+                data: [returnData.pie['sum'], (returnData.bins_checked['sum'] - returnData.pie['sum'])],
                 backgroundColor: ['#1b1534', '#000014'],
             }, ],
         },
@@ -230,7 +230,7 @@ get_accumulated_reports().then(function (returnData) {
             ],
             datasets: [{
                 labels: ['binaries with RELRO', 'binaries without RELRO'],
-                data: [returnData.relro['mean'], (returnData.bins_checked['mean'] - returnData.relro['mean'])],
+                data: [returnData.relro['sum'], (returnData.bins_checked['sum'] - returnData.relro['sum'])],
                 backgroundColor: ['#7b919d', '#5b717d'],
             }, ],
         },
@@ -282,7 +282,7 @@ get_accumulated_reports().then(function (returnData) {
             ],
             datasets: [{
                 labels: ['binaries with CANARY', 'binaries without CANARY'],
-                data: [returnData.canary['mean'], (returnData.bins_checked['mean'] - returnData.canary['mean'])],
+                data: [returnData.canary['sum'], (returnData.bins_checked['sum'] - returnData.canary['sum'])],
                 backgroundColor: ['#525d63', '#323d43'],
             }, ],
         },
@@ -334,7 +334,7 @@ get_accumulated_reports().then(function (returnData) {
             ],
             datasets: [{
                 labels: ['binaries with Stripped', 'binaries without Stripped'],
-                data: [returnData.stripped['mean'], (returnData.bins_checked['mean'] - returnData.stripped['mean'])],
+                data: [returnData.stripped['sum'], (returnData.bins_checked['sum'] - returnData.stripped['sum'])],
                 backgroundColor: ['#009999', '#005050'],
             }, ],
         },
