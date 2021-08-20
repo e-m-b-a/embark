@@ -36,9 +36,6 @@ You can inspect the [EMBA](https://github.com/e-m-b-a/emba) repository and get m
 The IoT is growing, the development is ongoing, and there are many new features that we want to add.
 We welcome [pull requests](https://github.com/e-m-b-a/embark/pulls) and [issues](https://github.com/e-m-b-a/embark/issues) on GitHub.
 
-## Contact Us
-If what you want to tell us something that is not a suitable github issue, feel free to send us an email at <a href="mailto:michael.messner@siemens-energy.com">michael.messner@siemens-energy.com</a> or via <a href="https://twitter.com/s3cur1ty_de">twitter</a>.
-
 ## Sponsor and history
 This project was originally sponsored by [Siemens Energy](https://www.siemens-energy.com/) as [AMOS project](https://oss.cs.fau.de/teaching/the-amos-project/) in cooperation with the [FAU](https://oss.cs.fau.de/).
 
