@@ -233,7 +233,7 @@ CHANNEL_LAYERS = {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
             "hosts": [('127.0.0.1', REDIS_PORT)],
-            #"hosts": [(REDIS_HOST, REDIS_PORT)],
+            # "hosts": [(REDIS_HOST, REDIS_PORT)],
         },
     },
 }
