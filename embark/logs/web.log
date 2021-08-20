@@ -1,0 +1,273 @@
+2021-08-20 10:40:27 web          INFO     Added job 'resource_tracker'.
+2021-08-20 10:40:27 web          INFO     Added weekly job: 'delete_old_job_executions'.
+2021-08-20 10:40:27 web          INFO     Starting scheduler for tracking...
+2021-08-20 10:40:27 web          INFO     WS - connect
+2021-08-20 10:40:27 web          INFO     WS - connect - accept
+2021-08-20 10:40:34 web          INFO     WS - disconnected
+2021-08-20 10:40:34 web          INFO     WS - connect
+2021-08-20 10:40:34 web          INFO     WS - connect - accept
+2021-08-20 10:40:40 web          INFO     WS - disconnected
+2021-08-20 10:40:40 web          INFO     WS - connect
+2021-08-20 10:40:40 web          INFO     WS - connect - accept
+2021-08-20 10:41:00 web          INFO     WS - disconnected
+2021-08-20 10:41:00 web          INFO     Posted Form is valid
+2021-08-20 10:41:01 web          INFO     10 - DIR300B5_FW214WWB01.bin
+2021-08-20 10:41:01 web          INFO     Starting: cd /app/emba/ && ./emba.sh -f /app/embark/uploadedFirmwareImages/active_16/DIR300B5_FW214WWB01.bin -l /app/emba/emba_logs/16  -X 1.04b04 -Y D-Link -Z DIR-300 -g -s -z -W -E -F -t -r
+2021-08-20 10:41:01 web          INFO     WS - connect
+2021-08-20 10:41:01 web          INFO     WS - connect - accept
+2021-08-20 10:41:02 web          INFO     read loop started for 16
+2021-08-20 10:41:02 web          INFO     WS - disconnected
+2021-08-20 10:41:02 web          INFO     WS - connect
+2021-08-20 10:41:02 web          INFO     WS - connect - accept
+2021-08-20 10:41:15 web          INFO     WS - send message
+2021-08-20 10:41:15 web          INFO     WS - send message
+2021-08-20 10:41:15 web          INFO     WS - send message
+2021-08-20 10:41:15 web          INFO     WS - send message
+2021-08-20 10:41:27 web          INFO     WS - disconnected
+2021-08-20 10:41:27 web          INFO     Posted Form is valid
+2021-08-20 10:41:27 web          INFO     11 - WNR2000v4-V1.0.0.30.img
+2021-08-20 10:41:27 web          INFO     Starting: cd /app/emba/ && ./emba.sh -f /app/embark/uploadedFirmwareImages/active_17/WNR2000v4-V1.0.0.30.img -l /app/emba/emba_logs/17  -X v1.0.0.30 -Y Netgear -Z WNR2000v4 -g -s -z -W -E -F -t -r
+2021-08-20 10:41:28 web          INFO     WS - connect
+2021-08-20 10:41:28 web          INFO     WS - connect - accept
+2021-08-20 10:41:28 web          INFO     read loop started for 17
+2021-08-20 10:41:30 web          INFO     WS - send message
+2021-08-20 10:41:43 web          INFO     WS - send message
+2021-08-20 10:41:44 web          INFO     WS - send message
+2021-08-20 10:41:45 web          INFO     WS - send message
+2021-08-20 10:41:45 web          INFO     WS - send message
+2021-08-20 10:41:50 web          INFO     WS - disconnected
+2021-08-20 10:41:51 web          INFO     WS - connect
+2021-08-20 10:41:51 web          INFO     WS - connect - accept
+2021-08-20 10:41:56 web          INFO     WS - send message
+2021-08-20 10:41:56 web          INFO     WS - send message
+2021-08-20 10:41:57 web          INFO     WS - disconnected
+2021-08-20 10:41:58 web          INFO     WS - connect
+2021-08-20 10:41:58 web          INFO     WS - connect - accept
+2021-08-20 10:42:02 web          INFO     WS - send message
+2021-08-20 10:42:04 web          INFO     WS - send message
+2021-08-20 10:42:05 web          INFO     WS - send message
+2021-08-20 10:42:19 web          INFO     WS - send message
+2021-08-20 10:42:19 web          INFO     WS - send message
+2021-08-20 10:42:21 web          INFO     WS - disconnected
+2021-08-20 10:42:21 web          INFO     Posted Form is valid
+2021-08-20 10:42:21 web          INFO     12 - ArcherC7v2_en_3_14_2_up_boot.bin
+2021-08-20 10:42:21 web          INFO     Starting: cd /app/emba/ && ./emba.sh -f /app/embark/uploadedFirmwareImages/active_18/ArcherC7v2_en_3_14_2_up_boot.bin -l /app/emba/emba_logs/18  -X 3.14.2 -Y Netgear -Z ArcherC7v2 -g -s -z -W -E -F -t -r
+2021-08-20 10:42:22 web          INFO     WS - connect
+2021-08-20 10:42:22 web          INFO     WS - connect - accept
+2021-08-20 10:42:23 web          INFO     read loop started for 18
+2021-08-20 10:42:35 web          INFO     WS - send message
+2021-08-20 10:43:07 web          INFO     WS - send message
+2021-08-20 10:43:14 web          INFO     WS - send message
+2021-08-20 10:43:43 web          INFO     WS - send message
+2021-08-20 10:43:43 web          INFO     WS - send message
+2021-08-20 10:43:43 web          INFO     WS - send message
+2021-08-20 10:43:44 web          INFO     WS - send message
+2021-08-20 10:43:50 web          INFO     WS - send message
+2021-08-20 10:44:08 web          INFO     WS - send message
+2021-08-20 10:44:09 web          INFO     WS - send message
+2021-08-20 10:44:09 web          INFO     WS - send message
+2021-08-20 10:44:18 web          INFO     WS - send message
+2021-08-20 10:44:18 web          INFO     WS - send message
+2021-08-20 10:44:23 web          INFO     WS - send message
+2021-08-20 10:44:25 web          INFO     WS - send message
+2021-08-20 10:44:28 web          INFO     WS - send message
+2021-08-20 10:44:30 web          INFO     WS - send message
+2021-08-20 10:44:37 web          INFO     WS - send message
+2021-08-20 10:44:59 web          INFO     WS - send message
+2021-08-20 10:45:54 web          INFO     WS - send message
+2021-08-20 10:45:56 web          INFO     WS - send message
+2021-08-20 10:46:12 web          INFO     WS - send message
+2021-08-20 10:46:12 web          INFO     WS - send message
+2021-08-20 10:46:12 web          INFO     WS - send message
+2021-08-20 10:47:00 web          INFO     WS - send message
+2021-08-20 10:47:00 web          INFO     WS - send message
+2021-08-20 10:47:03 web          INFO     WS - send message
+2021-08-20 10:47:06 web          INFO     WS - send message
+2021-08-20 10:47:10 web          INFO     WS - send message
+2021-08-20 10:47:12 web          INFO     WS - send message
+2021-08-20 10:47:14 web          INFO     WS - send message
+2021-08-20 10:47:15 web          INFO     WS - send message
+2021-08-20 10:47:22 web          INFO     WS - send message
+2021-08-20 10:47:30 web          INFO     WS - send message
+2021-08-20 10:47:41 web          INFO     WS - send message
+2021-08-20 10:47:55 web          INFO     WS - send message
+2021-08-20 10:47:55 web          INFO     WS - send message
+2021-08-20 10:47:58 web          INFO     WS - send message
+2021-08-20 10:48:06 web          INFO     WS - send message
+2021-08-20 10:48:14 web          INFO     WS - send message
+2021-08-20 10:48:28 web          INFO     WS - send message
+2021-08-20 10:48:28 web          INFO     WS - send message
+2021-08-20 10:48:37 web          INFO     WS - send message
+2021-08-20 10:48:37 web          INFO     WS - send message
+2021-08-20 10:48:39 web          INFO     WS - disconnected
+2021-08-20 10:48:40 web          INFO     WS - connect
+2021-08-20 10:48:40 web          INFO     WS - connect - accept
+2021-08-20 10:48:42 web          INFO     WS - send message
+2021-08-20 10:48:48 web          INFO     WS - send message
+2021-08-20 10:48:52 web          INFO     WS - disconnected
+2021-08-20 10:48:52 web          INFO     WS - connect
+2021-08-20 10:48:52 web          INFO     WS - connect - accept
+2021-08-20 10:48:55 web          INFO     WS - send message
+2021-08-20 10:48:58 web          INFO     WS - send message
+2021-08-20 10:48:59 web          INFO     WS - send message
+2021-08-20 10:49:00 web          INFO     WS - disconnected
+2021-08-20 10:49:02 web          INFO     WS - connect
+2021-08-20 10:49:02 web          INFO     WS - connect - accept
+2021-08-20 10:49:02 web          INFO     WS - send message
+2021-08-20 10:49:02 web          INFO     WS - send message
+2021-08-20 10:49:07 web          INFO     WS - send message
+2021-08-20 10:49:07 web          INFO     WS - send message
+2021-08-20 10:49:09 web          INFO     WS - disconnected
+2021-08-20 10:49:09 web          INFO     WS - connect
+2021-08-20 10:49:10 web          INFO     WS - connect - accept
+2021-08-20 10:49:24 web          INFO     WS - send message
+2021-08-20 10:49:33 web          INFO     WS - send message
+2021-08-20 10:51:20 web          INFO     WS - send message
+2021-08-20 10:51:23 web          INFO     WS - send message
+2021-08-20 10:51:24 web          INFO     WS - send message
+2021-08-20 10:51:24 web          INFO     WS - send message
+2021-08-20 10:51:55 web          INFO     WS - send message
+2021-08-20 10:56:19 web          INFO     WS - send message
+2021-08-20 10:56:19 web          INFO     WS - send message
+2021-08-20 10:56:45 web          INFO     WS - send message
+2021-08-20 10:56:46 web          INFO     WS - send message
+2021-08-20 10:57:32 web          INFO     WS - disconnected
+2021-08-20 10:57:32 web          INFO     WS - connect
+2021-08-20 10:57:32 web          INFO     WS - connect - accept
+2021-08-20 10:57:44 web          INFO     WS - disconnected
+2021-08-20 10:57:46 web          INFO     WS - connect
+2021-08-20 10:57:46 web          INFO     WS - connect - accept
+2021-08-20 10:57:52 web          INFO     WS - disconnected
+2021-08-20 10:57:52 web          INFO     WS - connect
+2021-08-20 10:57:52 web          INFO     WS - connect - accept
+2021-08-20 10:58:28 web          INFO     WS - send message
+2021-08-20 10:58:42 web          INFO     WS - send message
+2021-08-20 10:59:01 web          INFO     WS - send message
+2021-08-20 10:59:04 web          INFO     WS - send message
+2021-08-20 10:59:19 web          INFO     WS - send message
+2021-08-20 10:59:19 web          INFO     WS - send message
+2021-08-20 10:59:31 web          INFO     WS - send message
+2021-08-20 10:59:55 web          INFO     WS - send message
+2021-08-20 11:00:14 web          INFO     WS - send message
+2021-08-20 11:00:35 web          INFO     WS - send message
+2021-08-20 11:00:47 web          INFO     WS - send message
+2021-08-20 11:00:58 web          INFO     WS - send message
+2021-08-20 11:01:07 web          INFO     WS - send message
+2021-08-20 11:01:13 web          INFO     WS - send message
+2021-08-20 11:01:46 web          INFO     WS - send message
+2021-08-20 11:01:52 web          INFO     WS - send message
+2021-08-20 11:02:00 web          INFO     WS - send message
+2021-08-20 11:02:17 web          INFO     WS - send message
+2021-08-20 11:02:17 web          INFO     WS - send message
+2021-08-20 11:02:32 web          INFO     WS - send message
+2021-08-20 11:03:16 web          INFO     WS - send message
+2021-08-20 11:03:17 web          INFO     WS - send message
+2021-08-20 11:03:17 web          INFO     WS - send message
+2021-08-20 11:03:17 web          INFO     WS - send message
+2021-08-20 11:05:30 web          INFO     WS - send message
+2021-08-20 11:07:03 web          INFO     WS - send message
+2021-08-20 11:07:03 web          INFO     WS - send message
+2021-08-20 11:09:45 web          INFO     WS - send message
+2021-08-20 11:13:55 web          INFO     WS - disconnected
+2021-08-20 11:13:57 web          INFO     WS - connect
+2021-08-20 11:13:57 web          INFO     WS - connect - accept
+2021-08-20 11:14:08 web          INFO     WS - disconnected
+2021-08-20 11:14:08 web          INFO     WS - connect
+2021-08-20 11:14:08 web          INFO     WS - connect - accept
+2021-08-20 11:14:22 web          INFO     WS - disconnected
+2021-08-20 11:14:22 web          INFO     WS - connect
+2021-08-20 11:14:23 web          INFO     WS - connect - accept
+2021-08-20 11:14:31 web          INFO     WS - send message
+2021-08-20 11:15:05 web          INFO     WS - send message
+2021-08-20 11:18:37 web          INFO     WS - send message
+2021-08-20 11:18:37 web          INFO     WS - send message
+2021-08-20 11:18:42 web          INFO     WS - send message
+2021-08-20 11:18:44 web          INFO     WS - send message
+2021-08-20 11:20:11 web          INFO     WS - send message
+2021-08-20 11:20:16 web          INFO     WS - send message
+2021-08-20 11:20:17 web          INFO     WS - send message
+2021-08-20 11:26:48 web          INFO     WS - send message
+2021-08-20 11:26:48 web          INFO     WS - send message
+2021-08-20 11:26:48 web          INFO     WS - send message
+2021-08-20 11:26:48 web          INFO     WS - send message
+2021-08-20 11:26:48 web          INFO     WS - send message
+2021-08-20 11:38:59 web          INFO     WS - send message
+2021-08-20 11:39:05 web          INFO     WS - send message
+2021-08-20 11:39:05 web          INFO     Log reader cleaned up for 16
+2021-08-20 11:39:05 web          INFO     WS - send message
+2021-08-20 11:39:07 web          INFO     Success: cd /app/emba/ && ./emba.sh -f /app/embark/uploadedFirmwareImages/active_16/DIR300B5_FW214WWB01.bin -l /app/emba/emba_logs/16  -X 1.04b04 -Y D-Link -Z DIR-300 -g -s -z -W -E -F -t -r
+2021-08-20 11:39:07 web          INFO     Reading report from:
+2021-08-20 11:39:07 web          INFO     {'Firmware_vendor': 'D-Link', 'Firmware_version': '1.04b04', 'Device': 'DIR-300', 'FW_path': '/app/emba/emba_logs/16/firmware', 'emba_command': './emba.sh -f /app/embark/uploadedFirmwareImages/active_16/DIR300B5_FW214WWB01.bin -l /app/emba/emba_logs/16 -X 1.04b04 -Y D-Link -Z DIR-300 -g -s -z -W -E -F -t -r', 'architecture_verified': 'MIPS', 'os_verified': 'Linux / v2.6.33.2', 'files': '1091', 'directories': '91', 'entropy_value': ' 7.989077 bits per byte.', 'shell_scripts': '78', 'shell_script_vulns': '182', 'yara_rules_match': '60', 'kernel_modules': '3', 'kernel_modules_lic': '0', 'interesting_files': '0', 'post_files': '1', 'canary': '95', 'canary_per': '100', 'relro': '91', 'relro_per': '96', 'nx': '95', 'nx_per': '100', 'pie': '45', 'pie_per': '47', 'stripped': '51', 'stripped_per': '54', 'bins_checked': '95', 'strcpy': '266', 'strcpy_bin': {'igmpproxy': '37', 'dnsmasq': '28', 'updatewifistats': '21', 'iwconfig': '21', 'cgibin': '16', 'httpd': '13', 'libip6tc.so.0.0.0': '12', 'libip4tc.so.0.0.0': '12', 'pppd': '9', 'servd': '7'}, 'versions_identified': '22', 'cve_high': '413', 'cve_medium': '848', 'cve_low': '334', 'exploits': '148', 'metasploit_modules': '23'}
+2021-08-20 11:39:07 web          INFO     Successful cleaned up: cd /app/emba/ && ./emba.sh -f /app/embark/uploadedFirmwareImages/active_16/DIR300B5_FW214WWB01.bin -l /app/emba/emba_logs/16  -X 1.04b04 -Y D-Link -Z DIR-300 -g -s -z -W -E -F -t -r
+2021-08-20 11:39:18 web          INFO     WS - send message
+2021-08-20 11:39:22 web          INFO     WS - send message
+2021-08-20 11:39:22 web          INFO     Log reader cleaned up for 17
+2021-08-20 11:39:22 web          INFO     WS - send message
+2021-08-20 11:39:23 web          INFO     Success: cd /app/emba/ && ./emba.sh -f /app/embark/uploadedFirmwareImages/active_17/WNR2000v4-V1.0.0.30.img -l /app/emba/emba_logs/17  -X v1.0.0.30 -Y Netgear -Z WNR2000v4 -g -s -z -W -E -F -t -r
+2021-08-20 11:39:23 web          INFO     Reading report from:
+2021-08-20 11:39:23 web          INFO     {'Firmware_vendor': 'Netgear', 'Firmware_version': 'v1.0.0.30', 'Device': 'WNR2000v4', 'FW_path': '/app/emba/emba_logs/17/firmware', 'emba_command': './emba.sh -f /app/embark/uploadedFirmwareImages/active_17/WNR2000v4-V1.0.0.30.img -l /app/emba/emba_logs/17 -X v1.0.0.30 -Y Netgear -Z WNR2000v4 -g -s -z -W -E -F -t -r', 'architecture_verified': 'MIPS', 'os_verified': 'Linux / v2.6.31', 'files': '850', 'directories': '76', 'entropy_value': ' 7.976434 bits per byte.', 'shell_scripts': '15', 'shell_script_vulns': '142', 'yara_rules_match': '18', 'kernel_modules': '42', 'kernel_modules_lic': '5', 'interesting_files': '0', 'post_files': '1', 'canary': '124', 'canary_per': '100', 'relro': '120', 'relro_per': '97', 'nx': '124', 'nx_per': '100', 'pie': '57', 'pie_per': '46', 'stripped': '82', 'stripped_per': '66', 'bins_checked': '124', 'versions_identified': '18', 'cve_high': '439', 'cve_medium': '839', 'cve_low': '332', 'exploits': '159', 'metasploit_modules': '19'}
+2021-08-20 11:39:23 web          INFO     Successful cleaned up: cd /app/emba/ && ./emba.sh -f /app/embark/uploadedFirmwareImages/active_17/WNR2000v4-V1.0.0.30.img -l /app/emba/emba_logs/17  -X v1.0.0.30 -Y Netgear -Z WNR2000v4 -g -s -z -W -E -F -t -r
+2021-08-20 11:39:49 web          INFO     WS - send message
+2021-08-20 11:39:55 web          INFO     WS - send message
+2021-08-20 11:39:55 web          INFO     Log reader cleaned up for 18
+2021-08-20 11:39:55 web          INFO     WS - send message
+2021-08-20 11:39:57 web          INFO     Success: cd /app/emba/ && ./emba.sh -f /app/embark/uploadedFirmwareImages/active_18/ArcherC7v2_en_3_14_2_up_boot.bin -l /app/emba/emba_logs/18  -X 3.14.2 -Y Netgear -Z ArcherC7v2 -g -s -z -W -E -F -t -r
+2021-08-20 11:39:57 web          INFO     Reading report from:
+2021-08-20 11:39:57 web          INFO     {'Firmware_vendor': 'Netgear', 'Firmware_version': '3.14.2', 'Device': 'ArcherC7v2', 'FW_path': '/app/emba/emba_logs/18/firmware', 'emba_command': './emba.sh -f /app/embark/uploadedFirmwareImages/active_18/ArcherC7v2_en_3_14_2_up_boot.bin -l /app/emba/emba_logs/18 -X 3.14.2 -Y Netgear -Z ArcherC7v2 -g -s -z -W -E -F -t -r', 'architecture_verified': 'MIPS', 'os_verified': 'Linux / v2.6.31', 'files': '510', 'directories': '46', 'entropy_value': ' 5.567590 bits per byte.', 'yara_rules_match': '27', 'weak_perm_count': '3', 'password_hashes': '1', 'kernel_modules': '88', 'kernel_modules_lic': '6', 'interesting_files': '0', 'post_files': '3', 'canary': '223', 'canary_per': '100', 'relro': '219', 'relro_per': '98', 'nx': '223', 'nx_per': '100', 'pie': '45', 'pie_per': '20', 'stripped': '58', 'stripped_per': '26', 'bins_checked': '223', 'strcpy': '777', 'strcpy_bin': {'httpd': '466', 'uclited': '74', 'busybox': '36', 'libiw.so.29': '24', 'radartool': '21', 'dnsproxy': '13', 'pppd': '11', 'minidlnad': '11', 'xl2tpd': '10', 'ntfs-3g': '7'}, 'versions_identified': '15', 'cve_high': '449', 'cve_medium': '911', 'cve_low': '344', 'exploits': '165', 'metasploit_modules': '32'}
+2021-08-20 11:39:57 web          INFO     Successful cleaned up: cd /app/emba/ && ./emba.sh -f /app/embark/uploadedFirmwareImages/active_18/ArcherC7v2_en_3_14_2_up_boot.bin -l /app/emba/emba_logs/18  -X 3.14.2 -Y Netgear -Z ArcherC7v2 -g -s -z -W -E -F -t -r
+2021-08-20 15:26:21 web          INFO     WS - disconnected
+2021-08-20 15:26:22 web          INFO     WS - connect
+2021-08-20 15:26:22 web          INFO     WS - connect - accept
+2021-08-20 15:26:25 web          INFO     WS - disconnected
+2021-08-20 15:26:25 web          INFO     WS - connect
+2021-08-20 15:26:25 web          INFO     WS - connect - accept
+2021-08-20 15:27:14 web          INFO     WS - disconnected
+2021-08-20 15:27:14 web          INFO     WS - connect
+2021-08-20 15:27:14 web          INFO     WS - connect - accept
+2021-08-20 15:27:18 web          INFO     WS - disconnected
+2021-08-20 15:27:18 web          INFO     WS - connect
+2021-08-20 15:27:18 web          INFO     WS - connect - accept
+2021-08-20 15:27:27 web          INFO     WS - disconnected
+2021-08-20 15:27:27 web          INFO     WS - connect
+2021-08-20 15:27:27 web          INFO     WS - connect - accept
+2021-08-20 18:25:02 web          INFO     Added job 'resource_tracker'.
+2021-08-20 18:25:02 web          INFO     Added weekly job: 'delete_old_job_executions'.
+2021-08-20 18:25:02 web          INFO     Starting scheduler for tracking...
+2021-08-20 18:25:06 web          INFO     WS - connect
+2021-08-20 18:25:06 web          INFO     WS - connect - accept
+2021-08-20 18:25:10 web          INFO     WS - disconnected
+2021-08-20 18:25:10 web          INFO     WS - connect
+2021-08-20 18:25:10 web          INFO     WS - connect - accept
+2021-08-20 18:25:14 web          INFO     WS - disconnected
+2021-08-20 18:25:14 web          INFO     WS - connect
+2021-08-20 18:25:14 web          INFO     WS - connect - accept
+2021-08-20 18:25:18 web          INFO     WS - disconnected
+2021-08-20 18:25:18 web          INFO     WS - connect
+2021-08-20 18:25:18 web          INFO     WS - connect - accept
+2021-08-20 18:26:45 web          INFO     WS - disconnected
+2021-08-20 18:26:46 web          INFO     WS - connect
+2021-08-20 18:26:46 web          INFO     WS - connect - accept
+2021-08-20 18:26:50 web          INFO     WS - disconnected
+2021-08-20 18:26:50 web          INFO     Posted Form is valid
+2021-08-20 18:26:50 web          INFO     9 - Simatic_RF650R_Firmware_Dump
+2021-08-20 18:26:50 web          INFO     Starting: cd /app/emba/ && ./emba.sh -f /app/embark/uploadedFirmwareImages/active_19/Simatic_RF650R_Firmware_Dump -l /app/emba/emba_logs/19  -g -s -z -W -E -F -t -r
+2021-08-20 18:26:51 web          INFO     WS - connect
+2021-08-20 18:26:51 web          INFO     WS - connect - accept
+2021-08-20 18:26:52 web          INFO     read loop started for 19
+2021-08-20 18:27:10 web          INFO     WS - send message
+2021-08-20 18:27:12 web          INFO     WS - send message
+2021-08-20 18:27:12 web          INFO     WS - send message
+2021-08-20 18:27:12 web          INFO     WS - send message
+2021-08-20 18:27:40 web          INFO     WS - send message
+2021-08-20 18:28:10 web          INFO     WS - send message
+2021-08-20 18:28:10 web          INFO     WS - send message
+2021-08-20 18:28:14 web          INFO     WS - send message
+2021-08-20 18:28:15 web          INFO     WS - send message
+2021-08-20 18:28:21 web          INFO     WS - send message
+2021-08-20 18:28:22 web          INFO     WS - send message
+2021-08-20 18:28:25 web          INFO     WS - send message
+2021-08-20 18:28:27 web          INFO     WS - send message
+2021-08-20 18:28:31 web          INFO     WS - send message
+2021-08-20 18:28:33 web          INFO     WS - send message
+2021-08-20 18:28:46 web          INFO     WS - send message
+2021-08-20 18:28:57 web          INFO     WS - send message
