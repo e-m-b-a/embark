@@ -58,7 +58,7 @@ class WSConsumer(WebsocketConsumer):
     def send_message(self, event):
         # Receive message and extract data from room group
         message = event['message']
-        #logger.info(f"WS - send message: " + str(message))
+        # logger.info(f"WS - send message: " + str(message))
         logger.info(f"WS - send message")
         # Send message to WebSocket
         self.send(json.dumps(message, sort_keys=False))
