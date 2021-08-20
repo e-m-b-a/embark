@@ -7,7 +7,7 @@ var canarypie = document.getElementById('canarypie').getContext('2d');
 var strippedpie = document.getElementById('strippedpie').getContext('2d');
 
 let report_id = window.location.pathname.split("/").pop();
-let entropy_url = "/emba_logs/12345/html-report/style/firmware_entropy.png".replace(/12345/,report_id);
+let entropy_url = "/emba_logs/REPORT_ID_REPLACE/html-report/style/firmware_entropy.png".replace(/REPORT_ID_REPLACE/,report_id);
 document.getElementById("entropy").src = entropy_url;
 
 /**
