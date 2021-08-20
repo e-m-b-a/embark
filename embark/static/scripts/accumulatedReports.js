@@ -552,7 +552,7 @@ get_accumulated_reports().then(function (returnData) {
             data: {
                 labels: topEntropyLabels,
                 datasets: [{
-                    label: 'Firmwares with top entropies',
+                    label: 'Firmware entropie values',
                     labels: topEntropyLabels,
                     data: topEntropyValues,
                     borderWidth: 1,
@@ -565,7 +565,7 @@ get_accumulated_reports().then(function (returnData) {
                 plugins: {
                     title: {
                         display: true,
-                        text: 'Firmwares with top entropies',
+                        text: 'Firmware entropie values',
                         position: 'top',
                         color: 666,
                         padding: {

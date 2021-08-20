@@ -1,5 +1,4 @@
 FROM kalilinux/kali-rolling
-#FROM ubuntu:20.10
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DJANGO_SETTINGS_MODULE=embark.settings
@@ -14,8 +13,6 @@ RUN apt-get update && \
     sudo apt-get install -y build-essential && \
     sudo apt-get install -y python3-dev && \
     sudo apt-get install -y libssl-dev && \
-#    sudo apt-get install -y net-tools && \
-#    sudo apt-get install -y python3-pip && \
     sudo apt-get install -y swig
 
 ADD . /app

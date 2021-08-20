@@ -29,6 +29,7 @@ class WSConsumer(WebsocketConsumer):
 
     # this method is executed when the connection to the frontend is established
     def connect(self):
+        logger.info(f"WS - connect")
         # create room group for channels communication
         async_to_sync(self.channel_layer.group_add)(
             self.room_group_name,
@@ -36,15 +37,18 @@ class WSConsumer(WebsocketConsumer):
         )
         # accept socket connection
         self.accept()
+        logger.info(f"WS - connect - accept")
 
         # called when received data from frontend
         # TODO: implement this for processing client input at backend -> page refresh should be here
 
     def receive(self, text_data=None, bytes_data=None):
+        logger.info(f"WS - receive")
         pass
 
     # called when websocket connection is closed
     def disconnect(self, close_code):
+        logger.info(f"WS - disconnected")
         async_to_sync(self.channel_layer.group_discard)(
             self.room_group_name,
             self.channel_name
@@ -54,5 +58,7 @@ class WSConsumer(WebsocketConsumer):
     def send_message(self, event):
         # Receive message and extract data from room group
         message = event['message']
+        #logger.info(f"WS - send message: " + str(message))
+        logger.info(f"WS - send message")
         # Send message to WebSocket
         self.send(json.dumps(message, sort_keys=False))
