@@ -85,7 +85,9 @@ pytester(){
 
 pylinter(){
   echo -e "[*] Searching python files and test with pylint (under construction)"
-  pylint --max-line-length=240 embark/*
+  echo -e "[*] Do not forget to install the pylint-django plugin (e.g. apt-get install python3-pylint-django)" 
+  pylint --max-line-length=240 --load-plugins pylint_django embark/*
+  # current rating: 6.93/10
   # current rating: 5.58/10
 }
 
@@ -93,6 +95,4 @@ shellchecker
 pycodestyle_check
 pytester
 pylinter
-
-
 
