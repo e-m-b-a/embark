@@ -99,16 +99,15 @@ function get_load() {
                 cpu: data.cpu_percentage,
                 mem: data.memory_percentage
             }
-        })    
+        })
     } catch (error) {
-        // console.log(error.message);
+        console.log(error.message);
     }
-    
 }
 
 /**
  * Validates the Login
- * @returns  HTTP Response 
+ * @returns HTTP Response
  */
 function check_login() {
     let url = window.location.origin + "/check_login/";

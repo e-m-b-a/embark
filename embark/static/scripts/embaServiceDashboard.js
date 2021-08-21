@@ -14,14 +14,14 @@ var cur_len = 0
 
 /**
  * called when a websocket connection is established
- * */ 
+ * */
 socket.onopen = function (e) {
     console.log("[open] Connection established");
 };
 
-/** 
+/**
  * This method is called whenever a message from the backend arrives
- * */ 
+ * */
 socket.onmessage = function (event) {
 
     try{
@@ -54,23 +54,25 @@ socket.onmessage = function (event) {
             }
     }
     catch(error){
-        // console.log(error.message);
+        //console.log(error.message);
+        console.log(error);
     }
 }
 
 /**
  * This method is called when the websocket connection is closed
- *  */ 
+ *  */
 socket.onclose = function (event) {
-    console.log(event.reason)
-    console.error('Chat socket closed unexpectedly');
+    //console.log(event.reason)
+    console.error('Chat socket closed unexpectedly', event);
 };
 
 /**
- * this method is called when a error occurs
- *  */ 
+ * this method is called when an error occurs
+ *  */
 socket.onerror = function (err) {
-    console.error('Socket encountered error: ', err.message, 'Closing socket');
+    //console.error('Socket encountered error: ', err.message, 'Closing socket');
+    console.error('Socket encountered error: ', err);
     socket.close();
 };
 
@@ -121,18 +123,17 @@ function livelog_module(module, cur_ID) {
     $List.append($entry);
 }
 
-
 /**
  * Removes the container from the UI
  * @param {*} currentID Id of the contaniner which is passed backend to pull information
  */
 function cancelLog(currentID) {
 
-
     try {
         var idOfDIV = "#Container_" + currentID;
         $(idOfDIV).remove();
     } catch (error) {
-        // console.log(error.message);
+        //console.log(error.message);
+        console.log(error);
     }
 }

@@ -131,11 +131,12 @@ class BoundedExecutor:
         # unpack firmware file to </app/embark/uploadedFirmwareImages/active_{ID}/>
         active_analyzer_dir = f"/app/embark/{settings.MEDIA_ROOT}/active_{firmware_flags.id}/"
 
-        if firmware_file.is_archive:
-            Archiver.unpack(firmware_file.file.path, active_analyzer_dir)
-            # TODO: maybe descent in directory structure
-        else:
-            Archiver.copy(firmware_file.file.path, active_analyzer_dir)
+        # we do not extract anything in embark -> emba should be able to handle all the cases with deep extraction
+        # if firmware_file.is_archive:
+        #    Archiver.unpack(firmware_file.file.path, active_analyzer_dir)
+        #    # TODO: maybe descent in directory structure
+        # else:
+        Archiver.copy(firmware_file.file.path, active_analyzer_dir)
 
         # find emba start_file
         emba_startfile = os.listdir(active_analyzer_dir)
@@ -228,7 +229,8 @@ class BoundedExecutor:
 
         entropy_value = res_dict.get("entropy_value", 0)
         if type(entropy_value) is str:
-            entropy_value = re.findall(r'(\d+\.?\d*)', ' 7.55 bits per byte.')[0]
+            # entropy_value = re.findall(r'(\d+\.?\d*)', ' 7.55 bits per byte.')[0]
+            entropy_value = re.findall(r'(\d+\.?\d*)', entropy_value)[0]
             entropy_value = entropy_value.strip('.')
 
         res = Result(
@@ -264,6 +266,9 @@ class BoundedExecutor:
             cve_medium=int(res_dict.get("cve_medium", 0)),
             cve_low=int(res_dict.get("cve_low", 0)),
             exploits=int(res_dict.get("exploits", 0)),
+            metasploit_modules=int(res_dict.get("metasploit_modules", 0)),
+            certificates=int(res_dict.get("certificates", 0)),
+            certificates_outdated=int(res_dict.get("certificates_outdated", 0)),
         )
         res.save()
         return res

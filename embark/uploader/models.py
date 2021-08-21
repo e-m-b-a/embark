@@ -146,9 +146,9 @@ class Firmware(models.Model):
         help_text='Architecture of the linux firmware [MIPS, ARM, x86, x64, PPC] -a will be added',
         max_length=MAX_LENGTH, blank=True, expert_mode=True)
     cwe_checker = BooleanFieldExpertMode(
-        help_text='Enables cwe-checker,-c will be added', default=False, expert_mode=True, blank=True)
+        help_text='Enables cwe-checker,-c will be added (docker mode currently not supported)', default=False, expert_mode=True, blank=True)
     docker_container = BooleanFieldExpertMode(
-        help_text='Run emba in docker container, -D will be added', default=True, expert_mode=True, blank=True,
+        help_text='Run emba in docker container, -D will be added (currently not supported)', default=True, expert_mode=True, blank=True,
         readonly=True)
     deep_extraction = BooleanFieldExpertMode(
         help_text='Enable deep extraction, -x will be added', default=False, expert_mode=True, blank=True)
@@ -165,13 +165,16 @@ class Firmware(models.Model):
         help_text='Activates web report creation in log path, -W will be added', default=True, expert_mode=True,
         blank=True)
     emulation_test = BooleanFieldExpertMode(
-        help_text='Enables automated qemu emulation tests, -E will be added', default=False, expert_mode=True,
+        help_text='Enables automated qemu emulation tests, -E will be added', default=True, expert_mode=True,
         blank=True)
     dependency_check = BooleanFieldExpertMode(
         help_text=' Checks dependencies but ignore errors, -F will be added', default=True, expert_mode=True,
         blank=True)
     multi_threaded = BooleanFieldExpertMode(
         help_text='Activate multi threading (destroys regular console output), -t will be added', default=True,
+        expert_mode=True, blank=True)
+    firmware_remove = BooleanFieldExpertMode(
+        help_text='Remove extracted firmware file/directory after testint, -r will be added', default=True,
         expert_mode=True, blank=True)
 
     # embark meta data
@@ -238,6 +241,8 @@ class Firmware(models.Model):
             command = command + " -F"
         if self.multi_threaded:
             command = command + " -t"
+        if self.firmware_remove:
+            command = command + " -r"
         # running emba
         return command
 
@@ -252,6 +257,8 @@ class Result(models.Model):
     files = models.IntegerField(default=0, help_text='')
     directories = models.IntegerField(default=0, help_text='')
     entropy_value = models.FloatField(default=0.0, help_text='')
+    certificates = models.IntegerField(default=0, help_text='')
+    certificates_outdated = models.IntegerField(default=0, help_text='')
     shell_scripts = models.IntegerField(default=0, help_text='')
     shell_script_vulns = models.IntegerField(default=0, help_text='')
     yara_rules_match = models.IntegerField(default=0, help_text='')
@@ -275,6 +282,7 @@ class Result(models.Model):
     cve_medium = models.IntegerField(default=0, help_text='')
     cve_low = models.IntegerField(default=0, help_text='')
     exploits = models.IntegerField(default=0, help_text='')
+    metasploit_modules = models.IntegerField(default=0, help_text='')
     bins_checked = models.IntegerField(default=0, help_text='')
     strcpy_bin = models.TextField(default='{}')
 

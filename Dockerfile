@@ -19,15 +19,14 @@ ADD . /app
 
 WORKDIR /app/embark
 
-
 ADD embark/requirements.txt /app/embark/requirements.txt
 
-RUN yes | sudo /app/emba/installer.sh -D -F  && \
+RUN yes | sudo /app/emba/installer.sh -D  && \
     sudo pip3 install uwsgi -I --no-cache-dir && \
     pip3 install --user --no-warn-script-location -r /app/embark/requirements.txt
 
-# 8000 for http workers. 8001 for ws workers
-EXPOSE 8000
+# 80 for http workers. 8001 for ws workers
+EXPOSE 80
 # Opening on extra port for our ASGI setup
 EXPOSE 8001
 

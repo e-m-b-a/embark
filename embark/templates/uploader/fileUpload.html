@@ -6,8 +6,8 @@
     <div class="col-sm">
         <div class="row uploadIconRow">
             <div id="fileDropDiv" class="fileDrop" ondrop="showFiles(event.dataTransfer.items)" ondragover="dragOverHandler(event)" onchange="showFiles(this.lastElementChild.files)">
-                <p align="center" class="mainText">Upload a firmware image or archive</p>
-                <p align="center" class="subText">Supported archive types : zip,tar,tar.gz</p>
+                <p align="center" class="mainText">Upload a firmware image/archive</p>
+                <p align="center" class="subText">Supported archive types : firmware binary and most archive types</p>
                 <label for="file-input" class="iconLabel">
                     <span class="uploadIcon"><i class="fas fa-cloud-upload-alt fileuploadIcon fa-9x" aria-hidden="true"></i></span>
                     {% comment %} <img src="{% static 'content/images/fileUpload.jpg'%}"/> {% endcomment %}
@@ -27,7 +27,7 @@
 
         <div class="row deleteIconRow">
             <div id="fileDelDiv">
-                <p align="center" class="mainText">Select and Delete a firmware image or archive</p>
+                <p align="center" class="mainText">Select and Delete a firmware image/archive</p>
                 <form action="/home/delete/" method="POST" id="delete-form" onsubmit="window.confirmDelete(event)">
 
                     {% csrf_token %}
@@ -109,7 +109,7 @@
                             </label>
                         </div>
 
-                        <div class="col-sm-7 togLbl">
+                        <!-- <div class="col-sm-7 togLbl">
                             <label for="helpText">Display Help</label>
                         </div>
                         <div class="col-sm-5 togSwitch">
@@ -117,7 +117,7 @@
                                 <input id="helpTextSwitch" type="checkbox" onclick="helpTextOn()">
                                 <span class="slider round"></span>
                             </label>
-                        </div>
+                        </div> -->
 
                     </div>
                 </div>

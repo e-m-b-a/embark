@@ -6,6 +6,27 @@ var relropie = document.getElementById('relropie').getContext('2d');
 var canarypie = document.getElementById('canarypie').getContext('2d');
 var strippedpie = document.getElementById('strippedpie').getContext('2d');
 
+let report_id = window.location.pathname.split("/").pop();
+let entropy_url = "/emba_logs/REPORT_ID_REPLACE/html-report/style/firmware_entropy.png".replace(/REPORT_ID_REPLACE/,report_id);
+document.getElementById("entropy").src = entropy_url;
+
+/**
+ * get the id of the current report -> we use this for the buttons and the entropy graph
+ */
+function get_report_url() {
+  let report_id = window.location.pathname.split("/").pop();
+  let report_url = "/emba_logs/REPORT_ID_REPLACE/html-report/index.html".replace(/REPORT_ID_REPLACE/,report_id);
+  window.location.href = report_url;
+  console.log(report_url);
+}
+
+function get_dl_report_url() {
+  let report_id = window.location.pathname.split("/").pop();
+  let report_url = "/download_zipped/REPORT_ID_REPLACE".replace(/REPORT_ID_REPLACE/,report_id);
+  window.location.href = report_url;
+  console.log(report_url);
+}
+
 /**
  * Generates Reports after you complete receiving the data for Individual Fimware
  */
@@ -69,36 +90,52 @@ get_individual_report().then(function (returnData) {
         }
     });
 
-    make_chart(relropie, 'Binaries with RELRO', 'Binaries without RELRO',
+    make_chart(relropie, 'Binaries without RELRO', 'Binaries with RELRO',
         '#493791', '#291771', returnData.bins_checked, returnData.relro, 'RELRO')
-    make_chart(nxpie, 'Binaries with NX', 'Binaries without NX',
+    make_chart(nxpie, 'Binaries without NX', 'Binaries with NX',
         '#1b1534', '#000014', returnData.bins_checked, returnData.nx, 'NX')
-    make_chart(piepie, 'Binaries with PIE', 'Binaries without PIE',
+    make_chart(piepie, 'Binaries without PIE', 'Binaries with PIE',
         '#7b919d', '#5b717d', returnData.bins_checked, returnData.pie, 'PIE')
-    make_chart(canarypie, 'Binaries with CANARY', 'Binaries without CANARY',
+    make_chart(canarypie, 'Binaries without CANARY', 'Binaries with CANARY',
         '#525d63', '#323d43', returnData.bins_checked, returnData.canary, 'CANARY')
-    make_chart(strippedpie, 'Binaries with Stripped', 'Binaries without Stripped',
+    make_chart(strippedpie, 'Stripped binaries', 'Unstripped binaries',
         '#009999', '#005050', returnData.bins_checked, returnData.stripped, 'Stripped')
 
     let data_to_display = {
-        "firmware name": returnData.name,
-        "start date": returnData.start_date.replace('T', ' - '),
-        "end date": returnData.end_date.replace('T', ' - '),
-        "architecture verified": returnData.architecture_verified,
-        "vendor": returnData.vendor,
-        "version": returnData.version,
-        "notes": returnData.notes,
-        "files": returnData.files,
-        "directories": returnData.directories,
-        "bins checked": returnData.bins_checked,
-        "exploits": returnData.exploits,
-        "entropy_value": returnData.entropy_value,
-        "path to logs": returnData.path_to_logs,
-        "emba command": "./emba.sh -f /app/embark/uploadedFirmwareImages/active_2/170.pdf -l /app/emba/emba_logs/2  -g -s -z -W -F -t",
+        "Firmware name": returnData.name.replace(/\d\//,""),
+        "Firmware ID": returnData.name.replace(/\/.*$/,""),
+        "Start date": returnData.start_date.replace('T', ' - '),
+        "End date": returnData.end_date.replace('T', ' - '),
+        "Vendor": returnData.vendor,
+        "Version": returnData.version,
+        "Notes": returnData.notes,
+        "Operating sytem detected": returnData.os_verified,
+        "Architecture detected": returnData.architecture_verified,
+        "Entropy value": returnData.entropy_value,
+        "Path to logs": returnData.path_to_logs.replace(/\/app\/emba/,""),
+        "EMBA command": "TODO",
+        "Files detected": returnData.files,
+        "Directories detected": returnData.directories,
+        "Certificates detected": returnData.certificates,
+        "Outdated certificates detected": returnData.certificates_outdated,
+        "Shell scripts detected": returnData.shell_scripts,
+        "Shell script issues": returnData.shell_script_vulns,
+        "Binaries checked": returnData.bins_checked,
+        "Versions identified": returnData.versions_identified,
+        "Exploits identified": returnData.exploits,
+        "Metasploit modules": returnData.metasploit_modules,
+        "High CVE": returnData.cve_high,
+        "Medium CVE": returnData.cve_medium,
+        "Low CVE": returnData.cve_low,
+        "NX disabled binaries": returnData.nx,
+        "RELRO disabled binaries": returnData.relro,
+        "PIE disabled binaries": returnData.pie,
+        "Stack canaries disabled binaries": returnData.canary,
+        "Stripped binaries": returnData.stripped,
     }
 
     for (const [key, value] of Object.entries(returnData.strcpy_bin)) {
-        data_to_display["strcpy bin: " + key] = value
+        data_to_display["STRCPY binary: " + key] = value
     }
 
     const table = document.getElementById("detail_body");
@@ -125,14 +162,14 @@ function get_individual_report() {
 }
 
 /**
- * Develops Chart 
+ * Develops Chart
  * @param {*} html_chart Type of Chart
  * @param {*} label_1 Labels
  * @param {*} label_2 Labels
  * @param {*} color_1 Colors
  * @param {*} color_2 Colors
  * @param {*} data_cmp Data to be plotted
- * @param {*} data_strcpy 
+ * @param {*} data_strcpy
  * @param {*} title Title of The chart
  */
 function make_chart(html_chart, label_1, label_2, color_1, color_2, data_cmp, data_strcpy, title) {
@@ -182,7 +219,6 @@ function make_chart(html_chart, label_1, label_2, color_1, color_2, data_cmp, da
                     enabled: true
                 }
             }
-
         }
     });
 }

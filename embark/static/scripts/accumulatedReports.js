@@ -38,7 +38,7 @@ function getRandomColors(num) {
             }
             return colors;    
     } catch (error) {
-        // console.log(error.message);
+        console.log(error.message);
         location.reload();
     }
     
@@ -121,12 +121,12 @@ get_accumulated_reports().then(function (returnData) {
         type: 'pie',
         data: {
             labels: [
-                'Binaries with NX',
                 'Binaries without NX',
+                'Binaries with NX',
             ],
             datasets: [{
                 labels: ['binaries with NX', 'binaries without NX'],
-                data: [returnData.nx['mean'], (returnData.bins_checked['mean'] - returnData.nx['mean'])],
+                data: [returnData.nx['sum'], (returnData.bins_checked['sum'] - returnData.nx['sum'])],
                 backgroundColor: ['#493791', '#291771'],
             }, ],
         },
@@ -136,7 +136,7 @@ get_accumulated_reports().then(function (returnData) {
             plugins: {
                 title: {
                     display: true,
-                    text: 'NX',
+                    text: 'No eXecute',
                     position: 'top',
                     color: 666,
                     padding: {
@@ -173,12 +173,12 @@ get_accumulated_reports().then(function (returnData) {
         type: 'pie',
         data: {
             labels: [
-                'Binaries with PIE',
-                'Binaries without PIE',
+                'Not PIE binaries',
+                'PIE enabled binaries',
             ],
             datasets: [{
                 labels: ['binaries with PIE', 'binaries without PIE'],
-                data: [returnData.pie['mean'], (returnData.bins_checked['mean'] - returnData.pie['mean'])],
+                data: [returnData.pie['sum'], (returnData.bins_checked['sum'] - returnData.pie['sum'])],
                 backgroundColor: ['#1b1534', '#000014'],
             }, ],
         },
@@ -188,7 +188,7 @@ get_accumulated_reports().then(function (returnData) {
             plugins: {
                 title: {
                     display: true,
-                    text: 'PIE',
+                    text: 'Position Independent (PIE)',
                     position: 'top',
                     color: 666,
                     padding: {
@@ -225,12 +225,12 @@ get_accumulated_reports().then(function (returnData) {
         type: 'pie',
         data: {
             labels: [
-                'Binaries with RELRO',
                 'Binaries without RELRO',
+                'Binaries with RELRO',
             ],
             datasets: [{
                 labels: ['binaries with RELRO', 'binaries without RELRO'],
-                data: [returnData.relro['mean'], (returnData.bins_checked['mean'] - returnData.relro['mean'])],
+                data: [returnData.relro['sum'], (returnData.bins_checked['sum'] - returnData.relro['sum'])],
                 backgroundColor: ['#7b919d', '#5b717d'],
             }, ],
         },
@@ -277,12 +277,12 @@ get_accumulated_reports().then(function (returnData) {
         type: 'pie',
         data: {
             labels: [
-                'Binaries with CANARY',
-                'Binaries without CANARY',
+                'Binaries without stack canaries',
+                'Binaries with stack canaries',
             ],
             datasets: [{
                 labels: ['binaries with CANARY', 'binaries without CANARY'],
-                data: [returnData.canary['mean'], (returnData.bins_checked['mean'] - returnData.canary['mean'])],
+                data: [returnData.canary['sum'], (returnData.bins_checked['sum'] - returnData.canary['sum'])],
                 backgroundColor: ['#525d63', '#323d43'],
             }, ],
         },
@@ -292,7 +292,7 @@ get_accumulated_reports().then(function (returnData) {
             plugins: {
                 title: {
                     display: true,
-                    text: 'CANARY',
+                    text: 'Stack canaries',
                     position: 'top',
                     color: 666,
                     padding: {
@@ -329,12 +329,12 @@ get_accumulated_reports().then(function (returnData) {
         type: 'pie',
         data: {
             labels: [
-                'Binaries with Stripped',
-                'Binaries without Stripped',
+                'Stripped binaries',
+                'Not stripped binaries',
             ],
             datasets: [{
                 labels: ['binaries with Stripped', 'binaries without Stripped'],
-                data: [returnData.stripped['mean'], (returnData.bins_checked['mean'] - returnData.stripped['mean'])],
+                data: [returnData.stripped['sum'], (returnData.bins_checked['sum'] - returnData.stripped['sum'])],
                 backgroundColor: ['#009999', '#005050'],
             }, ],
         },
@@ -344,7 +344,7 @@ get_accumulated_reports().then(function (returnData) {
             plugins: {
                 title: {
                     display: true,
-                    text: 'Stripped',
+                    text: 'Debugging information',
                     position: 'top',
                     color: 666,
                     padding: {
@@ -491,7 +491,7 @@ get_accumulated_reports().then(function (returnData) {
         data: {
             labels: topBinaryLabels,
             datasets: [{
-                label: 'Top strcpy Binaries',
+                label: 'Number of STRCPY used',
                 labels: topBinaryLabels,
                 data: topBinaryCounts,
                 borderWidth: 1,
@@ -504,7 +504,7 @@ get_accumulated_reports().then(function (returnData) {
             plugins: {
                 title: {
                     display: true,
-                    text: 'Top strcpy Binaries',
+                    text: 'Binaries with weak functions',
                     position: 'top',
                     color: 666,
                     padding: {
@@ -552,7 +552,7 @@ get_accumulated_reports().then(function (returnData) {
             data: {
                 labels: topEntropyLabels,
                 datasets: [{
-                    label: 'Firmwares with top entropies',
+                    label: 'Firmware entropie values',
                     labels: topEntropyLabels,
                     data: topEntropyValues,
                     borderWidth: 1,
@@ -565,7 +565,7 @@ get_accumulated_reports().then(function (returnData) {
                 plugins: {
                     title: {
                         display: true,
-                        text: 'Firmwares with top entropies',
+                        text: 'Firmware entropie values',
                         position: 'top',
                         color: 666,
                         padding: {
@@ -615,7 +615,7 @@ function get_accumulated_reports() {
         return data;
         })    
     } catch (error) {
-        // console.log(error.message);
+        console.log(error.message);
         location.reload();
     }
     

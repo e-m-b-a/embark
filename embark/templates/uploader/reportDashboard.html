@@ -21,7 +21,9 @@
                 <tr>
                     <th scope="col">ID</th>
                     <th scope="col">Name</th>
-                    <th scope="col">Architecture</th>
+                    <th scope="col">Vendor</th>
+                    <th scope="col">Device</th>
+                    <th scope="col">Version</th>
                     <th scope="col">Start Date</th>
                     <th scope="col">End Date</th>
                     <th scope="col">Actions</th>
@@ -31,9 +33,11 @@
                 <tbody>
                 {% for firmware in finished_firmwares %}
                     <tr>
-                        <td>{{ firmware.pk}}</td>
-                        <td>{{ firmware.firmware}}</td>
-                        <td>{{ firmware.firmware_Architecture }}</td>
+                        <td>{{ firmware.pk }}</td>
+                        <td>{{ firmware.firmware }}</td>
+                        <td>{{ firmware.vendor }}</td>
+                        <td>{{ firmware.device }}</td>
+                        <td>{{ firmware.version }}</td>
                         <td>{{ firmware.start_date }}</td>
                         <td>{{ firmware.end_date }}</td>
                         <td>
@@ -46,6 +50,9 @@
                                 </form>
                                 <form action={% url 'embark-IndividualReportDashboard' firmware.pk %} method='GET'>
                                     <button type="submit" class="btn" >Detail View</button>
+                                </form>
+                                <form action={% url 'embark-start-analysis' 1 %} method='GET'>
+                                    <button type="submit" class="btn" >Rescan/delete</button>
                                 </form>
                             </div>
                         </td>
