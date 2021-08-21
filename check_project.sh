@@ -84,8 +84,9 @@ pytester(){
 }
 
 pylinter(){
-  echo -e "[*] Searching python files and test with pylint (not supported)"
-  #pylint --max-line-length=240 embark/*
+  echo -e "[*] Searching python files and test with pylint (under construction)"
+  pylint --max-line-length=240 embark/*
+  # current rating: 5.58/10
 }
 
 shellchecker
