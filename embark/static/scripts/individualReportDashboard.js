@@ -15,14 +15,14 @@ document.getElementById("entropy").src = entropy_url;
  */
 function get_report_url() {
   let report_id = window.location.pathname.split("/").pop();
-  let report_url = "/emba_logs/12345/html-report/index.html".replace(/12345/,report_id);
+  let report_url = "/emba_logs/REPORT_ID_REPLACE/html-report/index.html".replace(/REPORT_ID_REPLACE/,report_id);
   window.location.href = report_url;
   console.log(report_url);
 }
 
 function get_dl_report_url() {
   let report_id = window.location.pathname.split("/").pop();
-  let report_url = "/download_zipped/12345".replace(/12345/,report_id);
+  let report_url = "/download_zipped/REPORT_ID_REPLACE".replace(/REPORT_ID_REPLACE/,report_id);
   window.location.href = report_url;
   console.log(report_url);
 }
