@@ -35,19 +35,19 @@ def signin(request):
                 logger.exception('Missing keys from data- Username and password')
                 return HttpResponse("User data is invalid")
 
-            logger.debug(f'Found user name and password')
+            logger.debug('Found user name and password')
             user = authenticate(request, username=username, password=password)
             if user is not None:
-                logger.debug(f'User authenticated')
+                logger.debug('User authenticated')
                 login(request, user)
-                logger.debug(f'User logged in')
+                logger.debug('User logged in')
                 return redirect('embark-home')
             # else:
-            logger.debug(f'User could not be authenticated')
+            logger.debug('User could not be authenticated')
             messages.info(request, "Invalid user data")
             return render(request, 'uploader/login.html', {'error_message': True})
         except Exception as error:
-            logger.exception('Wide exception in Signup: ' + str(error))
+            logger.exception('Wide exception in Signup: %s', error)
             messages.info(request, "Invalid user data")
             return render(request, 'uploader/login.html', {'error_message': True})
     else:
@@ -67,23 +67,23 @@ def signup(request):
             logger.exception('Missing keys from data- Username, password and confirm_password')
             return HttpResponse("User data is invalid")
         if password == confirm_password:
-            logger.debug(f'Passwords match. Creating user')
+            logger.debug('Passwords match. Creating user')
             user = User.objects.create(username=username, email=username)
             user.set_password(password)
             user.save()
-            logger.debug(f'User created')
+            logger.debug('User created')
         else:
-            logger.debug(f'Passwords do not match')
+            logger.debug('Passwords do not match')
             return HttpResponse("Passwords do not match")
 
         user = authenticate(username=username, password=password)
-        logger.debug(f'User authenticated')
+        logger.debug('User authenticated')
         if user is not None:
             login(request, user)
-            logger.debug(f'User logged in')
+            logger.debug('User logged in')
             return HttpResponse("Signup complete. User Logged in")
         # else:
         return HttpResponse("Invalid signup data")
     except Exception as error:
-        logger.exception('Wide exception in Signup: ' + str(error))
+        logger.exception('Wide exception in Signup: %s', error)
         return HttpResponse("Something went wrong when signing up the user")

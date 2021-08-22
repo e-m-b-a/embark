@@ -72,23 +72,23 @@ def download_zipped(request, analyze_id):
 
         if os.path.exists(firmware.path_to_logs):
             archive_path = Archiver.pack(firmware.path_to_logs, 'zip', firmware.path_to_logs, '.')
-            logger.debug(f"Archive {archive_path} created")
+            logger.debug("Archive %s created", archive_path)
             with open(archive_path, 'rb') as requested_log_dir:
                 response = HttpResponse(requested_log_dir.read(), content_type="application/zip")
                 response['Content-Disposition'] = 'inline; filename=' + archive_path
                 return response
 
-        logger.warning(f"Firmware with ID: {analyze_id} does not exist")
-        return HttpResponse(f"Firmware with ID: {analyze_id} does not exist")
+        logger.warning("Firmware with ID: %s does not exist", analyze_id)
+        return HttpResponse("Firmware with ID: %s does not exist", analyze_id)
 
     except Firmware.DoesNotExist as ex:
-        logger.warning(f"Firmware with ID: {analyze_id} does not exist in DB")
-        logger.warning(f"{ex}")
-        return HttpResponse(f"Firmware ID does not exist in DB")
+        logger.warning("Firmware with ID: %s does not exist in DB", analyze_id)
+        logger.warning("Exception: %s", ex)
+        return HttpResponse("Firmware ID does not exist in DB")
     except Exception as ex:
-        logger.error(f"Error occured while querying for Firmware object: {analyze_id}")
-        logger.error(f"{ex}")
-        return HttpResponse(f"Error occured while querying for Firmware object")
+        logger.error("Error occured while querying for Firmware object: %s", analyze_id)
+        logger.error("Exception: %s", ex)
+        return HttpResponse("Error occured while querying for Firmware object")
 
 
 @csrf_exempt
@@ -120,7 +120,7 @@ def start_analysis(request, refreshed):
             # TODO: make clean db access
             firmware_file = FirmwareFile.objects.get(pk=firmware_flags.firmware.pk)
 
-            logger.info(firmware_file)
+            logger.info("Firmware file: %s", firmware_file)
 
             # inject into bounded Executor
             if BoundedExecutor.submit_firmware(firmware_flags=firmware_flags, firmware_file=firmware_file):
@@ -233,7 +233,7 @@ def log_streamer(request):
         try:
             firmware = Firmware.objects.get(id=int(firmware_id))
         except Firmware.DoesNotExist:
-            logger.error(f"Firmware with id: {firmware_id}. Does not exist.")
+            logger.error("Firmware with id: %s. Does not exist.", firmware_id)
             return False
 
         file_path = f"/app/emba/{settings.LOG_ROOT}/{firmware.id}/emba.log"
@@ -270,7 +270,7 @@ def log_streamer(request):
                                    "{ scrollTop: $(document).height() }, 'slow');</script>"
                 last = file_.tell()
     except Exception as error:
-        logger.exception('Wide exception in logstreamer: ' + str(error))
+        logger.exception('Wide exception in logstreamer: %s', error)
         return False
 
 
@@ -288,7 +288,7 @@ def get_logs(request):
 
     """
     generator = log_streamer(request)
-    if type(generator) is bool:
+    if isinstance(generator, bool):
         return HttpResponse('Error in Streaming logs')
     response = StreamingHttpResponse(log_streamer(request))
     response['X-Accel-Buffering'] = "no"
@@ -359,7 +359,7 @@ def delete_file(request):
         form = DeleteFirmwareForm(request.POST)
 
         if form.is_valid():
-            logger.info(f"Form {form} is valid")
+            logger.info("Form %s is valid", form)
 
             # get relevant data
             firmware_file = form.cleaned_data['firmware']
@@ -368,8 +368,8 @@ def delete_file(request):
             return HttpResponseRedirect("../../home/upload/1/")
 
         # else:
-        logger.error(f"Form {form} is invalid")
-        logger.error(f"{form.errors}")
+        logger.error("Form %s is invalid", form)
+        logger.error("Form error: %s", form.errors)
         return HttpResponse("invalid Form")
 
     return HttpResponseRedirect("../../home/upload/1/")
@@ -386,7 +386,7 @@ def get_load(request):
             result[k] = tuple(model_to_dict(d)[k] for d in query_set)
         return JsonResponse(data=result, status=HTTPStatus.OK)
     except ResourceTimestamp.DoesNotExist:
-        logger.error(f'ResourceTimestamps not found in database')
+        logger.error('ResourceTimestamps not found in database')
         return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)
 
 
@@ -412,7 +412,7 @@ def get_individual_report(request, analyze_id):
 
         return JsonResponse(data=return_dict, status=HTTPStatus.OK)
     except Result.DoesNotExist:
-        logger.error(f'Report for firmware_id: {firmware_id} not found in database')
+        logger.error('Report for firmware_id: %s not found in database', firmware_id)
         return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)
 
 

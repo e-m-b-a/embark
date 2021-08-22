@@ -34,7 +34,7 @@ class LogReader:
         try:
             self.firmwarefile = Firmware.objects.get(pk=firmware_id).firmware.__str__()
         except Exception as error:
-            logger.info(error)
+            logger.info("Firmware file exception: %s", error)
 
         # set variables for channels communication
         self.room_group_name = 'updatesgroup'
@@ -134,7 +134,7 @@ class LogReader:
                  :return: None
        """
 
-        logger.info(f"read loop started for {self.firmware_id}")
+        logger.info("read loop started for %s", self.firmware_id)
 
         while not self.finish:
 
@@ -178,7 +178,7 @@ class LogReader:
         """
         # inotify = INotify()
         # inotify.rm_watch(self.wd)
-        logger.info(f"Log reader cleaned up for {self.firmware_id}")
+        logger.info("Log reader cleaned up for %s", self.firmware_id)
 
     def process_line(self, inp, pat):
 
@@ -265,14 +265,13 @@ class LogReader:
 
     def inotify_events(self, path):
         inotify = INotify()
-        # TODO: add/remove flags to watch
         watch_flags = flags.CREATE | flags.DELETE | flags.MODIFY | flags.DELETE_SELF | flags.CLOSE_NOWRITE | flags.CLOSE_WRITE
         try:
             # add watch on file
             inotify.add_watch(path, watch_flags)
             return inotify.read()
-        except Exception as error:
-            logger.info(error)
+        except Exception:
+            # logger.info("inotify_event error: emba.log - %s", error)
             return []
 
     def produce_test_output(self, inp):

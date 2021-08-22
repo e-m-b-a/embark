@@ -103,7 +103,7 @@ class Command(BaseCommand):
             max_instances=1,
             replace_existing=True,
         )
-        logger.info(f"Added job '{resource_tracker.__name__}'.")
+        logger.info("Added job %s.", resource_tracker.__name__)
 
         # start cleanup jobresource_tracker
         scheduler.add_job(

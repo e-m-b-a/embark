@@ -53,7 +53,7 @@ class BoundedExecutor:
         :return:
         """
 
-        logger.info(f"Starting: {cmd}")
+        logger.info("Starting: %s", cmd)
 
         # get return code to evaluate: 0 = success, 1 = failure,
         # see emba.sh for further information
@@ -63,13 +63,13 @@ class BoundedExecutor:
             emba_process = subprocess.call(cmd, shell=True)
 
             # success
-            logger.info(f"Success: {cmd}")
+            logger.info("Success: %s", cmd)
 
             # get csv log location
             csv_log_location = f"/app/emba/{settings.LOG_ROOT}/{primary_key}/f50_base_aggregator.csv"
 
             # read f50_aggregator and store it into a Result form
-            logger.info(f'Reading report from:')
+            logger.info('Reading report from: %s', csv_log_location)
             if Path(csv_log_location).exists:
                 cls.csv_read(primary_key, csv_log_location)
 
@@ -79,7 +79,7 @@ class BoundedExecutor:
 
         except Exception as ex:
             # fail
-            logger.error(f"{ex}")
+            logger.error("run_emba_cmd error: %s", ex)
 
             # finalize db entry
             if primary_key:
@@ -96,7 +96,7 @@ class BoundedExecutor:
                 firmware.finished = True
                 firmware.save()
 
-            logger.info(f"Successful cleaned up: {cmd}")
+            logger.info("Successful cleaned up: %s", cmd)
 
         finally:
             # take care of cleanup
@@ -143,8 +143,8 @@ class BoundedExecutor:
         if len(emba_startfile) == 1:
             image_file_location = f"{active_analyzer_dir}{emba_startfile.pop()}"
         else:
-            logger.error(f"Uploaded file: {firmware_file} doesnt comply with processable files.\n zip folder with no "
-                         f"extra directory in between.")
+            logger.error("Uploaded file: %s doesnt comply with processable files.", firmware_file)
+            logger.error("Zip folder with no extra directory in between.")
             shutil.rmtree(active_analyzer_dir)
             return None
 
@@ -184,12 +184,12 @@ class BoundedExecutor:
         # check if semaphore can be acquired, if not queue is full
         queue_not_full = semaphore.acquire(blocking=False)
         if not queue_not_full:
-            logger.error(f"Executor queue full")
+            logger.error("Executor queue full")
             return None
         try:
             future = executor.submit(fn, *args, **kwargs)
         except Exception as error:
-            logger.error(f"Executor task could not be submitted")
+            logger.error("Executor task could not be submitted")
             semaphore.release()
             raise error
         else:
@@ -224,11 +224,12 @@ class BoundedExecutor:
                     else:
                         pass
 
-        logger.info(res_dict)
+        logger.info("result dict: %s", res_dict)
         res_dict.pop('FW_path', None)
 
         entropy_value = res_dict.get("entropy_value", 0)
-        if type(entropy_value) is str:
+        # if type(entropy_value) is str:
+        if isinstance(entropy_value, str):
             # entropy_value = re.findall(r'(\d+\.?\d*)', ' 7.55 bits per byte.')[0]
             entropy_value = re.findall(r'(\d+\.?\d*)', entropy_value)[0]
             entropy_value = entropy_value.strip('.')

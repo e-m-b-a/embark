@@ -102,7 +102,7 @@ pylinter(){
 
   echo -e "\\n""$GREEN""Run pylint on all scripts:""$NC""\\n"
   pylint --max-line-length=240 --load-plugins pylint_django embark/* | grep "Your code has been rated"
-  # current rating: 7.77/10
+  # current rating: 8.31/10
   # start rating: 5.58/10
 }
 

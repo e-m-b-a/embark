@@ -187,13 +187,11 @@ class Firmware(models.Model):
     class Meta:
         app_label = 'uploader'
 
-    """
+        """
         build shell command from input fields
-
         :params: None
-
         :return:
-    """
+        """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
