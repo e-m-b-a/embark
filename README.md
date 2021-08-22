@@ -14,22 +14,22 @@
 
 ## About
 
-*EMBArk* is the web based enterprise interface for the firmware security scanner *EMBA*. It is developed to provide the firmware security analyzer *[EMBA](https://github.com/e-m-b-a/emba)* as a containerized service and to ease accessibility to *emba* regardless of system and operating system.
+*EMBArk* is the web based enterprise interface for the firmware security scanner *EMBA*. It is developed to provide the firmware security analyzer *[EMBA](https://github.com/e-m-b-a/emba)* as a containerized service and to ease accessibility to the firmware scanning backend *EMBA* regardless of system and operating system.
 
 Furthermore *EMBArk* improves the data provision by aggregating the various scanning results in an [aggregated management dashboard](https://github.com/e-m-b-a/embark/wiki/Web-interface#main-dashboard).
 
-## Setup - automated (on Kali Linux)
+## Automated setup (on Kali Linux)
 1. Checkout the repository (e.g. `git clone https://github.com/e-m-b-a/embark.git`)
-2. Change directory to root of the repository i.e `embark`
-3. Run `sudo ./installer.sh -r` to force install all the dependencies on host. This rebuilds the complete docker environment including a fresh emba installation.
+2. Change directory to root of the repository i.e `cd embark`
+3. Run `sudo ./installer.sh -r` to force install all the dependencies on host. This rebuilds the complete docker environment including a fresh *EMBA* installation.
 4. Further details are available in the wiki (See [installation](https://github.com/e-m-b-a/embark/wiki/Installation))
-5. If you are running into issues on autometed installation please take a look at the wiki (See [build instructions](https://github.com/e-m-b-a/embark/wiki/Build-EMBArk))
+5. If you are running into issues or need to install *EMBArk* manually please take a look at the wiki (See [build instructions](https://github.com/e-m-b-a/embark/wiki/Build-EMBArk))
 
-EMBArk is using the firmware security scanner EMBA as backend. You can take a look at the [EMBA](https://github.com/e-m-b-a/emba) repository and get more [information about usage of *emba* in the wiki](https://github.com/e-m-b-a/emba/wiki/Usage). Additionally you should check the [EMBArk wiki](https://github.com/e-m-b-a/embark/wiki).
+*EMBArk* is using the firmware security scanner EMBA as backend. You can take a look at the [EMBA](https://github.com/e-m-b-a/emba) repository and get more [information about usage of *emba* in the wiki](https://github.com/e-m-b-a/emba/wiki/Usage). Additionally you should check the [EMBArk wiki](https://github.com/e-m-b-a/embark/wiki).
 
 ## Get involved
 The IoT is growing, the development is ongoing, and there are many new features that we want to add.
-We welcome [pull requests](https://github.com/e-m-b-a/embark/pulls) and [issues](https://github.com/e-m-b-a/embark/issues) on GitHub.
+We welcome [pull requests](https://github.com/e-m-b-a/embark/pulls) and bug reports or feature requests via [issues](https://github.com/e-m-b-a/embark/issues) on GitHub.
 
 ## Acknowledgement
 This project was originally initiated by [Siemens Energy](https://www.siemens-energy.com/) as [AMOS project](https://oss.cs.fau.de/teaching/the-amos-project/) in cooperation with the [FAU](https://oss.cs.fau.de/).
