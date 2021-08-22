@@ -2,7 +2,7 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
-import logging
+# import logging
 
 
 def main():
@@ -10,7 +10,9 @@ def main():
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'embark.settings')
 
     try:
+        # pylint: disable=import-outside-toplevel
         from django.core.management import execute_from_command_line
+        # pylint: enable=import-outside-toplevel
     except ImportError as exc:
         raise ImportError(
             "Couldn't import Django. Are you sure it's installed and "

@@ -42,12 +42,12 @@ def signin(request):
                 login(request, user)
                 logger.debug(f'User logged in')
                 return redirect('embark-home')
-            else:
-                logger.debug(f'User could not be authenticated')
-                messages.info(request, "Invalid user data")
-                return render(request, 'uploader/login.html', {'error_message': True})
+            # else:
+            logger.debug(f'User could not be authenticated')
+            messages.info(request, "Invalid user data")
+            return render(request, 'uploader/login.html', {'error_message': True})
         except Exception as error:
-            logger.exception('Wide exception in Signup')
+            logger.exception('Wide exception in Signup: ' + str(error))
             messages.info(request, "Invalid user data")
             return render(request, 'uploader/login.html', {'error_message': True})
     else:
@@ -82,8 +82,8 @@ def signup(request):
             login(request, user)
             logger.debug(f'User logged in')
             return HttpResponse("Signup complete. User Logged in")
-        else:
-            return HttpResponse("Invalid signup data")
-    except Exception as e:
-        logger.exception('Wide exception in Signup')
+        # else:
+        return HttpResponse("Invalid signup data")
+    except Exception as error:
+        logger.exception('Wide exception in Signup: ' + str(error))
         return HttpResponse("Something went wrong when signing up the user")

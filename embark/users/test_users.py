@@ -1,7 +1,7 @@
+from http import HTTPStatus
+
 from django.test import TestCase
 from django.test import Client
-
-from http import HTTPStatus
 
 from users.models import User
 

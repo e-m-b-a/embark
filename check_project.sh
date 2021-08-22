@@ -34,7 +34,7 @@ shellchecker() {
   fi
 
   echo -e "\\n""$GREEN""Run shellcheck on this script:""$NC""\\n"
-  if shellcheck ./codestyle_check.sh || [[ $? -ne 1 && $? -ne 2 ]]; then
+  if shellcheck ./check_project.sh || [[ $? -ne 1 && $? -ne 2 ]]; then
     echo -e "$GREEN""$BOLD""==> SUCCESS""$NC""\\n"
   else
     echo -e "\\n""$ORANGE$BOLD==> FIX ERRORS""$NC""\\n"
@@ -84,9 +84,25 @@ pytester(){
 }
 
 pylinter(){
-  echo -e "[*] Searching python files and test with pylint (under construction)"
+  echo -e "\\n""$ORANGE""$BOLD""EMBArk pyling check""$NC""\\n""$BOLD""=================================================================""$NC"
   echo -e "[*] Do not forget to install the pylint-django plugin (e.g. apt-get install python3-pylint-django)" 
-  pylint --max-line-length=240 --load-plugins pylint_django embark/*
+  mapfile -t PY_SCRIPTS < <(find embark -type d -name migrations -prune -false -o -iname "*.py")
+  for PY_SCRIPT in "${PY_SCRIPTS[@]}"; do
+    echo -e "\\n""$GREEN""Run pylint on $PY_SCRIPT:""$NC""\\n"
+    mapfile -t PY_RESULT < <(pylint --max-line-length=240 --load-plugins pylint_django "$PY_SCRIPT")
+    if [[ "${#PY_RESULT[@]}" -gt 0 ]]; then 
+      for LINE in "${PY_RESULT[@]}"; do
+        echo "$LINE"
+      done
+      echo -e "\\n""$ORANGE$BOLD==> FIX ERRORS""$NC""\\n"
+    else
+      echo -e "$GREEN""$BOLD""==> SUCCESS""$NC""\\n"
+    fi
+  done
+
+  echo -e "\\n""$GREEN""Run pylint on all scripts:""$NC""\\n"
+  pylint --max-line-length=240 --load-plugins pylint_django embark/* | grep "Your code has been rated"
+  # current rating: 7.42/10
   # current rating: 6.93/10
   # current rating: 5.58/10
 }

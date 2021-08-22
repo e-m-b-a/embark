@@ -1,7 +1,10 @@
+import logging
 import django
 from django import forms
 
 from uploader import models
+
+logger = logging.getLogger('web')
 
 
 class FirmwareForm(forms.ModelForm):
@@ -31,13 +34,15 @@ class FirmwareForm(forms.ModelForm):
             try:
                 if field.field.readonly:
                     field.field.widget.attrs["disabled"] = "disabled"
-            except:
-                pass
+            except Exception as error:
+                logger.info("Exception passed: %s", error)
+                # pass
 
             try:
                 field.expert_mode = field.field.expert_mode
-            except:
-                pass
+            except Exception as error:
+                logger.info("Exception passed: %s", error)
+                # pass
 
         self.base_fields['firmware'] = forms.ModelChoiceField(queryset=models.FirmwareFile.objects, empty_label='Select firmware')
 

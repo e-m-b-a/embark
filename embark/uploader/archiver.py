@@ -18,7 +18,7 @@ class Archiver:
 
         # register additional formats ( gz )
         shutil.register_unpack_format('gz', ['.gz', ], self.gunzip_file)
-        pass
+        # pass
 
     @staticmethod
     def gunzip_file(file_name, work_dir):

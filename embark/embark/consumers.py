@@ -2,6 +2,8 @@ import difflib
 import json
 import re
 
+import logging
+
 import rx
 import rx.operators as ops
 from asgiref.sync import async_to_sync
@@ -12,8 +14,6 @@ from channels.layers import get_channel_layer
 from inotify_simple import flags
 from django.conf import settings
 from uploader.models import Firmware
-
-import logging
 
 logger = logging.getLogger('web')
 

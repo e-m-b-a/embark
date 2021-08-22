@@ -4,17 +4,17 @@ import pathlib
 import re
 import time
 
+import logging
 import rx
 import rx.operators as ops
-import logging
 
 from channels.generic.websocket import WebsocketConsumer
+from channels.layers import get_channel_layer
 
 from django.conf import settings
 from uploader.models import Firmware, FirmwareFile
 from inotify_simple import INotify, flags
 from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
 
 logger = logging.getLogger('web')
 
@@ -190,8 +190,8 @@ class LogReader:
 
         if re.match(pat, inp):
             return True
-        else:
-            return False
+        # else:
+        return False
 
     def copy_file_content(self, diff, log_path):
 
