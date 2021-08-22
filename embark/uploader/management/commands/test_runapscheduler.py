@@ -6,7 +6,7 @@ from uploader.models import ResourceTimestamp
 from .runapscheduler import resource_tracker, delete_old_job_executions
 
 
-class unpacker_test(TestCase):
+class UnpackerTest(TestCase):
 
     def setUp(self):
         # nothing to do here

@@ -8,11 +8,12 @@ import logging
 import rx
 import rx.operators as ops
 
-from channels.generic.websocket import WebsocketConsumer
+# from channels.generic.websocket import WebsocketConsumer
 from channels.layers import get_channel_layer
 
 from django.conf import settings
-from uploader.models import Firmware, FirmwareFile
+# from uploader.models import Firmware, FirmwareFile
+from uploader.models import Firmware
 from inotify_simple import INotify, flags
 from asgiref.sync import async_to_sync
 
@@ -32,8 +33,8 @@ class LogReader:
         self.firmware_id_str = str(self.firmware_id)
         try:
             self.firmwarefile = Firmware.objects.get(pk=firmware_id).firmware.__str__()
-        except Exception as e:
-            logger.info(e)
+        except Exception as error:
+            logger.info(error)
 
         # set variables for channels communication
         self.room_group_name = 'updatesgroup'
@@ -270,7 +271,8 @@ class LogReader:
             # add watch on file
             inotify.add_watch(path, watch_flags)
             return inotify.read()
-        except Exception as e:
+        except Exception as error:
+            logger.info(error)
             return []
 
     def produce_test_output(self, inp):

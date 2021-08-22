@@ -3,7 +3,7 @@ from django.test import TestCase
 from .models import Firmware, FirmwareFile
 
 
-class test_models(TestCase):
+class TestModels(TestCase):
 
     def setUp(self):
         self.fw_file = FirmwareFile.objects.create()

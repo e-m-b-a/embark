@@ -5,7 +5,7 @@ from django.test import TestCase
 from .archiver import Archiver
 
 
-class unpacker_test(TestCase):
+class UnpackerTest(TestCase):
 
     def setUp(self):
         self.archiver = Archiver

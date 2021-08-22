@@ -84,7 +84,7 @@ pytester(){
 }
 
 pylinter(){
-  echo -e "\\n""$ORANGE""$BOLD""EMBArk pyling check""$NC""\\n""$BOLD""=================================================================""$NC"
+  echo -e "\\n""$ORANGE""$BOLD""EMBArk pylint check""$NC""\\n""$BOLD""=================================================================""$NC"
   echo -e "[*] Do not forget to install the pylint-django plugin (e.g. apt-get install python3-pylint-django)" 
   mapfile -t PY_SCRIPTS < <(find embark -type d -name migrations -prune -false -o -iname "*.py")
   for PY_SCRIPT in "${PY_SCRIPTS[@]}"; do
@@ -102,9 +102,8 @@ pylinter(){
 
   echo -e "\\n""$GREEN""Run pylint on all scripts:""$NC""\\n"
   pylint --max-line-length=240 --load-plugins pylint_django embark/* | grep "Your code has been rated"
-  # current rating: 7.42/10
-  # current rating: 6.93/10
-  # current rating: 5.58/10
+  # current rating: 7.77/10
+  # start rating: 5.58/10
 }
 
 shellchecker

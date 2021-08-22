@@ -7,7 +7,7 @@ from . import logreader
 logger = logging.getLogger('web')
 
 
-class test_logreader(TestCase):
+class TestLogreader(TestCase):
 
     def setUp(self):
         self.log_string1 = "[\x1b[0;33m*\x1b[0m] Tue Jun 15 12:12:26 UTC 2021 - P02_firmware_bin_file_check starting\n"

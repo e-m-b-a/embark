@@ -1,9 +1,9 @@
 from django.test import TestCase
 
-from .boundedExecutor import BoundedExecutor, max_workers, max_queue
+from .boundedExecutor import BoundedExecutor, MAX_WORKERS, MAX_QUEUE
 
 
-class test_boundedExecutor(TestCase):
+class TestBoundedExecutor(TestCase):
 
     def setUp(self):
         pass
@@ -13,13 +13,13 @@ class test_boundedExecutor(TestCase):
 
         fut_list = []
 
-        for _ in range(max_workers + max_queue):
+        for _ in range(MAX_WORKERS + MAX_QUEUE):
             # if testing under windows use "timeout /T 5" instead of "sleep 5"
             fut = BoundedExecutor.submit(BoundedExecutor.run_emba_cmd, "sleep 5")
             self.assertIsNotNone(fut)
             fut_list.append(fut)
 
-        for _ in range(max_workers):
+        for _ in range(MAX_WORKERS):
             fut = BoundedExecutor.submit(BoundedExecutor.run_emba_cmd, "sleep 5")
             self.assertIsNone(fut)
 

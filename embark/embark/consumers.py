@@ -1,19 +1,19 @@
-import difflib
+# import difflib
 import json
-import re
+# import re
 
 import logging
 
-import rx
-import rx.operators as ops
+# import rx
+# import rx.operators as ops
 from asgiref.sync import async_to_sync
 
 from channels.generic.websocket import WebsocketConsumer
 from channels.layers import get_channel_layer
 
-from inotify_simple import flags
-from django.conf import settings
-from uploader.models import Firmware
+# from inotify_simple import flags
+# from django.conf import settings
+# from uploader.models import Firmware
 
 logger = logging.getLogger('web')
 
@@ -44,7 +44,7 @@ class WSConsumer(WebsocketConsumer):
 
     def receive(self, text_data=None, bytes_data=None):
         logger.info(f"WS - receive")
-        pass
+        # pass
 
     # called when websocket connection is closed
     def disconnect(self, close_code):

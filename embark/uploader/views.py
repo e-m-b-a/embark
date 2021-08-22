@@ -247,8 +247,8 @@ def log_streamer(request):
                     filestart = False
                     result = file_.read()
                     last = file_.tell()
-                    t = loader.get_template('uploader/log.html')
-                    yield t.render({"result": result})
+                    templ = loader.get_template('uploader/log.html')
+                    yield templ.render({"result": result})
                 except IOError:
                     start += 50
         reset = 0
@@ -265,7 +265,7 @@ def log_streamer(request):
                 file_.seek(last)
                 result = file_.read()
                 if result:
-                    t = loader.get_template('uploader/log.html')
+                    templ = loader.get_template('uploader/log.html')
                     yield result + "<script>$('html,body').animate(" \
                                    "{ scrollTop: $(document).height() }, 'slow');</script>"
                 last = file_.tell()

@@ -21,17 +21,17 @@ from embark.logreader import LogReader
 logger = logging.getLogger('web')
 
 # maximum concurrent running workers
-max_workers = 4
+MAX_WORKERS = 4
 # maximum queue bound
-max_queue = 0
+MAX_QUEUE = 0
 
 # assign the threadpool max_worker_threads
-executor = ThreadPoolExecutor(max_workers=max_workers)
+executor = ThreadPoolExecutor(max_workers=MAX_WORKERS)
 # create semaphore to track queue state
-semaphore = BoundedSemaphore(max_queue + max_workers)
+semaphore = BoundedSemaphore(MAX_QUEUE + MAX_WORKERS)
 
 # emba directories
-emba_script_location = "cd /app/emba/ && ./emba.sh"
+EMBA_SCRIPT_LOCATION = "cd /app/emba/ && ./emba.sh"
 
 
 class BoundedExecutor:
@@ -161,7 +161,7 @@ class BoundedExecutor:
         firmware_flags.save()
 
         # build command
-        emba_cmd = f"{emba_script_location} -f {image_file_location} -l {emba_log_location} {emba_flags}"
+        emba_cmd = f"{EMBA_SCRIPT_LOCATION} -f {image_file_location} -l {emba_log_location} {emba_flags}"
 
         # submit command to executor threadpool
         emba_fut = BoundedExecutor.submit(cls.run_emba_cmd, emba_cmd, firmware_flags.pk, active_analyzer_dir)
@@ -188,10 +188,10 @@ class BoundedExecutor:
             return None
         try:
             future = executor.submit(fn, *args, **kwargs)
-        except Exception as e:
+        except Exception as error:
             logger.error(f"Executor task could not be submitted")
             semaphore.release()
-            raise e
+            raise error
         else:
             future.add_done_callback(lambda x: semaphore.release())
             return future
