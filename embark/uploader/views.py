@@ -338,6 +338,7 @@ def html_report_resource(request, analyze_id, img_file):
     logger.info("html_report_resource - request.path: %s", request.path)
 
     try:
+        # CodeQL issue is not relevant as the urls are defined via urls.py
         with open(resource_path, "rb") as file_:
             return HttpResponse(file_.read(), content_type=content_type)
     except IOError as ex:
