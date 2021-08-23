@@ -14,7 +14,8 @@ function dragOverHandler(ev) {
 function showFiles(fileData) {
   try {
     document.getElementById("uploadedFileNames").style.display = 'block';
-    document.querySelector(".fileName").innerHTML = fileData[0].name;
+    //document.querySelector(".fileName").innerHTML = fileData[0].name;
+    document.querySelector(".fileName").textContent = fileData[0].name;
     $("#uploadFirmware-btn").attr("disabled", false);
 
   } catch (error) {
