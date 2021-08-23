@@ -6,6 +6,9 @@ services:
     restart: always
     env_file:
       - .env
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     network_mode: "host"
     ports:
       - '3306:3306'
@@ -23,6 +26,8 @@ services:
         - /var/run/docker.sock:/var/run/docker.sock
         - /tmp/:/tmp/
         - ./embark/:/app/embark/
+        - /etc/timezone:/etc/timezone:ro
+        - /etc/localtime:/etc/localtime:ro
     network_mode: "host"
     ports:
       - '80:80'
@@ -39,6 +44,9 @@ services:
   redis:
     image: "redis:5"
     restart: always
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     network_mode: "host"
     ports:
       - '6379:6379'

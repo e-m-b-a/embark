@@ -335,13 +335,14 @@ def html_report_resource(request, analyze_id, img_file):
         content_type = "image/png"
 
     resource_path = Path(f'/app/emba{request.path}')
+    logger.info("html_report_resource - request.path: %s", request.path)
 
     try:
         with open(resource_path, "rb") as file_:
             return HttpResponse(file_.read(), content_type=content_type)
     except IOError as ex:
         logger.error(ex)
-    logger.error(request.path)
+        logger.error(request.path)
 
 
 @require_http_methods(["POST"])

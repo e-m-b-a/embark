@@ -83,11 +83,12 @@ class Command(BaseCommand):
 
         # configure CronTrigger
         if options['test']:
-            # Every hour -> changed to 10 seconds
-            resource_tracker_trigger = CronTrigger(second="*/10")
-            # everyday at midnight
-            delete_old_job_executions_tigger = CronTrigger(minute="*/3")
-            delete_old_than = 180
+            # Every hour -> changed to 5 seconds
+            resource_tracker_trigger = CronTrigger(second="*/5")
+            # every 30 minutes
+            delete_old_job_executions_tigger = CronTrigger(minute="*/30")
+            # older than 30 minutes
+            delete_old_than = 1800
         else:
             # Every hour
             resource_tracker_trigger = CronTrigger(minute="00")
@@ -104,6 +105,8 @@ class Command(BaseCommand):
             replace_existing=True,
         )
         logger.info("Added CronTrigger job %s.", resource_tracker.__name__)
+        logger.info("Added CronTrigger resource_tracker_trigger: %s.", resource_tracker_trigger)
+        logger.info("Added CronTrigger delete_old_job_executions_trigger: %s.", delete_old_job_executions_trigger)
 
         # start cleanup jobresource_tracker
         scheduler.add_job(
