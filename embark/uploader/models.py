@@ -148,7 +148,7 @@ class Firmware(models.Model):
     cwe_checker = BooleanFieldExpertMode(
         help_text='Enables cwe-checker,-c will be added (docker mode currently not supported)', default=False, expert_mode=True, blank=True)
     docker_container = BooleanFieldExpertMode(
-        help_text='Run emba in docker container, -D will be added (currently not supported)', default=True, expert_mode=True, blank=True,
+        help_text='Run emba in docker container, -D will be added (currently not supported)', default=False, expert_mode=True, blank=True,
         readonly=True)
     deep_extraction = BooleanFieldExpertMode(
         help_text='Enable deep extraction, -x will be added', default=False, expert_mode=True, blank=True)
