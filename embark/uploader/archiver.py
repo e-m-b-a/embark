@@ -79,7 +79,8 @@ class Archiver:
             logger.info("Unpacked file successful: %s", file_location)
             return True
         except shutil.ReadError:
-            logging.error(f"Format {file_location.split('.', 1)[1]} is not supported")
+            # logging.error(f"Format {file_location.split('.', 1)[1]} is not supported")
+            logging.error("Format %s is not supported", file_location.split('.', 1)[1])
             raise ValueError
         except Exception as ex:
             logging.error("Undefined Error during unpacking file: %s", file_location)

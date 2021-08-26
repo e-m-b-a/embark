@@ -106,7 +106,7 @@ class Command(BaseCommand):
         )
         logger.info("Added CronTrigger job %s.", resource_tracker.__name__)
         logger.info("Added CronTrigger resource_tracker_trigger: %s.", resource_tracker_trigger)
-        logger.info("Added CronTrigger delete_old_job_executions_trigger: %s.", delete_old_job_executions_trigger)
+        logger.info("Added CronTrigger delete_old_job_executions_trigger: %s.", delete_old_job_executions_tigger)
 
         # start cleanup jobresource_tracker
         scheduler.add_job(

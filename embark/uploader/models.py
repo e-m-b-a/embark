@@ -218,9 +218,8 @@ class Firmware(models.Model):
             command = command + " -a " + str(self.firmware_Architecture)
         if self.cwe_checker:
             command = command + " -c"
-        # TODO: check if already adapted to use-case
-        # if self.docker_container:
-        #     command = command + " -D"
+        if self.docker_container:
+            command = command + " -D"
         if self.deep_extraction:
             command = command + " -x"
         if self.log_path:
@@ -246,8 +245,7 @@ class Firmware(models.Model):
 
 
 class Result(models.Model):
-    # TODO missing: emba_command, os_unverified, bins_checked, strcpy_bin
-    # TODO different: FW_path/firmware
+    # TODO missing: emba_command
 
     firmware = models.ForeignKey(Firmware, on_delete=models.CASCADE, help_text='')
     architecture_verified = models.CharField(blank=True, null=True, max_length=100, help_text='')

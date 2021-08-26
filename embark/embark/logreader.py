@@ -42,7 +42,7 @@ class LogReader:
 
         # variables for cleanup
         self.finish = False
-        self.wd = None
+        # self.wd = None
 
         # for testing
         self.test_list1 = []
@@ -169,7 +169,7 @@ class LogReader:
                         self.copy_file_content(tmp, firmware.path_to_logs)
 
         self.cleanup()
-        return
+        # return
 
     def cleanup(self):
 

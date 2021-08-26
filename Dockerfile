@@ -13,6 +13,8 @@ RUN apt-get update && \
     sudo apt-get install -y build-essential && \
     sudo apt-get install -y python3-dev && \
     sudo apt-get install -y libssl-dev && \
+    sudo apt-get install -y python3-pylint-django && \
+    sudo apt-get install -y pycodestyle && \
     sudo apt-get install -y swig
 
 ADD . /app

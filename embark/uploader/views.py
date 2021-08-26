@@ -21,7 +21,7 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.cache import cache_control
 from django.template import loader
 
-from uploader.boundedExecutor import BoundedExecutor
+from uploader.boundedexecutor import BoundedExecutor
 from uploader.archiver import Archiver
 from uploader.forms import FirmwareForm, DeleteFirmwareForm
 # from uploader.models import Firmware, FirmwareFile, DeleteFirmware, Result, ResourceTimestamp
@@ -176,6 +176,7 @@ def individual_report_dashboard(request, analyze_id):
     :return: rendered individualReportDashboard
     """
     html_body = get_template('uploader/individualReportDashboard.html')
+    logger.info("individual_dashboard - analyze_id: %s", analyze_id)
     return HttpResponse(html_body.render({'username': request.user.username}))
 
 
@@ -317,6 +318,7 @@ def html_report(request, analyze_id, hmtl_file):
     report_path = Path(f'/app/emba{request.path}')
 
     html_body = get_template(report_path)
+    logger.info("html_report - analyze_id: %s hmtl_file: %s", analyze_id, hmtl_file)
     return HttpResponse(html_body.render())
 
 
@@ -335,7 +337,7 @@ def html_report_resource(request, analyze_id, img_file):
         content_type = "image/png"
 
     resource_path = Path(f'/app/emba{request.path}')
-    logger.info("html_report_resource - request.path: %s", request.path)
+    logger.info("html_report_resource - analyze_id: %s request.path: %s", analyze_id, request.path)
 
     try:
         # CodeQL issue is not relevant as the urls are defined via urls.py

@@ -60,7 +60,8 @@ class BoundedExecutor:
         try:
 
             # run emba_process and wait for completion
-            emba_process = subprocess.call(cmd, shell=True)
+            # emba_process = subprocess.call(cmd, shell=True)
+            subprocess.call(cmd, shell=True)
 
             # success
             logger.info("Success: %s", cmd)
