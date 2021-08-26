@@ -94,6 +94,7 @@ install_embark() {
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanning environment EMBArk""$NC"
 
   if ! [[ -f .env ]]; then
+    DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
     echo -e "$ORANGE""$BOLD""Creating a default EMBArk configuration file .env""$NC"
     {
       echo "DATABASE_NAME=embark"
@@ -105,8 +106,9 @@ install_embark() {
       echo "MYSQL_DATABASE=embark"
       echo "REDIS_HOST=0.0.0.0"
       echo "REDIS_HOST=6379"
+      echo "SECRET_KEY=$DJANGO_SECRET_KEY"
     } >> .env
-    echo -e "$ORANGE""$BOLD""WARNING: The default EMBArk configuration includes weak credentials!""$NC"
+    echo -e "$ORANGE""$BOLD""WARNING: The default EMBArk configuration includes a secret key generated via the shell script!""$NC"
   else
     echo -e "$GREEN""$BOLD""Using the provided EMBArk configuration file .env""$NC"
     cat .env
