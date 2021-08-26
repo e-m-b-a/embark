@@ -28,7 +28,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -203,7 +203,7 @@ MEDIA_ROOT = os.path.join('uploadedFirmwareImages')  # media directory in the ro
 MEDIA_URL = '/uploadedFirmwareImages/'
 LOG_ROOT = os.path.join('emba_logs')  # media directory in the root directory
 LOG_URL = '/emba_logs/'
-REDIS_HOST = os.environ.get('REDIS_HOST', 'host.docker.internal')
+REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
 REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
 
 # Default primary key field type

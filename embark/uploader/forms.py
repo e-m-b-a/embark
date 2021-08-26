@@ -17,7 +17,8 @@ class FirmwareForm(forms.ModelForm):
                   'web_reporter', 'emulation_test', 'dependency_check', 'multi_threaded', 'firmware_remove')
 
     def __init__(self, *args, **kwargs):
-        super(FirmwareForm, self).__init__(*args, **kwargs)
+        # super(FirmwareForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         for field in self.visible_fields():
 
@@ -55,7 +56,8 @@ class DeleteFirmwareForm(forms.ModelForm):
         fields = ('firmware', )
 
     def __init__(self, *args, **kwargs):
-        super(DeleteFirmwareForm, self).__init__(*args, **kwargs)
+        # super(DeleteFirmwareForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         for field in self.visible_fields():
             if isinstance(field.field.widget, django.forms.widgets.Select):
                 field.field.widget.attrs['class'] = 'form-control select dropdownSelect'

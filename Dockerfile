@@ -6,16 +6,16 @@ ENV PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:
 
 RUN apt-get update && \ 
     apt-get -y upgrade && \
-    apt-get -y install wget kmod procps sudo && \
-    sudo apt-get install -y apt-utils && \
-    sudo apt-get install -y default-libmysqlclient-dev && \
-    sudo apt-get install -y default-mysql-client && \
-    sudo apt-get install -y build-essential && \
-    sudo apt-get install -y python3-dev && \
-    sudo apt-get install -y libssl-dev && \
-    sudo apt-get install -y python3-pylint-django && \
-    sudo apt-get install -y pycodestyle && \
-    sudo apt-get install -y swig
+    apt-get -y -q install wget kmod procps sudo && \
+    sudo apt-get install -y -q apt-utils && \
+    sudo apt-get install -y -q default-libmysqlclient-dev && \
+    sudo apt-get install -y -q default-mysql-client && \
+    sudo apt-get install -y -q build-essential && \
+    sudo apt-get install -y -q python3-dev && \
+    sudo apt-get install -y -q libssl-dev && \
+    sudo apt-get install -y -q python3-pylint-django && \
+    sudo apt-get install -y -q pycodestyle && \
+    sudo apt-get install -y -q swig
 
 ADD . /app
 

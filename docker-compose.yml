@@ -10,8 +10,6 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     network_mode: "host"
-    ports:
-      - '3306:3306'
 
   embark:
     image: embark:latest
@@ -29,9 +27,6 @@ services:
         - /etc/timezone:/etc/timezone:ro
         - /etc/localtime:/etc/localtime:ro
     network_mode: "host"
-    ports:
-      - '80:80'
-      - '8001:8001'
     env_file:
       - .env
     command: './entrypoint.sh'
@@ -48,5 +43,3 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     network_mode: "host"
-    ports:
-      - '6379:6379'

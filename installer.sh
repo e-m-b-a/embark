@@ -100,11 +100,11 @@ install_embark() {
       echo "DATABASE_NAME=embark"
       echo "DATABASE_USER=root"
       echo "DATABASE_PASSWORD=embark"
-      echo "DATABASE_HOST=0.0.0.0"
+      echo "DATABASE_HOST=127.0.0.1"
       echo "DATABASE_PORT=3306"
       echo "MYSQL_ROOT_PASSWORD=embark"
       echo "MYSQL_DATABASE=embark"
-      echo "REDIS_HOST=0.0.0.0"
+      echo "REDIS_HOST=127.0.0.1"
       echo "REDIS_HOST=6379"
       echo "SECRET_KEY=$DJANGO_SECRET_KEY"
     } >> .env
@@ -156,10 +156,24 @@ install_embark() {
 
 install_debs() {
   echo -e "\n$GREEN""$BOLD""Install debian packages for EMBArk installation""$NC"
-  apt-get install -y git
-  apt-get install -y docker.io
-  apt-get install -y docker-compose
-  apt-get install -y pycodestyle
+  if ! command -v git > /dev/null ; then
+    apt-get install -y -q git
+  fi
+  if ! command -v docker > /dev/null ; then
+    apt-get install -y -q docker.io
+  fi
+  if ! command -v docker-compose > /dev/null ; then
+    apt-get install -y -q docker-compose
+  fi
+  if ! command -v pycodestyle > /dev/null ; then
+    apt-get install -y -q pycodestyle
+  fi
+  if ! command -v pylint > /dev/null ; then
+    apt-get install -y -q pylint
+    apt-get install -y -q python3-pylint-django
+  fi
+  # we need the django package on the host for generating the django SECRET_KEY
+  apt-get install -y -q python3-django
 }
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"

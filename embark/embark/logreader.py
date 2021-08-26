@@ -229,10 +229,10 @@ class LogReader:
                   :return: None
         """
 
-        status_pattern = "\[\*\]*"
-        phase_pattern = "\[\!\]*"
+        status_pattern = "\\[\\*\\]*"
+        phase_pattern = "\\[\\!\\]*"
 
-        color_pattern = "\\x1b\[.{1,5}m"
+        color_pattern = "\\x1b\\[.{1,5}m"
 
         cur_ar = tmp_inp.splitlines()
 
@@ -260,8 +260,6 @@ class LogReader:
         ).subscribe(
             lambda x: [self.update_phase(x), self.test_list2.append(x)]
         )
-
-        # TODO: add more observers for more information
 
     def inotify_events(self, path):
         inotify = INotify()

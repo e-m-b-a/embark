@@ -347,6 +347,11 @@ def html_report_resource(request, analyze_id, img_file):
         logger.error(ex)
         logger.error(request.path)
 
+    # just in case -> back to report intro
+    report_path = Path(f'/app/emba{request.path}')
+    html_body = get_template(report_path)
+    return HttpResponse(html_body.render())
+
 
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)

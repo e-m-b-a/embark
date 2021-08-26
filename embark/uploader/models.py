@@ -20,7 +20,8 @@ class BooleanFieldExpertModeForm(forms.BooleanField):
     def __init__(self, input_formats=None, *args, **kwargs):
         self.expert_mode = kwargs.pop('expert_mode', True)
         self.readonly = kwargs.pop('readonly', False)
-        super(BooleanFieldExpertModeForm, self).__init__(*args, **kwargs)
+        # super(BooleanFieldExpertModeForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class BooleanFieldExpertMode(models.BooleanField):
@@ -31,7 +32,8 @@ class BooleanFieldExpertMode(models.BooleanField):
     def __init__(self, *args, **kwargs):
         self.expert_mode = kwargs.pop('expert_mode', True)
         self.readonly = kwargs.pop('readonly', False)
-        super(BooleanFieldExpertMode, self).__init__(*args, **kwargs)
+        # super(BooleanFieldExpertMode, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def formfield(self, **kwargs):
         defaults = {'form_class': BooleanFieldExpertModeForm, 'expert_mode': self.expert_mode, 'readonly': self.readonly}
@@ -47,7 +49,8 @@ class CharFieldExpertModeForm(forms.CharField):
     def __init__(self, input_formats=None, *args, **kwargs):
         self.expert_mode = kwargs.pop('expert_mode', True)
         self.readonly = kwargs.pop('readonly', False)
-        super(CharFieldExpertModeForm, self).__init__(*args, **kwargs)
+        # super(CharFieldExpertModeForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class TypedChoiceFieldExpertModeForm(forms.TypedChoiceField):
@@ -58,7 +61,8 @@ class TypedChoiceFieldExpertModeForm(forms.TypedChoiceField):
     def __init__(self, input_formats=None, *args, **kwargs):
         self.expert_mode = kwargs.pop('expert_mode', True)
         self.readonly = kwargs.pop('readonly', False)
-        super(TypedChoiceFieldExpertModeForm, self).__init__(*args, **kwargs)
+        # super(TypedChoiceFieldExpertModeForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class CharFieldExpertMode(models.CharField):
@@ -69,7 +73,8 @@ class CharFieldExpertMode(models.CharField):
     def __init__(self, *args, **kwargs):
         self.expert_mode = kwargs.pop('expert_mode', True)
         self.readonly = kwargs.pop('readonly', False)
-        super(CharFieldExpertMode, self).__init__(*args, **kwargs)
+        # super(CharFieldExpertMode, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def formfield(self, **kwargs):
         defaults = {'form_class': CharFieldExpertModeForm, 'choices_form_class': TypedChoiceFieldExpertModeForm, 'expert_mode': self.expert_mode, 'readonly': self.readonly}
