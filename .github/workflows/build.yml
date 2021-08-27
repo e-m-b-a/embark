@@ -24,8 +24,7 @@ jobs:
       run: |
         cd embark
         python -m pip install --upgrade pip
-        export SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
     - name: run unit tests [pytest]
-      run: cd embark && python manage.py test && cd ..
+      run: cd embark && export SECRET_KEY='django-insecure-3vwtv++oulw75(9qch!ry4-0u38xqj=lw$!#u7#6$8nq%dkv51' && python manage.py test && cd ..
