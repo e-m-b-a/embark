@@ -50,14 +50,25 @@ function getRandomColors(num) {
  */
 get_accumulated_reports().then(function (returnData) {
 
-    accumulatedEntropy.setAttribute('value', returnData.entropy_value['mean']);
-    entropyMeterLabel.textContent = 'Average Entropy Value: ' + returnData.entropy_value['mean'].toFixed(2);
-    firmwareAnalysed.textContent = returnData.total_firmwares;
-    totalFiles.textContent = returnData.files['sum'];
-    totalDirectories.textContent = returnData.directories['sum'];
-    totalBinaries.textContent = returnData.bins_checked['sum'];
-    totalCve.textContent = returnData.cve_medium['sum'] + returnData.cve_low['sum'] + returnData.cve_high['sum'];
-    totalIssues.textContent = returnData.exploits['sum'];
+    if (returnData.total_firmwares !== 0) {
+      firmwareAnalysed.textContent = returnData.total_firmwares;
+      accumulatedEntropy.setAttribute('value', returnData.entropy_value['mean']);
+      entropyMeterLabel.textContent = 'Average Entropy Value: ' + returnData.entropy_value['mean'].toFixed(2);
+      totalFiles.textContent = returnData.files['sum'];
+      totalDirectories.textContent = returnData.directories['sum'];
+      totalBinaries.textContent = returnData.bins_checked['sum'];
+      totalCve.textContent = returnData.cve_medium['sum'] + returnData.cve_low['sum'] + returnData.cve_high['sum'];
+      totalIssues.textContent = returnData.exploits['sum'];
+    } else {
+      firmwareAnalysed.textContent = "no data";
+      accumulatedEntropy.setAttribute('value', 0);
+      entropyMeterLabel.textContent = 'Average Entropy Value: no data';
+      totalFiles.textContent = "no data";
+      totalDirectories.textContent = "no data";
+      totalBinaries.textContent = "no data";
+      totalCve.textContent = "no data";
+      totalIssues.textContent = "no data";
+    }
 
     let cvePieChart = new Chart(accumulatedCvePie, {
         type: 'pie',

@@ -31,6 +31,7 @@ socket.onmessage = function (event) {
             if (cur_len !== Object.keys(data).length) {
                 /* var htmlToAdd = '<div class="row"><div class="coldiv"><a class="tile row statusTile"><div class="progress" id="progress-wrapper"><div id="pBar_' + Object.keys(data)[cur_len] + '" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div><br><div class="row statusEMba"><div class="col-sm log tile moduleLog"><ul class="log_phase" id="log_phase_' + Object.keys(data)[cur_len] + '"> </ul></div><div class="col-sm log tile phaseLog"><ul class="log_phase" id="log_module_' + Object.keys(data)[cur_len] + '"> </ul></div></div><button type="submit" class="btn" id="' + Object.keys(data)[cur_len] + '" onclick="pythonAjax(this.id)" >Upload</button></a></div></div>' */
                 var htmlToAdd = '<div class="row containerCSS" id="Container_' + Object.keys(data)[cur_len] + '"\n > <div class="title">\n <span>'+data[Object.keys(data)[cur_len]][0]["firmwarename"].split(".")[0]+'</span></div>\n<div class="row"><div class="col-sm log tile moduleLog"><ul class="log_phase logUL" id="log_phase_' + Object.keys(data)[cur_len] + '"> </ul > </div><div class="col-sm log tile phaseLog"><ul class="log_phase logUL" id="log_module_' + Object.keys(data)[cur_len] + '"> </ul></div></div><div class="row"><div class="progress col-sm-11" id="progress-wrapper"><div id="pBar_' + Object.keys(data)[cur_len] + '" class="progress-bar" role="progressbar" aria-valuenow: "0" aria - valuemin: "0"aria - valuemax= "100" > 0 % </div></div><div class="col-sm"><button type="submit" class="btn" id="' + Object.keys(data)[cur_len] + '" onclick="cancelLog(this.id)" >Cancel</button></div></div></div>'
+                //Todo: on non service dashboard web sites we get an exception:
                 document.getElementById("add_to_me").insertAdjacentHTML('afterend', htmlToAdd);
                 console.log("log_phase_" + Object.keys(data)[cur_len])
                 module_array.push("no module");
@@ -54,7 +55,6 @@ socket.onmessage = function (event) {
             }
     }
     catch(error){
-        //console.log(error.message);
         console.log(error);
     }
 }
