@@ -19,8 +19,6 @@ services:
     restart: always
     privileged: true
     volumes:
-        - ${FIRMWARE}/:/firmware
-        - ${LOG}/:/log
         - /var/run/docker.sock:/var/run/docker.sock
         - /tmp/:/tmp/
         - ./embark/:/app/embark/
@@ -38,6 +36,7 @@ services:
 
   redis:
     image: "redis:5"
+    command: --port 7777
     restart: always
     volumes:
       - /etc/timezone:/etc/timezone:ro

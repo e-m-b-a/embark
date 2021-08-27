@@ -134,8 +134,8 @@ pylinter
 
 
 if [[ "${#MODULES_TO_CHECK_ARR[@]}" -gt 0 ]]; then
-  echo -e "\\n""$GREEN""SUMMARY:\\n"
-  echo -e "\\nModules to check: $MODULES_TO_CHECK\\n"
+  echo -e "\\n\\n""$GREEN$BOLD""SUMMARY:$NC\\n"
+  echo -e "Modules to check: $MODULES_TO_CHECK\\n"
   for MODULE in "${MODULES_TO_CHECK_ARR[@]}"; do
     echo -e "$ORANGE$BOLD==> FIX MODULE: ""$MODULE""$NC"
   done

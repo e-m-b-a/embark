@@ -105,10 +105,11 @@ install_embark() {
       echo "MYSQL_ROOT_PASSWORD=embark"
       echo "MYSQL_DATABASE=embark"
       echo "REDIS_HOST=127.0.0.1"
-      echo "REDIS_HOST=6379"
+      echo "REDIS_PORT=7777"
       echo "SECRET_KEY=$DJANGO_SECRET_KEY"
     } >> .env
     echo -e "$ORANGE""$BOLD""WARNING: The default EMBArk configuration includes a secret key generated via the shell script!""$NC"
+    cat .env
   else
     echo -e "$GREEN""$BOLD""Using the provided EMBArk configuration file .env""$NC"
     cat .env
