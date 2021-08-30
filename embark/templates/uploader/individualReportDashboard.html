@@ -1,13 +1,6 @@
 {% extends "uploader/home.html" %}
 {% block maincontent %}
 
-<style>
-tbody tr td:first-child {
-  float: left;
-  min-width: 350px;
-}
-</style>
-
 <div>
   <h1><center>Firmware security scanning details</center></h1>
 </div>
@@ -35,7 +28,7 @@ tbody tr td:first-child {
         </div>
 
         <div class="card dataCardIR">
-          <table class="table table-striped table-borderless">
+          <table class="table table-striped table-borderless table-individualrep">
             <div class="row">
             <!-- Quick and dirty JS solution. Need to fix the report id for using django mechanisms -->
             <form action="javascript:;" onsubmit="return get_report_url();" method='GET'>

@@ -87,8 +87,7 @@ class Command(BaseCommand):
             resource_tracker_trigger = CronTrigger(second="*/5")
             # every 30 minutes
             delete_old_job_executions_tigger = CronTrigger(minute="*/30")
-            # older than 30 minutes
-            delete_old_than = 1800
+            delete_old_than = 900
         else:
             # Every hour
             resource_tracker_trigger = CronTrigger(minute="00")

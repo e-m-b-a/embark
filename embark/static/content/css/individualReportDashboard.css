@@ -26,3 +26,8 @@
 .IRReportCard1 {
     max-height: 450px;
 }
+
+.table-individualrep tr td:first-child {
+  float: left;
+  min-width: 350px;
+}
