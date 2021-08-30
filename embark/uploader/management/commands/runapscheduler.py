@@ -1,16 +1,15 @@
+import datetime as dtime
 import logging
 import psutil
 
-from django.conf import settings
-
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
+from django.conf import settings
 from django.core.management.base import BaseCommand
+from django.utils.datetime_safe import datetime
 from django_apscheduler.jobstores import DjangoJobStore
 from django_apscheduler.models import DjangoJobExecution
 from django_apscheduler import util
-from django.utils.datetime_safe import datetime
-import datetime as dtime
 
 from uploader.models import ResourceTimestamp
 
@@ -84,11 +83,11 @@ class Command(BaseCommand):
 
         # configure CronTrigger
         if options['test']:
-            # Every hour
-            resource_tracker_trigger = CronTrigger(second="*/1")
-            # everyday at midnight
-            delete_old_job_executions_tigger = CronTrigger(minute="*/3")
-            delete_old_than = 180
+            # Every hour -> changed to 5 seconds
+            resource_tracker_trigger = CronTrigger(second="*/5")
+            # every 30 minutes
+            delete_old_job_executions_tigger = CronTrigger(minute="*/30")
+            delete_old_than = 900
         else:
             # Every hour
             resource_tracker_trigger = CronTrigger(minute="00")
@@ -104,7 +103,9 @@ class Command(BaseCommand):
             max_instances=1,
             replace_existing=True,
         )
-        logger.info(f"Added job '{resource_tracker.__name__}'.")
+        logger.info("Added CronTrigger job %s.", resource_tracker.__name__)
+        logger.info("Added CronTrigger resource_tracker_trigger: %s.", resource_tracker_trigger)
+        logger.info("Added CronTrigger delete_old_job_executions_trigger: %s.", delete_old_job_executions_tigger)
 
         # start cleanup jobresource_tracker
         scheduler.add_job(

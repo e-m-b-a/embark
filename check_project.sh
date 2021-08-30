@@ -31,13 +31,17 @@ shellchecker() {
     echo -e "$GREEN""$BOLD""==> SUCCESS""$NC""\\n"
   else
     echo -e "\\n""$ORANGE$BOLD==> FIX ERRORS""$NC""\\n"
+    ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+    MODULES_TO_CHECK_ARR+=( "installer.sh" )
   fi
 
   echo -e "\\n""$GREEN""Run shellcheck on this script:""$NC""\\n"
-  if shellcheck ./codestyle_check.sh || [[ $? -ne 1 && $? -ne 2 ]]; then
+  if shellcheck ./check_project.sh || [[ $? -ne 1 && $? -ne 2 ]]; then
     echo -e "$GREEN""$BOLD""==> SUCCESS""$NC""\\n"
   else
     echo -e "\\n""$ORANGE$BOLD==> FIX ERRORS""$NC""\\n"
+    ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+    MODULES_TO_CHECK_ARR+=( "check_project.sh" )
   fi
 
   echo -e "\\n""$GREEN""Find shell scripts and run shellcheck on them:""$NC""\\n"
@@ -48,6 +52,8 @@ shellchecker() {
       echo -e "$GREEN""$BOLD""==> SUCCESS""$NC""\\n"
     else
       echo -e "\\n""$ORANGE$BOLD==> FIX ERRORS""$NC""\\n"
+      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+      MODULES_TO_CHECK_ARR+=( "$SH_SCRIPT" )
     fi
   done
 }
@@ -74,6 +80,8 @@ pycodestyle_check(){
       echo -e "$GREEN""$BOLD""==> SUCCESS""$NC""\\n"
     else
       echo -e "\\n""$ORANGE$BOLD==> FIX ERRORS""$NC""\\n"
+      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+      MODULES_TO_CHECK_ARR+=( "$PY_SCRIPT" )
     fi
   done
 }
@@ -84,15 +92,51 @@ pytester(){
 }
 
 pylinter(){
-  echo -e "[*] Searching python files and test with pylint (under construction)"
+  echo -e "\\n""$ORANGE""$BOLD""EMBArk pylint check""$NC""\\n""$BOLD""=================================================================""$NC"
   echo -e "[*] Do not forget to install the pylint-django plugin (e.g. apt-get install python3-pylint-django)" 
-  pylint --max-line-length=240 --load-plugins pylint_django embark/*
-  # current rating: 6.93/10
-  # current rating: 5.58/10
+  mapfile -t PY_SCRIPTS < <(find embark -type d -name migrations -prune -false -o -iname "*.py")
+  for PY_SCRIPT in "${PY_SCRIPTS[@]}"; do
+    echo -e "\\n""$GREEN""Run pylint on $PY_SCRIPT:""$NC""\\n"
+    mapfile -t PY_RESULT < <(pylint --max-line-length=240 -d C0115,C0114,C0116,W0511 --load-plugins pylint_django "$PY_SCRIPT")
+    local RATING_10=0
+    if [[ "${#PY_RESULT[@]}" -gt 0 ]]; then 
+      if ! printf '%s\n' "${PY_RESULT[@]}" | grep -q -P '^Your code has been rated at 10'; then
+        for LINE in "${PY_RESULT[@]}"; do
+          echo "$LINE"
+        done
+      else
+        RATING_10=1
+      fi
+      if [[ "$RATING_10" -ne 1 ]]; then
+        echo -e "\\n""$ORANGE$BOLD==> FIX ERRORS""$NC""\\n"
+        ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+        MODULES_TO_CHECK_ARR+=( "$PY_SCRIPT" )
+      else
+        echo -e "$GREEN""$BOLD""==> SUCCESS""$NC""\\n"
+      fi
+    else
+      echo -e "$GREEN""$BOLD""==> SUCCESS""$NC""\\n"
+    fi
+  done
+
+  echo -e "\\n""$GREEN""Run pylint on all scripts:""$NC""\\n"
+  pylint --max-line-length=240 -d C0115,C0114,C0116,W0511 --load-plugins pylint_django embark/* | grep "Your code has been rated"
+  # current rating: 9.52/10
+  # start rating: 5.58/10
 }
 
+MODULES_TO_CHECK=0
+MODULES_TO_CHECK_ARR=()
 shellchecker
 pycodestyle_check
-pytester
 pylinter
+# pytester
 
+
+if [[ "${#MODULES_TO_CHECK_ARR[@]}" -gt 0 ]]; then
+  echo -e "\\n\\n""$GREEN$BOLD""SUMMARY:$NC\\n"
+  echo -e "Modules to check: $MODULES_TO_CHECK\\n"
+  for MODULE in "${MODULES_TO_CHECK_ARR[@]}"; do
+    echo -e "$ORANGE$BOLD==> FIX MODULE: ""$MODULE""$NC"
+  done
+fi

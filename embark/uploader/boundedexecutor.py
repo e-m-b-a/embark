@@ -21,17 +21,17 @@ from embark.logreader import LogReader
 logger = logging.getLogger('web')
 
 # maximum concurrent running workers
-max_workers = 4
+MAX_WORKERS = 4
 # maximum queue bound
-max_queue = 0
+MAX_QUEUE = 0
 
 # assign the threadpool max_worker_threads
-executor = ThreadPoolExecutor(max_workers=max_workers)
+executor = ThreadPoolExecutor(max_workers=MAX_WORKERS)
 # create semaphore to track queue state
-semaphore = BoundedSemaphore(max_queue + max_workers)
+semaphore = BoundedSemaphore(MAX_QUEUE + MAX_WORKERS)
 
 # emba directories
-emba_script_location = "cd /app/emba/ && ./emba.sh"
+EMBA_SCRIPT_LOCATION = "cd /app/emba/ && ./emba.sh"
 
 
 class BoundedExecutor:
@@ -53,25 +53,29 @@ class BoundedExecutor:
         :return:
         """
 
-        logger.info(f"Starting: {cmd}")
+        logger.info("Starting: %s", cmd)
 
         # get return code to evaluate: 0 = success, 1 = failure,
         # see emba.sh for further information
         try:
 
             # run emba_process and wait for completion
-            emba_process = subprocess.call(cmd, shell=True)
+            # emba_process = subprocess.call(cmd, shell=True)
+            subprocess.call(cmd, shell=True)
 
             # success
-            logger.info(f"Success: {cmd}")
+            logger.info("Success: %s", cmd)
 
             # get csv log location
             csv_log_location = f"/app/emba/{settings.LOG_ROOT}/{primary_key}/f50_base_aggregator.csv"
 
             # read f50_aggregator and store it into a Result form
-            logger.info(f'Reading report from:')
+            logger.info('Reading report from: %s', csv_log_location)
             if Path(csv_log_location).exists:
-                cls.csv_read(primary_key, csv_log_location)
+                cls.csv_read(primary_key, csv_log_location, cmd)
+            else:
+                logger.error("CSV file %s for report: %s not generated", csv_log_location, primary_key)
+                logger.error("EMBA run was probably not successful!")
 
             # take care of cleanup
             if active_analyzer_dir:
@@ -79,7 +83,8 @@ class BoundedExecutor:
 
         except Exception as ex:
             # fail
-            logger.error(f"{ex}")
+            logger.error("EMBA run was probably not successful!")
+            logger.error("run_emba_cmd error: %s", ex)
 
             # finalize db entry
             if primary_key:
@@ -96,7 +101,7 @@ class BoundedExecutor:
                 firmware.finished = True
                 firmware.save()
 
-            logger.info(f"Successful cleaned up: {cmd}")
+            logger.info("Successful cleaned up: %s", cmd)
 
         finally:
             # take care of cleanup
@@ -143,8 +148,8 @@ class BoundedExecutor:
         if len(emba_startfile) == 1:
             image_file_location = f"{active_analyzer_dir}{emba_startfile.pop()}"
         else:
-            logger.error(f"Uploaded file: {firmware_file} doesnt comply with processable files.\n zip folder with no "
-                         f"extra directory in between.")
+            logger.error("Uploaded file: %s doesnt comply with processable files.", firmware_file)
+            logger.error("Zip folder with no extra directory in between.")
             shutil.rmtree(active_analyzer_dir)
             return None
 
@@ -161,18 +166,19 @@ class BoundedExecutor:
         firmware_flags.save()
 
         # build command
-        emba_cmd = f"{emba_script_location} -f {image_file_location} -l {emba_log_location} {emba_flags}"
+        emba_cmd = f"{EMBA_SCRIPT_LOCATION} -f {image_file_location} -l {emba_log_location} {emba_flags}"
 
         # submit command to executor threadpool
         emba_fut = BoundedExecutor.submit(cls.run_emba_cmd, emba_cmd, firmware_flags.pk, active_analyzer_dir)
 
         # start log_reader TODO: cancel future and return future
-        log_read_fut = BoundedExecutor.submit(LogReader, firmware_flags.pk)
+        # log_read_fut = BoundedExecutor.submit(LogReader, firmware_flags.pk)
+        BoundedExecutor.submit(LogReader, firmware_flags.pk)
 
         return emba_fut
 
     @classmethod
-    def submit(cls, fn, *args, **kwargs):
+    def submit(cls, function_cmd, *args, **kwargs):
         """
         same as concurrent.futures.Executor#submit, but with queue
 
@@ -181,17 +187,20 @@ class BoundedExecutor:
         return: future on success, None on full queue
         """
 
+        logger.info("submit fn: %s", function_cmd)
+        logger.info("submit cls: %s", cls)
+
         # check if semaphore can be acquired, if not queue is full
         queue_not_full = semaphore.acquire(blocking=False)
         if not queue_not_full:
-            logger.error(f"Executor queue full")
+            logger.error("Executor queue full")
             return None
         try:
-            future = executor.submit(fn, *args, **kwargs)
-        except Exception as e:
-            logger.error(f"Executor task could not be submitted")
+            future = executor.submit(function_cmd, *args, **kwargs)
+        except Exception as error:
+            logger.error("Executor task could not be submitted")
             semaphore.release()
-            raise e
+            raise error
         else:
             future.add_done_callback(lambda x: semaphore.release())
             return future
@@ -203,7 +212,7 @@ class BoundedExecutor:
         executor.shutdown(wait)
 
     @classmethod
-    def csv_read(cls, pk, path):
+    def csv_read(cls, primary_key, path, cmd):
         """
         This job reads the F50_aggregator file and stores its content into the Result model
         """
@@ -224,18 +233,19 @@ class BoundedExecutor:
                     else:
                         pass
 
-        logger.info(res_dict)
+        logger.info("result dict: %s", res_dict)
         res_dict.pop('FW_path', None)
 
         entropy_value = res_dict.get("entropy_value", 0)
-        if type(entropy_value) is str:
+        # if type(entropy_value) is str:
+        if isinstance(entropy_value, str):
             # entropy_value = re.findall(r'(\d+\.?\d*)', ' 7.55 bits per byte.')[0]
             entropy_value = re.findall(r'(\d+\.?\d*)', entropy_value)[0]
             entropy_value = entropy_value.strip('.')
 
         res = Result(
-            firmware=Firmware.objects.get(id=pk),
-            # emba_command=res_dict["emba_command"],
+            firmware=Firmware.objects.get(id=primary_key),
+            emba_command=cmd.replace("cd /app/emba/ && ", ""),
             architecture_verified=res_dict.get("architecture_verified", ''),
             # os_unverified=res_dict.get("os_unverified", ''),
             os_verified=res_dict.get("os_verified", ''),

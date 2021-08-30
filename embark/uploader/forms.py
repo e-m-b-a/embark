@@ -1,7 +1,10 @@
+import logging
 import django
 from django import forms
 
 from uploader import models
+
+logger = logging.getLogger('web')
 
 
 class FirmwareForm(forms.ModelForm):
@@ -14,7 +17,8 @@ class FirmwareForm(forms.ModelForm):
                   'web_reporter', 'emulation_test', 'dependency_check', 'multi_threaded', 'firmware_remove')
 
     def __init__(self, *args, **kwargs):
-        super(FirmwareForm, self).__init__(*args, **kwargs)
+        # super(FirmwareForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         for field in self.visible_fields():
 
@@ -31,13 +35,15 @@ class FirmwareForm(forms.ModelForm):
             try:
                 if field.field.readonly:
                     field.field.widget.attrs["disabled"] = "disabled"
-            except:
-                pass
+            except Exception as error:
+                logger.info("Exception passed: %s", error)
+                # pass
 
             try:
                 field.expert_mode = field.field.expert_mode
-            except:
-                pass
+            except Exception as error:
+                logger.info("Exception passed: %s", error)
+                # pass
 
         self.base_fields['firmware'] = forms.ModelChoiceField(queryset=models.FirmwareFile.objects, empty_label='Select firmware')
 
@@ -50,7 +56,8 @@ class DeleteFirmwareForm(forms.ModelForm):
         fields = ('firmware', )
 
     def __init__(self, *args, **kwargs):
-        super(DeleteFirmwareForm, self).__init__(*args, **kwargs)
+        # super(DeleteFirmwareForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         for field in self.visible_fields():
             if isinstance(field.field.widget, django.forms.widgets.Select):
                 field.field.widget.attrs['class'] = 'form-control select dropdownSelect'

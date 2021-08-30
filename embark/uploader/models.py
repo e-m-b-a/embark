@@ -20,7 +20,8 @@ class BooleanFieldExpertModeForm(forms.BooleanField):
     def __init__(self, input_formats=None, *args, **kwargs):
         self.expert_mode = kwargs.pop('expert_mode', True)
         self.readonly = kwargs.pop('readonly', False)
-        super(BooleanFieldExpertModeForm, self).__init__(*args, **kwargs)
+        # super(BooleanFieldExpertModeForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class BooleanFieldExpertMode(models.BooleanField):
@@ -31,7 +32,8 @@ class BooleanFieldExpertMode(models.BooleanField):
     def __init__(self, *args, **kwargs):
         self.expert_mode = kwargs.pop('expert_mode', True)
         self.readonly = kwargs.pop('readonly', False)
-        super(BooleanFieldExpertMode, self).__init__(*args, **kwargs)
+        # super(BooleanFieldExpertMode, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def formfield(self, **kwargs):
         defaults = {'form_class': BooleanFieldExpertModeForm, 'expert_mode': self.expert_mode, 'readonly': self.readonly}
@@ -47,7 +49,8 @@ class CharFieldExpertModeForm(forms.CharField):
     def __init__(self, input_formats=None, *args, **kwargs):
         self.expert_mode = kwargs.pop('expert_mode', True)
         self.readonly = kwargs.pop('readonly', False)
-        super(CharFieldExpertModeForm, self).__init__(*args, **kwargs)
+        # super(CharFieldExpertModeForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class TypedChoiceFieldExpertModeForm(forms.TypedChoiceField):
@@ -58,7 +61,8 @@ class TypedChoiceFieldExpertModeForm(forms.TypedChoiceField):
     def __init__(self, input_formats=None, *args, **kwargs):
         self.expert_mode = kwargs.pop('expert_mode', True)
         self.readonly = kwargs.pop('readonly', False)
-        super(TypedChoiceFieldExpertModeForm, self).__init__(*args, **kwargs)
+        # super(TypedChoiceFieldExpertModeForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class CharFieldExpertMode(models.CharField):
@@ -69,7 +73,8 @@ class CharFieldExpertMode(models.CharField):
     def __init__(self, *args, **kwargs):
         self.expert_mode = kwargs.pop('expert_mode', True)
         self.readonly = kwargs.pop('readonly', False)
-        super(CharFieldExpertMode, self).__init__(*args, **kwargs)
+        # super(CharFieldExpertMode, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def formfield(self, **kwargs):
         defaults = {'form_class': CharFieldExpertModeForm, 'choices_form_class': TypedChoiceFieldExpertModeForm, 'expert_mode': self.expert_mode, 'readonly': self.readonly}
@@ -98,8 +103,8 @@ class FirmwareFile(models.Model):
     def get_abs_folder_path(self):
         return f"/app/embark/{settings.MEDIA_ROOT}/{self.pk}"
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    # def __init__(self, *args, **kwargs):
+    #    super().__init__(*args, **kwargs)
         # self.file_name = self.file.name
 
     def __str__(self):
@@ -148,7 +153,7 @@ class Firmware(models.Model):
     cwe_checker = BooleanFieldExpertMode(
         help_text='Enables cwe-checker,-c will be added (docker mode currently not supported)', default=False, expert_mode=True, blank=True)
     docker_container = BooleanFieldExpertMode(
-        help_text='Run emba in docker container, -D will be added (currently not supported)', default=True, expert_mode=True, blank=True,
+        help_text='Run emba in docker container, -D will be added (currently not supported)', default=False, expert_mode=True, blank=True,
         readonly=True)
     deep_extraction = BooleanFieldExpertMode(
         help_text='Enable deep extraction, -x will be added', default=False, expert_mode=True, blank=True)
@@ -187,16 +192,14 @@ class Firmware(models.Model):
     class Meta:
         app_label = 'uploader'
 
-    """
+        """
         build shell command from input fields
-
         :params: None
-
         :return:
-    """
+        """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    # def __init__(self, *args, **kwargs):
+    #    super().__init__(*args, **kwargs)
 
     def __str__(self):
         return f"{self.id}({self.firmware})"
@@ -220,9 +223,8 @@ class Firmware(models.Model):
             command = command + " -a " + str(self.firmware_Architecture)
         if self.cwe_checker:
             command = command + " -c"
-        # TODO: check if already adapted to use-case
-        # if self.docker_container:
-        #     command = command + " -D"
+        if self.docker_container:
+            command = command + " -D"
         if self.deep_extraction:
             command = command + " -x"
         if self.log_path:
@@ -248,12 +250,12 @@ class Firmware(models.Model):
 
 
 class Result(models.Model):
-    # TODO missing: emba_command, os_unverified, bins_checked, strcpy_bin
-    # TODO different: FW_path/firmware
+    # TODO missing: emba_command
 
     firmware = models.ForeignKey(Firmware, on_delete=models.CASCADE, help_text='')
     architecture_verified = models.CharField(blank=True, null=True, max_length=100, help_text='')
     os_verified = models.CharField(blank=True, null=True, max_length=100, help_text='')
+    emba_command = models.CharField(blank=True, null=True, max_length=300, help_text='')
     files = models.IntegerField(default=0, help_text='')
     directories = models.IntegerField(default=0, help_text='')
     entropy_value = models.FloatField(default=0.0, help_text='')
@@ -300,8 +302,8 @@ class DeleteFirmware(models.Model):
     class Meta:
         app_label = 'uploader'
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    # def __init__(self, *args, **kwargs):
+    #    super().__init__(*args, **kwargs)
 
 
 class ResourceTimestamp(models.Model):

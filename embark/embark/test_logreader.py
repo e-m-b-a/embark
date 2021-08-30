@@ -1,13 +1,13 @@
-from django.test import TestCase
-from . import logreader
 import logging
-
+from django.test import TestCase
 from uploader.models import Firmware, FirmwareFile
+
+from . import logreader
 
 logger = logging.getLogger('web')
 
 
-class test_logreader(TestCase):
+class TestLogreader(TestCase):
 
     def setUp(self):
         self.log_string1 = "[\x1b[0;33m*\x1b[0m] Tue Jun 15 12:12:26 UTC 2021 - P02_firmware_bin_file_check starting\n"
@@ -27,11 +27,11 @@ class test_logreader(TestCase):
         firmware.save()
 
     def test_in_pro(self):
-        lr = logreader.LogReader(-1)
+        logr = logreader.LogReader(-1)
         res1 = []
         res2 = []
         for line in self.log_list:
-            res1, res2 = lr.produce_test_output(line)
+            res1, res2 = logr.produce_test_output(line)
         self.assertEqual("P02_firmware_bin_file_check", res1[0][0])
         self.assertEqual("Test ended on Sat Jul  3 00:07:10 UTC 2021 and took about 00:34:24",
                          res2[0][1])

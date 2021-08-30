@@ -1,19 +1,19 @@
-import difflib
+# import difflib
 import json
-import re
+# import re
 
-import rx
-import rx.operators as ops
+import logging
+
+# import rx
+# import rx.operators as ops
 from asgiref.sync import async_to_sync
 
 from channels.generic.websocket import WebsocketConsumer
 from channels.layers import get_channel_layer
 
-from inotify_simple import flags
-from django.conf import settings
-from uploader.models import Firmware
-
-import logging
+# from inotify_simple import flags
+# from django.conf import settings
+# from uploader.models import Firmware
 
 logger = logging.getLogger('web')
 
@@ -29,7 +29,7 @@ class WSConsumer(WebsocketConsumer):
 
     # this method is executed when the connection to the frontend is established
     def connect(self):
-        logger.info(f"WS - connect")
+        logger.info("WS - connect")
         # create room group for channels communication
         async_to_sync(self.channel_layer.group_add)(
             self.room_group_name,
@@ -37,18 +37,18 @@ class WSConsumer(WebsocketConsumer):
         )
         # accept socket connection
         self.accept()
-        logger.info(f"WS - connect - accept")
+        logger.info("WS - connect - accept")
 
         # called when received data from frontend
         # TODO: implement this for processing client input at backend -> page refresh should be here
 
     def receive(self, text_data=None, bytes_data=None):
-        logger.info(f"WS - receive")
-        pass
+        logger.info("WS - receive")
+        # pass
 
     # called when websocket connection is closed
     def disconnect(self, close_code):
-        logger.info(f"WS - disconnected")
+        logger.info("WS - disconnected: %s", close_code)
         async_to_sync(self.channel_layer.group_discard)(
             self.room_group_name,
             self.channel_name
@@ -59,6 +59,6 @@ class WSConsumer(WebsocketConsumer):
         # Receive message and extract data from room group
         message = event['message']
         # logger.info(f"WS - send message: " + str(message))
-        logger.info(f"WS - send message")
+        logger.info("WS - send message")
         # Send message to WebSocket
         self.send(json.dumps(message, sort_keys=False))

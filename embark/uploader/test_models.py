@@ -3,7 +3,7 @@ from django.test import TestCase
 from .models import Firmware, FirmwareFile
 
 
-class test_models(TestCase):
+class TestModels(TestCase):
 
     def setUp(self):
         self.fw_file = FirmwareFile.objects.create()
@@ -35,7 +35,7 @@ class test_models(TestCase):
         firmware.multi_threaded = True
         firmware.firmware_remove = True
 
-        expected_string = " -X version -Y vendor -Z device -N notes -a x64 -c -x -i -g -s -z -W -E -F -t -r"
+        expected_string = " -X version -Y vendor -Z device -N notes -a x64 -c -D -x -i -g -s -z -W -E -F -t -r"
         self.assertEqual(firmware.get_flags(), expected_string)
 
     def test_get_flags_all_false(self):

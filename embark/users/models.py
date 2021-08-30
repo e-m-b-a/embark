@@ -1,16 +1,19 @@
+import enum
+
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 from lib.choice_enum import ChoiceIntEnum
-import enum
 
 
 @enum.unique
 class Role(ChoiceIntEnum):
+    # pylint: disable=invalid-name
     viewer = 0
     editor = 1
     owner = 2
     manager = 3
+    # pylint: enable=invalid-name
 
 
 class Team(models.Model):

@@ -4,17 +4,18 @@ import pathlib
 import re
 import time
 
+import logging
 import rx
 import rx.operators as ops
-import logging
 
-from channels.generic.websocket import WebsocketConsumer
+# from channels.generic.websocket import WebsocketConsumer
+from channels.layers import get_channel_layer
 
 from django.conf import settings
-from uploader.models import Firmware, FirmwareFile
+# from uploader.models import Firmware, FirmwareFile
+from uploader.models import Firmware
 from inotify_simple import INotify, flags
 from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
 
 logger = logging.getLogger('web')
 
@@ -32,8 +33,8 @@ class LogReader:
         self.firmware_id_str = str(self.firmware_id)
         try:
             self.firmwarefile = Firmware.objects.get(pk=firmware_id).firmware.__str__()
-        except Exception as e:
-            logger.info(e)
+        except Exception as error:
+            logger.info("Firmware file exception: %s", error)
 
         # set variables for channels communication
         self.room_group_name = 'updatesgroup'
@@ -41,7 +42,7 @@ class LogReader:
 
         # variables for cleanup
         self.finish = False
-        self.wd = None
+        # self.wd = None
 
         # for testing
         self.test_list1 = []
@@ -133,7 +134,7 @@ class LogReader:
                  :return: None
        """
 
-        logger.info(f"read loop started for {self.firmware_id}")
+        logger.info("read loop started for %s", self.firmware_id)
 
         while not self.finish:
 
@@ -168,7 +169,7 @@ class LogReader:
                         self.copy_file_content(tmp, firmware.path_to_logs)
 
         self.cleanup()
-        return
+        # return
 
     def cleanup(self):
 
@@ -177,9 +178,11 @@ class LogReader:
         """
         # inotify = INotify()
         # inotify.rm_watch(self.wd)
-        logger.info(f"Log reader cleaned up for {self.firmware_id}")
+        logger.info("Log reader cleaned up for %s", self.firmware_id)
 
-    def process_line(self, inp, pat):
+    @classmethod
+    # def process_line(self, inp, pat):
+    def process_line(cls, inp, pat):
 
         """
                   Regex function for lambda
@@ -190,8 +193,8 @@ class LogReader:
 
         if re.match(pat, inp):
             return True
-        else:
-            return False
+        # else:
+        return False
 
     def copy_file_content(self, diff, log_path):
 
@@ -228,10 +231,10 @@ class LogReader:
                   :return: None
         """
 
-        status_pattern = "\[\*\]*"
-        phase_pattern = "\[\!\]*"
+        status_pattern = "\\[\\*\\]*"
+        phase_pattern = "\\[\\!\\]*"
 
-        color_pattern = "\\x1b\[.{1,5}m"
+        color_pattern = "\\x1b\\[.{1,5}m"
 
         cur_ar = tmp_inp.splitlines()
 
@@ -260,17 +263,17 @@ class LogReader:
             lambda x: [self.update_phase(x), self.test_list2.append(x)]
         )
 
-        # TODO: add more observers for more information
-
-    def inotify_events(self, path):
+    @classmethod
+    def inotify_events(cls, path):
+        # def inotify_events(self, path):
         inotify = INotify()
-        # TODO: add/remove flags to watch
         watch_flags = flags.CREATE | flags.DELETE | flags.MODIFY | flags.DELETE_SELF | flags.CLOSE_NOWRITE | flags.CLOSE_WRITE
         try:
             # add watch on file
             inotify.add_watch(path, watch_flags)
             return inotify.read()
-        except Exception as e:
+        except Exception:
+            # logger.info("inotify_event error: emba.log - %s", error)
             return []
 
     def produce_test_output(self, inp):

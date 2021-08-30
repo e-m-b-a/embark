@@ -1,17 +1,16 @@
 from pathlib import Path
 
-from django.conf import settings
-
-from django import forms
-from django.forms import model_to_dict
-
 import json
 import os
 import time
 import logging
+
 from operator import itemgetter
 from http import HTTPStatus
 
+from django.conf import settings
+# from django import forms
+from django.forms import model_to_dict
 from django.shortcuts import render
 from django.template.loader import get_template
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, StreamingHttpResponse
@@ -19,14 +18,14 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.views.decorators.http import require_http_methods
-
+from django.views.decorators.cache import cache_control
 from django.template import loader
 
-from uploader.boundedExecutor import BoundedExecutor
+from uploader.boundedexecutor import BoundedExecutor
 from uploader.archiver import Archiver
 from uploader.forms import FirmwareForm, DeleteFirmwareForm
-from uploader.models import Firmware, FirmwareFile, DeleteFirmware, Result, ResourceTimestamp
-from django.views.decorators.cache import cache_control
+# from uploader.models import Firmware, FirmwareFile, DeleteFirmware, Result, ResourceTimestamp
+from uploader.models import Firmware, FirmwareFile, Result, ResourceTimestamp
 
 logger = logging.getLogger('web')
 
@@ -73,23 +72,23 @@ def download_zipped(request, analyze_id):
 
         if os.path.exists(firmware.path_to_logs):
             archive_path = Archiver.pack(firmware.path_to_logs, 'zip', firmware.path_to_logs, '.')
-            logger.debug(f"Archive {archive_path} created")
+            logger.debug("Archive %s created", archive_path)
             with open(archive_path, 'rb') as requested_log_dir:
                 response = HttpResponse(requested_log_dir.read(), content_type="application/zip")
                 response['Content-Disposition'] = 'inline; filename=' + archive_path
                 return response
 
-        logger.warning(f"Firmware with ID: {analyze_id} does not exist")
-        return HttpResponse(f"Firmware with ID: {analyze_id} does not exist")
+        logger.warning("Firmware with ID: %s does not exist", analyze_id)
+        return HttpResponse("Firmware with ID: %s does not exist", analyze_id)
 
     except Firmware.DoesNotExist as ex:
-        logger.warning(f"Firmware with ID: {analyze_id} does not exist in DB")
-        logger.warning(f"{ex}")
-        return HttpResponse(f"Firmware with ID: {analyze_id} does not exist in DB")
+        logger.warning("Firmware with ID: %s does not exist in DB", analyze_id)
+        logger.warning("Exception: %s", ex)
+        return HttpResponse("Firmware ID does not exist in DB")
     except Exception as ex:
-        logger.error(f"Error occured while querying for Firmware object with ID: {analyze_id}")
-        logger.error(f"{ex}")
-        return HttpResponse(f"Error occured while querying for Firmware object with ID: {analyze_id}")
+        logger.error("Error occured while querying for Firmware object: %s", analyze_id)
+        logger.error("Exception: %s", ex)
+        return HttpResponse("Error occured while querying for Firmware object")
 
 
 @csrf_exempt
@@ -121,29 +120,29 @@ def start_analysis(request, refreshed):
             # TODO: make clean db access
             firmware_file = FirmwareFile.objects.get(pk=firmware_flags.firmware.pk)
 
-            logger.info(firmware_file)
+            logger.info("Firmware file: %s", firmware_file)
 
             # inject into bounded Executor
             if BoundedExecutor.submit_firmware(firmware_flags=firmware_flags, firmware_file=firmware_file):
                 if refreshed == 1:
                     return HttpResponseRedirect("../../upload/1/")
-                else:
-                    return HttpResponseRedirect("../../serviceDashboard/")
-            else:
-                return HttpResponse("Queue full")
-        else:
-            logger.error("Posted Form is Invalid")
-            logger.error(form.errors)
-            return HttpResponse("Invalid Form")
+                # else:
+                return HttpResponseRedirect("../../serviceDashboard/")
+            # else:
+            return HttpResponse("Queue full")
+        # else:
+        logger.error("Posted Form is Invalid")
+        logger.error(form.errors)
+        return HttpResponse("Invalid Form")
 
     analyze_form = FirmwareForm()
     delete_form = DeleteFirmwareForm()
 
     if refreshed == 1:
         return render(request, 'uploader/fileUpload.html', {'analyze_form': analyze_form, 'delete_form': delete_form, 'username': request.user.username})
-    else:
-        html_body = get_template('uploader/embaServiceDashboard.html')
-        return HttpResponse(html_body.render({'username': request.user.username}))
+    # else:
+    html_body = get_template('uploader/embaServiceDashboard.html')
+    return HttpResponse(html_body.render({'username': request.user.username}))
 
 
 @csrf_exempt
@@ -177,6 +176,7 @@ def individual_report_dashboard(request, analyze_id):
     :return: rendered individualReportDashboard
     """
     html_body = get_template('uploader/individualReportDashboard.html')
+    logger.info("individual_dashboard - analyze_id: %s", analyze_id)
     return HttpResponse(html_body.render({'username': request.user.username}))
 
 
@@ -234,22 +234,22 @@ def log_streamer(request):
         try:
             firmware = Firmware.objects.get(id=int(firmware_id))
         except Firmware.DoesNotExist:
-            logger.error(f"Firmware with id: {firmware_id}. Does not exist.")
+            logger.error("Firmware with id: %s. Does not exist.", firmware_id)
             return False
 
         file_path = f"/app/emba/{settings.LOG_ROOT}/{firmware.id}/emba.log"
         mtime = os.path.getmtime(file_path)
-        with open(file_path) as f:
+        with open(file_path) as file_:
             start = -int(from_) or -2000
             filestart = True
             while filestart:
                 try:
-                    f.seek(start, 2)
+                    file_.seek(start, 2)
                     filestart = False
-                    result = f.read()
-                    last = f.tell()
-                    t = loader.get_template('uploader/log.html')
-                    yield t.render({"result": result})
+                    result = file_.read()
+                    last = file_.tell()
+                    templ = loader.get_template('uploader/log.html')
+                    yield templ.render({"result": result})
                 except IOError:
                     start += 50
         reset = 0
@@ -262,16 +262,16 @@ def log_streamer(request):
                     yield "<!-- empty -->"
                 continue
             mtime = newmtime
-            with open(file_path) as f:
-                f.seek(last)
-                result = f.read()
+            with open(file_path) as file_:
+                file_.seek(last)
+                result = file_.read()
                 if result:
-                    t = loader.get_template('uploader/log.html')
+                    templ = loader.get_template('uploader/log.html')
                     yield result + "<script>$('html,body').animate(" \
                                    "{ scrollTop: $(document).height() }, 'slow');</script>"
-                last = f.tell()
-    except Exception as e:
-        logger.exception('Wide exception in logstreamer')
+                last = file_.tell()
+    except Exception as error:
+        logger.exception('Wide exception in logstreamer: %s', error)
         return False
 
 
@@ -289,7 +289,7 @@ def get_logs(request):
 
     """
     generator = log_streamer(request)
-    if type(generator) is bool:
+    if isinstance(generator, bool):
         return HttpResponse('Error in Streaming logs')
     response = StreamingHttpResponse(log_streamer(request))
     response['X-Accel-Buffering'] = "no"
@@ -313,11 +313,12 @@ def reports(request):
 @csrf_exempt
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def html_report(request, analyze_id, hmtl_file):
+def html_report(request, analyze_id, html_file):
 
     report_path = Path(f'/app/emba{request.path}')
 
     html_body = get_template(report_path)
+    logger.info("html_report - analyze_id: %s html_file: %s", analyze_id, html_file)
     return HttpResponse(html_body.render())
 
 
@@ -336,13 +337,20 @@ def html_report_resource(request, analyze_id, img_file):
         content_type = "image/png"
 
     resource_path = Path(f'/app/emba{request.path}')
+    logger.info("html_report_resource - analyze_id: %s request.path: %s", analyze_id, request.path)
 
     try:
-        with open(resource_path, "rb") as f:
-            return HttpResponse(f.read(), content_type=content_type)
+        # CodeQL issue is not relevant as the urls are defined via urls.py
+        with open(resource_path, "rb") as file_:
+            return HttpResponse(file_.read(), content_type=content_type)
     except IOError as ex:
         logger.error(ex)
-    logger.error(request.path)
+        logger.error(request.path)
+
+    # just in case -> back to report intro
+    report_path = Path(f'/app/emba{request.path}')
+    html_body = get_template(report_path)
+    return HttpResponse(html_body.render())
 
 
 @require_http_methods(["POST"])
@@ -360,7 +368,7 @@ def delete_file(request):
         form = DeleteFirmwareForm(request.POST)
 
         if form.is_valid():
-            logger.info(f"Form {form} is valid")
+            logger.info("Form %s is valid", form)
 
             # get relevant data
             firmware_file = form.cleaned_data['firmware']
@@ -368,10 +376,10 @@ def delete_file(request):
 
             return HttpResponseRedirect("../../home/upload/1/")
 
-        else:
-            logger.error(f"Form {form} is invalid")
-            logger.error(f"{form.errors}")
-            return HttpResponse("invalid Form")
+        # else:
+        logger.error("Form %s is invalid", form)
+        logger.error("Form error: %s", form.errors)
+        return HttpResponse("invalid Form")
 
     return HttpResponseRedirect("../../home/upload/1/")
 
@@ -383,11 +391,12 @@ def get_load(request):
     try:
         query_set = ResourceTimestamp.objects.all()
         result = {}
-        for k in model_to_dict(query_set[0]).keys():
+        # for k in model_to_dict(query_set[0]).keys():
+        for k in model_to_dict(query_set[0]):
             result[k] = tuple(model_to_dict(d)[k] for d in query_set)
         return JsonResponse(data=result, status=HTTPStatus.OK)
     except ResourceTimestamp.DoesNotExist:
-        logger.error(f'ResourceTimestamps not found in database')
+        logger.error('ResourceTimestamps not found in database')
         return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)
 
 
@@ -395,6 +404,9 @@ def get_load(request):
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def get_individual_report(request, analyze_id):
+    """
+    Get individual firmware report based on scan id (analyze_id)
+    """
     firmware_id = analyze_id
     if not firmware_id:
         logger.error('Bad request for get_individual_report')
@@ -410,7 +422,7 @@ def get_individual_report(request, analyze_id):
 
         return JsonResponse(data=return_dict, status=HTTPStatus.OK)
     except Result.DoesNotExist:
-        logger.error(f'Report for firmware_id: {firmware_id} not found in database')
+        logger.error('Report for firmware_id: %s not found in database', firmware_id)
         return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)
 
 
@@ -438,6 +450,7 @@ def get_accumulated_reports(request):
         result = model_to_dict(result)
         # Pop firmware object_id
         result.pop('firmware', None)
+        result.pop('emba_command', None)
 
         # Get counts for all strcpy_bin values
         strcpy_bin = json.loads(result.pop('strcpy_bin', '{}'))
@@ -458,7 +471,9 @@ def get_accumulated_reports(request):
             if field not in data:
                 data[field] = {'sum': 0, 'count': 0}
             data[field]['count'] += 1
-            data[field]['sum'] += result[field]
+            # logger.info("result-field %s", result[field])
+            if result[field] is not None:
+                data[field]['sum'] += result[field]
 
     for field in data:
         if field not in charfields:

@@ -5,7 +5,7 @@ from django.test import TestCase
 from .archiver import Archiver
 
 
-class unpacker_test(TestCase):
+class UnpackerTest(TestCase):
 
     def setUp(self):
         self.archiver = Archiver
@@ -32,12 +32,12 @@ class unpacker_test(TestCase):
         archive_name = "invalid.txt"
 
         # create invalid archive
-        f = open(archive_name, "a")
-        f.close()
+        archivef = open(archive_name, "a")
+        archivef.close()
 
         # check for error
         with self.assertRaises(ValueError):
-            self.archiver.unpack(f.name)
+            self.archiver.unpack(archivef.name)
 
         # delete file
         os.remove(archive_name)

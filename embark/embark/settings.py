@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 from pathlib import Path
 import os
 import sys
-import channels.layers
+# import channels.layers
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,7 +24,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 
 # TODO: Move this to .env file
-SECRET_KEY = 'django-insecure-3vwtv++oulw75(9qch!ry4-0u38xqj=lw$!#u7#6$8nq%dkv51'
+# SECRET_KEY = 'django-insecure-3vwtv++oulw75(9qch!ry4-0u38xqj=lw$!#u7#6$8nq%dkv51'
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -202,7 +203,7 @@ MEDIA_ROOT = os.path.join('uploadedFirmwareImages')  # media directory in the ro
 MEDIA_URL = '/uploadedFirmwareImages/'
 LOG_ROOT = os.path.join('emba_logs')  # media directory in the root directory
 LOG_URL = '/emba_logs/'
-REDIS_HOST = os.environ.get('REDIS_HOST', 'host.docker.internal')
+REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
 REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
 
 # Default primary key field type
@@ -232,8 +233,7 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('127.0.0.1', REDIS_PORT)],
-            # "hosts": [(REDIS_HOST, REDIS_PORT)],
+            "hosts": [(REDIS_HOST, REDIS_PORT)],
         },
     },
 }

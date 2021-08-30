@@ -18,7 +18,7 @@ class Archiver:
 
         # register additional formats ( gz )
         shutil.register_unpack_format('gz', ['.gz', ], self.gunzip_file)
-        pass
+        # pass
 
     @staticmethod
     def gunzip_file(file_name, work_dir):
@@ -78,11 +78,12 @@ class Archiver:
                 shutil.unpack_archive(file_location)
             logger.info("Unpacked file successful: %s", file_location)
             return True
-        except shutil.ReadError:
-            logging.error(f"Format {file_location.split('.', 1)[1]} is not supported")
-            raise ValueError
+        except shutil.ReadError as ex:
+            # logging.error(f"Format {file_location.split('.', 1)[1]} is not supported")
+            logging.error("Format %s is not supported", file_location.split('.', 1)[1])
+            raise ValueError from ex
         except Exception as ex:
-            logging.error(f"Undefined Error during unpacking file: {file_location}", )
+            logging.error("Undefined Error during unpacking file: %s", file_location)
             logging.error(ex)
             raise ex
 
@@ -123,7 +124,7 @@ class Archiver:
             if file_name.endswith(ext):
                 return True
 
-        logger.info(f"Format for {file_name} is not supported by archiver")
+        logger.info("Format for %s is not supported by archiver", file_name)
         return False
 
     @classmethod
