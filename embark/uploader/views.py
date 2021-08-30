@@ -313,12 +313,12 @@ def reports(request):
 @csrf_exempt
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def html_report(request, analyze_id, hmtl_file):
+def html_report(request, analyze_id, html_file):
 
     report_path = Path(f'/app/emba{request.path}')
 
     html_body = get_template(report_path)
-    logger.info("html_report - analyze_id: %s hmtl_file: %s", analyze_id, hmtl_file)
+    logger.info("html_report - analyze_id: %s html_file: %s", analyze_id, html_file)
     return HttpResponse(html_body.render())
 
 
