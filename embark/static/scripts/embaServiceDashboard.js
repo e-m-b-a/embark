@@ -68,8 +68,7 @@ socket.onmessage = function (event) {
  * This method is called when the websocket connection is closed
  *  */
 socket.onclose = function (event) {
-    //console.log(event.reason)
-    console.error('Chat socket closed unexpectedly', event);
+    // console.error('Chat socket closed unexpectedly', event);
 };
 
 /**
