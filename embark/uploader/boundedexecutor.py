@@ -71,7 +71,8 @@ class BoundedExecutor:
 
             # read f50_aggregator and store it into a Result form
             logger.info('Reading report from: %s', csv_log_location)
-            if Path(csv_log_location).exists:
+            # if Path(csv_log_location).exists:
+            if Path(csv_log_location).is_file():
                 cls.csv_read(primary_key, csv_log_location, cmd)
             else:
                 logger.error("CSV file %s for report: %s not generated", csv_log_location, primary_key)
