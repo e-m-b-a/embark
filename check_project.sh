@@ -97,7 +97,7 @@ pylinter(){
   mapfile -t PY_SCRIPTS < <(find embark -type d -name migrations -prune -false -o -iname "*.py")
   for PY_SCRIPT in "${PY_SCRIPTS[@]}"; do
     echo -e "\\n""$GREEN""Run pylint on $PY_SCRIPT:""$NC""\\n"
-    mapfile -t PY_RESULT < <(pylint --max-line-length=240 -d C0115,C0114,C0116,W0511 --load-plugins pylint_django "$PY_SCRIPT")
+    mapfile -t PY_RESULT < <(pylint --max-line-length=240 -d C0115,C0114,C0116,W0511,W0703 --load-plugins pylint_django "$PY_SCRIPT")
     local RATING_10=0
     if [[ "${#PY_RESULT[@]}" -gt 0 ]]; then 
       if ! printf '%s\n' "${PY_RESULT[@]}" | grep -q -P '^Your code has been rated at 10'; then
@@ -120,7 +120,7 @@ pylinter(){
   done
 
   echo -e "\\n""$GREEN""Run pylint on all scripts:""$NC""\\n"
-  pylint --max-line-length=240 -d C0115,C0114,C0116,W0511 --load-plugins pylint_django embark/* | grep "Your code has been rated"
+  pylint --max-line-length=240 -d C0115,C0114,C0116,W0511,W0703 --load-plugins pylint_django embark/* | grep "Your code has been rated"
   # current rating: 9.52/10
   # start rating: 5.58/10
 }
