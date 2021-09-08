@@ -151,9 +151,9 @@ class Firmware(models.Model):
         help_text='Architecture of the linux firmware [MIPS, ARM, x86, x64, PPC] -a will be added',
         max_length=MAX_LENGTH, blank=True, expert_mode=True)
     cwe_checker = BooleanFieldExpertMode(
-        help_text='Enables cwe-checker,-c will be added (docker mode currently not supported)', default=False, expert_mode=True, blank=True)
-    docker_container = BooleanFieldExpertMode(
-        help_text='Run emba in docker container, -D will be added (currently not supported)', default=False, expert_mode=True, blank=True,
+        help_text='Enables cwe-checker,-c will be added', default=False, expert_mode=True, blank=True)
+    dev_mode = BooleanFieldExpertMode(
+        help_text='Run emba in developer mode, -D will be added (disabling developer mode is currently not supported)', default=True, expert_mode=True, blank=True,
         readonly=True)
     deep_extraction = BooleanFieldExpertMode(
         help_text='Enable deep extraction, -x will be added', default=False, expert_mode=True, blank=True)
@@ -210,7 +210,7 @@ class Firmware(models.Model):
 
         :return: string formatted input flags for emba
         """
-        command = ""
+        command = "-D"
         if self.version:
             command = command + " -X " + str(self.version)
         if self.vendor:
@@ -223,8 +223,9 @@ class Firmware(models.Model):
             command = command + " -a " + str(self.firmware_Architecture)
         if self.cwe_checker:
             command = command + " -c"
-        if self.docker_container:
+        if self.dev_mode:
             command = command + " -D"
+            logger.info("current command %s", command)
         if self.deep_extraction:
             command = command + " -x"
         if self.log_path:
@@ -246,6 +247,7 @@ class Firmware(models.Model):
         if self.firmware_remove:
             command = command + " -r"
         # running emba
+        logger.info("final command %s", command)
         return command
 
 

@@ -180,6 +180,12 @@ install_debs() {
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
 echo -e "$ORANGE""$BOLD""WARNING: This script can harm your environment!""$NC"
 
+if [ "$#" -ne 1 ]; then
+  echo -e "$RED""$BOLD""Invalid number of arguments""$NC"
+  print_help
+  exit 1
+fi
+
 while getopts eFrh OPT ; do
   case $OPT in
     e)

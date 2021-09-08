@@ -23,7 +23,7 @@ class TestModels(TestCase):
         firmware.notes = "notes"
         firmware.firmware_Architecture = "x64"
         firmware.cwe_checker = True
-        firmware.docker_container = True
+        firmware.dev_mode = True
         firmware.deep_extraction = True
         firmware.log_path = True
         firmware.grep_able_log = True
@@ -51,7 +51,7 @@ class TestModels(TestCase):
         firmware.notes = None
         firmware.firmware_Architecture = None
         firmware.cwe_checker = False
-        firmware.docker_container = False
+        firmware.dev_mode = False
         firmware.deep_extraction = False
         firmware.log_path = False
         firmware.grep_able_log = False
