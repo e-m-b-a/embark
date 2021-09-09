@@ -157,6 +157,7 @@ install_embark() {
 
 install_debs() {
   echo -e "\n$GREEN""$BOLD""Install debian packages for EMBArk installation""$NC"
+  apt-get update -y
   if ! command -v git > /dev/null ; then
     apt-get install -y -q git
   fi

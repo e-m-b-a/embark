@@ -153,8 +153,7 @@ class Firmware(models.Model):
     cwe_checker = BooleanFieldExpertMode(
         help_text='Enables cwe-checker,-c will be added', default=False, expert_mode=True, blank=True)
     dev_mode = BooleanFieldExpertMode(
-        help_text='Run emba in developer mode, -D will be added (disabling developer mode is currently not supported)', default=True, expert_mode=True, blank=True,
-        readonly=True)
+        help_text='Run emba in developer mode, -D will be added (disabling developer mode is currently not supported)', default=True, expert_mode=True, blank=True)
     deep_extraction = BooleanFieldExpertMode(
         help_text='Enable deep extraction, -x will be added', default=False, expert_mode=True, blank=True)
     log_path = BooleanFieldExpertMode(
@@ -210,7 +209,7 @@ class Firmware(models.Model):
 
         :return: string formatted input flags for emba
         """
-        command = "-D"
+        command = ""
         if self.version:
             command = command + " -X " + str(self.version)
         if self.vendor:
@@ -225,7 +224,6 @@ class Firmware(models.Model):
             command = command + " -c"
         if self.dev_mode:
             command = command + " -D"
-            logger.info("current command %s", command)
         if self.deep_extraction:
             command = command + " -x"
         if self.log_path:
@@ -247,7 +245,7 @@ class Firmware(models.Model):
         if self.firmware_remove:
             command = command + " -r"
         # running emba
-        logger.info("final command %s", command)
+        logger.info("final emba parameters %s", command)
         return command
 
 
