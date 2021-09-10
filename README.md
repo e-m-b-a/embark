@@ -25,7 +25,7 @@ Furthermore *EMBArk* improves the data provision by aggregating the various scan
 4. Further details are available in the wiki (See [installation](https://github.com/e-m-b-a/embark/wiki/Installation))
 5. If you are running into issues or need to install *EMBArk* manually please take a look at the wiki (See [build instructions](https://github.com/e-m-b-a/embark/wiki/Build-EMBArk))
 
-*EMBArk* is using the firmware security scanner EMBA as backend. You can take a look at the [EMBA](https://github.com/e-m-b-a/emba) repository and get more [information about usage of *emba* in the wiki](https://github.com/e-m-b-a/emba/wiki/Usage). Additionally you should check the [EMBArk wiki](https://github.com/e-m-b-a/embark/wiki).
+*EMBArk* is using the firmware security scanner *EMBA* as backend. You can take a look at the [*EMBA*](https://github.com/e-m-b-a/emba) repository and get more [information about usage of *EMBA* in the wiki](https://github.com/e-m-b-a/emba/wiki/Usage). Additionally you should check the [*EMBArk* wiki](https://github.com/e-m-b-a/embark/wiki).
 
 ## Get involved
 The IoT is growing, the development is ongoing, and there are many new features that we want to add.
@@ -34,4 +34,4 @@ We welcome [pull requests](https://github.com/e-m-b-a/embark/pulls) and bug repo
 ## Acknowledgement
 This project was originally initiated by [Siemens Energy](https://www.siemens-energy.com/) as [AMOS project](https://oss.cs.fau.de/teaching/the-amos-project/) in cooperation with the [FAU](https://oss.cs.fau.de/).
 
-See also the original [EMBArk AMOS project](https://github.com/amosproj/amos2021ss01-emba-service) and [AMOS](https://github.com/amosproj).
+See also the original [*EMBArk* AMOS project](https://github.com/amosproj/amos2021ss01-emba-service) and [AMOS](https://github.com/amosproj).
