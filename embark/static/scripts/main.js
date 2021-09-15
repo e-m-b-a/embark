@@ -2,12 +2,9 @@
  * Activate Navigation Menu
  */
 function navToolTip() {
-    let menuBtn = document.querySelector("#menuBtn");
-    let navigation = document.querySelector(".navigation");
+    console.log("test");
 
-    menuBtn.onclick = function () {
-        navigation.classList.toggle("active");
-    }
+    document.getElementById("navigation").classList.toggle("active");
 }
 
 /**
