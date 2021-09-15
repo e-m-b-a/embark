@@ -2,8 +2,6 @@
  * Activate Navigation Menu
  */
 function navToolTip() {
-    console.log("test");
-
     document.getElementById("navigation").classList.toggle("active");
 }
 
