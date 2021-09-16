@@ -1,20 +1,18 @@
-{% extends "uploader/home.html" %}
+{% extends "uploader/base.html" %}
 {% block maincontent %}
 <div class="row reportRow">
    <div class="col-sm" id="reportDashboardMainContainer">
 
         {% csrf_token %}
         <!-- Iterate over all fields and set expmode on fields in expert mode -->
-{% comment %}
-            <div class="col-sm-4 input-group float-right searchBar">
-                <input type="text" class="form-control input-lg" placeholder="Search..." id="mySearchText"/>
-                <span class="input-group-btn">
-                    <button class="btn btn-info btn-sm" type="button" id="mySearchButton">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </span>
-            </div> {% endcomment %}
-            {% include "uploader/searchBar.html" %}
+        <div class="col-sm-2 input-group float-right searchBar">
+            <input type="text" class="form-control input-lg" placeholder="Search..." id="mySearchText"/>
+            <span class="input-group-btn">
+                <button class="btn btn-info btn-sm" type="button" id="mySearchButton">
+                    <i class="fas fa-search">x</i>
+                </button>
+            </span>
+        </div>
         <div class="tableData">
             <table class="table table-striped table-light table-hover" id="report-table">
                 <thead>
