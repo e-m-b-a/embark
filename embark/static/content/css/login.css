@@ -5,21 +5,16 @@
     font-family: sans-serif;
 }
 
-.container-fluid {
-    position: relative;
-    width: 100%;
-    background-color: #fff;
-    min-height: 100vh;
-    overflow: hidden;
+html, body {
+    height: 100%;
+    background-color: #29043f;
 }
 
-
-.forms-container {
-    position: absolute;
-    width: 100%;
+.container-fluid {
+    overflow: hidden;
+    background-image: url('../images/bg.png');
+    background-repeat: repeat;
     height: 100%;
-    top: 0;
-    left: 0;
 }
 
 form {
@@ -34,8 +29,13 @@ form {
 
 .title {
     font-size: 2.2rem;
-    color: #444;
+    color: rgb(255, 255, 255);
     margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.login {
+    margin-top: 100px;
 }
 
 .input-field {
@@ -44,7 +44,6 @@ form {
     height: 55px;
     background-color: #f0f0f0;
     margin: 10px 0;
-    border-radius: 55px;
     display: grid;
     grid-template-columns: 15% 85%;
     padding: 0 0.4rem;
@@ -54,7 +53,7 @@ form {
 .input-field i {
     text-align: center;
     line-height: 55px;
-    color: #acacac;
+    color: #ffffff;
     font-size: 1.5rem;
 }
 
@@ -73,14 +72,17 @@ form {
     font-weight: 500;
 }
 
+#loginButton {
+    margin-top: 30px;
+}
+
 .btn-login {
     width: 150px;
     height: 49px;
     outline: none;
     border: none;
-    border-radius: 48px;
     background-color: #4d4197;
-    color: white;
+    color: #ffffff;
     text-transform: uppercase;
     font-weight: 600;
     margin: 10px, 0;
@@ -88,42 +90,23 @@ form {
 }
 
 .btn-login:hover {
-    background-color: #1B1734;
+    background-color: #6a5ebe;
 }
 
-.login {
-    position: absolute;
-    top: 50%;
-    left: 75%;
-    transform: translate(-50%, -50%);
-    display: grid;
-    grid-template-columns: 1fr;
+#embarkLogo {
+    width: 100%;
+    padding: 50px;
 }
 
-.alert {
-    width: max-content;
-    position: absolute;
-    margin: auto;
-    left: 0;
-    right: 0;
-
+#embarkLogo img {
+    width: 60%;
+    max-width: 600px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
 }
 
-img {
-    height: 100%;
-    width: 50%;
-    opacity: 0.7;
-    position: relative;
-}
-
-@media only screen and (max-width: 525px) {
-    img {
-        width: 70%;
-        height: 40%;
-        left: 15%;
-    }
-
-    .login {
-        left: 50%;
-    }
-}
+::selection{  
+    background-color: #160022;
+    color: #ffcc00;
+}  

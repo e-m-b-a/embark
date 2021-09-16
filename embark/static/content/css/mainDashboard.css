@@ -9,7 +9,7 @@
 }
 
 .card-body {
-    background: #def2ff;
+    background: #e0e0e0;
     color: #2a225c;
     text-align: center;
 }
@@ -29,6 +29,8 @@
 
 .card {
     padding: 15px;
+    border-radius: 0;
+    border-width: 0;
 }
 
 .card-wide {
