@@ -1,7 +1,8 @@
 {% extends "uploader/base.html" %}
+{% block title %}EMBArk file upload{% endblock %}
+{% block navigation %}{% include "uploader/menu.html" %}{% endblock %}
 {% block maincontent %}
-{% comment %} {% load static %}
-<link rel="stylesheet" type="text/css" href="{% static 'content/css/fileUpload.css' %}"> {% endcomment %}
+{% load static %}
 <div class="row uploadRow">
     <div class="col-sm">
         <div class="row uploadIconRow">
@@ -10,7 +11,6 @@
                 <p align="center" class="subText">Supported archive types : firmware binary and most archive types</p>
                 <label for="file-input" class="iconLabel">
                     <span class="uploadIcon">Upload</span>
-                    {% comment %} <img src="{% static 'content/images/fileUpload.jpg'%}"/> {% endcomment %}
                 </label>
                 <input id="file-input" type="file" multiple/>
             </div>

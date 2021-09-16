@@ -1,5 +1,8 @@
 {% extends "uploader/base.html" %}
+{% block title %}EMBArk file upload{% endblock %}
+{% block navigation %}{% include "uploader/menu.html" %}{% endblock %}
 {% block maincontent %}
+{% load static %}
 <div class="cardBox">
     <div class="card">
         <div class="card-title cardName firmwareAnalysed">Firmware tested</div>
@@ -101,8 +104,6 @@
     </div>
 </div>
 
-
-{% load static %}
 <script type="text/javascript" src="{% static 'scripts/mainDashboard.js' %}"></script>
 <script type="text/javascript" src="{% static 'scripts/accumulatedReports.js' %}"></script>
 {% endblock %}
