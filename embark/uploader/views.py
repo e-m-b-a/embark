@@ -224,31 +224,52 @@ def save_file(request, refreshed):
             return HttpResponse("Firmware could not be uploaded")
 
 
-def log_streamer(request):
+def log_streamer(fw_id, offset):
+    logger.info('x fu')
     try:
-        firmware_id = request.GET.get('id', None)
-        from_ = int(request.GET.get('offset', 0))
+        firmware_id = fw_id #request.GET.get('id', None)
+        from_ = offset #int(request.GET.get('offset', 0))
+
+        logger.info('x id: %s', firmware_id)
+        logger.info('x from: %s', from_)
 
         if firmware_id is None:
+            logger.info('x error: %s', firmware_id)
             return False
         try:
             firmware = Firmware.objects.get(id=int(firmware_id))
+            logger.info('x fw: %s', firmware)
         except Firmware.DoesNotExist:
             logger.error("Firmware with id: %s. Does not exist.", firmware_id)
             return False
 
         file_path = f"/app/emba/{settings.LOG_ROOT}/{firmware.id}/emba.log"
         mtime = os.path.getmtime(file_path)
+        logger.info('x Test file: %s', file_path)
         with open(file_path) as file_:
             start = -int(from_) or -2000
             filestart = True
             while filestart:
                 try:
-                    file_.seek(start, 2)
-                    filestart = False
-                    result = file_.read()
+                    lines_ = from_
+                    buffer_ = 4098
+                    lines_found = []
+                    block_counter = -1
+
+                    while len(lines_found) <= lines_:
+                        try:
+                            file_.seek(block_counter * buffer_, os.SEEK_END)
+                        except IOError:  # either file is too small, or too many lines requested
+                            file_.seek(0)
+                            lines_found = file_.readlines()
+                            break
+
+                        lines_found = file_.readlines()
+                        block_counter -= 1
+
+                    result = lines_found[-lines_:]
                     last = file_.tell()
-                    templ = loader.get_template('uploader/log.html')
+                    templ = loader.get_template('uploader/logs.html')
                     yield templ.render({"result": result})
                 except IOError:
                     start += 50
@@ -266,7 +287,7 @@ def log_streamer(request):
                 file_.seek(last)
                 result = file_.read()
                 if result:
-                    templ = loader.get_template('uploader/log.html')
+                    templ = loader.get_template('uploader/logs.html')
                     yield result + "<script>$('html,body').animate(" \
                                    "{ scrollTop: $(document).height() }, 'slow');</script>"
                 last = file_.tell()
@@ -277,7 +298,7 @@ def log_streamer(request):
 
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def get_logs(request):
+def get_logs(request, fw_id, offset):
     """
     View takes a get request with following params:
     1. id: id for firmware
@@ -288,10 +309,11 @@ def get_logs(request):
     Returns:
 
     """
-    generator = log_streamer(request)
+    generator = log_streamer(fw_id, offset)
+    logger.info('Test generator: %s', request)
     if isinstance(generator, bool):
         return HttpResponse('Error in Streaming logs')
-    response = StreamingHttpResponse(log_streamer(request))
+    response = StreamingHttpResponse(generator)
     response['X-Accel-Buffering'] = "no"
     return response
 
@@ -303,11 +325,11 @@ def main_dashboard(request):
     return HttpResponse(html_body.render({'username': request.user.username}))
 
 
-@csrf_exempt
-@login_required(login_url='/' + settings.LOGIN_URL)
-def reports(request):
-    html_body = get_template('uploader/reports.html')
-    return HttpResponse(html_body.render({'username': request.user.username}))
+# @csrf_exempt
+# @login_required(login_url='/' + settings.LOGIN_URL)
+# def reports(request):
+#     html_body = get_template('uploader/reports.html')
+#     return HttpResponse(html_body.render({'username': request.user.username}))
 
 
 @csrf_exempt
