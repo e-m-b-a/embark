@@ -158,3 +158,14 @@ button[type="delete"]:hover {
     box-shadow: none;
     border-left: solid 1px #ccc;
 }
+
+#logHeader {
+    position: fixed;
+    right: 0;
+    top: 0;
+    left: 0;
+    padding: 1rem;
+    background-color: #333;
+    color: white;
+    text-align: center;
+}

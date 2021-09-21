@@ -224,60 +224,9 @@ def save_file(request, refreshed):
             return HttpResponse("Firmware could not be uploaded")
 
 
-def log_streamer(log_type, lines):
-    try:
-        file_path = f"{settings.BASE_DIR}/logs/{log_type}.log"
-        mtime = os.path.getmtime(file_path)
-        logger.info('x Test file: %s', file_path)
-        with open(file_path) as file_:
-            try:
-                buffer_ = 50
-                lines_found = []
-                block_counter = -1
-
-                while len(lines_found) <= lines:
-                    try:
-                        file_.seek(block_counter * buffer_, 2)
-                    except IOError: 
-                        file_.seek(0)
-                        lines_found = file_.readlines()
-                        break
-
-                    lines_found = file_.readlines()
-                    block_counter -= 1
-
-                result = lines_found[-lines:]
-                last = file_.tell()
-                templ = loader.get_template('uploader/logs.html')
-                yield templ.render({"result": ''.join(result)})
-            except Exception as error:
-                logger.exception('Wide exception in logstreamer: %s', error)
-        reset = 0
-        while True:
-            newmtime = os.path.getmtime(file_path)
-            if newmtime == mtime:
-                time.sleep(1)
-                reset += 1
-                if reset >= 15:
-                    yield "<!-- empty -->"
-                continue
-            mtime = newmtime
-            with open(file_path) as file_:
-                file_.seek(last)
-                result = file_.read()
-                if result:
-                    templ = loader.get_template('uploader/logs.html')
-                    yield result + "<script>$('html,body').animate(" \
-                                   "{ scrollTop: $(document).height() }, 'slow');</script>"
-                last = file_.tell()
-    except Exception as error:
-        logger.exception('Wide exception in logstreamer: %s', error)
-        return False
-
-
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def get_logs(request, log_type, lines):
+def get_log(request, log_type, lines):
     """
     View takes a get request with following params:
     1. log_type: selector of log file (daphne, migration, mysql_db, redis_db, uwsgi, web)
@@ -288,13 +237,31 @@ def get_logs(request, log_type, lines):
     Returns:
 
     """
-    generator = log_streamer(log_type, lines)
-    logger.info('Test generator: %s', request)
-    if isinstance(generator, bool):
-        return HttpResponse('Error in Streaming logs')
-    response = StreamingHttpResponse(generator)
-    response['X-Accel-Buffering'] = "no"
-    return response
+
+    file_path = f"{settings.BASE_DIR}/logs/{log_type}.log"
+    logger.info('x Test file: %s', file_path)
+    with open(file_path) as file_:
+        try:
+            buffer_ = 500
+            lines_found = []
+            block_counter = -1
+
+            while len(lines_found) <= lines:
+                try:
+                    file_.seek(block_counter * buffer_, 2)
+                except IOError: 
+                    file_.seek(0)
+                    lines_found = file_.readlines()
+                    break
+
+                lines_found = file_.readlines()
+                block_counter -= 1
+
+            result = lines_found[-(lines+1):]
+        except Exception as error:
+            logger.exception('Wide exception in logstreamer: %s', error)
+
+    return render(request, 'uploader/log.html', {'log': '\n'.join(result), 'username': request.user.username})
 
 
 @csrf_exempt
