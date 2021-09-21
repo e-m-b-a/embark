@@ -224,55 +224,34 @@ def save_file(request, refreshed):
             return HttpResponse("Firmware could not be uploaded")
 
 
-def log_streamer(fw_id, offset):
-    logger.info('x fu')
+def log_streamer(log_type, lines):
     try:
-        firmware_id = fw_id #request.GET.get('id', None)
-        from_ = offset #int(request.GET.get('offset', 0))
-
-        logger.info('x id: %s', firmware_id)
-        logger.info('x from: %s', from_)
-
-        if firmware_id is None:
-            logger.info('x error: %s', firmware_id)
-            return False
-        try:
-            firmware = Firmware.objects.get(id=int(firmware_id))
-            logger.info('x fw: %s', firmware)
-        except Firmware.DoesNotExist:
-            logger.error("Firmware with id: %s. Does not exist.", firmware_id)
-            return False
-
-        file_path = f"/app/emba/{settings.LOG_ROOT}/{firmware.id}/emba.log"
+        file_path = f"{settings.BASE_DIR}/logs/{log_type}.log"
         mtime = os.path.getmtime(file_path)
         logger.info('x Test file: %s', file_path)
         with open(file_path) as file_:
-            start = -int(from_) or -2000
-            filestart = True
-            while filestart:
-                try:
-                    lines_ = from_
-                    buffer_ = 4098
-                    lines_found = []
-                    block_counter = -1
+            try:
+                buffer_ = 50
+                lines_found = []
+                block_counter = -1
 
-                    while len(lines_found) <= lines_:
-                        try:
-                            file_.seek(block_counter * buffer_, os.SEEK_END)
-                        except IOError:  # either file is too small, or too many lines requested
-                            file_.seek(0)
-                            lines_found = file_.readlines()
-                            break
-
+                while len(lines_found) <= lines:
+                    try:
+                        file_.seek(block_counter * buffer_, 2)
+                    except IOError: 
+                        file_.seek(0)
                         lines_found = file_.readlines()
-                        block_counter -= 1
+                        break
 
-                    result = lines_found[-lines_:]
-                    last = file_.tell()
-                    templ = loader.get_template('uploader/logs.html')
-                    yield templ.render({"result": result})
-                except IOError:
-                    start += 50
+                    lines_found = file_.readlines()
+                    block_counter -= 1
+
+                result = lines_found[-lines:]
+                last = file_.tell()
+                templ = loader.get_template('uploader/logs.html')
+                yield templ.render({"result": ''.join(result)})
+            except Exception as error:
+                logger.exception('Wide exception in logstreamer: %s', error)
         reset = 0
         while True:
             newmtime = os.path.getmtime(file_path)
@@ -298,18 +277,18 @@ def log_streamer(fw_id, offset):
 
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def get_logs(request, fw_id, offset):
+def get_logs(request, log_type, lines):
     """
     View takes a get request with following params:
-    1. id: id for firmware
-    2. offset: offset in log file
+    1. log_type: selector of log file (daphne, migration, mysql_db, redis_db, uwsgi, web)
+    2. lines: lines in log file
     Args:
         request: HTTPRequest instance
 
     Returns:
 
     """
-    generator = log_streamer(fw_id, offset)
+    generator = log_streamer(log_type, lines)
     logger.info('Test generator: %s', request)
     if isinstance(generator, bool):
         return HttpResponse('Error in Streaming logs')
