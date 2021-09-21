@@ -1,10 +1,10 @@
 {% extends "uploader/base.html" %}
-{% block title %}EMBArk file upload{% endblock %}
+{% block title %}EMBArk log{% endblock %}
 {% block navigation %}{% include "uploader/menu.html" %}{% endblock %}
 {% block maincontent %}
 {% load static %}
-<div id="logHeader"><strong>Log</strong></div>
-<pre><code>
+<div id="logHeader"><strong>{{ header }}</strong></div>
+<div id="logBox">
 {{ log }}
-</code></pre>
+</div>
 {% endblock %}

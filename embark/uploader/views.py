@@ -239,29 +239,33 @@ def get_log(request, log_type, lines):
     """
 
     file_path = f"{settings.BASE_DIR}/logs/{log_type}.log"
-    logger.info('x Test file: %s', file_path)
-    with open(file_path) as file_:
-        try:
-            buffer_ = 500
-            lines_found = []
-            block_counter = -1
+    logger.info('Load log file: %s', file_path)
+    try:
+        with open(file_path) as file_:
+            try:
+                buffer_ = 500
+                lines_found = []
+                block_counter = -1
 
-            while len(lines_found) <= lines:
-                try:
-                    file_.seek(block_counter * buffer_, 2)
-                except IOError: 
-                    file_.seek(0)
+                while len(lines_found) <= lines:
+                    try:
+                        file_.seek(block_counter * buffer_, 2)
+                    except IOError: 
+                        file_.seek(0)
+                        lines_found = file_.readlines()
+                        break
+
                     lines_found = file_.readlines()
-                    break
+                    block_counter -= 1
 
-                lines_found = file_.readlines()
-                block_counter -= 1
+                result = lines_found[-(lines+1):]
+            except Exception as error:
+                logger.exception('Wide exception in logstreamer: %s', error)
 
-            result = lines_found[-(lines+1):]
-        except Exception as error:
-            logger.exception('Wide exception in logstreamer: %s', error)
+        return render(request, 'uploader/log.html', {'header': log_type + '.log', 'log': ''.join(result), 'username': request.user.username})
+    except IOError:
+        return render(request, 'uploader/log.html', {'header': 'Error', 'log': log_type + '.log not found!', 'username': request.user.username})
 
-    return render(request, 'uploader/log.html', {'log': '\n'.join(result), 'username': request.user.username})
 
 
 @csrf_exempt

@@ -7,14 +7,10 @@
 
 html, body {
     height: 100%;
-    background-color: #1a1a1a;
 }
 
 .container-fluid {
     overflow: hidden;
-    background-image: url('../images/bg.png');
-    background-repeat: repeat;
-    height: 100%;
 }
 
 form {
