@@ -1,8 +1,8 @@
 {% extends "uploader/base.html" %}
+{% load static %}
+{% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/login.css' %}">{% endblock %}
 {% block title %}EMBArk login{% endblock %}
 {% block maincontent %}
-{% load static %}
-
 <div class="login-form-container">
     {% if error_message %}
 <div class="alert alert-danger alert-dismissible fade show" role="alert">

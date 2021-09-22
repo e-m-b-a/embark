@@ -1,8 +1,9 @@
 {% extends "uploader/base.html" %}
-{% block title %}EMBArk log{% endblock %}
-{% block navigation %}{% include "uploader/menu.html" %}{% endblock %}
-{% block maincontent %}
 {% load static %}
+{% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/log.css' %}">{% endblock %}
+{% block title %}EMBArk log{% endblock %}
+{% block navigation %}{% include "uploader/navigation.html" %}{% endblock %}
+{% block maincontent %}
 <div id="logHeader"><strong>{{ header }}</strong></div>
 <div id="logBox">
 {{ log }}

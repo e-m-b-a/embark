@@ -1,8 +1,9 @@
 {% extends "uploader/base.html" %}
-{% block title %}EMBArk report dashboard{% endblock %}
-{% block navigation %}{% include "uploader/menu.html" %}{% endblock %}
-{% block maincontent %}
 {% load static %}
+{% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/reportDashboard.css' %}">{% endblock %}
+{% block title %}EMBArk report dashboard{% endblock %}
+{% block navigation %}{% include "uploader/navigation.html" %}{% endblock %}
+{% block maincontent %}
 <div class="row reportRow">
    <div class="col-sm" id="reportDashboardMainContainer">
 

@@ -141,14 +141,14 @@ def start_analysis(request, refreshed):
     if refreshed == 1:
         return render(request, 'uploader/fileUpload.html', {'analyze_form': analyze_form, 'delete_form': delete_form, 'username': request.user.username})
     # else:
-    html_body = get_template('uploader/embaServiceDashboard.html')
+    html_body = get_template('uploader/serviceDashboard.html')
     return HttpResponse(html_body.render({'username': request.user.username}))
 
 
 @csrf_exempt
 @login_required(login_url='/' + settings.LOGIN_URL)
 def service_dashboard(request):
-    html_body = get_template('uploader/embaServiceDashboard.html')
+    html_body = get_template('uploader/serviceDashboard.html')
     return HttpResponse(html_body.render({'username': request.user.username}))
 
 

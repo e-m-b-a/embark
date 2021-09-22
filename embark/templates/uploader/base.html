@@ -18,13 +18,7 @@
 
 	<!-- Styling sheets-->
 	<link rel="stylesheet" type="text/css" href="{% static 'content/css/globalStyle.css' %}">
-	<link rel="stylesheet" type="text/css" href="{% static 'content/css/home.css' %}">
-	<link rel="stylesheet" type="text/css" href="{% static 'content/css/login.css' %}">
-	<link rel="stylesheet" type="text/css" href="{% static 'content/css/mainDashboard.css' %}">
-	<link rel="stylesheet" type="text/css" href="{% static 'content/css/fileUpload.css' %}">
-	<link rel="stylesheet" type="text/css" href="{% static 'content/css/serviceDashboard.css' %}">
-	<link rel="stylesheet" type="text/css" href="{% static 'content/css/reportDashboard.css' %}">
-	<link rel="stylesheet" type="text/css" href="{% static 'content/css/individualReportDashboard.css' %}">
+	{% block style %}{% endblock %}
 
 	<!-- x jQuery -->
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
@@ -41,22 +35,19 @@
 	<!-- local Javascript files-->
 	<script src="{% static 'scripts/main.js' %}"></script>
 	<script src="{% static 'scripts/fileUpload.js' %}"></script>
-	<script src="{% static 'scripts/embaServiceDashboard.js' %}"></script>
+	<script src="{% static 'scripts/serviceDashboard.js' %}"></script>
 	<script src="{% static 'scripts/mainDashboard.js' %}"></script>
 	<script src="{% static 'scripts/alertBox.js' %}"></script>
 
 </head>
 <body>
 	<div class="container-fluid">
-		{% block navigation %}
-		{% endblock %}
+		{% block navigation %}{% endblock %}
 		<!--Main container-->
 		<div class="main">
-			{% block maincontent %}
-			{% endblock %}
+			{% block maincontent %}{% endblock %}
 		</div>
 	</div>
-	{% block js %}
-	{% endblock %}
+	{% block js %}{% endblock %}
 </body>
 </html>

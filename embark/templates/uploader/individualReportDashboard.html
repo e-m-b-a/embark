@@ -1,9 +1,9 @@
 {% extends "uploader/base.html" %}
-{% block title %}EMBArk individual dashboard{% endblock %}
-{% block navigation %}{% include "uploader/menu.html" %}{% endblock %}
-{% block maincontent %}
 {% load static %}
-
+{% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/individualReportDashboard.css' %}">{% endblock %}
+{% block title %}EMBArk individual dashboard{% endblock %}
+{% block navigation %}{% include "uploader/navigation.html" %}{% endblock %}
+{% block maincontent %}
 <div>
   <h1><center>Firmware security scanning details</center></h1>
 </div>
