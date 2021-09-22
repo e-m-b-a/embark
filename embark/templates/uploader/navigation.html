@@ -1,14 +1,11 @@
 {% load static %}
 {% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/navigation.css' %}">{% endblock %}
 {% block navigation %}
-<!--Navigation menu-->
 <div id="navigation">
-    <!--Navigation menu items-->
     <div class="logo-content">
         <div class="logo">
             <a href="{% url 'embark-home' %}" onclick="">
-                <span class="brandlogo"><img src="{% static 'content/images/embark_logo_text.png'%}" alt="embark" class="embarklogo"></span>
-                
+                <img class="logo" src="{% static 'content/images/embark_logo_text.png'%}" alt="embark">
             </a>
         </div>
         <div class="nav-toggle" onclick="navToolTip()">
