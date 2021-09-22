@@ -1,4 +1,3 @@
-
 /**
  * The following event calls prevent default to turn off the browsers default drag and drop handler
  * @param {*} ev Event

@@ -1,6 +1,7 @@
 {% extends "uploader/base.html" %}
 {% load static %}
 {% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/fileUpload.css' %}">{% endblock %}
+{% block js %}<script type="text/javascript" src="{% static 'scripts/fileUpload.js' %}"></script>{% endblock %}
 {% block title %}EMBArk file upload{% endblock %}
 {% block navigation %}{% include "uploader/navigation.html" %}{% endblock %}
 {% block maincontent %}

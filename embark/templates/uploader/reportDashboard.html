@@ -67,20 +67,19 @@
     </div>
 </div>
 {% endblock %}
+{% block inlinejs %}
+<script>
+    $(document).ready(function() {
+        let table = $('#report-table').DataTable({sDom: 'lrtip'});
 
-{% block js %}
-    <script>
-        $(document).ready(function() {
-            let table = $('#report-table').DataTable({sDom: 'lrtip'});
-
-            $('#mySearchButton').on( 'keyup click', function () {
-                table.search($('#mySearchText').val()).draw();
-            } );
-
-            $("#mySearchText").change(function(){
-                table.search($('#mySearchText').val()).draw();
-            });
+        $('#mySearchButton').on( 'keyup click', function () {
+            table.search($('#mySearchText').val()).draw();
         } );
 
-    </script>
+        $("#mySearchText").change(function(){
+            table.search($('#mySearchText').val()).draw();
+        });
+    } );
+
+</script>
 {% endblock %}
