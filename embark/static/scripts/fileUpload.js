@@ -6,21 +6,16 @@ function dragOverHandler(ev) {
   ev.preventDefault();
 }
 
-/**
- * This function binds file name to div.
- * @param {*} fileData File Data Uploaded
- */
-function showFiles(fileData) {
-  try {
-    document.getElementById("uploadedFileNames").style.display = 'block';
-    //document.querySelector(".fileName").innerHTML = fileData[0].name;
-    document.querySelector(".fileName").textContent = fileData[0].name;
+$(window).bind("load", function() {
+  document.querySelector("#file-input").onchange = function(){
+    fileNames = ""
+    for (var i = 0; i < this.files.length; i++) {
+        fileNames = fileNames + this.files[i].name + "<br>"
+    }
+    document.querySelector("#file-name").innerHTML = fileNames;
     $("#uploadFirmware-btn").attr("disabled", false);
-
-  } catch (error) {
-      console.log(error.message);
   }
-}
+});
 
 /**
  * Checks for any Multiple uploads and the Passes to save

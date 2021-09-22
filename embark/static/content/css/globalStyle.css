@@ -50,11 +50,11 @@ textarea:focus,
     width: fit-content;
     font-weight: normal;
     border-radius: 0px;
+    height: 40px;
     line-height: 1;
     font-size: medium;
     color: #FFFFFF;
     margin: 5px;
-    padding: 10px;
 }
 
 .btn:hover {

@@ -10,6 +10,8 @@
     display: inline-block;
     width: 40px;
     height: 10px;
+    top: 5px;
+    left: 10px;
 }
 
 /* Hide default HTML checkbox */
@@ -27,7 +29,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #b8cedb;
+    background-color: #a791ff;
     -webkit-transition: .4s;
     transition: .4s;
 }
@@ -38,17 +40,17 @@
     height: 16px;
     width: 16px;
     bottom: -3px;
-    background-color: white;
+    background-color: rgb(48, 48, 48);
     -webkit-transition: .4s;
     transition: .4s;
 }
 
 input:checked+.slider {
-    background-color: #009999;
+    background-color: #493791;
 }
 
 input:focus+.slider {
-    box-shadow: 0 0 1px #009999;
+    box-shadow: 0 0 1px #493791;
 }
 
 input:checked+.slider:before {
@@ -56,6 +58,8 @@ input:checked+.slider:before {
     -ms-transform: translateX(26px);
     transform: translateX(26px);
 }
+
+
 
 /* Rounded sliders */
 .slider.round {
@@ -66,24 +70,26 @@ input:checked+.slider:before {
     border-radius: 50%;
 }
 
-.togLbl {
-    padding: 0;
-}
-
-.togSwitch {
-    margin-top: 4px;
-    padding: 0;
-}
-
 /* Styles for the dataform fields */
+
+.form-check-input:checked {
+    background-color: #493791;
+    border-color: #493791;
+}
 
 .formTxtField,
 .dropdownSelect {
     width: 80%;
     height: 2rem;
-    border: 1px solid #b8cedb;
-    border-radius: .25rem;
+    border: none;
+    border-radius: 0;
     padding: 6px 12px 6px 12px;
+    margin-top: 15px;
+    background-color: #acacac;
+}
+
+.form-control:focus {
+    background-color: #acacac;
 }
 
 .dataRow {
@@ -120,10 +126,6 @@ input:checked+.slider:before {
 }
 
 /*Uploaded Files*/
-.uploadedFile {
-    display: none;
-}
-
 .statusTile {
     background-color: #009999;
 }
@@ -131,10 +133,6 @@ input:checked+.slider:before {
 .iconLabel {
     display: block;
     text-align: center;
-}
-
-.uploadBtnRow {
-    justify-content: center;
 }
 
 .deleteBtnRow {
@@ -154,7 +152,6 @@ input:checked+.slider:before {
 
 .deleteFirmware>select {
     margin-left: 10px;
-    width: 60%;
 }
 
 .form-group>.form-check-input {
@@ -171,10 +168,48 @@ input:checked+.slider:before {
 }
 
 .mainText {
-    font-size: large;
-    margin-bottom: 10px;
+    font-size: 24px;
+    margin-bottom: 12px;
+    text-align: center;
+    color: #1e0e28ff;
 }
 
 .subText {
     font-size: medium;
+    text-align: center;
+}
+
+#file-input {
+    visibility: hidden;
+    width: 0;
+}
+
+.buttonRow {
+    height: 60px;
+    padding-right: calc(var(--bs-gutter-x) * .5);
+    padding-left: calc(var(--bs-gutter-x) * .5);
+}
+
+.buttonRowElem {
+    display: block;
+    float: right;
+}
+
+.box {
+    margin-bottom: calc(var(--bs-gutter-x));
+    background-color: #fff;
+    color: #000;
+    padding-top: 12px;
+}
+
+#firmwareToDelete {
+    margin-bottom: 10px;
+}
+
+.innerBlock {
+    margin-left: 30px;
+}
+
+.form-check-input[type="checkbox"] {
+    border-radius: 0;
 }
