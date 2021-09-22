@@ -52,6 +52,9 @@ h3 {
 }
 
 .progress {
+    height: 20px;
+    margin-top: 10px;
+    background-color: #493791;
     padding: 0%;
 }
 

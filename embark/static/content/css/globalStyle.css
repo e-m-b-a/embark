@@ -2,13 +2,8 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: Arial, Helvetica, sans-serif;
-    font-weight: 700;
-}
-
-html {
-    --scrollbarBG: #d7e4ee;
-    --thumbBG: #b8cedb;
+    font-family: Helvetica, sans-serif;
+    font-weight: 500;
 }
 
 body {
@@ -18,9 +13,10 @@ body {
     background-repeat: repeat;
 }
 
-.container {
-    /* position: fixed; */
-    width: 100%;
+.container-fluid,
+.row {
+    padding: 0;
+    margin: 0;
 }
 
 .col {
@@ -29,36 +25,24 @@ body {
     margin: 0;
 }
 
-.container-fluid,
-.row {
-    padding: 0;
-    margin: 0;
+.main {
+    color: #fff;
 }
 
-/*Progress bars*/
-.progress {
-    height: 20px;
-    margin-top: 10px;
-    background-color: #b8cedb;
-    border-radius: 30px;
+input:focus,
+select:focus,
+textarea:focus,
+.form-control:focus,
+.btn:focus {
+    outline: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    box-shadow: none;
 }
 
+/*Progress bar*/
 .progress-bar {
-    background-color: #009999;
-}
-
-/* text styles */
-.mainText {
-    font-size: large;
-    margin-bottom: 10px;
-}
-
-.subText {
-    font-size: medium;
-}
-
-.text {
-    font-size: medium;
+    background-color: #493791;
 }
 
 /* button styles */
@@ -66,7 +50,6 @@ body {
     width: fit-content;
     font-weight: normal;
     border-radius: 0px;
-    font: 'arial';
     line-height: 1;
     font-size: medium;
     color: #FFFFFF;
@@ -85,12 +68,16 @@ button[type="submit"] {
 }
 
 button[type="submit"]:hover {
-    background: #1b1534;
+    background: #2d2357;
     color: #FFFFFF;
 }
 
-/* general button */
+button[type="submit"]:disabled {
+    background: #3f3f3f;
+    color: #5f5f5f;
+}
 
+/* general button */
 button[type="button"] {
     background: #7b919d;
     color: #FFFFFF;
@@ -102,7 +89,6 @@ button[type="button"]:hover {
 }
 
 /* reset /cancel / delete buttons */
-
 button[type="reset"],
 button[type="delete"] {
     background: #e3141b;
@@ -115,62 +101,13 @@ button[type="delete"]:hover {
     color: #FFFFFF;
 }
 
-/* form field styles */
-
-/* scrollbar */
-::-webkit-scrollbar {
-    width: 11px;
+.form-select {
+    border-radius: 0;
+    margin: 0 5px;
+    border: none;
 }
 
-::-webkit-scrollbar-track {
-    background: var(--scrollbarBG);
-}
-
-::-webkit-scrollbar-thumb {
-    background-color: var(--thumbBG);
-    border-radius: 6px;
-    border: 3px solid var(--scrollbarBG);
-}
-
-/* Search bar styles */
-.searchBar {
-    padding: 3px;
-    border: solid 1px #E4E4E4;
-    border-radius: 6px;
-    background-color: #fff;
-}
-
-.searchBar input {
-    border: 0;
+.form-select:focus {
     box-shadow: none;
-}
-
-.searchBar button {
-    margin: 2px 0 0 0;
-    background: none;
-    box-shadow: none;
-    border: 0;
-    color: #666666;
-    padding: 6 8px 6 8px;
-    border-left: solid 1px #ccc;
-}
-
-.searchBar button:hover {
-    border: 0;
-    box-shadow: none;
-    border-left: solid 1px #ccc;
-}
-
-#logHeader {
-    padding: 1rem;
-    background-color: #333;
-    color: #fff;
-    text-align: center;
-}
-
-#logBox {
-    color: #fff;
-    white-space: pre-wrap;
-    font-family: monospace;
-    font-size: 14px;
+    border: none;
 }

@@ -1,0 +1,13 @@
+#logHeader {
+    padding: 1rem;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+}
+
+#logBox {
+    color: #fff;
+    white-space: pre-wrap;
+    font-family: monospace;
+    font-size: 14px;
+}

@@ -169,3 +169,12 @@ input:checked+.slider:before {
     display: none;
     margin-top: 10px;
 }
+
+.mainText {
+    font-size: large;
+    margin-bottom: 10px;
+}
+
+.subText {
+    font-size: medium;
+}
