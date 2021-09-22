@@ -1,7 +1,7 @@
 /**
  * Activate Navigation Menu
  */
-function navToolTip() {
+function navToggle() {
     document.getElementById("navigation").classList.toggle("active");
 }
 
