@@ -250,7 +250,7 @@ def get_log(request, log_type, lines):
                 while len(lines_found) <= lines:
                     try:
                         file_.seek(block_counter * buffer_, 2)
-                    except IOError: 
+                    except IOError:
                         file_.seek(0)
                         lines_found = file_.readlines()
                         break
@@ -265,7 +265,6 @@ def get_log(request, log_type, lines):
         return render(request, 'uploader/log.html', {'header': log_type + '.log', 'log': ''.join(result), 'username': request.user.username})
     except IOError:
         return render(request, 'uploader/log.html', {'header': 'Error', 'log': log_type + '.log not found!', 'username': request.user.username})
-
 
 
 @csrf_exempt
