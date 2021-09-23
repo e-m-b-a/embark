@@ -1,51 +1,51 @@
 <!DOCTYPE html>
 <html>
 <head>
-	{% load static %}
+    {% load static %}
 
-	<meta charset="utf-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-	<link rel="icon" type="image/png" href="{%  static 'content/images/favicon.png' %}">
-	<title>{% block title %}{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{%  static 'content/images/favicon.png' %}">
+    <title>{% block title %}{% endblock %}</title>
 
-	<!-- x Bootstrap and jquery-confirm CSS -->
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
+    <!-- x Bootstrap and jquery-confirm CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
 
-	<!--x DataTables styling sheets-->
-	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.css"/>
+    <!--x DataTables styling sheets-->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.css"/>
 
-	<!-- Styling sheets-->
-	<link rel="stylesheet" type="text/css" href="{% static 'content/css/globalStyle.css' %}">
-	{% block style %}{% endblock %}
+    <!-- Styling sheets-->
+    <link rel="stylesheet" type="text/css" href="{% static 'content/css/globalStyle.css' %}">
+    {% block style %}{% endblock %}
 
-	<!-- x jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <!-- x jQuery -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 
-	<!-- x script for bootstrap -->
-	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ" crossorigin="anonymous"></script>
+    <!-- x script for bootstrap -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ" crossorigin="anonymous"></script>
 
-	<!--x DataTables script-->
-	<script type="text/javascript" src="https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.js"></script>
+    <!--x DataTables script-->
+    <script type="text/javascript" src="https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.js"></script>
 
-	<!-- x Charts script -->
-	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js"></script>
+    <!-- x Charts script -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js"></script>
 
-	<!-- local Javascript files-->
-	<script type="text/javascript" src="{% static 'scripts/main.js' %}"></script>
-	<script type="text/javascript" src="{% static 'scripts/alertBox.js' %}"></script>
-	{% block js %}{% endblock %}
+    <!-- local Javascript files-->
+    <script type="text/javascript" src="{% static 'scripts/main.js' %}"></script>
+    <script type="text/javascript" src="{% static 'scripts/alertBox.js' %}"></script>
+    {% block js %}{% endblock %}
 
 </head>
 <body>
-	<div class="container-fluid">
-		{% block navigation %}{% endblock %}
-		<!--Main container-->
-		<div class="main">
-			{% block maincontent %}{% endblock %}
-		</div>
-	</div>
-	{% block inlinejs %}{% endblock %}
+    <div class="container-fluid">
+        {% block navigation %}{% endblock %}
+        <!--Main container-->
+        <div class="main">
+            {% block maincontent %}{% endblock %}
+        </div>
+    </div>
+    {% block inlinejs %}{% endblock %}
 </body>
 </html>
