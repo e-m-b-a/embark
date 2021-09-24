@@ -8,19 +8,19 @@
 <div class="row uploadRow">
     <div class="col-sm">
         <div class="box">
-            <p class="mainText">Upload firmware image(s)/archive(s)</p>
+            <p class="mainText">Upload firmware image/archive</p>
             <p class="subText">Supported archive types : firmware binary and most archive types</p>
             <div class="innerBlock">
-                Selected file(s): <div id="file-name" class="uploadedFile">None selected.</div>
+                Selected file: <div id="file-name" class="uploadedFile">None selected.</div>
             </div>
         <div class="buttonRow">
                 <button type="submit" id="uploadFirmware-btn" class="btn buttonRowElem" onclick="saveFiles()" disabled>
                     Upload
                 </button>
                 <button type="button" class="btn buttonRowElem" >
-                    <label for="file-input">Select file(s)</label>
+                    <label for="file-input">Select file</label>
                 </button>
-                <input id="file-input" type="file" multiple/>
+                <input id="file-input" type="file"/>
             </div>
             <div class="progress-wrapper" id="progress-wrapper" style="display:none;">
                 <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
@@ -35,11 +35,12 @@
                 {% load filters %}
                 <!-- Iterate over all fields and set expmode on fields in expert mode -->
                 {% for field in delete_form %}
-                <div id="firmwareToDelete" class="form-group deleteFirmware" >
-                        {{ field.label_tag }}
-                        {{ field }}
+                <div class="innerBlock">
+                    <div id="firmwareToDelete" class="form-group deleteFirmware" >
+                            {{ field }}
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
                 <div class="buttonRow">
                     <button type="delete" class="btn buttonRowElem">Delete</button>
                 </div>
@@ -104,4 +105,3 @@
     </div>
 </div>
 {% endblock %}
-
