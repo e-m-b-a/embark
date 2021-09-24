@@ -54,7 +54,7 @@ textarea:focus,
     line-height: 1;
     font-size: medium;
     color: #FFFFFF;
-    margin: 5px;
+    margin: 15px 0 10px 10px;
 }
 
 .btn:hover {
@@ -101,6 +101,18 @@ button[type="delete"]:hover {
     color: #FFFFFF;
 }
 
+.buttonRow {
+    height: 60px;
+    padding-right: calc(var(--bs-gutter-x) * .5);
+    padding-left: calc(var(--bs-gutter-x) * .5);
+    margin-bottom: 10px;
+}
+
+.buttonRowElem {
+    display: block;
+    float: right;
+}
+
 .form-select {
     border-radius: 0;
     margin: 0 5px;
@@ -110,4 +122,32 @@ button[type="delete"]:hover {
 .form-select:focus {
     box-shadow: none;
     border: none;
+}
+
+.progress-wrapper {
+    display: none;
+    margin-top: 10px;
+}
+
+.box {
+    margin-bottom: calc(var(--bs-gutter-x));
+    background-color: #fff;
+    color: #000;
+    padding-top: 12px;
+}
+
+.innerBlock {
+    margin-left: 30px;
+}
+
+.mainText {
+    font-size: 24px;
+    margin-bottom: 12px;
+    text-align: center;
+    color: #1e0e28ff;
+}
+
+.subText {
+    font-size: medium;
+    text-align: center;
 }

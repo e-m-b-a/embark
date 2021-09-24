@@ -162,54 +162,15 @@ input:checked+.slider:before {
     padding-left: 30px;
 }
 
-.progress-wrapper {
-    display: none;
-    margin-top: 10px;
-}
-
-.mainText {
-    font-size: 24px;
-    margin-bottom: 12px;
-    text-align: center;
-    color: #1e0e28ff;
-}
-
-.subText {
-    font-size: medium;
-    text-align: center;
-}
-
 #file-input {
     visibility: hidden;
     width: 0;
 }
 
-.buttonRow {
-    height: 60px;
-    padding-right: calc(var(--bs-gutter-x) * .5);
-    padding-left: calc(var(--bs-gutter-x) * .5);
-}
-
-.buttonRowElem {
-    display: block;
-    float: right;
-}
-
-.box {
-    margin-bottom: calc(var(--bs-gutter-x));
-    background-color: #fff;
-    color: #000;
-    padding-top: 12px;
+.form-check-input[type="checkbox"] {
+    border-radius: 0;
 }
 
 #firmwareToDelete {
     margin-bottom: 10px;
-}
-
-.innerBlock {
-    margin-left: 30px;
-}
-
-.form-check-input[type="checkbox"] {
-    border-radius: 0;
 }

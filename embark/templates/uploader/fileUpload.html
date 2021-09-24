@@ -13,7 +13,7 @@
             <div class="innerBlock">
                 Selected file: <div id="file-name" class="uploadedFile">None selected.</div>
             </div>
-        <div class="buttonRow">
+            <div class="buttonRow">
                 <button type="submit" id="uploadFirmware-btn" class="btn buttonRowElem" onclick="saveFiles()" disabled>
                     Upload
                 </button>
@@ -49,7 +49,7 @@
     </div>
 
     <div class="col-sm">
-        <div class="row box">
+        <div class="box">
             <p class="mainText">Analyze a firmware image/archive</p>
                 <form action="{% url 'embark-start-analysis' refreshed=2 %}" method="POST" id="analyze-form">
                     <div class="innerBlock">
