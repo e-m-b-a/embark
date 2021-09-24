@@ -4,6 +4,7 @@ import json
 import os
 import time
 import logging
+import werkzeug
 
 from operator import itemgetter
 from http import HTTPStatus
@@ -239,10 +240,10 @@ def get_log(request, log_type, lines):
     """
     log_file_list = ["daphne", "migration", "mysql_db", "redis_db", "uwsgi", "web"]
     if log_type in log_file_list:
-        file_path = f"{settings.BASE_DIR}/logs/{log_type}.log"
-        logger.info('Load log file: %s', file_path)
+        file_path = werkzeug.utils.secure_filename(f"{settings.BASE_DIR}/logs/{log_type}.log")
+        logger.info('Load log file: %s', file_path.replace('_', os.path.sep))
         try:
-            with open(file_path) as file_:
+            with open(os.path.sep + file_path.replace('_', os.path.sep)) as file_:
                 try:
                     buffer_ = 500
                     lines_found = []
@@ -265,7 +266,7 @@ def get_log(request, log_type, lines):
 
             return render(request, 'uploader/log.html', {'header': log_type + '.log', 'log': ''.join(result), 'username': request.user.username})
         except IOError:
-            return render(request, 'uploader/log.html', {'header': 'Error', 'log': log_type + '.log not found!', 'username': request.user.username})
+            return render(request, 'uploader/log.html', {'header': 'Error', 'log': file_path + ' not found!', 'username': request.user.username})
 
 
 @csrf_exempt
