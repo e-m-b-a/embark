@@ -238,35 +238,34 @@ def get_log(request, log_type, lines):
 
     """
     log_file_list = ["daphne", "migration", "mysql_db", "redis_db", "uwsgi", "web"]
-    if log_type in log_file_list:
-        file_path = f"{settings.BASE_DIR}/logs/{log_type}.log"
-        if file_path.find('.')==-1:
-            logger.info('Load log file: %s', file_path.replace('_', os.path.sep))
+    log_file = log_file_list[log_type]
+    file_path = f"{settings.BASE_DIR}/logs/{log_file}.log"
+    logger.info('Load log file: %s', file_path)
+    try:
+        with open(file_path) as file_:
             try:
-                with open(os.path.sep + file_path.replace('_', os.path.sep)) as file_:
+                buffer_ = 500
+                lines_found = []
+                block_counter = -1
+
+                while len(lines_found) <= lines:
                     try:
-                        buffer_ = 500
-                        lines_found = []
-                        block_counter = -1
+                        file_.seek(block_counter * buffer_, 2)
+                    except IOError:
+                        file_.seek(0)
+                        lines_found = file_.readlines()
+                        break
 
-                        while len(lines_found) <= lines:
-                            try:
-                                file_.seek(block_counter * buffer_, 2)
-                            except IOError:
-                                file_.seek(0)
-                                lines_found = file_.readlines()
-                                break
+                    lines_found = file_.readlines()
+                    block_counter -= 1
 
-                            lines_found = file_.readlines()
-                            block_counter -= 1
+                result = lines_found[-(lines+1):]
+            except Exception as error:
+                logger.exception('Wide exception in logstreamer: %s', error)
 
-                        result = lines_found[-(lines+1):]
-                    except Exception as error:
-                        logger.exception('Wide exception in logstreamer: %s', error)
-
-                return render(request, 'uploader/log.html', {'header': log_type + '.log', 'log': ''.join(result), 'username': request.user.username})
-            except IOError:
-                return render(request, 'uploader/log.html', {'header': 'Error', 'log': file_path + ' not found!', 'username': request.user.username})
+        return render(request, 'uploader/log.html', {'header': log_file + '.log', 'log': ''.join(result), 'username': request.user.username})
+    except IOError:
+        return render(request, 'uploader/log.html', {'header': 'Error', 'log': file_path + ' not found!', 'username': request.user.username})
 
 
 @csrf_exempt
