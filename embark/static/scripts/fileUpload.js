@@ -12,7 +12,8 @@ $(window).bind("load", function() {
     for (var i = 0; i < this.files.length; i++) {
         fileNames = fileNames + this.files[i].name + "<br>"
     }
-    document.querySelector("#file-name").innerHTML = fileNames;
+    var target = document.querySelector("#file-name");
+    $.find(target).innerHTML = fileNames
     $("#uploadFirmware-btn").attr("disabled", false);
   }
 });

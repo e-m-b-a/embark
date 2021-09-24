@@ -1,27 +1,31 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
-    {% load static %}
-
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <link rel="icon" type="image/png" href="{%  static 'content/images/favicon.png' %}">
     <title>{% block title %}{% endblock %}</title>
 
-    <!-- x Bootstrap and jquery-confirm CSS -->
-    <link rel="stylesheet" href="{% static 'external/css/bootstrap.css' %}">
-    <link rel="stylesheet" href="{% static 'external/css/jquery.css' %}">
+    <!-- jQuery-confirm style sheet -->
+    <link rel="stylesheet" href="{% static 'external/css/confirm.css' %}">
 
-    <!--x DataTables styling sheets-->
+    <!-- Bootstrap and jquery-confirm style sheet -->
+    <link rel="stylesheet" href="{% static 'external/css/bootstrap.css' %}">
+
+    <!--DataTables style sheets-->
     <link rel="stylesheet" type="text/css" href="{% static 'external/css/datatable.css' %}"/>
 
-    <!-- Styling sheets-->
+    <!-- Style sheets-->
     <link rel="stylesheet" type="text/css" href="{% static 'content/css/globalStyle.css' %}">
     {% block style %}{% endblock %}
 
     <!-- jQuery script -->
     <script type="text/javascript" src="{% static 'external/scripts/jquery.js' %}"></script>
+
+    <!-- jQuery confirm script -->
+    <script type="text/javascript" src="{% static 'external/scripts/confirm.js' %}"></script>
 
     <!-- Bootstrap script -->
     <script type="text/javascript" src="{% static 'external/scripts/bootstrap.js' %}"></script>
