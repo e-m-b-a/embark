@@ -17,7 +17,7 @@ urlpatterns = [
     path('home/reportDashboard/', views.report_dashboard, name='embark-ReportDashboard'),
     path('home/individualReportDashboard/<int:analyze_id>', views.individual_report_dashboard, name='embark-IndividualReportDashboard'),
     path('download_zipped/<int:analyze_id>/', views.download_zipped, name='embark-download'),
-    path('home/log/<str:log_type>/<int:lines>/', views.get_log, name='log'),
+    path('home/log/<int:log_type>/<int:lines>/', views.get_log, name='log'),
     path('emba_logs/<int:analyze_id>/html-report/<str:html_file>', views.html_report, name='embark-html-report'),
     path('emba_logs/<int:analyze_id>/html-report/style/<str:img_file>', views.html_report_resource, name='embark-html-report-resource'),
 

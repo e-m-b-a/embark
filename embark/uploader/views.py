@@ -238,7 +238,7 @@ def get_log(request, log_type, lines):
 
     """
     log_file_list = ["daphne", "migration", "mysql_db", "redis_db", "uwsgi", "web"]
-    log_file = log_file_list[log_type]
+    log_file = log_file_list[int(log_type)]
     file_path = f"{settings.BASE_DIR}/logs/{log_file}.log"
     logger.info('Load log file: %s', file_path)
     try:
