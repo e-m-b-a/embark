@@ -32,19 +32,19 @@
 
         <div class="card dataCardIR">
           <table class="table table-striped table-borderless table-individualrep">
-            <div class="row">
+            <div class="buttonRow">
             <!-- Quick and dirty JS solution. Need to fix the report id for using django mechanisms -->
             <form action="javascript:;" onsubmit="return get_report_url();" method='GET'>
-              <button class="btn" type="submit">Open Report</button>
+              <button class="btn buttonRowElem" type="submit">Open Report</button>
             </form>
             <form action="javascript:;" onsubmit="return get_dl_report_url();" method='GET'>
-              <button class="btn" type="submit">Download Report</button>
+              <button class="btn buttonRowElem" type="submit">Download Report</button>
             </form>
             <form action={% url 'embark-start-analysis' 1 %} method='GET'>
-              <button type="submit" class="btn" >Rescan/delete</button>
+              <button type="submit" class="btn buttonRowElem" >Rescan/delete</button>
             </form>
             <form action={% url 'embark-MainDashboard' %} method='GET'>
-              <button type="submit" class="btn" >Main dashboard</button>
+              <button type="submit" class="btn buttonRowElem" >Main dashboard</button>
             </form>
             </div>
             <br>

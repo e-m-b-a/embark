@@ -21,14 +21,14 @@
             <table class="table table-striped table-light table-hover" id="report-table">
                 <thead>
                 <tr>
-                    <th scope="col">ID</th>
+                    <th data-priority="2" scope="col">ID</th>
                     <th scope="col">Name</th>
                     <th scope="col">Vendor</th>
                     <th scope="col">Device</th>
                     <th scope="col">Version</th>
                     <th scope="col">Start Date</th>
                     <th scope="col">End Date</th>
-                    <th scope="col">Actions</th>
+                    <th data-orderable="false" data-priority="1" scope="col">Actions</th>
                 </tr>
                 </thead>
 
@@ -43,18 +43,18 @@
                         <td>{{ firmware.start_date }}</td>
                         <td>{{ firmware.end_date }}</td>
                         <td>
-                            <div class="row">
+                            <div class="buttonRow">
                                 <form action={% url 'embark-download' firmware.pk %} method='GET'>
-                                    <button type="submit" class="btn" >Download Logs</button>
+                                    <button type="submit" class="btn buttonRowElem" >Download Logs</button>
                                 </form>
                                 <form action={% url 'embark-html-report' firmware.pk 'index.html' %} method='GET'>
-                                    <button type="submit" class="btn" >Open Report</button>
+                                    <button type="submit" class="btn buttonRowElem" >Open Report</button>
                                 </form>
                                 <form action={% url 'embark-IndividualReportDashboard' firmware.pk %} method='GET'>
-                                    <button type="submit" class="btn" >Detail View</button>
+                                    <button type="submit" class="btn buttonRowElem" >Detail View</button>
                                 </form>
                                 <form action={% url 'embark-start-analysis' 1 %} method='GET'>
-                                    <button type="submit" class="btn" >Rescan/delete</button>
+                                    <button type="submit" class="btn buttonRowElem" >Rescan/delete</button>
                                 </form>
                             </div>
                         </td>

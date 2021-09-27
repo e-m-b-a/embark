@@ -28,6 +28,5 @@
 }
 
 .table-individualrep tr td:first-child {
-  float: left;
   min-width: 350px;
 }

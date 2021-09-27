@@ -47,3 +47,12 @@
     background-color: #493791;
     border-color: #493791;
 }
+
+table.dataTable td, table.dataTable th {
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+.buttonRowElem {
+    margin: 2px;
+}
