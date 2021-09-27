@@ -2,7 +2,7 @@
 
 
 <p align="center" style="margin:25px;">
-  <img src="./embark/static/content/images/embark_logo.svg" alt="" width="400"/>
+  <img src="./embark/static/content/images/header.png" alt="" width="100%"/>
 </p>
 <p align="center">
   <a href="https://github.com/e-m-b-a/embark/blob/master/LICENSE"><img src="https://img.shields.io/github/license/e-m-b-a/embark?label=License"></a>
