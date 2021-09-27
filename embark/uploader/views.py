@@ -141,14 +141,14 @@ def start_analysis(request, refreshed):
     if refreshed == 1:
         return render(request, 'uploader/fileUpload.html', {'analyze_form': analyze_form, 'delete_form': delete_form, 'username': request.user.username})
     # else:
-    html_body = get_template('uploader/embaServiceDashboard.html')
+    html_body = get_template('uploader/serviceDashboard.html')
     return HttpResponse(html_body.render({'username': request.user.username}))
 
 
 @csrf_exempt
 @login_required(login_url='/' + settings.LOGIN_URL)
 def service_dashboard(request):
-    html_body = get_template('uploader/embaServiceDashboard.html')
+    html_body = get_template('uploader/serviceDashboard.html')
     return HttpResponse(html_body.render({'username': request.user.username}))
 
 
@@ -224,76 +224,48 @@ def save_file(request, refreshed):
             return HttpResponse("Firmware could not be uploaded")
 
 
-def log_streamer(request):
-    try:
-        firmware_id = request.GET.get('id', None)
-        from_ = int(request.GET.get('offset', 0))
-
-        if firmware_id is None:
-            return False
-        try:
-            firmware = Firmware.objects.get(id=int(firmware_id))
-        except Firmware.DoesNotExist:
-            logger.error("Firmware with id: %s. Does not exist.", firmware_id)
-            return False
-
-        file_path = f"/app/emba/{settings.LOG_ROOT}/{firmware.id}/emba.log"
-        mtime = os.path.getmtime(file_path)
-        with open(file_path) as file_:
-            start = -int(from_) or -2000
-            filestart = True
-            while filestart:
-                try:
-                    file_.seek(start, 2)
-                    filestart = False
-                    result = file_.read()
-                    last = file_.tell()
-                    templ = loader.get_template('uploader/log.html')
-                    yield templ.render({"result": result})
-                except IOError:
-                    start += 50
-        reset = 0
-        while True:
-            newmtime = os.path.getmtime(file_path)
-            if newmtime == mtime:
-                time.sleep(1)
-                reset += 1
-                if reset >= 15:
-                    yield "<!-- empty -->"
-                continue
-            mtime = newmtime
-            with open(file_path) as file_:
-                file_.seek(last)
-                result = file_.read()
-                if result:
-                    templ = loader.get_template('uploader/log.html')
-                    yield result + "<script>$('html,body').animate(" \
-                                   "{ scrollTop: $(document).height() }, 'slow');</script>"
-                last = file_.tell()
-    except Exception as error:
-        logger.exception('Wide exception in logstreamer: %s', error)
-        return False
-
-
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def get_logs(request):
+def get_log(request, log_type, lines):
     """
     View takes a get request with following params:
-    1. id: id for firmware
-    2. offset: offset in log file
+    1. log_type: selector of log file (daphne, migration, mysql_db, redis_db, uwsgi, web)
+    2. lines: lines in log file
     Args:
         request: HTTPRequest instance
 
     Returns:
 
     """
-    generator = log_streamer(request)
-    if isinstance(generator, bool):
-        return HttpResponse('Error in Streaming logs')
-    response = StreamingHttpResponse(log_streamer(request))
-    response['X-Accel-Buffering'] = "no"
-    return response
+    log_file_list = ["daphne", "migration", "mysql_db", "redis_db", "uwsgi", "web"]
+    log_file = log_file_list[int(log_type)]
+    file_path = f"{settings.BASE_DIR}/logs/{log_file}.log"
+    logger.info('Load log file: %s', file_path)
+    try:
+        with open(file_path) as file_:
+            try:
+                buffer_ = 500
+                lines_found = []
+                block_counter = -1
+
+                while len(lines_found) <= lines:
+                    try:
+                        file_.seek(block_counter * buffer_, 2)
+                    except IOError:
+                        file_.seek(0)
+                        lines_found = file_.readlines()
+                        break
+
+                    lines_found = file_.readlines()
+                    block_counter -= 1
+
+                result = lines_found[-(lines+1):]
+            except Exception as error:
+                logger.exception('Wide exception in logstreamer: %s', error)
+
+        return render(request, 'uploader/log.html', {'header': log_file + '.log', 'log': ''.join(result), 'username': request.user.username})
+    except IOError:
+        return render(request, 'uploader/log.html', {'header': 'Error', 'log': file_path + ' not found!', 'username': request.user.username})
 
 
 @csrf_exempt
@@ -303,11 +275,11 @@ def main_dashboard(request):
     return HttpResponse(html_body.render({'username': request.user.username}))
 
 
-@csrf_exempt
-@login_required(login_url='/' + settings.LOGIN_URL)
-def reports(request):
-    html_body = get_template('uploader/reports.html')
-    return HttpResponse(html_body.render({'username': request.user.username}))
+# @csrf_exempt
+# @login_required(login_url='/' + settings.LOGIN_URL)
+# def reports(request):
+#     html_body = get_template('uploader/reports.html')
+#     return HttpResponse(html_body.render({'username': request.user.username}))
 
 
 @csrf_exempt

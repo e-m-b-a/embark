@@ -1,4 +1,8 @@
-{% extends "uploader/home.html" %}
+{% extends "uploader/base.html" %}
+{% load static %}
+{% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/mainDashboard.css' %}">{% endblock %}
+{% block title %}EMBArk main dashboard{% endblock %}
+{% block navigation %}{% include "uploader/navigation.html" %}{% endblock %}
 {% block maincontent %}
 <div class="cardBox">
     <div class="card">
@@ -75,7 +79,6 @@
     </div>
 </div>
 
-
 <div class="dataCard">
     <div class="row cardRow dataCardRow4">
         <div class="card">
@@ -100,9 +103,8 @@
         </div>
     </div>
 </div>
-
-
-{% load static %}
+{% endblock %}
+{% block inlinejs %}
 <script type="text/javascript" src="{% static 'scripts/mainDashboard.js' %}"></script>
 <script type="text/javascript" src="{% static 'scripts/accumulatedReports.js' %}"></script>
 {% endblock %}

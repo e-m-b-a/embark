@@ -1,4 +1,3 @@
-
 /** Error alert - Displays Alert message if something is failed
  * @param {*} message - message to be shown to user
  */

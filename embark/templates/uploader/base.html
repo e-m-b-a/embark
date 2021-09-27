@@ -1,0 +1,55 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="icon" type="image/png" href="{%  static 'content/images/favicon.png' %}">
+    <title>{% block title %}{% endblock %}</title>
+
+    <!-- jQuery-confirm style sheet -->
+    <link rel="stylesheet" href="{% static 'external/css/confirm.css' %}">
+
+    <!-- Bootstrap and jquery-confirm style sheet -->
+    <link rel="stylesheet" href="{% static 'external/css/bootstrap.css' %}">
+
+    <!--DataTables style sheets-->
+    <link rel="stylesheet" type="text/css" href="{% static 'external/css/datatable.css' %}"/>
+
+    <!-- Style sheets-->
+    <link rel="stylesheet" type="text/css" href="{% static 'content/css/globalStyle.css' %}">
+    {% block style %}{% endblock %}
+
+    <!-- jQuery script -->
+    <script type="text/javascript" src="{% static 'external/scripts/jquery.js' %}"></script>
+
+    <!-- jQuery confirm script -->
+    <script type="text/javascript" src="{% static 'external/scripts/confirm.js' %}"></script>
+
+    <!-- Bootstrap script -->
+    <script type="text/javascript" src="{% static 'external/scripts/bootstrap.js' %}"></script>
+
+    <!--DataTables script-->
+    <script type="text/javascript" src="{% static 'external/scripts/datatable.js' %}"></script>
+
+    <!-- Charts script -->
+    <script type="text/javascript" src="{% static 'external/scripts/charts.js' %}"></script>
+
+    <!-- local Javascript files-->
+    <script type="text/javascript" src="{% static 'scripts/main.js' %}"></script>
+    <script type="text/javascript" src="{% static 'scripts/alertBox.js' %}"></script>
+    {% block js %}{% endblock %}
+
+</head>
+<body>
+    <div class="container-fluid">
+        {% block navigation %}{% endblock %}
+        <!--Main container-->
+        <div class="main">
+            {% block maincontent %}{% endblock %}
+        </div>
+    </div>
+    {% block inlinejs %}{% endblock %}
+</body>
+</html>

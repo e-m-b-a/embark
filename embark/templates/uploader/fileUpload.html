@@ -1,129 +1,107 @@
-{% extends "uploader/home.html" %}
+{% extends "uploader/base.html" %}
+{% load static %}
+{% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/fileUpload.css' %}">{% endblock %}
+{% block js %}<script type="text/javascript" src="{% static 'scripts/fileUpload.js' %}"></script>{% endblock %}
+{% block title %}EMBArk file upload{% endblock %}
+{% block navigation %}{% include "uploader/navigation.html" %}{% endblock %}
 {% block maincontent %}
-{% comment %} {% load static %}
-<link rel="stylesheet" type="text/css" href="{% static 'content/css/fileUpload.css' %}"> {% endcomment %}
 <div class="row uploadRow">
     <div class="col-sm">
-        <div class="row uploadIconRow">
-            <div id="fileDropDiv" class="fileDrop" ondrop="showFiles(event.dataTransfer.items)" ondragover="dragOverHandler(event)" onchange="showFiles(this.lastElementChild.files)">
-                <p align="center" class="mainText">Upload a firmware image/archive</p>
-                <p align="center" class="subText">Supported archive types : firmware binary and most archive types</p>
-                <label for="file-input" class="iconLabel">
-                    <span class="uploadIcon"><i class="fas fa-cloud-upload-alt fileuploadIcon fa-9x" aria-hidden="true"></i></span>
-                    {% comment %} <img src="{% static 'content/images/fileUpload.jpg'%}"/> {% endcomment %}
-                </label>
-                <input id="file-input" type="file" multiple/>
+        <div class="box">
+            <p class="mainText">Upload firmware image/archive</p>
+            <p class="subText">Supported archive types : firmware binary and most archive types</p>
+            <div class="innerBlock">
+                Selected file: <div id="file-name" class="uploadedFile">None selected.</div>
+            </div>
+            <div class="buttonRow">
+                <button type="submit" id="uploadFirmware-btn" class="btn buttonRowElem" onclick="saveFiles()" disabled>
+                    Upload
+                </button>
+                <button type="button" class="btn buttonRowElem" >
+                    <label for="file-input">Select file</label>
+                </button>
+                <input id="file-input" type="file"/>
+            </div>
+            <div class="progress-wrapper" id="progress-wrapper" style="display:none;">
+                <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
             </div>
         </div>
-        <div id="uploadedFileNames" class="uploadedFile row">
-            <p align="center" class="fileName"></p>
-        </div>
-        <div class="row uploadBtnRow">
-            <button type="submit" id="uploadFirmware-btn" class="btn" onclick="saveFiles()" disabled>Upload</button>
-        </div>
-        <div class="progress-wrapper" id="progress-wrapper" style="display:none;">
-            <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
-        </div>
+        
+        <div class="box">
+            <p class="mainText">Select and delete a firmware image/archive</p>
+            <form action="/home/delete/" method="POST" id="delete-form" onsubmit="window.confirmDelete(event)">
 
-        <div class="row deleteIconRow">
-            <div id="fileDelDiv">
-                <p align="center" class="mainText">Select and Delete a firmware image/archive</p>
-                <form action="/home/delete/" method="POST" id="delete-form" onsubmit="window.confirmDelete(event)">
-
-                    {% csrf_token %}
-                    {% load filters %}
-                    <!-- Iterate over all fields and set expmode on fields in expert mode -->
-                    {% for field in delete_form %}
-
-                        <div id="firmwareToDelete" class="form-group deleteFirmware" >
-                                {{ field.label_tag }}
-                                {{ field }}
-                        </div>
-
-                    {% endfor %}
-
-                    <div class="row deleteBtnRow">
-                        <button type="delete" class="btn">Delete</button>
+                {% csrf_token %}
+                {% load filters %}
+                <!-- Iterate over all fields and set expmode on fields in expert mode -->
+                {% for field in delete_form %}
+                <div class="innerBlock">
+                    <div id="firmwareToDelete" class="form-group deleteFirmware" >
+                            {{ field }}
                     </div>
-                </form>
-            </div>
+                    {% endfor %}
+                </div>
+                <div class="buttonRow">
+                    <button type="delete" class="btn buttonRowElem">Delete</button>
+                </div>
+            </form>
         </div>
     </div>
+
     <div class="col-sm">
-        <div class="row dataRow">
-            <div class="col col-sm-8">
+        <div class="box">
+            <p class="mainText">Analyze a firmware image/archive</p>
                 <form action="{% url 'embark-start-analysis' refreshed=2 %}" method="POST" id="analyze-form">
+                    <div class="innerBlock">
+                        <label for="expertMode">Expert mode</label>
+                        <label class="switch">
+                            <input id="expertModeSwitch" type="checkbox" onclick="expertModeOn()">
+                            <span class="slider round"></span>
+                        </label>
 
-                    {% csrf_token %}
-                    {% load filters %}
-                    <!-- Iterate over all fields and set expmode on fields in expert mode -->
-                    {% for field in analyze_form %}
+                        {% csrf_token %}
+                        {% load filters %}
+                        <!-- Iterate over all fields and set expmode on fields in expert mode -->
+                        {% for field in analyze_form %}
 
-                        {% if field.expert_mode %}
-                            <div class="form-group expertModeOptions" value="expmode" style="display:none;">
-                                {% if field.field.widget|is_checkbox %}
-                                    {{ field }}
-                                    {{ field.label_tag }}
-                                {% else %}
-                                    {% comment %} {{ field.label_tag }} {% endcomment %}
-                                    {{ field }}
-                                {% endif %}
-                                {% if field.help_text %}
-                                    <small class="form-text text-muted" value="help_text" style="display:none;">{{ field.help_text }}</small>
-                                {% endif %}
-                            </div>
-                        {% else %}
-                            <div class="form-group">
-                                 {% if field.field.widget|is_checkbox %}
-                                    {{ field }}
-                                    {{ field.label_tag }}
-                                {% else %}
-                                    {% comment %} {{ field.label_tag }} {% endcomment %}
-                                    {{ field }}
-                                {% endif %}
-                                {% if field.help_text %}
-                                    <small class="form-text text-muted" value="help_text" style="display:none;">{{ field.help_text }}</small>
-                                {% endif %}
-                            </div>
-                        {% endif %}
+                            {% if field.expert_mode %}
+                                <div class="form-group expertModeOptions" value="expmode" style="display:none;">
+                                    {% if field.field.widget|is_checkbox %}
+                                        {{ field }}
+                                        {{ field.label_tag }}
+                                    {% else %}
+                                        {% comment %} {{ field.label_tag }} {% endcomment %}
+                                        {{ field }}
+                                    {% endif %}
+                                    {% if field.help_text %}
+                                        <small class="form-text text-muted" value="help_text" style="display:none;">{{ field.help_text }}</small>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <div class="form-group">
+                                    {% if field.field.widget|is_checkbox %}
+                                        {{ field }}
+                                        {{ field.label_tag }}
+                                    {% else %}
+                                        {% comment %} {{ field.label_tag }} {% endcomment %}
+                                        {{ field }}
+                                    {% endif %}
+                                    {% if field.help_text %}
+                                        <small class="form-text text-muted" value="help_text" style="display:none;">{{ field.help_text }}</small>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
 
-                    {% endfor %}
-
-                    <button type="submit" class="btn" >
-                        Analyse
-                    </button>
-                    <button type="reset" class="btn">Cancel</button>
-
-                </form>
-            </div>
-            <div class="col col-sm-4">
-                <div class="form-group">
-                    <div class="row">
-                        <div class="col-sm-7 togLbl">
-                            <label for="expertMode">Expert mode</label>
-                        </div>
-                        <div class="col-sm-5 togSwitch">
-                            <label class="switch">
-                                <input id="expertModeSwitch" type="checkbox" onclick="expertModeOn()">
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-
-                        <!-- <div class="col-sm-7 togLbl">
-                            <label for="helpText">Display Help</label>
-                        </div>
-                        <div class="col-sm-5 togSwitch">
-                            <label class="switch">
-                                <input id="helpTextSwitch" type="checkbox" onclick="helpTextOn()">
-                                <span class="slider round"></span>
-                            </label>
-                        </div> -->
+                        {% endfor %}
 
                     </div>
-                </div>
+                    <div class="buttonRow">
+                        <button type="submit" class="btn buttonRowElem">Analyze</button>
+                        <button type="reset" class="btn buttonRowElem">Cancel</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
-<script src="static/scripts/main.js"></script>

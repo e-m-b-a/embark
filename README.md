@@ -1,8 +1,8 @@
 # EMBArk - The firmware security scanning environment <br>
 
 
-<p align="center">
-  <img src="./documentation/embark.svg" alt="" width="250"/>
+<p align="center" style="margin:25px;">
+  <img src="./embark/static/content/images/header.png" alt="" width="100%"/>
 </p>
 <p align="center">
   <a href="https://github.com/e-m-b-a/embark/blob/master/LICENSE"><img src="https://img.shields.io/github/license/e-m-b-a/embark?label=License"></a>

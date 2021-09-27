@@ -8,6 +8,8 @@ embark/emba_logs/
 embark/uploader/migrations/
 embark/users/migrations/
 embark/logs/
+embark/static/external/
+embark/uploadedFirmwareImages/
 
 # other stuff
 *.zip

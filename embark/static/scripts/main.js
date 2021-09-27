@@ -1,13 +1,8 @@
 /**
  * Activate Navigation Menu
  */
-function navToolTip() {
-    let menuBtn = document.querySelector("#menuBtn");
-    let navigation = document.querySelector(".navigation");
-
-    menuBtn.onclick = function () {
-        navigation.classList.toggle("active");
-    }
+function navToggle() {
+    document.getElementById("navigation").classList.toggle("active");
 }
 
 /**
