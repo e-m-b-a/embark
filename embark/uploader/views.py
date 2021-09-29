@@ -280,7 +280,7 @@ def main_dashboard(request):
     
 
 @csrf_exempt
-#@login_required()#login_url='/' + settings.LOGIN_URL)
+# @login_required()#login_url='/' + settings.LOGIN_URL)
 def main_dashboard_unauth(request):
     html_body = get_template('uploader/mainDashboard.html')
     return HttpResponse(html_body.render({'nav_switch': False, 'username': request.user.username}))
@@ -369,7 +369,7 @@ def delete_file(request):
 
 @csrf_exempt
 @require_http_methods(["GET"])
-#@login_required(login_url='/' + settings.LOGIN_URL)
+# @login_required(login_url='/' + settings.LOGIN_URL)
 def get_load(request):
     try:
         query_set = ResourceTimestamp.objects.all()
@@ -411,7 +411,7 @@ def get_individual_report(request, analyze_id):
 
 @csrf_exempt
 @require_http_methods(["GET"])
-#@login_required(login_url='/' + settings.LOGIN_URL)
+# @login_required(login_url='/' + settings.LOGIN_URL)
 def get_accumulated_reports(request):
     """
     Sends accumulated results for main dashboard

@@ -93,9 +93,9 @@ def signup(request):
 
 
 @csrf_exempt
-#@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+# @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def signout(request):
-    #request.session.flush()
+    # request.session.flush()
     logger.debug("Logout user %s", request.user)
     logout(request)
     return render(request, 'uploader/login.html', {'success_message': True, 'message': 'Logout successful.'})
