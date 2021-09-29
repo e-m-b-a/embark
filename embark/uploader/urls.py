@@ -7,7 +7,8 @@ from uploader import views
 # view routing
 urlpatterns = [
     path(settings.LOGIN_URL, views.login, name='embark-login'),
-    path(settings.LOGOUT_REDIRECT_URL, views.logout_view, name='embark-logout'),
+    path('register/', views.register, name='embark-register'),
+    #path('home/', views.logout_view, name='embark-logout'), #settings.LOGOUT_REDIRECT_URL
     path('home/', views.home, name='embark-home'),
     path('home/upload/<int:refreshed>/', views.start_analysis, name='embark-start-analysis'),
     path('home/delete/', views.delete_file, name='embark-delete'),
