@@ -54,13 +54,6 @@ def logout(request):
     return HttpResponse(html_body.render())
 
 
-@csrf_exempt
-@login_required(login_url='/' + settings.LOGIN_URL)
-def home(request):
-    html_body = get_template('uploader/mainDashboard.html')
-    return HttpResponse(html_body.render({'username': request.user.username}))
-
-
 def download_zipped(request, analyze_id):
     """
     download zipped log directory
@@ -152,8 +145,6 @@ def start_analysis(request, refreshed):
 @csrf_exempt
 @login_required(login_url='/' + settings.LOGIN_URL)
 def service_dashboard(request):
-    if not request.user.is_authenticated():
-        return redirect(settings.LOGIN_URL)
     html_body = get_template('uploader/serviceDashboard.html')
     return HttpResponse(html_body.render({'username': request.user.username}))
 
@@ -275,10 +266,24 @@ def get_log(request, log_type, lines):
 
 
 @csrf_exempt
-@login_required()#login_url='/' + settings.LOGIN_URL)
+@login_required(login_url='/' + settings.LOGIN_URL)
+def home(request):
+    html_body = get_template('uploader/mainDashboard.html')
+    return HttpResponse(html_body.render({'nav_switch': True, 'username': request.user.username}))
+
+
+@csrf_exempt
+@login_required(login_url='/' + settings.LOGIN_URL)
 def main_dashboard(request):
     html_body = get_template('uploader/mainDashboard.html')
-    return HttpResponse(html_body.render({'username': request.user.username}))
+    return HttpResponse(html_body.render({'nav_switch': True, 'username': request.user.username}))
+    
+
+@csrf_exempt
+#@login_required()#login_url='/' + settings.LOGIN_URL)
+def main_dashboard_unauth(request):
+    html_body = get_template('uploader/mainDashboard.html')
+    return HttpResponse(html_body.render({'nav_switch': False, 'username': request.user.username}))
 
 
 @csrf_exempt
@@ -364,7 +369,7 @@ def delete_file(request):
 
 @csrf_exempt
 @require_http_methods(["GET"])
-@login_required(login_url='/' + settings.LOGIN_URL)
+#@login_required(login_url='/' + settings.LOGIN_URL)
 def get_load(request):
     try:
         query_set = ResourceTimestamp.objects.all()
@@ -406,7 +411,7 @@ def get_individual_report(request, analyze_id):
 
 @csrf_exempt
 @require_http_methods(["GET"])
-@login_required(login_url='/' + settings.LOGIN_URL)
+#@login_required(login_url='/' + settings.LOGIN_URL)
 def get_accumulated_reports(request):
     """
     Sends accumulated results for main dashboard

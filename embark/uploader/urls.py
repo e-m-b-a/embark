@@ -14,6 +14,7 @@ urlpatterns = [
     path('home/delete/', views.delete_file, name='embark-delete'),
     path('home/upload/<int:refreshed>/save_file', views.save_file, name='embark-FileSave'),
     path('home/serviceDashboard/', views.service_dashboard, name='embark-ServiceDashboard'),
+    path('mainDashboard/', views.main_dashboard_unauth, name='embark-MainDashboard-unauth'),
     path('home/mainDashboard/', views.main_dashboard, name='embark-MainDashboard'),
     path('home/reportDashboard/', views.report_dashboard, name='embark-ReportDashboard'),
     path('home/individualReportDashboard/<int:analyze_id>', views.individual_report_dashboard, name='embark-IndividualReportDashboard'),

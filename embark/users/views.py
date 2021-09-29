@@ -33,7 +33,7 @@ def signin(request):
                 password = body['password']
             except KeyError:
                 logger.exception('Missing keys from data- Username and password')
-                return HttpResponse("User data is invalid")
+                return render(request, 'uploader/login.html', {'error_message': True, 'message': 'Username or password are wrong.'})
 
             logger.debug('Found user name and password')
             user = authenticate(request, username=username, password=password)
@@ -45,13 +45,13 @@ def signin(request):
             # else:
             logger.debug('User could not be authenticated')
             messages.info(request, "Invalid user data")
-            return render(request, 'uploader/login.html', {'error_message': True})
+            return render(request, 'uploader/login.html', {'error_message': True, 'message': 'Invalid user data.'})
         except Exception as error:
             logger.exception('Wide exception in Signup: %s', error)
             messages.info(request, "Invalid user data")
-            return render(request, 'uploader/login.html', {'error_message': True})
+            return render(request, 'uploader/login.html', {'error_message': True, 'message': 'Something went wrong when signing in the user.'})
     else:
-        return render(request, 'login.html')
+        return render(request, 'uploader/login.html')
 
 
 @csrf_exempt
@@ -80,23 +80,16 @@ def signup(request):
                     logger.debug('User created')
                 else:
                     logger.debug('Passwords do not match')
-                    return HttpResponse("Passwords do not match")
+                    return render(request, 'uploader/register.html', {'error_message': True, 'message': 'Passwords do not match.'})
 
-                user = authenticate(username=username, password=password)
-                logger.debug('User authenticated')
-                if user is not None:
-                    login(request, user)
-                    logger.debug('User logged in')
-                    return HttpResponse("Signup complete. User Logged in")
-                # else:
-                return HttpResponse("Invalid signup data")
+                return render(request, 'uploader/login.html', {'success_message': True, 'message': 'Registration successful.'})
 
             except KeyError:
                 logger.exception('Missing keys from data- Username, password, password_confirm')
-                return HttpResponse("User data is invalid")
+                return render(request, 'uploader/register.html', {'error_message': True, 'message': 'User data is invalid.'})
         except Exception as error:
             logger.exception('Wide exception in Signup: %s', error)
-            return HttpResponse("Something went wrong when signing up the user")
+            return render(request, 'uploader/register.html', {'error_message': True, 'message': 'Something went wrong when signing up the user.'})
 
 
 @csrf_exempt
@@ -105,4 +98,4 @@ def signout(request):
     #request.session.flush()
     logger.debug("Logout user %s", request.user)
     logout(request)
-    return render(request, 'uploader/login.html', {'error_message': True})
+    return render(request, 'uploader/login.html', {'success_message': True, 'message': 'Logout successful.'})

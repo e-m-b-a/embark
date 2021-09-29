@@ -3,11 +3,15 @@
 {% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/login.css' %}">{% endblock %}
 {% block title %}EMBArk login{% endblock %}
 {% block maincontent %}
-hello {{ username }} !
 <div class="login-form-container">
     {% if error_message %}
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <small>Incorrect user e-mail or password entered.</small>
+        <medium>{{ message }}</medium>
+    </div>
+    {% endif %}
+    {% if success_message %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <medium>{{ message }}</medium>
     </div>
     {% endif %}
     <div id="embarkLogo"><img src="{% static 'content/images/embark_logo.svg'%}" alt="EMBArk logo graphic"></div>
@@ -19,14 +23,19 @@ hello {{ username }} !
             <input type="email" placeholder="User email" name="email" required/>
         </div>
         <div class="input-field">
-            <svg viewBox="0 -2 25 25" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd" transform="translate(4 1)"><path d="m2.5 8.5-.00586729-1.99475098c-.00728549-4.00349935 1.32800361-6.00524902 4.00586729-6.00524902s4.0112203 2.00174967 4.0000699 6.00524902v1.99475098m-8.0000699 0h8.0225317c1.0543618 0 1.9181652.81587779 1.9945143 1.8507377l.0054778.1548972-.0169048 6c-.0031058 1.1023652-.8976224 1.9943651-1.999992 1.9943651h-8.005627c-1.1045695 0-2-.8954305-2-2v-6c0-1.1045695.8954305-2 2-2z" stroke="#000" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="13.5" fill="currentColor" r="1.5"/></g></svg>
+            <svg viewBox="0 -2 25 25" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd" transform="translate(4 1)"><path d="m2.5 8.5-.00586729-1.99475098c-.00728549-4.00349935 1.32800361-6.00524902 4.00586729-6.00524902s4.0112203 2.00174967 4.0000699 6.00524902v1.99475098m-8.0000699 0h8.0225317c1.0543618 0 1.9181652.81587779 1.9945143 1.8507377l.0054778.1548972-.0169048 6c-.0031058 1.1023652-.8976224 1.9943651-1.999992 1.9943651h-8.005627c-1.1045695 0-2-.8954305-2-2v-6c0-1.1045695.8954305-2 2-2z" stroke="#000" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="13.5" fill="#000" r="1.5"/></g></svg>
             <input type="password" placeholder="Password" name="password" required/>
         </div>
-        <a href="{% url 'embark-register' %}">
-            <input class="solid btn-login" value="Register" />
-        </a>
         <input id="loginButton" type="submit" class="solid btn-login" value="Login" />
         </form> 
+    </div>
+    <div id="login_footer">
+        <a href="{% url 'embark-MainDashboard-unauth' %}">
+            <input class="solid btn-login" type="submit" value="Dashboard" />
+        </a>
+        <a href="{% url 'embark-register' %}">
+            <input class="solid btn-login" type="submit" value="Register" />
+        </a>
     </div>
 </div>
 {% endblock %}
