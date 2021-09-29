@@ -66,7 +66,7 @@ def signup(request):
 
                 if password == confirm_password:
                     logger.debug('Passwords match. Creating user')
-                    user = User.objects.create(username=username, email=username)
+                    user = User.objects.create(username=username)
                     user.set_password(password)
                     user.save()
                     logger.debug('User created')
