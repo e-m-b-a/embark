@@ -277,7 +277,7 @@ def home(request):
 def main_dashboard(request):
     html_body = get_template('uploader/mainDashboard.html')
     return HttpResponse(html_body.render({'nav_switch': True, 'username': request.user.username}))
-    
+
 
 @csrf_exempt
 # @login_required()#login_url='/' + settings.LOGIN_URL)
