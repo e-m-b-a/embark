@@ -20,16 +20,12 @@ logger = logging.getLogger('web')
 def signin(request):
     if request.method == "POST":
         logger.debug(request.POST)
-        logger.debug(request.body)
         data = {k: v[0] for k, v in dict(request.POST).items()}
         logger.debug(data)
         try:
+            body = {k: v[0] for k, v in dict(request.POST).items()}
             try:
-                body = json.loads(request.body.decode(encoding='UTF-8'))
-            except json.JSONDecodeError:
-                body = {k: v[0] for k, v in dict(request.POST).items()}
-            try:
-                username = body['email']
+                username = body['username']
                 password = body['password']
             except KeyError:
                 logger.exception('Missing keys from data- Username and password')
@@ -51,24 +47,20 @@ def signin(request):
             messages.info(request, "Invalid user data")
             return render(request, 'uploader/login.html', {'error_message': True, 'message': 'Something went wrong when signing in the user.'})
     else:
-        return render(request, 'uploader/login.html')
+        return render(request, 'login.html')
 
 
 @csrf_exempt
-@require_http_methods(["POST"])
+@require_http_methods(["GET", "POST"])
 def signup(request):
     if request.method == "POST":
         logger.debug(request.POST)
-        logger.debug(request.body)
         data = {k: v[0] for k, v in dict(request.POST).items()}
         logger.debug(data)
         try:
+            body = {k: v[0] for k, v in dict(request.POST).items()}
             try:
-                body = json.loads(request.body.decode(encoding='UTF-8'))
-            except json.JSONDecodeError:
-                body = {k: v[0] for k, v in dict(request.POST).items()}
-            try:
-                username = body['email']
+                username = body['username']
                 password = body['password']
                 confirm_password = body['confirm_password']
 
@@ -90,6 +82,8 @@ def signup(request):
         except Exception as error:
             logger.exception('Wide exception in Signup: %s', error)
             return render(request, 'uploader/register.html', {'error_message': True, 'message': 'Something went wrong when signing up the user.'})
+    else:
+        return render(request, 'register.html')
 
 
 @csrf_exempt
