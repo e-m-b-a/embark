@@ -9,6 +9,11 @@ html, body {
     height: 100%;
 }
 
+a {
+    color: #fff;
+    text-decoration: none;
+}
+
 .container-fluid {
     overflow: hidden;
 }
@@ -83,6 +88,7 @@ form {
     font-weight: 600;
     margin: 10px, 0;
     transition: all 0.5s;
+    display: inline-block;
 }
 
 .btn-login:hover {
@@ -106,3 +112,12 @@ form {
     background-color: #160022;
     color: #ffcc00;
 }  
+
+.alert {
+    margin: 30px;
+}
+
+#login_footer {
+    text-align: center;
+    margin: 50px 0;
+}

@@ -2,7 +2,7 @@
 {% load static %}
 {% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/mainDashboard.css' %}">{% endblock %}
 {% block title %}EMBArk main dashboard{% endblock %}
-{% block navigation %}{% include "uploader/navigation.html" %}{% endblock %}
+{% block navigation %}{% if nav_switch %}{% include "uploader/navigation.html" %}{% endif %}{% endblock %}
 {% block maincontent %}
 <div class="cardBox">
     <div class="card">

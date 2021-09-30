@@ -11,12 +11,11 @@ from http import HTTPStatus
 from django.conf import settings
 # from django import forms
 from django.forms import model_to_dict
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.template.loader import get_template
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import logout
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.cache import cache_control
 from django.template import loader
@@ -44,17 +43,15 @@ def login(request):
 
 
 @csrf_exempt
-@login_required(login_url='/' + settings.LOGIN_URL)
-def home(request):
-    html_body = get_template('uploader/mainDashboard.html')
-    return HttpResponse(html_body.render({'username': request.user.username}))
+def register(request):
+    html_body = get_template('uploader/register.html')
+    return HttpResponse(html_body.render())
 
 
 @csrf_exempt
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-def logout_view(request):
-    request.session.flush()
-    logout(request)
+def logout(request):
+    html_body = get_template('uploader/logout.html')
+    return HttpResponse(html_body.render())
 
 
 def download_zipped(request, analyze_id):
@@ -270,16 +267,30 @@ def get_log(request, log_type, lines):
 
 @csrf_exempt
 @login_required(login_url='/' + settings.LOGIN_URL)
+def home(request):
+    html_body = get_template('uploader/mainDashboard.html')
+    return HttpResponse(html_body.render({'nav_switch': True, 'username': request.user.username}))
+
+
+@csrf_exempt
+@login_required(login_url='/' + settings.LOGIN_URL)
 def main_dashboard(request):
     html_body = get_template('uploader/mainDashboard.html')
+    return HttpResponse(html_body.render({'nav_switch': True, 'username': request.user.username}))
+
+
+@csrf_exempt
+# @login_required()#login_url='/' + settings.LOGIN_URL)
+def main_dashboard_unauth(request):
+    html_body = get_template('uploader/mainDashboard.html')
+    return HttpResponse(html_body.render({'nav_switch': False, 'username': request.user.username}))
+
+
+@csrf_exempt
+@login_required(login_url='/' + settings.LOGIN_URL)
+def reports(request):
+    html_body = get_template('uploader/reports.html')
     return HttpResponse(html_body.render({'username': request.user.username}))
-
-
-# @csrf_exempt
-# @login_required(login_url='/' + settings.LOGIN_URL)
-# def reports(request):
-#     html_body = get_template('uploader/reports.html')
-#     return HttpResponse(html_body.render({'username': request.user.username}))
 
 
 @csrf_exempt
@@ -358,7 +369,7 @@ def delete_file(request):
 
 @csrf_exempt
 @require_http_methods(["GET"])
-@login_required(login_url='/' + settings.LOGIN_URL)
+# @login_required(login_url='/' + settings.LOGIN_URL)
 def get_load(request):
     try:
         query_set = ResourceTimestamp.objects.all()
@@ -400,7 +411,7 @@ def get_individual_report(request, analyze_id):
 
 @csrf_exempt
 @require_http_methods(["GET"])
-@login_required(login_url='/' + settings.LOGIN_URL)
+# @login_required(login_url='/' + settings.LOGIN_URL)
 def get_accumulated_reports(request):
     """
     Sends accumulated results for main dashboard

@@ -1,4 +1,4 @@
-check_login();
+//check_login();
 
 try {
     var loadChart = document.getElementById('loadChart').getContext('2d');
