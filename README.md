@@ -6,7 +6,7 @@
 </p>
 <p align="center">
   <a href="https://github.com/e-m-b-a/embark/blob/master/LICENSE"><img src="https://img.shields.io/github/license/e-m-b-a/embark?label=License"></a>
-  <a href="https://img.shields.io/badge/python-3.7+-blue.svg"><img src="https://img.shields.io/badge/python-3.7+-blue.svg"></a>
+  <img src="https://img.shields.io/badge/python-3.7+-blue.svg">
   <a href="https://github.com/e-m-b-a/embark/stargazers"><img src="https://img.shields.io/github/stars/e-m-b-a/embark?label=Stars"></a>
   <a href="https://github.com/e-m-b-a/embark/network/members"><img src="https://img.shields.io/github/forks/e-m-b-a/embark?label=Forks"></a>
   <a href="https://github.com/e-m-b-a/embark/graphs/contributors"><img src="https://img.shields.io/github/contributors/e-m-b-a/embark?color=9ea"></a>
