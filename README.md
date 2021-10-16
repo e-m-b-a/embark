@@ -19,7 +19,8 @@
 
 Furthermore *EMBArk* improves the data provision by aggregating the various scanning results in an [aggregated management dashboard](https://github.com/e-m-b-a/embark/wiki/Web-interface#main-dashboard).
 
-[![Watch the video](https://img.youtube.com/vi/qSHuPWbfhmI/maxresdefault.jpg)](https://youtu.be/qSHuPWbfhmI)
+[![Watch EMBArk](https://raw.githubusercontent.com/wiki/e-m-b-a/embark/images/EMBArk-YouTube.png)](https://youtu.be/qSHuPWbfhmI "Watch EMBArk")
+
 
 ## Automated setup (on Kali Linux)
 1. Checkout the repository (e.g. `git clone https://github.com/e-m-b-a/embark.git`)
