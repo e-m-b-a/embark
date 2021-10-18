@@ -1,0 +1,4 @@
+{
+  "TestFramework": "Pytest",
+  "Interpreter": "embarkenv\\Scripts\\python.exe"
+}

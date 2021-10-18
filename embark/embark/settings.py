@@ -35,14 +35,14 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    'channels',
-    'django_apscheduler',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django.contrib.sessions',
+    'django.contrib.sessions', # TODO: delete this
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
+    'django_apscheduler', # why the name?
     'uploader',
     'users'
 ]
