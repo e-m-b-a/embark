@@ -15,7 +15,7 @@ var totalFiles = document.getElementById('totalFiles');
 var totalDirectories = document.getElementById('totalDirectories');
 var totalBinaries = document.getElementById('totalBinaries');
 var totalCve = document.getElementById('totalCve');
-var totalIssues = document.getElementById('totalIssues')
+var totalIssues = document.getElementById('totalIssues');
 var topEntropies = document.getElementById('topEntropies').getContext('2d');
 var entropyMeterLabel = document.getElementById('entropyMeterLabel');
 
@@ -28,13 +28,15 @@ var topBinaryTypes = document.getElementById('topBinaryTypes').getContext('2d');
  * @returns Array of colors with RGB values
  */
 function getRandomColors(num) {
+    /* jshint unused:false */
+    "use strict";
     try {
             var colors = [];
             for (var i = 0; i < num; i++) {
                 var r = Math.round(Math.random() * 255);
                 var g = Math.round(Math.random() * 255);
                 var b = Math.round(Math.random() * 255);
-                colors.push(`rgba(${r}, ${g}, ${b})`)
+                colors.push('rgba(${r}, ${g}, ${b})');
             }
             return colors;    
     } catch (error) {
@@ -49,16 +51,17 @@ function getRandomColors(num) {
  * Develop Charts from the Analysed data .
  */
 get_accumulated_reports().then(function (returnData) {
-
+    /* jshint unused:false*/
+    "use strict";
     if (returnData.total_firmwares !== 0) {
       firmwareAnalysed.textContent = returnData.total_firmwares;
-      accumulatedEntropy.setAttribute('value', returnData.entropy_value['mean']);
-      entropyMeterLabel.textContent = 'Average Entropy Value: ' + returnData.entropy_value['mean'].toFixed(2);
-      totalFiles.textContent = returnData.files['sum'];
-      totalDirectories.textContent = returnData.directories['sum'];
-      totalBinaries.textContent = returnData.bins_checked['sum'];
-      totalCve.textContent = returnData.cve_medium['sum'] + returnData.cve_low['sum'] + returnData.cve_high['sum'];
-      totalIssues.textContent = returnData.exploits['sum'];
+      accumulatedEntropy.setAttribute('value', returnData.entropy_value.mean);
+      entropyMeterLabel.textContent = 'Average Entropy Value: ' + returnData.entropy_value.sum.toFixed(2);
+      totalFiles.textContent = returnData.files.sum;
+      totalDirectories.textContent = returnData.directories.sum;
+      totalBinaries.textContent = returnData.bins_checked.sum;
+      totalCve.textContent = returnData.cve_medium.sum + returnData.cve_low.sum + returnData.cve_high.sum;
+      totalIssues.textContent = returnData.exploits.sum;
     } else {
       firmwareAnalysed.textContent = "no data";
       accumulatedEntropy.setAttribute('value', 0);
@@ -137,7 +140,7 @@ get_accumulated_reports().then(function (returnData) {
             ],
             datasets: [{
                 labels: ['binaries with NX', 'binaries without NX'],
-                data: [returnData.nx['sum'], (returnData.bins_checked['sum'] - returnData.nx['sum'])],
+                data: [returnData.nx.sum, (returnData.bins_checked.sum - returnData.nx.sum)],
                 backgroundColor: ['#493791', '#291771'],
             }, ],
         },
@@ -189,7 +192,7 @@ get_accumulated_reports().then(function (returnData) {
             ],
             datasets: [{
                 labels: ['binaries with PIE', 'binaries without PIE'],
-                data: [returnData.pie['sum'], (returnData.bins_checked['sum'] - returnData.pie['sum'])],
+                data: [returnData.pie.sum, (returnData.bins_checked.sum - returnData.pie.sum)],
                 backgroundColor: ['#1b1534', '#000014'],
             }, ],
         },
@@ -241,7 +244,7 @@ get_accumulated_reports().then(function (returnData) {
             ],
             datasets: [{
                 labels: ['binaries with RELRO', 'binaries without RELRO'],
-                data: [returnData.relro['sum'], (returnData.bins_checked['sum'] - returnData.relro['sum'])],
+                data: [returnData.relro.sum, (returnData.bins_checked.sum - returnData.relro.sum)],
                 backgroundColor: ['#7b919d', '#5b717d'],
             }, ],
         },
@@ -293,7 +296,7 @@ get_accumulated_reports().then(function (returnData) {
             ],
             datasets: [{
                 labels: ['binaries with CANARY', 'binaries without CANARY'],
-                data: [returnData.canary['sum'], (returnData.bins_checked['sum'] - returnData.canary['sum'])],
+                data: [returnData.canary.sum, (returnData.bins_checked.sum - returnData.canary.sum)],
                 backgroundColor: ['#525d63', '#323d43'],
             }, ],
         },
@@ -334,7 +337,7 @@ get_accumulated_reports().then(function (returnData) {
                 }
             }
         }
-    })
+    });
 
     let strippedpiechart = new Chart(strippedpie, {
         type: 'pie',
@@ -345,7 +348,7 @@ get_accumulated_reports().then(function (returnData) {
             ],
             datasets: [{
                 labels: ['binaries with Stripped', 'binaries without Stripped'],
-                data: [returnData.stripped['sum'], (returnData.bins_checked['sum'] - returnData.stripped['sum'])],
+                data: [returnData.stripped.sum, (returnData.bins_checked.sum - returnData.stripped.sum)],
                 backgroundColor: ['#009999', '#005050'],
             }, ],
         },
@@ -554,8 +557,8 @@ get_accumulated_reports().then(function (returnData) {
     var topEntropyValues = [];
 
     for (var i = 0; i < returnData.top_entropies.length; i++) {
-        topEntropyLabels.push(returnData.top_entropies[i]["name"]);
-        topEntropyValues.push(returnData.top_entropies[i]["entropy_value"]);
+        topEntropyLabels.push(returnData.top_entropies[i].name);
+        topEntropyValues.push(returnData.top_entropies[i].entropy_value);
     }
 
     let topEntropyBar = new Chart(topEntropies, {
@@ -607,7 +610,7 @@ get_accumulated_reports().then(function (returnData) {
                     },
                 },
             }
-        },
+        }
 
     );
 
@@ -618,13 +621,13 @@ get_accumulated_reports().then(function (returnData) {
  * @returns Data for the Graphs
  */
 function get_accumulated_reports() {
-
+    "use strict";
     try {
         let url = window.location.origin + "/get_accumulated_reports/";
         return $.getJSON(url).then(function (data) {
         console.log(data);
         return data;
-        })    
+        });    
     } catch (error) {
         console.log(error.message);
         location.reload();
