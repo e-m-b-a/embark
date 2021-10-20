@@ -32,17 +32,17 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-# Application definition
+# Application definition - defines what apps gets migrated
 
-INSTALLED_APPS = [
+INSTALLED_APPS = [   
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django.contrib.sessions', # TODO: delete this
+    'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_apscheduler',
     'channels',
-    'django_apscheduler', # why the name?
     'uploader',
     'users'
 ]
@@ -84,7 +84,7 @@ SESSION_COOKIE_HTTPONLY = True
 
 WSGI_APPLICATION = 'embark.wsgi.application'
 
-# Database
+# Database - uses *.env to configure
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 DATABASES = {
