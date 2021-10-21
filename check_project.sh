@@ -40,6 +40,7 @@ jscheck(){
     else 
       echo -e "\\n""$RED$BOLD""[jshint]ERRORS in SCRIPT""$NC""\\n"
     fi
+    # TODO: ADD the Module_check thingy
   done
 }
 
@@ -64,6 +65,7 @@ htmlchecker(){
     else 
       echo -e "\\n""$RED$BOLD""[html-check(tidy)]ERRORS in SCRIPT""$NC""\\n"
     fi
+    # TODO: ADD the Module_check thingy
   done
 }
 
