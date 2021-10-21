@@ -1,3 +1,6 @@
+// jshint unused:false
+// ^ this should only be added AFTER successfull check (disables waring for global functions)
+
 /**
  * The following event calls prevent default to turn off the browsers default drag and drop handler
  * @param {*} ev Event
@@ -21,31 +24,10 @@ $(window).bind("load", function() {
 });
 
 /**
- * Checks for any Multiple uploads and the Passes to save
- */
-function saveFiles() {
-    "use strict";
-    var progressBar = document.getElementById("progress-wrapper");
-    if (progressBar.style.display == "none") {
-      progressBar.style.display = "block";
-    } else {
-      progressBar.style.display = "none";
-    }
-    var fileData = document.getElementById('file-input').files;
-    var formData = new FormData();
-    for (let index = 0; index < fileData.length; index++) {
-      fileData[index].inputFileName = fileData[index].name;
-      formData.append('file', fileData[index]);
-
-    }
-  postFiles(formData);
-}
-
-/**
  * Makes Ajax call and save files locally
  * @param {*} formData Information of the uploaded file or Files
  */
-async function postFiles(formData) {
+ async function postFiles(formData) {
   "use strict";
   try {
     //formData.append('file', fileData);
@@ -94,3 +76,25 @@ async function postFiles(formData) {
       console.log(error.message);
   }
 }
+
+/**
+ * Checks for any Multiple uploads and the Passes to save
+ */
+function saveFiles() {
+    "use strict";
+    var progressBar = document.getElementById("progress-wrapper");
+    if (progressBar.style.display == "none") {
+      progressBar.style.display = "block";
+    } else {
+      progressBar.style.display = "none";
+    }
+    var fileData = document.getElementById('file-input').files;
+    var formData = new FormData();
+    for (let index = 0; index < fileData.length; index++) {
+      fileData[index].inputFileName = fileData[index].name;
+      formData.append('file', fileData[index]);
+
+    }
+  postFiles(formData);
+}
+

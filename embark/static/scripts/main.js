@@ -1,9 +1,33 @@
+// jshint unused:false
+// ^ this should only be added AFTER successfull check (disables waring for global functions)
+
 /**
  * Activate Navigation Menu
  */
 function navToggle() {
     "use strict";
     document.getElementById("navigation").classList.toggle("active");
+}
+
+/**
+ * To display the individual helptext of form fields below
+ */
+ function helpTextOn() {
+    "use strict";
+    try {
+        var expertOptions = document.querySelectorAll('[value="help_text"]');
+
+        for (var i = 0; i < expertOptions.length; i++) {
+            var expertDiv = expertOptions[i];
+            if (expertDiv.style.display === "none") {
+                expertDiv.style.display = "block";
+            } else {
+                expertDiv.style.display = "none";
+            }
+        }
+    } catch (error) {
+        console.log(error.message);
+    }
 }
 
 /**
@@ -27,27 +51,6 @@ function expertModeOn() {
     }
     /* we enable the help text automatically in expert mode */
     helpTextOn();
-}
-
-/**
- * To display the individual helptext of form fields below
- */
-function helpTextOn() {
-    "use strict";
-    try {
-        var expertOptions = document.querySelectorAll('[value="help_text"]');
-
-        for (var i = 0; i < expertOptions.length; i++) {
-            var expertDiv = expertOptions[i];
-            if (expertDiv.style.display === "none") {
-                expertDiv.style.display = "block";
-            } else {
-                expertDiv.style.display = "none";
-            }
-        }
-    } catch (error) {
-        console.log(error.message);
-    }
 }
 
 /**

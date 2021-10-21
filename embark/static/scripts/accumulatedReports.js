@@ -1,3 +1,6 @@
+// jshint unused:false
+// ^ this should only be added AFTER successfull check (disables waring for global functions)
+
 var nxpie = document.getElementById('nxpie').getContext('2d');
 var piepie = document.getElementById('piepie').getContext('2d');
 var relropie = document.getElementById('relropie').getContext('2d');
