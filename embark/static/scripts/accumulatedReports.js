@@ -27,8 +27,8 @@ var topBinaryTypes = document.getElementById('topBinaryTypes').getContext('2d');
  * @param {*} num Number of Colors required for the chart
  * @returns Array of colors with RGB values
  */
+// TODO: make direct call, no array! simplify
 function getRandomColors(num) {
-    /* jshint unused:false */
     "use strict";
     try {
             var colors = [];
@@ -36,7 +36,7 @@ function getRandomColors(num) {
                 var r = Math.round(Math.random() * 255);
                 var g = Math.round(Math.random() * 255);
                 var b = Math.round(Math.random() * 255);
-                colors.push('rgba(${r}, ${g}, ${b})');
+                colors.push(`rgba(${r}, ${g}, ${b})`);
             }
             return colors;    
     } catch (error) {
@@ -46,12 +46,11 @@ function getRandomColors(num) {
     
 }
 
-
 /**
- * Develop Charts from the Analysed data .
- */
-get_accumulated_reports().then(function (returnData) {
-    /* jshint unused:false*/
+* Inits Chart instances from report-data
+* @param {*} returnData report-data from emba
+*/
+function makeCharts(returnData) {
     "use strict";
     if (returnData.total_firmwares !== 0) {
       firmwareAnalysed.textContent = returnData.total_firmwares;
@@ -614,7 +613,7 @@ get_accumulated_reports().then(function (returnData) {
 
     );
 
-});
+}
 
 /**
  * Gets Accumulated data of all firmware scans analysed.
@@ -634,3 +633,8 @@ function get_accumulated_reports() {
     }
     
 }
+
+/**
+ * Develop Charts from the Analysed data .
+ */
+ get_accumulated_reports().then(makeCharts);

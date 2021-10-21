@@ -42,8 +42,8 @@
     "boss"          : false,     // true: Tolerate assignments where comparisons would be expected
     "debug"         : false,     // true: Allow debugger statements e.g. browser breakpoints.
     "eqnull"        : false,     // true: Tolerate use of `== null`
-    "esversion"     : 6,         // {int} Specify the ECMAScript version to which the code must adhere.
-    "moz"           : false,     // true: Allow Mozilla specific syntax (extends and overrides esnext features)
+    "esversion"     : 8,         // {int} Specify the ECMAScript version to which the code must adhere.
+    "moz"           : true,     // true: Allow Mozilla specific syntax (extends and overrides esnext features)
                                  // (ex: `for each`, multiple try/catch, function expression…)
     "evil"          : false,     // true: Tolerate use of `eval` and `new Function()`
     "expr"          : false,     // true: Tolerate `ExpressionStatement` as Programs
@@ -87,5 +87,10 @@
     "yui"           : false,    // Yahoo User Interface
 
     // Custom Globals
-    "globals"       : {}        // additional predefined global variables
+    "globals"       : {
+        "$": false,
+        "successAlert": false,
+        "Chart": false
+
+    }
 }

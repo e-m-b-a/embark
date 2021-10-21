@@ -14,6 +14,7 @@ document.getElementById("entropy").src = entropy_url;
  * get the id of the current report -> we use this for the buttons and the entropy graph
  */
 function get_report_url() {
+  "use strict";
   let report_id = window.location.pathname.split("/").pop();
   let report_url = "/emba_logs/REPORT_ID_REPLACE/html-report/index.html".replace(/REPORT_ID_REPLACE/,report_id);
   window.location.href = report_url;
@@ -21,6 +22,7 @@ function get_report_url() {
 }
 
 function get_dl_report_url() {
+  "use strict";
   let report_id = window.location.pathname.split("/").pop();
   let report_url = "/download_zipped/REPORT_ID_REPLACE".replace(/REPORT_ID_REPLACE/,report_id);
   window.location.href = report_url;
@@ -31,7 +33,7 @@ function get_dl_report_url() {
  * Generates Reports after you complete receiving the data for Individual Fimware
  */
 get_individual_report().then(function (returnData) {
-
+    "use strict";
     let cvedoughnutChart = new Chart(accumulatedCveDoughnut, {
         type: 'doughnut',
         data: {
@@ -91,15 +93,15 @@ get_individual_report().then(function (returnData) {
     });
 
     make_chart(relropie, 'Binaries without RELRO', 'Binaries with RELRO',
-        '#493791', '#291771', returnData.bins_checked, returnData.relro, 'RELRO')
+        '#493791', '#291771', returnData.bins_checked, returnData.relro, 'RELRO');
     make_chart(nxpie, 'Binaries without NX', 'Binaries with NX',
-        '#1b1534', '#000014', returnData.bins_checked, returnData.nx, 'NX')
+        '#1b1534', '#000014', returnData.bins_checked, returnData.nx, 'NX');
     make_chart(piepie, 'Binaries without PIE', 'Binaries with PIE',
-        '#7b919d', '#5b717d', returnData.bins_checked, returnData.pie, 'PIE')
+        '#7b919d', '#5b717d', returnData.bins_checked, returnData.pie, 'PIE');
     make_chart(canarypie, 'Binaries without CANARY', 'Binaries with CANARY',
-        '#525d63', '#323d43', returnData.bins_checked, returnData.canary, 'CANARY')
+        '#525d63', '#323d43', returnData.bins_checked, returnData.canary, 'CANARY');
     make_chart(strippedpie, 'Stripped binaries', 'Unstripped binaries',
-        '#009999', '#005050', returnData.bins_checked, returnData.stripped, 'Stripped')
+        '#009999', '#005050', returnData.bins_checked, returnData.stripped, 'Stripped');
 
     let data_to_display = {
         "Firmware name": returnData.name.replace(/\d\//,""),
@@ -133,17 +135,17 @@ get_individual_report().then(function (returnData) {
         "PIE disabled binaries": returnData.pie,
         "Stack canaries disabled binaries": returnData.canary,
         "Stripped binaries": returnData.stripped,
-    }
+    };
 
     for (const [key, value] of Object.entries(returnData.strcpy_bin)) {
-        data_to_display["STRCPY binary: " + key] = value
+        data_to_display["STRCPY binary: " + key] = value;
     }
 
     const table = document.getElementById("detail_body");
     for (const [key, value] of Object.entries(data_to_display)) {
         let row = table.insertRow();
         let date = row.insertCell(0);
-        date.innerHTML = key
+        date.innerHTML = key;
         let name = row.insertCell(1);
         name.innerHTML = value;
     }
@@ -154,12 +156,13 @@ get_individual_report().then(function (returnData) {
  * @returns data of the Nalysed Individual firmware
  */
 function get_individual_report() {
+    "use strict";
     let report_index = window.location.href.substring(window.location.href.lastIndexOf('/') + 1);
     let url = window.location.origin + "/get_individual_report/" + report_index;
 
     return $.getJSON(url).then(function (data) {
-        return data
-    })
+        return data;
+    });
 }
 
 /**
@@ -174,6 +177,7 @@ function get_individual_report() {
  * @param {*} title Title of The chart
  */
 function make_chart(html_chart, label_1, label_2, color_1, color_2, data_cmp, data_strcpy, title) {
+    "use strict";
     let chart = new Chart(html_chart, {
         type: 'pie',
         data: {

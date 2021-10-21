@@ -7,7 +7,7 @@ try {
      * Develops Chart after loading the required data
      */
     get_load().then(function (returndata) {
-    
+        "use strict";
         let lineChart = new Chart(loadChart, {
             type: 'line', // bar, horizontalBar, pie, line, doughnut, radar, polarArea
             data: {
@@ -94,6 +94,7 @@ try {
  * @returns Object of the Time,cpu and memory Percentage
  */
 function get_load() {
+    "use strict";
     try {
         let url = window.location.origin + "/get_load/";
 
@@ -103,8 +104,8 @@ function get_load() {
                 time: data.timestamp,
                 cpu: data.cpu_percentage,
                 mem: data.memory_percentage
-            }
-        })
+            };
+        });
     } catch (error) {
         console.log(error.message);
     }
@@ -115,7 +116,7 @@ function get_load() {
  * @returns HTTP Response
  */
 function check_login() {
+    "use strict";
     let url = window.location.origin + "/check_login/";
-
     return $.getJSON(url);
 }

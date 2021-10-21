@@ -3,19 +3,18 @@
  *  start socket connection just once
  */
 var socket = new WebSocket(
-        'ws://'
-        + location.hostname + ':8001'
-        + '/ws/progress/'
+        'ws://' + location.hostname + ':8001' + '/ws/progress/'
 );
 /*for log implementation which is currently commented out*/
-var module_array = []
-var phase_array = []
-var cur_len = 0
+var module_array = [];
+var phase_array = [];
+var cur_len = 0;
 
 /**
  * called when a websocket connection is established
  * */
-socket.onopen = function (e) {
+socket.onopen = function () { 
+    "use strict";
     console.log("[open] Connection established");
 };
 
@@ -23,7 +22,7 @@ socket.onopen = function (e) {
  * This method is called whenever a message from the backend arrives
  * */
 socket.onmessage = function (event) {
-
+    "use strict";
     try{
             var data = JSON.parse(event.data);
             console.log(data);
@@ -32,7 +31,7 @@ socket.onmessage = function (event) {
                 var htmlToAdd = `
                 <div class="box" id="Container_` + Object.keys(data)[cur_len] + `">
                     <div class="mainText">
-                        <span>`+data[Object.keys(data)[cur_len]][0]["firmwarename"].split(".")[0]+`</span>
+                        <span>`+data[Object.keys(data)[cur_len]][0].firmwarename.split(".")[0]+`</span>
                     </div>
                     <div class="row">
                         <div class="col-sm log tile moduleLog">
@@ -52,51 +51,54 @@ socket.onmessage = function (event) {
                     <button type="reset" class="btn buttonRowElem" id="` + Object.keys(data)[cur_len] + `" onclick="cancelLog(this.id)" >
                         Cancel
                     </button>
-                </div>`
+                </div>`;
                 //Todo: on non service dashboard web sites we get an exception:
                 document.getElementsByClassName("main")[0].insertAdjacentHTML('beforeend', htmlToAdd);
-                console.log("log_phase_" + Object.keys(data)[cur_len])
+                console.log("log_phase_" + Object.keys(data)[cur_len]);
                 module_array.push("no module");
                 phase_array.push("no phase");
-                cur_len += 1
+                cur_len += 1;
             }
 
             for (let idx = 0; idx < cur_len; idx++) {
-                let id = Object.keys(data)[idx]
-                length = data[id].length
+                let id = Object.keys(data)[idx];
+                var length = data[id].length;
                 if (phase_array[idx] !== data[id][length - 1].phase) {
-                    console.log(data[id][length - 1].phase)
-                    livelog_phase(data[id][length - 1].phase, id)
+                    console.log(data[id][length - 1].phase);
+                    livelog_phase(data[id][length - 1].phase, id);
                 }
                 if (module_array[idx] !== data[id][length - 1].module) {
-                    livelog_module(data[id][length - 1].module, id)
+                    livelog_module(data[id][length - 1].module, id);
                 }
-                module_array[idx] = data[id][length - 1].module
-                phase_array[idx] = data[id][length - 1].phase
+                module_array[idx] = data[id][length - 1].module;
+                phase_array[idx] = data[id][length - 1].phase;
                 if (Number(data[id][length - 1].percentage) > Number(1)) {
-                  console.log("progress bar overload detected: " + data[id][length - 1].percentage)
-                  makeProgress(1.00, id)
+                  console.log("progress bar overload detected: " + data[id][length - 1].percentage);
+                  makeProgress(1.00, id);
                 } else {
-                  makeProgress(data[id][length - 1].percentage, id)
+                  makeProgress(data[id][length - 1].percentage, id);
                 }
             }
     }
     catch(error){
         console.log(error);
     }
-}
+};
 
 /**
  * This method is called when the websocket connection is closed
  *  */
-socket.onclose = function (event) {
+socket.onclose = function () {
+    "use strict";
     // console.error('Chat socket closed unexpectedly', event);
+    console.log("[Socket]Closed Successfully");
 };
 
 /**
  * this method is called when an error occurs
  *  */
 socket.onerror = function (err) {
+    "use strict";
     //console.error('Socket encountered error: ', err.message, 'Closing socket');
     console.error('Socket encountered error: ', err);
     socket.close();
@@ -119,10 +121,11 @@ function embaProgress() {
  * @param {*} cur_ID Current Id of the Container
  */
 function makeProgress(percent, cur_ID) {
+    "use strict";
     var p = percent * 100;
     var rounded = Math.round(p);
-    id = "#pBar_" + cur_ID;
-    $(id).attr('aria-valuenow', rounded).css('width', rounded + '%').text(rounded + '%')
+    var id = "#pBar_" + cur_ID;
+    $(id).attr('aria-valuenow', rounded).css('width', rounded + '%').text(rounded + '%');
 }
 
 /**
@@ -131,6 +134,7 @@ function makeProgress(percent, cur_ID) {
  * @param {*} cur_ID Current Id of the Container
  */
 function livelog_phase(phase, cur_ID) {
+    "use strict";
     var id = "#log_phase_" + cur_ID;
     var $List = $(id);
     var $entry = $('<li>' + phase + '</li>');
@@ -143,6 +147,7 @@ function livelog_phase(phase, cur_ID) {
  * @param {*} cur_ID Current Id of the container
  */
 function livelog_module(module, cur_ID) {
+    "use strict";
     var id = "#log_module_" + cur_ID;
     var $List = $(id);
     var $entry = $('<li>' + module + '</li>');
@@ -154,7 +159,7 @@ function livelog_module(module, cur_ID) {
  * @param {*} currentID Id of the contaniner which is passed backend to pull information
  */
 function cancelLog(currentID) {
-
+    "use strict";
     try {
         var idOfDIV = "#Container_" + currentID;
         $(idOfDIV).remove();
