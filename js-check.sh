@@ -14,7 +14,6 @@ jscheck(){
     # mapfile -t JS_RESULT < <(jshint "$JS_SCRIPT")
     jshint "$JS_SCRIPT" >"$JS_SCRIPT.report"
     RES=$?
-    echo -e "$RES"
     if [[ $RES -eq 2 ]] ; then
       echo -e "\\n""$RED$BOLD==> FIX ERRORS""$NC""\\n"
       cat "$JS_SCRIPT.report"
