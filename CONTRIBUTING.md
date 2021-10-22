@@ -46,7 +46,7 @@ It also sketches the typical integration process of patches.
 
 - Use `export` for variables which aren't only used in one file - it isn't necessary, but helps for readability
 
-- Code tests: For *.sh, *.js, *.html, *.py(other then django)-files Use the provided-script (./check_project.sh) to test your shellcode  # TODO
+- Code tests: For *.sh, *.js, *.html, *.py(other then django)-files use the provided-script (./check_project.sh) to test/verify your code.
 
 ## 3) Developer's Certificate of Origin 1.1
 
