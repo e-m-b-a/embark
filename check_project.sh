@@ -10,7 +10,7 @@
 # EMBArk is licensed under MIT
 #
 # Author(s): Michael Messner, Pascal Eckmann
-# Editor: Benedikt Kuehne
+# Contributer(s): Benedikt Kuehne
 
 # Description:  Check all scripts and templates(Django gets its own unit-tests)
 
@@ -50,7 +50,6 @@ htmlchecker(){
   mapfile -t HTML_FILE < <(find embark -iname "*.html")
   for HTML_FILE in "${HTML_FILE[@]}"; do
     echo -e "\\n""$GREEN""Run tidy on $HTML_FILE:""$NC""\\n"
-    #$( tidy "$HTML_FILE" -q 2>"$HTML_FILE.errors" 1>"$HTML_FILE.new" << EOF) 
     cat "$HTML_FILE" | tidy -q -f "$HTML_FILE.errors" -o "$HTML_FILE.new" >/dev/null 2>&1
     RES=$?
     if [[ $RES -eq 2 ]] ; then
