@@ -190,9 +190,10 @@ install_debs() {
     apt-get install -y -q python3-pylint-django
   fi
   if ! command -v npm -version > /dev/null ; then
-    apt-get install -y -q npm
-    npm install -g jshint 
+    apt-get install -y -q npm 
   fi
+  # jshint install
+  npm install -g jshint
   # we need the django package on the host for generating the django SECRET_KEY and pip
   apt-get install -y -q python3-django python3-pip
   # install djlint global
