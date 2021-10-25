@@ -54,7 +54,7 @@ templatechecker(){
   mapfile -t HTML_FILE < <(find embark -iname "*.html")
   for HTML_FILE in "${HTML_FILE[@]}"; do
     echo -e "\\n""$GREEN""Run tidy on $HTML_FILE:""$NC""\\n"
-    djlint "$HTML_FILE"
+    python3 -m djlint "$HTML_FILE"
     RES=$?
     if [[ $RES -eq 1 ]]; then
       echo -e "\\n""$ORANGE$BOLD==> FIX ERRORS""$NC""\\n"
