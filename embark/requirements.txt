@@ -1,4 +1,4 @@
-Django
+django
 uWSGI
 ipython
 django-dotenv

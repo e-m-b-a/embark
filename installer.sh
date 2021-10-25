@@ -203,7 +203,7 @@ install_debs() {
 make_dev_env(){
   echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
   apt-get update -y
-  apt-get install -y -q python3-dev default-libmysqlclient-dev build-essential pipenv 
+  apt-get install -y -q python3-dev default-libmysqlclient-dev build-essential sqlite3 pipenv 
   pipenv install -r ./embark/requirements.txt # installs pipenv in proj-root-dir
   #TODO
   #if [[ idk test for piplock? ]]; then
