@@ -32,9 +32,13 @@ jscheck(){
     if [[ $RES -eq 2 ]] ; then
       echo -e "\\n""$RED$BOLD==> FIX ERRORS""$NC""\\n"
       cat "$JS_SCRIPT.report"
+      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+      MODULES_TO_CHECK_ARR+=( "$JS_SCRIPT" )
     elif [[ $RES -eq 1 ]]; then
       echo -e "\\n""$ORANGE$BOLD==> FIX WARNINGS""$NC""\\n"
       cat "$JS_SCRIPT.report"
+      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+      MODULES_TO_CHECK_ARR+=( "$JS_SCRIPT" )
     elif [[ $RES -eq 0 ]]; then 
       echo -e "$GREEN""$BOLD""==> SUCCESS""$NC""\\n"
     else 
@@ -50,21 +54,23 @@ htmlchecker(){
   mapfile -t HTML_FILE < <(find embark -iname "*.html")
   for HTML_FILE in "${HTML_FILE[@]}"; do
     echo -e "\\n""$GREEN""Run tidy on $HTML_FILE:""$NC""\\n"
-    cat "$HTML_FILE" | tidy -q -f "$HTML_FILE.errors" -o "$HTML_FILE.new" >/dev/null 2>&1
+    cat "$HTML_FILE" | tidy -q -f "$HTML_FILE.report" -o "$HTML_FILE.new" >/dev/null 2>&1 # TODO del output, now only used for debugging
     RES=$?
     if [[ $RES -eq 2 ]] ; then
       echo -e "\\n""$RED$BOLD==> FIX ERRORS""$NC""\\n"
-      cat "$HTML_FILE.errors"
+      cat "$HTML_FILE.report"
+      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+      MODULES_TO_CHECK_ARR+=( "$HTML_FILE" )
     elif [[ $RES -eq 1 ]]; then
       echo -e "\\n""$ORANGE$BOLD==> FIX WARNINGS""$NC""\\n"
-      cat "$HTML_FILE.errors"
+      cat "$HTML_FILE.report"
+      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+      MODULES_TO_CHECK_ARR+=( "$HTML_FILE" )
     elif [[ $RES -eq 0 ]]; then 
       echo -e "$GREEN""$BOLD""==> SUCCESS""$NC""\\n"
-      mv "$HTML_FILE.new" "$HTML_FILE" # rename/replace
     else 
       echo -e "\\n""$RED$BOLD""[html-check(tidy)]ERRORS in SCRIPT""$NC""\\n"
     fi
-    # TODO: ADD the Module_check thingy
   done
 }
 
