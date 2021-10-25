@@ -1,0 +1,27 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+ipython = "*"
+django-dotenv = "*"
+pycodestyle = "*"
+channels-redis = "*"
+channels = "==3.0.3"
+daphne = "*"
+inotify-simple = "*"
+mysqlclient = "*"
+pymongo = "*"
+mongoengine = "*"
+msgpack = "*"
+django-apscheduler = "*"
+psutil = "*"
+Django = "*"
+uWSGI = "*"
+Rx = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"

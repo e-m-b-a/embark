@@ -203,13 +203,13 @@ install_debs() {
 make_dev_env(){
   echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
   apt-get update -y
-  apt-get install -y -q pipenv 
+  apt-get install -y -q python3-dev default-libmysqlclient-dev build-essential pipenv 
   pipenv install -r ./embark/requirements.txt # installs pipenv in proj-root-dir
   #TODO
-  if [[ idk test for piplock? ]]; then
-    echo -e "\n$GREEN""$BOLD""  ==> Building Developent-Enviroment for EMBArk Done""$NC"
-  else 
-    echo -e "\n$RED""$BOLD""  ==> Building Developent-Enviroment for EMBArk FAILED""$NC"
+  #if [[ idk test for piplock? ]]; then
+  #  echo -e "\n$GREEN""$BOLD""  ==> Building Developent-Enviroment for EMBArk Done""$NC"
+  #else 
+  #  echo -e "\n$RED""$BOLD""  ==> Building Developent-Enviroment for EMBArk FAILED""$NC"
 }
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
