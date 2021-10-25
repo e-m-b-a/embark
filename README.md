@@ -10,6 +10,7 @@
   <a href="https://github.com/e-m-b-a/embark/stargazers"><img src="https://img.shields.io/github/stars/e-m-b-a/embark?label=Stars"></a>
   <a href="https://github.com/e-m-b-a/embark/network/members"><img src="https://img.shields.io/github/forks/e-m-b-a/embark?label=Forks"></a>
   <a href="https://github.com/e-m-b-a/embark/graphs/contributors"><img src="https://img.shields.io/github/contributors/e-m-b-a/embark?color=9ea"></a>
+  <a href="https://twitter.com/intent/tweet?text=Check%20out%20EMBArk%20-%20The%20Firmware%20security%20scanning%20environment!%20https://github.com/e-m-b-a/embark"><img src="https://img.shields.io/twitter/url.svg?style=social&url=https%3A%2F%2Fgithub.com%2Fe-m-b-a%2Fembark"></a>
 </p>
 
 ## About
@@ -17,6 +18,9 @@
 *EMBArk* is the web based enterprise interface for the firmware security scanner *EMBA*. It is developed to provide the firmware security analyzer *[EMBA](https://github.com/e-m-b-a/emba)* as a containerized service and to ease accessibility to the firmware scanning backend *EMBA* regardless of system and operating system.
 
 Furthermore *EMBArk* improves the data provision by aggregating the various scanning results in an [aggregated management dashboard](https://github.com/e-m-b-a/embark/wiki/Web-interface#main-dashboard).
+
+[![Watch EMBArk](https://raw.githubusercontent.com/wiki/e-m-b-a/embark/images/EMBArk-YouTube.png)](https://youtu.be/qSHuPWbfhmI "Watch EMBArk")
+
 
 ## Automated setup (on Kali Linux)
 1. Checkout the repository (e.g. `git clone https://github.com/e-m-b-a/embark.git`)
