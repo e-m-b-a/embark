@@ -1,110 +1,110 @@
 {% extends "uploader/base.html" %}
 {% load static %}
-{% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/mainDashboard.css' %}">{% endblock %}
-{% block title %}EMBArk main dashboard{% endblock %}
-{% block navigation %}{% if nav_switch %}{% include "uploader/navigation.html" %}{% endif %}{% endblock %}
-{% block maincontent %}
-<div class="cardBox">
-    <div class="card">
-        <div class="card-title cardName firmwareAnalysed">Firmware tested</div>
-        <div class="card-body cardValue" id="firmwareAnalysed"></div>
-    </div>
-    <div class="card">
-        <div class="card-title cardName totalFiles">Files analysed</div>
-        <div class="card-body cardValue" id="totalFiles"></div>
-    </div>
-    <div class="card">
-        <div class="card-title cardName totalDirectories">Directories found</div>
-        <div class="card-body cardValue" id="totalDirectories"></div>
-    </div>
-    <div class="card">
-        <div class="card-title cardName totalBinaries">Binaries analysed</div>
-        <div class="card-body cardValue" id="totalBinaries"></div>
-    </div>
-    <div class="card">
-        <div class="card-title cardName totalCve">Vulnerabilities (CVEs)</div>
-        <div class="card-body cardValue" id="totalCve"></div>
-    </div>
-    <div class="card">
-        <div class="card-title cardName totalIssues">Exploits</div>
-        <div class="card-body cardValue" id="totalIssues"></div>
-    </div>
-</div>
+    {% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/mainDashboard.css' %}"/>{% endblock style %}
+    {% block title %}EMBArk main dashboard{% endblock title %}
+    {% block navigation %}{% if nav_switch %}{% include "uploader/navigation.html" %}{% endif %}{% endblock navigation %}
+    {% block maincontent %}
+        <div class="cardBox">
+            <div class="card">
+                <div class="card-title cardName firmwareAnalysed">Firmware tested</div>
+                <div class="card-body cardValue" id="firmwareAnalysed"></div>
+            </div>
+            <div class="card">
+                <div class="card-title cardName totalFiles">Files analysed</div>
+                <div class="card-body cardValue" id="totalFiles"></div>
+            </div>
+            <div class="card">
+                <div class="card-title cardName totalDirectories">Directories found</div>
+                <div class="card-body cardValue" id="totalDirectories"></div>
+            </div>
+            <div class="card">
+                <div class="card-title cardName totalBinaries">Binaries analysed</div>
+                <div class="card-body cardValue" id="totalBinaries"></div>
+            </div>
+            <div class="card">
+                <div class="card-title cardName totalCve">Vulnerabilities (CVEs)</div>
+                <div class="card-body cardValue" id="totalCve"></div>
+            </div>
+            <div class="card">
+                <div class="card-title cardName totalIssues">Exploits</div>
+                <div class="card-body cardValue" id="totalIssues"></div>
+            </div>
+        </div>
 
-<div class="dataCard">
-    <div class="row cardRow dataCardRow">
-        <div class="card card-left">
-            <canvas class="aggregatedReport" id="accumulatedCvePie"></canvas>
-        </div>
-        <div class="card card-right">
-            <canvas class="aggregatedReport" id="accumulatedOs"></canvas>
-        </div>
-    </div>
-</div>
-<div class="dataCard">
-    <div class="row cardRow dataCardRow2">
-        <div class="card card-pie">
-            <div class="row">
-                <canvas class="aggregatedReport" id="nxpie"></canvas>
+        <div class="dataCard">
+            <div class="row cardRow dataCardRow">
+                <div class="card card-left">
+                    <canvas class="aggregatedReport" id="accumulatedCvePie"></canvas>
+                </div>
+                <div class="card card-right">
+                    <canvas class="aggregatedReport" id="accumulatedOs"></canvas>
+                </div>
             </div>
         </div>
-        <div class="card card-pie">
-            <div class="row">
-                <canvas class="aggregatedReport" id="piepie"></canvas>
+        <div class="dataCard">
+            <div class="row cardRow dataCardRow2">
+                <div class="card card-pie">
+                    <div class="row">
+                        <canvas class="aggregatedReport" id="nxpie"></canvas>
+                    </div>
+                </div>
+                <div class="card card-pie">
+                    <div class="row">
+                        <canvas class="aggregatedReport" id="piepie"></canvas>
+                    </div>
+                </div>
+                <div class="card card-pie">
+                    <div class="row">
+                        <canvas class="aggregatedReport" id="relropie"></canvas>
+                    </div>
+                </div>
+                <div class="card card-pie">
+                    <div class="row">
+                        <canvas class="aggregatedReport" id="canarypie"></canvas>
+                    </div>
+                </div>
+                <div class="card card-pie">
+                    <div class="row">
+                        <canvas class="aggregatedReport" id="strippedpie"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="card card-pie">
-            <div class="row">
-                <canvas class="aggregatedReport" id="relropie"></canvas>
-            </div>
-        </div>
-        <div class="card card-pie">
-            <div class="row">
-                <canvas class="aggregatedReport" id="canarypie"></canvas>
-            </div>
-        </div>
-        <div class="card card-pie">
-            <div class="row">
-                <canvas class="aggregatedReport" id="strippedpie"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="dataCard">
-    <div class="row cardRow dataCardRow3">
-        <div class="card card-wide">
-            <canvas class="system-overload" id="loadChart"></canvas>
-        </div>
-    </div>
-</div>
-
-<div class="dataCard">
-    <div class="row cardRow dataCardRow4">
-        <div class="card">
-            <canvas class="aggregatedReport" id="accumulatedArchitecture"></canvas>
-        </div>
-        <div class="card" id="entropy">
-            <div class="topEntropyGraph">
-                <canvas class="aggregatedReport" id="topEntropies"></canvas>
+        <div class="dataCard">
+            <div class="row cardRow dataCardRow3">
+                <div class="card card-wide">
+                    <canvas class="system-overload" id="loadChart"></canvas>
+                </div>
             </div>
-            <label for="accumulatedEntropy" id="entropyMeterLabel">Average Entropy Value:</label>
-            <meter id="accumulatedEntropy"
-                min="0" max="8"
-                value="0"
-                high="6"
-                low="3">
-            </meter>
         </div>
-    </div>
-    <div class="row cardRow dataCardRow5">
-        <div class="card card-wide">
-            <canvas class="aggregatedReport" id="topBinaryTypes"></canvas>
+
+        <div class="dataCard">
+            <div class="row cardRow dataCardRow4">
+                <div class="card">
+                    <canvas class="aggregatedReport" id="accumulatedArchitecture"></canvas>
+                </div>
+                <div class="card" id="entropy">
+                    <div class="topEntropyGraph">
+                        <canvas class="aggregatedReport" id="topEntropies"></canvas>
+                    </div>
+                    <label for="accumulatedEntropy" id="entropyMeterLabel">Average Entropy Value:</label>
+                    <meter id="accumulatedEntropy"
+                        min="0" max="8"
+                        value="0"
+                        high="6"
+                        low="3">
+                    </meter>
+                </div>
+            </div>
+            <div class="row cardRow dataCardRow5">
+                <div class="card card-wide">
+                    <canvas class="aggregatedReport" id="topBinaryTypes"></canvas>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
-{% endblock %}
-{% block inlinejs %}
-<script type="text/javascript" src="{% static 'scripts/mainDashboard.js' %}"></script>
-<script type="text/javascript" src="{% static 'scripts/accumulatedReports.js' %}"></script>
-{% endblock %}
+    {% endblock maincontent %}
+    {% block inlinejs %}
+        <script type="text/javascript" src="{% static 'scripts/mainDashboard.js' %}"></script>
+        <script type="text/javascript" src="{% static 'scripts/accumulatedReports.js' %}"></script>
+    {% endblock inlinejs %}

@@ -6,10 +6,6 @@ ORANGE='\033[0;33m'
 BOLD='\033[1m'
 NC='\033[0m' # no color
 
-# Tidy returns
-#0 = if everything is fine
-#1 = if there were warnings and
-#2 = if there were errors.
 
 # uses tidy to check for errors in all html files inside /embark (Django-root-dir)
 # config in /embark/templates/uploader/.tidrc
@@ -17,7 +13,7 @@ htmlchecker(){
   mapfile -t HTML_FILE < <(find embark -iname "*.html")
   for HTML_FILE in "${HTML_FILE[@]}"; do
     echo -e "\\n""$GREEN""Run tidy on $HTML_FILE:""$NC""\\n"
-    cat "$HTML_FILE" | tidy -q -f "$HTML_FILE.report" -o "$HTML_FILE.new" >/dev/null 2>&1 # TODO del output, now only used for debugging
+    cat "$HTML_FILE" | tidy -q -f "$HTML_FILE.report" -o "$HTML_FILE.new" >/dev/null 2>&1 
     RES=$?
     if [[ $RES -eq 2 ]] ; then
       echo -e "\\n""$RED$BOLD==> FIX ERRORS""$NC""\\n"

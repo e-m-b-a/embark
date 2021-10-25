@@ -48,22 +48,16 @@ jscheck(){
   done
 }
 
-# uses tidy to check for errors in all html files inside /embark (Django-root-dir)
-# config in /embark/templates/uploader/.tidrc
-htmlchecker(){
+# uses djlint to check for errors in all html-template files inside /embark (Django-root-dir)
+# no config
+templatechecker(){
   mapfile -t HTML_FILE < <(find embark -iname "*.html")
   for HTML_FILE in "${HTML_FILE[@]}"; do
     echo -e "\\n""$GREEN""Run tidy on $HTML_FILE:""$NC""\\n"
-    cat "$HTML_FILE" | tidy -q -f "$HTML_FILE.report" -o "$HTML_FILE.new" >/dev/null 2>&1 # TODO del output, now only used for debugging
+    djlint "$HTML_FILE"
     RES=$?
-    if [[ $RES -eq 2 ]] ; then
-      echo -e "\\n""$RED$BOLD==> FIX ERRORS""$NC""\\n"
-      cat "$HTML_FILE.report"
-      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
-      MODULES_TO_CHECK_ARR+=( "$HTML_FILE" )
-    elif [[ $RES -eq 1 ]]; then
-      echo -e "\\n""$ORANGE$BOLD==> FIX WARNINGS""$NC""\\n"
-      cat "$HTML_FILE.report"
+    if [[ $RES -eq 1 ]]; then
+      echo -e "\\n""$ORANGE$BOLD==> FIX ERRORS""$NC""\\n"
       ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
       MODULES_TO_CHECK_ARR+=( "$HTML_FILE" )
     elif [[ $RES -eq 0 ]]; then 
@@ -184,7 +178,7 @@ MODULES_TO_CHECK=0
 MODULES_TO_CHECK_ARR=()
 shellchecker
 jscheck
-htmlchecker
+templatechecker
 pycodestyle_check
 pylinter
 # pytester
