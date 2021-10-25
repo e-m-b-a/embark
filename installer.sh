@@ -202,9 +202,13 @@ install_debs() {
 
 make_dev_env(){
   echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
+  python3 -m pip install pipenv 
+  pipenv install -r ./embark/requirements.txt # installs pipenv in proj-root-dir
   #TODO
-  # 1. pip install pipenv
-  echo -e "THIS IS STILL IN WORK"
+  if [[ idk test for piplock? ]]; then
+    echo -e "\n$GREEN""$BOLD""  ==> Building Developent-Enviroment for EMBArk Done""$NC"
+  else 
+    echo -e "\n$RED""$BOLD""  ==> Building Developent-Enviroment for EMBArk FAILED""$NC"
 }
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
@@ -252,6 +256,11 @@ if ! [[ $EUID -eq 0 ]] && [[ $LIST_DEP -eq 0 ]] ; then
   exit 1
 fi
 
+if [[ "$DEV" -eq 1 ]]; then
+    make_dev_env
+    exit 1
+fi
+
 install_debs
 
 install_emba
@@ -267,10 +276,6 @@ if [[ "$EMBA_ONLY" -ne 1 ]]; then
   fi
 
   install_embark
-
-  if [[ "$DEV" -eq 1 ]]; then
-    make_dev_env
-  fi
 
 fi
 

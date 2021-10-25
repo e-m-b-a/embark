@@ -20,6 +20,17 @@ ORANGE='\033[0;33m'
 BOLD='\033[1m'
 NC='\033[0m' # no color
 
+# check that all tools are installed
+check_tools(){
+  TOOLS=("jshint" "python3 -m djlint" "shellcheck" "pylint")
+  for TOOL in "${TOOLS[@]}";do
+    if ! command -v "$TOOL" > /dev/null ; then 
+      echo -e "\\n""$RED""$TOOL is not installed correctly""$NC""\\n"
+      exit 1
+    fi
+  done
+}
+
 # checks js-scripts with jshint for errors
 # config @ ./embark/static/.jshintrc
 jscheck(){
@@ -174,6 +185,7 @@ pylinter(){
   # start rating: 5.58/10
 }
 
+check_tools
 MODULES_TO_CHECK=0
 MODULES_TO_CHECK_ARR=()
 shellchecker
