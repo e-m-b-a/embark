@@ -215,7 +215,7 @@ if [ "$#" -ne 1 ]; then
   exit 1
 fi
 
-while getopts eFrh OPT ; do
+while getopts eFrdh OPT ; do
   case $OPT in
     e)
       export EMBA_ONLY=1
@@ -270,6 +270,6 @@ if [[ "$EMBA_ONLY" -ne 1 ]]; then
   if [[ "$DEV" -eq 1 ]]; then
     make_dev_env
   fi
-  
+
 fi
 
