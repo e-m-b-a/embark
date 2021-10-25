@@ -202,7 +202,8 @@ install_debs() {
 
 make_dev_env(){
   echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
-  python3 -m pip install pipenv 
+  apt-get update -y
+  apt-get install -y -q pipenv 
   pipenv install -r ./embark/requirements.txt # installs pipenv in proj-root-dir
   #TODO
   if [[ idk test for piplock? ]]; then
