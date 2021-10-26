@@ -107,7 +107,6 @@ install_embark() {
   wget -O ./embark/static/external/css/datatable.css https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.css
   find ./embark/static/external/ -type f -exec sed -i '/sourceMappingURL/d' {} \;
 
-
   if ! [[ -f .env ]]; then
     DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
     echo -e "$ORANGE""$BOLD""Creating a default EMBArk configuration file .env""$NC"
@@ -115,11 +114,11 @@ install_embark() {
       echo "DATABASE_NAME=embark"
       echo "DATABASE_USER=root"
       echo "DATABASE_PASSWORD=embark"
-      echo "DATABASE_HOST=127.0.0.1"
+      echo "DATABASE_HOST=172.21.0.5"
       echo "DATABASE_PORT=3306"
       echo "MYSQL_ROOT_PASSWORD=embark"
       echo "MYSQL_DATABASE=embark"
-      echo "REDIS_HOST=127.0.0.1"
+      echo "REDIS_HOST=172.21.0.8"
       echo "REDIS_PORT=7777"
       echo "SECRET_KEY=$DJANGO_SECRET_KEY"
     } >> .env
@@ -156,6 +155,7 @@ install_embark() {
   else
     echo -e "$ORANGE""$BOLD""Failed restarting EMBArk docker images""$NC"
   fi
+  # TODO detach from embark_dev_net
 
   echo -e "$GREEN""$BOLD""Testing EMBArk installation""$NC"
   # need to wait a few seconds until everyting is up and running
@@ -177,7 +177,7 @@ install_debs() {
     apt-get install -y -q git
   fi
   if ! command -v docker > /dev/null ; then
-    apt-get install -y -q docker.io
+    
   fi
   if ! command -v docker-compose > /dev/null ; then
     apt-get install -y -q docker-compose
@@ -202,9 +202,76 @@ install_debs() {
 
 make_dev_env(){
   echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
-  apt-get update -y
+  install_debs
   apt-get install -y -q python3-dev default-libmysqlclient-dev build-essential sqlite3 pipenv 
   pipenv install -r ./embark/requirements.txt # installs pipenv in proj-root-dir
+
+  #make logs-dir
+  if ! [[ -d embark/logs ]]; then
+    mkdir embark/logs
+  fi
+
+  # download externals
+  echo -e "\n$GREEN""$BOLD""Downloading of external files, e.g. jQuery, for the offline usability of EMBArk""$NC"
+  mkdir -p ./embark/static/external/{scripts,css}
+  wget -O ./embark/static/external/scripts/jquery.js https://code.jquery.com/jquery-3.6.0.min.js
+  wget -O ./embark/static/external/scripts/confirm.js https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js
+  wget -O ./embark/static/external/scripts/bootstrap.js https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js
+  wget -O ./embark/static/external/scripts/datatable.js https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.js
+  wget -O ./embark/static/external/scripts/charts.js https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js
+  wget -O ./embark/static/external/css/confirm.css https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css
+  wget -O ./embark/static/external/css/bootstrap.css https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css
+  wget -O ./embark/static/external/css/datatable.css https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.css
+  find ./embark/static/external/ -type f -exec sed -i '/sourceMappingURL/d' {} \;
+ 
+  # setup .env
+  DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+  echo -e "$ORANGE""$BOLD""Creating a Developer EMBArk configuration file .env""$NC"
+  {
+    echo "DATABASE_NAME=embark"
+    echo "DATABASE_USER=root"
+    echo "DATABASE_PASSWORD=embark"
+    echo "DATABASE_HOST=172.20.0.5"
+    echo "DATABASE_PORT=3306"
+    echo "MYSQL_ROOT_PASSWORD=embark"
+    echo "MYSQL_DATABASE=embark"
+    echo "REDIS_HOST=172.20.0.8"
+    echo "REDIS_PORT=7777"
+    echo "SECRET_KEY=$DJANGO_SECRET_KEY"
+  } >> .env
+
+  # for devs we dont want embark in docker...
+
+  # TODO
+
+  # setup dockercontainer
+   echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
+  docker-compose build
+  DB_RETURN=$?
+  if [[ $DB_RETURN -eq 0 ]] ; then
+    echo -e "$GREEN""$BOLD""Finished building EMBArk docker images""$NC"
+  else
+    echo -e "$ORANGE""$BOLD""Failed building EMBArk docker images""$NC"
+  fi
+
+  echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
+  docker-compose up -d
+  DU_RETURN=$?
+  if [[ $DU_RETURN -eq 0 ]] ; then
+    echo -e "$GREEN""$BOLD""Finished setup mysql and redis docker images""$NC"
+  else
+    echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
+  fi
+
+  echo -e "\n$GREEN""$BOLD""Restarting EMBArk docker images""$NC"
+  docker-compose restart embark
+  DS_RETURN=$?
+  if [[ $DS_RETURN -eq 0 ]] ; then
+    echo -e "$GREEN""$BOLD""Finished restarting EMBArk docker images""$NC"
+  else
+    echo -e "$ORANGE""$BOLD""Failed restarting EMBArk docker images""$NC"
+  fi
+
   #TODO
   #if [[ idk test for piplock? ]]; then
   #  echo -e "\n$GREEN""$BOLD""  ==> Building Developent-Enviroment for EMBArk Done""$NC"

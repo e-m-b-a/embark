@@ -14,26 +14,8 @@ services:
     networks:
       backend: 
         ipv4_address: 172.21.0.5
-
-  embark:
-    image: embark:latest
-    build:
-      context: .
-      dockerfile: Dockerfile
-    restart: always
-    privileged: true
-    volumes:
-        - /var/run/docker.sock:/var/run/docker.sock
-        - ./embark/:/app/embark/
-        - /etc/timezone:/etc/timezone:ro
-        - /etc/localtime:/etc/localtime:ro
-    ports:
-      - "80:80"
-    networks:
-      frontend:
-        ipv4_address: 172.22.0.2
-      backend:
-        ipv4_address: 172.21.0.2
+      embark_dev:
+        ipv4_address: 172.20.0.5
 
     env_file:
       - .env
@@ -54,14 +36,10 @@ services:
     networks:
       backend:
         ipv4_address: 172.21.0.8
+      embark_dev:
+        ipv4_address: 172.20.0.8
 
 networks:
-  frontend:
-    name: embark_frontend
-    driver: bridge
-    driver_opts:
-      com.docker.network.bridge.name: embark_frontend
-      subnet: 172.22.0.1/16
 
   backend:
     name: backend
@@ -70,4 +48,10 @@ networks:
     driver_opts:
       subnet: 172.21.0.1/16
 
+  embark_dev:
+    name: embark_dev
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: embark_dev
+      subnet: 172.20.0.1/16
 

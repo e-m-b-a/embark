@@ -1,0 +1,48 @@
+version: "3"
+
+services:
+
+  auth-db:
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - embark_dev_net
+
+  embark:
+    image: embark:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./embark/:/app/embark/
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - embark_dev_net
+    env_file:
+      - .env
+    command: './entrypoint.sh'
+    environment:
+      - USER
+    depends_on:
+      - auth-db
+      - redis
+
+  redis:
+    image: "redis:5"
+    command: --port 7777
+    restart: always
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    network: 
+      - embark_dev_net
