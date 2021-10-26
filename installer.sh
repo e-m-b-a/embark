@@ -155,6 +155,7 @@ install_embark() {
   else
     echo -e "$ORANGE""$BOLD""Failed restarting EMBArk docker images""$NC"
   fi
+
   # TODO detach from embark_dev_net
 
   echo -e "$GREEN""$BOLD""Testing EMBArk installation""$NC"
@@ -224,12 +225,12 @@ make_dev_env(){
   wget -O ./embark/static/external/css/datatable.css https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.css
   find ./embark/static/external/ -type f -exec sed -i '/sourceMappingURL/d' {} \;
  
-  # setup .env
+  # setup .env for dev bridge-network
   DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
   echo -e "$ORANGE""$BOLD""Creating a Developer EMBArk configuration file .env""$NC"
   {
     echo "DATABASE_NAME=embark"
-    echo "DATABASE_USER=root"
+    echo "DATABASE_USER=root" 
     echo "DATABASE_PASSWORD=embark"
     echo "DATABASE_HOST=172.20.0.5"
     echo "DATABASE_PORT=3306"
@@ -240,13 +241,9 @@ make_dev_env(){
     echo "SECRET_KEY=$DJANGO_SECRET_KEY"
   } >> .env
 
-  # for devs we dont want embark in docker...
-
-  # TODO
-
-  # setup dockercontainer
+  # setup backend-container and detach
    echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
-  docker-compose build
+  docker-compose -f docker-compose-dev.yml build
   DB_RETURN=$?
   if [[ $DB_RETURN -eq 0 ]] ; then
     echo -e "$GREEN""$BOLD""Finished building EMBArk docker images""$NC"
@@ -263,14 +260,12 @@ make_dev_env(){
     echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
   fi
 
-  echo -e "\n$GREEN""$BOLD""Restarting EMBArk docker images""$NC"
-  docker-compose restart embark
-  DS_RETURN=$?
-  if [[ $DS_RETURN -eq 0 ]] ; then
-    echo -e "$GREEN""$BOLD""Finished restarting EMBArk docker images""$NC"
-  else
-    echo -e "$ORANGE""$BOLD""Failed restarting EMBArk docker images""$NC"
-  fi
+
+  # now:
+  #    embark: host , not running
+  #    DB's : dev_net bridge, running
+
+  # next: setup embark on host 
 
   #TODO
   #if [[ idk test for piplock? ]]; then
