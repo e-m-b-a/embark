@@ -261,15 +261,17 @@ make_dev_env(){
     git clone https://github.com/e-m-b-a/emba.git
   else
     cd emba || exit 1
-    git pull
+    RES=$(git pull;)
     cd .. || exit 1
   fi
 
   # install on host
   #TODO change 2 container
-  cd emba || exit 1
-  ./installer.sh -F 
-  cd .. || exit 1
+  if ! [[ RES == "Already up to date." ]]; then
+    cd emba || exit 1
+    ./installer.sh -F 
+    cd .. || exit 1
+  fi
 
   # setup dbs-container and detach
    echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
