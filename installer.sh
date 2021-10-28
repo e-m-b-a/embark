@@ -47,7 +47,7 @@ install_emba() {
   fi
 
   cd emba || exit 1
-  ./installer.sh -F
+  ./installer.sh -F # this HAS to make an image for emba DOES IT?
   cd .. || exit 1
 }
 
@@ -114,11 +114,11 @@ install_embark() {
       echo "DATABASE_NAME=embark"
       echo "DATABASE_USER=root"
       echo "DATABASE_PASSWORD=embark"
-      echo "DATABASE_HOST=172.21.0.5"
+      echo "DATABASE_HOST=embark_db"
       echo "DATABASE_PORT=3306"
       echo "MYSQL_ROOT_PASSWORD=embark"
       echo "MYSQL_DATABASE=embark"
-      echo "REDIS_HOST=172.21.0.8"
+      echo "REDIS_HOST=embark_redis"
       echo "REDIS_PORT=7777"
       echo "SECRET_KEY=$DJANGO_SECRET_KEY"
     } >> .env
@@ -128,6 +128,13 @@ install_embark() {
     echo -e "$GREEN""$BOLD""Using the provided EMBArk configuration file .env""$NC"
     cat .env
   fi
+
+  # set shared volumes paths for emba & embark
+  FIRMWARE_EMBA=./emba/firmware
+  LOG_EMBA=./emba/log
+  EMBA=./emba
+  LOG_EMBA=./embark/log
+  EMBA=./embark
 
   echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
   docker-compose build
@@ -259,7 +266,7 @@ make_dev_env(){
   fi
 
   cd emba || exit 1
-  ./installer.sh -F
+  ./installer.sh -F 
   cd .. || exit 1
   # TODO externalize emba container 
 
