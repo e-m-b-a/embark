@@ -294,11 +294,11 @@ make_dev_env(){
   #    DB's : dev bridge, running
 
   # next: setup embark on host 
-  if test ping -c 1 -I embark_dev -W 1 embark_db_dev; then
-    echo -e "\n$GREEN""$BOLD""  ==> Building Developent-Enviroment for EMBArk Done""$NC"
-  else 
-    echo -e "\n$RED""$BOLD""  ==> Building Developent-Enviroment for EMBArk FAILED""$NC"
-  fi
+  #if TODO ping -c 1 -I embark_dev -W 1 embark_db_dev; then
+  #  echo -e "\n$GREEN""$BOLD""  ==> Building Developent-Enviroment for EMBArk Done""$NC"
+  #else 
+  #  echo -e "\n$RED""$BOLD""  ==> Building Developent-Enviroment for EMBArk FAILED""$NC"
+  #fi
 }
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
