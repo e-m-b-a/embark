@@ -198,17 +198,17 @@ install_debs() {
   if ! command -v npm -version > /dev/null ; then
     apt-get install -y -q npm 
   fi
-  # jshint install
-  npm install -g jshint
   # we need the django package on the host for generating the django SECRET_KEY and pip
   apt-get install -y -q python3-django python3-pip
-  # install djlint global
-  python3 -m pip install djlint
 }
 
 make_dev_env(){
   echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
   install_debs
+  # install djlint global TODO add that to pip
+  python3 -m pip install djlint
+  # jshint install
+  npm install -g jshint
   apt-get install -y -q python3-dev default-libmysqlclient-dev build-essential sqlite3 pipenv
   if ! [[ -f Pipfile ]]; then
     echo -e "$GREEN""$BOLD""Pipenv allready installed""$NC"
@@ -270,8 +270,8 @@ make_dev_env(){
   fi
 
   # install on host
-  #TODO change 2 container
-  if ! [[ RES == "Already up to date." ]]; then
+  #TODO build a container thats callable instead????
+  if ! [[ "$RES" == "Already up to date." ]]; then
     cd emba || exit 1
     ./installer.sh -F 
     cd .. || exit 1

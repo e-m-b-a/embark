@@ -22,13 +22,17 @@ NC='\033[0m' # no color
 
 # check that all tools are installed
 check_tools(){
-  TOOLS=("jshint" "python3 -m djlint" "shellcheck" "pylint")
+  TOOLS=("jshint" "shellcheck" "pylint")
   for TOOL in "${TOOLS[@]}";do
     if ! command -v "$TOOL" > /dev/null ; then 
       echo -e "\\n""$RED""$TOOL is not installed correctly""$NC""\\n"
       exit 1
     fi
   done
+  python3 -m djlint --version | grep "version"; RES=$?
+  if [[ -z "$RES" ]];then
+    echo -e "\\n""$RED""djlint(pip) is not installed correctly""$NC""\\n"
+  fi
 }
 
 # checks js-scripts with jshint for errors

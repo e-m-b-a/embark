@@ -2,6 +2,8 @@
 
 export DJANGO_SETTINGS_MODULE=embark.settings
 
+cd embark || exit 1
+
 if ! [[ -d logs ]]; then
   mkdir logs
 fi
@@ -20,3 +22,5 @@ uwsgi --wsgi-file /app/embark/embark/wsgi.py --http :80 --processes 2 --threads 
 echo -e "[*] Starting daphne - log to ./logs/daphne.log"
 # shellcheck disable=2094
 daphne -v 3 --access-log ./logs/daphne.log embark.asgi:application -p 8001 -b '0.0.0.0' &> ./logs/daphne.log
+
+cd .. || exit 1
