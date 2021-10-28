@@ -252,13 +252,6 @@ make_dev_env(){
     echo "REDIS_PORT=7777"
     echo "SECRET_KEY=$DJANGO_SECRET_KEY"
   } > .env
-  
-  # set shared volumes paths for emba & embark
-  FIRMWARE_EMBA=./emba/firmware
-  LOG_EMBA=./emba/log
-  EMBA=./emba
-  LOG_EMBA=./embark/log
-  EMBA=./embark
 
   # get emba
   if ! [[ -d ./emba ]]; then
