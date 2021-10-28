@@ -51,11 +51,11 @@ services:
 
   emba:
     image: embeddedanalyzer/emba:latest
-    build: .
+    build: ./emba
     privileged: true
     volumes:
-      - ${FIRMWARE}/:/firmware
-      - ${LOG}/:/log
+      - ${FIRMWARE_EMBA}/:/firmware
+      - ${LOG_EMBA}/:/log
       - ${EMBA}/:/emba:ro
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
