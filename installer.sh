@@ -300,9 +300,6 @@ make_dev_env(){
   #    embark: host , not running
   #    DB's : dev bridge, running
 
-  # next: setup embark on host 
-  source ./embark/entrypoint-dev.sh
-
   #if TODO ping -c 1 -I embark_dev -W 1 embark_db_dev; then
   #  echo -e "\n$GREEN""$BOLD""  ==> Building Developent-Enviroment for EMBArk Done""$NC"
   #else 
