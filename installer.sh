@@ -47,7 +47,7 @@ install_emba() {
   fi
 
   cd emba || exit 1
-  ./installer.sh -F # this HAS to make an image for emba DOES IT?
+  ./installer.sh -F 
   cd .. || exit 1
 }
 
@@ -90,6 +90,7 @@ reset_docker() {
     echo -e "$GREEN""$BOLD""Remove redis docker image""$NC"
     docker image rm redis:5 -f
   fi
+  #TODO add emba container
 }
 
 install_embark() {
@@ -163,8 +164,6 @@ install_embark() {
     echo -e "$ORANGE""$BOLD""Failed restarting EMBArk docker images""$NC"
   fi
 
-  # TODO detach from embark_dev_net
-
   echo -e "$GREEN""$BOLD""Testing EMBArk installation""$NC"
   # need to wait a few seconds until everyting is up and running
   sleep 5
@@ -174,8 +173,7 @@ install_embark() {
     echo -e "$ORANGE""$BOLD""Failed installing EMBArk - check the output from the installation process""$NC"
   fi
 
-  echo -e "$GREEN""$BOLD""Setup your initial user with:""$NC"
-  echo -e "curl -XPOST 'http://0.0.0.0:80/signup' -d '{\"email\": \"test@gmail.com\", \"password\": \"test\", \"confirm_password\": \"test\"}'"
+  echo -e "$GREEN""$BOLD""Ready to use @ localhost:80""$NC"
 }
 
 install_debs() {
@@ -220,11 +218,6 @@ make_dev_env(){
     exit 1
   fi
 
-  #make logs-dir
-  if ! [[ -d embark/logs ]]; then
-    mkdir embark/logs
-  fi
-
   # download externals
   if ! [[ -d embark/static/external ]]; then
     echo -e "\n$GREEN""$BOLD""Downloading of external files, e.g. jQuery, for the offline usability of EMBArk""$NC"
@@ -263,7 +256,7 @@ make_dev_env(){
   LOG_EMBA=./embark/log
   EMBA=./embark
 
-  # install emba on host
+  # get emba
   if ! [[ -d ./emba ]]; then
     git clone https://github.com/e-m-b-a/emba.git
   else
@@ -272,10 +265,11 @@ make_dev_env(){
     cd .. || exit 1
   fi
 
+  # install on host
+  #TODO change 2 container
   cd emba || exit 1
   ./installer.sh -F 
   cd .. || exit 1
-  # TODO externalize emba container 
 
   # setup dbs-container and detach
    echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
@@ -302,6 +296,7 @@ make_dev_env(){
 
   # next: setup embark on host 
   source ./embark/entrypoint-dev.sh
+
   #if TODO ping -c 1 -I embark_dev -W 1 embark_db_dev; then
   #  echo -e "\n$GREEN""$BOLD""  ==> Building Developent-Enviroment for EMBArk Done""$NC"
   #else 
