@@ -255,6 +255,13 @@ make_dev_env(){
     echo "REDIS_PORT=7777"
     echo "SECRET_KEY=$DJANGO_SECRET_KEY"
   } >> .env
+  
+  # set shared volumes paths for emba & embark
+  FIRMWARE_EMBA=./emba/firmware
+  LOG_EMBA=./emba/log
+  EMBA=./emba
+  LOG_EMBA=./embark/log
+  EMBA=./embark
 
   # install emba on host
   if ! [[ -d ./emba ]]; then
@@ -294,6 +301,7 @@ make_dev_env(){
   #    DB's : dev bridge, running
 
   # next: setup embark on host 
+  source ./embark/entrypoint-dev.sh
   #if TODO ping -c 1 -I embark_dev -W 1 embark_db_dev; then
   #  echo -e "\n$GREEN""$BOLD""  ==> Building Developent-Enviroment for EMBArk Done""$NC"
   #else 

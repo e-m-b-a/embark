@@ -6,11 +6,12 @@ if ! [[ -d logs ]]; then
   mkdir logs
 fi
 
-echo -e "[*] Setup logging of redis database - log to ./logs/redis_db.log"
-docker container logs embark_redis_1 -f > ./logs/redis_db.log &
-echo -e "[*] Setup logging of mysql database - log to ./logs/mysql_db.log"
-docker container logs embark_auth-db_1 -f > ./logs/mysql_db.log &
-echo -e "[*] Starting migrations - log to ./logs/migration.log"
+echo -e "[*] Setup logging of redis database - log to embark/logs/redis_db.log"
+docker container logs embark_redis_dev -f > ./logs/redis_db.log &
+echo -e "[*] Setup logging of mysql database - log to embark/logs/mysql_db.log"
+docker container logs embark_db_dev -f > ./logs/mysql_db.log &
+
+echo -e "[*] Starting migrations - log to embark/logs/migration.log"
 python3 manage.py makemigrations users uploader | tee -a ./logs/migration.log
 python3 manage.py migrate | tee -a ./logs/migration.log
 echo -e "[*] Starting runapscheduler"
