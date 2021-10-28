@@ -122,7 +122,7 @@ install_embark() {
       echo "REDIS_HOST=embark_redis"
       echo "REDIS_PORT=7777"
       echo "SECRET_KEY=$DJANGO_SECRET_KEY"
-    } >> .env
+    } > .env
     echo -e "$ORANGE""$BOLD""WARNING: The default EMBArk configuration includes a secret key generated via the shell script!""$NC"
     cat .env
   else
@@ -209,11 +209,15 @@ install_debs() {
 make_dev_env(){
   echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
   install_debs
-  apt-get install -y -q python3-dev default-libmysqlclient-dev build-essential sqlite3 pipenv 
-  pipenv install -r ./embark/requirements.txt # installs pipenv in proj-root-dir
-  if [[ -f Pipfile ]]; then
-    echo -e "$GREEN""$BOLD"" Done type $ pipenv shell to start python-env""$NC"
+  apt-get install -y -q python3-dev default-libmysqlclient-dev build-essential sqlite3 pipenv
+  if ! [[ -f Pipfile ]]; then
+    echo -e "$GREEN""$BOLD""Pipenv allready installed""$NC"
+    pipenv install -r ./embark/requirements.txt # installs pipenv in proj-root-dir
   else
+    echo -e "$GREEN""$BOLD"" Done type $ pipenv shell to start python-env""$NC"
+  fi
+  
+  if ! [[ -f Pipfile ]]; then
     echo -e "$RED""$BOLD"" pipenv failed to build""$NC"
     exit 1
   fi
@@ -247,7 +251,7 @@ make_dev_env(){
     echo "REDIS_HOST=embark_redis_dev"
     echo "REDIS_PORT=7777"
     echo "SECRET_KEY=$DJANGO_SECRET_KEY"
-  } >> .env
+  } > .env
   
   # set shared volumes paths for emba & embark
   FIRMWARE_EMBA=./emba/firmware

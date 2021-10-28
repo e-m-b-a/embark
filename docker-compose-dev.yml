@@ -11,6 +11,8 @@ services:
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "3306:3306"
     networks:
       embark_dev:
         aliases:
@@ -24,6 +26,8 @@ services:
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "7777:7777"
     networks:
       embark_dev:
         aliases:
