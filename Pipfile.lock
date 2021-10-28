@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "5c535cee1481e71025307628ad0f870bf1e612c47439a2448a3034c28052eb9e"
+            "sha256": "11170330a2f2d679a1e69139344aed99cffde373d216837444d5189663566e83"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -693,10 +693,10 @@
         },
         "tzlocal": {
             "hashes": [
-                "sha256:3689a33e855912057028c41e31c5e27e6aa97658c58e35b76d58d0c301993b6d",
-                "sha256:8560aabba61b5d2a5e1697bb781f682e6eaa3ce386cee85a09a458cc0003f836"
+                "sha256:9d0bb4c2640616f4965bb229eaf53a9e4c4c69cec3e6ab08eb2a55712e2fe1d3",
+                "sha256:ab6cf47469cc78a3cf5687d206424512b13ac692162595f024892b39fd9d4e85"
             ],
-            "version": "==4.0.1"
+            "version": "==4.0.2"
         },
         "uwsgi": {
             "hashes": [

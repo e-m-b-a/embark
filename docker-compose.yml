@@ -11,9 +11,7 @@ services:
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-    networks:
-      backend: 
-        ipv4_address: 172.21.0.5
+    network_mode: "host"
 
   embark:
     image: embark:latest
@@ -23,26 +21,19 @@ services:
     restart: always
     privileged: true
     volumes:
-        - /var/run/docker.sock:/var/run/docker.sock
-        - ./embark/:/app/embark/
-        - /etc/timezone:/etc/timezone:ro
-        - /etc/localtime:/etc/localtime:ro
-    ports:
-      - "80:80"
-    networks:
-      frontend:
-        ipv4_address: 172.22.0.2
-      backend:
-        ipv4_address: 172.21.0.2
-
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./embark/:/app/embark/
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    network_mode: "host"
     env_file:
       - .env
     command: './entrypoint.sh'
     environment:
-        - USER
+      - USER
     depends_on:
-        - auth-db
-        - redis
+      - auth-db
+      - redis
 
   redis:
     image: "redis:5"
@@ -51,23 +42,4 @@ services:
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-    networks:
-      backend:
-        ipv4_address: 172.21.0.8
-
-networks:
-  frontend:
-    name: embark_frontend
-    driver: bridge
-    driver_opts:
-      com.docker.network.bridge.name: embark_frontend
-      subnet: 172.22.0.1/16
-
-  backend:
-    name: backend
-    driver: ipvlan
-    internal: true
-    driver_opts:
-      subnet: 172.21.0.1/16
-
-
+    network_mode: "host"

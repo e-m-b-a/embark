@@ -1,0 +1,95 @@
+version: "3"
+# TODO rethink that
+services:
+
+  auth-db:
+    image: mysql
+    container_name: embark_db
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      backend: 
+        aliases:
+          - embark_db
+
+  embark:
+    image: embark:latest
+    container_name: embark_server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    privileged: true
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - ./embark/:/app/embark/
+        - /etc/timezone:/etc/timezone:ro
+        - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "80:80"
+    networks:
+      embark_frontend:
+        aliases:
+          - embark_server
+      embark_backend:
+        aliases:
+          - embark_server
+    env_file:
+      - .env
+    command: './entrypoint.sh'
+    environment:
+        - USER
+    depends_on:
+        - auth-db
+        - redis
+        - emba
+
+  emba:
+    image: embeddedanalyzer/emba:latest
+    build: .
+    privileged: true
+    volumes:
+      - ${FIRMWARE}/:/firmware
+      - ${LOG}/:/log
+      - ${EMBA}/:/emba:ro
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - embark_backend
+    environment:
+      - USER
+    devices:
+      - /dev/fuse:/dev/fuse:rwm
+    cap_add:
+      - SYS_ADMIN
+
+  redis:
+    image: "redis:5"
+    container_name: embark_redis
+    command: --port 7777
+    restart: always
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      backend:
+        ipv4_address: 172.21.0.8
+
+networks:
+  frontend:
+    name: embark_frontend
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: embark_frontend
+
+  backend:
+    name: embark_backend
+    driver: ipvlan
+    internal: true
+
+

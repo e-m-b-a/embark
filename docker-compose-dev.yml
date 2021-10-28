@@ -1,8 +1,8 @@
 version: "3"
 
 services:
-
   auth-db:
+    container_name: embark_db_dev
     image: mysql
     command: --default-authentication-plugin=mysql_native_password
     restart: always
@@ -12,21 +12,12 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     networks:
-      backend: 
-        ipv4_address: 172.21.0.5
       embark_dev:
-        ipv4_address: 172.20.0.5
-
-    env_file:
-      - .env
-    command: './entrypoint.sh'
-    environment:
-        - USER
-    depends_on:
-        - auth-db
-        - redis
+        aliases:
+          - embark_db_dev
 
   redis:
+    container_name: embark_redis_dev
     image: "redis:5"
     command: --port 7777
     restart: always
@@ -34,24 +25,15 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     networks:
-      backend:
-        ipv4_address: 172.21.0.8
       embark_dev:
-        ipv4_address: 172.20.0.8
+        aliases:
+          - embark_redis_dev 
+
 
 networks:
-
-  backend:
-    name: backend
-    driver: ipvlan
-    internal: true
-    driver_opts:
-      subnet: 172.21.0.1/16
-
   embark_dev:
     name: embark_dev
     driver: bridge
     driver_opts:
       com.docker.network.bridge.name: embark_dev
-      subnet: 172.20.0.1/16
 

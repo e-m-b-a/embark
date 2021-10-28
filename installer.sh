@@ -178,7 +178,7 @@ install_debs() {
     apt-get install -y -q git
   fi
   if ! command -v docker > /dev/null ; then
-    
+    apt-get install -y -q docker.io
   fi
   if ! command -v docker-compose > /dev/null ; then
     apt-get install -y -q docker-compose
@@ -206,6 +206,12 @@ make_dev_env(){
   install_debs
   apt-get install -y -q python3-dev default-libmysqlclient-dev build-essential sqlite3 pipenv 
   pipenv install -r ./embark/requirements.txt # installs pipenv in proj-root-dir
+  if [[ -f Pipfile ]]; then
+    echo -e "$GREEN""$BOLD"" Done type $ pipenv shell to start python-env""$NC"
+  else
+    echo -e "$RED""$BOLD"" pipenv failed to build""$NC"
+    exit 1
+  fi
 
   #make logs-dir
   if ! [[ -d embark/logs ]]; then
@@ -213,35 +219,51 @@ make_dev_env(){
   fi
 
   # download externals
-  echo -e "\n$GREEN""$BOLD""Downloading of external files, e.g. jQuery, for the offline usability of EMBArk""$NC"
-  mkdir -p ./embark/static/external/{scripts,css}
-  wget -O ./embark/static/external/scripts/jquery.js https://code.jquery.com/jquery-3.6.0.min.js
-  wget -O ./embark/static/external/scripts/confirm.js https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js
-  wget -O ./embark/static/external/scripts/bootstrap.js https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js
-  wget -O ./embark/static/external/scripts/datatable.js https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.js
-  wget -O ./embark/static/external/scripts/charts.js https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js
-  wget -O ./embark/static/external/css/confirm.css https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css
-  wget -O ./embark/static/external/css/bootstrap.css https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css
-  wget -O ./embark/static/external/css/datatable.css https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.css
-  find ./embark/static/external/ -type f -exec sed -i '/sourceMappingURL/d' {} \;
- 
-  # setup .env for dev bridge-network
+  if ! [[ -d embark/static/external ]]; then
+    echo -e "\n$GREEN""$BOLD""Downloading of external files, e.g. jQuery, for the offline usability of EMBArk""$NC"
+    mkdir -p ./embark/static/external/{scripts,css}
+    wget -O ./embark/static/external/scripts/jquery.js https://code.jquery.com/jquery-3.6.0.min.js
+    wget -O ./embark/static/external/scripts/confirm.js https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js
+    wget -O ./embark/static/external/scripts/bootstrap.js https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js
+    wget -O ./embark/static/external/scripts/datatable.js https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.js
+    wget -O ./embark/static/external/scripts/charts.js https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js
+    wget -O ./embark/static/external/css/confirm.css https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css
+    wget -O ./embark/static/external/css/bootstrap.css https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css
+    wget -O ./embark/static/external/css/datatable.css https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.css
+    find ./embark/static/external/ -type f -exec sed -i '/sourceMappingURL/d' {} \;
+  fi
+
+  # setup .env with dev network
   DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
   echo -e "$ORANGE""$BOLD""Creating a Developer EMBArk configuration file .env""$NC"
   {
     echo "DATABASE_NAME=embark"
     echo "DATABASE_USER=root" 
     echo "DATABASE_PASSWORD=embark"
-    echo "DATABASE_HOST=172.20.0.5"
+    echo "DATABASE_HOST=embark_db_dev"
     echo "DATABASE_PORT=3306"
     echo "MYSQL_ROOT_PASSWORD=embark"
     echo "MYSQL_DATABASE=embark"
-    echo "REDIS_HOST=172.20.0.8"
+    echo "REDIS_HOST=embark_redis_dev"
     echo "REDIS_PORT=7777"
     echo "SECRET_KEY=$DJANGO_SECRET_KEY"
   } >> .env
 
-  # setup backend-container and detach
+  # install emba on host
+  if ! [[ -d ./emba ]]; then
+    git clone https://github.com/e-m-b-a/emba.git
+  else
+    cd emba || exit 1
+    git pull
+    cd .. || exit 1
+  fi
+
+  cd emba || exit 1
+  ./installer.sh -F
+  cd .. || exit 1
+  # TODO externalize emba container 
+
+  # setup dbs-container and detach
    echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
   docker-compose -f docker-compose-dev.yml build
   DB_RETURN=$?
@@ -252,7 +274,7 @@ make_dev_env(){
   fi
 
   echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
-  docker-compose up -d
+  docker-compose -f docker-compose-dev.yml up -d
   DU_RETURN=$?
   if [[ $DU_RETURN -eq 0 ]] ; then
     echo -e "$GREEN""$BOLD""Finished setup mysql and redis docker images""$NC"
@@ -260,18 +282,16 @@ make_dev_env(){
     echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
   fi
 
-
   # now:
   #    embark: host , not running
-  #    DB's : dev_net bridge, running
+  #    DB's : dev bridge, running
 
   # next: setup embark on host 
-
-  #TODO
-  #if [[ idk test for piplock? ]]; then
-  #  echo -e "\n$GREEN""$BOLD""  ==> Building Developent-Enviroment for EMBArk Done""$NC"
-  #else 
-  #  echo -e "\n$RED""$BOLD""  ==> Building Developent-Enviroment for EMBArk FAILED""$NC"
+  if test ping -c 1 -I embark_dev -W 1 embark_db_dev; then
+    echo -e "\n$GREEN""$BOLD""  ==> Building Developent-Enviroment for EMBArk Done""$NC"
+  else 
+    echo -e "\n$RED""$BOLD""  ==> Building Developent-Enviroment for EMBArk FAILED""$NC"
+  fi
 }
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
