@@ -108,6 +108,7 @@ install_embark() {
   wget -O ./embark/static/external/css/datatable.css https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.css
   find ./embark/static/external/ -type f -exec sed -i '/sourceMappingURL/d' {} \;
 
+  # TODO this into docker compose
   if ! [[ -f .env ]]; then
     DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
     echo -e "$ORANGE""$BOLD""Creating a default EMBArk configuration file .env""$NC"
@@ -195,27 +196,27 @@ install_debs() {
     apt-get install -y -q pylint
     apt-get install -y -q python3-pylint-django
   fi
-  if ! command -v npm -version > /dev/null ; then
-    apt-get install -y -q npm 
-  fi
   # we need the django package on the host for generating the django SECRET_KEY and pip
   apt-get install -y -q python3-django python3-pip
 }
 
+# TODO this or install_emba NOT both 
 make_dev_env(){
   echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
   install_debs
-  apt-get install -y -q python3-dev default-libmysqlclient-dev build-essential sqlite3 pipenv
+  apt-get install -y -q python3-dev default-libmysqlclient-dev build-essential sqlite3 pipenv npm
+  npm install -g jshint # global install
   if ! [[ -f ./Pipfile ]]; then
     echo -e "$GREEN""$BOLD""Pipenv installing""$NC"
     pipenv install -r ./embark/requirements.txt # installs pipenv in proj-root-dir
+    pipenv install djlint
   else
     echo -e "$GREEN""$BOLD"" Done type $ pipenv shell to start python-env""$NC"
   fi
 
   if ! [[ -f ./Pipfile ]]; then
     echo -e "$RED""$BOLD"" pipenv failed to build""$NC"
-    # TODO jump back to main?
+    exit 1
   fi
   # download externals
   if ! [[ -d embark/static/external ]]; then

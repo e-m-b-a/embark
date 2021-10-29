@@ -10,8 +10,6 @@ embark/users/migrations/
 embark/logs/
 embark/static/external/
 embark/uploadedFirmwareImages/
-Pipfile
-Pipfile.lock
 
 # other stuff
 *.zip

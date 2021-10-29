@@ -22,11 +22,7 @@ NC='\033[0m' # no color
 export DJANGO_SETTINGS_MODULE=embark.settings
 
 echo -e "\n$GREEN""$BOLD""Configuring Embark""$NC"
-# install djlint
-# if pipenv run djlint -version 
-# pipenv install djlint
-# jshint install GLOBAL
-npm install -g jshint
+
 
 # setup .env with dev network
 DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
@@ -79,27 +75,26 @@ pipenv run ./manage.py runserver
 
 
 
-#echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./embark/logs/redis_dev.log""$NC" 
-#docker container logs embark_redis_dev -f > ./embark/logs/redis_dev.log & # TODO test if this is quiet???
-#echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.log""$NC"
-#docker container logs embark_db_dev -f > ./embark/logs/mysql_dev.log & 
+# echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./embark/logs/redis_dev.log""$NC" 
+# docker container logs embark_redis_dev -f > ./embark/logs/redis_dev.log & # TODO test if this is quiet???
+# echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.log""$NC"
+# docker container logs embark_db_dev -f > ./embark/logs/mysql_dev.log & 
 
 
 
 # run middlewears
-#echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
-#pipenv run ./embark/manage.py runapscheduler --test | tee -a ./embark/logs/migration.log &
-#echo -e "\n[""$BLUE JOB""$NC""] Starting uwsgi - log to /embark/logs/uwsgi.log"
-#pipenv run uwsgi --wsgi-file ./embark/embark/wsgi.py --http :80 --processes 2 --threads 10 --logto ./embark/logs/uwsgi.log &
-#echo -e "\n[""$BLUE JOB""$NC""] Starting daphne - log to /embark/logs/daphne.log"
-#pipenv run daphne -v 3 --access-log ./embark/logs/daphne.log embark.asgi:application -p 8001 -b '0.0.0.0' &> ./embark/logs/daphne.log
+# echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
+# pipenv run ./embark/manage.py runapscheduler --test | tee -a ./embark/logs/migration.log &
+# echo -e "\n[""$BLUE JOB""$NC""] Starting uwsgi - log to /embark/logs/uwsgi.log"
+# pipenv run uwsgi --wsgi-file ./embark/embark/wsgi.py --http :80 --processes 2 --threads 10 --logto ./embark/logs/uwsgi.log &
+# echo -e "\n[""$BLUE JOB""$NC""] Starting daphne - log to /embark/logs/daphne.log"
+# pipenv run daphne -v 3 --access-log ./embark/logs/daphne.log embark.asgi:application -p 8001 -b '0.0.0.0' &> ./embark/logs/daphne.log
 
 # TODO cleanup
-#if TODO ping -c 1 -I embark_dev -W 1 embark_db_dev; then
+# if TODO ping -c 1 -I embark_dev -W 1 embark_db_dev; then
 #  echo -e "\n$GREEN""$BOLD""  ==> Building Developent-Enviroment for EMBArk Done""$NC"
-#else 
+# else 
 #  echo -e "\n$RED""$BOLD""  ==> Building Developent-Enviroment for EMBArk FAILED""$NC"
-#fi
-echo -e "\n$ORANGE""$BOLD""Done""$NC"
-
+# fi
+echo -e "\n$ORANGE""$BOLD""Done. To clean-up use the clean-setup script""$NC"
 cd ..
