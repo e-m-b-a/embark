@@ -40,6 +40,8 @@ echo -e "$ORANGE""$BOLD""Creating a Developer EMBArk configuration file .env""$N
   echo "SECRET_KEY=$DJANGO_SECRET_KEY"
 } > .env
 
+SECRET_KEY="$DJANGO_SECRET_KEY"
+
 # setup dbs-container and detach build could be skipt
   echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
 docker-compose -f docker-compose-dev.yml build

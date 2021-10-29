@@ -1,7 +1,5 @@
 version: "3"
-# TODO 
-# add exposed ports
-# 
+
 services:
 
   auth-db:
@@ -10,12 +8,13 @@ services:
     command: --default-authentication-plugin=mysql_native_password
     restart: always
     env_file:
-      - .env
+      - .env #TODO
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     networks:
-      backend: 
+      backend:
+        ipv4_address: "172." # TODO
         aliases:
           - embark_db
 
@@ -41,11 +40,21 @@ services:
       embark_backend:
         aliases:
           - embark_server
-    env_file:
+    env_file: #TODO
       - .env
     command: './entrypoint.sh'
     environment:
-        - USER
+        - USER #TODO
+        - SERET_KEY=#TODO
+        - DATABASE_NAME
+        - DATABASE_USER
+        - DATABASE_HOST
+        - DATABASE_PASSWORD
+        - DATABASE_PORT 
+        - DJANGO_LOG_LEVEL
+        - DEBUG
+        - REDIS_HOST
+        - REDIS_PORT
     depends_on:
         - auth-db
         - redis
