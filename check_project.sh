@@ -29,7 +29,7 @@ check_tools(){
       exit 1
     fi
   done
-  python3 -m djlint --version | grep "version"; RES=$?
+  pipenv run djlint --version | grep "version"; RES=$?
   if [[ -z "$RES" ]];then
     echo -e "\\n""$RED""djlint(pip) is not installed correctly""$NC""\\n"
   fi
@@ -69,7 +69,7 @@ templatechecker(){
   mapfile -t HTML_FILE < <(find embark -iname "*.html")
   for HTML_FILE in "${HTML_FILE[@]}"; do
     echo -e "\\n""$GREEN""Run tidy on $HTML_FILE:""$NC""\\n"
-    python3 -m djlint "$HTML_FILE"
+    pipenv run djlint "$HTML_FILE"
     RES=$?
     if [[ $RES -eq 1 ]]; then
       echo -e "\\n""$ORANGE$BOLD==> FIX ERRORS""$NC""\\n"

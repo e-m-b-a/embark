@@ -5,33 +5,32 @@ services:
     container_name: embark_db_dev
     image: mysql
     command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3306:3306"
     restart: always
     env_file:
       - .env
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-    ports:
-      - "3306:3306"
     networks:
-      embark_dev:
-        aliases:
-          - embark_db_dev
+      - embark_dev
 
   redis:
     container_name: embark_redis_dev
     image: "redis:5"
     command: --port 7777
+    ports:
+      - "7777:7777"
     restart: always
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-    ports:
-      - "7777:7777"
     networks:
-      embark_dev:
-        aliases:
-          - embark_redis_dev 
+      - embark_dev
+    logging:
+      driver: "local"
+
 
 
 networks:
@@ -40,4 +39,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.name: embark_dev
+    ipam:
+      config:
+        - subnet: "172.21.0.0/16"
 

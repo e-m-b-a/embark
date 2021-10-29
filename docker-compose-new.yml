@@ -1,5 +1,7 @@
 version: "3"
-# TODO rethink that
+# TODO 
+# add exposed ports
+# 
 services:
 
   auth-db:

@@ -20,6 +20,7 @@ psutil = "*"
 Django = "*"
 uWSGI = "*"
 Rx = "*"
+djlint = "*"
 
 [dev-packages]
 
