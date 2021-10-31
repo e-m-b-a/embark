@@ -16,6 +16,7 @@ RUN apt-get update && \
     sudo apt-get install -y -q python3-pylint-django && \
     sudo apt-get install -y -q pycodestyle && \
     sudo apt-get install -y -q swig
+RUN sudo apt-get install -y -q python3-pip
 
 ADD . /app
 
@@ -23,9 +24,21 @@ WORKDIR /app/embark
 
 ADD embark/requirements.txt /app/embark/requirements.txt
 
-RUN yes | sudo /app/emba/installer.sh -D  && \
-    sudo pip3 install uwsgi -I --no-cache-dir && \
+RUN yes | sudo pip3 install uwsgi -I --no-cache-dir && \
     pip3 install --user --no-warn-script-location -r /app/embark/requirements.txt
+
+RUN mkdir -p /app/embark/static/external/scripts && \
+  mkdir -p /app/embark/static/external/css && \
+  wget -O /app/embark/static/external/scripts/jquery.js https://code.jquery.com/jquery-3.6.0.min.js && \
+  wget -O /app/embark/static/external/scripts/confirm.js https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js && \
+  wget -O /app/embark/static/external/scripts/bootstrap.js https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js && \
+  wget -O /app/embark/static/external/scripts/datatable.js https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.js && \
+  wget -O /app/embark/static/external/scripts/charts.js https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js && \
+  wget -O /app/embark/static/external/css/confirm.css https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css && \
+  wget -O /app/embark/static/external/css/bootstrap.css https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css && \
+  wget -O /app/embark/static/external/css/datatable.css https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.css && \
+  find /app/embark/static/external/ -type f -exec sed -i '/sourceMappingURL/d' {} \;
+
 
 # 80 for http workers. 8001 for ws workers
 EXPOSE 80
