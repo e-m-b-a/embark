@@ -4,6 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV DJANGO_SETTINGS_MODULE=embark.settings
 ENV PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/.local/bin
 
+# TODO: clean. why pylint ?
 RUN apt-get update && \ 
     apt-get -y upgrade && \
     apt-get -y -q install wget kmod procps sudo && \

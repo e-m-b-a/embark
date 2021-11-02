@@ -5,8 +5,8 @@ services:
     container_name: embark_db_dev
     image: mysql
     command: --default-authentication-plugin=mysql_native_password
-    ports:
-      - "3306:3306"
+    expose:
+      - "3306"
     restart: always
     env_file:
       - .env
@@ -14,20 +14,22 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     networks:
-      - embark_dev
+      embark_dev:
+        ipv4_address: "172.21.0.5"
 
   redis:
     container_name: embark_redis_dev
     image: "redis:5"
     command: --port 7777
-    ports:
-      - "7777:7777"
+    expose:
+      - "7777"
     restart: always
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     networks:
-      - embark_dev
+      embark_dev:
+        ipv4_address: "172.21.0.8"
     logging:
       driver: "local"
 

@@ -1,22 +1,21 @@
 version: "3"
-
+# still in work
 services:
 
-  auth-db:
+  embark_db:
     image: mysql
     container_name: embark_db
-    command: --default-authentication-plugin=mysql_native_password
     restart: always
+    expose:
+      - "3306"
     env_file:
-      - .env #TODO
+      - .env
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
+      # - ./embark_db:/var/lib/mysql
     networks:
-      backend:
-        ipv4_address: "172." # TODO
-        aliases:
-          - embark_db
+      - backend
 
   embark:
     image: embark:latest
@@ -27,36 +26,20 @@ services:
     restart: always
     privileged: true
     volumes:
-        - /var/run/docker.sock:/var/run/docker.sock
+        - /var/run/docker.sock:/var/run/docker.sock # this is a BIG problem
         - ./embark/:/app/embark/
         - /etc/timezone:/etc/timezone:ro
         - /etc/localtime:/etc/localtime:ro
     ports:
       - "80:80"
     networks:
-      embark_frontend:
-        aliases:
-          - embark_server
-      embark_backend:
-        aliases:
-          - embark_server
-    env_file: #TODO
+      - embark_frontend
+      - embark_backend
+    env_file: 
       - .env
     command: './entrypoint.sh'
-    environment:
-        - USER #TODO
-        - SERET_KEY=#TODO
-        - DATABASE_NAME
-        - DATABASE_USER
-        - DATABASE_HOST
-        - DATABASE_PASSWORD
-        - DATABASE_PORT 
-        - DJANGO_LOG_LEVEL
-        - DEBUG
-        - REDIS_HOST
-        - REDIS_PORT
     depends_on:
-        - auth-db
+        - embark_db
         - redis
         - emba
 
@@ -83,24 +66,28 @@ services:
     image: "redis:5"
     container_name: embark_redis
     command: --port 7777
+    expose:
+      - "7777"
     restart: always
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     networks:
-      backend:
-        ipv4_address: 172.21.0.8
+      - embark_backend
 
 networks:
-  frontend:
+  embark_frontend:
     name: embark_frontend
     driver: bridge
     driver_opts:
       com.docker.network.bridge.name: embark_frontend
 
-  backend:
+  embark_backend:
     name: embark_backend
     driver: ipvlan
     internal: true
+    ipam:
+      config:
+        - subnet: "172.22.0.0/16"
 
 

@@ -108,19 +108,19 @@ install_embark() {
   wget -O ./embark/static/external/css/datatable.css https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.css
   find ./embark/static/external/ -type f -exec sed -i '/sourceMappingURL/d' {} \;
 
-  # TODO this into docker compose
+  # generating dynamic authentication for backend
   if ! [[ -f .env ]]; then
     DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
     echo -e "$ORANGE""$BOLD""Creating a default EMBArk configuration file .env""$NC"
     {
       echo "DATABASE_NAME=embark"
-      echo "DATABASE_USER=root"
-      echo "DATABASE_PASSWORD=embark"
+      echo "DATABASE_USER=embarkserver"
+      echo "DATABASE_PASSWORD=2e-m-b-a-R-K4u" # TODO make dynamic
       echo "DATABASE_HOST=embark_db"
       echo "DATABASE_PORT=3306"
-      echo "MYSQL_ROOT_PASSWORD=embark"
+      echo "MYSQL_PASSWORD=2e-m-b-a-R-K4u" # TODO make dynamic
       echo "MYSQL_DATABASE=embark"
-      echo "REDIS_HOST=embark_redis"
+      echo "REDIS_HOST=redis"
       echo "REDIS_PORT=7777"
       echo "SECRET_KEY=$DJANGO_SECRET_KEY"
     } > .env
@@ -132,11 +132,11 @@ install_embark() {
   fi
 
   # set shared volumes paths for emba & embark
-  FIRMWARE_EMBA=./emba/firmware
-  LOG_EMBA=./emba/log
-  EMBA=./emba
-  LOG_EMBA=./embark/log
-  EMBA=./embark
+  # FIRMWARE_EMBA=./emba/firmware
+  # LOG_EMBA=./emba/log
+  # EMBA=./emba
+  # LOG_EMBA=./embark/log
+  # EMBA=./embark
 
   echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
   docker-compose build
@@ -200,7 +200,7 @@ install_debs() {
   apt-get install -y -q python3-django python3-pip
 }
 
-# TODO this or install_emba NOT both 
+# TODO this or install_embark NOT both in the same directory
 make_dev_env(){
   echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
   install_debs

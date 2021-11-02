@@ -31,11 +31,11 @@ echo -e "$ORANGE""$BOLD""Creating a Developer EMBArk configuration file .env""$N
   echo "DATABASE_NAME=embark"
   echo "DATABASE_USER=root" 
   echo "DATABASE_PASSWORD=embark"
-  echo "DATABASE_HOST=127.0.0.1"
+  echo "DATABASE_HOST=172.21.0.5"
   echo "DATABASE_PORT=3306"
   echo "MYSQL_ROOT_PASSWORD=embark"
   echo "MYSQL_DATABASE=embark"
-  echo "REDIS_HOST=127.0.0.1"
+  echo "REDIS_HOST=172.21.0.8"
   echo "REDIS_PORT=7777"
   echo "SECRET_KEY=$DJANGO_SECRET_KEY"
 } > .env
