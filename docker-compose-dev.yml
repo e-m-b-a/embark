@@ -1,7 +1,7 @@
 version: "3"
 
 services:
-  auth-db:
+  embark_db:
     container_name: embark_db_dev
     image: mysql
     command: --default-authentication-plugin=mysql_native_password
