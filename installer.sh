@@ -109,16 +109,18 @@ install_embark() {
   find ./embark/static/external/ -type f -exec sed -i '/sourceMappingURL/d' {} \;
 
   # generating dynamic authentication for backend
+  # for MYSQL root pwd check the logs of the container
   if ! [[ -f .env ]]; then
     DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+    PASSWORD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13 )
     echo -e "$ORANGE""$BOLD""Creating a default EMBArk configuration file .env""$NC"
     {
       echo "DATABASE_NAME=embark"
       echo "DATABASE_USER=embarkserver"
-      echo "DATABASE_PASSWORD=2e-m-b-a-R-K4u" # TODO make dynamic
+      echo "DATABASE_PASSWORD=$PASSWORD"
       echo "DATABASE_HOST=embark_db"
       echo "DATABASE_PORT=3306"
-      echo "MYSQL_PASSWORD=2e-m-b-a-R-K4u" # TODO make dynamic
+      echo "MYSQL_PASSWORD=$PASSWORD" 
       echo "MYSQL_DATABASE=embark"
       echo "REDIS_HOST=redis"
       echo "REDIS_PORT=7777"
@@ -130,13 +132,6 @@ install_embark() {
     echo -e "$GREEN""$BOLD""Using the provided EMBArk configuration file .env""$NC"
     cat .env
   fi
-
-  # set shared volumes paths for emba & embark
-  # FIRMWARE_EMBA=./emba/firmware
-  # LOG_EMBA=./emba/log
-  # EMBA=./emba
-  # LOG_EMBA=./embark/log
-  # EMBA=./embark
 
   echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
   docker-compose build

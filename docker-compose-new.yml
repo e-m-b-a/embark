@@ -20,9 +20,7 @@ services:
   embark:
     image: embark:latest
     container_name: embark_server
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     restart: always
     privileged: true
     volumes:
@@ -47,14 +45,15 @@ services:
     image: embeddedanalyzer/emba:latest
     build: ./emba
     privileged: true
-    volumes:
-      - ${FIRMWARE_EMBA}/:/firmware
-      - ${LOG_EMBA}/:/log
-      - ${EMBA}/:/emba:ro
+    volumes: 
+      - ./emba/firmware:/firmware
+      - ./emba/log:/log
+      - ./emba:/emba:ro
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     networks:
       - embark_backend
+    # TODO whats the rest
     environment:
       - USER
     devices:

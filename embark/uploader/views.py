@@ -99,8 +99,8 @@ def start_analysis(request, refreshed):
         else: return Queue full
     else: returns Invalid form error
     Args:
-        request:
-
+        request: the http req
+        refreshed: =~id
     Returns:
 
     """

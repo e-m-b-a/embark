@@ -28,8 +28,6 @@ RUN yes | sudo /app/emba/installer.sh -D  && \
     sudo pip3 install uwsgi -I --no-cache-dir && \
     pip3 install --user --no-warn-script-location -r /app/embark/requirements.txt
 
-# TODO dont expose 8001 to outside !!
-# 80 for http workers. 8001 for ws workers
 EXPOSE 80
 # Opening on extra port for our ASGI setup
 EXPOSE 8001
