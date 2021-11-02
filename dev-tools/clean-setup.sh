@@ -1,5 +1,4 @@
 #!/bin/bash
-cd .. || exit 1
 echo -e "\n$GREEN""$BOLD""Reset docker container & networks""$NC"
 
 docker images

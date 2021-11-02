@@ -190,11 +190,15 @@ pylinter(){
 }
 
 #main
-cd .. || exit 1
+cd .. || exit 1 
+if ! [[ -d embark ]]; then
+  echo $PWD
+  exit 1
+fi
 check_tools
 MODULES_TO_CHECK=0
 MODULES_TO_CHECK_ARR=()
-shellchecker
+shellchecker # TODO ignore emba!!!!lol
 jscheck
 templatechecker
 pycodestyle_check

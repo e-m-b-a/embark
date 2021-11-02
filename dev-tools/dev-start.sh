@@ -21,7 +21,6 @@ NC='\033[0m' # no color
 
 export DJANGO_SETTINGS_MODULE=embark.settings
 
-cd .. || exit 1
 echo -e "\n$GREEN""$BOLD""Configuring Embark""$NC"
 
 
@@ -41,7 +40,7 @@ echo -e "$ORANGE""$BOLD""Creating a Developer EMBArk configuration file .env""$N
   echo "SECRET_KEY=$DJANGO_SECRET_KEY"
 } > .env
 
-SECRET_KEY="$DJANGO_SECRET_KEY"
+export SECRET_KEY="$DJANGO_SECRET_KEY"
 
 # setup dbs-container and detach build could be skipt
   echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
@@ -62,8 +61,10 @@ else
   echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
 fi
 
+echo $PWD
 cd ./embark || exit 1
 if ! [[ -d logs ]]; then
+echo $PWD
   mkdir logs
 fi
 
@@ -82,8 +83,6 @@ pipenv run ./manage.py runserver
 # docker container logs embark_redis_dev -f > ./embark/logs/redis_dev.log & # TODO test if this is quiet???
 # echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.log""$NC"
 # docker container logs embark_db_dev -f > ./embark/logs/mysql_dev.log & 
-
-
 
 # run middlewears
 # echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
