@@ -22,6 +22,7 @@ urlpatterns = [
     path('home/log/<int:log_type>/<int:lines>/', views.get_log, name='log'),
     path('emba_logs/<int:analyze_id>/html-report/<str:html_file>', views.html_report, name='embark-html-report'),
     path('emba_logs/<int:analyze_id>/html-report/style/<str:img_file>', views.html_report_resource, name='embark-html-report-resource'),
+    # TODO:  http://127.0.0.1/emba_logs/18/html-report/s106_deep_key_search/deep_key_search_server.pem.html not working
 
     path('get_load/', views.get_load, name='embark-get-load'),
     path('get_individual_report/<int:analyze_id>/', views.get_individual_report, name='embark-get-individual-report'),

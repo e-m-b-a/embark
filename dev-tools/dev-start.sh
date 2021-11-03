@@ -27,20 +27,31 @@ echo -e "\n$GREEN""$BOLD""Configuring Embark""$NC"
 # setup .env with dev network
 DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
 echo -e "$ORANGE""$BOLD""Creating a Developer EMBArk configuration file .env""$NC"
+export DATABASE_NAME="embark"
+export DATABASE_USER="embark"
+export DATABASE_PASSWORD="embark"
+export DATABASE_HOST="127.0.0.1"
+export DATABASE_PORT="3306"
+export MYSQL_PASSWORD="embark"
+export MYSQL_USER="embark"
+export MYSQL_DATABASE="embark"
+export REDIS_HOST="127.0.0.1"
+export REDIS_PORT="7777"
+export SECRET_KEY="$DJANGO_SECRET_KEY"
+# this is for django
 {
-  echo "DATABASE_NAME=embark"
-  echo "DATABASE_USER=root" 
-  echo "DATABASE_PASSWORD=embark"
-  echo "DATABASE_HOST=127.0.0.1"
-  echo "DATABASE_PORT=3306"
-  echo "MYSQL_ROOT_PASSWORD=embark"
-  echo "MYSQL_DATABASE=embark"
-  echo "REDIS_HOST=127.0.0.1"
-  echo "REDIS_PORT=7777"
+  echo "DATABASE_NAME=$DATABASE_NAME"
+  echo "DATABASE_USER=$DATABASE_USER" 
+  echo "DATABASE_PASSWORD=$DATABASE_PASSWORD"
+  echo "DATABASE_HOST=$DATABASE_HOST"
+  echo "DATABASE_PORT=$DATABASE_PORT"
+  echo "MYSQL_PASSWORD=$MYSQL_PASSWORD"
+  echo "MYSQL_USER=$MYSQL_USER"
+  echo "MYSQL_DATABASE=$MYSQL_DATABASE"
+  echo "REDIS_HOST=$REDIS_HOST"
+  echo "REDIS_PORT=$REDIS_PORT"
   echo "SECRET_KEY=$DJANGO_SECRET_KEY"
 } > .env
-
-export SECRET_KEY="$DJANGO_SECRET_KEY"
 
 # setup dbs-container and detach build could be skipt
   echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
@@ -61,21 +72,18 @@ else
   echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
 fi
 
-echo $PWD
-cd ./embark || exit 1
-if ! [[ -d logs ]]; then
-echo $PWD
-  mkdir logs
+if ! [[ -d ./embark/logs ]]; then
+  mkdir ./embark/logs
 fi
 
 # db_init
 echo -e "[*] Starting migrations - log to embark/logs/migration.log"
-pipenv run ./manage.py makemigrations users uploader | tee -a ./logs/migration.log
-pipenv run ./manage.py migrate | tee -a ./logs/migration.log
+pipenv run ./embark/manage.py makemigrations users uploader | tee -a ./embark/logs/migration.log
+pipenv run ./embark/manage.py migrate | tee -a ./embark/logs/migration.log
 
 # start embark
 echo -e "$ORANGE""$BOLD""start embark server""$NC"
-pipenv run ./manage.py runserver 
+pipenv run ./embark/manage.py runserver 
 
 
 
@@ -99,4 +107,3 @@ pipenv run ./manage.py runserver
 #  echo -e "\n$RED""$BOLD""  ==> Building Developent-Enviroment for EMBArk FAILED""$NC"
 # fi
 echo -e "\n$ORANGE""$BOLD""Done. To clean-up use the clean-setup script""$NC"
-cd ..

@@ -16,6 +16,7 @@
 
 export DEBIAN_FRONTEND=noninteractive
 
+RED='\033[0;31m'
 GREEN='\033[0;32m'
 ORANGE='\033[0;33m'
 BOLD='\033[1m'
@@ -25,6 +26,7 @@ print_help() {
   echo -e "\\n""$CYAN""USAGE""$NC"
   echo -e "$CYAN-F$NC         Installation of EMBArk with all dependencies (typical initial installation)"
   echo -e "$CYAN-r$NC         Reinstallation of EMBArk with all dependencies (cleanup of docker environment first)"
+  echo -e "$RED               ! This Delets all Images as well !" #TODO 
   echo -e "$CYAN-e$NC         Install emba only"
   echo -e "$CYAN-h$NC         Print this help message"
   echo -e "$CYAN-d$NC         Build Development-Enviroment for Embark"
@@ -56,6 +58,20 @@ reset_docker() {
 
   docker images
   docker container ls -a
+
+  #TODO test this
+  while docker images | grep -qE "^\<none\>"; do
+    IMAGE_ID=$(docker container| grep -E "^\<none\>" | awk '{print $3}')
+    echo -e "$GREEN""$BOLD""Remove failed docker image""$NC"
+    docker image rm "$IMAGE_ID"
+  done
+
+  if docker images | grep -qE "^embeddedanalyzer/emba"; then
+    echo -e "\n$GREEN""$BOLD""Found EMBA docker environment - removing it""$NC"
+    CONTAINER_ID=$(docker image ls | grep -E "embeddedanalyzer/emba" | awk '{print $3}')
+    echo -e "$GREEN""$BOLD""Remove EMBA docker image""$NC"
+    docker image rm "$IMAGE_ID"
+  fi
 
   if docker images | grep -qE "^embark[[:space:]]*latest"; then
     echo -e "\n$GREEN""$BOLD""Found EMBArk docker environment - removing it""$NC"
@@ -114,6 +130,7 @@ install_embark() {
     DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
     PASSWORD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13 )
     echo -e "$ORANGE""$BOLD""Creating a default EMBArk configuration file .env""$NC"
+    #TODO
     {
       echo "DATABASE_NAME=embark"
       echo "DATABASE_USER=embarkserver"
@@ -267,6 +284,7 @@ while getopts eFrdh OPT ; do
     r)
       export REFORCE=1
       echo -e "$GREEN""$BOLD""Install all dependecies including docker cleanup""$NC"
+
       ;;
     d)
       export DEV=1
