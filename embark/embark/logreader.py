@@ -3,7 +3,6 @@ import difflib
 import pathlib
 import re
 import time
-
 import logging
 import rx
 import rx.operators as ops

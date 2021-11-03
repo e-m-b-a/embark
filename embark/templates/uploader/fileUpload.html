@@ -31,7 +31,7 @@
             
             <div class="box">
                 <p class="mainText">Select and delete a firmware image/archive</p>
-                <form action="/home/delete/" method="POST" id="delete-form" onsubmit="window.confirmDelete(event)">
+                <form action="{% url 'embark-delete' %}" method="POST" id="delete-form" onsubmit="window.confirmDelete(event)">
                     {% csrf_token %}
                     {% load filters %}
                     <!-- Iterate over all fields and set expmode on fields in expert mode -->

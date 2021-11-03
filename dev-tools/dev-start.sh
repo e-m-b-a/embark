@@ -38,7 +38,7 @@ export MYSQL_DATABASE="embark"
 export REDIS_HOST="127.0.0.1"
 export REDIS_PORT="7777"
 export SECRET_KEY="$DJANGO_SECRET_KEY"
-# this is for django
+# this is for pipenv/django # TODO change after 
 {
   echo "DATABASE_NAME=$DATABASE_NAME"
   echo "DATABASE_USER=$DATABASE_USER" 

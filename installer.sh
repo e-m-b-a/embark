@@ -141,7 +141,7 @@ install_embark() {
     export REDIS_HOST="127.0.0.1"
     export REDIS_PORT="7777"
     export SECRET_KEY="$DJANGO_SECRET_KEY"
-    # this is needed by django ?? to check
+    # this is for pipenv/django # TODO change/lock after deploy
     {
       echo "DATABASE_NAME=$DATABASE_NAME"
       echo "DATABASE_USER=$DATABASE_USER" 
@@ -213,6 +213,8 @@ install_debs() {
   if ! command -v docker-compose > /dev/null ; then
     apt-get install -y -q docker-compose
   fi
+
+  #TODO put all these into dev
   if ! command -v pycodestyle > /dev/null ; then 
     apt-get install -y -q pycodestyle
   fi

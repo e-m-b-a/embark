@@ -24,7 +24,7 @@ ALLOWED_HOSTS = ['*']
 
 # Application definition - defines what apps gets migrated
 
-INSTALLED_APPS = [   
+INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

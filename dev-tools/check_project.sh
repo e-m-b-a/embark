@@ -38,7 +38,7 @@ check_tools(){
 # checks js-scripts with jshint for errors
 # config @ ./embark/static/.jshintrc
 jscheck(){
-  mapfile -t JS_SCRIPTS < <(find embark -iname "*.js")
+  mapfile -t JS_SCRIPTS < <(find ./embark -iname "*.js")
   for JS_SCRIPT in "${JS_SCRIPTS[@]}"; do
     echo -e "\\n""$GREEN""Run jshint on $JS_SCRIPT:""$NC""\\n"
     # mapfile -t JS_RESULT < <(jshint "$JS_SCRIPT")
@@ -66,9 +66,9 @@ jscheck(){
 # uses djlint to check for errors in all html-template files inside /embark (Django-root-dir)
 # no config
 templatechecker(){
-  mapfile -t HTML_FILE < <(find embark -iname "*.html")
+  mapfile -t HTML_FILE < <(find ./embark -iname "*.html")
   for HTML_FILE in "${HTML_FILE[@]}"; do
-    echo -e "\\n""$GREEN""Run tidy on $HTML_FILE:""$NC""\\n"
+    echo -e "\\n""$GREEN""Run djlint on $HTML_FILE:""$NC""\\n"
     pipenv run djlint "$HTML_FILE"
     RES=$?
     if [[ $RES -eq 1 ]]; then
@@ -150,10 +150,6 @@ pycodestyle_check(){
   done
 }
 
-pytester(){
-  echo -e "[*] Test project with pytest (not supported)"
-  #pytest
-}
 
 pylinter(){
   echo -e "\\n""$ORANGE""$BOLD""EMBArk pylint check""$NC""\\n""$BOLD""=================================================================""$NC"
@@ -161,7 +157,7 @@ pylinter(){
   mapfile -t PY_SCRIPTS < <(find embark -type d -name migrations -prune -false -o -iname "*.py")
   for PY_SCRIPT in "${PY_SCRIPTS[@]}"; do
     echo -e "\\n""$GREEN""Run pylint on $PY_SCRIPT:""$NC""\\n"
-    mapfile -t PY_RESULT < <(pylint --max-line-length=240 -d C0115,C0114,C0116,W0511,W0703 --load-plugins pylint_django "$PY_SCRIPT")
+    mapfile -t PY_RESULT < <(pipenv run pylint --max-line-length=240 -d C0115,C0114,C0116,W0511,W0703 --load-plugins pylint_django "$PY_SCRIPT")
     local RATING_10=0
     if [[ "${#PY_RESULT[@]}" -gt 0 ]]; then 
       if ! printf '%s\n' "${PY_RESULT[@]}" | grep -q -P '^Your code has been rated at 10'; then
@@ -184,26 +180,22 @@ pylinter(){
   done
 
   echo -e "\\n""$GREEN""Run pylint on all scripts:""$NC""\\n"
-  pylint --max-line-length=240 -d C0115,C0114,C0116,W0511,W0703 --load-plugins pylint_django embark/* | grep "Your code has been rated"
+  pipenv run pylint --max-line-length=240 -d C0115,C0114,C0116,W0511,W0703 --load-plugins pylint_django embark/* | grep "Your code has been rated"
   # current rating: 9.52/10
   # start rating: 5.58/10
 }
 
 #main
-cd .. || exit 1 
-if ! [[ -d embark ]]; then
-  echo $PWD
-  exit 1
-fi
+
 check_tools
 MODULES_TO_CHECK=0
 MODULES_TO_CHECK_ARR=()
-shellchecker # TODO ignore emba!!!!lol
+shellchecker 
 jscheck
 templatechecker
 pycodestyle_check
 pylinter
-# pytester
+
 
 
 if [[ "${#MODULES_TO_CHECK_ARR[@]}" -gt 0 ]]; then
