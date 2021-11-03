@@ -8,6 +8,11 @@ services:
     restart: always
     env_file:
       - .env
+    environment:
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
+      - MYSQL_PASSWORD
+      - MYSQL_USER
+      - MYSQL_DATABASE
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
@@ -29,6 +34,16 @@ services:
     network_mode: "host"
     env_file:
       - .env
+    environment:
+      - DATABASE_NAME
+      - DATABASE_USER
+      - DATABASE_HOST
+      - DATABASE_PORT
+      - DATABASE_PASSWORD
+      - DJANGO_LOG_LEVEL
+      - DEBUG=False
+      - REDIS_HOST
+      - REDIS_PORT
     command: './entrypoint.sh'
     environment:
       - USER
