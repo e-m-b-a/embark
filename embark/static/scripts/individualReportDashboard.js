@@ -1,3 +1,6 @@
+// jshint unused:false
+// ^ this should only be added AFTER successfull check (disables waring for global functions)
+
 var accumulatedCveDoughnut = document.getElementById('accumulatedCveDoughnut').getContext('2d');
 
 var nxpie = document.getElementById('nxpie').getContext('2d');
@@ -14,6 +17,7 @@ document.getElementById("entropy").src = entropy_url;
  * get the id of the current report -> we use this for the buttons and the entropy graph
  */
 function get_report_url() {
+  "use strict";
   let report_id = window.location.pathname.split("/").pop();
   let report_url = "/emba_logs/REPORT_ID_REPLACE/html-report/index.html".replace(/REPORT_ID_REPLACE/,report_id);
   window.location.href = report_url;
@@ -21,6 +25,7 @@ function get_report_url() {
 }
 
 function get_dl_report_url() {
+  "use strict";
   let report_id = window.location.pathname.split("/").pop();
   let report_url = "/download_zipped/REPORT_ID_REPLACE".replace(/REPORT_ID_REPLACE/,report_id);
   window.location.href = report_url;
@@ -28,10 +33,87 @@ function get_dl_report_url() {
 }
 
 /**
+ * Gets data to generate Reports for Individual Firmware
+ * @returns data of the Nalysed Individual firmware
+ */
+ function get_individual_report() {
+    "use strict";
+    let report_index = window.location.href.substring(window.location.href.lastIndexOf('/') + 1);
+    let url = window.location.origin + "/get_individual_report/" + report_index;
+
+    return $.getJSON(url).then(function (data) {
+        return data;
+    });
+}
+
+/**
+ * Develops Chart
+ * @param {*} html_chart Type of Chart
+ * @param {*} label_1 Labels
+ * @param {*} label_2 Labels
+ * @param {*} color_1 Colors
+ * @param {*} color_2 Colors
+ * @param {*} data_cmp Data to be plotted
+ * @param {*} data_strcpy
+ * @param {*} title Title of The chart
+ */
+function make_chart(html_chart, label_1, label_2, color_1, color_2, data_cmp, data_strcpy, title) {
+    "use strict";
+    let chart = new Chart(html_chart, {
+        type: 'pie',
+        data: {
+            labels: [label_1, label_2],
+            datasets: [{
+                labels: [label_1, label_2],
+                data: [data_strcpy, (data_cmp - data_strcpy)],
+                backgroundColor: [color_1, color_2],
+            }, ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: title,
+                    position: 'top',
+                    color: 666,
+                    padding: {
+                        top: 15,
+                        bottom: 10
+                    },
+                    font: {
+                        size: 24
+                    }
+                },
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        fontColor: '#000'
+                    }
+                },
+                layout: {
+                    padding: {
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        top: 0
+                    }
+                },
+                tooltips: {
+                    enabled: true
+                }
+            }
+        }
+    });
+}
+
+/**
  * Generates Reports after you complete receiving the data for Individual Fimware
  */
 get_individual_report().then(function (returnData) {
-
+    "use strict";
     let cvedoughnutChart = new Chart(accumulatedCveDoughnut, {
         type: 'doughnut',
         data: {
@@ -91,15 +173,15 @@ get_individual_report().then(function (returnData) {
     });
 
     make_chart(relropie, 'Binaries without RELRO', 'Binaries with RELRO',
-        '#493791', '#291771', returnData.bins_checked, returnData.relro, 'RELRO')
+        '#493791', '#291771', returnData.bins_checked, returnData.relro, 'RELRO');
     make_chart(nxpie, 'Binaries without NX', 'Binaries with NX',
-        '#1b1534', '#000014', returnData.bins_checked, returnData.nx, 'NX')
+        '#1b1534', '#000014', returnData.bins_checked, returnData.nx, 'NX');
     make_chart(piepie, 'Binaries without PIE', 'Binaries with PIE',
-        '#7b919d', '#5b717d', returnData.bins_checked, returnData.pie, 'PIE')
+        '#7b919d', '#5b717d', returnData.bins_checked, returnData.pie, 'PIE');
     make_chart(canarypie, 'Binaries without CANARY', 'Binaries with CANARY',
-        '#525d63', '#323d43', returnData.bins_checked, returnData.canary, 'CANARY')
+        '#525d63', '#323d43', returnData.bins_checked, returnData.canary, 'CANARY');
     make_chart(strippedpie, 'Stripped binaries', 'Unstripped binaries',
-        '#009999', '#005050', returnData.bins_checked, returnData.stripped, 'Stripped')
+        '#009999', '#005050', returnData.bins_checked, returnData.stripped, 'Stripped');
 
     let data_to_display = {
         "Firmware name": returnData.name.replace(/\d\//,""),
@@ -133,93 +215,18 @@ get_individual_report().then(function (returnData) {
         "PIE disabled binaries": returnData.pie,
         "Stack canaries disabled binaries": returnData.canary,
         "Stripped binaries": returnData.stripped,
-    }
+    };
 
     for (const [key, value] of Object.entries(returnData.strcpy_bin)) {
-        data_to_display["STRCPY binary: " + key] = value
+        data_to_display["STRCPY binary: " + key] = value;
     }
 
     const table = document.getElementById("detail_body");
     for (const [key, value] of Object.entries(data_to_display)) {
         let row = table.insertRow();
         let date = row.insertCell(0);
-        date.innerHTML = key
+        date.innerHTML = key;
         let name = row.insertCell(1);
         name.innerHTML = value;
     }
 });
-
-/**
- * Gets data to generate Reports for Individual Firmware
- * @returns data of the Nalysed Individual firmware
- */
-function get_individual_report() {
-    let report_index = window.location.href.substring(window.location.href.lastIndexOf('/') + 1);
-    let url = window.location.origin + "/get_individual_report/" + report_index;
-
-    return $.getJSON(url).then(function (data) {
-        return data
-    })
-}
-
-/**
- * Develops Chart
- * @param {*} html_chart Type of Chart
- * @param {*} label_1 Labels
- * @param {*} label_2 Labels
- * @param {*} color_1 Colors
- * @param {*} color_2 Colors
- * @param {*} data_cmp Data to be plotted
- * @param {*} data_strcpy
- * @param {*} title Title of The chart
- */
-function make_chart(html_chart, label_1, label_2, color_1, color_2, data_cmp, data_strcpy, title) {
-    let chart = new Chart(html_chart, {
-        type: 'pie',
-        data: {
-            labels: [label_1, label_2],
-            datasets: [{
-                labels: [label_1, label_2],
-                data: [data_strcpy, (data_cmp - data_strcpy)],
-                backgroundColor: [color_1, color_2],
-            }, ],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: title,
-                    position: 'top',
-                    color: 666,
-                    padding: {
-                        top: 15,
-                        bottom: 10
-                    },
-                    font: {
-                        size: 24
-                    }
-                },
-                legend: {
-                    display: true,
-                    position: 'bottom',
-                    labels: {
-                        fontColor: '#000'
-                    }
-                },
-                layout: {
-                    padding: {
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        top: 0
-                    }
-                },
-                tooltips: {
-                    enabled: true
-                }
-            }
-        }
-    });
-}

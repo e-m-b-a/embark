@@ -1,3 +1,38 @@
+// jshint unused:false
+// ^ this should only be added AFTER successfull check (disables waring for global functions)
+
+/**
+ * Get Load of Time , CPU and Memory Percentage
+ * @returns Object of the Time,cpu and memory Percentage
+ */
+ function get_load() {
+    "use strict";
+    try {
+        let url = window.location.origin + "/get_load/";
+
+        return $.getJSON(url).then(function (data) {
+
+            return {
+                time: data.timestamp,
+                cpu: data.cpu_percentage,
+                mem: data.memory_percentage
+            };
+        });
+    } catch (error) {
+        console.log(error.message);
+    }
+}
+
+/**
+ * Validates the Login
+ * @returns HTTP Response
+ */
+function check_login() {
+    "use strict";
+    let url = window.location.origin + "/check_login/";
+    return $.getJSON(url);
+}
+
 //check_login();
 
 try {
@@ -7,7 +42,7 @@ try {
      * Develops Chart after loading the required data
      */
     get_load().then(function (returndata) {
-    
+        "use strict";
         let lineChart = new Chart(loadChart, {
             type: 'line', // bar, horizontalBar, pie, line, doughnut, radar, polarArea
             data: {
@@ -89,33 +124,3 @@ try {
   // console.log("exception" + error)
 }
 
-/**
- * Get Load of Time , CPU and Memory Percentage
- * @returns Object of the Time,cpu and memory Percentage
- */
-function get_load() {
-    try {
-        let url = window.location.origin + "/get_load/";
-
-        return $.getJSON(url).then(function (data) {
-
-            return {
-                time: data.timestamp,
-                cpu: data.cpu_percentage,
-                mem: data.memory_percentage
-            }
-        })
-    } catch (error) {
-        console.log(error.message);
-    }
-}
-
-/**
- * Validates the Login
- * @returns HTTP Response
- */
-function check_login() {
-    let url = window.location.origin + "/check_login/";
-
-    return $.getJSON(url);
-}

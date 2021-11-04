@@ -10,14 +10,63 @@
 # EMBArk is licensed under MIT
 #
 # Author(s): Michael Messner, Pascal Eckmann
+# Contributer(s): Benedikt Kuehne
 
-# Description:  Check all shell and python scripts
+# Description:  Check all scripts and templates(Django gets its own unit-tests)
 
-
+RED='\033[0;31m'
 GREEN='\033[0;32m'
 ORANGE='\033[0;33m'
 BOLD='\033[1m'
 NC='\033[0m' # no color
+
+# checks js-scripts with jshint for errors
+# config @ ./embark/static/.jshintrc
+jscheck(){
+  mapfile -t JS_SCRIPTS < <(find embark -iname "*.js")
+  for JS_SCRIPT in "${JS_SCRIPTS[@]}"; do
+    echo -e "\\n""$GREEN""Run jshint on $JS_SCRIPT:""$NC""\\n"
+    # mapfile -t JS_RESULT < <(jshint "$JS_SCRIPT")
+    jshint "$JS_SCRIPT" >"$JS_SCRIPT.report"
+    RES=$?
+    if [[ $RES -eq 2 ]] ; then
+      echo -e "\\n""$RED$BOLD==> FIX ERRORS""$NC""\\n"
+      cat "$JS_SCRIPT.report"
+      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+      MODULES_TO_CHECK_ARR+=( "$JS_SCRIPT" )
+    elif [[ $RES -eq 1 ]]; then
+      echo -e "\\n""$ORANGE$BOLD==> FIX WARNINGS""$NC""\\n"
+      cat "$JS_SCRIPT.report"
+      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+      MODULES_TO_CHECK_ARR+=( "$JS_SCRIPT" )
+    elif [[ $RES -eq 0 ]]; then 
+      echo -e "$GREEN""$BOLD""==> SUCCESS""$NC""\\n"
+    else 
+      echo -e "\\n""$RED$BOLD""[jshint]ERRORS in SCRIPT""$NC""\\n"
+    fi
+    # TODO: ADD the Module_check thingy
+  done
+}
+
+# uses djlint to check for errors in all html-template files inside /embark (Django-root-dir)
+# no config
+templatechecker(){
+  mapfile -t HTML_FILE < <(find embark -iname "*.html")
+  for HTML_FILE in "${HTML_FILE[@]}"; do
+    echo -e "\\n""$GREEN""Run tidy on $HTML_FILE:""$NC""\\n"
+    python3 -m djlint "$HTML_FILE"
+    RES=$?
+    if [[ $RES -eq 1 ]]; then
+      echo -e "\\n""$ORANGE$BOLD==> FIX ERRORS""$NC""\\n"
+      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+      MODULES_TO_CHECK_ARR+=( "$HTML_FILE" )
+    elif [[ $RES -eq 0 ]]; then 
+      echo -e "$GREEN""$BOLD""==> SUCCESS""$NC""\\n"
+    else 
+      echo -e "\\n""$RED$BOLD""[html-check(tidy)]ERRORS in SCRIPT""$NC""\\n"
+    fi
+  done
+}
 
 shellchecker() {
   echo -e "\\n""$ORANGE""$BOLD""EMBArk Shellcheck""$NC""\\n""$BOLD""=================================================================""$NC"
@@ -128,6 +177,8 @@ pylinter(){
 MODULES_TO_CHECK=0
 MODULES_TO_CHECK_ARR=()
 shellchecker
+jscheck
+templatechecker
 pycodestyle_check
 pylinter
 # pytester

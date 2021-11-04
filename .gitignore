@@ -14,3 +14,5 @@ embark/uploadedFirmwareImages/
 # other stuff
 *.zip
 *.bin
+*.error
+*.report

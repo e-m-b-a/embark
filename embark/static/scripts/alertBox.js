@@ -1,17 +1,20 @@
+// jshint unused:false
+// ^ this should only be added AFTER successfull check (disables waring for global functions)
+
 /** Error alert - Displays Alert message if something is failed
  * @param {*} message - message to be shown to user
  */
- function errorAlert(message) {
+function errorAlert(message) {
+    "use strict";
     $.confirm({
-       title:  'Error!',
-       content: message,
-       type: 'red',
-       typeAnimated: true,
-       buttons: {
-           close: function () {
-           }
-       }
-   });
+        title:  'Error!',
+        content: message,
+        type: 'red',
+        typeAnimated: true,
+        buttons: {
+            close: function () {}
+        }
+    });
 
   }
 
@@ -20,6 +23,7 @@
    * @param {*} message - Display message to be shown to user
    */
   function successAlert(message) {
+    "use strict";
     $.confirm({
        title:  'Success',
        content: message,
@@ -38,6 +42,7 @@
    * @param {*} message Display message to user
    */
   function promptAlert(message) {
+    "use strict";
     $.confirm({
       title: 'Prompt',
       content: '' +

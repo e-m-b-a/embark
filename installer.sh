@@ -10,6 +10,7 @@
 # EMBArk is licensed under MIT
 #
 # Author(s): Michael Messner, Pascal Eckmann
+# Contributor(s): Benedikt Kuehne
 
 # Description: Installer for EMBArk
 
@@ -26,6 +27,7 @@ print_help() {
   echo -e "$CYAN-r$NC         Reinstallation of EMBArk with all dependencies (cleanup of docker environment first)"
   echo -e "$CYAN-e$NC         Install emba only"
   echo -e "$CYAN-h$NC         Print this help message"
+  echo -e "$CYAN-d$NC         Build Development-Enviroment for Embark"
   echo
 }
 
@@ -180,15 +182,29 @@ install_debs() {
   if ! command -v docker-compose > /dev/null ; then
     apt-get install -y -q docker-compose
   fi
-  if ! command -v pycodestyle > /dev/null ; then
+  if ! command -v pycodestyle > /dev/null ; then 
     apt-get install -y -q pycodestyle
   fi
-  if ! command -v pylint > /dev/null ; then
+  if ! command -v pylint > /dev/null ; then 
     apt-get install -y -q pylint
     apt-get install -y -q python3-pylint-django
   fi
-  # we need the django package on the host for generating the django SECRET_KEY
-  apt-get install -y -q python3-django
+  if ! command -v npm -version > /dev/null ; then
+    apt-get install -y -q npm 
+  fi
+  # jshint install
+  npm install -g jshint
+  # we need the django package on the host for generating the django SECRET_KEY and pip
+  apt-get install -y -q python3-django python3-pip
+  # install djlint global
+  python3 -m pip install djlint
+}
+
+make_dev_env(){
+  echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
+  #TODO
+  # 1. pip install pipenv
+  echo -e "THIS IS STILL IN WORK"
 }
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
@@ -200,7 +216,7 @@ if [ "$#" -ne 1 ]; then
   exit 1
 fi
 
-while getopts eFrh OPT ; do
+while getopts eFrdh OPT ; do
   case $OPT in
     e)
       export EMBA_ONLY=1
@@ -213,6 +229,10 @@ while getopts eFrh OPT ; do
     r)
       export REFORCE=1
       echo -e "$GREEN""$BOLD""Install all dependecies including docker cleanup""$NC"
+      ;;
+    d)
+      export DEV=1
+      echo -e "$GREEN""$BOLD""Building Development-Enviroment""$NC"
       ;;
     h)
       print_help
@@ -241,10 +261,16 @@ if [[ "$EMBA_ONLY" -ne 1 ]]; then
   if ! [[ -d embark/logs ]]; then
     mkdir embark/logs
   fi
-
+  
   if [[ "$REFORCE" -eq 1 ]]; then
     reset_docker
   fi
+
   install_embark
+
+  if [[ "$DEV" -eq 1 ]]; then
+    make_dev_env
+  fi
+
 fi
 
