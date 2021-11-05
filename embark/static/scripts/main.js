@@ -18,12 +18,7 @@ function navToggle() {
         var expertOptions = document.querySelectorAll('[value="help_text"]');
 
         for (var i = 0; i < expertOptions.length; i++) {
-            var expertDiv = expertOptions[i];
-            if (expertDiv.style.display === "none") {
-                expertDiv.style.display = "block";
-            } else {
-                expertDiv.style.display = "none";
-            }
+            expertOptions[i].classList.toggle("show");
         }
     } catch (error) {
         console.log(error.message);
@@ -39,12 +34,7 @@ function expertModeOn() {
         var expertOptions = document.querySelectorAll('[value="expmode"]');
 
         for (var i = 0; i < expertOptions.length; i++) {
-            var expertDiv = expertOptions[i];
-            if (expertDiv.style.display === "none") {
-                expertDiv.style.display = "block";
-            } else {
-                expertDiv.style.display = "none";
-            }
+            expertOptions[i].classList.toggle("show");
         }
     } catch (error) {
         console.log(error.message);

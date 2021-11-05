@@ -66,7 +66,7 @@
                         {% for field in analyze_form %}
 
                             {% if field.expert_mode %}
-                                <div class="form-group expertModeOptions" value="expmode">
+                                <div id="expertModeOptions" class="form-group" value="expmode">
                                     {% if field.field.widget|is_checkbox %}
                                         {{ field }}
                                         {{ field.label_tag }}
@@ -75,7 +75,7 @@
                                         {{ field }}
                                     {% endif %}
                                     {% if field.help_text %}
-                                        <small class="form-text text-muted" value="help_text">{{ field.help_text }}</small>
+                                        <small id="text-muted" class="form-text" value="help_text">{{ field.help_text }}</small>
                                     {% endif %}
                                 </div>
                             {% else %}
@@ -88,7 +88,7 @@
                                         {{ field }}
                                     {% endif %}
                                     {% if field.help_text %}
-                                        <small class="form-text text-muted" value="help_text">{{ field.help_text }}</small>
+                                        <small id="text-muted" class="form-text" value="help_text">{{ field.help_text }}</small>
                                     {% endif %}
                                 </div>
                             {% endif %}
