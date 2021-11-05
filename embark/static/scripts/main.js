@@ -15,10 +15,15 @@ function navToggle() {
  function helpTextOn() {
     "use strict";
     try {
-        var expertOptions = document.querySelectorAll('[value="help_text"]');
+        var expertOptions = document.querySelectorAll('small.text-muted');
 
         for (var i = 0; i < expertOptions.length; i++) {
-            expertOptions[i].classList.toggle("show");
+            var expertDiv = expertOptions[i];
+            if (expertDiv.getAttribute("value") === "help_text_off") {
+                expertDiv.setAttribute("value","help_text_on");
+            } else {
+                expertDiv.setAttribute("value","help_text_off");
+            }
         }
     } catch (error) {
         console.log(error.message);
@@ -31,10 +36,15 @@ function navToggle() {
 function expertModeOn() {
     "use strict";
     try {
-        var expertOptions = document.querySelectorAll('[value="expmode"]');
+        var expertOptions = document.querySelectorAll('div.expertModeOptions');
 
         for (var i = 0; i < expertOptions.length; i++) {
-            expertOptions[i].classList.toggle("show");
+            var expertDiv = expertOptions[i];
+            if (expertDiv.getAttribute("value") === "expmode_off") {
+                expertDiv.setAttribute("value","expmode_on");
+            } else {
+                expertDiv.setAttribute("value","expmode_off");
+            }
         }
     } catch (error) {
         console.log(error.message);

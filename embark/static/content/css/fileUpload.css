@@ -180,22 +180,23 @@ input:checked+.slider:before {
     left: 22px;
 }
 
-#expertModeOptions {
-    display:none;
-}
 
-#expertModeOptions.show {
+.expertModeOptions[value="expmode_off"] {
+    display: none;
+}
+.expertModeOptions[value="expmode_on"] {
     display: block;
 }
+
 
 .form-group>label {
     padding-left: 30px;
 }
 
-#text-muted {
+.text-muted[value="help_text_off"] {
     display:none;
 }
 
-#text-muted.show {
-    display: block;
+.text-muted[value="help_text_on"] {
+    display:block;
 }
