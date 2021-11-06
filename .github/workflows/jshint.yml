@@ -4,8 +4,7 @@
   uses: moneyforward/jshint-action@v0.0.1
   with:
     # Specify files or directories
-    ./embark/static/scripts/
-    files: # optional
+    files: ./embark/static/scripts/
     # Changes `jshint` command line options.
 
 # Specify the options in JSON array format.
