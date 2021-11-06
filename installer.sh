@@ -47,7 +47,7 @@ install_emba() {
   fi
 
   cd emba || exit 1
-  ./installer.sh -F
+  ./installer.sh -C
   cd .. || exit 1
 }
 
