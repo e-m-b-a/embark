@@ -1,0 +1,16 @@
+- name: Code review using JSHint
+  # You may pin to the exact commit or the version.
+  # uses: moneyforward/jshint-action@58ba1de65f1da08043e2bdd7a9371494a1815ea9
+  uses: moneyforward/jshint-action@v0.0.1
+  with:
+    # Specify files or directories
+    ./embark/static/scripts/
+    files: # optional
+    # Changes `jshint` command line options.
+
+# Specify the options in JSON array format.
+# e.g.: '["--extra-ext", ".js"]'
+
+    options: # optional
+    # Changes the current working directory of the Node.js process
+    working_directory: # optional
