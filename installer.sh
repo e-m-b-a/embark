@@ -26,7 +26,7 @@ print_help() {
   echo -e "\\n""$CYAN""USAGE""$NC"
   echo -e "$CYAN-F$NC         Installation of EMBArk with all dependencies (typical initial installation)"
   echo -e "$CYAN-r$NC         Reinstallation of EMBArk with all dependencies (cleanup of docker environment first)"
-  echo -e "$RED               ! This Delets all Images as well !" #TODO 
+  echo -e "$RED               ! This Delets all Images as well !""$NC"
   echo -e "$CYAN-e$NC         Install emba only"
   echo -e "$CYAN-h$NC         Print this help message"
   echo -e "$CYAN-d$NC         Build Development-Enviroment for Embark"
