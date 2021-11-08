@@ -48,6 +48,7 @@ def register(request):
 
 
 @csrf_exempt
+#TODO @login_required or not?
 def logout(request):
     html_body = get_template('uploader/logout.html')
     return HttpResponse(html_body.render())
