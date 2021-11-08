@@ -34,7 +34,7 @@ print_help() {
 }
 
 install_emba() {
-  echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner emba""$NC"
+  echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner emba on host""$NC"
 
   if [[ "$REFORCE" -eq 1 && -d ./emba ]]; then
     rm ./emba -r
@@ -59,12 +59,12 @@ reset_docker() {
   docker images
   docker container ls -a
 
-  #TODO test this
-  while docker images | grep -qE "^\<none\>"; do
-    IMAGE_ID=$(docker container| grep -E "^\<none\>" | awk '{print $3}')
-    echo -e "$GREEN""$BOLD""Remove failed docker image""$NC"
-    docker image rm "$IMAGE_ID"
-  done
+  
+  # while docker images | grep -qE "^\<none\>"; do
+  #   IMAGE_ID=$(docker container| grep -E "^\<none\>" | awk '{print $3}')
+  #   echo -e "$GREEN""$BOLD""Remove failed docker image""$NC"
+  #   docker image rm "$IMAGE_ID"
+  # done
 
   if docker images | grep -qE "^embeddedanalyzer/emba"; then
     echo -e "\n$GREEN""$BOLD""Found EMBA docker environment - removing it""$NC"
@@ -106,7 +106,6 @@ reset_docker() {
     echo -e "$GREEN""$BOLD""Remove redis docker image""$NC"
     docker image rm redis:5 -f
   fi
-  #TODO add emba container
 }
 
 install_embark() {
@@ -179,7 +178,8 @@ install_embark() {
   else
     echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
   fi
-
+  
+  # TODO compose work without restart
   echo -e "\n$GREEN""$BOLD""Restarting EMBArk docker images""$NC"
   docker-compose restart embark
   DS_RETURN=$?
@@ -267,7 +267,7 @@ make_dev_env(){
     cd .. || exit 1
   fi
 
-  # install on host # TODO better
+  # install on host 
   if ! [[ "$RES" == "Already up to date." ]]; then
     cd emba || exit 1
     ./installer.sh -F 
