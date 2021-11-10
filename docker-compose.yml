@@ -16,8 +16,7 @@ services:
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-    ports:
-      - "3306:3306"
+    network_mode: "host"
 
   embark:
     image: embark:latest
@@ -58,5 +57,4 @@ services:
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-    ports:
-      - "7777:7777"
+    network_mode: "host"
