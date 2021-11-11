@@ -28,8 +28,9 @@ services:
     restart: always
     privileged: true
     volumes:
-        - /var/run/docker.sock:/var/run/docker.sock # this is a BIG problem
+        - /var/run/docker.sock:/var/run/docker.sock 
         - ./embark/:/app/embark/
+        - ./emba/:/app/emba/
         - /etc/timezone:/etc/timezone:ro
         - /etc/localtime:/etc/localtime:ro
     ports:
@@ -54,26 +55,6 @@ services:
         - embark_db
         - redis
         - emba
-
-  emba:
-    image: embeddedanalyzer/emba:latest
-    build: ./emba
-    privileged: true
-    volumes: 
-      - ./emba/firmware:/firmware
-      - ./emba/log:/log
-      - ./emba:/emba:ro
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-    networks:
-      - embark_backend
-    # TODO whats the rest
-    environment:
-      - USER
-    devices:
-      - /dev/fuse:/dev/fuse:rwm
-    cap_add:
-      - SYS_ADMIN
 
   redis:
     image: "redis:5"

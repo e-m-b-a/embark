@@ -4,7 +4,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV DJANGO_SETTINGS_MODULE=embark.settings
 ENV PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/.local/bin
 
-# TODO: clean. why pylint ?
 RUN apt-get update && \ 
     apt-get -y upgrade && \
     apt-get -y -q install wget kmod procps sudo && \
@@ -14,8 +13,6 @@ RUN apt-get update && \
     sudo apt-get install -y -q build-essential && \
     sudo apt-get install -y -q python3-dev && \
     sudo apt-get install -y -q libssl-dev && \
-    sudo apt-get install -y -q python3-pylint-django && \
-    sudo apt-get install -y -q pycodestyle && \
     sudo apt-get install -y -q swig
 
 ADD . /app
