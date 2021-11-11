@@ -153,7 +153,7 @@ class Firmware(models.Model):
     cwe_checker = BooleanFieldExpertMode(
         help_text='Enables cwe-checker,-c will be added', default=False, expert_mode=True, blank=True)
     dev_mode = BooleanFieldExpertMode(
-        help_text='Run emba in developer mode, -D will be added (disabling developer mode is currently not supported)', default=True, expert_mode=True, blank=True)
+        help_text='Run emba in developer mode, -D will be added ', default=True, expert_mode=True, blank=True)
     deep_extraction = BooleanFieldExpertMode(
         help_text='Enable deep extraction, -x will be added', default=False, expert_mode=True, blank=True)
     log_path = BooleanFieldExpertMode(
@@ -182,7 +182,7 @@ class Firmware(models.Model):
         expert_mode=True, blank=True)
 
     # embark meta data
-    path_to_logs = models.FilePathField(default="/", blank=True)
+    path_to_logs = models.FilePathField(default="/", blank=True) # TODO change 
     start_date = models.DateTimeField(default=datetime.now, blank=True)
     end_date = models.DateTimeField(default=datetime.min, blank=True)
     finished = models.BooleanField(default=False, blank=False)

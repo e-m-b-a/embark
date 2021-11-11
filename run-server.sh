@@ -72,42 +72,30 @@ else
   echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
 fi
 
-if ! [[ -d ./embark/logs ]]; then
-  mkdir ./embark/logs
+cd ./embark || exit 1
+
+if ! [[ -d ./logs ]]; then
+  mkdir ./logs
 fi
 
 # db_init
 echo -e "[*] Starting migrations - log to embark/logs/migration.log"
-pipenv run ./embark/manage.py makemigrations users uploader | tee -a ./embark/logs/migration.log
-pipenv run ./embark/manage.py migrate | tee -a ./embark/logs/migration.log
+pipenv run ./manage.py makemigrations users uploader | tee -a ./logs/migration.log
+pipenv run ./manage.py migrate | tee -a ./logs/migration.log
 
-# echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./embark/logs/redis_dev.log""$NC" 
-# docker container logs embark_redis_dev -f > ./embark/logs/redis_dev.log & # TODO test if this is quiet???
-# echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.log""$NC"
-# docker container logs embark_db_dev -f > ./embark/logs/mysql_dev.log & 
+# container-logs
+echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./embark/logs/redis_dev.log""$NC" 
+docker container logs embark_redis_dev -f &> ./logs/redis_dev.log & 
+echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.log""$NC"
+docker container logs embark_db_dev -f &> ./logs/mysql_dev.log & 
 
 # run middlewears
-# echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
-# pipenv run ./embark/manage.py runapscheduler --test | tee -a ./embark/logs/migration.log &
-# echo -e "\n[""$BLUE JOB""$NC""] Starting uwsgi - log to /embark/logs/uwsgi.log"
-# pipenv run uwsgi --wsgi-file ./embark/embark/wsgi.py --http :80 --processes 2 --threads 10 --logto ./embark/logs/uwsgi.log &
-
+echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
+pipenv run ./manage.py runapscheduler --test | tee -a ./logs/scheduler.log &
+echo -e "\n[""$BLUE JOB""$NC""] Starting uwsgi - log to /embark/logs/uwsgi.log"
+pipenv run uwsgi --wsgi-file ./embark/wsgi.py --http :8080 --processes 2 --threads 10 --logto ./logs/uwsgi.log &
 echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-echo "START DAPHNE" >./embark/logs/daphne.log
-pipenv run daphne -v 3 --access-log ./embark/logs/daphne.log -p 8001 -b 0.0.0.0 --root-path="$PWD"/embark embark.asgi:application &>>./embark/logs/daphne.log &
+echo "START DAPHNE" >./logs/daphne.log
+pipenv run daphne -v 3 --access-log ./logs/daphne.log -p 8001 -b 0.0.0.0 --root-path="$PWD" embark.asgi:application &>>./logs/daphne.log &
 
-# start embark
-echo -e "$ORANGE""$BOLD""start embark server""$NC"
-pipenv run ./embark/manage.py runserver 8080 &
-
-wait %1
-wait %2
-kill -9 -1
-
-# TODO cleanup
-# if TODO ping -c 1 -I embark_dev -W 1 embark_db_dev; then
-#  echo -e "\n$GREEN""$BOLD""  ==> Building Developent-Enviroment for EMBArk Done""$NC"
-# else 
-#  echo -e "\n$RED""$BOLD""  ==> Building Developent-Enviroment for EMBArk FAILED""$NC"
-# fi
-echo -e "\n$ORANGE""$BOLD""Done. To clean-up use the clean-setup script""$NC"
+wait 

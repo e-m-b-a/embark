@@ -32,6 +32,7 @@ class FirmwareForm(forms.ModelForm):
             if isinstance(field.field.widget, django.forms.widgets.Select):
                 field.field.widget.attrs['class'] = 'form-control select dropdownSelect'
 
+            # TODO work to get rid of
             try:
                 if field.field.readonly:
                     field.field.widget.attrs["disabled"] = "disabled"
