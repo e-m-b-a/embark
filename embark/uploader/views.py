@@ -10,7 +10,7 @@ from http import HTTPStatus
 from django.conf import settings
 # from django import forms
 from django.forms import model_to_dict
-from django.shortcuts import render # , redirect
+from django.shortcuts import render     # , redirect
 from django.template.loader import get_template
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse # , StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -47,8 +47,8 @@ def register(request):
     return HttpResponse(html_body.render())
 
 
+# TODO @login_required or not?
 @csrf_exempt
-#TODO @login_required or not?
 def logout(request):
     html_body = get_template('uploader/logout.html')
     return HttpResponse(html_body.render())

@@ -108,7 +108,7 @@ class FirmwareFile(models.Model):
         # self.file_name = self.file.name
 
     def __str__(self):
-        return f"{self.file.name.replace('/', ' - ')}" # this the only sanitizing we do?
+        return f"{self.file.name.replace('/', ' - ')}"  # this the only sanitizing we do?
 
 
 @receiver(pre_delete, sender=FirmwareFile)
@@ -182,7 +182,7 @@ class Firmware(models.Model):
         expert_mode=True, blank=True)
 
     # embark meta data
-    path_to_logs = models.FilePathField(default="/", blank=True) # TODO change 
+    path_to_logs = models.FilePathField(default="/", blank=True)    # TODO change 
     start_date = models.DateTimeField(default=datetime.now, blank=True)
     end_date = models.DateTimeField(default=datetime.min, blank=True)
     finished = models.BooleanField(default=False, blank=False)

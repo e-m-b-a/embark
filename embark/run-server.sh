@@ -10,9 +10,11 @@
 #
 # Author(s): Benedikt Kuehne
 
-# Description: Automates setup of developer enviroment
+# Description: Starts the Django-Server(s) on host
 
-RED='\033[0;31m'
+cd "$(dirname "$0")" || exit 1
+
+
 GREEN='\033[0;32m'
 ORANGE='\033[0;33m'
 BLUE='\033[0;34m'
@@ -51,11 +53,11 @@ export SECRET_KEY="$DJANGO_SECRET_KEY"
   echo "REDIS_HOST=$REDIS_HOST"
   echo "REDIS_PORT=$REDIS_PORT"
   echo "SECRET_KEY=$DJANGO_SECRET_KEY"
-} > .env
+} > ../.env
 
 # setup dbs-container and detach build could be skipt
   echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
-docker-compose -f docker-compose-dev.yml build
+docker-compose -f ../docker-compose-dev.yml build
 DB_RETURN=$?
 if [[ $DB_RETURN -eq 0 ]] ; then
   echo -e "$GREEN""$BOLD""Finished building EMBArk docker images""$NC"
@@ -64,15 +66,13 @@ else
 fi
 
 echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
-docker-compose -f docker-compose-dev.yml up -d
+docker-compose -f ../docker-compose-dev.yml up -d
 DU_RETURN=$?
 if [[ $DU_RETURN -eq 0 ]] ; then
   echo -e "$GREEN""$BOLD""Finished setup mysql and redis docker images""$NC"
 else
   echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
 fi
-
-cd ./embark || exit 1
 
 if ! [[ -d ./logs ]]; then
   mkdir ./logs
@@ -95,7 +95,6 @@ pipenv run ./manage.py runapscheduler --test | tee -a ./logs/scheduler.log &
 echo -e "\n[""$BLUE JOB""$NC""] Starting uwsgi - log to /embark/logs/uwsgi.log"
 pipenv run uwsgi --wsgi-file ./embark/wsgi.py --http :8080 --processes 2 --threads 10 --logto ./logs/uwsgi.log &
 echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-echo "START DAPHNE" >./logs/daphne.log
-pipenv run daphne -v 3 --access-log ./logs/daphne.log -p 8001 -b 0.0.0.0 --root-path="$PWD" embark.asgi:application &>>./logs/daphne.log &
+pipenv run daphne -v 3 --access-log ./logs/daphne.log -p 8001 -b 0.0.0.0 --root-path="$PWD" embark.asgi:application &>./logs/daphne.log &
 
 wait 

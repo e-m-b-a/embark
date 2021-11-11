@@ -1,4 +1,5 @@
 #!/bin/bash
+cd "$(dirname "$0")" || exit 1
 echo -e "\n$GREEN""$BOLD""Reset docker container & networks""$NC"
 
 docker images
@@ -73,3 +74,5 @@ if docker network ls | grep -E "embark_backend"; then
   echo -e "$GREEN""$BOLD""Remove EMBArk_backend network""$NC"
   docker network rm "$NET_ID" 
 fi
+
+echo -e "$ORANGE""$BOLD""Consider running \$docker system prune""$NC"

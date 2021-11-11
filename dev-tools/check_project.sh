@@ -13,6 +13,10 @@
 # Contributer(s): Benedikt Kuehne
 
 # Description:  Check all scripts and templates(Django gets its own unit-tests)
+#               And check Django if its deployable
+
+cd "$(dirname "$0")" || exit 1
+cd .. || exit 1 
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -33,6 +37,11 @@ check_tools(){
   if [[ -z "$RES" ]];then
     echo -e "\\n""$RED""djlint(pip) is not installed correctly""$NC""\\n"
   fi
+}
+
+# checks django configuration
+check_django(){
+  pipenv run ./embark/manage.py check --deploy
 }
 
 # checks js-scripts with jshint for errors
@@ -186,7 +195,6 @@ pylinter(){
 }
 
 #main
-
 check_tools
 MODULES_TO_CHECK=0
 MODULES_TO_CHECK_ARR=()
@@ -195,6 +203,7 @@ jscheck
 templatechecker
 pycodestyle_check
 pylinter
+check_django
 
 
 

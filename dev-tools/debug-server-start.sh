@@ -10,7 +10,9 @@
 #
 # Author(s): Benedikt Kuehne
 
-# Description: Automates setup of developer enviroment
+# Description: Automates setup of developer enviroment for Debug-Server
+
+cd "$(dirname "$0")" || exit 1
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
