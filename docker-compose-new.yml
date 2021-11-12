@@ -19,7 +19,7 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     networks:
-      - backend
+      - embark_backend
 
   embark:
     image: embark:latest
