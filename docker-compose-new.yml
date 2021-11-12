@@ -54,7 +54,6 @@ services:
     depends_on:
         - embark_db
         - redis
-        - emba
 
   redis:
     image: "redis:5"
