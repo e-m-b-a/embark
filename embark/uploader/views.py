@@ -324,7 +324,7 @@ def html_report_download(request, analyze_id, html_path, download_file):
         file_path = request.path[1:]
     else:
         file_path = request.path
-    full_path = os.path.join(base_path, file_path)
+    full_path = os.path.normpath(os.path.join(base_path, file_path))
     logger.info("html_report - x: %s y: %s z: %s 1: %s", full_path, file_path, base_path, os.path.join(base_path, file_path))
     if full_path.startswith(base_path):
         with open(full_path, 'rb') as requested_file:
