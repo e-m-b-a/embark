@@ -319,12 +319,18 @@ def html_report_path(request, analyze_id, html_path, html_file):
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report_download(request, analyze_id, html_path, download_file):
-    report_path = Path(f'/app/emba{request.path}')
-
-    with open(report_path, 'rb') as requested_file:
-        response = HttpResponse(requested_file.read(), content_type="text/plain") 
-        response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(report_path)
-        return response
+    base_path = '/app/emba'
+    if request.path.startswith('/'):
+        file_path = request.path[1:]
+    else:
+        file_path = request.path
+    full_path = os.path.join(base_path, file_path)
+    logger.info("html_report - x: %s y: %s z: %s 1: %s", full_path, file_path, base_path, os.path.join(base_path, file_path))
+    if full_path.startswith(base_path):
+        with open(full_path, 'rb') as requested_file:
+            response = HttpResponse(requested_file.read(), content_type="text/plain") 
+            response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(full_path)
+            return response
 
 
 @csrf_exempt
