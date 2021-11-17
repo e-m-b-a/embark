@@ -268,23 +268,31 @@ def get_log(request, log_type, lines):
 @csrf_exempt
 @login_required(login_url='/' + settings.LOGIN_URL)
 def home(request):
-
-    html_body = get_template('uploader/mainDashboard.html')
-    return HttpResponse(html_body.render({'nav_switch': True, 'username': request.user.username}))
+    if Result.objects.all().count() > 0:
+        html_body = get_template('uploader/mainDashboard.html')
+        return HttpResponse(html_body.render({'nav_switch': True, 'username': request.user.username}))
+    else:
+        return HttpResponseRedirect("../../home/upload/1/")
 
 
 @csrf_exempt
 @login_required(login_url='/' + settings.LOGIN_URL)
 def main_dashboard(request):
-    html_body = get_template('uploader/mainDashboard.html')
-    return HttpResponse(html_body.render({'nav_switch': True, 'username': request.user.username}))
+    if Result.objects.all().count() > 0:
+        html_body = get_template('uploader/mainDashboard.html')
+        return HttpResponse(html_body.render({'nav_switch': True, 'username': request.user.username}))
+    else:
+        return HttpResponseRedirect("../../home/upload/1/")
 
 
 @csrf_exempt
 # @login_required()#login_url='/' + settings.LOGIN_URL)
 def main_dashboard_unauth(request):
-    html_body = get_template('uploader/mainDashboard.html')
-    return HttpResponse(html_body.render({'nav_switch': False, 'username': request.user.username}))
+    if Result.objects.all().count() > 0:
+        html_body = get_template('uploader/mainDashboard.html')
+        return HttpResponse(html_body.render({'nav_switch': False, 'username': request.user.username}))
+    else:
+        return HttpResponseRedirect("/")
 
 
 @csrf_exempt
