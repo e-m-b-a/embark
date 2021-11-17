@@ -268,6 +268,7 @@ def get_log(request, log_type, lines):
 @csrf_exempt
 @login_required(login_url='/' + settings.LOGIN_URL)
 def home(request):
+
     html_body = get_template('uploader/mainDashboard.html')
     return HttpResponse(html_body.render({'nav_switch': True, 'username': request.user.username}))
 
@@ -325,11 +326,11 @@ def html_report_download(request, analyze_id, html_path, download_file):
     else:
         file_path = request.path
     full_path = os.path.normpath(os.path.join(base_path, file_path))
-    logger.info("html_report - x: %s y: %s z: %s 1: %s", full_path, file_path, base_path, os.path.join(base_path, file_path))
     if full_path.startswith(base_path):
         with open(full_path, 'rb') as requested_file:
             response = HttpResponse(requested_file.read(), content_type="text/plain") 
             response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(full_path)
+            logger.info("html_report - analyze_id: %s html_path: %s download_file: %s", analyze_id, html_path, download_file)
             return response
 
 
