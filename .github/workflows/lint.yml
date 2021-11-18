@@ -13,13 +13,13 @@ jobs:
       uses: actions/checkout@v2
     - name: Install dependencies for linting
       run: |
-        apt-get install -y -q python3-dev npm pycodestyle pylint python3-pylint-django
+        sudo apt-get install -y -q python3-dev npm pycodestyle pylint python3-pylint-django
         npm install -g jshint
       shell: bash
     - name: Install djlint
       run: pip install djlint
       shell: python
     - name: Run checkproject
-      run: ./dev-tools/check_project.sh
+      run: sudo ./dev-tools/check_project.sh
       shell: bash
 
