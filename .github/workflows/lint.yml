@@ -16,7 +16,7 @@ jobs:
       run: |
         apt-get install -y -q python3-dev npm pycodestyle pylint python3-pylint-django
         npm install -g jshint
-        pip install djlint
+        python3 -m pip install djlint
    - name: Run checkproject
       run: |
         ./dev-tools/check-project.sh 
