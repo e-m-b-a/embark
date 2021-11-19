@@ -11,9 +11,10 @@ jobs:
     steps:
     - name: Checkout the Code
       uses: actions/checkout@v2
-    - run: echo "checkt out ${{ github.repository }} - Now in $pwd" 
+    - run: echo "checkt out ${{ github.repository }} - Now in $0 " 
     - name: Run build
       run: |
+        cd embark
         sudo installer.sh -d
         ./embark/runserver.sh 
         
