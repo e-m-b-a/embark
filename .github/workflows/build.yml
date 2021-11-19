@@ -12,6 +12,10 @@ jobs:
     steps:
     - name: Checkout the Code
       uses: actions/checkout@v2 
+    - name: Install python3
+      uses: actions/setup-python@v2
+      with:
+        python-version: "3.9"
     - name: Install-deps
       run: |
         sudo apt install -y python3-django python3-pip python3-dev pipenv 
