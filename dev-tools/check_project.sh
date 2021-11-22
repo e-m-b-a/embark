@@ -159,6 +159,28 @@ pycodestyle_check(){
   done
 }
 
+banditer() {
+  echo -e "\\n""$ORANGE""$BOLD""EMBArk bandit check""$NC""\\n""$BOLD""=================================================================""$NC"
+  if command -v bandit >/dev/null 2>&1; then
+    echo -e "\\n""$ORANGE""bandit found in PATH!""$NC""\\n"
+  else
+    echo -e "\\n""$ORANGE""bandit not found!""$NC""\\n""$ORANGE""Install bandit via 'apt-get install bandit'!""$NC\\n"
+    exit 1
+  fi
+
+  for PY_SCRIPT in "${PY_SCRIPTS[@]}"; do
+    echo -e "\\n""$GREEN""Run bandit on $PY_SCRIPT:""$NC""\\n"
+    if bandit "$PY_SCRIPT" 2> /dev/null | grep -q "No issues identified."; then
+      echo -e "$GREEN""$BOLD""==> SUCCESS""$NC""\\n"
+    else
+      bandit "$PY_SCRIPT"
+      echo -e "\\n""$ORANGE$BOLD==> FIX ERRORS""$NC""\\n"
+      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+      MODULES_TO_CHECK_ARR+=( "$PY_SCRIPT" )
+    fi
+  done
+
+}
 
 pylinter(){
   echo -e "\\n""$ORANGE""$BOLD""EMBArk pylint check""$NC""\\n""$BOLD""=================================================================""$NC"
@@ -202,6 +224,7 @@ shellchecker
 jscheck
 templatechecker
 pycodestyle_check
+banditer
 pylinter
 check_django
 

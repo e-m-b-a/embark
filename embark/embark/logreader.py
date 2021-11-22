@@ -66,7 +66,7 @@ class LogReader:
         self.module_count += 1
 
         # calculate percentage
-        percentage = self.module_count / 34
+        percentage = self.module_count / 47
 
         # set attributes of current message
         self.status_msg["module"] = stream_item_list[0]
