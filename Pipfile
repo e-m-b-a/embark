@@ -6,7 +6,6 @@ name = "pypi"
 [packages]
 ipython = "*"
 django-dotenv = "*"
-pycodestyle = "*"
 channels-redis = "*"
 channels = "==3.0.3"
 daphne = "*"
@@ -20,9 +19,11 @@ psutil = "*"
 Django = "*"
 uWSGI = "*"
 Rx = "*"
-djlint = "*"
+
 
 [dev-packages]
+pycodestyle = "*"
+djlint = "*"
 
 [requires]
 python_version = "3.9"
