@@ -11,10 +11,13 @@ jobs:
     steps:
     - name: Checkout Branch
       uses: actions/checkout@v2
-      run: echo "Checking out ${{ github.repository }}"
+    - name: Install python
+      uses: actions/setup-python@v2
+      with:
+        python-version: "3.9"
     - name: Install dependencies for linting
       run: |
-        apt-get install -y -q python3-dev npm pycodestyle pylint python3-pylint-django
+        apt-get install -y python3-dev npm pycodestyle pylint python3-pylint-django
         npm install -g jshint
         pip install djlint
    - name: Run checkproject

@@ -1,0 +1,35 @@
+name: Django Project checker
+
+on: [push]
+
+jobs:
+  django-integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - name: Checkout the Code
+      uses: actions/checkout@v2
+    - name: Get Python 3.9
+      uses: actions/setup-python@v2
+      with:
+        python-version: "3.9"
+    - name: Case try other python
+      if: ${{ failure() }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: "3.7"
+    - name: Install pipenv
+      run: python -m pip install --upgrade pipenv
+    - id: cache-pipenv
+      uses: actions/cache@v1
+      with:
+        path: ~/.local/share/virtualenvs/
+        key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }}
+    - name: Install Pipfile
+      if: steps.cache-pipenv.outputs.cache-hit != 'true'
+      run: pipenv install --deploy --dev
+    - name: Test Pipenv
+      run: pipenv run test -svvv
+    - name: Test Django 
+      run: pipenv run ./embark/manage.py check --deploy
