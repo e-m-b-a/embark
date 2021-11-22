@@ -18,9 +18,13 @@ jobs:
     - name: Install dependencies for linting
       run: |
         apt-get install -y python3-dev npm pycodestyle pylint python3-pylint-django
+
         npm install -g jshint
-        pip install djlint
-   - name: Run checkproject
-      run: |
-        ./dev-tools/check-project.sh 
+      shell: bash
+    - name: Install djlint
+      run: pip install djlint
+      shell: python
+    - name: Run checkproject
+      run: sudo ./dev-tools/check_project.sh
+      shell: bash
 
