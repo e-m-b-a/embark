@@ -271,8 +271,7 @@ def home(request):
     if Result.objects.all().count() > 0:
         html_body = get_template('uploader/mainDashboard.html')
         return HttpResponse(html_body.render({'nav_switch': True, 'username': request.user.username}))
-    else:
-        return HttpResponseRedirect("../../home/upload/1/")
+    return HttpResponseRedirect("../../home/upload/1/")
 
 
 @csrf_exempt
@@ -281,8 +280,7 @@ def main_dashboard(request):
     if Result.objects.all().count() > 0:
         html_body = get_template('uploader/mainDashboard.html')
         return HttpResponse(html_body.render({'nav_switch': True, 'username': request.user.username}))
-    else:
-        return HttpResponseRedirect("../../home/upload/1/")
+    return HttpResponseRedirect("../../home/upload/1/")
 
 
 @csrf_exempt
@@ -291,8 +289,7 @@ def main_dashboard_unauth(request):
     if Result.objects.all().count() > 0:
         html_body = get_template('uploader/mainDashboard.html')
         return HttpResponse(html_body.render({'nav_switch': False, 'username': request.user.username}))
-    else:
-        return HttpResponseRedirect("/")
+    return HttpResponseRedirect("/")
 
 
 @csrf_exempt
@@ -336,7 +333,7 @@ def html_report_download(request, analyze_id, html_path, download_file):
     full_path = os.path.normpath(os.path.join(base_path, file_path))
     if full_path.startswith(base_path):
         with open(full_path, 'rb') as requested_file:
-            response = HttpResponse(requested_file.read(), content_type="text/plain") 
+            response = HttpResponse(requested_file.read(), content_type="text/plain")
             response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(full_path)
             logger.info("html_report - analyze_id: %s html_path: %s download_file: %s", analyze_id, html_path, download_file)
             return response
