@@ -99,7 +99,7 @@ pipenv run ./embark/manage.py migrate | tee -a ./embark/logs/migration.log
 # pipenv run daphne -v 3 -p 8001 -b 0.0.0.0 --root-path="$PWD"/embark embark.asgi:application &>>./embark/logs/daphne.log &
 
 # start embark
-echo -e "$ORANGE""$BOLD""start embark server""$NC"
+echo -e "$ORANGE""$BOLD""start EMBArk server""$NC"
 pipenv run ./embark/manage.py runserver 8080 &
 
 wait %1

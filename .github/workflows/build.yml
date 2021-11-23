@@ -1,6 +1,6 @@
-# This workflow will run build embark in dev-mode
+# This workflow will run build EMBArk in dev-mode
 
-name: Build-Embark-DEV 
+name: Build-EMBArk-DEV 
 
 on: [push]
   
@@ -33,7 +33,7 @@ jobs:
           wget -O ./embark/static/external/css/datatable.css https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.css
           find ./embark/static/external/ -type f -exec sed -i '/sourceMappingURL/d' {} \;
       shell: bash
-    - name: Get Emba
+    - name: Get EMBA
       run: git clone https://github.com/e-m-b-a/emba.git
     - name: Start Debug-server-conf
       run: echo "TODO" # ./dev-tools/debug-server-start.sh  
