@@ -14,7 +14,7 @@
 
 cd "$(dirname "$0")" || exit 1
 
-RED='\033[0;31m'
+# RED='\033[0;31m'
 GREEN='\033[0;32m'
 ORANGE='\033[0;33m'
 BLUE='\033[0;34m'
