@@ -19,7 +19,6 @@ jobs:
       uses: palewire/install-python-pipenv-pipfile@v2
       with:
         python-version: 3.8
-      shell: bash
     - name: Run checkproject
       run: |
         sudo pipenv run ./dev-tools/check_project.sh
