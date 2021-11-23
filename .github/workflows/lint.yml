@@ -21,5 +21,6 @@ jobs:
         python-version: 3.9
     - name: Run checkproject
       run: |
+        pipenv install --dev
         pipenv run ./dev-tools/check_project.sh
 
