@@ -96,7 +96,7 @@ pipenv run ./embark/manage.py migrate | tee -a ./embark/logs/migration.log
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
 echo "START DAPHNE" >./embark/logs/daphne.log
-pipenv run daphne -v 3 --access-log ./embark/logs/daphne.log -p 8001 -b 0.0.0.0 --root-path="$PWD"/embark embark.asgi:application &>>./embark/logs/daphne.log &
+pipenv run daphne -v 3 -p 8001 -b 0.0.0.0 --root-path="$PWD"/embark embark.asgi:application &>>./embark/logs/daphne.log &
 
 # start embark
 echo -e "$ORANGE""$BOLD""start embark server""$NC"
