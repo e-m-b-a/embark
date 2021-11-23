@@ -182,7 +182,7 @@ class Firmware(models.Model):
         expert_mode=True, blank=True)
 
     # embark meta data
-    path_to_logs = models.FilePathField(default="/", blank=True)    # TODO change 
+    path_to_logs = models.FilePathField(default="/", blank=True)    # TODO change
     start_date = models.DateTimeField(default=datetime.now, blank=True)
     end_date = models.DateTimeField(default=datetime.min, blank=True)
     finished = models.BooleanField(default=False, blank=False)
