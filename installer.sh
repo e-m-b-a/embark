@@ -236,7 +236,7 @@ make_dev_env(){
     pipenv install -r ./embark/requirements.txt # installs pipenv in proj-root-dir
     pipenv install djlint
   else
-    pipenv install --dev --deploy
+    pipenv install --dev
     echo -e "$GREEN""$BOLD"" Done type $ pipenv shell to start python-env""$NC"
   fi
 
