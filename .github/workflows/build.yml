@@ -36,5 +36,5 @@ jobs:
     - name: Get Emba
       run: git clone https://github.com/e-m-b-a/emba.git
     - name: Start Debugg-server-conf
-      run: sudo pipenv run ./dev-tools/debug-start-server.sh
+      run: pipenv run ./dev-tools/debug-start-server.sh
       timeout-minutes: 5
