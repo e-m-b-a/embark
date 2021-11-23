@@ -109,12 +109,12 @@ shellchecker() {
   fi
 
   echo -e "\\n""$GREEN""Run shellcheck on this script:""$NC""\\n"
-  if shellcheck ./check_project.sh || [[ $? -ne 1 && $? -ne 2 ]]; then
+  if shellcheck ./dev-tools/check_project.sh || [[ $? -ne 1 && $? -ne 2 ]]; then
     echo -e "$GREEN""$BOLD""==> SUCCESS""$NC""\\n"
   else
     echo -e "\\n""$ORANGE$BOLD==> FIX ERRORS""$NC""\\n"
     ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
-    MODULES_TO_CHECK_ARR+=( "check_project.sh" )
+    MODULES_TO_CHECK_ARR+=( "dev-tools/check_project.sh" )
   fi
 
   echo -e "\\n""$GREEN""Find shell scripts and run shellcheck on them:""$NC""\\n"
