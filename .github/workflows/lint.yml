@@ -18,13 +18,15 @@ jobs:
     - name: Install pip
       run: sudo apt install -y python3-pip
     - name: Install pipenv
-      run: python -m pip install --upgrade pipenv
+      run: pipenv install
     - name: Install dependencies for linting
       run: |
         sudo apt-get install -y python3-dev npm pycodestyle pylint python3-pylint-django bandit
         sudo npm install -g jshint
       shell: bash
     - name: Run checkproject
-      run: pipenv shell && sudo ./dev-tools/check_project.sh
+      run: |
+        pipenv shell
+        sudo ./dev-tools/check_project.sh
       shell: bash
 
