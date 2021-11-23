@@ -18,10 +18,12 @@ jobs:
         python-version: "3.9"
     - name: Install-deps
       run: |
-        sudo apt install -y python3-django python3-pip python3-dev pipenv 
+        sudo apt install -y python3-django python3-pip python3-dev  
         sudo apt install -y build-essential default-libmysqlclient-dev
     - name: Setup pip-env
-      run: pipenv install
+      run: |
+        pip install --user pipenv
+        pipenv install --dev
     - name: Get externals
       run: |
           mkdir -p ./embark/static/external/{scripts,css}
@@ -38,5 +40,5 @@ jobs:
     - name: Get Emba
       run: git clone https://github.com/e-m-b-a/emba.git
     - name: Start Debugg-server-conf
-      run: sudo ./dev-tools/debug-start-server.sh
+      run: sudo pipenv run ./dev-tools/debug-start-server.sh
       timeout-minutes: 5

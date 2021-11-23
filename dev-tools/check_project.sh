@@ -33,7 +33,7 @@ check_tools(){
       exit 1
     fi
   done
-  python3 djlint --version | grep "version"; RES=$?
+  pipenv djlint --version | grep "version"; RES=$?
   if [[ -z "$RES" ]];then
     echo -e "\\n""$RED""djlint(pip) is not installed correctly""$NC""\\n"
   fi
@@ -41,7 +41,7 @@ check_tools(){
 
 # checks django configuration
 check_django(){
-  python3 ./embark/manage.py check --deploy
+  pipenv run ./embark/manage.py check --deploy
 }
 
 # checks js-scripts with jshint for errors
@@ -78,7 +78,7 @@ templatechecker(){
   mapfile -t HTML_FILE < <(find ./embark -iname "*.html")
   for HTML_FILE in "${HTML_FILE[@]}"; do
     echo -e "\\n""$GREEN""Run djlint on $HTML_FILE:""$NC""\\n"
-    python3 djlint "$HTML_FILE"
+    pipenv run djlint "$HTML_FILE"
     RES=$?
     if [[ $RES -eq 1 ]]; then
       echo -e "\\n""$ORANGE$BOLD==> FIX ERRORS""$NC""\\n"
@@ -149,7 +149,7 @@ pycodestyle_check(){
   mapfile -t PY_SCRIPTS < <(find embark -iname "*.py")
   for PY_SCRIPT in "${PY_SCRIPTS[@]}"; do
     echo -e "\\n""$GREEN""Run pycodestyle on $PY_SCRIPT:""$NC""\\n"
-    if python3 "$PYCODESTYLE" --first "$PY_SCRIPT" || [[ $? -ne 1 && $? -ne 2 ]]; then
+    if pipenv run "$PYCODESTYLE" --first "$PY_SCRIPT" || [[ $? -ne 1 && $? -ne 2 ]]; then
       echo -e "$GREEN""$BOLD""==> SUCCESS""$NC""\\n"
     else
       echo -e "\\n""$ORANGE$BOLD==> FIX ERRORS""$NC""\\n"
@@ -188,7 +188,7 @@ pylinter(){
   mapfile -t PY_SCRIPTS < <(find embark -type d -name migrations -prune -false -o -iname "*.py")
   for PY_SCRIPT in "${PY_SCRIPTS[@]}"; do
     echo -e "\\n""$GREEN""Run pylint on $PY_SCRIPT:""$NC""\\n"
-    mapfile -t PY_RESULT < <(python3 pylint --max-line-length=240 -d C0115,C0114,C0116,W0511,W0703 --load-plugins pylint_django "$PY_SCRIPT")
+    mapfile -t PY_RESULT < <(pipenv run pylint --max-line-length=240 -d C0115,C0114,C0116,W0511,W0703 --load-plugins pylint_django "$PY_SCRIPT")
     local RATING_10=0
     if [[ "${#PY_RESULT[@]}" -gt 0 ]]; then 
       if ! printf '%s\n' "${PY_RESULT[@]}" | grep -q -P '^Your code has been rated at 10'; then
@@ -211,7 +211,7 @@ pylinter(){
   done
 
   echo -e "\\n""$GREEN""Run pylint on all scripts:""$NC""\\n"
-  python3 pylint --max-line-length=240 -d C0115,C0114,C0116,W0511,W0703 --load-plugins pylint_django embark/* | grep "Your code has been rated"
+  pipenv run pylint --max-line-length=240 -d C0115,C0114,C0116,W0511,W0703 --load-plugins pylint_django embark/* | grep "Your code has been rated"
   # current rating: 9.52/10
   # start rating: 5.58/10
 }

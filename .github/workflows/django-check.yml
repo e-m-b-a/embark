@@ -28,7 +28,7 @@ jobs:
         key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }}
     - name: Install Pipfile
       if: steps.cache-pipenv.outputs.cache-hit != 'true'
-      run: pipenv install --deploy --dev
+      run: pipenv install --dev
     - name: Test Pipenv
       run: pipenv run test -svvv
     - name: Test Django 
