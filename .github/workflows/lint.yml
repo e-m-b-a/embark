@@ -28,7 +28,6 @@ jobs:
         pipenv install --dev
     - name: Run checkproject
       run: |
-        pipenv shell
         sudo ./dev-tools/check_project.sh
       shell: bash
 
