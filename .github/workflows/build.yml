@@ -36,5 +36,5 @@ jobs:
     - name: Get Emba
       run: git clone https://github.com/e-m-b-a/emba.git
     - name: Start Debugg-server-conf
-      run: bash ./dev-tools/debug-start-server.sh
+      run: ./dev-tools/debug-server-start.sh  
       timeout-minutes: 5
