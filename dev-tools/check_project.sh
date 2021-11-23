@@ -220,7 +220,7 @@ pylinter(){
 check_tools
 MODULES_TO_CHECK=0
 MODULES_TO_CHECK_ARR=()
-shellchecker 
+shellchecker
 jscheck
 templatechecker
 pycodestyle_check
