@@ -26,7 +26,7 @@ print_help() {
   echo -e "\\n""$CYAN""USAGE""$NC"
   echo -e "$CYAN-F$NC         Installation of EMBArk with all dependencies (typical initial installation)"
   echo -e "$CYAN-r$NC         Reinstallation of EMBArk with all dependencies (cleanup of docker environment first)"
-  echo -e "$RED               ! This Delets all Images as well !""$NC"
+  echo -e "$RED               ! This deletes all Docker-Images as well !""$NC"
   echo -e "$CYAN-e$NC         Install emba only"
   echo -e "$CYAN-h$NC         Print this help message"
   echo -e "$CYAN-d$NC         Build Development-Enviroment for Embark"
@@ -34,7 +34,7 @@ print_help() {
 }
 
 install_emba() {
-  echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner emba on host""$NC"
+  echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner EMBA on host""$NC"
 
   if [[ "$REFORCE" -eq 1 && -d ./emba ]]; then
     rm ./emba -r
@@ -271,7 +271,7 @@ make_dev_env(){
   # install on host 
   if ! [[ "$RES" == "Already up to date." ]]; then
     cd emba || exit 1
-    ./installer.sh -F 
+    ./installer.sh -d
     cd .. || exit 1
   fi
   
