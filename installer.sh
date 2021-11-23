@@ -213,7 +213,6 @@ install_debs() {
   if ! command -v docker-compose > /dev/null ; then
     apt-get install -y -q docker-compose
   fi
-
   #TODO put all these into dev
   if ! command -v pycodestyle > /dev/null ; then 
     apt-get install -y -q pycodestyle
