@@ -12,7 +12,7 @@ from django.conf import settings
 from django.forms import model_to_dict
 from django.shortcuts import render     # , redirect
 from django.template.loader import get_template
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse # , StreamingHttpResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse    # , StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
