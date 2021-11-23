@@ -226,7 +226,7 @@ templatechecker
 pycodestyle_check
 banditer
 pylinter
-check_django
+#check_django TODO
 
 
 
