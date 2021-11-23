@@ -153,7 +153,7 @@ class Firmware(models.Model):
     cwe_checker = BooleanFieldExpertMode(
         help_text='Enables cwe-checker,-c will be added', default=False, expert_mode=True, blank=True)
     dev_mode = BooleanFieldExpertMode(
-        help_text='Run emba in developer mode, -D will be added ', default=True, expert_mode=True, blank=True)
+        help_text='Run emba in developer mode, -D will be added ', default=False, expert_mode=True, blank=True)
     deep_extraction = BooleanFieldExpertMode(
         help_text='Enable deep extraction, -x will be added', default=False, expert_mode=True, blank=True)
     log_path = BooleanFieldExpertMode(
