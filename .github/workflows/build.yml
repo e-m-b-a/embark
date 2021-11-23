@@ -12,18 +12,14 @@ jobs:
     steps:
     - name: Checkout the Code
       uses: actions/checkout@v2 
-    - name: Install python3
-      uses: actions/setup-python@v2
+    - name: Install Python, pipenv and Pipfile packages
+      uses: palewire/install-python-pipenv-pipfile@v2
       with:
-        python-version: "3.9"
+        python-version: 3.8
     - name: Install-deps
       run: |
-        sudo apt install -y python3-django python3-pip python3-dev  
+        sudo apt install -y python3-django python3-dev  
         sudo apt install -y build-essential default-libmysqlclient-dev
-    - name: Setup pip-env
-      run: |
-        pip install --user pipenv
-        pipenv install --dev
     - name: Get externals
       run: |
           mkdir -p ./embark/static/external/{scripts,css}

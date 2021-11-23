@@ -11,21 +11,15 @@ jobs:
     steps:
     - name: Checkout Branch
       uses: actions/checkout@v2
-    - name: Install python
-      uses: actions/setup-python@v2
-      with:
-        python-version: "3.9"
-    - name: Install pip
-      run: sudo apt install -y python3-pip
     - name: Install dependencies for linting
       run: |
         sudo apt-get install -y python3-dev npm pycodestyle pylint python3-pylint-django bandit
         sudo npm install -g jshint
+    - name: Install Python, pipenv and Pipfile packages
+      uses: palewire/install-python-pipenv-pipfile@v2
+      with:
+        python-version: 3.8
       shell: bash
-    - name: Install pipenv
-      run: |
-        pip install --user pipenv
-        pipenv install --dev
     - name: Run checkproject
       run: |
         sudo pipenv run ./dev-tools/check_project.sh
