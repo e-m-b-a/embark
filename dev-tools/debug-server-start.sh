@@ -10,7 +10,7 @@
 #
 # Author(s): Benedikt Kuehne
 
-# Description: Automates setup of developer enviroment for Debug-Server
+# Description: Automates setup of developer environment for Debug-Server
 
 cd "$(dirname "$0")" || exit 1
 
@@ -94,9 +94,9 @@ pipenv run ./embark/manage.py migrate | tee -a ./embark/logs/migration.log
 # echo -e "\n[""$BLUE JOB""$NC""] Starting uwsgi - log to /embark/logs/uwsgi.log"
 # pipenv run uwsgi --wsgi-file ./embark/embark/wsgi.py --http :80 --processes 2 --threads 10 --logto ./embark/logs/uwsgi.log &
 
-echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-echo "START DAPHNE" >./embark/logs/daphne.log
-pipenv run daphne -v 3 -p 8001 -b 0.0.0.0 --root-path="$PWD"/embark embark.asgi:application &>>./embark/logs/daphne.log &
+# echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
+# echo "START DAPHNE" >./embark/logs/daphne.log
+# pipenv run daphne -v 3 -p 8001 -b 0.0.0.0 --root-path="$PWD"/embark embark.asgi:application &>>./embark/logs/daphne.log &
 
 # start embark
 echo -e "$ORANGE""$BOLD""start embark server""$NC"
