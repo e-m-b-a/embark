@@ -236,4 +236,6 @@ if [[ "${#MODULES_TO_CHECK_ARR[@]}" -gt 0 ]]; then
   for MODULE in "${MODULES_TO_CHECK_ARR[@]}"; do
     echo -e "$ORANGE$BOLD==> FIX MODULE: ""$MODULE""$NC"
   done
+  exit 1
 fi
+exit 0
