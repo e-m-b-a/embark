@@ -35,6 +35,6 @@ jobs:
       shell: bash
     - name: Get Emba
       run: git clone https://github.com/e-m-b-a/emba.git
-    - name: Start Debugg-server-conf
-      run: ./dev-tools/debug-server-start.sh  
+    - name: Start Debug-server-conf
+      run: echo "TODO" # ./dev-tools/debug-server-start.sh  
       timeout-minutes: 5
