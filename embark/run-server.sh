@@ -17,8 +17,8 @@ cd "$(dirname "$0")" || exit 1
 
 GREEN='\033[0;32m'
 ORANGE='\033[0;33m'
-BLUE='\033[0;34m'
-# BOLD='\033[1m'
+# BLUE='\033[0;34m'
+BOLD='\033[1m'
 NC='\033[0m' # no color
 
 export DJANGO_SETTINGS_MODULE=embark.settings
