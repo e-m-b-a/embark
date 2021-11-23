@@ -1,4 +1,16 @@
 #!/bin/bash
+# EMBArk - The firmware security scanning environment
+#
+# Copyright 2020-2021 Siemens Energy AG
+# Copyright 2020-2021 Siemens AG
+#
+# EMBArk comes with ABSOLUTELY NO WARRANTY.
+#
+# EMBArk is licensed under MIT
+#
+# Author(s): Benedikt Kuehne
+
+# Description:  Script for cleaning up all docker- container and images
 cd "$(dirname "$0")" || exit 1
 echo -e "\n$GREEN""$BOLD""Reset docker container & networks""$NC"
 
