@@ -15,9 +15,11 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: "3.9"
+    - name: Install pipenv
+      run: python -m pip install --upgrade pipenv
     - name: Install dependencies for linting
       run: |
-        sudo apt-get install -y python3-dev npm pycodestyle pylint python3-pylint-django
+        sudo apt-get install -y python3-dev npm pycodestyle pylint python3-pylint-django bandit
         sudo npm install -g jshint
       shell: bash
     - name: Run checkproject

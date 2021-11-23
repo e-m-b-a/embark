@@ -95,6 +95,6 @@ pipenv run ./manage.py runapscheduler --test | tee -a ./logs/scheduler.log &
 echo -e "\n[""$BLUE JOB""$NC""] Starting uwsgi - log to /embark/logs/uwsgi.log"
 pipenv run uwsgi --wsgi-file ./embark/wsgi.py --http :8080 --processes 2 --threads 10 --logto ./logs/uwsgi.log &
 echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-pipenv run daphne -v 3 --access-log ./logs/daphne.log -p 8001 -b 0.0.0.0 --root-path="$PWD" embark.asgi:application &>./logs/daphne.log &
+pipenv run daphne -v 3 --access-log ./logs/daphne.log -p 8001 -b 0.0.0.0 --root-path="$PWD" embark.asgi:application 1>/dev/null &
 
 wait 
