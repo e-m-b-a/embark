@@ -134,9 +134,9 @@ shellchecker() {
 pycodestyle_check(){
   echo -e "\\n""$ORANGE""$BOLD""EMBArk pycodestyle check""$NC""\\n""$BOLD""=================================================================""$NC"
   echo -e "[*] Searching python files and test with pycodestyle.py"
-  if command -v pycodstyle.py >/dev/null 2>&1; then
+  if command -v pipenv run pycodstyle >/dev/null 2>&1; then
     echo -e "\\n""$ORANGE""pycodestyle found in PATH!""$NC""\\n"
-    PYCODESTYLE="pycodestyle.py"
+    PYCODESTYLE="pycodestyle"
   elif [[ -f "/usr/lib/python3/dist-packages/pycodestyle.py" ]]; then
     echo -e "\\n""$ORANGE""pycodestyle found!""$NC""\\n"
     PYCODESTYLE="/usr/lib/python3/dist-packages/pycodestyle.py"
