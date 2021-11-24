@@ -33,7 +33,7 @@ check_tools(){
       exit 1
     fi
   done
-  pipenv djlint --version | grep "version"; RES=$?
+  pipenv run djlint --version | grep "version"; RES=$?
   if [[ -z "$RES" ]];then
     echo -e "\\n""$RED""djlint(pip) is not installed correctly""$NC""\\n"
   fi
