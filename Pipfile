@@ -20,10 +20,10 @@ Django = "*"
 uWSGI = "*"
 Rx = "*"
 
-
 [dev-packages]
 pycodestyle = "*"
 djlint = "*"
+pylint-django = "*"
 
 [requires]
 python_version = "3.9"

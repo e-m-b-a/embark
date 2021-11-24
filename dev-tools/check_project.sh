@@ -15,6 +15,8 @@
 # Description:  Check all scripts and templates(Django gets its own unit-tests)
 #               And check Django if its deployable
 
+export DJANGO_SETTINGS_MODULE=embark.settings
+
 cd "$(dirname "$0")" || exit 1
 cd .. || exit 1 
 
@@ -184,11 +186,10 @@ banditer() {
 
 pylinter(){
   echo -e "\\n""$ORANGE""$BOLD""EMBArk pylint check""$NC""\\n""$BOLD""=================================================================""$NC"
-  echo -e "[*] Do not forget to install the pylint-django plugin (e.g. apt-get install python3-pylint-django)" 
   mapfile -t PY_SCRIPTS < <(find embark -type d -name migrations -prune -false -o -iname "*.py")
   for PY_SCRIPT in "${PY_SCRIPTS[@]}"; do
     echo -e "\\n""$GREEN""Run pylint on $PY_SCRIPT:""$NC""\\n"
-    mapfile -t PY_RESULT < <(pipenv run pylint --max-line-length=240 -d C0115,C0114,C0116,W0511,W0703 --load-plugins pylint_django "$PY_SCRIPT")
+    mapfile -t PY_RESULT < <(pipenv run pylint "$PY_SCRIPT")
     local RATING_10=0
     if [[ "${#PY_RESULT[@]}" -gt 0 ]]; then 
       if ! printf '%s\n' "${PY_RESULT[@]}" | grep -q -P '^Your code has been rated at 10'; then
