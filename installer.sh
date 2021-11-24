@@ -263,8 +263,9 @@ make_dev_env(){
   fi
 
   #Add Symlink
-  ln -s "$PWD" /app || exit 1
-  
+  if ! [[ -d /app ]]; then
+    ln -s "$PWD" /app || exit 1
+  fi
   # download images for container
   docker-compose -f ../docker-compose-dev.yml build
 }
