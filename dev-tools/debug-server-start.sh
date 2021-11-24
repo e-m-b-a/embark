@@ -57,7 +57,7 @@ export SECRET_KEY="$DJANGO_SECRET_KEY"
 
 # setup dbs-container and detach build could be skipt
 echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
-docker-compose -f docker-compose-dev.yml build
+sudo docker-compose -f docker-compose-dev.yml build
 DB_RETURN=$?
 if [[ $DB_RETURN -eq 0 ]] ; then
   echo -e "$GREEN""$BOLD""Finished building EMBArk docker images""$NC"
@@ -66,7 +66,7 @@ else
 fi
 
 echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
-docker-compose -f docker-compose-dev.yml up -d
+sudo docker-compose -f docker-compose-dev.yml up -d
 DU_RETURN=$?
 if [[ $DU_RETURN -eq 0 ]] ; then
   echo -e "$GREEN""$BOLD""Finished setup mysql and redis docker images""$NC"

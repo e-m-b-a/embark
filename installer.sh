@@ -231,19 +231,7 @@ make_dev_env(){
   install_debs
   apt-get install -y -q python3-dev default-libmysqlclient-dev build-essential sqlite3 pipenv npm
   npm install -g jshint # global install
-  if ! [[ -f ./Pipfile ]]; then
-    echo -e "$GREEN""$BOLD""Pipenv installing""$NC"
-    pipenv install -r ./embark/requirements.txt # installs pipenv in proj-root-dir
-    pipenv install djlint
-  else
-    pipenv install --dev
-    echo -e "$GREEN""$BOLD"" Done type $ pipenv shell to start python-env""$NC"
-  fi
-
-  if ! [[ -f ./Pipfile ]]; then
-    echo -e "$RED""$BOLD"" pipenv failed to build""$NC"
-    exit 1
-  fi
+  pipenv install --dev
   # download externals
   if ! [[ -d embark/static/external ]]; then
     echo -e "\n$GREEN""$BOLD""Downloading of external files, e.g. jQuery, for the offline usability of EMBArk""$NC"
@@ -273,7 +261,12 @@ make_dev_env(){
     ./installer.sh -d
     cd .. || exit 1
   fi
+
+  #Add Symlink
+  ln -s "$PWD" /app || exit 1
   
+  # download images for container
+  docker-compose -f ../docker-compose-dev.yml build
 }
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
