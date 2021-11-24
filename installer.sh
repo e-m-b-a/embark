@@ -267,7 +267,7 @@ make_dev_env(){
     ln -s "$PWD" /app || exit 1
   fi
   # download images for container
-  docker-compose -f ../docker-compose-dev.yml build
+  docker-compose -f ./docker-compose-dev.yml build
 }
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
