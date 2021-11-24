@@ -14,6 +14,10 @@
 
 cd "$(dirname "$0")" || exit 1
 
+if ! [[ $EUID -eq 0 ]] && [[ $LIST_DEP -eq 0 ]] ; then
+  echo -e "\\n$RED""Run EMBArk run-server script with root permissions! (Docker)""$NC\\n"
+  exit 1
+fi
 
 GREEN='\033[0;32m'
 ORANGE='\033[0;33m'
@@ -93,8 +97,8 @@ docker container logs embark_db_dev -f &> ./logs/mysql_dev.log &
 echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
 pipenv run ./manage.py runapscheduler --test | tee -a ./logs/scheduler.log &
 echo -e "\n[""$BLUE JOB""$NC""] Starting uwsgi - log to /embark/logs/uwsgi.log"
-pipenv run uwsgi --wsgi-file ./embark/wsgi.py --http :8080 --processes 2 --threads 10 --logto ./logs/uwsgi.log &
+pipenv run uwsgi --wsgi-file ./embark/wsgi.py --http :80 --processes 2 --threads 10 --logto ./logs/uwsgi.log &
 echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-pipenv run daphne -v 3 --access-log ./logs/daphne.log -p 8001 -b 0.0.0.0 --root-path="$PWD" embark.asgi:application 1>/dev/null &
+pipenv run daphne -v 3 --access-log ./logs/daphne.log -p 8001 -b '0.0.0.0' --root-path="$PWD" embark.asgi:application 1>/dev/null &
 
 wait 
