@@ -268,6 +268,9 @@ make_dev_env(){
   fi
   # download images for container
   docker-compose -f ./docker-compose-dev.yml build
+
+  echo -e "$GREEN""$BOLD""Ready to use ./embark/run-server.sh or ./dev-tools/debug-server-start.sh ""$NC"
+  echo -e "$GREEN""$BOLD""Which starts the server eihter on port 80 or 8080""$NC"
 }
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
