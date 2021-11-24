@@ -80,6 +80,7 @@ fi
 
 if ! [[ -d ./logs ]]; then
   mkdir ./logs
+  #TODO add chown or make script run as non root
 fi
 
 # db_init
