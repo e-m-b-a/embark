@@ -19,6 +19,11 @@ jobs:
       uses: palewire/install-python-pipenv-pipfile@v2
       with:
         python-version: 3.9
+    - name: Make dirs
+      run: |
+        mkdir ./embark/logs
+        touch ./embark/logs/web.log
+        mkdir ./embark/uploadFirmwareImages
     - name: Run checkproject
       run: |
         pipenv install --dev
