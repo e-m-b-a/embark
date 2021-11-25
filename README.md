@@ -25,7 +25,7 @@ Furthermore *EMBArk* improves the data provision by aggregating the various scan
 ## Automated setup (on Kali Linux)
 1. Checkout the repository (e.g. `git clone https://github.com/e-m-b-a/embark.git`)
 2. Change directory to root of the repository i.e `cd embark`
-3. Run `sudo ./installer.sh -r` to force install all the dependencies on host. This rebuilds the complete docker environment including a fresh *EMBA* installation.
+3. Run `sudo ./installer.sh -d ` to run the default installation.
 4. Further details are available in the wiki (See [installation](https://github.com/e-m-b-a/embark/wiki/Installation))
 5. If you are running into issues or need to install *EMBArk* manually please take a look at the wiki (See [build instructions](https://github.com/e-m-b-a/embark/wiki/Build-EMBArk))
 
