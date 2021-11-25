@@ -2,8 +2,16 @@
 
 name: Lint with pycodestyle (former pep8) [ Python 3.7 ]
 
-on: push
-
+on:
+  push:
+    branches:    
+      - '**'        # matches every branch
+  pull_request:
+    branches:
+      - '**'
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+  
 jobs:
 
   build:
