@@ -25,6 +25,7 @@ export DJANGO_SETTINGS_MODULE=embark.settings
 
 echo -e "\n$GREEN""$BOLD""Configuring Embark""$NC"
 
+cd .. || exit 1
 
 # setup .env with dev network
 DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
@@ -57,7 +58,7 @@ export SECRET_KEY="$DJANGO_SECRET_KEY"
 
 # setup dbs-container and detach build could be skipt
 echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
-sudo docker-compose -f ../docker-compose-dev.yml build
+sudo docker-compose -f ./docker-compose-dev.yml build
 DB_RETURN=$?
 if [[ $DB_RETURN -eq 0 ]] ; then
   echo -e "$GREEN""$BOLD""Finished building EMBArk docker images""$NC"
@@ -66,7 +67,7 @@ else
 fi
 
 echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
-sudo docker-compose -f ../docker-compose-dev.yml up -d
+sudo docker-compose -f ./docker-compose-dev.yml up -d
 DU_RETURN=$?
 if [[ $DU_RETURN -eq 0 ]] ; then
   echo -e "$GREEN""$BOLD""Finished setup mysql and redis docker images""$NC"
@@ -74,42 +75,35 @@ else
   echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
 fi
 
-if ! [[ -d ../embark/logs ]]; then
-  mkdir ../embark/logs
+if ! [[ -d ./embark/logs ]]; then
+  mkdir ./embark/logs
 fi
 
 # db_init
 echo -e "[*] Starting migrations - log to embark/logs/migration.log"
-pipenv run ../embark/manage.py makemigrations users uploader | tee -a ../embark/logs/migration.log
-pipenv run ../embark/manage.py migrate | tee -a ../embark/logs/migration.log
+pipenv run ./embark/manage.py makemigrations users uploader | tee -a ../embark/logs/migration.log
+pipenv run ./embark/manage.py migrate | tee -a ../embark/logs/migration.log
 
-# echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./embark/logs/redis_dev.log""$NC" 
-# docker container logs embark_redis_dev -f > ./embark/logs/redis_dev.log & # TODO test if this is quiet???
-# echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.log""$NC"
-# docker container logs embark_db_dev -f > ./embark/logs/mysql_dev.log & 
+echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./embark/logs/redis_dev.log""$NC" 
+docker container logs embark_redis_dev -f > ./embark/logs/redis_dev.log &
+echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.log""$NC"
+docker container logs embark_db_dev -f > ./embark/logs/mysql_dev.log & 
 
 # run middlewears
 # echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
 # pipenv run ./embark/manage.py runapscheduler --test | tee -a ./embark/logs/migration.log &
 # echo -e "\n[""$BLUE JOB""$NC""] Starting uwsgi - log to /embark/logs/uwsgi.log"
 # pipenv run uwsgi --wsgi-file ./embark/embark/wsgi.py --http :80 --processes 2 --threads 10 --logto ./embark/logs/uwsgi.log &
-
 # echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
 # echo "START DAPHNE" >./embark/logs/daphne.log
 # pipenv run daphne -v 3 -p 8001 -b 0.0.0.0 --root-path="$PWD"/embark embark.asgi:application &>>./embark/logs/daphne.log &
 
 # start embark
 echo -e "$ORANGE""$BOLD""start EMBArk server""$NC"
-pipenv run ../embark/manage.py runserver 8080 &
+pipenv run ../embark/manage.py runserver 8080 
 
 wait %1
 wait %2
 kill -9 -1
 
-# TODO cleanup
-# if TODO ping -c 1 -I embark_dev -W 1 embark_db_dev; then
-#  echo -e "\n$GREEN""$BOLD""  ==> Building Developent-Enviroment for EMBArk Done""$NC"
-# else 
-#  echo -e "\n$RED""$BOLD""  ==> Building Developent-Enviroment for EMBArk FAILED""$NC"
-# fi
 echo -e "\n$ORANGE""$BOLD""Done. To clean-up use the clean-setup script""$NC"
