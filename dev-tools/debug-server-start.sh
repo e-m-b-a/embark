@@ -54,7 +54,7 @@ export SECRET_KEY="$DJANGO_SECRET_KEY"
   echo "REDIS_HOST=$REDIS_HOST"
   echo "REDIS_PORT=$REDIS_PORT"
   echo "SECRET_KEY=$DJANGO_SECRET_KEY"
-} > ../.env
+} > .env
 
 # setup dbs-container and detach build could be skipt
 echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
@@ -81,8 +81,8 @@ fi
 
 # db_init
 echo -e "[*] Starting migrations - log to embark/logs/migration.log"
-pipenv run ./embark/manage.py makemigrations users uploader | tee -a ../embark/logs/migration.log
-pipenv run ./embark/manage.py migrate | tee -a ../embark/logs/migration.log
+pipenv run ./embark/manage.py makemigrations users uploader | tee -a ./embark/logs/migration.log
+pipenv run ./embark/manage.py migrate | tee -a ./embark/logs/migration.log
 
 echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./embark/logs/redis_dev.log""$NC" 
 docker container logs embark_redis_dev -f > ./embark/logs/redis_dev.log &
@@ -100,7 +100,7 @@ docker container logs embark_db_dev -f > ./embark/logs/mysql_dev.log &
 
 # start embark
 echo -e "$ORANGE""$BOLD""start EMBArk server""$NC"
-pipenv run ../embark/manage.py runserver 8080 
+pipenv run ./embark/manage.py runserver 8080 
 
 wait %1
 wait %2
