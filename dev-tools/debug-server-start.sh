@@ -53,11 +53,11 @@ export SECRET_KEY="$DJANGO_SECRET_KEY"
   echo "REDIS_HOST=$REDIS_HOST"
   echo "REDIS_PORT=$REDIS_PORT"
   echo "SECRET_KEY=$DJANGO_SECRET_KEY"
-} > .env
+} > ../.env
 
 # setup dbs-container and detach build could be skipt
 echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
-sudo docker-compose -f docker-compose-dev.yml build
+sudo docker-compose -f ../docker-compose-dev.yml build
 DB_RETURN=$?
 if [[ $DB_RETURN -eq 0 ]] ; then
   echo -e "$GREEN""$BOLD""Finished building EMBArk docker images""$NC"
@@ -66,7 +66,7 @@ else
 fi
 
 echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
-sudo docker-compose -f docker-compose-dev.yml up -d
+sudo docker-compose -f ../docker-compose-dev.yml up -d
 DU_RETURN=$?
 if [[ $DU_RETURN -eq 0 ]] ; then
   echo -e "$GREEN""$BOLD""Finished setup mysql and redis docker images""$NC"
@@ -74,14 +74,14 @@ else
   echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
 fi
 
-if ! [[ -d ./embark/logs ]]; then
-  mkdir ./embark/logs
+if ! [[ -d ../embark/logs ]]; then
+  mkdir ../embark/logs
 fi
 
 # db_init
 echo -e "[*] Starting migrations - log to embark/logs/migration.log"
-pipenv run ./embark/manage.py makemigrations users uploader | tee -a ./embark/logs/migration.log
-pipenv run ./embark/manage.py migrate | tee -a ./embark/logs/migration.log
+pipenv run ../embark/manage.py makemigrations users uploader | tee -a ../embark/logs/migration.log
+pipenv run ../embark/manage.py migrate | tee -a ../embark/logs/migration.log
 
 # echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./embark/logs/redis_dev.log""$NC" 
 # docker container logs embark_redis_dev -f > ./embark/logs/redis_dev.log & # TODO test if this is quiet???
@@ -100,7 +100,7 @@ pipenv run ./embark/manage.py migrate | tee -a ./embark/logs/migration.log
 
 # start embark
 echo -e "$ORANGE""$BOLD""start EMBArk server""$NC"
-pipenv run ./embark/manage.py runserver 8080 &
+pipenv run ../embark/manage.py runserver 8080 &
 
 wait %1
 wait %2
