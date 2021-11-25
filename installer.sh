@@ -162,7 +162,7 @@ install_embark() {
   fi
 
   echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
-  docker-compose -f ./docker-compose.yml build  #!!CHANGED
+  docker-compose build
   DB_RETURN=$?
   if [[ $DB_RETURN -eq 0 ]] ; then
     echo -e "$GREEN""$BOLD""Finished building EMBArk docker images""$NC"
@@ -171,7 +171,7 @@ install_embark() {
   fi
 
   echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
-  docker-compose -f ./docker-compose.yml up -d  #!!CHANGED
+  docker-compose up -d
   DU_RETURN=$?
   if [[ $DU_RETURN -eq 0 ]] ; then
     echo -e "$GREEN""$BOLD""Finished setup mysql and redis docker images""$NC"

@@ -307,7 +307,7 @@ def html_report(request, analyze_id, html_file):
 
     html_body = get_template(report_path)
     logger.info("html_report - analyze_id: %s html_file: %s", analyze_id, html_file)
-    return HttpResponse(html_body.render({'embarkBackUrl': request.META.get('HTTP_REFERER') }))
+    return HttpResponse(html_body.render({'embarkBackUrl': request.META.get('HTTP_REFERER')}))
 
 
 @csrf_exempt
