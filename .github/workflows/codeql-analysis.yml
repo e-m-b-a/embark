@@ -13,10 +13,13 @@ name: "CodeQL"
 
 on:
   push:
-    branches: [ main ]
+    branches:    
+      - '**'        # matches every branch
   pull_request:
-    # The branches below must be a subset of the branches above
-    branches: [ main ]
+    branches:
+      - '**'
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
   schedule:
     - cron: '37 11 * * 6'
 
