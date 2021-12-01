@@ -259,7 +259,7 @@ make_dev_env(){
     ln -s "$PWD" /app || exit 1
   fi
   # download images for container
-  docker-compose -f ./docker-compose-dev.yml build
+  docker-compose -f ./docker-compose-dev.yml up --no-start
 
   echo -e "$GREEN""$BOLD""Ready to use ./embark/run-server.sh or ./dev-tools/debug-server-start.sh ""$NC"
   echo -e "$GREEN""$BOLD""Which starts the server eihter on port 80 or 8080""$NC"
