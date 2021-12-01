@@ -32,7 +32,8 @@ Furthermore *EMBArk* improves the data provision by aggregating the various scan
 *EMBArk* is using the firmware security scanner *EMBA* as backend. You can take a look at the [*EMBA*](https://github.com/e-m-b-a/emba) repository and get more [information about usage of *EMBA* in the wiki](https://github.com/e-m-b-a/emba/wiki/Usage). Additionally you should check the [*EMBArk* wiki](https://github.com/e-m-b-a/embark/wiki).
 
 ## Start Server
-To start the EMBArk-Server simply run `$ sudo ./embark/run-server.sh`. 
+To start the EMBArk-Server simply run `$ sudo ./embark/run-server.sh`.
+(If you encounter a "handshake-error", just restart the server)
 
 ## Get involved
 The IoT is growing, the development is ongoing, and there are many new features that we want to add.
