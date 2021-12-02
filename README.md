@@ -33,7 +33,7 @@ Furthermore *EMBArk* improves the data provision by aggregating the various scan
 
 ## Start Server
 To start the EMBArk-Server simply run `$ sudo ./embark/run-server.sh`.
-(If you encounter a "handshake-error", just restart the server)
+This starts the http-Server on 0.0.0.0:80
 
 ## Get involved
 The IoT is growing, the development is ongoing, and there are many new features that we want to add.
