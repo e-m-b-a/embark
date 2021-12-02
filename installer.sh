@@ -29,7 +29,7 @@ print_help() {
   # echo -e "$RED               ! This deletes all Docker-Images as well !""$NC"
   echo -e "$CYAN-e$NC         Install EMBA only"
   echo -e "$CYAN-h$NC         Print this help message"
-  echo -e "$CYAN-d$NC         Build Development-Enviroment for EMBArk"
+  echo -e "$CYAN-d$NC         Build EMBArk"  # Webserver on host
   echo
 }
 
