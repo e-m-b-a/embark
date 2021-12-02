@@ -24,9 +24,9 @@ NC='\033[0m' # no color
 
 print_help() {
   echo -e "\\n""$CYAN""USAGE""$NC"
-  echo -e "$CYAN-F$NC         Installation of EMBArk with all dependencies (typical initial installation)"
-  echo -e "$CYAN-r$NC         Reinstallation of EMBArk with all dependencies (cleanup of docker environment first)"
-  echo -e "$RED               ! This deletes all Docker-Images as well !""$NC"
+  # echo -e "$CYAN-F$NC         Installation of EMBArk with all dependencies (typical initial installation)"
+  # echo -e "$CYAN-r$NC         Reinstallation of EMBArk with all dependencies (cleanup of docker environment first)"
+  # echo -e "$RED               ! This deletes all Docker-Images as well !""$NC"
   echo -e "$CYAN-e$NC         Install EMBA only"
   echo -e "$CYAN-h$NC         Print this help message"
   echo -e "$CYAN-d$NC         Build Development-Enviroment for EMBArk"
@@ -250,7 +250,8 @@ make_dev_env(){
   # install on host 
   if ! [[ "$RES" == "Already up to date." ]]; then
     cd emba || exit 1
-    ./installer.sh -d
+    ./installer.sh -D
+    # ./installer.sh -d
     cd .. || exit 1
   fi
 
@@ -260,9 +261,12 @@ make_dev_env(){
   fi
   # download images for container
   docker-compose -f ./docker-compose-dev.yml up --no-start
+  docker-compose -f ./docker-compose-dev.yml up &>/dev/null &
+  sleep 30
+  kill %1
 
-  echo -e "$GREEN""$BOLD""Ready to use ./embark/run-server.sh or ./dev-tools/debug-server-start.sh ""$NC"
-  echo -e "$GREEN""$BOLD""Which starts the server eihter on port 80 or 8080""$NC"
+  echo -e "$GREEN""$BOLD""Ready to use \$sudo ./embark/run-server.sh ""$NC"
+  echo -e "$GREEN""$BOLD""Which starts the server on (0.0.0.0) port 80 ""$NC"
 }
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
