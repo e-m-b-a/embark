@@ -162,22 +162,6 @@ input:checked+.slider:before {
     margin-left: 10px;
 }
 
-.form-group>.form-check-input {
-    left: 22px;
-}
-
-.form-group>.expertModeOptions {
-    display: none;
-}
-
-.form-group>label {
-    padding-left: 30px;
-}
-
-.form-text>.text-muted {
-    display: none;
-}
-
 #file-input {
     visibility: hidden;
     width: 0;
@@ -189,4 +173,30 @@ input:checked+.slider:before {
 
 #firmwareToDelete {
     margin-bottom: 10px;
+}
+/* Analysis */
+
+.form-group>.form-check-input {
+    left: 22px;
+}
+
+
+.expertModeOptions[value="expmode_off"] {
+    display: none;
+}
+.expertModeOptions[value="expmode_on"] {
+    display: block;
+}
+
+
+.form-group>label {
+    padding-left: 30px;
+}
+
+.text-muted[value="help_text_off"] {
+    display:none;
+}
+
+.text-muted[value="help_text_on"] {
+    display:block;
 }

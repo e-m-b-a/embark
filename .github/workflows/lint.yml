@@ -1,6 +1,6 @@
 # This workflow tests the project for proper linting
 
-name: Lint with pycodestyle (former pep8) [ Python 3.7 ]
+name: Lint and check all
 
 on:
   push:
@@ -13,27 +13,40 @@ on:
   workflow_dispatch:
   
 jobs:
-
-  build:
-
+  lint:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [ 3.7 ]
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Build using Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-
-    - name: Install dependencies [pip]
+    - name: Checkout Branch
+      uses: actions/checkout@v2
+    - name: Install dependencies for linting
       run: |
-        cd embark
-        python -m pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
-    - name: run linter [pycodestyle (former PEP8)]
-      run: pycodestyle .
+        sudo apt-get install -y python3-dev npm pycodestyle python3-pylint-django bandit
+        sudo npm install -g jshint
+    - name: Install Python, pipenv and Pipfile packages
+      uses: palewire/install-python-pipenv-pipfile@v2
+      with:
+        python-version: 3.9
+    - name: Make dirs
+      run: |
+        mkdir ./embark/logs
+        touch ./embark/logs/web.log
+        mkdir ./embark/uploadFirmwareImages
+    - name: Run checkproject
+      run: |
+        pipenv install --dev
+        pipenv run ./dev-tools/check_project.sh
+      env:
+        DJANGO_SECRET_KEY: $(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+        DATABASE_NAME: "embark"
+        DATABASE_USER: "embark"
+        DATABASE_PASSWORD: "embark"
+        DATABASE_HOST: "127.0.0.1"
+        DATABASE_PORT: "3306"
+        MYSQL_PASSWORD: "embark"
+        MYSQL_USER: "embark"
+        MYSQL_DATABASE: "embark"
+        REDIS_HOST: "127.0.0.1"
+        REDIS_PORT: "7777"
+        SECRET_KEY: "$DJANGO_SECRET_KEY"
 

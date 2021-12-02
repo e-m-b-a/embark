@@ -2,7 +2,6 @@ from pathlib import Path
 
 import json
 import os
-import time
 import logging
 
 from operator import itemgetter
@@ -11,13 +10,13 @@ from http import HTTPStatus
 from django.conf import settings
 # from django import forms
 from django.forms import model_to_dict
-from django.shortcuts import render, redirect
+from django.shortcuts import render     # , redirect
 from django.template.loader import get_template
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, StreamingHttpResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse    # , StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
-from django.views.decorators.cache import cache_control
+# from django.views.decorators.cache import cache_control
 from django.template import loader
 
 from uploader.boundedexecutor import BoundedExecutor
@@ -48,6 +47,7 @@ def register(request):
     return HttpResponse(html_body.render())
 
 
+# TODO @login_required or not?
 @csrf_exempt
 def logout(request):
     html_body = get_template('uploader/logout.html')
@@ -99,8 +99,8 @@ def start_analysis(request, refreshed):
         else: return Queue full
     else: returns Invalid form error
     Args:
-        request:
-
+        request: the http req
+        refreshed: =~id
     Returns:
 
     """

@@ -10,6 +10,8 @@ embark/users/migrations/
 embark/logs/
 embark/static/external/
 embark/uploadedFirmwareImages/
+documentation/
+embark_db/
 
 # other stuff
 *.zip

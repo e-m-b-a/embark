@@ -1,43 +1,86 @@
 version: "3"
+
 services:
-  auth-db:
+
+  embark_db:
     image: mysql
-    command: --default-authentication-plugin=mysql_native_password
+    container_name: embark_db
     restart: always
+    expose:
+      - "3306"
     env_file:
       - .env
+    environment:
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
+      - MYSQL_PASSWORD
+      - MYSQL_USER
+      - MYSQL_DATABASE
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-    network_mode: "host"
+    networks:
+      - embark_backend
 
   embark:
     image: embark:latest
-    build:
-      context: .
-      dockerfile: Dockerfile
+    container_name: embark_server
+    build: .
     restart: always
     privileged: true
     volumes:
-        - /var/run/docker.sock:/var/run/docker.sock
+        - /var/run/docker.sock:/var/run/docker.sock 
         - ./embark/:/app/embark/
+        - ./emba/:/app/emba/
         - /etc/timezone:/etc/timezone:ro
         - /etc/localtime:/etc/localtime:ro
-    network_mode: "host"
-    env_file:
+    ports:
+      - "80:80"
+    networks:
+      - embark_frontend
+      - embark_backend
+    env_file: 
       - .env
-    command: './entrypoint.sh'
     environment:
-        - USER
+      - DATABASE_NAME
+      - DATABASE_USER
+      - DATABASE_HOST
+      - DATABASE_PORT
+      - DATABASE_PASSWORD
+      - DJANGO_LOG_LEVEL
+      - DEBUG=False
+      - REDIS_HOST
+      - REDIS_PORT
+    command: './entrypoint.sh'
     depends_on:
-        - auth-db
+        - embark_db
         - redis
 
   redis:
     image: "redis:5"
+    container_name: embark_redis
     command: --port 7777
+    expose:
+      - "7777"
     restart: always
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-    network_mode: "host"
+    networks:
+      - embark_backend
+
+networks:
+  embark_frontend:
+    name: embark_frontend
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: embark_frontend
+
+  embark_backend:
+    name: embark_backend
+    driver: ipvlan
+    internal: true
+    ipam:
+      config:
+        - subnet: "172.22.0.0/16"
+
+

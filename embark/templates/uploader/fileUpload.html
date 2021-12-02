@@ -31,7 +31,7 @@
             
             <div class="box">
                 <p class="mainText">Select and delete a firmware image/archive</p>
-                <form action="/home/delete/" method="POST" id="delete-form" onsubmit="window.confirmDelete(event)">
+                <form action="{% url 'embark-delete' %}" method="POST" id="delete-form" onsubmit="window.confirmDelete(event)">
                     {% csrf_token %}
                     {% load filters %}
                     <!-- Iterate over all fields and set expmode on fields in expert mode -->
@@ -66,7 +66,7 @@
                         {% for field in analyze_form %}
 
                             {% if field.expert_mode %}
-                                <div class="form-group expertModeOptions" value="expmode">
+                                <div class="form-group expertModeOptions" value="expmode_off">
                                     {% if field.field.widget|is_checkbox %}
                                         {{ field }}
                                         {{ field.label_tag }}
@@ -75,7 +75,7 @@
                                         {{ field }}
                                     {% endif %}
                                     {% if field.help_text %}
-                                        <small class="form-text text-muted" value="help_text">{{ field.help_text }}</small>
+                                        <small class="form-text text-muted" value="help_text_off">{{ field.help_text }}</small>
                                     {% endif %}
                                 </div>
                             {% else %}
@@ -88,7 +88,7 @@
                                         {{ field }}
                                     {% endif %}
                                     {% if field.help_text %}
-                                        <small class="form-text text-muted" value="help_text">{{ field.help_text }}</small>
+                                        <small class="form-text text-muted" value="help_text_off">{{ field.help_text }}</small>
                                     {% endif %}
                                 </div>
                             {% endif %}

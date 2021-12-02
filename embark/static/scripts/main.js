@@ -1,5 +1,5 @@
 // jshint unused:false
-// ^ this should only be added AFTER successfull check (disables waring for global functions)
+// ^ this should only be added AFTER successfull check (disables warning for global functions)
 
 /**
  * Activate Navigation Menu
@@ -15,14 +15,14 @@ function navToggle() {
  function helpTextOn() {
     "use strict";
     try {
-        var expertOptions = document.querySelectorAll('[value="help_text"]');
+        var expertOptions = document.querySelectorAll('small.text-muted');
 
         for (var i = 0; i < expertOptions.length; i++) {
             var expertDiv = expertOptions[i];
-            if (expertDiv.style.display === "none") {
-                expertDiv.style.display = "block";
+            if (expertDiv.getAttribute("value") === "help_text_off") {
+                expertDiv.setAttribute("value","help_text_on");
             } else {
-                expertDiv.style.display = "none";
+                expertDiv.setAttribute("value","help_text_off");
             }
         }
     } catch (error) {
@@ -36,14 +36,14 @@ function navToggle() {
 function expertModeOn() {
     "use strict";
     try {
-        var expertOptions = document.querySelectorAll('[value="expmode"]');
+        var expertOptions = document.querySelectorAll('div.expertModeOptions');
 
         for (var i = 0; i < expertOptions.length; i++) {
             var expertDiv = expertOptions[i];
-            if (expertDiv.style.display === "none") {
-                expertDiv.style.display = "block";
+            if (expertDiv.getAttribute("value") === "expmode_off") {
+                expertDiv.setAttribute("value","expmode_on");
             } else {
-                expertDiv.style.display = "none";
+                expertDiv.setAttribute("value","expmode_off");
             }
         }
     } catch (error) {

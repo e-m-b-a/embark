@@ -3,7 +3,6 @@ import difflib
 import pathlib
 import re
 import time
-
 import logging
 import rx
 import rx.operators as ops
@@ -20,7 +19,7 @@ from asgiref.sync import async_to_sync
 logger = logging.getLogger('web')
 
 # global map for storing messages from all processes
-process_map = {}
+PROCESS_MAP = {}
 
 
 class LogReader:
@@ -77,22 +76,22 @@ class LogReader:
         tmp_mes = copy.deepcopy(self.status_msg)
 
         # append it to the data structure
-        global process_map
+        global PROCESS_MAP
         if self.firmware_id > 0:
             found = False
-            for mes in process_map[self.firmware_id_str]:
+            for mes in PROCESS_MAP[self.firmware_id_str]:
                 if mes["phase"] == tmp_mes["phase"] and mes["module"] == tmp_mes["module"]:
                     found = True
 
             if not found:
-                process_map[self.firmware_id_str].append(tmp_mes)
+                PROCESS_MAP[self.firmware_id_str].append(tmp_mes)
 
                 # send it to room group
                 if self.firmware_id > 0:
                     async_to_sync(self.channel_layer.group_send)(
                         self.room_group_name, {
                             "type": 'send.message',
-                            "message": process_map
+                            "message": PROCESS_MAP
                         }
                     )
 
@@ -104,22 +103,22 @@ class LogReader:
         tmp_mes = copy.deepcopy(self.status_msg)
 
         # append it to the data structure
-        global process_map
+        global PROCESS_MAP
         if self.firmware_id > 0:
             found = False
-            for mes in process_map[self.firmware_id_str]:
+            for mes in PROCESS_MAP[self.firmware_id_str]:
                 if mes["phase"] == tmp_mes["phase"] and mes["module"] == tmp_mes["module"]:
                     found = True
 
             if not found:
-                process_map[self.firmware_id_str].append(tmp_mes)
+                PROCESS_MAP[self.firmware_id_str].append(tmp_mes)
 
                 # send it to room group
                 if self.firmware_id > 0:
                     async_to_sync(self.channel_layer.group_send)(
                         self.room_group_name, {
                             'type': 'send.message',
-                            'message': process_map
+                            'message': PROCESS_MAP
                         }
                     )
         if "Test ended" in stream_item_list[1]:
@@ -147,9 +146,9 @@ class LogReader:
                 open(pat, 'w+')
 
             # create an entry for the id in the process map
-            global process_map
-            if self.firmware_id_str not in process_map.keys():
-                process_map[self.firmware_id_str] = []
+            global PROCESS_MAP
+            if self.firmware_id_str not in PROCESS_MAP.keys():
+                PROCESS_MAP[self.firmware_id_str] = []
 
             # look for new events
             got_event = self.inotify_events(f"{firmware.path_to_logs}/emba.log")

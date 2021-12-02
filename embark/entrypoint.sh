@@ -19,4 +19,5 @@ echo -e "[*] Starting uwsgi - log to ./logs/uwsgi.log"
 uwsgi --wsgi-file /app/embark/embark/wsgi.py --http :80 --processes 2 --threads 10 --logto ./logs/uwsgi.log &
 echo -e "[*] Starting daphne - log to ./logs/daphne.log"
 # shellcheck disable=2094
+#TODO the bind address has to be set at runtime or dns-res
 daphne -v 3 --access-log ./logs/daphne.log embark.asgi:application -p 8001 -b '0.0.0.0' &> ./logs/daphne.log
