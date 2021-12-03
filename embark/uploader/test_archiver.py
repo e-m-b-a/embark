@@ -32,8 +32,8 @@ class UnpackerTest(TestCase):
         archive_name = "invalid.txt"
 
         # create invalid archive
-        archivef = open(archive_name, "a")
-        archivef.close()
+        with open(archive_name,'a') as archivef:
+            pass
 
         # check for error
         with self.assertRaises(ValueError):

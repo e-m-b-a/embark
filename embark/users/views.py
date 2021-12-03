@@ -5,7 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from django.contrib.auth import authenticate, login, logout
-import django.contrib.messages as messages
+from django.contrib import messages
 
 from .models import User
 
