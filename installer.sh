@@ -250,8 +250,7 @@ make_dev_env(){
   # install on host 
   if ! [[ "$RES" == "Already up to date." ]]; then
     cd emba || exit 1
-    ./installer.sh -D
-    # ./installer.sh -d
+    ./installer.sh -d
     cd .. || exit 1
   fi
 
