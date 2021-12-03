@@ -12,6 +12,19 @@
 
 # Description: Starts the Django-Server(s) on host
 
+cleaner() {
+  fuser -k 80/tcp
+  killall -9 -q "*daphne*"
+  fuser -k 8001/tcp
+  docker container stop embark_db_dev
+  docker container stop embark_redis_dev
+  docker network rm embark_dev
+  docker container prune
+  exit 1
+}
+set -a
+trap cleaner INT
+
 cd "$(dirname "$0")" || exit 1
 
 if ! [[ $EUID -eq 0 ]] && [[ $LIST_DEP -eq 0 ]] ; then
@@ -21,11 +34,12 @@ fi
 
 GREEN='\033[0;32m'
 ORANGE='\033[0;33m'
-# BLUE='\033[0;34m'
+BLUE='\033[0;34m'
 BOLD='\033[1m'
 NC='\033[0m' # no color
 
 export DJANGO_SETTINGS_MODULE=embark.settings
+
 echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
 docker-compose -f ../docker-compose-dev.yml up -d
 DU_RETURN=$?
@@ -37,7 +51,6 @@ fi
 
 if ! [[ -d ./logs ]]; then
   mkdir ./logs
-  #TODO add chown or make script run as non root
 fi
 
 # db_init

@@ -17,7 +17,6 @@ echo -e "\n$GREEN""$BOLD""Reset docker container & networks""$NC"
 docker images
 docker container ls -a
 
-#TODO test this
 while docker images | grep -qE "\<none\>"; do
   IMAGE_ID=$(docker images | grep -E "\<none\>" | awk '{print $3}')
   echo -e "$GREEN""$BOLD""Remove failed docker image""$NC"
@@ -86,5 +85,9 @@ if docker network ls | grep -E "embark_backend"; then
   echo -e "$GREEN""$BOLD""Remove EMBArk_backend network""$NC"
   docker network rm "$NET_ID" 
 fi
+
+fuser -k 8001/tcp
+fuser -k 80/tcp
+fuser -k 8080/tcp
 
 echo -e "$ORANGE""$BOLD""Consider running \$docker system prune""$NC"
