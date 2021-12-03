@@ -20,7 +20,6 @@ cleaner() {
   docker container stop embark_db_dev
   docker container stop embark_redis_dev
   docker network rm embark_dev
-  docker container prune
   exit 1
 }
 set -a

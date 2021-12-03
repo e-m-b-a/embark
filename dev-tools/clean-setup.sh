@@ -89,5 +89,6 @@ fi
 fuser -k 8001/tcp
 fuser -k 80/tcp
 fuser -k 8080/tcp
+docker container prune
 
 echo -e "$ORANGE""$BOLD""Consider running \$docker system prune""$NC"
