@@ -194,7 +194,7 @@ MEDIA_ROOT = os.path.join('uploadedFirmwareImages')  # media directory in the ro
 MEDIA_URL = '/uploadedFirmwareImages/'
 LOG_ROOT = os.path.join('emba_logs')  # media directory in the root directory
 LOG_URL = '/emba_logs/'
-REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')  # TODO why loopback here
+REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
 REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
 
 # Default primary key field type
