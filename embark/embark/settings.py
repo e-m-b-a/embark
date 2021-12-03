@@ -90,7 +90,7 @@ DATABASES = {
     },
 }
 
-# For Test Environment we're going to use sqlite3 to speed up the test
+# For Test Environment we're going to use sqlite3 to speed up the test TODO rm
 
 if 'test' in sys.argv:
     PASSWORD_HASHERS = (
