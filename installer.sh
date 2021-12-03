@@ -288,7 +288,7 @@ make_dev_env(){
   } > ./.env
   # setup dbs-container and detach build could be skipt
     echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
-  docker-compose -f ../docker-compose-dev.yml build
+  docker-compose -f ./docker-compose-dev.yml build
   DB_RETURN=$?
   if [[ $DB_RETURN -eq 0 ]] ; then
     echo -e "$GREEN""$BOLD""Finished building EMBArk docker images""$NC"
