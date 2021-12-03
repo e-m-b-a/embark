@@ -26,20 +26,6 @@ BOLD='\033[1m'
 NC='\033[0m' # no color
 
 export DJANGO_SETTINGS_MODULE=embark.settings
-
-echo -e "\n$GREEN""$BOLD""Configuring Embark""$NC"
-
-
-# setup dbs-container and detach build could be skipt
-  echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
-docker-compose -f ../docker-compose-dev.yml build
-DB_RETURN=$?
-if [[ $DB_RETURN -eq 0 ]] ; then
-  echo -e "$GREEN""$BOLD""Finished building EMBArk docker images""$NC"
-else
-  echo -e "$ORANGE""$BOLD""Failed building EMBArk docker images""$NC"
-fi
-
 echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
 docker-compose -f ../docker-compose-dev.yml up -d
 DU_RETURN=$?
