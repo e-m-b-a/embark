@@ -24,12 +24,12 @@ NC='\033[0m' # no color
 
 print_help() {
   echo -e "\\n""$CYAN""USAGE""$NC"
-  echo -e "$CYAN-F$NC         Installation of EMBArk with all dependencies (typical initial installation)"
-  echo -e "$CYAN-r$NC         Reinstallation of EMBArk with all dependencies (cleanup of docker environment first)"
-  echo -e "$RED               ! This deletes all Docker-Images as well !""$NC"
+  # echo -e "$CYAN-F$NC         Installation of EMBArk with all dependencies (typical initial installation)"
+  # echo -e "$CYAN-r$NC         Reinstallation of EMBArk with all dependencies (cleanup of docker environment first)"
+  # echo -e "$RED               ! This deletes all Docker-Images as well !""$NC"
   echo -e "$CYAN-e$NC         Install EMBA only"
   echo -e "$CYAN-h$NC         Print this help message"
-  echo -e "$CYAN-d$NC         Build Development-Enviroment for EMBArk"
+  echo -e "$CYAN-d$NC         Build EMBArk"  # Webserver on host
   echo
 }
 
@@ -258,11 +258,51 @@ make_dev_env(){
   if ! [[ -d /app ]]; then
     ln -s "$PWD" /app || exit 1
   fi
-  # download images for container
+  # setup .env with dev network
+  DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+  echo -e "$ORANGE""$BOLD""Creating a Developer EMBArk configuration file .env""$NC"
+  export DATABASE_NAME="embark"
+  export DATABASE_USER="embark"
+  export DATABASE_PASSWORD="embark"
+  export DATABASE_HOST="127.0.0.1"
+  export DATABASE_PORT="3306"
+  export MYSQL_PASSWORD="embark"
+  export MYSQL_USER="embark"
+  export MYSQL_DATABASE="embark"
+  export REDIS_HOST="127.0.0.1"
+  export REDIS_PORT="7777"
+  export SECRET_KEY="$DJANGO_SECRET_KEY"
+  # this is for pipenv/django # TODO change after 
+  {
+    echo "DATABASE_NAME=$DATABASE_NAME"
+    echo "DATABASE_USER=$DATABASE_USER" 
+    echo "DATABASE_PASSWORD=$DATABASE_PASSWORD"
+    echo "DATABASE_HOST=$DATABASE_HOST"
+    echo "DATABASE_PORT=$DATABASE_PORT"
+    echo "MYSQL_PASSWORD=$MYSQL_PASSWORD"
+    echo "MYSQL_USER=$MYSQL_USER"
+    echo "MYSQL_DATABASE=$MYSQL_DATABASE"
+    echo "REDIS_HOST=$REDIS_HOST"
+    echo "REDIS_PORT=$REDIS_PORT"
+    echo "SECRET_KEY=$DJANGO_SECRET_KEY"
+  } > ./.env
+  # setup dbs-container and detach build could be skipt
+    echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
   docker-compose -f ./docker-compose-dev.yml build
+  DB_RETURN=$?
+  if [[ $DB_RETURN -eq 0 ]] ; then
+    echo -e "$GREEN""$BOLD""Finished building EMBArk docker images""$NC"
+  else
+    echo -e "$ORANGE""$BOLD""Failed building EMBArk docker images""$NC"
+  fi
+  # download images for container
+  docker-compose -f ./docker-compose-dev.yml up --no-start
+  docker-compose -f ./docker-compose-dev.yml up &>/dev/null &
+  sleep 30
+  kill %1
 
-  echo -e "$GREEN""$BOLD""Ready to use ./embark/run-server.sh or ./dev-tools/debug-server-start.sh ""$NC"
-  echo -e "$GREEN""$BOLD""Which starts the server eihter on port 80 or 8080""$NC"
+  echo -e "$GREEN""$BOLD""Ready to use \$sudo ./embark/run-server.sh ""$NC"
+  echo -e "$GREEN""$BOLD""Which starts the server on (0.0.0.0) port 80 ""$NC"
 }
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"

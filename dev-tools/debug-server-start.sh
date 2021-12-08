@@ -12,6 +12,19 @@
 
 # Description: Automates setup of developer environment for Debug-Server
 
+PORT="8080"
+
+cleaner() {
+  fuser -k "$PORT"/tcp
+  killall -9 -q "*daphne*"
+  docker container stop embark_db_dev
+  docker container stop embark_redis_dev
+  docker network rm embark_dev
+  exit 1
+}
+set -a
+trap cleaner INT
+
 cd "$(dirname "$0")" || exit 1
 
 # RED='\033[0;31m'
@@ -100,10 +113,12 @@ docker container logs embark_db_dev -f > ./embark/logs/mysql_dev.log &
 
 # start embark
 echo -e "$ORANGE""$BOLD""start EMBArk server""$NC"
-pipenv run ./embark/manage.py runserver 8080 
+pipenv run ./embark/manage.py runserver "$PORT"
 
 wait %1
 wait %2
-kill -9 -1
+
+#cleanup TODO stop and remove container and network
+
 
 echo -e "\n$ORANGE""$BOLD""Done. To clean-up use the clean-setup script""$NC"
