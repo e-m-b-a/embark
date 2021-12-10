@@ -61,7 +61,7 @@ class BoundedExecutor:
 
             # run emba_process and wait for completion
             # emba_process = subprocess.call(cmd, shell=True)
-            subprocess.call(cmd, shell=True)
+            subprocess.call(cmd, shell=True)    # nosec
 
             # success
             logger.info("Success: %s", cmd)
@@ -192,19 +192,19 @@ class BoundedExecutor:
         logger.info("submit cls: %s", cls)
 
         # check if semaphore can be acquired, if not queue is full
-        queue_not_full = semaphore.acquire(blocking=False)
-        if not queue_not_full:
-            logger.error("Executor queue full")
-            return None
-        try:
-            future = executor.submit(function_cmd, *args, **kwargs)
-        except Exception as error:
-            logger.error("Executor task could not be submitted")
-            semaphore.release()
-            raise error
-        else:
-            future.add_done_callback(lambda x: semaphore.release())
-            return future
+        with semaphore.acquire(blocking=False) as queue_not_full:
+            if not queue_not_full:
+                logger.error("Executor queue full")
+                return None
+            try:
+                future = executor.submit(function_cmd, *args, **kwargs)
+            except Exception as error:
+                logger.error("Executor task could not be submitted")
+                semaphore.release()
+                raise error
+            else:
+                future.add_done_callback(lambda x: semaphore.release())
+                return future
 
     @classmethod
     def shutdown(cls, wait=True):
@@ -218,7 +218,7 @@ class BoundedExecutor:
         This job reads the F50_aggregator file and stores its content into the Result model
         """
 
-        with open(path, newline='\n') as csv_file:
+        with open(path, newline='\n', encoding='utf-8') as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=';')
             csv_list = []
             for row in csv_reader:

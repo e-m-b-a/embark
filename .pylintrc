@@ -9,11 +9,11 @@
 
 # Add files or directories to the blacklist. They should be base names, not
 # paths.
-ignore=third_party
+ignore=
 
 # Add files or directories matching the regex patterns to the blacklist. The
 # regex matches against base names, not paths.
-ignore-patterns=object_detection_grpc_client.py,prediction_pb2.py,prediction_pb2_grpc.py
+ignore-patterns=
 
 # Pickle collected data for later comparisons.
 persistent=no
@@ -59,7 +59,17 @@ confidence=
 #
 # Kubeflow disables string-interpolation because we are starting to use f
 # style strings
-disable=import-star-module-level,old-octal-literal,oct-method,print-statement,unpacking-in-except,parameter-unpacking,backtick,old-raise-syntax,old-ne-operator,long-suffix,dict-view-method,dict-iter-method,metaclass-assignment,next-method-called,raising-string,indexing-exception,raw_input-builtin,long-builtin,file-builtin,execfile-builtin,coerce-builtin,cmp-builtin,buffer-builtin,basestring-builtin,apply-builtin,filter-builtin-not-iterating,using-cmp-argument,useless-suppression,range-builtin-not-iterating,suppressed-message,missing-docstring,no-absolute-import,old-division,cmp-method,reload-builtin,zip-builtin-not-iterating,intern-builtin,unichr-builtin,reduce-builtin,standarderror-builtin,unicode-builtin,xrange-builtin,coerce-method,delslice-method,getslice-method,setslice-method,input-builtin,round-builtin,hex-method,nonzero-method,map-builtin-not-iterating,relative-import,invalid-name,bad-continuation,no-member,locally-disabled,fixme,import-error,too-many-locals,no-name-in-module,too-many-instance-attributes,no-self-use,logging-fstring-interpolation,C0115,C0114,C0116,W0511,W0703
+disable=C0115,C0114,C0116,W0703,W0603#,W0511
+#import-star-module-level,old-octal-literal,oct-method,print-statement,unpacking-in-except,
+#parameter-unpacking,backtick,old-raise-syntax,old-ne-operator,long-suffix,dict-view-method,dict-iter-method,
+#metaclass-assignment,next-method-called,raising-string,indexing-exception,raw_input-builtin,long-builtin,file-builtin,
+#execfile-builtin,coerce-builtin,cmp-builtin,buffer-builtin,basestring-builtin,apply-builtin,
+#filter-builtin-not-iterating,using-cmp-argument,useless-suppression,range-builtin-not-iterating,suppressed-message,
+#missing-docstring,no-absolute-import,old-division,cmp-method,reload-builtin,zip-builtin-not-iterating,intern-builtin,
+#unichr-builtin,reduce-builtin,standarderror-builtin,unicode-builtin,xrange-builtin,coerce-method,delslice-method,getslice-method,
+#setslice-method,input-builtin,round-builtin,hex-method,nonzero-method,map-builtin-not-iterating,relative-import,invalid-name,bad-continuation,
+#no-member,locally-disabled,fixme,import-error,too-many-locals,no-name-in-module,too-many-instance-attributes,no-self-use,
+#logging-fstring-interpolation
 
 
 [REPORTS]
@@ -93,7 +103,7 @@ evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / stateme
 [BASIC]
 
 # Good variable names which should always be accepted, separated by a comma
-good-names=i,j,k,ex,Run,_
+good-names=
 
 # Bad variable names which should always be refused, separated by a comma
 bad-names=foo,bar,baz,toto,tutu,tata
@@ -103,11 +113,11 @@ bad-names=foo,bar,baz,toto,tutu,tata
 name-group=
 
 # Include a hint for the correct naming format with invalid-name
-include-naming-hint=no
+include-naming-hint=yes
 
 # List of decorators that produce properties, such as abc.abstractproperty. Add
 # to this list to register other decorators that produce valid properties.
-property-classes=abc.abstractproperty
+property-classes=
 
 # Regular expression matching correct function names
 function-rgx=[a-z_][a-z0-9_]{2,30}$
@@ -181,7 +191,7 @@ docstring-min-length=-1
 [ELIF]
 
 # Maximum number of nested blocks for function / method body
-max-nested-blocks=5
+max-nested-blocks=6
 
 
 [TYPECHECK]
@@ -248,7 +258,7 @@ expected-line-ending-format=
 [MISCELLANEOUS]
 
 # List of note tags to take in consideration, separated by a comma.
-notes=FIXME,XXX,TODO
+notes=FIXME,TODO
 
 
 [VARIABLES]
@@ -345,7 +355,7 @@ analyse-fallback-blocks=no
 [DESIGN]
 
 # Maximum number of arguments for function / method
-max-args=7
+max-args=10
 
 # Argument names that match this expression will be ignored. Default to name
 # with leading underscore
@@ -367,7 +377,7 @@ max-statements=50
 max-parents=7
 
 # Maximum number of attributes for a class (see R0902).
-max-attributes=7
+max-attributes=10
 
 # Minimum number of public methods for a class (see R0903).
 min-public-methods=0
@@ -382,7 +392,7 @@ max-bool-expr=5
 [CLASSES]
 
 # List of method names used to declare (i.e. assign) instance attributes.
-defining-attr-methods=__init__,__new__,setUp
+defining-attr-methods=__init__,__new__
 
 # List of valid names for the first argument in a class method.
 valid-classmethod-first-arg=cls
@@ -392,7 +402,7 @@ valid-metaclass-classmethod-first-arg=mcs
 
 # List of member names, which should be excluded from the protected access
 # warning.
-exclude-protected=_asdict,_fields,_replace,_source,_make
+exclude-protected=
 
 
 [EXCEPTIONS]
