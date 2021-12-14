@@ -8,8 +8,6 @@ services:
     restart: always
     expose:
       - "3306"
-    env_file:
-      - .env
     environment:
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
       - MYSQL_PASSWORD
