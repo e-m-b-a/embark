@@ -142,7 +142,6 @@ shellchecker() {
   done
 }
 
-#TODO curtesy notice remove
 pycodestyle_check(){
   echo -e "\\n""$ORANGE""$BOLD""EMBArk pycodestyle check""$NC""\\n""$BOLD""=================================================================""$NC"
   echo -e "[*] Searching python files and test with pycodestyle.py"
@@ -194,7 +193,6 @@ banditer() {
 
 }
 
-#TODO curtesy notice remove
 pylinter(){
   cd ./embark || exit 1
   echo -e "\\n""$ORANGE""$BOLD""EMBArk pylint check""$NC""\\n""$BOLD""=================================================================""$NC"
@@ -225,8 +223,6 @@ pylinter(){
 
   echo -e "\\n""$GREEN""Run pylint on all scripts:""$NC""\\n"
   pipenv run pylint --rcfile=../.pylintrc ./*  2> >(grep -v "Courtesy Notice\|Loading .env" >&2) | grep "Your code has been rated"
-  # current rating: 9.52/10
-  # start rating: 5.58/10
   cd .. || exit 1
 }
 
