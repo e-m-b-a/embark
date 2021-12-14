@@ -142,6 +142,7 @@ shellchecker() {
   done
 }
 
+#TODO curtesy notice remove
 pycodestyle_check(){
   echo -e "\\n""$ORANGE""$BOLD""EMBArk pycodestyle check""$NC""\\n""$BOLD""=================================================================""$NC"
   echo -e "[*] Searching python files and test with pycodestyle.py"
@@ -160,7 +161,7 @@ pycodestyle_check(){
   mapfile -t PY_SCRIPTS < <(find embark -iname "*.py")
   for PY_SCRIPT in "${PY_SCRIPTS[@]}"; do
     echo -e "\\n""$GREEN""Run pycodestyle on $PY_SCRIPT:""$NC""\\n"
-    if pipenv run "$PYCODESTYLE" --first "$PY_SCRIPT" || [[ $? -ne 1 && $? -ne 2 ]]; then
+    if pipenv run "$PYCODESTYLE" --first "$PY_SCRIPT" 2> >(grep -v "Courtesy Notice" >&2) || [[ $? -ne 1 && $? -ne 2 ]]; then
       echo -e "$GREEN""$BOLD""==> SUCCESS""$NC""\\n"
     else
       echo -e "\\n""$ORANGE$BOLD==> FIX ERRORS""$NC""\\n"
@@ -193,13 +194,14 @@ banditer() {
 
 }
 
+#TODO curtesy notice remove
 pylinter(){
   cd ./embark || exit 1
   echo -e "\\n""$ORANGE""$BOLD""EMBArk pylint check""$NC""\\n""$BOLD""=================================================================""$NC"
   mapfile -t PY_SCRIPTS < <(find . -type d -name migrations -prune -false -o -iname "*.py")
   for PY_SCRIPT in "${PY_SCRIPTS[@]}"; do
     echo -e "\\n""$GREEN""Run pylint on $PY_SCRIPT:""$NC""\\n"
-    mapfile -t PY_RESULT < <(pipenv run pylint --rcfile=../.pylintrc "$PY_SCRIPT")
+    mapfile -t PY_RESULT < <(pipenv run pylint --rcfile=../.pylintrc "$PY_SCRIPT" 2> >(grep -v "Courtesy Notice" >&2) )
     local RATING_10=0
     if [[ "${#PY_RESULT[@]}" -gt 0 ]]; then 
       if ! printf '%s\n' "${PY_RESULT[@]}" | grep -q -P '^Your code has been rated at 10'; then
