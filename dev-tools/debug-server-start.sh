@@ -67,7 +67,8 @@ export SECRET_KEY="$DJANGO_SECRET_KEY"
   echo "REDIS_HOST=$REDIS_HOST"
   echo "REDIS_PORT=$REDIS_PORT"
   echo "SECRET_KEY=$DJANGO_SECRET_KEY"
-} > .env
+  echo "PYTHONPATH=${PYTHONPATH}:${PWD}:${PWD}/embark/" 
+} > .env  #TODO overwrite or what should it do?
 
 # setup dbs-container and detach build could be skipt
 echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
