@@ -17,7 +17,7 @@ class BooleanFieldExpertModeForm(forms.BooleanField):
     class BooleanFieldExpertModeForm
     Extension of forms.BooleanField to support expert_mode and readonly option for BooleanFields in Forms
     """
-    def __init__(self, input_formats=None, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         self.expert_mode = kwargs.pop('expert_mode', True)
         self.readonly = kwargs.pop('readonly', False)
         # super(BooleanFieldExpertModeForm, self).__init__(*args, **kwargs)
@@ -46,7 +46,7 @@ class CharFieldExpertModeForm(forms.CharField):
     class BooleanFieldExpertModeForm
     Extension of forms.CharField to support expert_mode and readonly for CharField option for Forms
     """
-    def __init__(self, input_formats=None, *args, **kwargs):
+    def __init__(self,*args, **kwargs):
         self.expert_mode = kwargs.pop('expert_mode', True)
         self.readonly = kwargs.pop('readonly', False)
         # super(CharFieldExpertModeForm, self).__init__(*args, **kwargs)
@@ -58,7 +58,7 @@ class TypedChoiceFieldExpertModeForm(forms.TypedChoiceField):
     class BooleanFieldExpertModeForm
     Extension of forms.TypedChoiceField to support expert_mode and readonly for TypedChoiceField option for Forms
     """
-    def __init__(self, input_formats=None, *args, **kwargs):
+    def __init__(self,*args, **kwargs):
         self.expert_mode = kwargs.pop('expert_mode', True)
         self.readonly = kwargs.pop('readonly', False)
         # super(TypedChoiceFieldExpertModeForm, self).__init__(*args, **kwargs)
@@ -110,7 +110,7 @@ class FirmwareFile(models.Model):
     def __str__(self):
         return f"{self.file.name.replace('/', ' - ')}"  # this the only sanitizing we do?
 
-
+#TODO not proper signal
 @receiver(pre_delete, sender=FirmwareFile)
 def delete_img_pre_delete_post(sender, instance, *args, **kwargs):
     """
@@ -132,22 +132,22 @@ class Firmware(models.Model):
 
     # emba basic flags
     version = CharFieldExpertMode(
-        help_text='Firmware version (double quote your input)', verbose_name=u"Firmware version", max_length=MAX_LENGTH,
+        help_text='Firmware version (double quote your input)', verbose_name="Firmware version", max_length=MAX_LENGTH,
         blank=True, expert_mode=False)
     vendor = CharFieldExpertMode(
-        help_text='Firmware vendor (double quote your input)', verbose_name=u"Firmware vendor", max_length=MAX_LENGTH,
+        help_text='Firmware vendor (double quote your input)', verbose_name="Firmware vendor", max_length=MAX_LENGTH,
         blank=True, expert_mode=False)
     device = CharFieldExpertMode(
-        help_text='Device (double quote your input)', verbose_name=u"Device", max_length=MAX_LENGTH, blank=True,
+        help_text='Device (double quote your input)', verbose_name="Device", max_length=MAX_LENGTH, blank=True,
         expert_mode=False)
     notes = CharFieldExpertMode(
-        help_text='Testing notes (double quote your input)', verbose_name=u"Testing notes", max_length=MAX_LENGTH,
+        help_text='Testing notes (double quote your input)', verbose_name="Testing notes", max_length=MAX_LENGTH,
         blank=True, expert_mode=False)
 
     # emba expert flags
     firmware_Architecture = CharFieldExpertMode(
         choices=[(None, 'Select architecture'), ('MIPS', 'MIPS'), ('ARM', 'ARM'), ('x86', 'x86'), ('x64', 'x64'), ('PPC', 'PPC')],
-        verbose_name=u"Select architecture of the linux firmware",
+        verbose_name="Select architecture of the linux firmware",
         help_text='Architecture of the linux firmware [MIPS, ARM, x86, x64, PPC] -a will be added',
         max_length=MAX_LENGTH, blank=True, expert_mode=True)
     cwe_checker = BooleanFieldExpertMode(
@@ -272,8 +272,8 @@ class Result(models.Model):
     canary_per = models.IntegerField(default=0, help_text='')
     relro = models.IntegerField(default=0, help_text='')
     relro_per = models.IntegerField(default=0, help_text='')
-    nx = models.IntegerField(default=0, help_text='')
-    nx_per = models.IntegerField(default=0, help_text='')
+    no_exec = models.IntegerField(default=0, help_text='')
+    no_exec_per = models.IntegerField(default=0, help_text='')
     pie = models.IntegerField(default=0, help_text='')
     pie_per = models.IntegerField(default=0, help_text='')
     stripped = models.IntegerField(default=0, help_text='')
