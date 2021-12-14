@@ -25,13 +25,13 @@ class UnpackerTest(TestCase):
         old_jobs = 5
         new_jobs = 5
 
-        for _ in range(old_jobs):
+        for foo in range(old_jobs):
             resource_tracker()
 
         # make jobs old jobs
         time.sleep(1)
 
-        for _ in range(new_jobs):
+        for foo in range(new_jobs):
             resource_tracker()
 
         # delete at least all old jobs
