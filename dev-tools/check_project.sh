@@ -85,6 +85,7 @@ jscheck(){
 # uses djlint to check for errors in all html-template files inside /embark (Django-root-dir)
 # no config
 templatechecker(){
+  echo -e "\\n""$ORANGE""$BOLD""EMBArk html-templates check""$NC""\\n""$BOLD""=================================================================""$NC"
   mapfile -t HTML_FILE < <(find ./embark -iname "*.html")
   for HTML_FILE in "${HTML_FILE[@]}"; do
     echo -e "\\n""$GREEN""Run djlint on $HTML_FILE:""$NC""\\n"
