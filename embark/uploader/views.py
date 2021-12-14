@@ -18,6 +18,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 # from django.views.decorators.cache import cache_control
 from django.template import loader
+from django.urls import reverse
 
 from uploader.boundedexecutor import BoundedExecutor
 from uploader.archiver import Archiver
@@ -307,7 +308,7 @@ def html_report(request, analyze_id, html_file):
 
     html_body = get_template(report_path)
     logger.info("html_report - analyze_id: %s html_file: %s", analyze_id, html_file)
-    return HttpResponse(html_body.render({'embarkBackUrl': request.META.get('HTTP_REFERER')}))
+    return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
 
 
 @csrf_exempt
@@ -318,7 +319,7 @@ def html_report_path(request, analyze_id, html_path, html_file):
 
     html_body = get_template(report_path)
     logger.info("html_report - analyze_id: %s path: %s html_file: %s", analyze_id, html_path, html_file)
-    return HttpResponse(html_body.render({'embarkBackUrl': request.META.get('HTTP_REFERER')}))
+    return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
 
 
 @csrf_exempt
