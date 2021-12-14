@@ -153,6 +153,7 @@ install_embark() {
       echo "REDIS_HOST=$REDIS_HOST"
       echo "REDIS_PORT=$REDIS_PORT"
       echo "SECRET_KEY=$DJANGO_SECRET_KEY"
+      echo "PYTHONPATH=${PYTHONPATH}:${PWD}:${PWD}/embark/"
     } > .env
     echo -e "$RED""$BOLD""WARNING: The default EMBArk configuration includes a key & password generation via the shell script!""$NC"
     cat .env
@@ -285,6 +286,7 @@ make_dev_env(){
     echo "REDIS_HOST=$REDIS_HOST"
     echo "REDIS_PORT=$REDIS_PORT"
     echo "SECRET_KEY=$DJANGO_SECRET_KEY"
+    echo "PYTHONPATH=${PYTHONPATH}:${PWD}"  #TODO
   } > ./.env
   # setup dbs-container and detach build could be skipt
     echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
