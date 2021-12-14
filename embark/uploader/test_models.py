@@ -5,7 +5,7 @@ from .models import Firmware, FirmwareFile
 
 class TestModels(TestCase):
 
-    def setUp(self):
+    def __init__(self, *args, **kwargs):
         self.fw_file = FirmwareFile.objects.create()
         self.fw_file.save()
 
