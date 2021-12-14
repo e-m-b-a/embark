@@ -56,6 +56,7 @@ check_django(){
 # checks js-scripts with jshint for errors
 # config @ ./embark/static/.jshintrc
 jscheck(){
+  echo -e "\\n""$ORANGE""$BOLD""EMBArk javascript-files check""$NC""\\n""$BOLD""=================================================================""$NC"
   mapfile -t JS_SCRIPTS < <(find ./embark -iname "*.js")
   for JS_SCRIPT in "${JS_SCRIPTS[@]}"; do
     echo -e "\\n""$GREEN""Run jshint on $JS_SCRIPT:""$NC""\\n"
@@ -230,7 +231,8 @@ dockerchecker(){
   echo -e "\\n""$ORANGE""$BOLD""EMBArk docker-files check""$NC""\\n""$BOLD""=================================================================""$NC"
   mapfile -t DOCKER_COMPS < <(find .  -maxdepth 1 -type d -name migrations -prune -false -o -iname "docker-compose*.yml")
   for DOCKER_COMP in "${DOCKER_COMPS[@]}"; do
-    if ! docker-compose -f "$DOCKER_COMP" config 1>/dev/null; then
+    echo -e "\\n""$GREEN""Run docker check on $DOCKER_COMP:""$NC""\\n"
+    if docker-compose -f "$DOCKER_COMP" config 1>/dev/null || [[ $? -ne 1 ]]; then
       echo -e "$GREEN""$BOLD""==> SUCCESS""$NC""\\n"
     else
       echo -e "\\n""$ORANGE$BOLD==> FIX ERRORS""$NC""\\n"
