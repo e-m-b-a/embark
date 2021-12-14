@@ -7,7 +7,8 @@ from users.models import User
 
 
 class TestUsers(TestCase):
-    def __init__(self) -> None:
+    def __init__(self):
+        super().__init__(self)
         user = User.objects.create(username='testuser')
         user.set_password('12345')
         user.save()

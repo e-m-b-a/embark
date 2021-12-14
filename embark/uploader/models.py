@@ -46,7 +46,7 @@ class CharFieldExpertModeForm(forms.CharField):
     class BooleanFieldExpertModeForm
     Extension of forms.CharField to support expert_mode and readonly for CharField option for Forms
     """
-    def __init__(self,*args, **kwargs):
+    def __init__(self, *args, **kwargs):
         self.expert_mode = kwargs.pop('expert_mode', True)
         self.readonly = kwargs.pop('readonly', False)
         # super(CharFieldExpertModeForm, self).__init__(*args, **kwargs)
@@ -58,7 +58,7 @@ class TypedChoiceFieldExpertModeForm(forms.TypedChoiceField):
     class BooleanFieldExpertModeForm
     Extension of forms.TypedChoiceField to support expert_mode and readonly for TypedChoiceField option for Forms
     """
-    def __init__(self,*args, **kwargs):
+    def __init__(self, *args, **kwargs):
         self.expert_mode = kwargs.pop('expert_mode', True)
         self.readonly = kwargs.pop('readonly', False)
         # super(TypedChoiceFieldExpertModeForm, self).__init__(*args, **kwargs)
@@ -110,15 +110,15 @@ class FirmwareFile(models.Model):
     def __str__(self):
         return f"{self.file.name.replace('/', ' - ')}"  # this the only sanitizing we do?
 
-#TODO not proper signal
+
 @receiver(pre_delete, sender=FirmwareFile)
-def delete_img_pre_delete_post(sender, instance, *args, **kwargs):
+def delete_img_pre_delete_post(sender, *args, **kwargs):
     """
     callback function
     delete the firmwarefile and folder structure in storage on recieve
     """
-    if instance.file:
-        shutil.rmtree(instance.get_abs_folder_path(), ignore_errors=True)
+    if sender.file:
+        shutil.rmtree(sender.get_abs_folder_path(), ignore_errors=True)
 
 
 class Firmware(models.Model):

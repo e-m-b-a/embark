@@ -1,4 +1,4 @@
-# pylint: disable=R1732, C0201
+# pylint: disable=R1732, C0201, E1129
 import csv
 import logging
 import os
@@ -24,12 +24,12 @@ logger = logging.getLogger('web')
 # maximum concurrent running workers
 MAX_WORKERS = 4
 # maximum queue bound
-MAX_QUEUE = 0
+MAX_QUEUE = MAX_WORKERS
 
 # assign the threadpool max_worker_threads
 executor = ThreadPoolExecutor(max_workers=MAX_WORKERS)
 # create semaphore to track queue state
-semaphore = BoundedSemaphore(MAX_QUEUE + MAX_WORKERS)
+semaphore = BoundedSemaphore(MAX_QUEUE)
 
 # emba directories
 EMBA_SCRIPT_LOCATION = "cd /app/emba/ && ./emba.sh"
