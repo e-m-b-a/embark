@@ -19,7 +19,7 @@ RUN apt-get update && apt-get -y -q --no-install-recommends install wget \
     swig \
     && rm -rf /var/lib/apt/lists/*
 
-ADD . /app
+COPY . /app
 
 WORKDIR /app/embark
 
