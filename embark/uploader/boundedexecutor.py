@@ -1,3 +1,4 @@
+# pylint: disable=R1732, C0201
 import csv
 import logging
 import os
@@ -82,10 +83,10 @@ class BoundedExecutor:
             if active_analyzer_dir:
                 shutil.rmtree(active_analyzer_dir)
 
-        except Exception as ex:
+        except Exception as execpt:
             # fail
             logger.error("EMBA run was probably not successful!")
-            logger.error("run_emba_cmd error: %s", ex)
+            logger.error("run_emba_cmd error: %s", execpt)
 
             # finalize db entry
             if primary_key:
