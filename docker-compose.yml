@@ -38,8 +38,6 @@ services:
     networks:
       - embark_frontend
       - embark_backend
-    env_file: 
-      - .env
     environment:
       - DATABASE_NAME
       - DATABASE_USER
