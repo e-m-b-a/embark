@@ -2,8 +2,9 @@
 FROM kalilinux/kali-rolling:latest
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV DJANGO_SETTINGS_MODULE=embark.settings
+#ENV DJANGO_SETTINGS_MODULE=embark.settings
 ENV PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/.local/bin
+# TODO add all needed vars
 
 USER root
 RUN apt-get update && apt-get -y -q --no-install-recommends install wget \
@@ -24,12 +25,11 @@ COPY . /app
 WORKDIR /app/embark
 
 RUN /app/emba/installer.sh -D  && \
-    pip3 install uwsgi -I --no-cache-dir && \
-    pip3 install --user --no-warn-script-location -r /app/embark/requirements.txt
+    pipenv install
 
 EXPOSE 80
 # Opening on extra port for our ASGI setup
 EXPOSE 8001
 
-CMD  ./entrypoint.sh
+ENTRYPOINT  ["./entrypoint.sh"]
 
