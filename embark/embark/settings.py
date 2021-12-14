@@ -18,7 +18,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY')   # look at .env
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = bool(os.environ.get('EMBARK_DEBUG',False))
 
 ALLOWED_HOSTS = ['*']
 
@@ -89,21 +89,6 @@ DATABASES = {
         'OPTIONS': {'charset': 'utf8mb4'},
     },
 }
-
-# For Test Environment we're going to use sqlite3 to speed up the test TODO rm
-
-if 'test' in sys.argv:
-    PASSWORD_HASHERS = (
-        'django.contrib.auth.hashers.MD5PasswordHasher',
-    )
-    # DEBUG = True
-    DATABASES = dict()
-    DATABASES['default'] = {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': str(BASE_DIR / 'test_db.sqlite3'),
-        'CONN_MAX_AGE': 60
-    }
-
 
 LOG_LEVEL = os.environ.get('DJANGO_LOG_LEVEL', 'DEBUG').upper()
 LOGGING = {
