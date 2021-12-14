@@ -35,6 +35,7 @@ BOLD='\033[1m'
 NC='\033[0m' # no color
 
 export DJANGO_SETTINGS_MODULE=embark.settings
+export EMBARK_DEBUG=True
 
 echo -e "\n$GREEN""$BOLD""Configuring Embark""$NC"
 
@@ -68,7 +69,7 @@ export SECRET_KEY="$DJANGO_SECRET_KEY"
   echo "REDIS_PORT=$REDIS_PORT"
   echo "SECRET_KEY=$DJANGO_SECRET_KEY"
   echo "PYTHONPATH=${PYTHONPATH}:${PWD}:${PWD}/embark/" 
-} > .env  #TODO overwrite or what should it do?
+} > .env  #overwrites!!
 
 # setup dbs-container and detach build could be skipt
 echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
