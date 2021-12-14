@@ -23,7 +23,7 @@ persistent=no
 load-plugins=pylint_django
 
 # Use multiple processes to speed up Pylint.
-jobs=4
+jobs=4  #Set to 4 bc of github workflows
 
 # Allow loading of arbitrary C extensions. Extensions are imported into the
 # active Python interpreter and may run arbitrary code.
@@ -120,16 +120,16 @@ include-naming-hint=yes
 property-classes=
 
 # Regular expression matching correct function names
-function-rgx=[a-z_][a-z0-9_]{2,30}$
+function-rgx=[a-z_][a-z0-9_]{2,32}$
 
 # Naming hint for function names
-function-name-hint=[a-z_][a-z0-9_]{2,30}$
+function-name-hint=[a-z_][a-z0-9_]{2,32}$
 
 # Regular expression matching correct variable names
-variable-rgx=[a-z_][a-z0-9_]{2,30}$
+variable-rgx=[a-z_][a-z0-9_]{2,32}$
 
 # Naming hint for variable names
-variable-name-hint=[a-z_][a-z0-9_]{2,30}$
+variable-name-hint=[a-z_][a-z0-9_]{2,32}$
 
 # Regular expression matching correct constant names
 const-rgx=(([A-Z_][A-Z0-9_]*)|(__.*__))$
@@ -138,22 +138,22 @@ const-rgx=(([A-Z_][A-Z0-9_]*)|(__.*__))$
 const-name-hint=(([A-Z_][A-Z0-9_]*)|(__.*__))$
 
 # Regular expression matching correct attribute names
-attr-rgx=[a-z_][a-z0-9_]{2,30}$
+attr-rgx=[a-z_][a-z0-9_]{2,32}$
 
 # Naming hint for attribute names
-attr-name-hint=[a-z_][a-z0-9_]{2,30}$
+attr-name-hint=[a-z_][a-z0-9_]{2,32}$
 
 # Regular expression matching correct argument names
-argument-rgx=[a-z_][a-z0-9_]{2,30}$
+argument-rgx=[a-z_][a-z0-9_]{2,32}$
 
 # Naming hint for argument names
-argument-name-hint=[a-z_][a-z0-9_]{2,30}$
+argument-name-hint=[a-z_][a-z0-9_]{2,32}$
 
 # Regular expression matching correct class attribute names
-class-attribute-rgx=([A-Za-z_][A-Za-z0-9_]{2,30}|(__.*__))$
+class-attribute-rgx=([A-Za-z_][A-Za-z0-9_]{2,32}|(__.*__))$
 
 # Naming hint for class attribute names
-class-attribute-name-hint=([A-Za-z_][A-Za-z0-9_]{2,30}|(__.*__))$
+class-attribute-name-hint=([A-Za-z_][A-Za-z0-9_]{2,32}|(__.*__))$
 
 # Regular expression matching correct inline iteration names
 inlinevar-rgx=[A-Za-z_][A-Za-z0-9_]*$
@@ -174,10 +174,10 @@ module-rgx=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$
 module-name-hint=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$
 
 # Regular expression matching correct method names
-method-rgx=[a-z_][a-z0-9_]{2,30}$
+method-rgx=[a-z_][a-z0-9_]{2,32}$
 
 # Naming hint for method names
-method-name-hint=[a-z_][a-z0-9_]{2,30}$
+method-name-hint=[a-z_][a-z0-9_]{2,32}$
 
 # Regular expression which should only match function or class names that do
 # not require a docstring.
@@ -368,7 +368,7 @@ max-locals=15
 max-returns=6
 
 # Maximum number of branch for function / method body
-max-branches=12
+max-branches=20
 
 # Maximum number of statements in function / method body
 max-statements=50
