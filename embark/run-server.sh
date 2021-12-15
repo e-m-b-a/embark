@@ -69,7 +69,7 @@ docker container logs embark_db_dev -f &> ./logs/mysql_dev.log &
 # pipenv run ./manage.py runapscheduler --test | tee -a ./logs/scheduler.log &
 echo -e "\n[""$BLUE JOB""$NC""] Starting wsgi - log to /embark/logs/wsgi.log"
 #pipenv run uwsgi --wsgi-file ./embark/wsgi.py --http :80 --threads 8 --logto ./logs/uwsgi.log &
-pipenv run mod_wsgi-express start-server ./embark/wsgi.py --port 80  --user www-data --group www-data --server-root=/app/embark &
+pipenv run mod_wsgi-express start-server ./embark/wsgi.py --port 80  --user www-data --group www-data --server-root="$PWD" &
 echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
 pipenv run daphne -v 3 --access-log ./logs/daphne.log -p 8001 -b '0.0.0.0' --root-path="$PWD" embark.asgi:application 1>/dev/null
 
