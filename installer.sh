@@ -16,6 +16,11 @@
 
 export DEBIAN_FRONTEND=noninteractive
 
+export PIPENV_VENV_IN_PROJECT="enabled"  #installs venv in same dir
+#export WORKON_HOME=~/.venvs
+export PIPENV_DOTENV_LOCATION=./.env
+export PIPENV_DONT_LOAD_ENV=0
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 ORANGE='\033[0;33m'
@@ -224,7 +229,7 @@ make_dev_env(){
   install_debs
   apt-get install -y -q python3-dev default-libmysqlclient-dev build-essential sqlite3 pipenv npm pycodestyle python3-pylint-django
   npm install -g jshint dockerlinter
-  pipenv install --dev
+  pipenv install --dev --deploy
   # download externals
   if ! [[ -d embark/static/external ]]; then
     echo -e "\n$GREEN""$BOLD""Downloading of external files, e.g. jQuery, for the offline usability of EMBArk""$NC"

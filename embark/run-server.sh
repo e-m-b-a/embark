@@ -27,9 +27,9 @@ trap cleaner INT
 
 cd "$(dirname "$0")" || exit 1
 
-if ! [[ $EUID -eq 0 ]] && [[ $LIST_DEP -eq 0 ]] ; then
-  echo -e "\\n$RED""Run EMBArk run-server script with root permissions! (Docker)""$NC\\n"
-  exit 1
+if [[ $EUID -eq 0 ]]; then
+  echo -e "\\n$RED""Running this script as root is not supported""$NC\\n"
+  echo -e "\\n$ORANGE""BUT you need to be part of the docker-group (use \$sudo usermod -aG docker <yourusername>)""$NC\\n"
 fi
 
 GREEN='\033[0;32m'
