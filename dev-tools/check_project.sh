@@ -54,14 +54,14 @@ check_django(){
 }
 
 # checks js-scripts with jshint for errors
-# config @ ./embark/static/.jshintrc
+# config @ .jshintrc
 jscheck(){
   echo -e "\\n""$ORANGE""$BOLD""EMBArk javascript-files check""$NC""\\n""$BOLD""=================================================================""$NC"
   mapfile -t JS_SCRIPTS < <(find ./embark -iname "*.js")
   for JS_SCRIPT in "${JS_SCRIPTS[@]}"; do
     echo -e "\\n""$GREEN""Run jshint on $JS_SCRIPT:""$NC""\\n"
     # mapfile -t JS_RESULT < <(jshint "$JS_SCRIPT")
-    jshint "$JS_SCRIPT" >/dev/null
+    jshint -c ./jshintrc "$JS_SCRIPT" >/dev/null
     RES=$?
     if [[ $RES -eq 2 ]] ; then
       echo -e "\\n""$RED$BOLD==> FIX ERRORS""$NC""\\n"
