@@ -61,7 +61,7 @@ jscheck(){
   for JS_SCRIPT in "${JS_SCRIPTS[@]}"; do
     echo -e "\\n""$GREEN""Run jshint on $JS_SCRIPT:""$NC""\\n"
     # mapfile -t JS_RESULT < <(jshint "$JS_SCRIPT")
-    jshint -c ./jshintrc "$JS_SCRIPT" >/dev/null
+    jshint -c ./jshintrc "$JS_SCRIPT" >"$JS_SCRIPT.report"
     RES=$?
     if [[ $RES -eq 2 ]] ; then
       echo -e "\\n""$RED$BOLD==> FIX ERRORS""$NC""\\n"
