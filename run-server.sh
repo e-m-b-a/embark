@@ -13,6 +13,7 @@
 # Description: Starts the Django-Server(s) on host
 
 cleaner() {
+  /app/mod_wsgi-express-80/apachectl stop
   fuser -k 80/tcp
   killall -9 -q "*daphne*"
   fuser -k 8001/tcp
@@ -67,16 +68,16 @@ docker container logs embark_redis_dev -f &> ./embark/logs/redis_dev.log &
 echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.log""$NC"
 docker container logs embark_db_dev -f &> ./embark/logs/mysql_dev.log & 
 
-# run apps
 #echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
 #pipenv run ./manage.py runapscheduler | tee -a ./logs/scheduler.log &
+
 echo -e "\n[""$BLUE JOB""$NC""] Starting wsgi - log to /embark/logs/wsgi.log"
-pipenv run ./embark/manage.py runmodwsgi --setup-only --port=80 --user www-data --group www-data --server-root=/app/mod_wsgi-express-80
-#1>/dev/null 2>./logs/wsgi.log &
+pipenv run ./embark/manage.py runmodwsgi --setup-only --port=80 --user www-data --group www-data --server-root=/app/mod_wsgi-express-80  # 1>/dev/null 2>./logs/wsgi.log &
+#TODO ch config
 /app/mod_wsgi-express-80/apachectl start
+
 echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-pipenv run daphne -v 3 --access-log ./embark/logs/daphne.log -p 8001 -b '0.0.0.0' --root-path="$PWD" embark.asgi:application 1>/dev/null
+pipenv run daphne -v 3 --access-log ./embark/logs/daphne.log -p 8001 -b '0.0.0.0' --root-path="$PWD/embark" embark.asgi:application 1>/dev/null
 
 wait %1
 wait %2
-wait %3
