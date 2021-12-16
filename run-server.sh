@@ -60,7 +60,7 @@ pipenv run ./embark/manage.py makemigrations users uploader | tee -a ./embark/lo
 pipenv run ./embark/manage.py migrate | tee -a ./embark/logs/migration.log
 
 # collect staticfiles
-pipenv run ./embark/manage.py collectstatic -c
+# pipenv run ./embark/manage.py collectstatic -c
 
 # container-logs
 echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./embark/logs/redis_dev.log""$NC" 
