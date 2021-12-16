@@ -61,16 +61,14 @@ jscheck(){
   for JS_SCRIPT in "${JS_SCRIPTS[@]}"; do
     echo -e "\\n""$GREEN""Run jshint on $JS_SCRIPT:""$NC""\\n"
     # mapfile -t JS_RESULT < <(jshint "$JS_SCRIPT")
-    jshint -c ./jshintrc "$JS_SCRIPT" >"$JS_SCRIPT.report"
+    jshint -c ./.jshintrc "$JS_SCRIPT"
     RES=$?
     if [[ $RES -eq 2 ]] ; then
       echo -e "\\n""$RED$BOLD==> FIX ERRORS""$NC""\\n"
-      cat "$JS_SCRIPT.report"
       ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
       MODULES_TO_CHECK_ARR+=( "$JS_SCRIPT" )
     elif [[ $RES -eq 1 ]]; then
       echo -e "\\n""$ORANGE$BOLD==> FIX WARNINGS""$NC""\\n"
-      cat "$JS_SCRIPT.report"
       ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
       MODULES_TO_CHECK_ARR+=( "$JS_SCRIPT" )
     elif [[ $RES -eq 0 ]]; then 
@@ -238,7 +236,7 @@ dockerchecker(){
       MODULES_TO_CHECK_ARR+=( "$DOCKER_COMP" )    
     fi
   done
-  #dockerlinter -f ./Dockerfile
+  dockerlinter -f ./Dockerfile
 }
 
 #main
@@ -252,13 +250,13 @@ templatechecker
 pycodestyle_check
 banditer
 pylinter
-#check_django TODO
+check_django
 
 if [[ "${#MODULES_TO_CHECK_ARR[@]}" -gt 0 ]]; then
   echo -e "\\n\\n""$GREEN$BOLD""SUMMARY:$NC\\n"
   echo -e "Modules to check: $MODULES_TO_CHECK\\n"
   for MODULE in "${MODULES_TO_CHECK_ARR[@]}"; do
-    echo -e "$ORANGE$BOLD==> FIX MODULE: ""$MODULE""$NC"
+    echo -e "$RED$BOLD==> FIX MODULE: ""$MODULE""$NC"
   done
   exit 1
 fi

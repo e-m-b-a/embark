@@ -41,7 +41,7 @@ NC='\033[0m' # no color
 export DJANGO_SETTINGS_MODULE=embark.settings
 
 echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
-docker-compose -f ../docker-compose-dev.yml up -d
+docker-compose -f ./docker-compose-dev.yml up -d
 DU_RETURN=$?
 if [[ $DU_RETURN -eq 0 ]] ; then
   echo -e "$GREEN""$BOLD""Finished setup mysql and redis docker images""$NC"
@@ -49,33 +49,33 @@ else
   echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
 fi
 
-if ! [[ -d ./logs ]]; then
-  mkdir ./logs
+if ! [[ -d ./embark/logs ]]; then
+  mkdir ./embark/logs
 fi
 
 # db_init
 echo -e "[*] Starting migrations - log to embark/logs/migration.log"
-pipenv run ./manage.py makemigrations users uploader | tee -a ./logs/migration.log
-pipenv run ./manage.py migrate | tee -a ./logs/migration.log
+pipenv run ./embark/manage.py makemigrations users uploader | tee -a ./embark/logs/migration.log
+pipenv run ./embark/manage.py migrate | tee -a ./embark/logs/migration.log
 
 # collect staticfiles
-pipenv run ./manage.py collectstatic -c
+pipenv run ./embark/manage.py collectstatic -c
 
 # container-logs
 echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./embark/logs/redis_dev.log""$NC" 
-docker container logs embark_redis_dev -f &> ./logs/redis_dev.log & 
+docker container logs embark_redis_dev -f &> ./embark/logs/redis_dev.log & 
 echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.log""$NC"
-docker container logs embark_db_dev -f &> ./logs/mysql_dev.log & 
+docker container logs embark_db_dev -f &> ./embark/logs/mysql_dev.log & 
 
 # run apps
 #echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
 #pipenv run ./manage.py runapscheduler | tee -a ./logs/scheduler.log &
 echo -e "\n[""$BLUE JOB""$NC""] Starting wsgi - log to /embark/logs/wsgi.log"
-pipenv run ./manage.py runmodwsgi --setup-only --port=80 --user www-data --group www-data --server-root=/app/mod_wsgi-express-80
+pipenv run ./embark/manage.py runmodwsgi --setup-only --port=80 --user www-data --group www-data --server-root=/app/mod_wsgi-express-80
 #1>/dev/null 2>./logs/wsgi.log &
 /app/mod_wsgi-express-80/apachectl start
 echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-pipenv run daphne -v 3 --access-log ./logs/daphne.log -p 8001 -b '0.0.0.0' --root-path="$PWD" embark.asgi:application 1>/dev/null
+pipenv run daphne -v 3 --access-log ./embark/logs/daphne.log -p 8001 -b '0.0.0.0' --root-path="$PWD" embark.asgi:application 1>/dev/null
 
 wait %1
 wait %2
