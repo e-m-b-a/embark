@@ -229,7 +229,7 @@ make_dev_env(){
   install_debs
   apt-get install -y -q python3-dev default-libmysqlclient-dev build-essential sqlite3 pipenv npm pycodestyle python3-pylint-django
   npm install -g jshint dockerlinter
-  pipenv install --dev --deploy
+  pipenv install --dev
   # download externals
   if ! [[ -d embark/static/external ]]; then
     echo -e "\n$GREEN""$BOLD""Downloading of external files, e.g. jQuery, for the offline usability of EMBArk""$NC"
