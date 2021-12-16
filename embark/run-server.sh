@@ -59,7 +59,7 @@ pipenv run ./manage.py makemigrations users uploader | tee -a ./logs/migration.l
 pipenv run ./manage.py migrate | tee -a ./logs/migration.log
 
 # collect staticfiles
-pipenv run ./embark/manage.py collectstatic -c
+pipenv run ./manage.py collectstatic -c
 
 # container-logs
 echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./embark/logs/redis_dev.log""$NC" 
@@ -71,7 +71,9 @@ docker container logs embark_db_dev -f &> ./logs/mysql_dev.log &
 #echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
 #pipenv run ./manage.py runapscheduler | tee -a ./logs/scheduler.log &
 echo -e "\n[""$BLUE JOB""$NC""] Starting wsgi - log to /embark/logs/wsgi.log"
-pipenv run ./embark/manage.py runmodwsgi --setup-only --port=80 --user www-data --group www-data --server-root=/app/mod_wsgi-express-80 1>/dev/null 2>./logs/wsgi.log &
+pipenv run ./manage.py runmodwsgi --setup-only --port=80 --user www-data --group www-data --server-root=/app/mod_wsgi-express-80
+#1>/dev/null 2>./logs/wsgi.log &
+/app/mod_wsgi-express-80/apachectl start
 echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
 pipenv run daphne -v 3 --access-log ./logs/daphne.log -p 8001 -b '0.0.0.0' --root-path="$PWD" embark.asgi:application 1>/dev/null
 
