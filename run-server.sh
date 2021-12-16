@@ -77,8 +77,7 @@ pipenv run ./embark/manage.py runmodwsgi --setup-only --port=80 --user www-data 
 /app/mod_wsgi-express-80/apachectl start
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-cd ./embark || exit 1
-pipenv run daphne -v 3 --access-log ./embark/logs/daphne.log -p 8001 -b '0.0.0.0' --root-path="$PWD" embark.asgi:application 1>/dev/null
-cd .. || exit 1
+pipenv run daphne -v 3 --access-log ./embark/logs/daphne.log -p 8001 -b '0.0.0.0' --root-path="./embark" embark.embark.asgi:application
+
 wait %1
 wait %2

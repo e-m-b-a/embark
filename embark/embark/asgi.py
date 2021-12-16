@@ -10,17 +10,15 @@ https://docs.djangoproject.com/en/3.2/howto/deployment/asgi/
 import os
 
 from django.core.asgi import get_asgi_application
-asgi_application = get_asgi_application()
 
-# pylint: disable=wrong-import-position
 from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter
 from channels.routing import URLRouter
 from .routing import ws_urlpatterns
-# pylint: enable=wrong-import-position
-
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'embark.settings')
+
+asgi_application = get_asgi_application()
 
 application = ProtocolTypeRouter({
     'http': asgi_application,
