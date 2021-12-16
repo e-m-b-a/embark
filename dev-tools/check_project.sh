@@ -243,7 +243,7 @@ dockerchecker(){
       MODULES_TO_CHECK_ARR+=( "$DOCKER_COMP" )    
     fi
   done
-  dockerlinter -f ./Dockerfile
+  # TODO dockerlinter -f ./Dockerfile
 }
 
 #main
