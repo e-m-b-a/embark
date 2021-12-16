@@ -10,9 +10,9 @@ from http import HTTPStatus
 from django.conf import settings
 # from django import forms
 from django.forms import model_to_dict
-from django.shortcuts import render     # , redirect
+from django.shortcuts import render  # , redirect
 from django.template.loader import get_template
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse    # , StreamingHttpResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse  # , StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
@@ -137,7 +137,8 @@ def start_analysis(request, refreshed):
     delete_form = DeleteFirmwareForm()
 
     if refreshed == 1:
-        return render(request, 'uploader/fileUpload.html', {'analyze_form': analyze_form, 'delete_form': delete_form, 'username': request.user.username})
+        return render(request, 'uploader/fileUpload.html',
+                      {'analyze_form': analyze_form, 'delete_form': delete_form, 'username': request.user.username})
     # else:
     html_body = get_template('uploader/serviceDashboard.html')
     return HttpResponse(html_body.render({'username': request.user.username}))
@@ -161,7 +162,8 @@ def report_dashboard(request):
     """
 
     finished_firmwares = Firmware.objects.all().filter(finished=True)
-    return render(request, 'uploader/reportDashboard.html', {'finished_firmwares': finished_firmwares, 'username': request.user.username})
+    return render(request, 'uploader/reportDashboard.html',
+                  {'finished_firmwares': finished_firmwares, 'username': request.user.username})
 
 
 @csrf_exempt
@@ -204,18 +206,18 @@ def save_file(request, refreshed):
             firmware_file.file = file
             firmware_file.save()
 
-#             # not used for now since files get stored in different locations
-#             firmware_file = FirmwareFile(file=file)
-#             if(path.exists(firmware_file.get_abs_path())):
-#                 return HttpResponse("File Exists")
-#             else:
-#                 firmware_file.save()
-#                 return HttpResponse("Firmwares has been successfully saved")
-#            if is_archive:
+            #             # not used for now since files get stored in different locations
+            #             firmware_file = FirmwareFile(file=file)
+            #             if(path.exists(firmware_file.get_abs_path())):
+            #                 return HttpResponse("File Exists")
+            #             else:
+            #                 firmware_file.save()
+            #                 return HttpResponse("Firmwares has been successfully saved")
+            #            if is_archive:
             return HttpResponse("Successfully uploaded firmware")
-#            else:
-#                return HttpResponse("Firmware file not supported by archiver (binary file ?). \n"
-#                                    "Use on your own risk.")
+        #            else:
+        #                return HttpResponse("Firmware file not supported by archiver (binary file ?). \n"
+        #                                    "Use on your own risk.")
 
         except Exception as error:
             logger.error(error)
@@ -257,13 +259,34 @@ def get_log(request, log_type, lines):
                     lines_found = file_.readlines()
                     block_counter -= 1
 
-                result = lines_found[-(lines+1):]
+                result = lines_found[-(lines + 1):]
             except Exception as error:
                 logger.exception('Wide exception in logstreamer: %s', error)
 
-        return render(request, 'uploader/log.html', {'header': log_file + '.log', 'log': ''.join(result), 'username': request.user.username})
+        return render(request, 'uploader/log.html',
+                      {'header': log_file + '.log', 'log': ''.join(result), 'username': request.user.username})
     except IOError:
-        return render(request, 'uploader/log.html', {'header': 'Error', 'log': file_path + ' not found!', 'username': request.user.username})
+        return render(request, 'uploader/log.html',
+                      {'header': 'Error', 'log': file_path + ' not found!', 'username': request.user.username})
+
+
+# here is some request for account dashboard Yul
+@csrf_exempt
+@login_required(login_url='/' + settings.LOGIN_URL)
+def account_dashboard_(request):
+    if Result.objects.all().count() > 0:
+        html_body = get_template('uploader/passwordChange.html')
+        return HttpResponse(html_body.render({'nav_switch': True, 'username': request.user.username}))
+    return HttpResponseRedirect("../../home/upload/1/")
+
+
+@csrf_exempt
+@login_required(login_url='/' + settings.LOGIN_URL)
+def password_change_(request):
+    if Result.objects.all().count() > 0:
+        html_body = get_template('uploader/password_change.html')
+        return HttpResponse(html_body.render({'nav_switch': True, 'username': request.user.username}))
+    return HttpResponseRedirect("../../home/upload/1/")
 
 
 @csrf_exempt
@@ -336,7 +359,8 @@ def html_report_download(request, analyze_id, html_path, download_file):
         with open(full_path, 'rb') as requested_file:
             response = HttpResponse(requested_file.read(), content_type="text/plain")
             response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(full_path)
-            logger.info("html_report - analyze_id: %s html_path: %s download_file: %s", analyze_id, html_path, download_file)
+            logger.info("html_report - analyze_id: %s html_path: %s download_file: %s", analyze_id, html_path,
+                        download_file)
             return response
 
 
@@ -344,7 +368,6 @@ def html_report_download(request, analyze_id, html_path, download_file):
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report_resource(request, analyze_id, img_file):
-
     content_type = "text/plain"
 
     if img_file.endswith(".css"):
@@ -495,7 +518,7 @@ def get_accumulated_reports(request):
 
     for field in data:
         if field not in charfields:
-            data[field]['mean'] = data[field]['sum']/data[field]['count']
+            data[field]['mean'] = data[field]['sum'] / data[field]['count']
     data['total_firmwares'] = len(results)
     data['top_entropies'] = [{'name': r.firmware.firmware.file.name, 'entropy_value': r.entropy_value} for r in
                              top_5_entropies]
