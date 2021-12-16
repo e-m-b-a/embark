@@ -151,7 +151,7 @@ class LogReader:
 
             # create an entry for the id in the process map
             global PROCESS_MAP
-            if self.firmware_id_str not in PROCESS_MAP.keys():
+            if self.firmware_id_str not in PROCESS_MAP:
                 PROCESS_MAP[self.firmware_id_str] = []
 
             # look for new events
