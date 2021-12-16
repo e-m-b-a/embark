@@ -49,7 +49,14 @@ check_tools(){
 # checks django configuration
 check_django(){
   cd ./embark || exit 1
-  pipenv run python ./embark/manage.py check --deploy
+  echo -e "\\n""$ORANGE""$BOLD""EMBArk django-settings check""$NC""\\n""$BOLD""=================================================================""$NC"
+  if ! pipenv run python ./manage.py check --deploy | grep -q "System check identified no issues"; then
+      echo -e "\\n""$RED$BOLD==> FIX ERRORS""$NC""\\n"
+      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+      MODULES_TO_CHECK_ARR+=( "./embark/settings.py" )
+  else
+      echo -e "$GREEN""$BOLD""==> SUCCESS""$NC""\\n"
+  fi
   cd .. || exit 1
 }
 
