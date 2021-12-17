@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e6b6157e52d51666b107d2c69bea84570c4bb6204bb0183e1df6cbaf350ce880"
+            "sha256": "57066c23c57261ae715d0f6feb590dfdeaff69ae70b09783150b1b39a5f8cb1a"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -313,14 +313,8 @@
             "hashes": [
                 "sha256:4ab310a26dcad14246a66b0440c61a2026fedb9e9face8f2989955881907e1f2"
             ],
-            "version": "==2.4.48.1"
-        },
-        "mod-wsgi-standalone": {
-            "hashes": [
-                "sha256:71a5bb625c8810325cd16b8c7ddab69041ba3a1f52f66e4d87aa8e76d582c255"
-            ],
             "index": "pypi",
-            "version": "==4.9.0"
+            "version": "==2.4.48.1"
         },
         "mongoengine": {
             "hashes": [
@@ -706,13 +700,6 @@
                 "sha256:28ba8d9fcb6c9a782d6e0078b4f6627af1ea26aeaa32b4eab5324abc7df4149f"
             ],
             "version": "==4.1"
-        },
-        "uwsgi": {
-            "hashes": [
-                "sha256:88ab9867d8973d8ae84719cf233b7dafc54326fcaec89683c3f9f77c002cdff9"
-            ],
-            "index": "pypi",
-            "version": "==2.0.20"
         },
         "wcwidth": {
             "hashes": [
