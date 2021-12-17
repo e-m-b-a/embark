@@ -162,9 +162,7 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 STATIC_URL = '/static/'
 STATIC_ROOT = "/app/www/static/"
-STATICFILES_DIRS = [
-    
-]
+STATICFILES_DIRS = []
 # STATICFILES_STORAGE
 # STATICFILES_FINDERS
 
