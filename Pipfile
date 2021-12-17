@@ -17,9 +17,8 @@ msgpack = "*"
 django-apscheduler = "*"
 psutil = "*"
 Django = "*"
-uWSGI = "*"
 Rx = "*"
-mod-wsgi-standalone = "*"
+mod-wsgi-httpd = "*"
 
 [dev-packages]
 pycodestyle = "*"

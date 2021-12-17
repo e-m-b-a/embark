@@ -59,20 +59,20 @@ echo -e "[*] Starting migrations - log to embark/logs/migration.log"
 pipenv run ./embark/manage.py makemigrations users uploader | tee -a ./embark/logs/migration.log
 pipenv run ./embark/manage.py migrate | tee -a ./embark/logs/migration.log
 
-# collect staticfiles
-pipenv run ./embark/manage.py collectstatic --noinput
-
 # container-logs
 echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./embark/logs/redis_dev.log""$NC" 
 docker container logs embark_redis_dev -f &> ./embark/logs/redis_dev.log & 
 echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.log""$NC"
-docker container logs embark_db_dev -f &> ./embark/logs/mysql_dev.log & 
+docker container logs embark_db_dev -f &> ./embark/logs/mysql_dev.log &
+
+# collect staticfiles
+pipenv run ./embark/manage.py collectstatic --noinput
 
 #echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
 #pipenv run ./manage.py runapscheduler | tee -a ./logs/scheduler.log &
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting wsgi - log to /embark/logs/wsgi.log"
-pipenv run ./embark/manage.py runmodwsgi --working-directory . --port=80 --user www-data --group www-data --server-root=/app/mod_wsgi-express-80 --url-alias /static ./www/static --allow-localhost
+pipenv run ./embark/manage.py runmodwsgi --working-directory . #--port=80 --user www-data --group www-data --server-root=/app/mod_wsgi-express-80 --document-root ./www/static --allow-localhost
 #--setup-only 
 #/app/mod_wsgi-express-80/apachectl start
 
