@@ -163,10 +163,7 @@ USE_TZ = False
 STATIC_URL = '/static/'
 STATIC_ROOT = "/app/www/static/"
 STATICFILES_DIRS = [
-    BASE_DIR / 'static/scripts',
-    BASE_DIR / 'static/external',
-    BASE_DIR / 'static/content/css',
-    BASE_DIR / 'static/content/images'
+    BASE_DIR / 'static/'
 ]
 # STATICFILES_STORAGE
 # STATICFILES_FINDERS

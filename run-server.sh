@@ -72,8 +72,8 @@ pipenv run ./embark/manage.py collectstatic --noinput
 #pipenv run ./manage.py runapscheduler | tee -a ./logs/scheduler.log &
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting wsgi - log to /embark/logs/wsgi.log"
-pipenv run ./embark/manage.py runmodwsgi --working-directory . #--port=80 --user www-data --group www-data --server-root=/app/mod_wsgi-express-80 --document-root ./www/static --allow-localhost
-#--setup-only 
+pipenv run ./embark/manage.py runmodwsgi --setup-only --port=80 --user www-data --group www-data --server-root=/app/mod_wsgi-express-80 --document-root ./www/static --url-alias /static/ /app/www/static --allow-localhost
+#
 #/app/mod_wsgi-express-80/apachectl start
 
 #echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
