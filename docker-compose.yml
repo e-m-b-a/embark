@@ -12,17 +12,12 @@ services:
     ports:
       - "3306:3306"
     restart: always
-    environment:
-      - MYSQL_RANDOM_ROOT_PASSWORD=yes
-      - MYSQL_PASSWORD
-      - MYSQL_USER
-      - MYSQL_DATABASE
     volumes:
       - ./embark_db:/var/lib/mysql
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     networks:
-      embark_dev:
+      embark_backend:
         ipv4_address: "172.21.0.5"
 
   redis:
@@ -40,7 +35,7 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     networks:
-      embark_dev:
+      embark_backend:
         ipv4_address: "172.21.0.8"
     logging:
       driver: "local"
@@ -48,10 +43,10 @@ services:
 
 networks:
   embark_dev:
-    name: embark_dev
+    name: embark_backend
     driver: bridge
     driver_opts:
-      com.docker.network.bridge.name: embark_dev
+      com.docker.network.bridge.name: embark_backend
     ipam:
       config:
         - subnet: "172.21.0.0/16"
