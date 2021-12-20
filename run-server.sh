@@ -65,16 +65,17 @@ docker container logs embark_redis_dev -f &> ./embark/logs/redis_dev.log &
 echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.log""$NC"
 docker container logs embark_db_dev -f &> ./embark/logs/mysql_dev.log &
 
-# collect staticfiles
+# collect staticfiles and make accesable for server
 pipenv run ./embark/manage.py collectstatic --noinput
+chown www-embark /app/www -R
 
 #echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
 #pipenv run ./manage.py runapscheduler | tee -a ./logs/scheduler.log &
 
-echo -e "\n[""$BLUE JOB""$NC""] Starting wsgi - log to /embark/logs/wsgi.log"
-pipenv run ./embark/manage.py runmodwsgi --setup-only --port=80 --user www-data --group www-data --server-root=/app/mod_wsgi-express-80 --document-root ./www/static --url-alias /static/ /app/www/static --allow-localhost
-#
-#/app/mod_wsgi-express-80/apachectl start
+echo -e "\n[""$BLUE JOB""$NC""] Starting Apache"
+pipenv run ./embark/manage.py runmodwsgi --setup-only --port=80 --user www-embark --group sudo --server-root=/app/mod_wsgi-express-80 --url-alias /static/ /app/www/static/ --allow-localhost
+
+/app/mod_wsgi-express-80/apachectl start
 
 #echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
 #pipenv run daphne -v 3 --access-log ./embark/logs/daphne.log -p 8001 -b '0.0.0.0' --root-path="./embark" embark.embark.asgi:application
