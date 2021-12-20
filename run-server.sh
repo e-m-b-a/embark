@@ -12,6 +12,11 @@
 
 # Description: Starts the Django-Server(s) on host
 
+export PIPENV_VENV_IN_PROJECT="enabled"
+#export WORKON_HOME=/tmp
+export PIPENV_DOTENV_LOCATION=./.env
+export PIPENV_DONT_LOAD_ENV=0
+
 cleaner() {
   /app/mod_wsgi-express-80/apachectl stop
   fuser -k 80/tcp
@@ -73,9 +78,7 @@ chown www-embark /app/www -R
 #pipenv run ./manage.py runapscheduler | tee -a ./logs/scheduler.log &
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting Apache"
-pipenv run ./embark/manage.py runmodwsgi --setup-only --port=80 --user www-embark --group sudo --server-root=/app/mod_wsgi-express-80 --url-alias /static/ /app/www/static/ --allow-localhost
-
-/app/mod_wsgi-express-80/apachectl start
+pipenv run ./embark/manage.py runmodwsgi --port=80 --user www-embark --group sudo --url-alias /static/ /app/www/static/ --allow-localhost --working-directory ./embark
 
 #echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
 #pipenv run daphne -v 3 --access-log ./embark/logs/daphne.log -p 8001 -b '0.0.0.0' --root-path="./embark" embark.embark.asgi:application
