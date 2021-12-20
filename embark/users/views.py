@@ -5,7 +5,7 @@ from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, get_user
 from django.contrib import messages
 
 from .models import User
@@ -106,6 +106,8 @@ def signout(request):
 def password_change(request):
     if request.method == "POST":
         logger.debug(request.POST)
+        user = get_user(request)
+
         data = {k: v[0] for k, v in dict(request.POST).items()}
         logger.debug(data)
         try:
@@ -115,27 +117,33 @@ def password_change(request):
                 newPassword = body['newPassword']
                 confirmPassword = body['confirmPassword']
 
-                if User.check_password(oldPassword):
+                if user.check_password(oldPassword):
+                    if oldPassword == newPassword:
+                        logger.debug('New password = old password')
+                        return render(request, 'uploader/passwordChange.html',
+                                      {'error_message': True, 'message': 'New password matches the old password'})
                     if newPassword == confirmPassword:
-                        User.set_password(newPassword)
-                        logger.debug('New password set')
+                        user.set_password(newPassword)
+                        user.save()
+                        authenticate(request, username=user.username, password=newPassword)
+                        login(request, user)
+                        logger.debug('New password set, user authenticated')
+                        return render(request, 'uploader/passwordChangeDone.html',
+                                      {'success_message': True, 'message': 'Password change successful.'})
                     else:
                         logger.debug('Passwords do not match')
                         return render(request, 'uploader/passwordChange.html',
                                       {'error_message': True, 'message': 'Passwords do not match.'})
-                    return render(request, 'uploader/base.html',
-                              {'success_message': True, 'message': 'Password change successful.'})
                 else:
                     logger.debug('Old password is incorrect')
                     return render(request, 'uploader/passwordChange.html',
-                              {'error_message': True, 'message': 'Old password is incorrect.'})
+                                  {'error_message': True, 'message': 'Old password is incorrect.'})
             except KeyError:
                 logger.exception('Missing keys from data-passwords')
                 return render(request, 'uploader/passwordChange.html', {'error_message': True, 'message': 'Some fields are empty!'})
-        except KeyError:
-        #except Exception as error:
-            #logger.exception('Wide exception in Password Change: %s', error)
+        except Exception as error:
+            logger.exception('Wide exception in Password Change: %s', error)
             return render(request, 'uploader/passwordChange.html', {'error_message': True,
-                                                              'message': 'Something went wrong when changing the password for the user.'})
+                                                                    'message': 'Something went wrong when changing the password for the user.'})
     else:
         return render(request, 'uploader/passwordChange.html')
