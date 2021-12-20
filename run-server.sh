@@ -12,11 +12,6 @@
 
 # Description: Starts the Django-Server(s) on host
 
-export PIPENV_VENV_IN_PROJECT="enabled"
-#export WORKON_HOME=/tmp
-export PIPENV_DOTENV_LOCATION=./.env
-export PIPENV_DONT_LOAD_ENV=0
-
 cleaner() {
   /app/mod_wsgi-express-80/apachectl stop
   fuser -k 80/tcp
@@ -47,7 +42,7 @@ NC='\033[0m' # no color
 export DJANGO_SETTINGS_MODULE=embark.settings
 
 echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
-docker-compose -f ./docker-compose-dev.yml up -d
+pipenv run docker-compose -f ./docker-compose-dev.yml up -d
 DU_RETURN=$?
 if [[ $DU_RETURN -eq 0 ]] ; then
   echo -e "$GREEN""$BOLD""Finished setup mysql and redis docker images""$NC"
