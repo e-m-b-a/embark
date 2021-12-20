@@ -433,7 +433,7 @@ fi
 if [[ "$DEV" -eq 1 ]]; then
   install_embark_dev
   exit 0
-elif [[ "$DEFAULT" -eq 1 ]]: then
+elif [[ "$DEFAULT" -eq 1 ]]; then
   install_embark_default
   exit 0
 fi
