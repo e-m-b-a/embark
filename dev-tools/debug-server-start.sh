@@ -34,7 +34,7 @@ ORANGE='\033[0;33m'
 BOLD='\033[1m'
 NC='\033[0m' # no color
 
-export DJANGO_SETTINGS_MODULE=embark.settings
+export DJANGO_SETTINGS_MODULE=embark.settings.dev
 export EMBARK_DEBUG=True
 
 echo -e "\n$GREEN""$BOLD""Configuring Embark""$NC"
