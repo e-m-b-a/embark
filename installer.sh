@@ -16,11 +16,6 @@
 
 export DEBIAN_FRONTEND=noninteractive
 
-export PIPENV_VENV_IN_PROJECT="enabled"
-#export WORKON_HOME=/tmp
-export PIPENV_DOTENV_LOCATION=./.env
-export PIPENV_DONT_LOAD_ENV=0
-
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 ORANGE='\033[0;33m'
@@ -34,7 +29,8 @@ print_help() {
   # echo -e "$RED               ! This deletes all Docker-Images as well !""$NC"
   echo -e "$CYAN-e$NC         Install EMBA only"
   echo -e "$CYAN-h$NC         Print this help message"
-  echo -e "$CYAN-d$NC         Build EMBArk"  # Webserver on host
+  echo -e "$CYAN-D$NC         EMBArk Developer"
+  echo -e "$CYAN-d$NC         Build EMBArk <-----default"
   echo
 }
 
@@ -113,9 +109,126 @@ reset_docker() {
   fi
 }
 
-install_embark() {
-  echo -e "\n$GREEN""$BOLD""Installation of the firmware scanning environment EMBArk""$NC"
+install_debs() {
+  echo -e "\n$GREEN""$BOLD""Install debian packages for EMBArk installation""$NC"
+  apt-get update -y
+  if ! command -v git > /dev/null ; then
+    apt-get install -y -q git
+  fi
+  if ! command -v docker > /dev/null ; then
+    apt-get install -y -q docker.io
+  fi
+  if ! command -v docker-compose > /dev/null ; then
+    apt-get install -y -q docker-compose
+  fi
+  # we need the django package on the host for generating the django SECRET_KEY and pip
+  apt-get install -y -q python3-django python3-pip
+}
 
+install_embark_default() {
+  echo -e "\n$GREEN""$BOLD""Installation of the firmware scanning environment EMBArk""$NC"
+  install_debs
+
+  #Add user for server
+  useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /app/
+  echo 'www-embark ALL=(ALL) NOPASSWD: /app/emba/emba.sh' | EDITOR='tee -a' visudo
+
+  #Add Symlink
+  if ! [[ -d /app ]]; then
+    ln -s "$PWD" /app || exit 1
+  fi
+  
+  #install packages
+  export WORKON_HOME=/app/www/
+  export PIPENV_DOTENV_LOCATION=/app/www/.env
+  pipenv install
+
+  # download externals
+  if ! [[ -d ./embark/static/external ]]; then
+    echo -e "\n$GREEN""$BOLD""Downloading of external files, e.g. jQuery, for the offline usability of EMBArk""$NC"
+    mkdir -p ./embark/static/external/{scripts,css}
+    wget -O ./embark/static/external/scripts/jquery.js https://code.jquery.com/jquery-3.6.0.min.js
+    wget -O ./embark/static/external/scripts/confirm.js https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js
+    wget -O ./embark/static/external/scripts/bootstrap.js https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js
+    wget -O ./embark/static/external/scripts/datatable.js https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.js
+    wget -O ./embark/static/external/scripts/charts.js https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js
+    wget -O ./embark/static/external/css/confirm.css https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css
+    wget -O ./embark/static/external/css/bootstrap.css https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css
+    wget -O ./embark/static/external/css/datatable.css https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.css
+    find ./embark/static/external/ -type f -exec sed -i '/sourceMappingURL/d' {} \;
+  fi
+
+  # copy django server
+  cp -R ./embark/ /app/www/embark/
+  # TODO exclude everzthing thats not needed
+
+  # get emba
+  if ! [[ -d ./emba ]]; then
+    git clone https://github.com/e-m-b-a/emba.git
+  else
+    cd emba || exit 1
+    RES=$(git pull;)
+    cd .. || exit 1
+  fi
+
+  # install on host 
+  if ! [[ "$RES" == "Already up to date." ]]; then
+    cd emba || exit 1
+    ./installer.sh -d
+    cd .. || exit 1
+  fi
+
+  # setup .env with dev network
+  DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+  echo -e "$ORANGE""$BOLD""Creating a Developer EMBArk configuration file .env""$NC"
+  export DATABASE_NAME="embark"
+  export DATABASE_USER="embark"
+  export DATABASE_PASSWORD="embark"
+  export DATABASE_HOST="127.0.0.1"
+  export DATABASE_PORT="3306"
+  export MYSQL_PASSWORD="embark"
+  export MYSQL_USER="embark"
+  export MYSQL_DATABASE="embark"
+  export REDIS_HOST="127.0.0.1"
+  export REDIS_PORT="7777"
+  export SECRET_KEY="$DJANGO_SECRET_KEY"
+  # this is for pipenv/django # TODO change after 
+  {
+    echo "DATABASE_NAME=$DATABASE_NAME"
+    echo "DATABASE_USER=$DATABASE_USER" 
+    echo "DATABASE_PASSWORD=$DATABASE_PASSWORD"
+    echo "DATABASE_HOST=$DATABASE_HOST"
+    echo "DATABASE_PORT=$DATABASE_PORT"
+    echo "MYSQL_PASSWORD=$MYSQL_PASSWORD"
+    echo "MYSQL_USER=$MYSQL_USER"
+    echo "MYSQL_DATABASE=$MYSQL_DATABASE"
+    echo "REDIS_HOST=$REDIS_HOST"
+    echo "REDIS_PORT=$REDIS_PORT"
+    echo "SECRET_KEY=$DJANGO_SECRET_KEY"
+    echo "PYTHONPATH=${PYTHONPATH}:${PWD}"  #TODO
+  } > /app/www/.env
+
+  # setup dbs-container and detach build could be skipt
+  echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
+  docker-compose -f ./docker-compose.yml build
+  DB_RETURN=$?
+  if [[ $DB_RETURN -eq 0 ]] ; then
+    echo -e "$GREEN""$BOLD""Finished building EMBArk docker images""$NC"
+  else
+    echo -e "$ORANGE""$BOLD""Failed building EMBArk docker images""$NC"
+  fi
+  # download images for container
+  docker-compose -f ./docker-compose.yml up --no-start
+  docker-compose -f ./docker-compose.yml up &>/dev/null &
+  sleep 30
+  kill %1
+
+  echo -e "$GREEN""$BOLD""Ready to use \$sudo ./embark/run-server.sh ""$NC"
+  echo -e "$GREEN""$BOLD""Which starts the server on (0.0.0.0) port 80 ""$NC"
+}
+
+#install as container TODO!!!!!!!!!
+install_embark_docker(){
   echo -e "\n$GREEN""$BOLD""Downloading of external files, e.g. jQuery, for the offline usability of EMBArk""$NC"
   mkdir -p ./embark/static/external/{scripts,css}
   wget -O ./embark/static/external/scripts/jquery.js https://code.jquery.com/jquery-3.6.0.min.js
@@ -207,31 +320,14 @@ install_embark() {
   echo -e "$GREEN""$BOLD""Ready to use @ localhost:80""$NC"
 }
 
-install_debs() {
-  echo -e "\n$GREEN""$BOLD""Install debian packages for EMBArk installation""$NC"
-  apt-get update -y
-  if ! command -v git > /dev/null ; then
-    apt-get install -y -q git
-  fi
-  if ! command -v docker > /dev/null ; then
-    apt-get install -y -q docker.io
-  fi
-  if ! command -v docker-compose > /dev/null ; then
-    apt-get install -y -q docker-compose
-  fi
-  # we need the django package on the host for generating the django SECRET_KEY and pip
-  apt-get install -y -q python3-django python3-pip
-}
-
-# TODO this or install_embark NOT both in the same directory
-make_dev_env(){
+install_embark_dev(){
   echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
   install_debs
   apt-get install -y -q python3-dev default-libmysqlclient-dev build-essential sqlite3 pipenv npm pycodestyle python3-pylint-django
   npm install -g jshint dockerlinter
-  pipenv install --dev
+  PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
   # download externals
-  if ! [[ -d embark/static/external ]]; then
+  if ! [[ -d ./embark/static/external ]]; then
     echo -e "\n$GREEN""$BOLD""Downloading of external files, e.g. jQuery, for the offline usability of EMBArk""$NC"
     mkdir -p ./embark/static/external/{scripts,css}
     wget -O ./embark/static/external/scripts/jquery.js https://code.jquery.com/jquery-3.6.0.min.js
@@ -264,41 +360,9 @@ make_dev_env(){
   if ! [[ -d /app ]]; then
     ln -s "$PWD" /app || exit 1
   fi
-  #Add user for server
-  useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /app/
-  echo 'www-embark ALL=(ALL) NOPASSWD: /app/emba/emba.sh' | EDITOR='tee -a' visudo
-  
-  # setup .env with dev network
-  DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
-  echo -e "$ORANGE""$BOLD""Creating a Developer EMBArk configuration file .env""$NC"
-  export DATABASE_NAME="embark"
-  export DATABASE_USER="embark"
-  export DATABASE_PASSWORD="embark"
-  export DATABASE_HOST="127.0.0.1"
-  export DATABASE_PORT="3306"
-  export MYSQL_PASSWORD="embark"
-  export MYSQL_USER="embark"
-  export MYSQL_DATABASE="embark"
-  export REDIS_HOST="127.0.0.1"
-  export REDIS_PORT="7777"
-  export SECRET_KEY="$DJANGO_SECRET_KEY"
-  # this is for pipenv/django # TODO change after 
-  {
-    echo "DATABASE_NAME=$DATABASE_NAME"
-    echo "DATABASE_USER=$DATABASE_USER" 
-    echo "DATABASE_PASSWORD=$DATABASE_PASSWORD"
-    echo "DATABASE_HOST=$DATABASE_HOST"
-    echo "DATABASE_PORT=$DATABASE_PORT"
-    echo "MYSQL_PASSWORD=$MYSQL_PASSWORD"
-    echo "MYSQL_USER=$MYSQL_USER"
-    echo "MYSQL_DATABASE=$MYSQL_DATABASE"
-    echo "REDIS_HOST=$REDIS_HOST"
-    echo "REDIS_PORT=$REDIS_PORT"
-    echo "SECRET_KEY=$DJANGO_SECRET_KEY"
-    echo "PYTHONPATH=${PYTHONPATH}:${PWD}"  #TODO
-  } > ./.env
+
   # setup dbs-container and detach build could be skipt
-    echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
+  echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
   docker-compose -f ./docker-compose-dev.yml build
   DB_RETURN=$?
   if [[ $DB_RETURN -eq 0 ]] ; then
@@ -325,7 +389,7 @@ if [ "$#" -ne 1 ]; then
   exit 1
 fi
 
-while getopts eFrdh OPT ; do
+while getopts eFrdDh OPT ; do
   case $OPT in
     e)
       export EMBA_ONLY=1
@@ -341,6 +405,10 @@ while getopts eFrdh OPT ; do
 
       ;;
     d)
+      export DEFAULT=1
+      echo -e "$GREEN""$BOLD""Default installation of EMBArk""$NC"
+      ;;
+    D)
       export DEV=1
       echo -e "$GREEN""$BOLD""Building Development-Enviroment""$NC"
       ;;
@@ -363,8 +431,11 @@ if ! [[ $EUID -eq 0 ]] && [[ $LIST_DEP -eq 0 ]] ; then
 fi
 
 if [[ "$DEV" -eq 1 ]]; then
-    make_dev_env
-    exit 1
+  install_embark_dev
+  exit 0
+elif [[ "$DEFAULT" -eq 1 ]]: then
+  install_embark_default
+  exit 0
 fi
 
 install_debs
@@ -384,4 +455,4 @@ if [[ "$EMBA_ONLY" -ne 1 ]]; then
   install_embark
 
 fi
-
+exit 0

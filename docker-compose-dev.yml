@@ -5,6 +5,8 @@ services:
   embark_db:
     container_name: embark_db_dev
     image: mysql
+    env_file:
+      - /app/www/.env
     expose:
       - "3306"
     ports:
@@ -26,6 +28,8 @@ services:
   redis:
     container_name: embark_redis_dev
     image: "redis:5"
+    env_file:
+      - /app/www/.env
     command: --port 7777
     expose:
       - "7777"

@@ -16,7 +16,7 @@ from channels.routing import ProtocolTypeRouter
 from channels.routing import URLRouter
 from .routing import ws_urlpatterns
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'embark.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'embark.settings.deploy')
 
 asgi_application = get_asgi_application()
 
