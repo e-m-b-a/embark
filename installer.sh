@@ -266,6 +266,7 @@ make_dev_env(){
   fi
   useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /app/
   echo 'www-embark ALL=(ALL) NOPASSWD: /app/emba/emba.sh' | EDITOR='tee -a' visudo
+  chown www-data /app/embark -R
   # setup .env with dev network
   DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
   echo -e "$ORANGE""$BOLD""Creating a Developer EMBArk configuration file .env""$NC"
