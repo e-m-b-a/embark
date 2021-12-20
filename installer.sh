@@ -158,10 +158,6 @@ install_embark_default() {
     find ./embark/static/external/ -type f -exec sed -i '/sourceMappingURL/d' {} \;
   fi
 
-  # copy django server
-  cp -R ./embark/ /app/www/embark/
-  # TODO exclude everything thats not needed
-
   # get emba
   if ! [[ -d ./emba ]]; then
     git clone https://github.com/e-m-b-a/emba.git
@@ -205,7 +201,7 @@ install_embark_default() {
     echo "REDIS_HOST=$REDIS_HOST"
     echo "REDIS_PORT=$REDIS_PORT"
     echo "SECRET_KEY=$DJANGO_SECRET_KEY"
-    echo "PYTHONPATH=${PYTHONPATH}:${PWD}"  #TODO
+    echo "PYTHONPATH=${PYTHONPATH}:${PWD}"
   } > /app/www/.env
 
   # setup dbs-container and detach build could be skipt
@@ -223,7 +219,7 @@ install_embark_default() {
   sleep 30
   kill %1
 
-  echo -e "$GREEN""$BOLD""Ready to use \$sudo ./embark/run-server.sh ""$NC"
+  echo -e "$GREEN""$BOLD""Ready to use \$sudo pipenv run ./run-server.sh ""$NC"
   echo -e "$GREEN""$BOLD""Which starts the server on (0.0.0.0) port 80 ""$NC"
 }
 

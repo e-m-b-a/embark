@@ -28,7 +28,7 @@ set -a
 trap cleaner INT
 
 cd "$(dirname "$0")" || exit 1
-export PIPENV_DOTENV_LOCATION=/app/www/.env
+#export PIPENV_DOTENV_LOCATION=/app/www/.env
 export DJANGO_SETTINGS_MODULE=embark.settings.deploy
 
 if ! [[ $EUID -eq 0 ]] ; then
@@ -61,6 +61,10 @@ echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./embark/logs/redis_dev
 docker container logs embark_redis -f &> /app/www/logs/redis_dev.log & 
 echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.log""$NC"
 docker container logs embark_db -f &> /app/www/logs/mysql_dev.log &
+
+# copy django server
+cp -Ru ./embark/ /app/www/embark/
+# TODO exclude everything thats not needed
 
 # !DIRECTORY-CHANGE!
 cd /app/www/embark/ || exit 1
