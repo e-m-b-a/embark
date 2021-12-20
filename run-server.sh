@@ -39,7 +39,7 @@ BLUE='\033[0;34m'
 BOLD='\033[1m'
 NC='\033[0m' # no color
 
-export DJANGO_SETTINGS_MODULE=embark.settings
+export DJANGO_SETTINGS_MODULE=embark.settings.deploy
 
 echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
 pipenv run docker-compose -f ./docker-compose-dev.yml up -d
@@ -72,11 +72,11 @@ chown www-embark /app/www -R
 #echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
 #pipenv run ./manage.py runapscheduler | tee -a ./logs/scheduler.log &
 
+echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
+pipenv run daphne -v 3 --access-log ./embark/logs/daphne.log -p 8001 -b '0.0.0.0' --root-path="./embark" embark.embark.asgi:application
+
 echo -e "\n[""$BLUE JOB""$NC""] Starting Apache"
 pipenv run ./embark/manage.py runmodwsgi --port=80 --user www-embark --group sudo --url-alias /static/ /app/www/static/ --allow-localhost --working-directory ./embark
-
-#echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-#pipenv run daphne -v 3 --access-log ./embark/logs/daphne.log -p 8001 -b '0.0.0.0' --root-path="./embark" embark.embark.asgi:application
 
 wait %1
 wait %2
