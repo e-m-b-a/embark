@@ -130,7 +130,7 @@ install_embark_default() {
   install_debs
 
   #Add user for server
-  useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /app/
+  useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /app/www/
   echo 'www-embark ALL=(ALL) NOPASSWD: /app/emba/emba.sh' | EDITOR='tee -a' visudo
 
   #Add Symlink
@@ -139,7 +139,7 @@ install_embark_default() {
   fi
   
   #install packages
-  export WORKON_HOME=/app/www/
+  #export WORKON_HOME=/app/www/
   export PIPENV_DOTENV_LOCATION=/app/www/.env
   pipenv install
 
@@ -160,7 +160,7 @@ install_embark_default() {
 
   # copy django server
   cp -R ./embark/ /app/www/embark/
-  # TODO exclude everzthing thats not needed
+  # TODO exclude everything thats not needed
 
   # get emba
   if ! [[ -d ./emba ]]; then

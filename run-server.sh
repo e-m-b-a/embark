@@ -28,6 +28,8 @@ set -a
 trap cleaner INT
 
 cd "$(dirname "$0")" || exit 1
+export PIPENV_DOTENV_LOCATION=/app/www/.env
+export DJANGO_SETTINGS_MODULE=embark.settings.deploy
 
 if ! [[ $EUID -eq 0 ]] ; then
   echo -e "\\n$RED""Run EMBArk installation script with root permissions!""$NC\\n"
@@ -62,30 +64,27 @@ docker container logs embark_db -f &> /app/www/logs/mysql_dev.log &
 
 # !DIRECTORY-CHANGE!
 cd /app/www/embark/ || exit 1
-export DJANGO_SETTINGS_MODULE=embark.settings.deploy
-export PIPENV_DOTENV_LOCATION=/app/www/.env
-export PIPENV_VENV_IN_PROJECT=1
 
 # db_init
 echo -e "[*] Starting migrations - log to embark/logs/migration.log"
-pipenv run ./manage.py makemigrations users uploader | tee -a /app/www/logs/migration.log
-pipenv run ./manage.py migrate | tee -a /app/www/logs/migration.log
+python3 ./manage.py makemigrations users uploader | tee -a /app/www/logs/migration.log
+python3 ./manage.py migrate | tee -a /app/www/logs/migration.log
 
 
 # collect staticfiles and make accesable for server
-pipenv run ./manage.py collectstatic
+python3 ./manage.py collectstatic
 chown www-embark /app/www/embark -R
 chown www-embark /app/www/media -R
 chown www-embark /app/www/static -R
 
 #echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
-#pipenv run ./manage.py runapscheduler | tee -a /app/www/logs/scheduler.log &
+#python3 ./manage.py runapscheduler | tee -a /app/www/logs/scheduler.log &
 
 #echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-#pipenv run daphne -v 3 --access-log /app/www/logs/daphne.log -p 8001 -b '0.0.0.0' --root-path="/app/www/embark" embark.asgi:application &
+#python3 daphne -v 3 --access-log /app/www/logs/daphne.log -p 8001 -b '0.0.0.0' --root-path="/app/www/embark" embark.asgi:application &
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting Apache"
-pipenv run ./manage.py runmodwsgi --port=80 --user www-embark --group sudo --url-alias /static/ /app/www/static/ --url-alias /uploadedFirmwareImages/ /app/www/media/ --allow-localhost --working-directory . --server-root /app/www/httpd80/
+python3 ./manage.py runmodwsgi --port=80 --user www-embark --group sudo --url-alias /static/ /app/www/static/ --url-alias /uploadedFirmwareImages/ /app/www/media/ --allow-localhost --working-directory . --server-root /app/www/httpd80/
 
 wait %1
 wait %2

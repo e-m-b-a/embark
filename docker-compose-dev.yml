@@ -3,10 +3,8 @@ version: "3"
 services:
 
   embark_db:
-    container_name: embark_db_dev
+    container_name: embark_db
     image: mysql
-    env_file:
-      - /app/www/.env
     expose:
       - "3306"
     ports:
@@ -22,14 +20,12 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     networks:
-      embark_dev:
+      embark_backend:
         ipv4_address: "172.21.0.5"
 
   redis:
-    container_name: embark_redis_dev
+    container_name: embark_redis
     image: "redis:5"
-    env_file:
-      - /app/www/.env
     command: --port 7777
     expose:
       - "7777"
@@ -40,18 +36,18 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     networks:
-      embark_dev:
+      embark_backend:
         ipv4_address: "172.21.0.8"
     logging:
       driver: "local"
 
 
 networks:
-  embark_dev:
+  embark_backend:
     name: embark_dev
     driver: bridge
     driver_opts:
-      com.docker.network.bridge.name: embark_dev
+      com.docker.network.bridge.name: embark_backend
     ipam:
       config:
         - subnet: "172.21.0.0/16"
