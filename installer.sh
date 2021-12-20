@@ -16,7 +16,7 @@
 
 export DEBIAN_FRONTEND=noninteractive
 
-#export PIPENV_VENV_IN_PROJECT="enabled"  #installs venv in same dir
+export PIPENV_VENV_IN_PROJECT="enabled"
 #export WORKON_HOME=/tmp
 export PIPENV_DOTENV_LOCATION=./.env
 export PIPENV_DONT_LOAD_ENV=0
