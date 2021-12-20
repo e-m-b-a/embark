@@ -76,19 +76,19 @@ else
   echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
 fi
 
-if ! [[ -d ./embark/logs ]]; then
-  mkdir ./embark/logs
+if ! [[ -d ./logs ]]; then
+  mkdir ./logs
 fi
 
 # db_init
 echo -e "[*] Starting migrations - log to embark/logs/migration.log"
-pipenv run ./embark/manage.py makemigrations users uploader | tee -a ./embark/logs/migration.log
-pipenv run ./embark/manage.py migrate | tee -a ./embark/logs/migration.log
+pipenv run ./embark/manage.py makemigrations users uploader | tee -a ./logs/migration.log
+pipenv run ./embark/manage.py migrate | tee -a ./logs/migration.log
 
 echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./embark/logs/redis_dev.log""$NC" 
-docker container logs embark_redis_dev -f > ./embark/logs/redis_dev.log &
+docker container logs embark_redis_dev -f > ./logs/redis_dev.log &
 echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.log""$NC"
-docker container logs embark_db_dev -f > ./embark/logs/mysql_dev.log & 
+docker container logs embark_db_dev -f > ./logs/mysql_dev.log & 
 
 # run middlewears
 # echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"

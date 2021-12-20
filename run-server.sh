@@ -21,6 +21,7 @@ cleaner() {
   docker container stop embark_redis_dev
   docker network rm embark_dev
   docker container prune
+  #echo "\\n$ORANGE""Consider reseting ownership of the project manually, else git wont work correctly""$NC\\n"
   exit 1
 }
 set -a
@@ -39,8 +40,7 @@ BLUE='\033[0;34m'
 BOLD='\033[1m'
 NC='\033[0m' # no color
 
-export DJANGO_SETTINGS_MODULE=embark.settings.deploy
-
+# Start container
 echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
 pipenv run docker-compose -f ./docker-compose-dev.yml up -d
 DU_RETURN=$?
@@ -50,33 +50,44 @@ else
   echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
 fi
 
-if ! [[ -d ./embark/logs ]]; then
-  mkdir ./embark/logs
+export DJANGO_SETTINGS_MODULE=embark.settings.deploy
+
+# copy django server
+cp -R ./embark/ /app/www/
+# TODO exclude everzthing thats not needed
+
+if ! [[ -d /app/www/logs ]]; then
+  mkdir ./logs
 fi
+
+cd /app/www/embark/ || exit 1
 
 # db_init
 echo -e "[*] Starting migrations - log to embark/logs/migration.log"
-pipenv run ./embark/manage.py makemigrations users uploader | tee -a ./embark/logs/migration.log
-pipenv run ./embark/manage.py migrate | tee -a ./embark/logs/migration.log
+pipenv run ./manage.py makemigrations users uploader | tee -a /app/www/logs/migration.log
+pipenv run ./manage.py migrate | tee -a /app/www/logs/migration.log
 
 # container-logs
 echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./embark/logs/redis_dev.log""$NC" 
-docker container logs embark_redis_dev -f &> ./embark/logs/redis_dev.log & 
+docker container logs embark_redis_dev -f &> ./app/www/logs/redis_dev.log & 
 echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.log""$NC"
-docker container logs embark_db_dev -f &> ./embark/logs/mysql_dev.log &
+docker container logs embark_db_dev -f &> /app/www/logs/mysql_dev.log &
 
 # collect staticfiles and make accesable for server
-pipenv run ./embark/manage.py collectstatic --noinput
-chown www-embark /app/www -R
+pipenv run ./manage.py collectstatic --noinput
+chown www-embark /app/www/embark -R
+chown www-embark /app/www/media -R
+chown www-embark /app/www/static -R
 
 #echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
-#pipenv run ./manage.py runapscheduler | tee -a ./logs/scheduler.log &
+#pipenv run ./manage.py runapscheduler | tee -a /app/www/logs/scheduler.log &
 
-echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-pipenv run daphne -v 3 --access-log ./embark/logs/daphne.log -p 8001 -b '0.0.0.0' --root-path="./embark" embark.embark.asgi:application
+#echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
+#pipenv run daphne -v 3 --access-log /app/www/logs/daphne.log -p 8001 -b '0.0.0.0' --root-path="/app/www/embark" embark.asgi:application &
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting Apache"
-pipenv run ./embark/manage.py runmodwsgi --port=80 --user www-embark --group sudo --url-alias /static/ /app/www/static/ --allow-localhost --working-directory ./embark
+pipenv run ./manage.py runmodwsgi --port=80 --user www-embark --group sudo --url-alias /static/ /app/www/static/ --url-alias /uploadedFirmwareImages/ /app/www/media/ --allow-localhost --working-directory . --server-root /app/www/httpd80/
 
 wait %1
 wait %2
+#wait %3
