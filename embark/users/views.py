@@ -7,10 +7,9 @@ from django.views.decorators.http import require_http_methods
 
 from django.contrib.auth import authenticate, login, logout, get_user
 from django.contrib import messages
-
-from .models import User
 from django.conf import settings
 
+from .models import User
 logger = logging.getLogger('web')
 
 
