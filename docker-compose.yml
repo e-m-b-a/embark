@@ -3,7 +3,7 @@ version: "3"
 services:
 
   embark_db:
-    container_name: embark_db_dev
+    container_name: embark_db
     image: mysql
     env_file:
       - /app/www/.env
@@ -21,7 +21,7 @@ services:
         ipv4_address: "172.21.0.5"
 
   redis:
-    container_name: embark_redis_dev
+    container_name: embark_redis
     image: "redis:5"
     env_file:
       - /app/www/.env
@@ -42,7 +42,7 @@ services:
 
 
 networks:
-  embark_dev:
+  embark_backend:
     name: embark_backend
     driver: bridge
     driver_opts:
