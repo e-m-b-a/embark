@@ -12,6 +12,16 @@
 
 # Description: Starts the Django-Server(s) on host
 
+GREEN='\033[0;32m'
+ORANGE='\033[0;33m'
+BLUE='\033[0;34m'
+BOLD='\033[1m'
+NC='\033[0m' # no color
+
+export PIPENV_DOTENV_LOCATION=/app/www/.env
+export PIPENV_VENV_IN_PROJECT=1
+export DJANGO_SETTINGS_MODULE=embark.settings.deploy
+
 cleaner() {
   #/app/mod_wsgi-express-80/apachectl stop
   fuser -k 80/tcp
@@ -24,23 +34,19 @@ cleaner() {
   #echo "\\n$ORANGE""Consider reseting ownership of the project manually, else git wont work correctly""$NC\\n"
   exit 1
 }
+#main
 set -a
 trap cleaner INT
 
 cd "$(dirname "$0")" || exit 1
-#export PIPENV_DOTENV_LOCATION=/app/www/.env
-export DJANGO_SETTINGS_MODULE=embark.settings.deploy
 
 if ! [[ $EUID -eq 0 ]] ; then
   echo -e "\\n$RED""Run EMBArk installation script with root permissions!""$NC\\n"
   exit 1
 fi
 
-GREEN='\033[0;32m'
-ORANGE='\033[0;33m'
-BLUE='\033[0;34m'
-BOLD='\033[1m'
-NC='\033[0m' # no color
+#start venv
+source "$(pipenv --venv)/bin/activate"
 
 # Start container
 echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"

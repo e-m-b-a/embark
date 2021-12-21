@@ -139,9 +139,11 @@ install_embark_default() {
   fi
   
   #install packages
-  #export WORKON_HOME=/app/www/
+  export PIPENV_VENV_IN_PROJECT=1
   export PIPENV_DOTENV_LOCATION=/app/www/.env
   pipenv install
+
+  #make venv accessable TODO?
 
   # download externals
   if ! [[ -d ./embark/static/external ]]; then
