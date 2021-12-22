@@ -193,19 +193,19 @@ class BoundedExecutor:
         logger.info("submit cls: %s", cls)
 
         # check if semaphore can be acquired, if not queue is full
-        with semaphore.acquire(blocking=False) as queue_not_full:
-            if not queue_not_full:
-                logger.error("Executor queue full")
-                return None
-            try:
-                future = executor.submit(function_cmd, *args, **kwargs)
-            except Exception as error:
-                logger.error("Executor task could not be submitted")
-                semaphore.release()
-                raise error
-            else:
-                future.add_done_callback(lambda x: semaphore.release())
-                return future
+        queue_not_full = semaphore.acquire(blocking=False)  # FIXME
+        if not queue_not_full:
+            logger.error("Executor queue full")
+            return None
+        try:
+            future = executor.submit(function_cmd, *args, **kwargs)
+        except Exception as error:
+            logger.error("Executor task could not be submitted")
+            semaphore.release()
+            raise error
+        else:
+            future.add_done_callback(lambda x: semaphore.release())
+            return future
 
     @classmethod
     def shutdown(cls, wait=True):
