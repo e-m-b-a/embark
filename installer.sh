@@ -291,7 +291,6 @@ make_dev_env(){
     echo "REDIS_HOST=$REDIS_HOST"
     echo "REDIS_PORT=$REDIS_PORT"
     echo "SECRET_KEY=$DJANGO_SECRET_KEY"
-    echo "PYTHONPATH=${PYTHONPATH}:${PWD}"  #TODO
   } > ./.env
   # setup dbs-container and detach build could be skipt
     echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
