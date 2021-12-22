@@ -9,16 +9,16 @@ https://docs.djangoproject.com/en/3.2/howto/deployment/asgi/
 
 import os
 
-from django.core.asgi import get_asgi_application
-
 from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter
 from channels.routing import URLRouter
-from .routing import ws_urlpatterns
+from django.conf.urls import urls
+from django.core.asgi import get_asgi_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'embark.settings.deploy')
-
 asgi_application = get_asgi_application()
+
+from .routing import ws_urlpatterns
 
 application = ProtocolTypeRouter({
     'http': asgi_application,

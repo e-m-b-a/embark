@@ -63,9 +63,9 @@ if ! [[ -d /app/www/logs ]]; then
 fi
 
 # container-logs (2 jobs)
-echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./embark/logs/redis_dev.log""$NC" 
+echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./embark/logs/redis_dev.log" 
 docker container logs embark_redis -f &> /app/www/logs/redis.log & 
-echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.log""$NC"
+echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.log"
 docker container logs embark_db -f &> /app/www/logs/mysql.log &
 
 # copy django server
@@ -76,25 +76,27 @@ cp -Ru ./embark/ /app/www/embark/
 cd /app/www/embark/ || exit 1
 
 # db_init
-echo -e "[*] Starting migrations - log to embark/logs/migration.log"
+echo -e "\n[""$BLUE JOB""$NC""] Starting migrations - log to embark/logs/migration.log"
 pipenv run ./manage.py makemigrations users uploader | tee -a /app/www/logs/migration.log
 pipenv run ./manage.py migrate | tee -a /app/www/logs/migration.log
 
 
 # collect staticfiles and make accesable for server
+echo -e "\n[""$BLUE JOB""$NC""] Collecting static files"
 pipenv run ./manage.py collectstatic
 chown www-embark /app/www/ -R
 chmod 770 /app/www/media/
 
-#echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
-
-#pipenv run ./manage.py runapscheduler | tee -a /app/www/logs/scheduler.log &
-
-echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-pipenv run daphne --access-log /app/www/logs/daphne.log -p 8001 -b '0.0.0.0' --root-path="/app/www/embark" embark.asgi:application &
+echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
+pipenv run ./manage.py runapscheduler | tee -a /app/www/logs/scheduler.log &
+sleep 5
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting Apache"
-pipenv run ./manage.py runmodwsgi --port=80 --user www-embark --group sudo --url-alias /static/ /app/www/static/ --url-alias /uploadedFirmwareImages/ /app/www/media/ --allow-localhost --working-directory /app/www/embark/ --server-root /app/www/httpd80/
+pipenv run ./manage.py runmodwsgi --port=80 --user www-embark --group sudo --url-alias /static/ /app/www/static/ --url-alias /uploadedFirmwareImages/ /app/www/media/ --allow-localhost --working-directory /app/www/embark/ --server-root /app/www/httpd80/ &
+sleep 5
+
+echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
+pipenv run daphne --access-log /app/www/logs/daphne.log -p 8001 -b '0.0.0.0' --root-path="/app/www/embark/" embark.asgi:application
 
 wait %1
 wait %2

@@ -24,7 +24,6 @@ LOG_URL = '/emba_logs/'
 ALLOWED_HOSTS = ['*']
 
 # Application definition - defines what apps gets migrated
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -32,8 +31,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'mod_wsgi.server',
     'django_apscheduler',
+    'mod_wsgi.server',
     'channels',
     'uploader',
     'users'
@@ -74,10 +73,11 @@ CSRF_COOKIE_SAMESITE = 'Strict'
 CSRF_COOKIE_HTTPONLY = False  # False since we will grab it via universal-cookies
 
 SESSION_COOKIE_SAMESITE = 'Strict'
-SESSION_COOKIE_SECURE = True
-SESSION_COOKIE_HTTPONLY = False
+# SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
 
 WSGI_APPLICATION = 'embark.wsgi.application'
+ASGI_APPLICATION = 'embark.asgi.application'
 
 # Database - uses *.env to configure
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
@@ -190,7 +190,7 @@ REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-ASGI_APPLICATION = 'embark.asgi.application'
+
 
 # Format string for displaying run time timestamps in the Django admin site. The default
 # just adds seconds to the standard Django format, which is useful for displaying the timestamps
