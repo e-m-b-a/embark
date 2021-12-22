@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e6b6157e52d51666b107d2c69bea84570c4bb6204bb0183e1df6cbaf350ce880"
+            "sha256": "3a5f678d94c8e5ac4af59bcbb5880310decacf5392a499a7377094ca22e71976"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -39,10 +39,10 @@
         },
         "async-timeout": {
             "hashes": [
-                "sha256:a22c0b311af23337eb05fcf05a8b51c3ea53729d46fb5460af62bee033cec690",
-                "sha256:b930cb161a39042f9222f6efb7301399c87eeab394727ec5437924a36d6eef51"
+                "sha256:2163e1640ddb52b7a8c80d0a67a08587e5d245cc9c553a74a847056bc2976b15",
+                "sha256:8ca1e4fcf50d07413d66d1a5e416e42cfdf5851c981d679a09851a6853383b3c"
             ],
-            "version": "==4.0.1"
+            "version": "==4.0.2"
         },
         "attrs": {
             "hashes": [
@@ -128,11 +128,11 @@
         },
         "channels": {
             "hashes": [
-                "sha256:056b72e51080a517a0f33a0a30003e03833b551d75394d6636c885d4edb8188f",
-                "sha256:3f15bdd2138bb4796e76ea588a0a344b12a7964ea9b2e456f992fddb988a4317"
+                "sha256:0ff0422b4224d10efac76e451575517f155fe7c97d369b5973b116f22eeaf86c",
+                "sha256:fdd9a94987a23d8d7ebd97498ed8b8cc83163f37e53fc6c85098aba7a3bb8b75"
             ],
             "index": "pypi",
-            "version": "==3.0.3"
+            "version": "==3.0.4"
         },
         "channels-redis": {
             "hashes": [
@@ -308,19 +308,6 @@
                 "sha256:aed605ba3b72462d64d475a21a9296f400a19c4f74a31b59103d2a99ffd5aa5c"
             ],
             "version": "==0.1.3"
-        },
-        "mod-wsgi-httpd": {
-            "hashes": [
-                "sha256:4ab310a26dcad14246a66b0440c61a2026fedb9e9face8f2989955881907e1f2"
-            ],
-            "version": "==2.4.48.1"
-        },
-        "mod-wsgi-standalone": {
-            "hashes": [
-                "sha256:71a5bb625c8810325cd16b8c7ddab69041ba3a1f52f66e4d87aa8e76d582c255"
-            ],
-            "index": "pypi",
-            "version": "==4.9.0"
         },
         "mongoengine": {
             "hashes": [
