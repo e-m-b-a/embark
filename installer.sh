@@ -137,6 +137,13 @@ install_embark_default() {
   if ! [[ -d /app ]]; then
     ln -s "$PWD" /app || exit 1
   fi
+
+  #make dirs
+  if ! [[ -d ./www ]]; then
+    mkdir ./www
+    mkdir ./www/media
+    mkdir ./www/static
+  fi
   
   #install packages
   export PIPENV_VENV_IN_PROJECT=1

@@ -32,7 +32,7 @@ executor = ThreadPoolExecutor(max_workers=MAX_WORKERS)
 semaphore = BoundedSemaphore(MAX_QUEUE)
 
 # emba directories
-EMBA_SCRIPT_LOCATION = "cd /app/emba/ && ./emba.sh"
+EMBA_SCRIPT_LOCATION = f"cd {settings.EMBA_ROOT} && ./emba.sh"
 
 
 class BoundedExecutor:
@@ -68,7 +68,7 @@ class BoundedExecutor:
             logger.info("Success: %s", cmd)
 
             # get csv log location
-            csv_log_location = f"/app/emba/{settings.LOG_ROOT}/{primary_key}/f50_base_aggregator.csv"
+            csv_log_location = f"{settings.EMBA_ROOT}{settings.LOG_ROOT}/{primary_key}/f50_base_aggregator.csv"
 
             # read f50_aggregator and store it into a Result form
             logger.info('Reading report from: %s', csv_log_location)
@@ -136,7 +136,7 @@ class BoundedExecutor:
         """
 
         # unpack firmware file to </app/embark/uploadedFirmwareImages/active_{ID}/>
-        active_analyzer_dir = f"/app/embark/{settings.MEDIA_ROOT}/active_{firmware_flags.id}/"
+        active_analyzer_dir = f"{settings.MEDIA_ROOT}/active_{firmware_flags.id}/"
 
         # we do not extract anything in embark -> emba should be able to handle all the cases with deep extraction
         # if firmware_file.is_archive:
@@ -160,7 +160,7 @@ class BoundedExecutor:
 
         # evaluate meta information and safely create log dir
 
-        emba_log_location = f"/app/emba/{settings.LOG_ROOT}/{firmware_flags.pk}"
+        emba_log_location = f"{settings.EMBA_ROOT}{settings.LOG_ROOT}/{firmware_flags.pk}"
         log_path = Path(emba_log_location)
         log_path.mkdir(parents=True, exist_ok=True)
 
@@ -247,7 +247,7 @@ class BoundedExecutor:
 
         res = Result(
             firmware=Firmware.objects.get(id=primary_key),
-            emba_command=cmd.replace("cd /app/emba/ && ", ""),
+            emba_command=cmd.replace(f"cd {settings.EMBA_ROOT} && ", ""),
             architecture_verified=res_dict.get("architecture_verified", ''),
             # os_unverified=res_dict.get("os_unverified", ''),
             os_verified=res_dict.get("os_verified", ''),

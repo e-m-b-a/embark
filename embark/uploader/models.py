@@ -98,10 +98,10 @@ class FirmwareFile(models.Model):
     upload_date = models.DateTimeField(default=datetime.now, blank=True)
 
     def get_abs_path(self):
-        return f"/app/embark/{settings.MEDIA_ROOT}/{self.pk}/{self.file.name}"
+        return f"{settings.MEDIA_ROOT}/{self.pk}/{self.file.name}"
 
     def get_abs_folder_path(self):
-        return f"/app/embark/{settings.MEDIA_ROOT}/{self.pk}"
+        return f"{settings.MEDIA_ROOT}/{self.pk}"
 
     # def __init__(self, *args, **kwargs):
     #    super().__init__(*args, **kwargs)

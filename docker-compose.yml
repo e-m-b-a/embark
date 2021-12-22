@@ -7,6 +7,8 @@ services:
     image: mysql
     env_file:
       - /app/www/.env
+    environment:
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
     expose:
       - "3306"
     ports:

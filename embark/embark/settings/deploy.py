@@ -16,6 +16,11 @@ SECRET_KEY = os.environ.get('SECRET_KEY')   # look at .env
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.environ.get('EMBARK_DEBUG', False))
 
+# EMBA location
+EMBA_ROOT='/app/emba/'
+LOG_ROOT = os.path.join('emba_logs')  # media directory in the root directory
+LOG_URL = '/emba_logs/'
+
 ALLOWED_HOSTS = ['*']
 
 # Application definition - defines what apps gets migrated
@@ -51,7 +56,7 @@ ROOT_URLCONF = 'embark.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates', '/app/emba/emba_logs'],
+        'DIRS': [BASE_DIR / 'templates', LOG_ROOT ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -113,7 +118,7 @@ LOGGING = {
             'level': LOG_LEVEL,
             'class': 'logging.FileHandler',
             'formatter': 'file',
-            'filename': '/app/www/logs/embark.log',
+            'filename': BASE_DIR / 'embark.log',
         }
     },
     'loggers': {
@@ -175,10 +180,9 @@ LOGIN_URL = ''
 LOGOUT_REDIRECT_URL = ''
 
 # Added for FIle storage to get the path to save Firmware images.
-MEDIA_ROOT = '/app/www/media/'
+MEDIA_ROOT = '/app/www/media/uploadedFirmwareImages/'
 MEDIA_URL = '/uploadedFirmwareImages/'
-LOG_ROOT = os.path.join('emba_logs')  # media directory in the root directory
-LOG_URL = '/emba_logs/'
+
 REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
 REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
 

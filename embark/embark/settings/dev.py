@@ -6,6 +6,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = bool(os.environ.get('EMBARK_DEBUG', False))
 ALLOWED_HOSTS = ['*']
+EMBA_ROOT='/app/emba/'
+LOG_ROOT = os.path.join('emba_logs')
+LOG_URL = '/emba_logs/'
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -38,7 +41,7 @@ ROOT_URLCONF = 'embark.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates', '/app/emba/emba_logs'],
+        'DIRS': [BASE_DIR / 'templates', LOG_ROOT ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -157,8 +160,7 @@ LOGOUT_REDIRECT_URL = ''
 # Added for FIle storage to get the path to save Firmware images.
 MEDIA_ROOT = os.path.join('uploadedFirmwareImages')  # media directory in the root directory
 MEDIA_URL = '/uploadedFirmwareImages/'
-LOG_ROOT = os.path.join('emba_logs')  # media directory in the root directory
-LOG_URL = '/emba_logs/'
+
 REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
 REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
 
