@@ -1,3 +1,4 @@
+# pylint: disable=W0613
 from pathlib import Path
 
 import json
@@ -183,7 +184,7 @@ def individual_report_dashboard(request, analyze_id):
 @csrf_exempt
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def save_file(request):
+def save_file(request, refreshed):  #FIXME
     """
     file saving on POST requests with attached file
 

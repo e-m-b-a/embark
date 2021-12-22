@@ -142,6 +142,7 @@ install_embark_default() {
   if ! [[ -d ./www ]]; then
     mkdir ./www
     mkdir ./www/media
+    mkdir ./www/media/uploadedFirmwareImages
     mkdir ./www/static
   fi
   
@@ -149,8 +150,6 @@ install_embark_default() {
   export PIPENV_VENV_IN_PROJECT=1
   export PIPENV_DOTENV_LOCATION=/app/www/.env
   pipenv install
-
-  #make venv accessable TODO?
 
   # download externals
   if ! [[ -d ./embark/static/external ]]; then

@@ -6,6 +6,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = bool(os.environ.get('EMBARK_DEBUG', False))
 ALLOWED_HOSTS = ['*']
+
 EMBA_ROOT='/app/emba/'
 LOG_ROOT = os.path.join('emba_logs')
 LOG_URL = '/emba_logs/'
@@ -54,13 +55,11 @@ TEMPLATES = [
     },
 ]
 
-# CSRF_COOKIE_SECURE = False
 CSRF_COOKIE_SAMESITE = 'Strict'
 CSRF_COOKIE_HTTPONLY = False  # False since we will grab it via universal-cookies
 
 SESSION_COOKIE_SAMESITE = 'Strict'
-SESSION_COOKIE_SECURE = True
-SESSION_COOKIE_HTTPONLY = False
+SESSION_COOKIE_HTTPONLY = True
 
 WSGI_APPLICATION = 'embark.wsgi.application'
 
@@ -144,7 +143,6 @@ USE_TZ = False
 
 
 STATIC_URL = '/static/'
-STATIC_ROOT = "/app/www/static/"
 STATICFILES_DIRS = [
     BASE_DIR / 'static/'
 ]

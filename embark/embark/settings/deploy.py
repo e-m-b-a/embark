@@ -18,7 +18,7 @@ DEBUG = bool(os.environ.get('EMBARK_DEBUG', False))
 
 # EMBA location
 EMBA_ROOT='/app/emba/'
-LOG_ROOT = os.path.join('emba_logs')  # media directory in the root directory
+LOG_ROOT = os.path.join('emba_logs')  #FIXME media directory in the root directory
 LOG_URL = '/emba_logs/'
 
 ALLOWED_HOSTS = ['*']
