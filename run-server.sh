@@ -90,12 +90,11 @@ chmod 770 /app/www/media/
 
 #pipenv run ./manage.py runapscheduler | tee -a /app/www/logs/scheduler.log &
 
-#echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-
-#pipenv run daphne -v 3 --access-log /app/www/logs/daphne.log -p 8001 -b '0.0.0.0' --root-path="/app/www/embark" embark.asgi:application &
+echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
+pipenv run daphne --access-log /app/www/logs/daphne.log -p 8001 -b '0.0.0.0' --root-path="/app/www/embark" embark.asgi:application &
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting Apache"
-pipenv run ./manage.py runmodwsgi --port=80 --user www-embark --group sudo --url-alias /static/ /app/www/static/ --url-alias /uploadedFirmwareImages/ /app/www/media/ --working-directory . --server-root /app/www/httpd80/  --log-directory /app/www/logs/
+pipenv run ./manage.py runmodwsgi --port=80 --user www-embark --group sudo --url-alias /static/ /app/www/static/ --url-alias /uploadedFirmwareImages/ /app/www/media/ --allow-localhost --working-directory /app/www/embark/ --server-root /app/www/httpd80/
 
 wait %1
 wait %2
