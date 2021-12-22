@@ -16,6 +16,11 @@
 
 export DEBIAN_FRONTEND=noninteractive
 
+#export PIPENV_VENV_IN_PROJECT="enabled"  #installs venv in same dir
+#export WORKON_HOME=/tmp
+export PIPENV_DOTENV_LOCATION=./.env
+export PIPENV_DONT_LOAD_ENV=0
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 ORANGE='\033[0;33m'
@@ -153,6 +158,7 @@ install_embark() {
       echo "REDIS_HOST=$REDIS_HOST"
       echo "REDIS_PORT=$REDIS_PORT"
       echo "SECRET_KEY=$DJANGO_SECRET_KEY"
+      echo "PYTHONPATH=${PYTHONPATH}:${PWD}:${PWD}/embark/"
     } > .env
     echo -e "$RED""$BOLD""WARNING: The default EMBArk configuration includes a key & password generation via the shell script!""$NC"
     cat .env
@@ -222,7 +228,7 @@ make_dev_env(){
   echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
   install_debs
   apt-get install -y -q python3-dev default-libmysqlclient-dev build-essential sqlite3 pipenv npm pycodestyle python3-pylint-django
-  npm install -g jshint # global install
+  npm install -g jshint dockerlinter
   pipenv install --dev
   # download externals
   if ! [[ -d embark/static/external ]]; then

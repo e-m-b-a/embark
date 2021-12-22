@@ -78,14 +78,14 @@ class Archiver:
                 shutil.unpack_archive(file_location)
             logger.info("Unpacked file successful: %s", file_location)
             return True
-        except shutil.ReadError as ex:
+        except shutil.ReadError as rerr:
             # logging.error(f"Format {file_location.split('.', 1)[1]} is not supported")
             logging.error("Format %s is not supported", file_location.split('.', 1)[1])
-            raise ValueError from ex
-        except Exception as ex:
+            raise ValueError from rerr
+        except Exception as error:
             logging.error("Undefined Error during unpacking file: %s", file_location)
-            logging.error(ex)
-            raise ex
+            logging.error(error)
+            raise error
 
     @staticmethod
     def get_supported_formats():
