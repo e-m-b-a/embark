@@ -70,7 +70,7 @@ docker container logs embark_db_dev -f &> ./logs/mysql_dev.log &
 echo -e "\n[""$BLUE JOB""$NC""] Starting wsgi - log to /embark/logs/wsgi.log"
 pipenv run uwsgi --wsgi-file ./embark/wsgi.py --http :80 --threads 8 --logto ./logs/uwsgi.log &
 echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-pipenv run daphne -v 3 --access-log ./logs/daphne.log -p 8001 -b '0.0.0.0' --root-path="$PWD" embark.asgi:application 1>/dev/null
+pipenv run daphne --access-log ./logs/daphne.log -p 8001 -b '0.0.0.0' --root-path="$PWD" embark.asgi:application 1>/dev/null
 
 wait %1
 wait %2
