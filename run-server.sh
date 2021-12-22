@@ -109,6 +109,7 @@ sleep 5
 echo -e "\n[""$BLUE JOB""$NC""] Starting Apache"
 pipenv run ./manage.py runmodwsgi --port="$HTTP_PORT" --user www-embark --group sudo \
 --url-alias /static/ /app/www/static/ --url-alias /uploadedFirmwareImages/ /app/www/media/ \
+--url-alias /emba_logs/ /app/emba/emba_logs/ \
 --allow-localhost --working-directory /app/www/embark/ --server-root /app/www/httpd80/ \
 --limit-request-body 104857600 --include-file /app/www/conf/embark.conf &
 #--https-only --ssl-ca-certificate-file --ssl-certificate FILE-PATH --https-port "$HTTPS_PORT" &
