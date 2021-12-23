@@ -1,3 +1,4 @@
+# pylint:disable=W0613
 from pathlib import Path
 
 import json
@@ -10,14 +11,15 @@ from http import HTTPStatus
 from django.conf import settings
 # from django import forms
 from django.forms import model_to_dict
-from django.shortcuts import render  # , redirect
+from django.http.response import Http404
+from django.shortcuts import render     # , redirect
+
 from django.template.loader import get_template
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse  # , StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 # from django.views.decorators.cache import cache_control
-from django.template import loader
 from django.urls import reverse
 
 from uploader.boundedexecutor import BoundedExecutor
@@ -79,13 +81,13 @@ def download_zipped(request, analyze_id):
         logger.warning("Firmware with ID: %s does not exist", analyze_id)
         return HttpResponse("Firmware with ID: %s does not exist", analyze_id)
 
-    except Firmware.DoesNotExist as ex:
+    except Firmware.DoesNotExist as excpt:
         logger.warning("Firmware with ID: %s does not exist in DB", analyze_id)
-        logger.warning("Exception: %s", ex)
+        logger.warning("Exception: %s", excpt)
         return HttpResponse("Firmware ID does not exist in DB")
-    except Exception as ex:
+    except Exception as error:
         logger.error("Error occured while querying for Firmware object: %s", analyze_id)
-        logger.error("Exception: %s", ex)
+        logger.error("Exception: %s", error)
         return HttpResponse("Error occured while querying for Firmware object")
 
 
@@ -242,7 +244,7 @@ def get_log(request, log_type, lines):
     file_path = f"{settings.BASE_DIR}/logs/{log_file}.log"
     logger.info('Load log file: %s', file_path)
     try:
-        with open(file_path) as file_:
+        with open(file_path, encoding='utf-8') as file_:
             try:
                 buffer_ = 500
                 lines_found = []
@@ -362,6 +364,9 @@ def html_report_download(request, analyze_id, html_path, download_file):
             logger.info("html_report - analyze_id: %s html_path: %s download_file: %s", analyze_id, html_path,
                         download_file)
             return response
+    else:
+        response = Http404
+        return response
 
 
 @csrf_exempt
@@ -384,8 +389,8 @@ def html_report_resource(request, analyze_id, img_file):
         # CodeQL issue is not relevant as the urls are defined via urls.py
         with open(resource_path, "rb") as file_:
             return HttpResponse(file_.read(), content_type=content_type)
-    except IOError as ex:
-        logger.error(ex)
+    except IOError as error:
+        logger.error(error)
         logger.error(request.path)
 
     # just in case -> back to report intro
@@ -433,8 +438,8 @@ def get_load(request):
         query_set = ResourceTimestamp.objects.all()
         result = {}
         # for k in model_to_dict(query_set[0]).keys():
-        for k in model_to_dict(query_set[0]):
-            result[k] = tuple(model_to_dict(d)[k] for d in query_set)
+        for modelnr in model_to_dict(query_set[0]):
+            result[modelnr] = tuple(model_to_dict(querynr)[modelnr] for querynr in query_set)
         return JsonResponse(data=result, status=HTTPStatus.OK)
     except ResourceTimestamp.DoesNotExist:
         logger.error('ResourceTimestamps not found in database')
@@ -507,8 +512,9 @@ def get_accumulated_reports(request):
             value = result.pop(charfield)
             if value not in data[charfield]:
                 data[charfield][value] = 0
+
             data[charfield][value] += 1
-        for field in result:
+        for field in result.items():
             if field not in data:
                 data[field] = {'sum': 0, 'count': 0}
             data[field]['count'] += 1
@@ -516,7 +522,7 @@ def get_accumulated_reports(request):
             if result[field] is not None:
                 data[field]['sum'] += result[field]
 
-    for field in data:
+    for field in data.items():
         if field not in charfields:
             data[field]['mean'] = data[field]['sum'] / data[field]['count']
     data['total_firmwares'] = len(results)

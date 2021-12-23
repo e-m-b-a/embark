@@ -31,7 +31,7 @@
             
             <div class="box">
                 <p class="mainText">Select and delete a firmware image/archive</p>
-                <form action="{% url 'embark-delete' %}" method="POST" id="delete-form" onsubmit="window.confirmDelete(event)">
+                <form action="{% url 'embark-delete' %}" method="post" id="delete-form" onsubmit="window.confirmDelete(event)">
                     {% csrf_token %}
                     {% load filters %}
                     <!-- Iterate over all fields and set expmode on fields in expert mode -->
@@ -52,7 +52,7 @@
         <div class="col-sm">
             <div class="box">
                 <p class="mainText">Analyze a firmware image/archive</p>
-                <form action="{% url 'embark-start-analysis' refreshed=2 %}" method="POST" id="analyze-form">
+                <form action="{% url 'embark-start-analysis' refreshed=2 %}" method="post" id="analyze-form">
                     <div class="innerBlock">
                         <label for="expertMode">Expert mode</label>
                         <label class="switch">

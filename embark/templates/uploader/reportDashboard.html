@@ -44,16 +44,16 @@
                             <td>{{ firmware.end_date }}</td>
                             <td>
                                 <div class="buttonRow">
-                                    <form action={% url 'embark-download' firmware.pk %} method='GET'>
+                                    <form action={% url 'embark-download' firmware.pk %} method='get'>
                                         <button type="submit" class="btn buttonRowElem" >Download Logs</button>
                                     </form>
-                                    <form action={% url 'embark-html-report' firmware.pk 'index.html' %} method='GET'>
+                                    <form action={% url 'embark-html-report' firmware.pk 'index.html' %} method='get'>
                                         <button type="submit" class="btn buttonRowElem" >Open Report</button>
                                     </form>
-                                    <form action={% url 'embark-IndividualReportDashboard' firmware.pk %} method='GET'>
+                                    <form action={% url 'embark-IndividualReportDashboard' firmware.pk %} method='get'>
                                         <button type="submit" class="btn buttonRowElem" >Detail View</button>
                                     </form>
-                                    <form action={% url 'embark-start-analysis' 1 %} method='GET'>
+                                    <form action={% url 'embark-start-analysis' 1 %} method='get'>
                                         <button type="submit" class="btn buttonRowElem" >Rescan/delete</button>
                                     </form>
                                 </div>
