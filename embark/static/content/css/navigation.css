@@ -91,6 +91,7 @@
     pointer-events: none;
     color: #fff;
     width: 100%;
+    height: min-content;
 }
 
 #navigation .nav-link:hover {
@@ -186,4 +187,33 @@
 #navigation.active~.main {
     width: calc(100% - 300px);
     left: 300px;
+}
+
+.dropdown {
+  display: inline-block;
+  position: relative;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    width: 150%;
+    overflow: initial;
+    font-size: 18px;
+    line-height: 0.5em;
+    margin-left: 30px;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+.dropdown-content a {
+  display: block;
+  color: #000000;
+  padding: 15px;
+  text-decoration: none;
+}
+.dropdown-content a:hover {
+  color: #eee;
+  background-color: #29043f;
 }

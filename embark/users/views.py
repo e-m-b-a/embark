@@ -146,3 +146,26 @@ def password_change(request):
                                                                     'message': 'Something went wrong when changing the password for the user.'})
     else:
         return render(request, 'uploader/passwordChange.html')
+
+
+@csrf_exempt
+@login_required(login_url='/' + settings.LOGIN_URL)
+@require_http_methods(["GET", "POST"])
+def acc_delete(request):
+    if request.method == "POST":
+        logger.debug('disabling account')
+        user = get_user(request)
+        user.is_active = False
+        user.save()
+        return render(request, 'uploader/register.html',
+                      {'success_message': True, 'message': 'Account successfully deleted.'})
+    else:
+        return render(request, 'uploader/accountDelete.html')
+
+
+@csrf_exempt
+@login_required(login_url='/' + settings.LOGIN_URL)
+@require_http_methods(["GET", "POST"])
+def password_reset(request):
+
+    return render(request, 'uploader/passwordReset.html')
