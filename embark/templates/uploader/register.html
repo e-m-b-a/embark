@@ -9,6 +9,11 @@
             <medium>{{ message }}</medium>
         </div>
         {% endif %}
+        {% if success_message %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <medium>{{ message }}</medium>
+        </div>
+        {% endif %}
         <div id="embarkLogo"><img src="{% static 'content/images/embark_logo.svg' %}" alt="EMBArk logo graphic" height="auto" width="auto"/></div>
         <div class="login">
             <form action="{% url 'embark-signup' %}" class="login-form" method="POST" novalidate>

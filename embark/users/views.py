@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
@@ -10,6 +11,7 @@ from django.contrib import messages
 from django.conf import settings
 
 from .models import User
+
 logger = logging.getLogger('web')
 
 
@@ -139,7 +141,8 @@ def password_change(request):
                                   {'error_message': True, 'message': 'Old password is incorrect.'})
             except KeyError:
                 logger.exception('Missing keys from data-passwords')
-                return render(request, 'uploader/passwordChange.html', {'error_message': True, 'message': 'Some fields are empty!'})
+                return render(request, 'uploader/passwordChange.html',
+                              {'error_message': True, 'message': 'Some fields are empty!'})
         except Exception as error:
             logger.exception('Wide exception in Password Change: %s', error)
             return render(request, 'uploader/passwordChange.html', {'error_message': True,
@@ -155,6 +158,8 @@ def acc_delete(request):
     if request.method == "POST":
         logger.debug('disabling account')
         user = get_user(request)
+        logger.debug('' + datetime.now().strftime("%H:%M:%S"))
+        user.username = user.get_username() + '_disactivated_' + datetime.now().strftime("%H:%M:%S");  # workaround for not duplicating entry users_user.username
         user.is_active = False
         user.save()
         return render(request, 'uploader/register.html',
@@ -167,5 +172,4 @@ def acc_delete(request):
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["GET", "POST"])
 def password_reset(request):
-
     return render(request, 'uploader/passwordReset.html')
