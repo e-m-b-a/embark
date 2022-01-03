@@ -136,7 +136,7 @@ shellchecker() {
   mapfile -t SH_SCRIPTS < <(find embark -iname "*.sh")
   for SH_SCRIPT in "${SH_SCRIPTS[@]}"; do
     echo -e "\\n""$GREEN""Run shellcheck on $SH_SCRIPT:""$NC""\\n"
-    if shellcheck "$SH_SCRIPT" || [[ $? -ne 1 && $? -ne 2 ]]; then
+    if shellcheck -x "$SH_SCRIPT" || [[ $? -ne 1 && $? -ne 2 ]]; then
       echo -e "$GREEN""$BOLD""==> SUCCESS""$NC""\\n"
     else
       echo -e "\\n""$ORANGE$BOLD==> FIX ERRORS""$NC""\\n"

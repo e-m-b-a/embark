@@ -179,18 +179,20 @@ install_embark_default() {
   if ! [[ "$RES" == "Already up to date." ]]; then
     cd emba || exit 1
     ./installer.sh -d
+    cp ./config/emba_updater /etc/cron.daily/
     cd .. || exit 1
   fi
 
   # setup .env with dev network
   DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+  RANDOM_PW=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)
   echo -e "$ORANGE""$BOLD""Creating a Developer EMBArk configuration file .env""$NC"
   export DATABASE_NAME="embark"
   export DATABASE_USER="embark"
-  export DATABASE_PASSWORD="embark"
+  export DATABASE_PASSWORD="$RANDOM_PW"
   export DATABASE_HOST="127.0.0.1"
   export DATABASE_PORT="3306"
-  export MYSQL_PASSWORD="embark"
+  export MYSQL_PASSWORD="$RANDOM_PW"
   export MYSQL_USER="embark"
   export MYSQL_DATABASE="embark"
   export REDIS_HOST="127.0.0.1"

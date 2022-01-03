@@ -1,10 +1,12 @@
 version: "3"
-
+# https://docs.docker.com/compose/compose-file/compose-file-v3/#deploy
 services:
 
   embark_db:
     container_name: embark_db
     image: mysql
+    labels:
+      flag: "deploy_EMBArk_server_mysql_container"
     env_file:
       - /app/www/.env
     environment:
@@ -25,6 +27,8 @@ services:
   redis:
     container_name: embark_redis
     image: "redis:5"
+    labels:
+      flag: "deploy_EMBArk_server_redis_container"
     env_file:
       - /app/www/.env
     command: --port 7777

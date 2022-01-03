@@ -23,19 +23,21 @@ export DJANGO_SETTINGS_MODULE=embark.settings.deploy
 # export EMBARK_DEBUG=True
 export HTTP_PORT=80
 export HTTPS_PORT=443
+export BIND_IP='0.0.0.0'
 
 cleaner() {
   fuser -k 80/tcp
   killall -9 -q "*daphne*"
+  kill -9 $(ps -ef | grep manage.py runapscheduler | awk '{print $2}')
   fuser -k 8001/tcp
   docker container stop embark_db
   docker container stop embark_redis
-  docker network rm embark
-  docker container prune
-  echo "\n$ORANGE""Consider reseting ownership of the project manually, else git wont work correctly""$NC\n"
+  docker network rm embark_backend
+  docker container prune -f --filter "label=flag"
+  echo -e "$ORANGE""Consider reseting ownership of the project manually, else git wont work correctly""$NC"
   exit 1
 }
-#main
+# main
 set -a
 trap cleaner INT
 
@@ -44,6 +46,24 @@ cd "$(dirname "$0")" || exit 1
 if ! [[ $EUID -eq 0 ]] ; then
   echo -e "\\n$RED""Run EMBArk installation script with root permissions!""$NC\\n"
   exit 1
+fi
+
+# check emba
+echo -e "$BLUE""$BOLD""checking EMBA""$RED"
+/app/emba/emba.sh -d 1>/dev/null
+if [[ $? -eq 1 ]]; then
+  echo -e "$BLUE""Trying auto-maintain""$NC"
+  # automaintain
+  cd ./emba || echo -e "$RED""EMBA not installed""$NC" && exit 1
+  git pull
+  docker network rm emba_runs
+  docker-compose up --no-start
+  /app/emba/emba.sh -d 1>/dev/null
+  if [[ $? -eq 1 ]]; then
+    echo -e "$RED""EMBA is not configured correctly""$NC"
+    exit 1
+  fi
+  cd .. || exit 1
 fi
 
 #start venv
@@ -63,7 +83,7 @@ if ! [[ -d /app/www/logs ]]; then
   mkdir /app/www/logs
 fi
 
-
+if ! [[ -d /app/www/conf ]]; then
   mkdir /app/www/conf
 fi
 
@@ -107,7 +127,8 @@ pipenv run ./manage.py runapscheduler | tee -a /app/www/logs/scheduler.log &
 sleep 5
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting Apache"
-pipenv run ./manage.py runmodwsgi --port="$HTTP_PORT" --user www-embark --group sudo \
+pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
+--host "$BIND_IP" --port="$HTTP_PORT" \
 --url-alias /static/ /app/www/static/ --url-alias /uploadedFirmwareImages/ /app/www/media/ \
 --url-alias /emba_logs/ /app/emba/emba_logs/ \
 --allow-localhost --working-directory /app/www/embark/ --server-root /app/www/httpd80/ \
@@ -117,7 +138,7 @@ pipenv run ./manage.py runmodwsgi --port="$HTTP_PORT" --user www-embark --group 
 sleep 5
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-pipenv run daphne --access-log /app/www/logs/daphne.log -p 8001 -b '0.0.0.0' --root-path=/app/www/embark embark.asgi:application
+pipenv run daphne --access-log /app/www/logs/daphne.log -p 8001 -b "$BIND_IP" --root-path=/app/www/embark embark.asgi:application
 
 wait %1
 wait %2

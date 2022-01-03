@@ -9,53 +9,48 @@ from operator import itemgetter
 from http import HTTPStatus
 
 from django.conf import settings
-# from django import forms
 from django.forms import model_to_dict
 from django.http.response import Http404
-from django.shortcuts import render     # , redirect
+from django.shortcuts import render
 from django.template.loader import get_template
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse    # , StreamingHttpResponse
-from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
-# from django.views.decorators.cache import cache_control
 from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
 
 from uploader.boundedexecutor import BoundedExecutor
 from uploader.archiver import Archiver
 from uploader.forms import FirmwareForm, DeleteFirmwareForm
-# from uploader.models import Firmware, FirmwareFile, DeleteFirmware, Result, ResourceTimestamp
 from uploader.models import Firmware, FirmwareFile, Result, ResourceTimestamp
 
 logger = logging.getLogger('web')
 
 
-@csrf_exempt
 @require_http_methods(['GET'])
-@login_required(login_url='/' + settings.LOGIN_URL)
+@login_required(login_url='/' + settings.LOGIN_URL)  #FIXME
 def check_login(request):
+    # TODO
     return HttpResponse('')
 
 
-@csrf_exempt
 def login(request):
     html_body = get_template('uploader/login.html')
     return HttpResponse(html_body.render())
 
 
-@csrf_exempt
 def register(request):
     html_body = get_template('uploader/register.html')
     return HttpResponse(html_body.render())
 
 
-# TODO @login_required or not?
-@csrf_exempt
+@login_required(login_url='/' + settings.LOGIN_URL)
 def logout(request):
     html_body = get_template('uploader/logout.html')
     return HttpResponse(html_body.render())
 
 
+@login_required(login_url='/' + settings.LOGIN_URL)
 def download_zipped(request, analyze_id):
     """
     download zipped log directory
@@ -90,7 +85,6 @@ def download_zipped(request, analyze_id):
         return HttpResponse("Error occured while querying for Firmware object")
 
 
-@csrf_exempt
 @login_required(login_url='/' + settings.LOGIN_URL)
 def start_analysis(request, refreshed):
     """
@@ -144,7 +138,6 @@ def start_analysis(request, refreshed):
     return HttpResponse(html_body.render({'username': request.user.username}))
 
 
-@csrf_exempt
 @login_required(login_url='/' + settings.LOGIN_URL)
 def service_dashboard(request):
     html_body = get_template('uploader/serviceDashboard.html')
@@ -165,7 +158,6 @@ def report_dashboard(request):
     return render(request, 'uploader/reportDashboard.html', {'finished_firmwares': finished_firmwares, 'username': request.user.username})
 
 
-@csrf_exempt
 def individual_report_dashboard(request, analyze_id):
     """
     delivering individualReportDashboard
@@ -181,7 +173,6 @@ def individual_report_dashboard(request, analyze_id):
 
 # Function which saves the file .
 # request - Post request
-@csrf_exempt
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def save_file(request, refreshed):  #FIXME
@@ -267,7 +258,6 @@ def get_log(request, log_type, lines):
         return render(request, 'uploader/log.html', {'header': 'Error', 'log': file_path + ' not found!', 'username': request.user.username})
 
 
-@csrf_exempt
 @login_required(login_url='/' + settings.LOGIN_URL)
 def home(request):
     if Result.objects.all().count() > 0:
@@ -276,7 +266,6 @@ def home(request):
     return HttpResponseRedirect("../../home/upload/1/")
 
 
-@csrf_exempt
 @login_required(login_url='/' + settings.LOGIN_URL)
 def main_dashboard(request):
     if Result.objects.all().count() > 0:
@@ -285,8 +274,8 @@ def main_dashboard(request):
     return HttpResponseRedirect("../../home/upload/1/")
 
 
+# FIXME
 @csrf_exempt
-# @login_required()#login_url='/' + settings.LOGIN_URL)
 def main_dashboard_unauth(request):
     if Result.objects.all().count() > 0:
         html_body = get_template('uploader/mainDashboard.html')
@@ -294,14 +283,12 @@ def main_dashboard_unauth(request):
     return HttpResponseRedirect("/")
 
 
-@csrf_exempt
 @login_required(login_url='/' + settings.LOGIN_URL)
 def reports(request):
     html_body = get_template('uploader/reports.html')
     return HttpResponse(html_body.render({'username': request.user.username}))
 
 
-@csrf_exempt
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report(request, analyze_id, html_file):
@@ -312,7 +299,6 @@ def html_report(request, analyze_id, html_file):
     return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
 
 
-@csrf_exempt
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report_path(request, analyze_id, html_path, html_file):
@@ -323,7 +309,6 @@ def html_report_path(request, analyze_id, html_path, html_file):
     return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
 
 
-@csrf_exempt
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report_download(request, analyze_id, html_path, download_file):
@@ -344,7 +329,6 @@ def html_report_download(request, analyze_id, html_path, download_file):
         return response
 
 
-@csrf_exempt
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report_resource(request, analyze_id, img_file):
@@ -406,7 +390,7 @@ def delete_file(request):
     return HttpResponseRedirect("../../home/upload/1/")
 
 
-@csrf_exempt
+# @csrf_exempt
 @require_http_methods(["GET"])
 # @login_required(login_url='/' + settings.LOGIN_URL)
 def get_load(request):
@@ -422,7 +406,7 @@ def get_load(request):
         return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)
 
 
-@csrf_exempt
+# @csrf_exempt
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def get_individual_report(request, analyze_id):
@@ -448,7 +432,7 @@ def get_individual_report(request, analyze_id):
         return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)
 
 
-@csrf_exempt
+# @csrf_exempt
 @require_http_methods(["GET"])
 # @login_required(login_url='/' + settings.LOGIN_URL)
 def get_accumulated_reports(request):
