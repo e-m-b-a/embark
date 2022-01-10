@@ -12,20 +12,21 @@
         <div id="embarkLogo"><img src="{% static 'content/images/embark_logo.svg' %}" alt="EMBArk logo graphic" height="auto" width="auto"/></div>
         <div class="login">
             <form action="{% url 'embark-signup' %}" class="login-form" method="post" novalidate>
-            <h2 class="title">Register</h2>
-            <div class="input-field" data-error="Username is required">
-                <svg viewBox="0 -2 25 25" xmlns="http://www.w3.org/2000/svg"><path d="m7.5.5c1.65685425 0 3 1.34314575 3 3v2c0 1.65685425-1.34314575 3-3 3s-3-1.34314575-3-3v-2c0-1.65685425 1.34314575-3 3-3zm7 14v-.7281753c0-3.1864098-3.6862915-5.2718247-7-5.2718247s-7 2.0854149-7 5.2718247v.7281753c0 .5522847.44771525 1 1 1h12c.5522847 0 1-.4477153 1-1z" fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round" transform="translate(3 2)"/></svg>
-                <input type="text" placeholder="Username" name="username" required/>
-            </div>
-            <div class="input-field">
-                <svg viewBox="0 -2 25 25" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd" transform="translate(4 1)"><path d="m2.5 8.5-.00586729-1.99475098c-.00728549-4.00349935 1.32800361-6.00524902 4.00586729-6.00524902s4.0112203 2.00174967 4.0000699 6.00524902v1.99475098m-8.0000699 0h8.0225317c1.0543618 0 1.9181652.81587779 1.9945143 1.8507377l.0054778.1548972-.0169048 6c-.0031058 1.1023652-.8976224 1.9943651-1.999992 1.9943651h-8.005627c-1.1045695 0-2-.8954305-2-2v-6c0-1.1045695.8954305-2 2-2z" stroke="#000" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="13.5" fill="#000" r="1.5"/></g></svg>
-                <input type="password" placeholder="Password" name="password" required/>
-            </div>
-            <div class="input-field">
-                <svg viewBox="0 -2 25 25" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd" transform="translate(4 1)"><path d="m2.5 8.5-.00586729-1.99475098c-.00728549-4.00349935 1.32800361-6.00524902 4.00586729-6.00524902s4.0112203 2.00174967 4.0000699 6.00524902v1.99475098m-8.0000699 0h8.0225317c1.0543618 0 1.9181652.81587779 1.9945143 1.8507377l.0054778.1548972-.0169048 6c-.0031058 1.1023652-.8976224 1.9943651-1.999992 1.9943651h-8.005627c-1.1045695 0-2-.8954305-2-2v-6c0-1.1045695.8954305-2 2-2z" stroke="#000" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="13.5" fill="#000" r="1.5"/></g></svg>
-                <input type="password" placeholder="Confirm password" name="confirm_password" required/>
-            </div>
-            <input id="loginButton" type="submit" class="solid btn-login" value="Register" />
+                {% csrf_token %}
+                <h2 class="title">Register</h2>
+                <div class="input-field" data-error="Username is required">
+                    <svg viewBox="0 -2 25 25" xmlns="http://www.w3.org/2000/svg"><path d="m7.5.5c1.65685425 0 3 1.34314575 3 3v2c0 1.65685425-1.34314575 3-3 3s-3-1.34314575-3-3v-2c0-1.65685425 1.34314575-3 3-3zm7 14v-.7281753c0-3.1864098-3.6862915-5.2718247-7-5.2718247s-7 2.0854149-7 5.2718247v.7281753c0 .5522847.44771525 1 1 1h12c.5522847 0 1-.4477153 1-1z" fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round" transform="translate(3 2)"/></svg>
+                    <input type="text" placeholder="Username" name="username" required/>
+                </div>
+                <div class="input-field">
+                    <svg viewBox="0 -2 25 25" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd" transform="translate(4 1)"><path d="m2.5 8.5-.00586729-1.99475098c-.00728549-4.00349935 1.32800361-6.00524902 4.00586729-6.00524902s4.0112203 2.00174967 4.0000699 6.00524902v1.99475098m-8.0000699 0h8.0225317c1.0543618 0 1.9181652.81587779 1.9945143 1.8507377l.0054778.1548972-.0169048 6c-.0031058 1.1023652-.8976224 1.9943651-1.999992 1.9943651h-8.005627c-1.1045695 0-2-.8954305-2-2v-6c0-1.1045695.8954305-2 2-2z" stroke="#000" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="13.5" fill="#000" r="1.5"/></g></svg>
+                    <input type="password" placeholder="Password" name="password" required/>
+                </div>
+                <div class="input-field">
+                    <svg viewBox="0 -2 25 25" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd" transform="translate(4 1)"><path d="m2.5 8.5-.00586729-1.99475098c-.00728549-4.00349935 1.32800361-6.00524902 4.00586729-6.00524902s4.0112203 2.00174967 4.0000699 6.00524902v1.99475098m-8.0000699 0h8.0225317c1.0543618 0 1.9181652.81587779 1.9945143 1.8507377l.0054778.1548972-.0169048 6c-.0031058 1.1023652-.8976224 1.9943651-1.999992 1.9943651h-8.005627c-1.1045695 0-2-.8954305-2-2v-6c0-1.1045695.8954305-2 2-2z" stroke="#000" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="13.5" fill="#000" r="1.5"/></g></svg>
+                    <input type="password" placeholder="Confirm password" name="confirm_password" required/>
+                </div>
+                <input id="loginButton" type="submit" class="solid btn-login" value="Register" />
             </form> 
         </div>
         <div id="login_footer">

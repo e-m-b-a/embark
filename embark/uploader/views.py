@@ -216,7 +216,7 @@ def save_file(request, refreshed):  #FIXME
 
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def get_log(request, log_type, lines):
+def get_log(request, log_type, lines):      #FIXME
     """
     View takes a get request with following params:
     1. log_type: selector of log file (daphne, migration, mysql_db, redis_db, uwsgi, web)
@@ -390,7 +390,6 @@ def delete_file(request):
     return HttpResponseRedirect("../../home/upload/1/")
 
 
-# @csrf_exempt
 @require_http_methods(["GET"])
 # @login_required(login_url='/' + settings.LOGIN_URL)
 def get_load(request):
@@ -406,7 +405,6 @@ def get_load(request):
         return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)
 
 
-# @csrf_exempt
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def get_individual_report(request, analyze_id):
@@ -432,7 +430,6 @@ def get_individual_report(request, analyze_id):
         return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)
 
 
-# @csrf_exempt
 @require_http_methods(["GET"])
 # @login_required(login_url='/' + settings.LOGIN_URL)
 def get_accumulated_reports(request):
