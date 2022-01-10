@@ -167,9 +167,3 @@ def acc_delete(request):
     else:
         return render(request, 'uploader/accountDelete.html')
 
-
-@csrf_exempt
-@login_required(login_url='/' + settings.LOGIN_URL)
-@require_http_methods(["GET", "POST"])
-def password_reset(request):
-    return render(request, 'uploader/passwordReset.html')
