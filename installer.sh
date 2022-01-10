@@ -186,7 +186,7 @@ install_embark_default() {
 
   # setup .env with dev network
   DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
-  RANDOM_PW=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)
+  RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
   echo -e "$ORANGE""$BOLD""Creating a Developer EMBArk configuration file .env""$NC"
   export DATABASE_NAME="embark"
   export DATABASE_USER="embark"

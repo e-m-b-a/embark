@@ -30,7 +30,7 @@ export FILE_SIZE=262144000  #250MB
 cleaner() {
   fuser -k 80/tcp
   killall -9 -q "*daphne*"
-  kill -9 $(ps -ef | grep manage.py runapscheduler | awk '{print $2}')
+  kill -9 "$(pgrep manage.py runapscheduler | awk '{print $2}')"
   fuser -k 8001/tcp
   docker container stop embark_db
   docker container stop embark_redis

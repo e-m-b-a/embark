@@ -28,7 +28,7 @@ logger = logging.getLogger('web')
 
 
 @require_http_methods(['GET'])
-@login_required(login_url='/' + settings.LOGIN_URL)  #FIXME
+@login_required(login_url='/' + settings.LOGIN_URL)  # FIXME
 def check_login(request):
     # TODO
     return HttpResponse('')
@@ -175,7 +175,7 @@ def individual_report_dashboard(request, analyze_id):
 # request - Post request
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def save_file(request, refreshed):  #FIXME
+def save_file(request, refreshed):  # FIXME
     """
     file saving on POST requests with attached file
 
@@ -216,7 +216,7 @@ def save_file(request, refreshed):  #FIXME
 
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def get_log(request, log_type, lines):      #FIXME
+def get_log(request, log_type, lines):      # FIXME
     """
     View takes a get request with following params:
     1. log_type: selector of log file (daphne, migration, mysql_db, redis_db, uwsgi, web)
@@ -274,9 +274,8 @@ def main_dashboard(request):
     return HttpResponseRedirect("../../home/upload/1/")
 
 
-# FIXME
 @csrf_exempt
-def main_dashboard_unauth(request):
+def main_dashboard_unauth(request):     # FIXME
     if Result.objects.all().count() > 0:
         html_body = get_template('uploader/mainDashboard.html')
         return HttpResponse(html_body.render({'nav_switch': False, 'username': request.user.username}))

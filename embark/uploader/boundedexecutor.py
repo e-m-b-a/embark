@@ -193,7 +193,7 @@ class BoundedExecutor:
         logger.info("submit cls: %s", cls)
 
         # check if semaphore can be acquired, if not queue is full
-        queue_not_full=semaphore.acquire(blocking=False)
+        queue_not_full = semaphore.acquire(blocking=False)
         if not queue_not_full:
             logger.error("Executor queue full")
             return None

@@ -17,8 +17,8 @@ SECRET_KEY = os.environ.get('SECRET_KEY')   # look at .env
 DEBUG = bool(os.environ.get('EMBARK_DEBUG', False))
 
 # EMBA location
-EMBA_ROOT='/app/emba/'
-LOG_ROOT = os.path.join('emba_logs')  #FIXME media directory in the root directory
+EMBA_ROOT = '/app/emba/'
+LOG_ROOT = os.path.join('emba_logs')  # FIXME media directory in the root directory
 LOG_URL = '/emba_logs/'
 
 ALLOWED_HOSTS = ['*']
@@ -55,7 +55,7 @@ ROOT_URLCONF = 'embark.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates', LOG_ROOT ],
+        'DIRS': [BASE_DIR / 'templates', LOG_ROOT],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

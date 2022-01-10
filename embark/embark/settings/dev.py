@@ -7,7 +7,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = bool(os.environ.get('EMBARK_DEBUG', False))
 ALLOWED_HOSTS = ['*']
 
-EMBA_ROOT='/app/emba/'
+EMBA_ROOT = '/app/emba/'
 LOG_ROOT = os.path.join('emba_logs')
 LOG_URL = '/emba_logs/'
 
@@ -42,7 +42,7 @@ ROOT_URLCONF = 'embark.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates', LOG_ROOT ],
+        'DIRS': [BASE_DIR / 'templates', LOG_ROOT],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
