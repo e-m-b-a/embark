@@ -24,6 +24,8 @@ export DJANGO_SETTINGS_MODULE=embark.settings.deploy
 export HTTP_PORT=80
 export HTTPS_PORT=443
 export BIND_IP='0.0.0.0'
+export FILE_SIZE=262144000  #250MB
+
 
 cleaner() {
   fuser -k 80/tcp
@@ -103,7 +105,7 @@ cp -Ru ./embark/ /app/www/embark/
 # add all modules we want (mod_ssl mod_auth_basic etc)
 # post_max_size increase
 {
-  echo ' '
+  echo ''
 } > /app/www/conf/embark.conf
 
 # !DIRECTORY-CHANGE!
@@ -128,13 +130,12 @@ sleep 5
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting Apache"
 pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
---host "$BIND_IP" --port="$HTTP_PORT" \
+--host "$BIND_IP" --port="$HTTP_PORT" --limit-request-body "$FILE_SIZE" \
 --url-alias /static/ /app/www/static/ --url-alias /uploadedFirmwareImages/ /app/www/media/ \
 --url-alias /emba_logs/ /app/emba/emba_logs/ \
 --allow-localhost --working-directory /app/www/embark/ --server-root /app/www/httpd80/ \
---limit-request-body 104857600 --include-file /app/www/conf/embark.conf &
-#--https-only --ssl-ca-certificate-file --ssl-certificate FILE-PATH --https-port "$HTTPS_PORT" &
-# --enable-debugger
+--include-file /app/www/conf/embark.conf &
+#--https-only --ssl-ca-certificate-file --ssl-certificate FILE-PATH --https-port "$HTTPS_PORT" --enable-debugger
 sleep 5
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"

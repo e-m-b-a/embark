@@ -144,6 +144,7 @@ install_embark_default() {
     mkdir ./www/media
     mkdir ./www/media/uploadedFirmwareImages
     mkdir ./www/static
+    mkdir ./www/conf
   fi
   
   #install packages
