@@ -33,7 +33,7 @@ cleaner() {
   docker container stop embark_db
   docker container stop embark_redis
   docker network rm embark_backend
-  docker container prune -f --filter "label=flag"
+  docker container prune -f --filter "label=flag"  #Try to only prune container we used not all of em
   echo -e "$ORANGE""Consider reseting ownership of the project manually, else git wont work correctly""$NC"
   exit 1
 }
