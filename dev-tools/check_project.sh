@@ -267,4 +267,5 @@ if [[ "${#MODULES_TO_CHECK_ARR[@]}" -gt 0 ]]; then
   done
   exit 1
 fi
+echo -e "$GREEN$BOLD===> ALL CHECKS SUCCESSFUL""$NC"
 exit 0
