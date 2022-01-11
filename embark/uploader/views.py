@@ -490,7 +490,7 @@ def get_accumulated_reports(request):
                 data[charfield][value] = 0
 
             data[charfield][value] += 1
-        for field in result.items():
+        for field in result:
             if field not in data:
                 data[field] = {'sum': 0, 'count': 0}
             data[field]['count'] += 1
@@ -498,7 +498,7 @@ def get_accumulated_reports(request):
             if result[field] is not None:
                 data[field]['sum'] += result[field]
 
-    for field in data.items():
+    for field in data:
         if field not in charfields:
             data[field]['mean'] = data[field]['sum']/data[field]['count']
     data['total_firmwares'] = len(results)
