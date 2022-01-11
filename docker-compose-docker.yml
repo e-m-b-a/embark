@@ -1,7 +1,6 @@
 version: "3"
 
 services:
-
   embark_db:
     image: mysql
     container_name: embark_db
@@ -27,25 +26,17 @@ services:
     privileged: true
     volumes:
         - /var/run/docker.sock:/var/run/docker.sock 
-        - ./embark/:/app/embark/
         - ./emba/:/app/emba/
         - /etc/timezone:/etc/timezone:ro
         - /etc/localtime:/etc/localtime:ro
     ports:
       - "80:80"
+      - "8001:8001"
+      - "443:443"
     networks:
-      - embark_frontend
       - embark_backend
     environment:
-      - DATABASE_NAME
-      - DATABASE_USER
-      - DATABASE_HOST
-      - DATABASE_PORT
-      - DATABASE_PASSWORD
-      - DJANGO_LOG_LEVEL
-      - DEBUG=False
-      - REDIS_HOST
-      - REDIS_PORT
+      - TODO
     command: './entrypoint.sh'
     depends_on:
         - embark_db
@@ -65,12 +56,6 @@ services:
       - embark_backend
 
 networks:
-  embark_frontend:
-    name: embark_frontend
-    driver: bridge
-    driver_opts:
-      com.docker.network.bridge.name: embark_frontend
-
   embark_backend:
     name: embark_backend
     driver: ipvlan
