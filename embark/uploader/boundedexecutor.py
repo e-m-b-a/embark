@@ -68,7 +68,7 @@ class BoundedExecutor:
             logger.info("Success: %s", cmd)
 
             # get csv log location
-            csv_log_location = f"{settings.EMBA_ROOT}{settings.LOG_ROOT}/{primary_key}/f50_base_aggregator.csv"
+            csv_log_location = f"{settings.EMBA_LOG_ROOT}/{primary_key}/f50_base_aggregator.csv"
 
             # read f50_aggregator and store it into a Result form
             logger.info('Reading report from: %s', csv_log_location)
@@ -160,7 +160,7 @@ class BoundedExecutor:
 
         # evaluate meta information and safely create log dir
 
-        emba_log_location = f"{settings.EMBA_ROOT}{settings.LOG_ROOT}/{firmware_flags.pk}"
+        emba_log_location = f"{settings.EMBA_LOG_ROOT}/{firmware_flags.pk}"
         log_path = Path(emba_log_location)
         log_path.mkdir(parents=True, exist_ok=True)
 

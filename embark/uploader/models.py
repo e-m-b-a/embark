@@ -203,7 +203,7 @@ class Firmware(models.Model):
     def __str__(self):
         return f"{self.id}({self.firmware})"
 
-    def get_flags(self):
+    def get_flags(self):    # FIXME is this comp with recent changes
         """
         build shell command from input fields
 

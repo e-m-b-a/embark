@@ -142,7 +142,7 @@ function makeCharts(returnData) {
             ],
             datasets: [{
                 labels: ['binaries with NX', 'binaries without NX'],
-                data: [returnData.nx.sum, (returnData.bins_checked.sum - returnData.nx.sum)],
+                data: [returnData.no_exec.sum, (returnData.bins_checked.sum - returnData.no_exec.sum)],
                 backgroundColor: ['#493791', '#291771'],
             }, ],
         },

@@ -3,6 +3,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 
 from django.shortcuts import redirect, render
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from django.contrib.auth import authenticate, login, logout
@@ -13,6 +14,7 @@ from .models import User
 logger = logging.getLogger('web')
 
 
+@csrf_exempt
 @require_http_methods(["GET", "POST"])
 def signin(request):
     if request.method == "POST":
@@ -47,6 +49,7 @@ def signin(request):
         return render(request, 'login.html')
 
 
+@csrf_exempt
 @require_http_methods(["GET", "POST"])
 def signup(request):
     if request.method == "POST":
@@ -82,6 +85,8 @@ def signup(request):
         return render(request, 'register.html')
 
 
+# TODO this should require the username or some other kind of validation-data or else everyone can end that session
+# TODO server should validate for client
 # @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required(login_url='/' + settings.LOGIN_URL)
 def signout(request):

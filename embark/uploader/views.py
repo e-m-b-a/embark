@@ -173,6 +173,7 @@ def individual_report_dashboard(request, analyze_id):
 
 # Function which saves the file .
 # request - Post request
+@csrf_exempt    # FIXME add csrf and put save_file in upload-template into form
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def save_file(request, refreshed):  # FIXME
@@ -291,7 +292,7 @@ def reports(request):
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report(request, analyze_id, html_file):
-    report_path = Path(f'{settings.EMBA_ROOT}{request.path}')
+    report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path}')
 
     html_body = get_template(report_path)
     logger.info("html_report - analyze_id: %s html_file: %s", analyze_id, html_file)
@@ -301,7 +302,7 @@ def html_report(request, analyze_id, html_file):
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report_path(request, analyze_id, html_path, html_file):
-    report_path = Path(f'{settings.EMBA_ROOT}{request.path}')
+    report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path}')
 
     html_body = get_template(report_path)
     logger.info("html_report - analyze_id: %s path: %s html_file: %s", analyze_id, html_path, html_file)
@@ -311,7 +312,7 @@ def html_report_path(request, analyze_id, html_path, html_file):
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report_download(request, analyze_id, html_path, download_file):
-    base_path = f"{settings.EMBA_ROOT}"
+    base_path = f"{settings.EMBA_LOG_ROOT}"
     if request.path.startswith('/'):
         file_path = request.path[1:]
     else:
@@ -341,7 +342,7 @@ def html_report_resource(request, analyze_id, img_file):
     elif img_file.endswith(".png"):
         content_type = "image/png"
 
-    resource_path = Path(f'{settings.EMBA_ROOT}{request.path}')
+    resource_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path}')
     logger.info("html_report_resource - analyze_id: %s request.path: %s", analyze_id, request.path)
 
     try:
@@ -353,7 +354,7 @@ def html_report_resource(request, analyze_id, img_file):
         logger.error(request.path)
 
     # just in case -> back to report intro
-    report_path = Path(f'{settings.EMBA_ROOT}{request.path}')
+    report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path}')
     html_body = get_template(report_path)
     return HttpResponse(html_body.render())
 
@@ -430,7 +431,7 @@ def get_individual_report(request, analyze_id):
 
 
 @require_http_methods(["GET"])
-# @login_required(login_url='/' + settings.LOGIN_URL)
+@login_required(login_url='/' + settings.LOGIN_URL)
 def get_accumulated_reports(request):
     """
     Sends accumulated results for main dashboard
@@ -470,7 +471,7 @@ def get_accumulated_reports(request):
                 data[charfield][value] = 0
 
             data[charfield][value] += 1
-        for field in result.items():
+        for field in result:
             if field not in data:
                 data[field] = {'sum': 0, 'count': 0}
             data[field]['count'] += 1
@@ -478,7 +479,7 @@ def get_accumulated_reports(request):
             if result[field] is not None:
                 data[field]['sum'] += result[field]
 
-    for field in data.items():
+    for field in data:
         if field not in charfields:
             data[field]['mean'] = data[field]['sum']/data[field]['count']
     data['total_firmwares'] = len(results)
