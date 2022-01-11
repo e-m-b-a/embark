@@ -32,6 +32,7 @@ jobs:
         mkdir ./embark/logs
         touch ./embark/logs/web.log
         mkdir ./embark/uploadFirmwareImages
+        touch /app/www/.env
     - name: Run checkproject
       run: |
         pipenv install --dev
