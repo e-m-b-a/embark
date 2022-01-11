@@ -143,6 +143,7 @@ install_embark_default() {
     mkdir ./www
     mkdir ./www/media
     mkdir ./www/media/uploadedFirmwareImages
+    mkdir ./www/media/emba_logs
     mkdir ./www/static
     mkdir ./www/conf
   fi
