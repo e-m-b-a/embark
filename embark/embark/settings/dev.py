@@ -8,8 +8,8 @@ DEBUG = bool(os.environ.get('EMBARK_DEBUG', False))
 ALLOWED_HOSTS = ['*']
 
 EMBA_ROOT = '/app/emba/'
-LOG_ROOT = os.path.join('emba_logs')
-LOG_URL = '/emba_logs/'
+EMBA_LOG_ROOT = os.path.join('emba_logs')
+EMBA_LOG_URL = '/emba_logs/'
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -42,7 +42,7 @@ ROOT_URLCONF = 'embark.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates', LOG_ROOT],
+        'DIRS': [BASE_DIR / 'templates', EMBA_LOG_ROOT],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

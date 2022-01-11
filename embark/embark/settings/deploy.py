@@ -16,12 +16,13 @@ SECRET_KEY = os.environ.get('SECRET_KEY')   # look at .env
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.environ.get('EMBARK_DEBUG', False))
 
+ALLOWED_HOSTS = ['*']
+
+# EMBA stuff
 # EMBA location
 EMBA_ROOT = '/app/emba/'
-LOG_ROOT = os.path.join('emba_logs')  # FIXME media directory in the root directory
-LOG_URL = '/emba_logs/'
-
-ALLOWED_HOSTS = ['*']
+EMBA_LOG_ROOT = os.path.join(EMBA_ROOT, 'emba_logs')
+EMBA_LOG_URL = '/emba_logs/'
 
 # Application definition - defines what apps gets migrated
 INSTALLED_APPS = [
@@ -55,7 +56,7 @@ ROOT_URLCONF = 'embark.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates', LOG_ROOT],
+        'DIRS': [BASE_DIR / 'templates', EMBA_LOG_ROOT],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -67,6 +68,10 @@ TEMPLATES = [
         },
     },
 ]
+
+# CSRF and SESSION cookies are:
+# 1. separate for now but basically linked (==CSRF_USE_SESSION)
+# 2. only active after login
 
 # CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_SAMESITE = 'Strict'
@@ -174,14 +179,14 @@ STATICFILES_DIRS = [
 # STATICFILES_FINDERS
 
 # URL of Login-Page
-LOGIN_URL = ''
+LOGIN_URL = 'login/'
 
 # URL of Logout-Page
-LOGOUT_REDIRECT_URL = ''
+LOGOUT_REDIRECT_URL = 'logout/'
 
-# Added for FIle storage to get the path to save Firmware images.
-MEDIA_ROOT = '/app/www/media/uploadedFirmwareImages/'
-MEDIA_URL = '/uploadedFirmwareImages/'
+# Added for File storage to get the path to save Firmware images.
+MEDIA_ROOT = '/app/www/media/'
+MEDIA_URL = '/media/'
 
 REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
 REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
