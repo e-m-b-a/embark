@@ -30,7 +30,7 @@ export FILE_SIZE=262144000  #250MB
 cleaner() {
   fuser -k 80/tcp
   killall -9 -q "*daphne*"
-  kill -9 "$(pgrep manage.py runapscheduler | awk '{print $2}')"
+  kill -9 "$(pgrep "manage.py runapscheduler")"     # TODO add non null cond
   fuser -k 8001/tcp
   docker container stop embark_db
   docker container stop embark_redis
@@ -52,11 +52,15 @@ fi
 
 # check emba
 echo -e "$BLUE""$BOLD""checking EMBA""$RED"
-/app/emba/emba.sh -d 1>/dev/null
+/app/emba/emba.sh -d    # 1>/dev/null
 if [[ $? -eq 1 ]]; then
   echo -e "$BLUE""Trying auto-maintain""$NC"
   # automaintain
-  cd ./emba || echo -e "$RED""EMBA not installed""$NC" && exit 1
+  if ! [[ -d ./emba ]]; then
+    echo -e "$RED""EMBA not installed""$NC"
+    exit 1
+  fi
+  cd ./emba
   git pull
   docker network rm emba_runs
   docker-compose up --no-start
@@ -68,7 +72,8 @@ if [[ $? -eq 1 ]]; then
   cd .. || exit 1
 fi
 
-#start venv
+# start venv (ignore source in script)
+# shellcheck disable=SC1091
 source ./.venv/bin/activate || exit 1
 
 # Start container
@@ -96,7 +101,7 @@ echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.lo
 docker container logs embark_db -f &> /app/www/logs/mysql.log &
 
 # copy django server
-if ! [[ -d /app/www/embark ]]; then
+if [[ -d /app/www/embark ]]; then
   rm -R /app/www/embark
 fi
 cp -Ru ./embark/ /app/www/embark/
@@ -131,7 +136,8 @@ sleep 5
 echo -e "\n[""$BLUE JOB""$NC""] Starting Apache"
 pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --host "$BIND_IP" --port="$HTTP_PORT" --limit-request-body "$FILE_SIZE" \
---url-alias /static/ /app/www/static/ --url-alias /uploadedFirmwareImages/ /app/www/media/ \
+--url-alias /static/ /app/www/static/ --url-alias /media/ /app/www/media/ \
+--url-alias /uploadedFirmwareImages/ /app/www/media/uploadedFirmwareImages/ \
 --url-alias /emba_logs/ /app/emba/emba_logs/ \
 --allow-localhost --working-directory /app/www/embark/ --server-root /app/www/httpd80/ \
 --include-file /app/www/conf/embark.conf &
