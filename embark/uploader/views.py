@@ -1,4 +1,4 @@
-# pylint:disable=W0613
+# pylint:disable=W0613,C0206
 from pathlib import Path
 
 import json
