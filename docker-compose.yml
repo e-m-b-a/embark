@@ -22,7 +22,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
     networks:
       embark_backend:
-        ipv4_address: "172.21.0.5"
+        ipv4_address: "172.22.0.5"
 
   redis:
     container_name: embark_redis
@@ -42,7 +42,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
     networks:
       embark_backend:
-        ipv4_address: "172.21.0.8"
+        ipv4_address: "172.22.0.8"
     logging:
       driver: "local"
 
@@ -55,5 +55,5 @@ networks:
       com.docker.network.bridge.name: embark_backend
     ipam:
       config:
-        - subnet: "172.21.0.0/16"
+        - subnet: "172.22.0.0/16"
 

@@ -65,6 +65,6 @@ networks:
     internal: true
     ipam:
       config:
-        - subnet: "172.22.0.0/16"
+        - subnet: "172.23.0.0/16"
 
 
