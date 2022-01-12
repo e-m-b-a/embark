@@ -231,6 +231,12 @@ pylinter(){
 }
 
 dockerchecker(){
+  if ! [[ -f .env ]]; then
+    ENV=1
+    touch .env    #dummy file
+  else
+    ENV=0
+  fi
   echo -e "\\n""$ORANGE""$BOLD""EMBArk docker-files check""$NC""\\n""$BOLD""=================================================================""$NC"
   mapfile -t DOCKER_COMPS < <(find . -maxdepth 1 -type d -name migrations -prune -false -o -iname "docker-compose*.yml")
   for DOCKER_COMP in "${DOCKER_COMPS[@]}"; do
@@ -243,7 +249,10 @@ dockerchecker(){
       MODULES_TO_CHECK_ARR+=( "$DOCKER_COMP" )    
     fi
   done
-  # TODO dockerlinter -f ./Dockerfile
+  #TODO dockerlinter -f ./Dockerfile
+  if [[ $ENV -gt 0 ]]; then
+    rm .env   #remove dummy
+  fi
 }
 
 #main

@@ -214,7 +214,7 @@ install_embark_default() {
     echo "REDIS_PORT=$REDIS_PORT"
     echo "SECRET_KEY=$DJANGO_SECRET_KEY"
     echo "PYTHONPATH=${PYTHONPATH}:${PWD}"
-  } > /app/www/.env
+  } > .env
 
   # setup dbs-container and detach build could be skipt
   echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"

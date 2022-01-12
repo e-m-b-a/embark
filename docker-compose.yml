@@ -8,7 +8,7 @@ services:
     labels:
       flag: "deploy_EMBArk_server_mysql_container"
     env_file:
-      - /app/www/.env
+      - .env
     environment:
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
     expose:
@@ -30,7 +30,7 @@ services:
     labels:
       flag: "deploy_EMBArk_server_redis_container"
     env_file:
-      - /app/www/.env
+      - .env
     command: --port 7777
     expose:
       - "7777"
