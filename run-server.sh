@@ -60,7 +60,7 @@ if [[ $? -eq 1 ]]; then
     echo -e "$RED""EMBA not installed""$NC"
     exit 1
   fi
-  cd ./emba
+  cd ./emba || exit 1
   git pull
   docker network rm emba_runs
   docker-compose up --no-start
