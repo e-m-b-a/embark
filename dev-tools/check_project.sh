@@ -15,7 +15,7 @@
 # Description:  Check all scripts and templates(Django gets its own unit-tests)
 #               And check Django if its deployable
 
-export DJANGO_SETTINGS_MODULE=embark.settings
+export DJANGO_SETTINGS_MODULE=embark.settings.dev
 export PYTHONPATH="$PYTHONPATH:${PWD}/embark/embark/"
 
 cd "$(dirname "$0")" || exit 1
