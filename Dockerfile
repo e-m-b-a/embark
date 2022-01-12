@@ -1,4 +1,3 @@
-# TODO currently not supported
 FROM kalilinux/kali-rolling:latest
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -18,6 +17,7 @@ RUN apt-get update && apt-get -y -q --no-install-recommends install wget \
     python3-dev \
     libssl-dev \
     swig \
+    pipenv \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /app

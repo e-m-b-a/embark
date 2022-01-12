@@ -7,11 +7,10 @@ services:
     restart: always
     expose:
       - "3306"
+    env_file:
+      - .env
     environment:
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
-      - MYSQL_PASSWORD
-      - MYSQL_USER
-      - MYSQL_DATABASE
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
@@ -24,6 +23,8 @@ services:
     build: .
     restart: always
     privileged: true
+    env_file:
+      - .env
     volumes:
         - /var/run/docker.sock:/var/run/docker.sock 
         - ./emba/:/app/emba/
@@ -46,6 +47,8 @@ services:
     image: "redis:5"
     container_name: embark_redis
     command: --port 7777
+    env_file:
+      - .env
     expose:
       - "7777"
     restart: always
