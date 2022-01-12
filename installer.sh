@@ -231,7 +231,7 @@ install_embark_default() {
   sleep 30
   kill %1
 
-  echo -e "$GREEN""$BOLD""Ready to use \$sudo pipenv run ./run-server.sh ""$NC"
+  echo -e "$GREEN""$BOLD""Ready to use \$sudo ./run-server.sh ""$NC"
   echo -e "$GREEN""$BOLD""Which starts the server on (0.0.0.0) port 80 ""$NC"
 }
 
