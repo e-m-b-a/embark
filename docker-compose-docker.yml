@@ -60,9 +60,8 @@ services:
 
 networks:
   embark_backend:
-    name: embark_backend
-    driver: ipvlan
-    internal: true
+    name: embark_backend_docker
+    driver: bridge
     ipam:
       config:
         - subnet: "172.23.0.0/16"

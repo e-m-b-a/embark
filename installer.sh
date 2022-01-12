@@ -129,6 +129,7 @@ install_embark_default() {
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanning environment EMBArk""$NC"
   install_debs
   apt-get install -y -q python3-dev default-libmysqlclient-dev build-essential pipenv   # TODO ?*-dev needed? try
+
   #Add user for server
   useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /app/www/
   echo 'www-embark ALL=(ALL) NOPASSWD: /app/emba/emba.sh' | EDITOR='tee -a' visudo
@@ -192,12 +193,12 @@ install_embark_default() {
   export DATABASE_NAME="embark"
   export DATABASE_USER="embark"
   export DATABASE_PASSWORD="$RANDOM_PW"
-  export DATABASE_HOST="127.0.0.1"
+  export DATABASE_HOST="172.22.0.5"
   export DATABASE_PORT="3306"
   export MYSQL_PASSWORD="$RANDOM_PW"
   export MYSQL_USER="embark"
   export MYSQL_DATABASE="embark"
-  export REDIS_HOST="127.0.0.1"
+  export REDIS_HOST="172.22.0.8"
   export REDIS_PORT="7777"
   export SECRET_KEY="$DJANGO_SECRET_KEY"
   # this is for pipenv/django # TODO change after 
@@ -260,12 +261,12 @@ install_embark_docker(){
   export DATABASE_NAME="embark"
   export DATABASE_USER="embark"
   export DATABASE_PASSWORD="$PASSWORD"
-  export DATABASE_HOST="127.0.0.1"
+  export DATABASE_HOST="172.23.0.5"
   export DATABASE_PORT="3306"
   export MYSQL_PASSWORD="$PASSWORD"
   export MYSQL_USER="embark"
   export MYSQL_DATABASE="embark"
-  export REDIS_HOST="127.0.0.1"
+  export REDIS_HOST="172.23.0.8"
   export REDIS_PORT="7777"
   export SECRET_KEY="$DJANGO_SECRET_KEY"
   # this is for pipenv/django # TODO change/lock after deploy
@@ -387,8 +388,8 @@ install_embark_dev(){
   sleep 30
   kill %1
 
-  echo -e "$GREEN""$BOLD""Ready to use \$sudo ./embark/run-server.sh ""$NC"
-  echo -e "$GREEN""$BOLD""Which starts the server on (0.0.0.0) port 80 ""$NC"
+  echo -e "$GREEN""$BOLD""Ready to use \$sudo ./dev-tools/debug-server-start.sh""$NC"
+  echo -e "$GREEN""$BOLD""Or use otherwise""$NC"
 }
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
@@ -413,7 +414,6 @@ while getopts eFrdDh OPT ; do
     r)
       export REFORCE=1
       echo -e "$GREEN""$BOLD""Install all dependecies including docker cleanup""$NC"
-
       ;;
     d)
       export DEFAULT=1

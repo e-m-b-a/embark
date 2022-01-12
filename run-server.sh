@@ -10,7 +10,7 @@
 #
 # Author(s): Benedikt Kuehne
 
-# Description: Starts the Django-Server(s) on host
+# Description: Starts the EMBArk on host
 
 GREEN='\033[0;32m'
 ORANGE='\033[0;33m'
