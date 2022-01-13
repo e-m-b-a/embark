@@ -151,7 +151,6 @@ install_embark_default() {
   
   #install packages
   export PIPENV_VENV_IN_PROJECT=1
-  export PIPENV_DOTENV_LOCATION=/app/www/.env
   pipenv install
 
   # download externals

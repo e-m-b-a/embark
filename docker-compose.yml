@@ -11,6 +11,9 @@ services:
       - .env
     environment:
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
+      - MYSQL_PASSWORD
+      - MYSQL_USER
+      - MYSQL_DATABASE
     expose:
       - "3306"
     ports:
@@ -30,7 +33,7 @@ services:
     labels:
       flag: "deploy_EMBArk_server_redis_container"
     env_file:
-      - .env
+      - ./.env
     command: --port 7777
     expose:
       - "7777"

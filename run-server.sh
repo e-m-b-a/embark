@@ -18,7 +18,7 @@ BLUE='\033[0;34m'
 BOLD='\033[1m'
 NC='\033[0m' # no color
 
-export PIPENV_DOTENV_LOCATION=.env
+# export PIPENV_DOTENV_LOCATION=.env
 export DJANGO_SETTINGS_MODULE=embark.settings.deploy
 export EMBARK_DEBUG=True
 export HTTP_PORT=80
