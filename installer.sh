@@ -24,14 +24,14 @@ NC='\033[0m' # no color
 
 print_help() {
   echo -e "\\n""$CYAN""USAGE""$NC"
-  # echo -e "$CYAN-F$NC         Installation of EMBArk with all dependencies (typical initial installation)"
+  echo -e "$CYAN-F$NC         Installation of EMBArk with all dependencies (typical initial installation)"
+  # echo -e "$CYAN-U$NC         Uninstall EMBArk" # TODO
   # echo -e "$CYAN-r$NC         Reinstallation of EMBArk with all dependencies (cleanup of docker environment first)"
   # echo -e "$RED               ! This deletes all Docker-Images as well !""$NC"
   echo -e "$CYAN-e$NC         Install EMBA only"
   echo -e "$CYAN-h$NC         Print this help message"
-  echo -e "$CYAN-D$NC         EMBArk Developer"
-  echo -e "$CYAN-d$NC         Build EMBArk <-----default"
-  echo
+  echo -e "$CYAN-D$NC         Install for Docker deployment"
+  echo -e "$CYAN-d$NC         EMBArk developer"
 }
 
 install_emba() {
@@ -382,6 +382,46 @@ install_embark_dev(){
   echo -e "$GREEN""$BOLD""Or use otherwise""$NC"
 }
 
+uninstall (){
+  echo -e "$ORANGE""$BOLD""Deleting Configuration and reseting""$NC"
+
+  #1 delete symlink
+  echo -e "$ORANGE""$BOLD""Delete Symlink?""$NC"
+  rm -i /app
+
+  #2 delete www
+  echo -e "$ORANGE""$BOLD""Delete Apache Directory""$NC"
+  rm -R ./www
+
+  #3 delete user www-embark and reset visudo
+  echo -e "$ORANGE""$BOLD""Delete user""$NC"
+  sed -i 's/www\-embark\ ALL\=\(ALL\)\ NOPASSWD\:\ \/app\/emba\/emba.sh//g' /etc/sudoers #TODO doesnt work yet
+  userdel www-embark
+
+  #4 delete venv
+  echo -e "$ORANGE""$BOLD""Delete Venv?""$NC"
+  rm -i -R ./.venv
+
+  #5 delete .env
+  echo -e "$ORANGE""$BOLD""Delete env""$NC"
+  rm -R ./.env
+
+  #6 delete shared volumes
+  echo -e "$ORANGE""$BOLD""Delete Database-files?""$NC"
+  rm -i -R ./embark_db
+
+  #7 delete all docker interfaces and containers + images
+  reset_docker
+  #TODO
+
+  #8 delete/uninstall EMBA
+  echo -e "$ORANGE""$BOLD""Delete EMBA?""$NC"
+  docker network rm emba_runs
+  rm -R ./emba
+
+  #9 
+}
+
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
 echo -e "$ORANGE""$BOLD""WARNING: This script can harm your environment!""$NC"
 
@@ -391,26 +431,31 @@ if [ "$#" -ne 1 ]; then
   exit 1
 fi
 
-while getopts eFrdDh OPT ; do
+while getopts eFUrdDh OPT ; do
   case $OPT in
     e)
       export EMBA_ONLY=1
       echo -e "$GREEN""$BOLD""Install only emba""$NC"
       ;;
     F)
-      export FORCE=1
+      export DEFAULT=1
       echo -e "$GREEN""$BOLD""Install all dependecies""$NC"
       ;;
+    U)
+      export UNINSTALL=1
+      echo -e "$GREEN""$BOLD""Uninstall EMBArk""$NC"
+      ;;
     r)
+      export UNINSTALL=1
       export REFORCE=1
       echo -e "$GREEN""$BOLD""Install all dependecies including docker cleanup""$NC"
       ;;
     d)
-      export DEFAULT=1
+      export DEV=1
       echo -e "$GREEN""$BOLD""Default installation of EMBArk""$NC"
       ;;
     D)
-      export DEV=1
+      export DOCKER=1
       echo -e "$GREEN""$BOLD""Building Development-Enviroment""$NC"
       ;;
     h)
@@ -431,29 +476,24 @@ if ! [[ $EUID -eq 0 ]] && [[ $LIST_DEP -eq 0 ]] ; then
   exit 1
 fi
 
-if [[ "$DEV" -eq 1 ]]; then
-  install_embark_dev
-  exit 0
-elif [[ "$DEFAULT" -eq 1 ]]; then
+if [[ "$DEFAULT" -eq 1 ]]; then
   install_embark_default
   exit 0
+elif [[ "$DEV" -eq 1 ]]; then
+  install_embark_dev
+  exit 0
+elif [[ "$DOCKER" -eq 1 ]]; then
+  install_embark_docker
+  exit 0
+elif [[ "$UNINSTALL" -eq 1 ]]; then
+  uninstall
+  if [[ "$REFORCE" -eq 1]]; then
+    install_embark_default
+  fi
+  exit 0
 fi
 
+#else
 install_debs
-
 install_emba
-
-if [[ "$EMBA_ONLY" -ne 1 ]]; then
-
-  if ! [[ -d embark/logs ]]; then
-    mkdir embark/logs
-  fi
-  
-  if [[ "$REFORCE" -eq 1 ]]; then
-    reset_docker
-  fi
-
-  install_embark
-
-fi
 exit 0
