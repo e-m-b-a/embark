@@ -11,9 +11,6 @@ services:
       - .env
     environment:
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
-      - MYSQL_PASSWORD
-      - MYSQL_USER
-      - MYSQL_DATABASE
     expose:
       - "3306"
     ports:

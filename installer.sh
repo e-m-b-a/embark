@@ -128,7 +128,7 @@ install_debs() {
 install_embark_default() {
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanning environment EMBArk""$NC"
   install_debs
-  apt-get install -y -q python3-dev default-libmysqlclient-dev build-essential pipenv   # TODO ?*-dev needed? try
+  apt-get install -y -q python3-dev default-libmysqlclient-dev build-essential pipenv
 
   #Add user for server
   useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /app/www/
@@ -185,7 +185,7 @@ install_embark_default() {
     cd .. || exit 1
   fi
 
-  # setup .env with dev network
+  # setup .env
   DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
   RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
   echo -e "$ORANGE""$BOLD""Creating a Developer EMBArk configuration file .env""$NC"
@@ -216,15 +216,6 @@ install_embark_default() {
     echo "PYTHONPATH=${PYTHONPATH}:${PWD}"
   } > .env
 
-  # setup dbs-container and detach build could be skipt
-  echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
-  docker-compose -f ./docker-compose.yml build
-  DB_RETURN=$?
-  if [[ $DB_RETURN -eq 0 ]] ; then
-    echo -e "$GREEN""$BOLD""Finished building EMBArk docker images""$NC"
-  else
-    echo -e "$ORANGE""$BOLD""Failed building EMBArk docker images""$NC"
-  fi
   # download images for container
   docker-compose -f ./docker-compose.yml up --no-start
   docker-compose -f ./docker-compose.yml up &>/dev/null &
