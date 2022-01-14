@@ -18,7 +18,6 @@ django-apscheduler = "*"
 psutil = "*"
 Django = "*"
 Rx = "*"
-mod-wsgi-standalone = "*"
 
 [dev-packages]
 pycodestyle = "*"
