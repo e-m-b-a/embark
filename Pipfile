@@ -1,24 +1,21 @@
 [[source]]
-url = "https://pypi.org/simple"
+url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
 [packages]
-ipython = "*"
-django-dotenv = "*"
-channels-redis = "*"
-channels = "*"
-daphne = "*"
-inotify-simple = "*"
-mysqlclient = "*"
-pymongo = "*"
-mongoengine = "*"
-msgpack = "*"
-django-apscheduler = "*"
-psutil = "*"
 Django = "*"
-Rx = "*"
+channels = "*"
+channels-redis = "*"
+daphne = "*"
+mysqlclient = "*"
+django-apscheduler = "*"
 mod-wsgi-standalone = "*"
+django-dotenv = "*"
+Rx = "*"
+inotify-simple = "*"
+psutil = "*"
+msgpack = "*"
 
 [dev-packages]
 pycodestyle = "*"
