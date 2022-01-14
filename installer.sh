@@ -446,9 +446,9 @@ if ! [[ $EUID -eq 0 ]] && [[ $LIST_DEP -eq 0 ]] ; then
   exit 1
 fi
 
-if [[ "$REFORCE" -eq 1]] && [[ "$UNINSTALL" -eq 1 ]]; then
+if [[ $REFORCE -eq 1 ]] && [[ $UNINSTALL -eq 1 ]]; then
   uninstall
-elif [[ "$UNINSTALL" -eq 1 ]]; then
+elif [[ $UNINSTALL -eq 1 ]]; then
   uninstall
   exit 0
 fi
@@ -456,11 +456,11 @@ fi
 install_debs
 install_emba
 
-if [[ "$DEFAULT" -eq 1 ]]; then
+if [[ $DEFAULT -eq 1 ]]; then
   install_embark_default
-elif [[ "$DEV" -eq 1 ]]; then
+elif [[ $DEV -eq 1 ]]; then
   install_embark_dev
-elif [[ "$DOCKER" -eq 1 ]]; then
+elif [[ $DOCKER -eq 1 ]]; then
   install_embark_docker
 fi
 
