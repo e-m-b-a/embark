@@ -47,8 +47,8 @@ class WSConsumer(WebsocketConsumer):
         # pass
 
     # called when websocket connection is closed
-    def disconnect(self, close_code):
-        logger.info("WS - disconnected: %s", close_code)
+    def disconnect(self, code):
+        logger.info("WS - disconnected: %s", code)
         async_to_sync(self.channel_layer.group_discard)(
             self.room_group_name,
             self.channel_name

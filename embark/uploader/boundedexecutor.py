@@ -1,3 +1,4 @@
+# pylint: disable=R1732, C0201, E1129
 import csv
 import logging
 import os
@@ -23,12 +24,12 @@ logger = logging.getLogger('web')
 # maximum concurrent running workers
 MAX_WORKERS = 4
 # maximum queue bound
-MAX_QUEUE = 0
+MAX_QUEUE = MAX_WORKERS
 
 # assign the threadpool max_worker_threads
 executor = ThreadPoolExecutor(max_workers=MAX_WORKERS)
 # create semaphore to track queue state
-semaphore = BoundedSemaphore(MAX_QUEUE + MAX_WORKERS)
+semaphore = BoundedSemaphore(MAX_QUEUE)
 
 # emba directories
 EMBA_SCRIPT_LOCATION = "cd /app/emba/ && ./emba.sh"
@@ -61,7 +62,7 @@ class BoundedExecutor:
 
             # run emba_process and wait for completion
             # emba_process = subprocess.call(cmd, shell=True)
-            subprocess.call(cmd, shell=True)
+            subprocess.call(cmd, shell=True)    # nosec
 
             # success
             logger.info("Success: %s", cmd)
@@ -82,10 +83,10 @@ class BoundedExecutor:
             if active_analyzer_dir:
                 shutil.rmtree(active_analyzer_dir)
 
-        except Exception as ex:
+        except Exception as execpt:
             # fail
             logger.error("EMBA run was probably not successful!")
-            logger.error("run_emba_cmd error: %s", ex)
+            logger.error("run_emba_cmd error: %s", execpt)
 
             # finalize db entry
             if primary_key:
@@ -192,7 +193,7 @@ class BoundedExecutor:
         logger.info("submit cls: %s", cls)
 
         # check if semaphore can be acquired, if not queue is full
-        queue_not_full = semaphore.acquire(blocking=False)
+        queue_not_full = semaphore.acquire(blocking=False)  # FIXME
         if not queue_not_full:
             logger.error("Executor queue full")
             return None
@@ -218,7 +219,7 @@ class BoundedExecutor:
         This job reads the F50_aggregator file and stores its content into the Result model
         """
 
-        with open(path, newline='\n') as csv_file:
+        with open(path, newline='\n', encoding='utf-8') as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=';')
             csv_list = []
             for row in csv_reader:
@@ -263,8 +264,8 @@ class BoundedExecutor:
             canary_per=int(res_dict.get("canary_per", 0)),
             relro=int(res_dict.get("relro", 0)),
             relro_per=int(res_dict.get("relro_per", 0)),
-            nx=int(res_dict.get("nx", 0)),
-            nx_per=int(res_dict.get("nx_per", 0)),
+            no_exec=int(res_dict.get("no_exec", 0)),
+            no_exec_per=int(res_dict.get("no_exec_per", 0)),
             pie=int(res_dict.get("pie", 0)),
             pie_per=int(res_dict.get("pie_per", 0)),
             stripped=int(res_dict.get("stripped", 0)),

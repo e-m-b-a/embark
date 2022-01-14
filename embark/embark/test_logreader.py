@@ -9,7 +9,8 @@ logger = logging.getLogger('web')
 
 class TestLogreader(TestCase):
 
-    def setUp(self):
+    def __init__(self):
+        super().__init__(self)
         self.log_string1 = "[\x1b[0;33m*\x1b[0m] Tue Jun 15 12:12:26 UTC 2021 - P02_firmware_bin_file_check starting\n"
         self.log_string2 = "[\x1b[0;33m*\x1b[0m] Tue Jun 15 12:12:27 UTC 2021 - P02_firmware_bin_file_check finished\n"
         self.log_string3 = "[\x1b[0;35m!\x1b[0m]\x1b[0;35m Test ended on Sat Jul  3 00:07:10 UTC 2021 and took about 00:34:24\x1b[0m\n"
