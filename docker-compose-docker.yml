@@ -4,6 +4,7 @@ services:
   embark_db:
     image: mysql
     container_name: embark_db
+    #TODO add flag
     restart: always
     expose:
       - "3306"

@@ -24,22 +24,19 @@ NC='\033[0m' # no color
 
 print_help() {
   echo -e "\\n""$CYAN""USAGE""$NC"
-  echo -e "$CYAN-F$NC         Installation of EMBArk with all dependencies (typical initial installation)"
-  # echo -e "$CYAN-U$NC         Uninstall EMBArk" # TODO
-  # echo -e "$CYAN-r$NC         Reinstallation of EMBArk with all dependencies (cleanup of docker environment first)"
-  # echo -e "$RED               ! This deletes all Docker-Images as well !""$NC"
-  echo -e "$CYAN-e$NC         Install EMBA only"
   echo -e "$CYAN-h$NC         Print this help message"
+  echo -e "$CYAN-d$NC         EMBArk default installation"
+  echo -e "$CYAN-F$NC         Installation of EMBArk for developers"
+  echo -e "$CYAN-e$NC         Install EMBA only"
   echo -e "$CYAN-D$NC         Install for Docker deployment"
-  echo -e "$CYAN-d$NC         EMBArk developer"
+  echo -e "---------------------------------------------------------------------------"
+  echo -e "$CYAN-U$NC         Uninstall EMBArk" # TODO
+  echo -e "$CYAN-r$NC         Reinstallation of EMBArk with all dependencies"
+  echo -e "$RED               ! Both options delete all Database-files as well !""$NC"
 }
 
 install_emba() {
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner EMBA on host""$NC"
-
-  if [[ "$REFORCE" -eq 1 && -d ./emba ]]; then
-    rm ./emba -r
-  fi
 
   if ! [[ -d ./emba ]]; then
     git clone https://github.com/e-m-b-a/emba.git
@@ -50,28 +47,30 @@ install_emba() {
   fi
 
   cd emba || exit 1
-  ./installer.sh -F 
+  ./installer.sh -d
+  cp ./config/emba_updater /etc/cron.daily/
   cd .. || exit 1
 }
 
 reset_docker() {
   echo -e "\n$GREEN""$BOLD""Reset EMBArk docker images""$NC"
 
-  docker images
-  docker container ls -a
+  docker container stop embark_db
+  docker container stop embark_redis
+  docker container stop embark_server
+  docker container prune -f --filter "label=flag"
 
-  
-  # while docker images | grep -qE "^\<none\>"; do
-  #   IMAGE_ID=$(docker container| grep -E "^\<none\>" | awk '{print $3}')
-  #   echo -e "$GREEN""$BOLD""Remove failed docker image""$NC"
-  #   docker image rm "$IMAGE_ID"
-  # done
+  while docker images | grep -qE "\<none\>"; do
+    IMAGE_ID=$(docker images | grep -E "\<none\>" | awk '{print $3}')
+    echo -e "$GREEN""$BOLD""Remove failed docker image""$NC"
+    docker image rm "$IMAGE_ID" -f
+  done
 
   if docker images | grep -qE "^embeddedanalyzer/emba"; then
     echo -e "\n$GREEN""$BOLD""Found EMBA docker environment - removing it""$NC"
-    CONTAINER_ID=$(docker image ls | grep -E "embeddedanalyzer/emba" | awk '{print $3}')
+    CONTAINER_ID=$(docker images | grep -E "embeddedanalyzer/emba" | awk '{print $3}')
     echo -e "$GREEN""$BOLD""Remove EMBA docker image""$NC"
-    docker image rm "$IMAGE_ID"
+    docker image rm "$IMAGE_ID" -f
   fi
 
   if docker images | grep -qE "^embark[[:space:]]*latest"; then
@@ -87,8 +86,7 @@ reset_docker() {
 
   if docker images | grep -qE "^mysql[[:space:]]*latest"; then
     echo -e "\n$GREEN""$BOLD""Found mysql docker environment - removing it""$NC"
-    CONTAINER_ID=$(docker container ls -a | grep -E "embark_auth-db_1" | awk '{print $1}')
-
+    CONTAINER_ID=$(docker container ls -a | grep -E "embark_db" | awk '{print $1}')
     echo -e "$GREEN""$BOLD""Stop mysql docker container""$NC"
     docker container stop "$CONTAINER_ID"
     echo -e "$GREEN""$BOLD""Remove mysql docker container""$NC"
@@ -99,7 +97,7 @@ reset_docker() {
 
   if docker images | grep -qE "^redis[[:space:]]*5"; then
     echo -e "\n$GREEN""$BOLD""Found redis docker environment - removing it""$NC"
-    CONTAINER_ID=$(docker container ls -a | grep -E "embark_redis_1" | awk '{print $1}')
+    CONTAINER_ID=$(docker container ls -a | grep -E "embark_redis" | awk '{print $1}')
     echo -e "$GREEN""$BOLD""Stop redis docker container""$NC"
     docker container stop "$CONTAINER_ID"
     echo -e "$GREEN""$BOLD""Remove redis docker container""$NC"
@@ -107,6 +105,30 @@ reset_docker() {
     echo -e "$GREEN""$BOLD""Remove redis docker image""$NC"
     docker image rm redis:5 -f
   fi
+
+  #networks
+
+  if docker network ls | grep -E "embark_dev"; then
+    echo -e "\n$GREEN""$BOLD""Found EMBArk_dev network - removing it""$NC"
+    NET_ID=$(docker network ls | grep -E "embark_dev" | awk '{print $1}')
+    echo -e "$GREEN""$BOLD""Remove EMBArk_dev network""$NC"
+    docker network rm "$NET_ID" 
+  fi
+
+  if docker network ls | grep -E "embark_frontend"; then
+    echo -e "\n$GREEN""$BOLD""Found EMBArk_frontend network - removing it""$NC"
+    NET_ID=$(docker network ls | grep -E "embark_frontend" | awk '{print $1}')
+    echo -e "$GREEN""$BOLD""Remove EMBArk_frontend network""$NC"
+    docker network rm "$NET_ID" 
+  fi
+
+  if docker network ls | grep -E "embark_backend"; then
+    echo -e "\n$GREEN""$BOLD""Found EMBArk_backend network - removing it""$NC"
+    NET_ID=$(docker network ls | grep -E "embark_backend" | awk '{print $1}')
+    echo -e "$GREEN""$BOLD""Remove EMBArk_backend network""$NC"
+    docker network rm "$NET_ID" 
+  fi
+  
 }
 
 install_debs() {
@@ -127,7 +149,6 @@ install_debs() {
 
 install_embark_default() {
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanning environment EMBArk""$NC"
-  install_debs
   apt-get install -y -q python3-dev default-libmysqlclient-dev build-essential pipenv
 
   #Add user for server
@@ -166,23 +187,6 @@ install_embark_default() {
     wget -O ./embark/static/external/css/bootstrap.css https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css
     wget -O ./embark/static/external/css/datatable.css https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.css
     find ./embark/static/external/ -type f -exec sed -i '/sourceMappingURL/d' {} \;
-  fi
-
-  # get emba
-  if ! [[ -d ./emba ]]; then
-    git clone https://github.com/e-m-b-a/emba.git
-  else
-    cd emba || exit 1
-    RES=$(git pull;)
-    cd .. || exit 1
-  fi
-
-  # install on host 
-  if ! [[ "$RES" == "Already up to date." ]]; then
-    cd emba || exit 1
-    ./installer.sh -d
-    cp ./config/emba_updater /etc/cron.daily/
-    cd .. || exit 1
   fi
 
   # setup .env
@@ -229,7 +233,6 @@ install_embark_default() {
 #install as docker-service
 install_embark_docker(){
   echo -e "\n$GREEN""$BOLD""Installing EMBArk as docker-container""$NC"
-  install_debs
 
   echo -e "\n$GREEN""$BOLD""Downloading of external files, e.g. jQuery, for the offline usability of EMBArk""$NC"
   mkdir -p ./embark/static/external/{scripts,css}
@@ -275,23 +278,6 @@ install_embark_docker(){
     echo "PYTHONPATH=${PYTHONPATH}:${PWD}:${PWD}/embark/"
   } > .env
 
-  # get emba
-  if ! [[ -d ./emba ]]; then
-    git clone https://github.com/e-m-b-a/emba.git
-  else
-    cd emba || exit 1
-    RES=$(git pull;)
-    cd .. || exit 1
-  fi
-
-  # install on host 
-  if ! [[ "$RES" == "Already up to date." ]]; then
-    cd emba || exit 1
-    ./installer.sh -d
-    cp ./config/emba_updater /etc/cron.daily/
-    cd .. || exit 1
-  fi
-
   # setup dbs-container and detach build could be skipt
   echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
   docker-compose -f ./docker-compose-docker.yml build
@@ -324,8 +310,7 @@ install_embark_docker(){
 
 install_embark_dev(){
   echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
-  install_debs
-  apt-get install -y -q npm pycodestyle python3-pylint-django
+  apt-get install -y -q npm pycodestyle python3-pylint-django python3-dev default-libmysqlclient-dev build-essential pipenv
   npm install -g jshint dockerlinter
   PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
   # download externals
@@ -341,21 +326,6 @@ install_embark_dev(){
     wget -O ./embark/static/external/css/bootstrap.css https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css
     wget -O ./embark/static/external/css/datatable.css https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.css
     find ./embark/static/external/ -type f -exec sed -i '/sourceMappingURL/d' {} \;
-  fi
-  # get emba
-  if ! [[ -d ./emba ]]; then
-    git clone https://github.com/e-m-b-a/emba.git
-  else
-    cd emba || exit 1
-    RES=$(git pull;)
-    cd .. || exit 1
-  fi
-
-  # install on host 
-  if ! [[ "$RES" == "Already up to date." ]]; then
-    cd emba || exit 1
-    ./installer.sh -d
-    cd .. || exit 1
   fi
 
   #Add Symlink
@@ -395,7 +365,7 @@ uninstall (){
 
   #3 delete user www-embark and reset visudo
   echo -e "$ORANGE""$BOLD""Delete user""$NC"
-  sed -i 's/www\-embark\ ALL\=\(ALL\)\ NOPASSWD\:\ \/app\/emba\/emba.sh//g' /etc/sudoers #TODO doesnt work yet
+  # sed -i 's/www\-embark\ ALL\=\(ALL\)\ NOPASSWD\:\ \/app\/emba\/emba.sh//g' /etc/sudoers #TODO doesnt work yet
   userdel www-embark
 
   #4 delete venv
@@ -412,12 +382,12 @@ uninstall (){
 
   #7 delete all docker interfaces and containers + images
   reset_docker
-  #TODO
+  echo -e "$ORANGE""$BOLD""Consider running \$docker system prune""$NC"
 
   #8 delete/uninstall EMBA
   echo -e "$ORANGE""$BOLD""Delete EMBA?""$NC"
   docker network rm emba_runs
-  rm -R ./emba
+  rm -i -R ./emba
 
   #9 
 }
@@ -438,8 +408,8 @@ while getopts eFUrdDh OPT ; do
       echo -e "$GREEN""$BOLD""Install only emba""$NC"
       ;;
     F)
-      export DEFAULT=1
-      echo -e "$GREEN""$BOLD""Install all dependecies""$NC"
+      export DEV=1
+      echo -e "$GREEN""$BOLD""Building Development-Enviroment""$NC"
       ;;
     U)
       export UNINSTALL=1
@@ -451,12 +421,12 @@ while getopts eFUrdDh OPT ; do
       echo -e "$GREEN""$BOLD""Install all dependecies including docker cleanup""$NC"
       ;;
     d)
-      export DEV=1
+      export DEFAULT=1
       echo -e "$GREEN""$BOLD""Default installation of EMBArk""$NC"
       ;;
     D)
       export DOCKER=1
-      echo -e "$GREEN""$BOLD""Building Development-Enviroment""$NC"
+      echo -e "$GREEN""$BOLD""Install all dependecies for EMBArk-docker-container""$NC"
       ;;
     h)
       print_help
@@ -476,24 +446,22 @@ if ! [[ $EUID -eq 0 ]] && [[ $LIST_DEP -eq 0 ]] ; then
   exit 1
 fi
 
-if [[ "$DEFAULT" -eq 1 ]]; then
-  install_embark_default
-  exit 0
-elif [[ "$DEV" -eq 1 ]]; then
-  install_embark_dev
-  exit 0
-elif [[ "$DOCKER" -eq 1 ]]; then
-  install_embark_docker
-  exit 0
+if [[ "$REFORCE" -eq 1]] && [[ "$UNINSTALL" -eq 1 ]]; then
+  uninstall
 elif [[ "$UNINSTALL" -eq 1 ]]; then
   uninstall
-  if [[ "$REFORCE" -eq 1]]; then
-    install_embark_default
-  fi
   exit 0
 fi
 
-#else
 install_debs
 install_emba
+
+if [[ "$DEFAULT" -eq 1 ]]; then
+  install_embark_default
+elif [[ "$DEV" -eq 1 ]]; then
+  install_embark_dev
+elif [[ "$DOCKER" -eq 1 ]]; then
+  install_embark_docker
+fi
+
 exit 0
