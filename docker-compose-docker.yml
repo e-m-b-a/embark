@@ -42,7 +42,7 @@ services:
     command: './entrypoint.sh'
     depends_on:
         - embark_db
-        - redis
+        - embark_redis
 
   embark_redis:
     image: "redis:5"
