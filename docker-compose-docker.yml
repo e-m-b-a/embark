@@ -18,7 +18,7 @@ services:
     networks:
       - embark_backend
 
-  embark:
+  embark_server:
     image: embark:latest
     container_name: embark_server
     build: .
@@ -44,7 +44,7 @@ services:
         - embark_db
         - redis
 
-  redis:
+  embark_redis:
     image: "redis:5"
     container_name: embark_redis
     command: --port 7777
@@ -60,7 +60,7 @@ services:
       - embark_backend
 
 networks:
-  embark_backend:
+  embark_backend_docker:
     name: embark_backend_docker
     driver: bridge
     ipam:

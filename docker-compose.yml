@@ -24,7 +24,7 @@ services:
       embark_backend:
         ipv4_address: "172.22.0.5"
 
-  redis:
+  embark_redis:
     container_name: embark_redis
     image: "redis:5"
     labels:
