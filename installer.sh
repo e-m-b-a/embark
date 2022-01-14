@@ -389,7 +389,8 @@ uninstall (){
   docker network rm emba_runs
   rm -i -R ./emba
 
-  #9 
+  #9 reset ownership etc
+  # TODO
 }
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
