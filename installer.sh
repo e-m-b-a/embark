@@ -55,16 +55,19 @@ install_emba() {
 reset_docker() {
   echo -e "\n$GREEN""$BOLD""Reset EMBArk docker images""$NC"
 
+  docker image ls -a
+
   docker container stop embark_db
   docker container stop embark_redis
   docker container stop embark_server
   docker container prune -f --filter "label=flag"
 
-  while docker images | grep -qE "\<none\>"; do
-    IMAGE_ID=$(docker images | grep -E "\<none\>" | awk '{print $3}')
-    echo -e "$GREEN""$BOLD""Remove failed docker image""$NC"
-    docker image rm "$IMAGE_ID" -f
-  done
+
+  #while docker images | grep -qE "\<none\>"; do
+  #  IMAGE_ID=$(docker images | grep -E "\<none\>" | awk '{print $3}')
+   # echo -e "$GREEN""$BOLD""Remove failed docker image""$NC"
+   # docker image rm -f "$IMAGE_ID"
+  #done
 
   if docker images | grep -qE "^embeddedanalyzer/emba"; then
     echo -e "\n$GREEN""$BOLD""Found EMBA docker environment - removing it""$NC"
@@ -369,16 +372,16 @@ uninstall (){
   userdel www-embark
 
   #4 delete venv
-  echo -e "$ORANGE""$BOLD""Delete Venv?""$NC"
-  rm -i -R ./.venv
+  echo -e "$ORANGE""$BOLD""Delete Venv""$NC"
+  rm -R ./.venv
 
   #5 delete .env
   echo -e "$ORANGE""$BOLD""Delete env""$NC"
   rm -R ./.env
 
   #6 delete shared volumes
-  echo -e "$ORANGE""$BOLD""Delete Database-files?""$NC"
-  rm -i -R ./embark_db
+  echo -e "$ORANGE""$BOLD""Delete Database-files""$NC"
+  rm -R ./embark_db
 
   #7 delete all docker interfaces and containers + images
   reset_docker
@@ -387,7 +390,7 @@ uninstall (){
   #8 delete/uninstall EMBA
   echo -e "$ORANGE""$BOLD""Delete EMBA?""$NC"
   docker network rm emba_runs
-  rm -i -R ./emba
+  rm -R ./emba
 
   #9 reset ownership etc
   # TODO
