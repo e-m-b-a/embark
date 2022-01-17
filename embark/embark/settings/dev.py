@@ -99,7 +99,7 @@ LOGGING = {
             'level': LOG_LEVEL,
             'class': 'logging.FileHandler',
             'formatter': 'file',
-            'filename': str(BASE_DIR / 'logs/web.log'),
+            'filename': str(BASE_DIR / 'embark.log'),
         }
     },
     'loggers': {

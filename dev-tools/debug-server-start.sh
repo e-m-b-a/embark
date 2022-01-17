@@ -19,7 +19,6 @@ cleaner() {
   killall -9 -q "*daphne*"
   docker container stop embark_db_dev
   docker container stop embark_redis_dev
-  docker network rm embark_dev
   exit 1
 }
 set -a
@@ -57,6 +56,10 @@ export REDIS_PORT="7777"
 export SECRET_KEY="$DJANGO_SECRET_KEY"
 export PYTHONPATH="${PYTHONPATH}:${PWD}:${PWD}/embark/"
 
+# start venv (ignore source in script)
+# shellcheck disable=SC1091
+source ./.venv/bin/activate || exit 1
+
 # setup dbs-container and detach build could be skipt
 echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
 sudo docker-compose -f ./docker-compose-dev.yml build
@@ -80,6 +83,7 @@ if ! [[ -d ./logs ]]; then
   mkdir ./logs
 fi
 
+echo "this is the db host: ""$DATABASE_HOST"
 # db_init
 echo -e "[*] Starting migrations - log to embark/logs/migration.log"
 pipenv run ./embark/manage.py makemigrations users uploader | tee -a ./logs/migration.log
@@ -101,7 +105,7 @@ docker container logs embark_db_dev -f > ./logs/mysql_dev.log &
 
 # start embark
 echo -e "$ORANGE""$BOLD""start EMBArk server""$NC"
-pipenv run ./embark/manage.py runserver "$PORT"
+pipenv run ./embark/manage.py runserver 0.0.0.0:"$PORT"
 
 wait %1
 wait %2
