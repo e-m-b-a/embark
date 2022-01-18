@@ -12,23 +12,6 @@
 
 # Description: Automates setup of developer environment for Debug-Server
 
-PORT="8080"
-IP="127.0.0.1"
-
-cleaner() {
-  fuser -k "$PORT"/tcp
-  killall -9 -q "*daphne*"
-  docker container stop embark_db_dev
-  docker container stop embark_redis_dev
-  rm ./.env
-  exit 1
-}
-
-set -a
-trap cleaner INT
-
-cd "$(dirname "$0")" || exit 1
-
 # RED='\033[0;31m'
 GREEN='\033[0;32m'
 ORANGE='\033[0;33m'
@@ -36,58 +19,35 @@ ORANGE='\033[0;33m'
 BOLD='\033[1m'
 NC='\033[0m' # no color
 
+PORT="8080"
+IP="127.0.0.1"
+
+
 export DJANGO_SETTINGS_MODULE=embark.settings.dev
 export EMBARK_DEBUG=True
 
-echo -e "\n$GREEN""$BOLD""Configuring Embark""$NC"
+cleaner() {
+  fuser -k "$PORT"/tcp
+  killall -9 -q "*daphne*"
+  docker container stop embark_db_dev
+  docker container stop embark_redis_dev
+  exit 1
+}
 
+set -a
+trap cleaner INT
+
+
+cd "$(dirname "$0")" || exit 1
 cd .. || exit 1
 
-# setup .env with dev network
-DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
-echo -e "$ORANGE""$BOLD""Creating a Developer EMBArk configuration file .env""$NC"
-export DATABASE_NAME="embark"
-export DATABASE_USER="embark"
-export DATABASE_PASSWORD="embark"
-export DATABASE_HOST="127.0.0.1"
-export DATABASE_PORT="3306"
-export MYSQL_PASSWORD="embark"
-export MYSQL_USER="embark"
-export MYSQL_DATABASE="embark"
-export REDIS_HOST="127.0.0.1"
-export REDIS_PORT="7777"
-export SECRET_KEY="$DJANGO_SECRET_KEY"
-export PYTHONPATH="${PYTHONPATH}:${PWD}:${PWD}/embark/"
-{
-  echo "DATABASE_NAME=$DATABASE_NAME"
-  echo "DATABASE_USER=$DATABASE_USER" 
-  echo "DATABASE_PASSWORD=$DATABASE_PASSWORD"
-  echo "DATABASE_HOST=$DATABASE_HOST"
-  echo "DATABASE_PORT=$DATABASE_PORT"
-  echo "MYSQL_PASSWORD=$MYSQL_PASSWORD"
-  echo "MYSQL_USER=$MYSQL_USER"
-  echo "MYSQL_DATABASE=$MYSQL_DATABASE"
-  echo "REDIS_HOST=$REDIS_HOST"
-  echo "REDIS_PORT=$REDIS_PORT"
-  echo "SECRET_KEY=$DJANGO_SECRET_KEY"
-  echo "PYTHONPATH=${PYTHONPATH}:${PWD}"
-} > .env
+echo -e "\n$GREEN""$BOLD""Configuring Embark""$NC"
 
 # shellcheck disable=SC1091
 source ./.venv/bin/activate || exit 1
 
-# setup dbs-container and detach build could be skipt
-echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
-sudo docker-compose -f ./docker-compose-dev.yml build
-DB_RETURN=$?
-if [[ $DB_RETURN -eq 0 ]] ; then
-  echo -e "$GREEN""$BOLD""Finished building EMBArk docker images""$NC"
-else
-  echo -e "$ORANGE""$BOLD""Failed building EMBArk docker images""$NC"
-fi
-
 echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
-sudo docker-compose -f ./docker-compose-dev.yml up -d
+docker-compose -f ./docker-compose-dev.yml up -d
 DU_RETURN=$?
 if [[ $DU_RETURN -eq 0 ]] ; then
   echo -e "$GREEN""$BOLD""Finished setup mysql and redis docker images""$NC"
@@ -99,7 +59,6 @@ if ! [[ -d ./logs ]]; then
   mkdir ./logs
 fi
 
-echo "this is the db host: ""$DATABASE_HOST"
 # db_init
 echo -e "[*] Starting migrations - log to embark/logs/migration.log"
 pipenv run ./embark/manage.py makemigrations users uploader | tee -a ./logs/migration.log
@@ -125,8 +84,5 @@ pipenv run ./embark/manage.py runserver "$IP":"$PORT"
 
 wait %1
 wait %2
-
-#cleanup TODO stop and remove container and network
-
 
 echo -e "\n$ORANGE""$BOLD""Done. To clean-up use the clean-setup script""$NC"

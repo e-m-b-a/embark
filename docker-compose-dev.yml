@@ -4,18 +4,19 @@ services:
 
   embark_db_dev:
     container_name: embark_db_dev
-    image: mysql
+    image: mysql:latest
+    env_file:
+      - .env
+    environment:
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
     expose:
       - "3306"
     ports:
       - "3306:3306"
     restart: always
-    environment:
-      - MYSQL_RANDOM_ROOT_PASSWORD=yes
-      - MYSQL_PASSWORD
-      - MYSQL_USER
-      - MYSQL_DATABASE
     volumes:
+      #- TODO share conf file for db
+      # ./embark_mysql.conf.d:/etc/mysql/conf.d
       - ./embark_db:/var/lib/mysql
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
@@ -32,6 +33,8 @@ services:
     ports:
       - "7777:7777"
     restart: always
+    env_file:
+      - .env
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
@@ -40,7 +43,6 @@ services:
         ipv4_address: "172.21.0.8"
     logging:
       driver: "local"
-
 
 networks:
   embark_dev:
