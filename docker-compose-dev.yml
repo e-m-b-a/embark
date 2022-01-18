@@ -26,7 +26,7 @@ services:
 
   embark_redis_dev:
     container_name: embark_redis_dev
-    image: "redis:5"
+    image: redis:latest
     command: --port 7777
     expose:
       - "7777"

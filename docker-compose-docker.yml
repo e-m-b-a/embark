@@ -2,7 +2,7 @@ version: "3"
 
 services:
   embark_db:
-    image: mysql
+    image: mysql:latest
     container_name: embark_db
     #TODO add flag
     restart: always

@@ -4,7 +4,7 @@ services:
 
   embark_db:
     container_name: embark_db
-    image: mysql
+    image: mysql:latest
     labels:
       flag: "deploy_EMBArk_server_mysql_container"
     env_file:
