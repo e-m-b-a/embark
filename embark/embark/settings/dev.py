@@ -8,7 +8,7 @@ DEBUG = bool(os.environ.get('EMBARK_DEBUG', True))
 ALLOWED_HOSTS = ['*']
 
 EMBA_ROOT = '/app/emba/'
-EMBA_LOG_ROOT = os.path.join('emba_logs')
+EMBA_LOG_ROOT = os.path.join(EMBA_ROOT)
 EMBA_LOG_URL = '/emba_logs/'
 
 INSTALLED_APPS = [
