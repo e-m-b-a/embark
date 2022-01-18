@@ -19,6 +19,7 @@ export DEBIAN_FRONTEND=noninteractive
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 ORANGE='\033[0;33m'
+CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m' # no color
 
@@ -411,7 +412,7 @@ uninstall (){
 }
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
-echo -e "$ORANGE""$BOLD""WARNING: This script can harm your environment!""$NC"
+echo -e "$ORANGE""$BOLD""WARNING: This script can harm your environment!""$NC\n"
 
 if [ "$#" -ne 1 ]; then
   echo -e "$RED""$BOLD""Invalid number of arguments""$NC"
