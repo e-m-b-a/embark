@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-Django = "*"
+Django = ">=4.0.1"
 channels = "*"
 channels-redis = "*"
 daphne = "*"
@@ -16,6 +16,7 @@ Rx = "*"
 inotify-simple = "*"
 psutil = "*"
 msgpack = "*"
+django = "*"
 
 [dev-packages]
 pycodestyle = "*"
