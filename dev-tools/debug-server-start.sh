@@ -19,7 +19,7 @@ ORANGE='\033[0;33m'
 BOLD='\033[1m'
 NC='\033[0m' # no color
 
-PORT="8080"
+PORT="8000"
 IP="127.0.0.1"
 
 
