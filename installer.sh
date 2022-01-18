@@ -313,7 +313,7 @@ install_embark_docker(){
 
 install_embark_dev(){
   echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
-  apt-get install -y -q npm pycodestyle python3-pylint-django python3-dev default-libmysqlclient-dev build-essential pipenv
+  apt-get install -y -q npm pycodestyle python3-pylint-django python3-dev default-libmysqlclient-dev build-essential pipenv bandit
   npm install -g jshint dockerlinter
   PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
   # download externals
