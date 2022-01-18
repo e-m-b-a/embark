@@ -156,7 +156,7 @@ LOGIN_URL = ''
 LOGOUT_REDIRECT_URL = ''
 
 # Added for FIle storage to get the path to save Firmware images.
-MEDIA_ROOT = os.path.join('uploadedFirmwareImages')  # media directory in the root directory
+MEDIA_ROOT = os.path.join('/app/','uploadedFirmwareImages')  # media directory in the root directory
 MEDIA_URL = '/uploadedFirmwareImages/'
 
 REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
