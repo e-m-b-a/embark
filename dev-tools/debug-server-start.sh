@@ -13,14 +13,17 @@
 # Description: Automates setup of developer environment for Debug-Server
 
 PORT="8080"
+IP="127.0.0.1"
 
 cleaner() {
   fuser -k "$PORT"/tcp
   killall -9 -q "*daphne*"
   docker container stop embark_db_dev
   docker container stop embark_redis_dev
+  rm ./.env
   exit 1
 }
+
 set -a
 trap cleaner INT
 
@@ -55,8 +58,21 @@ export REDIS_HOST="127.0.0.1"
 export REDIS_PORT="7777"
 export SECRET_KEY="$DJANGO_SECRET_KEY"
 export PYTHONPATH="${PYTHONPATH}:${PWD}:${PWD}/embark/"
+{
+  echo "DATABASE_NAME=$DATABASE_NAME"
+  echo "DATABASE_USER=$DATABASE_USER" 
+  echo "DATABASE_PASSWORD=$DATABASE_PASSWORD"
+  echo "DATABASE_HOST=$DATABASE_HOST"
+  echo "DATABASE_PORT=$DATABASE_PORT"
+  echo "MYSQL_PASSWORD=$MYSQL_PASSWORD"
+  echo "MYSQL_USER=$MYSQL_USER"
+  echo "MYSQL_DATABASE=$MYSQL_DATABASE"
+  echo "REDIS_HOST=$REDIS_HOST"
+  echo "REDIS_PORT=$REDIS_PORT"
+  echo "SECRET_KEY=$DJANGO_SECRET_KEY"
+  echo "PYTHONPATH=${PYTHONPATH}:${PWD}"
+} > .env
 
-# start venv (ignore source in script)
 # shellcheck disable=SC1091
 source ./.venv/bin/activate || exit 1
 
@@ -105,7 +121,7 @@ docker container logs embark_db_dev -f > ./logs/mysql_dev.log &
 
 # start embark
 echo -e "$ORANGE""$BOLD""start EMBArk server""$NC"
-pipenv run ./embark/manage.py runserver 0.0.0.0:"$PORT"
+pipenv run ./embark/manage.py runserver "$IP":"$PORT"
 
 wait %1
 wait %2
