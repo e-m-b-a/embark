@@ -25,8 +25,12 @@ IP="127.0.0.1"
 
 export DJANGO_SETTINGS_MODULE=embark.settings.dev
 export EMBARK_DEBUG=True
+export PIPENV_VENV_IN_PROJECT="True"
 
 cleaner() {
+  if [[ -f ./embark/embark.log ]]; then
+    chmod 755 ./embark/embark.log
+  fi
   fuser -k "$PORT"/tcp
   killall -9 -q "*daphne*"
   docker container stop embark_db_dev
@@ -36,7 +40,6 @@ cleaner() {
 
 set -a
 trap cleaner INT
-
 
 cd "$(dirname "$0")" || exit 1
 cd .. || exit 1
