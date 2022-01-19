@@ -17,6 +17,7 @@
 
 export DJANGO_SETTINGS_MODULE=embark.settings.dev
 export PYTHONPATH="$PYTHONPATH:${PWD}/embark/embark/"
+export PIPENV_VENV_IN_PROJECT="True"
 
 cd "$(dirname "$0")" || exit 1
 cd .. || exit 1 
