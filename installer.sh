@@ -63,13 +63,6 @@ reset_docker() {
   docker container stop embark_server
   docker container prune -f --filter "label=flag"
 
-
-  #while docker images | grep -qE "\<none\>"; do
-  #  IMAGE_ID=$(docker images | grep -E "\<none\>" | awk '{print $3}')
-   # echo -e "$GREEN""$BOLD""Remove failed docker image""$NC"
-   # docker image rm -f "$IMAGE_ID"
-  #done
-
   if docker images | grep -qE "^embeddedanalyzer/emba"; then
     echo -e "\n$GREEN""$BOLD""Found EMBA docker environment - removing it""$NC"
     CONTAINER_ID=$(docker images | grep -E "embeddedanalyzer/emba" | awk '{print $3}')
