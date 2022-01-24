@@ -1,3 +1,4 @@
+# pylint: disable=R1705
 import logging
 from datetime import datetime
 
@@ -114,19 +115,19 @@ def password_change(request):
         try:
             body = {k: v[0] for k, v in dict(request.POST).items()}
             try:
-                oldPassword = body['oldPassword']
-                newPassword = body['newPassword']
-                confirmPassword = body['confirmPassword']
+                old_password = body['oldPassword']
+                new_password = body['newPassword']
+                confirm_password = body['confirmPassword']
 
-                if user.check_password(oldPassword):
-                    if oldPassword == newPassword:
+                if user.check_password(old_password):
+                    if old_password == new_password:
                         logger.debug('New password = old password')
                         return render(request, 'uploader/passwordChange.html',
                                       {'error_message': True, 'message': 'New password matches the old password'})
-                    if newPassword == confirmPassword:
-                        user.set_password(newPassword)
+                    if new_password == confirm_password:
+                        user.set_password(new_password)
                         user.save()
-                        authenticate(request, username=user.username, password=newPassword)
+                        authenticate(request, username=user.username, password=new_password)
                         login(request, user)
                         logger.debug('New password set, user authenticated')
                         return render(request, 'uploader/passwordChangeDone.html',
@@ -158,12 +159,12 @@ def acc_delete(request):
     if request.method == "POST":
         logger.debug('disabling account')
         user = get_user(request)
-        logger.debug('' + datetime.now().strftime("%H:%M:%S"))
-        user.username = user.get_username() + '_disactivated_' + datetime.now().strftime("%H:%M:%S");  # workaround for not duplicating entry users_user.username
+        logger.debug(' %s Account: %s disabled', datetime.now().strftime("%H:%M:%S"), user)
+        user.username = user.get_username() + '_disactivated_' + datetime.now().strftime(
+            "%H:%M:%S")  # workaround for not duplicating entry users_user.username
         user.is_active = False
         user.save()
-        return render(request, 'uploader/register.html',
-                      {'success_message': True, 'message': 'Account successfully deleted.'})
+        return render(request, 'uploader/register.html', {'success_message': True, 'message': 'Account successfully '
+                                                                                              'deleted.'})
     else:
         return render(request, 'uploader/accountDelete.html')
-
