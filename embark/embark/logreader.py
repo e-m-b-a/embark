@@ -1,3 +1,5 @@
+# pylint: disable=W0602
+# ignores no-assignment error since there is one!
 import copy
 import difflib
 import pathlib
@@ -7,14 +9,15 @@ import logging
 import rx
 import rx.operators as ops
 
+from inotify_simple import INotify, flags
+from asgiref.sync import async_to_sync
+
 # from channels.generic.websocket import WebsocketConsumer
 from channels.layers import get_channel_layer
-
 from django.conf import settings
 # from uploader.models import Firmware, FirmwareFile
 from uploader.models import Firmware
-from inotify_simple import INotify, flags
-from asgiref.sync import async_to_sync
+
 
 logger = logging.getLogger('web')
 
@@ -143,11 +146,12 @@ class LogReader:
             # if file does not exist create it otherwise delete its content
             pat = f"/app/emba/{settings.LOG_ROOT}/emba_new_{self.firmware_id}.log"
             if not pathlib.Path(pat).exists():
-                open(pat, 'w+')
+                with open(pat, 'w+', encoding='utf-8'):
+                    pass
 
             # create an entry for the id in the process map
             global PROCESS_MAP
-            if self.firmware_id_str not in PROCESS_MAP.keys():
+            if self.firmware_id_str not in PROCESS_MAP:
                 PROCESS_MAP[self.firmware_id_str] = []
 
             # look for new events
@@ -165,7 +169,7 @@ class LogReader:
                         # send changes to frontend
                         self.input_processing(tmp)
                         # copy diff to tmp file
-                        self.copy_file_content(tmp, firmware.path_to_logs)
+                        self.copy_file_content(tmp)
 
         self.cleanup()
         # return
@@ -195,7 +199,7 @@ class LogReader:
         # else:
         return False
 
-    def copy_file_content(self, diff, log_path):
+    def copy_file_content(self, diff):
 
         """
                   Helper function to copy new emba log messages to temporary file continuously
@@ -203,7 +207,7 @@ class LogReader:
                   :return: None
         """
 
-        with open(f"/app/emba/{settings.LOG_ROOT}/emba_new_{self.firmware_id}.log", 'a+') as diff_file:
+        with open(f"/app/emba/{settings.LOG_ROOT}/emba_new_{self.firmware_id}.log", 'a+', encoding='utf-8') as diff_file:
             diff_file.write(diff)
 
     def get_diff(self, log_path):
@@ -216,11 +220,9 @@ class LogReader:
         """
 
         # open the two files to get diff from
-        old_file = open(f"{log_path}/emba.log")
-        new_file = open(f"/app/emba/{settings.LOG_ROOT}/emba_new_{self.firmware_id}.log")
-
-        diff = difflib.ndiff(old_file.readlines(), new_file.readlines())
-        return ''.join(x[2:] for x in diff if x.startswith('- '))
+        with open(f"{log_path}/emba.log", encoding='utf-8') as old_file, open(f"/app/emba/{settings.LOG_ROOT}/emba_new_{self.firmware_id}.log", encoding='utf-8') as new_file:
+            diff = difflib.ndiff(old_file.readlines(), new_file.readlines())
+            return ''.join(x[2:] for x in diff if x.startswith('- '))
 
     def input_processing(self, tmp_inp):
 
@@ -238,7 +240,7 @@ class LogReader:
         cur_ar = tmp_inp.splitlines()
 
         # create observable
-        source_stream = rx.from_(cur_ar)
+        source_stream = rx.from_iterable(cur_ar)
 
         # observer for status messages
         source_stream.pipe(

@@ -1,33 +1,35 @@
-FROM kalilinux/kali-rolling
+# TODO currently not supported
+FROM kalilinux/kali-rolling:latest
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV DJANGO_SETTINGS_MODULE=embark.settings
+#ENV DJANGO_SETTINGS_MODULE=embark.settings
 ENV PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/.local/bin
+# TODO add all needed vars
 
-RUN apt-get update && \ 
-    apt-get -y upgrade && \
-    apt-get -y -q install wget kmod procps sudo && \
-    sudo apt-get install -y -q apt-utils && \
-    sudo apt-get install -y -q default-libmysqlclient-dev && \
-    sudo apt-get install -y -q default-mysql-client && \
-    sudo apt-get install -y -q build-essential && \
-    sudo apt-get install -y -q python3-dev && \
-    sudo apt-get install -y -q libssl-dev && \
-    sudo apt-get install -y -q swig
+USER root
+RUN apt-get update && apt-get -y -q --no-install-recommends install wget \
+    kmod \
+    procps \
+    sudo \
+    apt-utils \
+    default-libmysqlclient-dev \
+    default-mysql-client \
+    build-essential \
+    python3-dev \
+    libssl-dev \
+    swig \
+    && rm -rf /var/lib/apt/lists/*
 
-ADD . /app
+COPY . /app
 
 WORKDIR /app/embark
 
-ADD embark/requirements.txt /app/embark/requirements.txt
-
-RUN yes | sudo /app/emba/installer.sh -D  && \
-    sudo pip3 install uwsgi -I --no-cache-dir && \
-    pip3 install --user --no-warn-script-location -r /app/embark/requirements.txt
+RUN /app/emba/installer.sh -D  && \
+    pipenv install
 
 EXPOSE 80
 # Opening on extra port for our ASGI setup
 EXPOSE 8001
 
-CMD  ./entrypoint.sh
+ENTRYPOINT  ["./entrypoint.sh"]
 

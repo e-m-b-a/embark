@@ -28,7 +28,7 @@ trap cleaner INT
 cd "$(dirname "$0")" || exit 1
 
 if ! [[ $EUID -eq 0 ]] && [[ $LIST_DEP -eq 0 ]] ; then
-  echo -e "\\n$RED""Run EMBArk run-server script with root permissions! (Docker)""$NC\\n"
+  echo -e "\\n$RED""Run EMBArk server script with root permissions!""$NC\\n"
   exit 1
 fi
 
@@ -64,13 +64,13 @@ docker container logs embark_redis_dev -f &> ./logs/redis_dev.log &
 echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.log""$NC"
 docker container logs embark_db_dev -f &> ./logs/mysql_dev.log & 
 
-# run middlewears
-# echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
-# pipenv run ./manage.py runapscheduler --test | tee -a ./logs/scheduler.log &
-echo -e "\n[""$BLUE JOB""$NC""] Starting uwsgi - log to /embark/logs/uwsgi.log"
+# run apps
+#echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
+#pipenv run ./manage.py runapscheduler | tee -a ./logs/scheduler.log &
+echo -e "\n[""$BLUE JOB""$NC""] Starting wsgi - log to /embark/logs/wsgi.log"
 pipenv run uwsgi --wsgi-file ./embark/wsgi.py --http :80 --threads 8 --logto ./logs/uwsgi.log &
 echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-pipenv run daphne -v 3 --access-log ./logs/daphne.log -p 8001 -b '0.0.0.0' --root-path="$PWD" embark.asgi:application 1>/dev/null
+pipenv run daphne --access-log ./logs/daphne.log -p 8001 -b '0.0.0.0' --root-path="$PWD" embark.asgi:application 1>/dev/null
 
 wait %1
 wait %2

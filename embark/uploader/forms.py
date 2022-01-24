@@ -1,3 +1,4 @@
+# pylint: disable=E1101
 import logging
 import django
 from django import forms
