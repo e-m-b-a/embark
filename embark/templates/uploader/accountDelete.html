@@ -1,0 +1,26 @@
+{% extends "uploader/base.html" %}
+{% block title %} Delete Account {% endblock title %}
+{% load static %}
+{% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/passwordReset.css' %}"/>{% endblock style %}
+{% block navigation %}{% include "uploader/navigation.html" %}{% endblock navigation %}
+{% block maincontent %}
+
+<div class="auth-wrapper">
+                <form action="{% url 'embark-delete' %}" method="post" novalidate>
+                    <div class="box box-primary">
+                            <div class="box-header">
+                            <h2 class="page-header"><i class="fa fa-lock"></i> Permanently delete my Account </h2>
+                        </div>
+                        <div class="box box-body-second">
+                            <p>Are you sure you want to permanently delete your account?</p>
+                        </div>
+                        <div class="btn-cnt">
+                            <p>
+                                <button class="btn-reset" type="submit" name="DeleteAcc">Delete Account</button>
+                            </p>
+                        </div>
+                    </div>
+                </form>
+</div>
+
+{% endblock maincontent %}
