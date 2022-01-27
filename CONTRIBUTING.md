@@ -23,14 +23,16 @@ It also sketches the typical integration process of patches.
     - to certify the "Developer's Certificate of Origin", see below
     - check with your employer when not working on your own!
 
-- test your code with shellcheck and pycodestyle [**required**] 
-    -  see the included [script](./check_project.sh)
+- test your code with [script](./dev-tools/check_project.sh) [**required**] 
+
 
 - send reminder if nothing happens after about a week
 
 - the code needs to work on the latest Kali Linux (other distributions are welcome but currently not tested)
 
-## 2) Code Guidelines (Todo)
+## 2) Code Guidelines
+
+**Bash:**
 
 - General: Identation should be 2 spaces (no tab character)
 
@@ -46,7 +48,21 @@ It also sketches the typical integration process of patches.
 
 - Use `export` for variables which aren't only used in one file - it isn't necessary, but helps for readability
 
-- Code tests: For *.sh, *.js, *.html, *.py(other then django)-files use the provided-script (./check_project.sh) to test/verify your code.
+**Python:**
+
+- General: Identation should be 4 spaces
+
+- Comments: use `# TODO` and `# FIXME` 
+
+- refer to linter-configs
+
+**Java-Script:**
+
+- Mozilla-style
+  
+- refer to `./.jshintrc`
+
+Code tests: For *.sh, *.js, *.html, *.py(other then django)-files use the provided-script (./dev-tools/check_project.sh) to test/verify your code.
 
 ## 3) Developer's Certificate of Origin 1.1
 

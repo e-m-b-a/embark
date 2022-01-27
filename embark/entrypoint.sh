@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export DJANGO_SETTINGS_MODULE=embark.settings
+export DJANGO_SETTINGS_MODULE=embark.settings.docker # TODO
 
 if ! [[ -d logs ]]; then
   mkdir logs

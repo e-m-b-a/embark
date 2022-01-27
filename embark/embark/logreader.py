@@ -144,7 +144,7 @@ class LogReader:
             firmware = Firmware.objects.get(pk=self.firmware_id)
 
             # if file does not exist create it otherwise delete its content
-            pat = f"/app/emba/{settings.LOG_ROOT}/emba_new_{self.firmware_id}.log"
+            pat = f"{settings.EMBA_LOG_ROOT}/emba_new_{self.firmware_id}.log"
             if not pathlib.Path(pat).exists():
                 with open(pat, 'w+', encoding='utf-8'):
                     pass
@@ -207,7 +207,7 @@ class LogReader:
                   :return: None
         """
 
-        with open(f"/app/emba/{settings.LOG_ROOT}/emba_new_{self.firmware_id}.log", 'a+', encoding='utf-8') as diff_file:
+        with open(f"{settings.EMBA_LOG_ROOT}/emba_new_{self.firmware_id}.log", 'a+', encoding='utf-8') as diff_file:
             diff_file.write(diff)
 
     def get_diff(self, log_path):
@@ -220,7 +220,7 @@ class LogReader:
         """
 
         # open the two files to get diff from
-        with open(f"{log_path}/emba.log", encoding='utf-8') as old_file, open(f"/app/emba/{settings.LOG_ROOT}/emba_new_{self.firmware_id}.log", encoding='utf-8') as new_file:
+        with open(f"{log_path}/emba.log", encoding='utf-8') as old_file, open(f"{settings.EMBA_LOG_ROOT}/emba_new_{self.firmware_id}.log", encoding='utf-8') as new_file:
             diff = difflib.ndiff(old_file.readlines(), new_file.readlines())
             return ''.join(x[2:] for x in diff if x.startswith('- '))
 
