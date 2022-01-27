@@ -93,10 +93,12 @@ def signup(request):
         return render(request, 'register.html')
 
 
-@csrf_exempt
+# TODO this should require the username or some other kind of validation-data or else everyone can end that session
+# TODO server should validate for client
 # @cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@login_required(login_url='/' + settings.LOGIN_URL)
 def signout(request):
-    # request.session.flush()
+    request.session.flush()
     logger.debug("Logout user %s", request.user)
     logout(request)
     return render(request, 'uploader/login.html', {'success_message': True, 'message': 'Logout successful.'})

@@ -15,8 +15,9 @@
 # Description:  Check all scripts and templates(Django gets its own unit-tests)
 #               And check Django if its deployable
 
-export DJANGO_SETTINGS_MODULE=embark.settings
+export DJANGO_SETTINGS_MODULE=embark.settings.dev
 export PYTHONPATH="$PYTHONPATH:${PWD}/embark/embark/"
+export PIPENV_VENV_IN_PROJECT="True"
 
 cd "$(dirname "$0")" || exit 1
 cd .. || exit 1 
@@ -49,7 +50,14 @@ check_tools(){
 # checks django configuration
 check_django(){
   cd ./embark || exit 1
-  pipenv run python ./embark/manage.py check --deploy
+  echo -e "\\n""$ORANGE""$BOLD""EMBArk django-settings check""$NC""\\n""$BOLD""=================================================================""$NC"
+  if ! pipenv run python ./manage.py check | grep -q "System check identified no issues"; then  #TODO add --deploy flag
+      echo -e "\\n""$RED$BOLD==> FIX ERRORS""$NC""\\n"
+      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+      MODULES_TO_CHECK_ARR+=( "./embark/settings.py" )
+  else
+      echo -e "$GREEN""$BOLD""==> SUCCESS""$NC""\\n"
+  fi
   cd .. || exit 1
 }
 
@@ -61,16 +69,14 @@ jscheck(){
   for JS_SCRIPT in "${JS_SCRIPTS[@]}"; do
     echo -e "\\n""$GREEN""Run jshint on $JS_SCRIPT:""$NC""\\n"
     # mapfile -t JS_RESULT < <(jshint "$JS_SCRIPT")
-    jshint "$JS_SCRIPT" >"$JS_SCRIPT.report"
+    jshint -c ./.jshintrc "$JS_SCRIPT"
     RES=$?
     if [[ $RES -eq 2 ]] ; then
       echo -e "\\n""$RED$BOLD==> FIX ERRORS""$NC""\\n"
-      cat "$JS_SCRIPT.report"
       ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
       MODULES_TO_CHECK_ARR+=( "$JS_SCRIPT" )
     elif [[ $RES -eq 1 ]]; then
       echo -e "\\n""$ORANGE$BOLD==> FIX WARNINGS""$NC""\\n"
-      cat "$JS_SCRIPT.report"
       ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
       MODULES_TO_CHECK_ARR+=( "$JS_SCRIPT" )
     elif [[ $RES -eq 0 ]]; then 
@@ -131,7 +137,7 @@ shellchecker() {
   mapfile -t SH_SCRIPTS < <(find embark -iname "*.sh")
   for SH_SCRIPT in "${SH_SCRIPTS[@]}"; do
     echo -e "\\n""$GREEN""Run shellcheck on $SH_SCRIPT:""$NC""\\n"
-    if shellcheck "$SH_SCRIPT" || [[ $? -ne 1 && $? -ne 2 ]]; then
+    if shellcheck -x "$SH_SCRIPT" || [[ $? -ne 1 && $? -ne 2 ]]; then
       echo -e "$GREEN""$BOLD""==> SUCCESS""$NC""\\n"
     else
       echo -e "\\n""$ORANGE$BOLD==> FIX ERRORS""$NC""\\n"
@@ -226,6 +232,12 @@ pylinter(){
 }
 
 dockerchecker(){
+  if ! [[ -f .env ]]; then
+    ENV=1
+    touch .env    #dummy file
+  else
+    ENV=0
+  fi
   echo -e "\\n""$ORANGE""$BOLD""EMBArk docker-files check""$NC""\\n""$BOLD""=================================================================""$NC"
   mapfile -t DOCKER_COMPS < <(find . -maxdepth 1 -type d -name migrations -prune -false -o -iname "docker-compose*.yml")
   for DOCKER_COMP in "${DOCKER_COMPS[@]}"; do
@@ -238,7 +250,10 @@ dockerchecker(){
       MODULES_TO_CHECK_ARR+=( "$DOCKER_COMP" )    
     fi
   done
-  #dockerlinter -f ./Dockerfile
+  #TODO dockerlinter -f ./Dockerfile
+  if [[ $ENV -gt 0 ]]; then
+    rm .env   #remove dummy
+  fi
 }
 
 #main
@@ -252,14 +267,15 @@ templatechecker
 pycodestyle_check
 banditer
 pylinter
-#check_django TODO
+check_django
 
 if [[ "${#MODULES_TO_CHECK_ARR[@]}" -gt 0 ]]; then
   echo -e "\\n\\n""$GREEN$BOLD""SUMMARY:$NC\\n"
   echo -e "Modules to check: $MODULES_TO_CHECK\\n"
   for MODULE in "${MODULES_TO_CHECK_ARR[@]}"; do
-    echo -e "$ORANGE$BOLD==> FIX MODULE: ""$MODULE""$NC"
+    echo -e "$RED$BOLD==> FIX MODULE: ""$MODULE""$NC"
   done
   exit 1
 fi
+echo -e "$GREEN$BOLD===> ALL CHECKS SUCCESSFUL""$NC"
 exit 0

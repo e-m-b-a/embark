@@ -1,82 +1,59 @@
 version: "3"
-
+# https://docs.docker.com/compose/compose-file/compose-file-v3/#deploy
 services:
 
   embark_db:
-    image: mysql
     container_name: embark_db
-    restart: always
-    expose:
-      - "3306"
+    image: mysql:latest
+    labels:
+      flag: "deploy_EMBArk_server_mysql_container"
+    env_file:
+      - .env
     environment:
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
-      - MYSQL_PASSWORD
-      - MYSQL_USER
-      - MYSQL_DATABASE
+    expose:
+      - "3306"
+    ports:
+      - "3306:3306"
+    restart: always
     volumes:
+      - ./embark_db:/var/lib/mysql
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     networks:
-      - embark_backend
+      embark_backend:
+        ipv4_address: "172.22.0.5"
 
-  embark:
-    image: embark:latest
-    container_name: embark_server
-    build: .
-    restart: always
-    privileged: true
-    volumes:
-        - /var/run/docker.sock:/var/run/docker.sock 
-        - ./embark/:/app/embark/
-        - ./emba/:/app/emba/
-        - /etc/timezone:/etc/timezone:ro
-        - /etc/localtime:/etc/localtime:ro
-    ports:
-      - "80:80"
-    networks:
-      - embark_frontend
-      - embark_backend
-    environment:
-      - DATABASE_NAME
-      - DATABASE_USER
-      - DATABASE_HOST
-      - DATABASE_PORT
-      - DATABASE_PASSWORD
-      - DJANGO_LOG_LEVEL
-      - DEBUG=False
-      - REDIS_HOST
-      - REDIS_PORT
-    command: './entrypoint.sh'
-    depends_on:
-        - embark_db
-        - redis
-
-  redis:
-    image: "redis:5"
+  embark_redis:
     container_name: embark_redis
+    image: "redis:5"
+    labels:
+      flag: "deploy_EMBArk_server_redis_container"
+    env_file:
+      - ./.env
     command: --port 7777
     expose:
       - "7777"
+    ports:
+      - "7777:7777"
     restart: always
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     networks:
-      - embark_backend
+      embark_backend:
+        ipv4_address: "172.22.0.8"
+    logging:
+      driver: "local"
+
 
 networks:
-  embark_frontend:
-    name: embark_frontend
-    driver: bridge
-    driver_opts:
-      com.docker.network.bridge.name: embark_frontend
-
   embark_backend:
     name: embark_backend
-    driver: ipvlan
-    internal: true
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: embark_backend
     ipam:
       config:
         - subnet: "172.22.0.0/16"
-
 

@@ -35,8 +35,9 @@ jobs:
     - name: Run checkproject
       run: |
         pipenv install --dev
-        pipenv run ./dev-tools/check_project.sh
+        ./dev-tools/check_project.sh
       env:
+        PIPENV_VENV_IN_PROJECT: "True"
         DJANGO_SECRET_KEY: $(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
         DATABASE_NAME: "embark"
         DATABASE_USER: "embark"
