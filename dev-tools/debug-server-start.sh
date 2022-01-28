@@ -83,7 +83,7 @@ docker container logs embark_db_dev -f > ./logs/mysql_dev.log &
 
 # start embark
 echo -e "$ORANGE""$BOLD""start EMBArk server""$NC"
-pipenv run ./embark/manage.py runserver "$IP":"$PORT"
+pipenv run ./embark/manage.py runserver "$IP":"$PORT" |& tee -a ./logs/debug-server.log
 
 wait %1
 wait %2
