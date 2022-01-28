@@ -88,7 +88,7 @@ class FirmwareFile(models.Model):
     Model to store zipped or bin firmware file and upload date
     """
     def get_storage_path(self, filename):
-        # file will be uploaded to MEDIA_ROOT/<filename>
+        # file will be uploaded to MEDIA_ROOT/pk/<filename>
         return os.path.join(f"{self.pk}", filename)
 
     MAX_LENGTH = 127

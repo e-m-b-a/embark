@@ -137,7 +137,7 @@ pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --host "$BIND_IP" --port="$HTTP_PORT" --limit-request-body "$FILE_SIZE" \
 --url-alias /static/ /app/www/static/ --url-alias /media/ /app/www/media/ \
 --url-alias /uploadedFirmwareImages/ /app/www/media/uploadedFirmwareImages/ \
---url-alias /emba_logs/ /app/emba/emba_logs/ \
+--url-alias /emba_logs/ /app/www/media/emba_logs/ \
 --allow-localhost --working-directory /app/www/embark/ --server-root /app/www/httpd80/ \
 --include-file /app/www/conf/embark.conf &
 #--https-only --ssl-ca-certificate-file --ssl-certificate FILE-PATH --https-port "$HTTPS_PORT" --enable-debugger

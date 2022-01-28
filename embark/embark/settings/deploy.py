@@ -21,7 +21,7 @@ ALLOWED_HOSTS = ['*']
 # EMBA stuff
 # EMBA location
 EMBA_ROOT = '/app/emba/'
-EMBA_LOG_ROOT = os.path.join(EMBA_ROOT, 'emba_logs')
+EMBA_LOG_ROOT = '/app/www/media/emba_logs'
 EMBA_LOG_URL = '/emba_logs/'
 
 # Application definition - defines what apps gets migrated
@@ -184,7 +184,7 @@ LOGIN_URL = ''
 # URL of Logout-Page
 LOGOUT_REDIRECT_URL = ''
 
-# Added for File storage to get the path to save Firmware images.
+# Upload Media
 MEDIA_ROOT = '/app/www/media/'
 MEDIA_URL = '/media/'
 
