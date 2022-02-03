@@ -135,7 +135,7 @@ class BoundedExecutor:
         return: emba process future on success, None on failure
         """
 
-        # unpack firmware file to </app/embark/uploadedFirmwareImages/active_{ID}/>
+        # unpack firmware file to </app/embark/{media}/active_{ID}/>
         active_analyzer_dir = f"{settings.MEDIA_ROOT}/active_{firmware_flags.id}/"
 
         # we do not extract anything in embark -> emba should be able to handle all the cases with deep extraction

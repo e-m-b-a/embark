@@ -2,7 +2,7 @@
 
 # EMBArk - The firmware security scanning environment
 #
-# Copyright 2020-2021 Siemens Energy AG
+# Copyright 2020-2022 Siemens Energy AG
 # Copyright 2020-2021 Siemens AG
 #
 # EMBArk comes with ABSOLUTELY NO WARRANTY.
@@ -15,6 +15,8 @@
 # Description: Installer for EMBArk
 
 export DEBIAN_FRONTEND=noninteractive
+
+DIR="$(realpath(dirname "$0"))"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -152,6 +154,11 @@ install_embark_default() {
   useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /app/www/
   echo 'www-embark ALL=(ALL) NOPASSWD: /app/emba/emba.sh' | EDITOR='tee -a' visudo
 
+  #prepare daemon
+  sed -i "s/\<BASE\_DIR\>/$DIR/g" ./embark.service
+  chmod +x ./embark.service
+  cp ./embark.service /etc/systemd/system/
+
   #Add Symlink
   if ! [[ -d /app ]]; then
     ln -s "$PWD" /app || exit 1
@@ -161,7 +168,7 @@ install_embark_default() {
   if ! [[ -d ./www ]]; then
     mkdir ./www
     mkdir ./www/media
-    mkdir ./www/media/emba_logs
+    mkdir ./www/emba_logs
     mkdir ./www/static
     mkdir ./www/conf
   fi

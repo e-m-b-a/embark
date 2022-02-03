@@ -16,9 +16,8 @@ GREEN='\033[0;32m'
 ORANGE='\033[0;33m'
 BLUE='\033[0;34m'
 BOLD='\033[1m'
-NC='\033[0m' # no color
+NC='\033[0m'
 
-# export PIPENV_DOTENV_LOCATION=.env
 export DJANGO_SETTINGS_MODULE=embark.settings.deploy
 export EMBARK_DEBUG=True
 export HTTP_PORT=80
@@ -29,6 +28,7 @@ export FILE_SIZE=262144000  #250MB
 
 cleaner() {
   fuser -k 80/tcp
+  fuser -k 8001/tcp
   killall -9 -q "*daphne*"
   kill -9 "$(pgrep "manage.py runapscheduler")"     # TODO add non null cond
   fuser -k 8001/tcp
@@ -36,8 +36,11 @@ cleaner() {
   docker container stop embark_redis
   docker network rm embark_backend
   docker container prune -f --filter "label=flag"  #Try to only prune container we used not all of em
+  systemctl stop embark.service
+  systemctl disable embark.service
   exit 1
 }
+
 # main
 set -a
 trap cleaner INT
@@ -51,7 +54,7 @@ fi
 
 # check emba
 echo -e "$BLUE""$BOLD""checking EMBA""$RED"
-/app/emba/emba.sh -d    # 1>/dev/null
+/app/emba/emba.sh -d
 if [[ $? -eq 1 ]]; then
   echo -e "$BLUE""Trying auto-maintain""$NC"
   # automaintain
@@ -99,6 +102,9 @@ docker container logs embark_redis -f &> /app/www/logs/redis.log &
 echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.log"
 docker container logs embark_db -f &> /app/www/logs/mysql.log &
 
+#start the supervisor
+systemctl start embark.service
+
 # copy django server
 if [[ -d /app/www/embark ]]; then
   rm -R /app/www/embark
@@ -135,9 +141,8 @@ sleep 5
 echo -e "\n[""$BLUE JOB""$NC""] Starting Apache"
 pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --host "$BIND_IP" --port="$HTTP_PORT" --limit-request-body "$FILE_SIZE" \
---url-alias /static/ /app/www/static/ --url-alias /media/ /app/www/media/ \
---url-alias /uploadedFirmwareImages/ /app/www/media/uploadedFirmwareImages/ \
---url-alias /emba_logs/ /app/www/media/emba_logs/ \
+--url-alias /static/ /app/www/static/ \
+--url-alias /media/ /app/www/media/ \
 --allow-localhost --working-directory /app/www/embark/ --server-root /app/www/httpd80/ \
 --include-file /app/www/conf/embark.conf &
 #--https-only --ssl-ca-certificate-file --ssl-certificate FILE-PATH --https-port "$HTTPS_PORT" --enable-debugger
@@ -146,6 +151,4 @@ sleep 5
 echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
 pipenv run daphne --access-log /app/www/logs/daphne.log -p 8001 -b "$BIND_IP" --root-path=/app/www/embark embark.asgi:application
 
-wait %1
-wait %2
-#wait %3
+wait

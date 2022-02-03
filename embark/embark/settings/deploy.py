@@ -21,7 +21,7 @@ ALLOWED_HOSTS = ['*']
 # EMBA stuff
 # EMBA location
 EMBA_ROOT = '/app/emba/'
-EMBA_LOG_ROOT = '/app/www/media/emba_logs'
+EMBA_LOG_ROOT = '/app/www/emba_logs'
 EMBA_LOG_URL = '/emba_logs/'
 
 # Application definition - defines what apps gets migrated

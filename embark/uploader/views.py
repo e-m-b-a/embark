@@ -455,7 +455,7 @@ def get_individual_report(request, analyze_id):
 
 
 @require_http_methods(["GET"])
-@login_required(login_url='/' + settings.LOGIN_URL)
+# @login_required(login_url='/' + settings.LOGIN_URL)
 def get_accumulated_reports(request):
     """
     Sends accumulated results for main dashboard
