@@ -3,7 +3,7 @@ Description=EMBArk supervisor daemon
 
 [Service]
 Type=simple
-ExecStart=<BASE_DIR>/supervisor.sh
+ExecStart=BASEDIR/supervisor.sh
 
 [Install]
 WantedBy=multi-user.target
