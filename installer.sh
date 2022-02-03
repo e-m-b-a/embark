@@ -155,7 +155,7 @@ install_embark_default() {
   echo 'www-embark ALL=(ALL) NOPASSWD: /app/emba/emba.sh' | EDITOR='tee -a' visudo
 
   #prepare daemon
-  sed -i "s/\<BASE\_DIR\>/$DIR/g" ./embark.service
+  sed -i "s/BASEDIR/$DIR/g" ./embark.service
   chmod +x ./embark.service
   cp ./embark.service /etc/systemd/system/
 
