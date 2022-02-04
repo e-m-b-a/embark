@@ -22,7 +22,7 @@ exec 2>&1
 while :; do
   #check
   ip a | grep "172.22.0.1/16"
-  if [[ $? -eq 1 ]] then
+  if [[ $? -eq 1 ]]; then
     systemctl restart NetworkManager docker
     echo "$(date +"%D %T")""retstarted docker-networks"
   fi
