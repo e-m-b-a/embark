@@ -316,7 +316,7 @@ def reports(request):
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report(request, analyze_id, html_file):
-    report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[2:]}')
+    report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
 
     html_body = get_template(report_path)
     logger.info("html_report - analyze_id: %s html_file: %s", analyze_id, html_file)
@@ -326,7 +326,7 @@ def html_report(request, analyze_id, html_file):
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report_path(request, analyze_id, html_path, html_file):
-    report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[2:]}')
+    report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
 
     html_body = get_template(report_path)
     logger.info("html_report - analyze_id: %s path: %s html_file: %s", analyze_id, html_path, html_file)
@@ -366,7 +366,7 @@ def html_report_resource(request, analyze_id, img_file):
     elif img_file.endswith(".png"):
         content_type = "image/png"
 
-    resource_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[2:]}')
+    resource_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
     logger.info("html_report_resource - analyze_id: %s request.path: %s", analyze_id, request.path)
 
     try:
@@ -378,7 +378,7 @@ def html_report_resource(request, analyze_id, img_file):
         logger.error(request.path)
 
     # just in case -> back to report intro
-    report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[2:]}')
+    report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
     html_body = get_template(report_path)
     return HttpResponse(html_body.render())
 
