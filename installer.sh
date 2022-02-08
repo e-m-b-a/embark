@@ -156,7 +156,7 @@ install_embark_default() {
 
   #prepare daemon
   sed -i "s|BASEDIR|$DIR|g" ./embark.service
-  chmod +x ./embark.service
+  chmod +x ./supervisor.sh
   cp ./embark.service /etc/systemd/system/ #TODO make this a link
 
   #Add Symlink
