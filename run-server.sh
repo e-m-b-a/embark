@@ -30,6 +30,7 @@ cleaner() {
   fuser -k 80/tcp
   fuser -k 8001/tcp
   killall -9 -q "*daphne*"
+  #TODO add kill for all p /app/emba
   kill -9 "$(pgrep "manage.py runapscheduler")"     # TODO add non null cond
   fuser -k 8001/tcp
   docker container stop embark_db
