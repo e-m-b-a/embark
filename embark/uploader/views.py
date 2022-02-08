@@ -219,7 +219,7 @@ def save_file(request, refreshed):  # FIXME
 
 
 @require_http_methods(["GET"])
-@login_required(login_url='/' + settings.LOGIN_URL)
+# @login_required(login_url='/' + settings.LOGIN_URL)
 def get_log(request, log_type, lines):      # FIXME
     """
     View takes a get request with following params:
