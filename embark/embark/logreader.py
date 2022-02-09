@@ -25,7 +25,7 @@ logger = logging.getLogger('web')
 PROCESS_MAP = {}
 
 # EMBAs module count
-EMBA_MODULE_CNT = 53    #total 82   #FIXME
+EMBA_MODULE_CNT = 53
 
 class LogReader:
 
@@ -72,13 +72,6 @@ class LogReader:
 
         # calculate percentage
         percentage = self.module_count / EMBA_MODULE_CNT
-        # Note: this is not dynamic enough since the number of modules emba runs on the \
-        # firmware is not static
-        # also depends on scan-profile etc
-        # - Pre-/Testing-/Report- Phase would be static
-        # - Pre and Report phase don't run in parallel so cnt up possible
-        # - 
-        # --> could always just use a processing (loading) bar
 
         # set attributes of current message
         self.status_msg["module"] = stream_item_list[0]
