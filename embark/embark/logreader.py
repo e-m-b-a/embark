@@ -27,6 +27,7 @@ PROCESS_MAP = {}
 # EMBAs module count
 EMBA_MODULE_CNT = 53
 
+
 class LogReader:
 
     def __init__(self, firmware_id):
