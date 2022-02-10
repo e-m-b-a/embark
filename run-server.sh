@@ -38,7 +38,6 @@ cleaner() {
   docker network rm embark_backend
   docker container prune -f --filter "label=flag"  #Try to only prune container we used not all of em
   systemctl stop embark.service
-  systemctl disable embark.service
   exit 1
 }
 
