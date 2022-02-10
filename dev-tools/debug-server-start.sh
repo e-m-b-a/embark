@@ -72,20 +72,17 @@ docker container logs embark_redis_dev -f > ./logs/redis_dev.log &
 echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.log""$NC"
 docker container logs embark_db_dev -f > ./logs/mysql_dev.log & 
 
-# run middlewears
-# echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
-# pipenv run ./embark/manage.py runapscheduler --test | tee -a ./embark/logs/migration.log &
-# echo -e "\n[""$BLUE JOB""$NC""] Starting uwsgi - log to /embark/logs/uwsgi.log"
-# pipenv run uwsgi --wsgi-file ./embark/embark/wsgi.py --http :80 --processes 2 --threads 10 --logto ./embark/logs/uwsgi.log &
-# echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-# echo "START DAPHNE" >./embark/logs/daphne.log
-# pipenv run daphne -v 3 -p 8001 -b 0.0.0.0 --root-path="$PWD"/embark embark.asgi:application &>>./embark/logs/daphne.log &
+echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
+pipenv run ./embark/manage.py runapscheduler | tee -a ./embark/logs/scheduler.log &
+
+echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
+echo "START DAPHNE" >./embark/logs/daphne.log
+pipenv run daphne -v 3 -p 8001 -b "$IP" --root-path="$PWD"/embark embark.asgi:application &>>./embark/logs/daphne.log &
 
 # start embark
 echo -e "$ORANGE""$BOLD""start EMBArk server""$NC"
 pipenv run ./embark/manage.py runserver "$IP":"$PORT" |& tee -a ./logs/debug-server.log
 
-wait %1
-wait %2
+wait
 
 echo -e "\n$ORANGE""$BOLD""Done. To clean-up use the clean-setup script""$NC"
