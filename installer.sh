@@ -146,6 +146,12 @@ install_debs() {
   apt-get install -y -q python3-django python3-pip
 }
 
+install_daemon() {
+  sed -i "s|BASEDIR|$DIR|g" ./embark.service
+  ln -s /app/embark.service /etc/systemd/system/embark.service
+  systemctl enable embark.service
+}
+
 install_embark_default() {
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanning environment EMBArk""$NC"
   apt-get install -y -q python3-dev default-libmysqlclient-dev build-essential pipenv
@@ -154,15 +160,13 @@ install_embark_default() {
   useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /app/www/
   echo 'www-embark ALL=(ALL) NOPASSWD: /app/emba/emba.sh' | EDITOR='tee -a' visudo
 
-  #prepare daemon
-  sed -i "s|BASEDIR|$DIR|g" ./embark.service
-  chmod +x ./supervisor.sh
-  cp ./embark.service /etc/systemd/system/ #TODO make this a link
-
   #Add Symlink
   if ! [[ -d /app ]]; then
     ln -s "$PWD" /app || exit 1
   fi
+
+  # daemon
+  install_daemon
 
   #make dirs
   if ! [[ -d ./www ]]; then
@@ -365,6 +369,9 @@ install_embark_dev(){
     ln -s "$PWD" /app || exit 1
   fi
 
+  # daemon
+  install_daemon
+
   # download images for container
   docker-compose -f ./docker-compose-dev.yml up --no-start
   docker-compose -f ./docker-compose-dev.yml up &>/dev/null &
@@ -412,7 +419,11 @@ uninstall (){
   docker network rm emba_runs
   rm -R ./emba
 
-  #9 reset ownership etc
+  #9 stop daemon
+  systemctl stop embark.service
+  systemctl disable embark.service
+
+  #10 reset ownership etc
   # TODO
 }
 
