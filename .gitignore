@@ -12,6 +12,7 @@ embark/static/external/
 embark/uploadedFirmwareImages/
 documentation/
 embark_db/
+.vscode/
 
 # other stuff
 *.zip

@@ -2,7 +2,7 @@
 
 # EMBArk - The firmware security scanning environment
 #
-# Copyright 2020-2021 Siemens Energy AG
+# Copyright 2020-2022 Siemens Energy AG
 # Copyright 2020-2021 Siemens AG
 #
 # EMBArk comes with ABSOLUTELY NO WARRANTY.
@@ -15,6 +15,8 @@
 # Description: Installer for EMBArk
 
 export DEBIAN_FRONTEND=noninteractive
+
+DIR="$(realpath "$(dirname "$0")")"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -144,6 +146,12 @@ install_debs() {
   apt-get install -y -q python3-django python3-pip
 }
 
+install_daemon() {
+  sed -i "s|BASEDIR|$DIR|g" ./embark.service
+  ln -s /app/embark.service /etc/systemd/system/embark.service
+  systemctl enable embark.service
+}
+
 install_embark_default() {
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanning environment EMBArk""$NC"
   apt-get install -y -q python3-dev default-libmysqlclient-dev build-essential pipenv
@@ -157,12 +165,14 @@ install_embark_default() {
     ln -s "$PWD" /app || exit 1
   fi
 
+  # daemon
+  install_daemon
+
   #make dirs
   if ! [[ -d ./www ]]; then
     mkdir ./www
     mkdir ./www/media
-    mkdir ./www/media/uploadedFirmwareImages
-    mkdir ./www/media/emba_logs
+    mkdir ./www/emba_logs
     mkdir ./www/static
     mkdir ./www/conf
   fi
@@ -221,6 +231,9 @@ install_embark_default() {
   docker-compose -f ./docker-compose.yml up &>/dev/null &
   sleep 30
   kill %1
+
+  # activate daemon
+  systemctl start embark.service
 
   echo -e "$GREEN""$BOLD""Ready to use \$sudo ./run-server.sh ""$NC"
   echo -e "$GREEN""$BOLD""Which starts the server on (0.0.0.0) port 80 ""$NC"
@@ -359,6 +372,15 @@ install_embark_dev(){
     ln -s "$PWD" /app || exit 1
   fi
 
+  # daemon
+  install_daemon
+
+  # download images for container
+  docker-compose -f ./docker-compose-dev.yml up --no-start
+  docker-compose -f ./docker-compose-dev.yml up &>/dev/null &
+  sleep 30
+  kill %1
+
   echo -e "$GREEN""$BOLD""Ready to use \$sudo ./dev-tools/debug-server-start.sh""$NC"
   echo -e "$GREEN""$BOLD""Or use otherwise""$NC"
 }
@@ -400,7 +422,11 @@ uninstall (){
   docker network rm emba_runs
   rm -R ./emba
 
-  #9 reset ownership etc
+  #9 stop daemon
+  systemctl stop embark.service
+  systemctl disable embark.service
+
+  #10 reset ownership etc
   # TODO
 }
 
