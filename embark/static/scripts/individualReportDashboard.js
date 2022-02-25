@@ -175,7 +175,7 @@ get_individual_report().then(function (returnData) {
     make_chart(relropie, 'Binaries without RELRO', 'Binaries with RELRO',
         '#493791', '#291771', returnData.bins_checked, returnData.relro, 'RELRO');
     make_chart(nxpie, 'Binaries without NX', 'Binaries with NX',
-        '#1b1534', '#000014', returnData.bins_checked, returnData.nx, 'NX');
+        '#1b1534', '#000014', returnData.bins_checked, returnData.nx, 'NX');                    //FIXME NoExec
     make_chart(piepie, 'Binaries without PIE', 'Binaries with PIE',
         '#7b919d', '#5b717d', returnData.bins_checked, returnData.pie, 'PIE');
     make_chart(canarypie, 'Binaries without CANARY', 'Binaries with CANARY',
@@ -188,7 +188,7 @@ get_individual_report().then(function (returnData) {
         "Firmware ID": returnData.name.replace(/\/.*$/,""),
         "Start date": returnData.start_date.replace('T', ' - '),
         "End date": returnData.end_date.replace('T', ' - '),
-        "Scan time": "TODO",
+        "Scan time": "TODO",                                                                    //FIXME
         "Vendor": returnData.vendor,
         "Version": returnData.version,
         "Notes": returnData.notes,

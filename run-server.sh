@@ -30,7 +30,7 @@ cleaner() {
   fuser -k 80/tcp
   fuser -k 8001/tcp
   killall -9 -q "*daphne*"
-  #TODO add kill for all p /app/emba
+  killall -9 -q "*/app/emba/emba.sh*"
   kill -9 "$(pgrep "manage.py runapscheduler")"     # TODO add non null cond
   fuser -k 8001/tcp
   docker container stop embark_db
@@ -150,6 +150,9 @@ pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 sleep 5
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-pipenv run daphne --access-log /app/www/logs/daphne.log -p 8001 -b "$BIND_IP" --root-path=/app/www/embark embark.asgi:application
+pipenv run daphne --access-log /app/www/logs/daphne.log -p 8001 -b "$BIND_IP" --root-path=/app/www/embark embark.asgi:application &
+sleep 5
+
+echo -e "\n""$ORANGE""Server started on http://$IP:$PORT""$NC"
 
 wait
