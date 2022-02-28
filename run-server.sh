@@ -153,6 +153,7 @@ echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daph
 pipenv run daphne --access-log /app/www/logs/daphne.log -p 8001 -b "$BIND_IP" --root-path=/app/www/embark embark.asgi:application &
 sleep 5
 
-echo -e "\n""$ORANGE""Server started on http://$IP:$PORT""$NC"
+echo -e "\n""$ORANGE$BOLD""=============================================================""$NC"
+echo -e "\n""$ORANGE$BOLD""Server started on http://$IP:$PORT""$NC"
 
 wait

@@ -55,6 +55,12 @@ install_emba() {
   cd .. || exit 1
 }
 
+create_ca (){
+  echo -e "\n$GREEN""$BOLD""Creating a SSL Cert""$NC"
+  openssl ca -selfsign -out ./ca.cert
+  #TODO 
+}
+
 reset_docker() {
   echo -e "\n$GREEN""$BOLD""Reset EMBArk docker images""$NC"
 
@@ -177,6 +183,10 @@ install_embark_default() {
     mkdir ./www/conf
   fi
   
+  #add ssl cert
+  #create_ca
+  # ln -s ./www/conf/ca.cert /app/ca.cert || exit 1
+
   #install packages
   PIPENV_VENV_IN_PROJECT=1 pipenv install
 
