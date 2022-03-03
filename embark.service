@@ -3,7 +3,7 @@ Description=EMBArk supervisor daemon
 
 [Service]
 Type=simple
-ExecStart=/home/benedikt/git-repos/embark/supervisor.sh
+ExecStart=BASEDIR
 
 [Install]
 WantedBy=multi-user.target
