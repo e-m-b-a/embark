@@ -19,3 +19,4 @@ embark_db/
 *.bin
 *.error
 *.report
+*.service
