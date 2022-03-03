@@ -57,8 +57,7 @@ install_emba() {
 
 create_ca (){
   echo -e "\n$GREEN""$BOLD""Creating a SSL Cert""$NC"
-  openssl ca -selfsign -out ./ca.cert
-  #TODO 
+  openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -sha256 -days 365
 }
 
 reset_docker() {
@@ -184,8 +183,8 @@ install_embark_default() {
   fi
   
   #add ssl cert
-  #create_ca
-  # ln -s ./www/conf/ca.cert /app/ca.cert || exit 1
+  create_ca
+  ln -s ./www/conf/cert.pem /app/cert.pem || exit 1
 
   #install packages
   PIPENV_VENV_IN_PROJECT=1 pipenv install
