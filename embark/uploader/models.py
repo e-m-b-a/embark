@@ -9,6 +9,7 @@ from django import forms
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 from django.utils.datetime_safe import datetime
+from rx import start
 
 logger = logging.getLogger('web')
 
@@ -186,7 +187,7 @@ class Firmware(models.Model):
     path_to_logs = models.FilePathField(default="/", blank=True)    # TODO change
     start_date = models.DateTimeField(default=datetime.now, blank=True)
     end_date = models.DateTimeField(default=datetime.min, blank=True)
-    scan_time = models.TimeField(default=timedelta.min, blank=True)
+    scan_time = models.DurationField(default=timedelta(), blank=True)
     finished = models.BooleanField(default=False, blank=False)
     failed = models.BooleanField(default=False, blank=False)
 
