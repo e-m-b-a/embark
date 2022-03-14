@@ -16,6 +16,9 @@
 
 export DEBIAN_FRONTEND=noninteractive
 
+DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
+
 DIR="$(realpath "$(dirname "$0")")"
 
 RED='\033[0;31m'
@@ -57,7 +60,7 @@ install_emba() {
 
 create_ca (){
   echo -e "\n$GREEN""$BOLD""Creating a SSL Cert""$NC"
-  openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -sha256 -days 365
+  openssl req -x509 -newkey rsa:4096 -keyout key.pem -passout pass:EMBArk  -out cert.pem -sha256 -days 365 -batch
 }
 
 reset_docker() {
@@ -205,8 +208,6 @@ install_embark_default() {
   fi
 
   # setup .env
-  DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
-  RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
   echo -e "$ORANGE""$BOLD""Creating a Developer EMBArk configuration file .env""$NC"
   export DATABASE_NAME="embark"
   export DATABASE_USER="embark"
@@ -266,15 +267,13 @@ install_embark_docker(){
 
   # generating dynamic authentication for backend
   # for MYSQL root pwd check the logs of the container
-  DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
-  PASSWORD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13 )
   echo -e "$ORANGE""$BOLD""Creating a container EMBArk configuration file .env""$NC"
   export DATABASE_NAME="embark"
   export DATABASE_USER="embark"
-  export DATABASE_PASSWORD="$PASSWORD"
+  export DATABASE_PASSWORD="$RANDOM_PW"
   export DATABASE_HOST="172.23.0.5"
   export DATABASE_PORT="3306"
-  export MYSQL_PASSWORD="$PASSWORD"
+  export MYSQL_PASSWORD="$RANDOM_PW"
   export MYSQL_USER="embark"
   export MYSQL_DATABASE="embark"
   export REDIS_HOST="172.23.0.8"
@@ -347,7 +346,6 @@ install_embark_dev(){
   fi
 
   # setup .env with dev network
-  DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
   echo -e "$ORANGE""$BOLD""Creating a Developer EMBArk configuration file .env""$NC"
   export DATABASE_NAME="embark"
   export DATABASE_USER="embark"
