@@ -187,7 +187,7 @@ install_embark_default() {
   
   #add ssl cert
   create_ca
-  ln -s ./www/conf/cert.pem /app/cert.pem || exit 1
+  ln -s /app/cert.pem /app/www/conf/cert.pem || exit 1
 
   #install packages
   PIPENV_VENV_IN_PROJECT=1 pipenv install
