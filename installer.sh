@@ -435,6 +435,11 @@ uninstall (){
 
   #10 reset ownership etc
   # TODO
+
+  #11 remove server-certs
+  rm key.pem
+  rm cert.pem
+  
 }
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
