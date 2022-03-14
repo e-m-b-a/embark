@@ -146,7 +146,10 @@ pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --url-alias /media/ /app/www/media/ \
 --allow-localhost --working-directory /app/www/embark/ --server-root /app/www/httpd80/ \
 --include-file /app/www/conf/embark.conf \
---https-only --ssl-ca-certificate-file --ssl-certificate /app/www/conf/cert.pem --https-port "$HTTPS_PORT" &
+--server-name 0-0-0-0.nip.io \
+--https-only \
+--ssl-certificate /app/www/conf/embark --ssl-certificate-key-file /app/www/conf/embark.key \
+--https-port "$HTTPS_PORT" &
 # --enable-debugger
 sleep 5
 
@@ -155,6 +158,6 @@ pipenv run daphne --access-log /app/www/logs/daphne.log -p 8001 -b "$BIND_IP" --
 sleep 5
 
 echo -e "\n""$ORANGE$BOLD""=============================================================""$NC"
-echo -e "\n""$ORANGE$BOLD""Server started on http://""$IP"":""$PORT""$NC"
+echo -e "\n""$ORANGE$BOLD""Server started on https://0-0-0-0.nip.io""$NC"
 
 wait
