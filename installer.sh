@@ -433,6 +433,7 @@ uninstall (){
   #9 stop daemon
   systemctl stop embark.service
   systemctl disable embark.service
+  git checkout HEAD -- embark.service
 
   #10 reset ownership etc
   # TODO
