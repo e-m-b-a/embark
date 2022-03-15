@@ -9,7 +9,6 @@ from django import forms
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 from django.utils.datetime_safe import datetime
-from rx import start
 
 logger = logging.getLogger('web')
 
