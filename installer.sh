@@ -60,7 +60,11 @@ install_emba() {
 
 create_ca (){
   echo -e "\n$GREEN""$BOLD""Creating a SSL Cert""$NC"
-  openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -nodes -keyout embark.key -out embark.crt -extensions san -config server.cnf
+  openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -nodes -keyout embark.key -out embark.crt -extensions san -config server.cnf -subj '/CN=embark.local'
+}
+
+dns_resolve(){
+  echo "0.0.0.0     embark.local\n" >>/etc/hosts
 }
 
 reset_docker() {
@@ -189,6 +193,9 @@ install_embark_default() {
   create_ca
   ln -s /app/embark.crt /app/www/conf/embark.crt || exit 1
   ln -s /app/embark.key /app/www/conf/embark.key || exit 1
+
+  #add dns name
+  dns_resolve
 
   #install packages
   PIPENV_VENV_IN_PROJECT=1 pipenv install
