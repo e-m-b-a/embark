@@ -64,7 +64,7 @@ create_ca (){
 }
 
 dns_resolve(){
-  echo "0.0.0.0     embark.local\n" >>/etc/hosts
+  printf "0.0.0.0     embark.local\n" >>/etc/hosts
 }
 
 reset_docker() {
