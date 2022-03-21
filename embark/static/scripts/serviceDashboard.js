@@ -60,11 +60,13 @@ function cancelLog(currentID) {
  */
 var loc = window.location;
 var wsStart = 'ws://';
+var wsPort = ':8001';
 if (loc.protocol == 'https:') {
-      wsStart = 'wss://'
+      wsStart = 'wss://';
+      wsPort = ':8000';
 }
 new WebSocket(
-        wsStart + location.hostname + ':8001' + '/ws/progress/'
+        wsStart + location.hostname + '.ws' + wsPort + '/ws/progress/'
 );
 /*for log implementation which is currently commented out*/
 var module_array = [];
