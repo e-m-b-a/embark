@@ -66,7 +66,7 @@ if (loc.protocol == 'https:') {
       wsPort = ':8000';
 }
 var socket = new WebSocket(
-        wsStart + location.hostname + '.ws' + wsPort + '/ws/progress/'
+        wsStart + location.hostname + wsPort + '/ws/progress/'
 );
 /*for log implementation which is currently commented out*/
 var module_array = [];
