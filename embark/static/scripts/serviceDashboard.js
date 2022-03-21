@@ -62,9 +62,6 @@ var loc = window.location;
 var wsStart = 'ws://';
 if (loc.protocol == 'https:') {
       wsStart = 'wss://'
- }
-if (loc.protocol == 'https:') {
-    wsStart = 'wss://'
 }
 new WebSocket(
         wsStart + location.hostname + ':8001' + '/ws/progress/'
