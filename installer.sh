@@ -62,11 +62,11 @@ create_ca (){
   echo -e "\n$GREEN""$BOLD""Creating a SSL Cert""$NC"
   cd cert || exit 1
   # create CA
-  openssl req -x509 -config openssl-ca.cnf -newkey rsa:4096 -sha256 -nodes -out cacert.pem -outform PEM -subj '/CN=embark.local/O=EMBA/C=US'
+  openssl req -x509 -config openssl-ca.cnf -newkey rsa:4096 -sha256 -nodes -out ca.cert.pem  -subj '/CN=embark.local/O=EMBA/C=US' -outform PEM
   # create server sign request
-  openssl req -config server.cnf -newkey rsa:4096 -sha256 -nodes -out embark.crt  -subj '/CN=embark.local' -outform PEM
+  openssl req -x509 -new -config server.cnf -newkey rsa:4096 -sha256 -nodes -out embark.cert.pem  -subj '/CN=embark.local/O=EMBA/C=US' -outform PEM
   # signe request with ca 
-  openssl ca -batch -config openssl-ca.cnf -out embark-cert.crt -infiles embark.crt
+  openssl ca -batch -config openssl-ca.cnf -out embark.cert.pem -infiles embark.cert.pem
   cd .. || exit 1
 }
 
@@ -411,7 +411,7 @@ uninstall (){
 
   #1 delete symlink
   echo -e "$ORANGE""$BOLD""Delete Symlink?""$NC"
-  rm -i /app
+  rm /app
 
   #2 delete www
   echo -e "$ORANGE""$BOLD""Delete Apache Directory""$NC"
