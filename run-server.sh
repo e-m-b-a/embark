@@ -158,6 +158,6 @@ pipenv run daphne --access-log /app/www/logs/daphne.log -e ssl:8000:privateKey=/
 sleep 5
 
 echo -e "\n""$ORANGE$BOLD""=============================================================""$NC"
-echo -e "\n""$ORANGE$BOLD""Server started on https://embark.local""$NC"
-
+echo -e "\n""$ORANGE$BOLD""Server started on http://embark.local""$NC"
+echo -e "\n\n""$GREEN$BOLD""the trusted rootCA.key for the ssl encryption is in /app/cert""$NC"
 wait
