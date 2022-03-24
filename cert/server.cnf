@@ -1,0 +1,45 @@
+HOME            = .
+
+####################################################################
+[ req ]
+default_bits       = 2048
+default_keyfile    = embark.key
+distinguished_name = server_distinguished_name
+req_extensions     = server_req_extensions
+string_mask        = utf8only
+
+####################################################################
+[ server_distinguished_name ]
+countryName         = Country Name (2 letter code)
+countryName_default = US
+
+stateOrProvinceName         = State or Province Name (full name)
+stateOrProvinceName_default = MD
+
+localityName         = Locality Name (eg, city)
+localityName_default = Baltimore
+
+organizationName            = Organization Name (eg, company)
+organizationName_default    = EMBA
+
+commonName           = Common Name (e.g. server FQDN or YOUR name)
+commonName_default   = EMBArk Server
+
+emailAddress         = Email Address
+emailAddress_default = no@mail.com
+
+####################################################################
+[ server_req_extensions ]
+
+subjectKeyIdentifier = hash
+basicConstraints     = CA:FALSE
+keyUsage             = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
+subjectAltName       = @alternate_names
+nsComment            = "OpenSSL Generated Certificate"
+
+####################################################################
+[ alternate_names ]
+
+DNS.1  = embark.local
+IP.1 = 0.0.0.0
+IP.2 = 127.0.0.1
