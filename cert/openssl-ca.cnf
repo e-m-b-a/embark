@@ -29,7 +29,7 @@ copy_extensions = copy          # Required to copy SANs from CSR to cert
 ####################################################################
 [ req ]
 default_bits       = 4096
-default_keyfile    = cakey.pem
+default_keyfile    = ca.key.pem
 distinguished_name = ca_distinguished_name
 x509_extensions    = ca_extensions
 string_mask        = utf8only
