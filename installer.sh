@@ -66,7 +66,7 @@ create_ca (){
   # create server sign request
   openssl req -x509 -new -config server.cnf -newkey rsa:4096 -sha256 -nodes -out embark.cert.pem  -subj '/CN=embark.local/O=EMBA/C=US' -outform PEM
   # signe request with ca 
-  openssl ca -batch -config openssl-ca.cnf -out embark.cert.pem -infiles embark.cert.pem
+  openssl ca -batch -config openssl-ca.cnf -out embark.cert.pem.crt -infiles embark.cert.pem
   cd .. || exit 1
 }
 

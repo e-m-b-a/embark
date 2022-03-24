@@ -147,7 +147,7 @@ pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --allow-localhost --working-directory /app/www/embark/ --server-root /app/www/httpd80/ \
 --include-file /app/www/conf/embark.conf \
 --server-name embark.local \
---ssl-certificate /app/www/conf/cert/embark-cert --ssl-certificate-key-file /app/www/conf/cert/01.pem \
+--ssl-certificate /app/www/conf/cert/embark.cert.pem --ssl-certificate-key-file /app/www/conf/cert/01.pem \
 --https-port "$HTTPS_PORT" &
 # --enable-debugger --https-only \
 sleep 5
