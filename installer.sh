@@ -198,7 +198,7 @@ install_embark_default() {
   
   #add ssl cert
   create_ca
-  ln -s /app/cert/ /app/www/conf/cert/ || exit 1
+  ln -s /app/cert /app/www/conf/cert || exit 1
 
   #add dns name
   dns_resolve
