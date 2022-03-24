@@ -62,12 +62,13 @@ create_ca (){
   echo -e "\n$GREEN""$BOLD""Creating a SSL Cert""$NC"
   cd cert || exit 1
   # create CA
-  openssl req -x509 -config openssl-ca.cnf -newkey rsa:4096 -sha256 -nodes -out ca.crt -subj '/CN=embark.local/O=EMBA/C=US'
-  # ca.cert.pem is the crt for other hosts
+  openssl genrsa -out rootCA.key 4096
+  openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 1024 -out rootCA.crt -subj '/CN=embark.local/O=EMBA/C=US'
   # create server sign request (csr)
-  openssl req -x509 -new -config server.cnf -newkey rsa:4096 -sha256 -nodes -out embark.local.csr  -subj '/CN=embark.local/O=EMBA/C=US'
+  openssl genrsa -out embark.local.key 2048
+  openssl req -new -sha256 -key embark.local.key -out embark.local.csr  -subj '/CN=embark.local/O=EMBA/C=US'
   # signe csr with ca
-  openssl ca -batch -config openssl-ca.cnf -out embark.local.crt -infiles embark.local.csr
+  openssl x509 -req -in embark.local.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out embark.local.crt -days 10000 -sha256
   cd .. || exit 1
 }
 

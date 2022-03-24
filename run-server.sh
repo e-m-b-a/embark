@@ -147,13 +147,13 @@ pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --allow-localhost --working-directory /app/www/embark/ --server-root /app/www/httpd80/ \
 --include-file /app/www/conf/embark.conf \
 --server-name embark.local \
---ssl-certificate /app/www/conf/cert/embark.cert.pem --ssl-certificate-key-file /app/www/conf/cert/01.pem \
+--ssl-certificate /app/www/conf/cert/embark.local --ssl-certificate-key-file /app/www/conf/cert/embark.local.key \
 --https-port "$HTTPS_PORT" &
 # --enable-debugger --https-only \
 sleep 5
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-pipenv run daphne --access-log /app/www/logs/daphne.log -e ssl:8000:privateKey=/app/www/conf/01.pem:certKey=/app/www/conf/cert/embark-cert.pem -b "$BIND_IP" -p 8001 -s embark.local --root-path=/app/www/embark embark.asgi:application &
+pipenv run daphne --access-log /app/www/logs/daphne.log -e ssl:8000:privateKey=/app/www/conf/embark.local.key:certKey=/app/www/conf/cert/embark.local.crt -b "$BIND_IP" -p 8001 -s embark.local --root-path=/app/www/embark embark.asgi:application &
 # TODO why does ws not work with https
 sleep 5
 
