@@ -6,8 +6,8 @@ default_ca    = CA_default      # The default ca section
 
 [ CA_default ]
 base_dir      = .
-certificate   = $base_dir/ca.cert.pem   # The CA certifcate
-private_key   = $base_dir/ca.key.pem    # The CA private key
+certificate   = $base_dir/ca.cert   # The CA certifcate
+private_key   = $base_dir/ca.key   # The CA private key
 new_certs_dir = $base_dir              # Location for new certs after signing
 database      = $base_dir/index.txt    # Database index file
 serial        = $base_dir/serial.txt   # The current serial number
@@ -29,7 +29,7 @@ copy_extensions = copy          # Required to copy SANs from CSR to cert
 ####################################################################
 [ req ]
 default_bits       = 4096
-default_keyfile    = ca.key.pem
+default_keyfile    = ca.key
 distinguished_name = ca_distinguished_name
 x509_extensions    = ca_extensions
 string_mask        = utf8only
