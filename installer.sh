@@ -66,7 +66,7 @@ create_ca (){
   # create server sign request
   openssl req -config server.cnf -newkey rsa:4096 -sha256 -nodes -out embark.crt  -subj '/CN=embark.local' -outform PEM
   # signe request with ca 
-  openssl ca -batch -config openssl-ca.cnf -out embark-cert.pem -infiles embark.crt
+  openssl ca -batch -config openssl-ca.cnf -out embark-cert.crt -infiles embark.crt
   cd .. || exit 1
 }
 
@@ -452,9 +452,8 @@ uninstall (){
   # TODO
 
   #11 remove server-certs
-  rm ./cert/embark.key
-  rm ./cert/embark.crt
-
+  rm -rf ./cert
+  git checkout HEAD -- cert
 }
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
