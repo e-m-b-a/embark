@@ -6,7 +6,7 @@ default_ca    = CA_default      # The default ca section
 
 [ CA_default ]
 base_dir      = .
-certificate   = $base_dir/ca.cert   # The CA certifcate
+certificate   = $base_dir/ca.crt   # The CA certifcate
 private_key   = $base_dir/ca.key   # The CA private key
 new_certs_dir = $base_dir              # Location for new certs after signing
 database      = $base_dir/index.txt    # Database index file
