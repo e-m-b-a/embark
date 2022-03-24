@@ -60,7 +60,14 @@ install_emba() {
 
 create_ca (){
   echo -e "\n$GREEN""$BOLD""Creating a SSL Cert""$NC"
-  openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -nodes -keyout embark.key -out embark.crt -extensions san -config server.cnf -subj '/CN=embark.local'
+  cd cert || exit 1
+  # create CA
+  openssl req -x509 -config openssl-ca.cnf -newkey rsa:4096 -sha256 -nodes -out cacert.pem -outform PEM -subj '/CN=embark.local/O=EMBA/C=US'
+  # create server sign request
+  openssl req -config server.cnf -newkey rsa:4096 -sha256 -nodes -out embark.crt  -subj '/CN=embark.local' -outform PEM
+  # signe request with ca 
+  openssl ca -batch -config openssl-ca.cnf -out embark-cert.pem -infiles embark.crt
+  cd .. || exit 1
 }
 
 dns_resolve(){
@@ -191,8 +198,7 @@ install_embark_default() {
   
   #add ssl cert
   create_ca
-  ln -s /app/embark.crt /app/www/conf/embark.crt || exit 1
-  ln -s /app/embark.key /app/www/conf/embark.key || exit 1
+  ln -s /app/cert/ /app/www/conf/cert/ || exit 1
 
   #add dns name
   dns_resolve
@@ -446,8 +452,8 @@ uninstall (){
   # TODO
 
   #11 remove server-certs
-  rm embark.key
-  rm embark.crt
+  rm ./cert/embark.key
+  rm ./cert/embark.crt
 
 }
 
