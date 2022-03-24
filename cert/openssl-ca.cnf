@@ -6,8 +6,8 @@ default_ca    = CA_default      # The default ca section
 
 [ CA_default ]
 base_dir      = .
-certificate   = $base_dir/cacert.pem   # The CA certifcate
-private_key   = $base_dir/cakey.pem    # The CA private key
+certificate   = $base_dir/ca.cert.pem   # The CA certifcate
+private_key   = $base_dir/ca.key.pem    # The CA private key
 new_certs_dir = $base_dir              # Location for new certs after signing
 database      = $base_dir/index.txt    # Database index file
 serial        = $base_dir/serial.txt   # The current serial number
