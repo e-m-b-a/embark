@@ -451,7 +451,7 @@ uninstall (){
   git checkout HEAD -- embark.service
 
   #10 reset ownership etc
-  # TODO
+  # TODO delte the dns resolve
 
   #11 remove server-certs
   rm -rf ./cert
