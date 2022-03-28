@@ -2,6 +2,7 @@ __pycache__/
 *.pyc
 *.log
 *.sqlite3
+cert/
 emba/
 .env
 embark/emba_logs/
