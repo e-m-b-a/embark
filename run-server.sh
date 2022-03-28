@@ -153,8 +153,8 @@ pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 sleep 5
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-pipenv run daphne --access-log /app/www/logs/daphne.log -e ssl:8000:privateKey=/app/www/conf/embark.local.key:certKey=/app/www/conf/cert/embark.local.crt -b "$BIND_IP" -p 8001 -s embark.local --root-path=/app/www/embark embark.asgi:application &
-# TODO why does ws not work with https
+pipenv run daphne --access-log /app/www/logs/daphne.log -e ssl:8000:privateKey=/app/www/conf/embark-ws.local.key:certKey=/app/www/conf/cert/embark-ws.local.crt -b "$BIND_IP" -p 8001 -s embark-ws.local --root-path=/app/www/embark embark.asgi:application &
+# TODO key error??
 sleep 5
 
 echo -e "\n""$ORANGE$BOLD""=============================================================""$NC"

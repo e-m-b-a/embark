@@ -64,11 +64,14 @@ create_ca (){
   # create CA
   openssl genrsa -out rootCA.key 4096
   openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 1024 -out rootCA.crt -subj '/CN=embark.local/O=EMBA/C=US'
-  # create server sign request (csr)
+  # create server sign requests (csr)
   openssl genrsa -out embark.local.key 2048
   openssl req -new -sha256 -key embark.local.key -out embark.local.csr  -subj '/CN=embark.local/O=EMBA/C=US'
+  openssl genrsa -out embark-ws.local.key 2048
+  openssl req -new -sha256 -key embark-ws.local.key -out embark-ws.local.csr  -subj '/CN=embark-ws.local/O=EMBA/C=US'
   # signe csr with ca
   openssl x509 -req -in embark.local.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out embark.local.crt -days 10000 -sha256
+  openssl x509 -req -in embark-ws.local.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out embark-ws.local.crt -days 10000 -sha256
   cd .. || exit 1
 }
 
@@ -179,6 +182,7 @@ install_embark_default() {
 
   #Add user for server
   useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /app/www/
+  # TODO add if grep /app/emba/emba.sh
   echo 'www-embark ALL=(ALL) NOPASSWD: /app/emba/emba.sh' | EDITOR='tee -a' visudo
 
   #Add Symlink
