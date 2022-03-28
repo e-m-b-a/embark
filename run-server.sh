@@ -154,10 +154,10 @@ sleep 5
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
 pipenv run daphne --access-log /app/www/logs/daphne.log -e ssl:8000:privateKey=/app/www/conf/embark-ws.local.key:certKey=/app/www/conf/cert/embark-ws.local.crt -b "$BIND_IP" -p 8001 -s embark-ws.local --root-path=/app/www/embark embark.asgi:application &
-# TODO key error??
 sleep 5
 
 echo -e "\n""$ORANGE$BOLD""=============================================================""$NC"
 echo -e "\n""$ORANGE$BOLD""Server started on http://embark.local""$NC"
+echo -e "\n""$ORANGE$BOLD""For SSL you may use https://embark.local (Not recommended for local use)""$NC"
 echo -e "\n\n""$GREEN$BOLD""the trusted rootCA.key for the ssl encryption is in /app/cert""$NC"
 wait
