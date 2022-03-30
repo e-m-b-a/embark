@@ -38,7 +38,6 @@ cleaner() {
   docker network rm embark_backend
   docker container prune -f --filter "label=flag"  #Try to only prune container we used not all of em
   systemctl stop embark.service
-  systemctl disable embark.service
   exit 1
 }
 
@@ -155,6 +154,7 @@ sleep 5
 echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
 pipenv run daphne --access-log /app/www/logs/daphne.log -e ssl:8000:privateKey=/app/www/conf/cert/embark-ws.local.key:certKey=/app/www/conf/cert/embark-ws.local.crt -b "$BIND_IP" -p 8001 -s embark-ws.local --root-path=/app/www/embark embark.asgi:application &
 sleep 5
+
 
 echo -e "\n""$ORANGE$BOLD""=============================================================""$NC"
 echo -e "\n""$ORANGE$BOLD""Server started on http://embark.local""$NC"
