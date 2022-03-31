@@ -59,7 +59,8 @@ install_emba() {
 }
 
 create_ca (){
-  echo -e "\n$GREEN""$BOLD""Creating a SSL Cert""$NC"
+  # TODO could use some work 
+  echo -e "\n$GREEN""$BOLD""Creating SSL Cert""$NC"
   cd cert || exit 1
   # create CA
   openssl genrsa -out rootCA.key 4096
@@ -76,6 +77,7 @@ create_ca (){
 }
 
 dns_resolve(){
+  echo -e "\n$GREEN""$BOLD""Install hostnames for local dns-resolve""$NC"
   printf "0.0.0.0     embark.local\n" >>/etc/hosts
 }
 
@@ -171,6 +173,7 @@ install_debs() {
 }
 
 install_daemon() {
+  echo -e "\n$GREEN""$BOLD""Install embark daemon""$NC"
   sed -i "s|BASEDIR|$DIR|g" ./embark.service
   ln -s /app/embark.service /etc/systemd/system/embark.service
   systemctl enable embark.service
