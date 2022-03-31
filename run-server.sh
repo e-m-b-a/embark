@@ -64,8 +64,7 @@ if [[ $? -eq 1 ]]; then
   fi
   cd ./emba || exit 1
   git pull
-  docker network rm emba_runs
-  docker-compose up --no-start
+  systemctl restart embark
   /app/emba/emba.sh -d 1>/dev/null
   if [[ $? -eq 1 ]]; then
     echo -e "$RED""EMBA is not configured correctly""$NC"
