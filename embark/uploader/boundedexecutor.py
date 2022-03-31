@@ -1,5 +1,6 @@
 # pylint: disable=R1732, C0201, E1129
 import csv
+from datetime import timedelta
 import logging
 import os
 import shutil
@@ -92,6 +93,7 @@ class BoundedExecutor:
             if primary_key:
                 firmware = Firmware.objects.get(pk=primary_key)
                 firmware.end_date = datetime.now()
+                firmware.scan_time = firmware.start_time - firmware.end_date
                 firmware.failed = True
                 firmware.save()
 
@@ -100,6 +102,7 @@ class BoundedExecutor:
             if primary_key:
                 firmware = Firmware.objects.get(pk=primary_key)
                 firmware.end_date = datetime.now()
+                firmware.scan_time = firmware.start_time - firmware.end_date
                 firmware.finished = True
                 firmware.save()
 

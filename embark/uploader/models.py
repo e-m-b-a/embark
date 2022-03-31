@@ -186,7 +186,7 @@ class Firmware(models.Model):
     path_to_logs = models.FilePathField(default="/", blank=True)    # TODO change
     start_date = models.DateTimeField(default=datetime.now, blank=True)
     end_date = models.DateTimeField(default=datetime.min, blank=True)
-    scan_time = models.DurationField(default=(datetime.now - datetime.min), blank=True)
+    scan_time = models.DurationField(default=timedelta.min, blank=True)
     finished = models.BooleanField(default=False, blank=False)
     failed = models.BooleanField(default=False, blank=False)
 
