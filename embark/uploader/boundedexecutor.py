@@ -94,7 +94,7 @@ class BoundedExecutor:
             if primary_key:
                 firmware = Firmware.objects.get(pk=primary_key)
                 firmware.end_date = datetime.now()
-                firmware.scan_time = firmware.start_time - datetime.now()   #FIXME
+                # firmware.scan_time = firmware.start_time - datetime.now()   #FIXME
                 firmware.finished = True
                 firmware.save()
 
