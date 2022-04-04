@@ -183,12 +183,13 @@ get_individual_report().then(function (returnData) {
     make_chart(strippedpie, 'Stripped binaries', 'Unstripped binaries',
         '#009999', '#005050', returnData.bins_checked, returnData.stripped, 'Stripped');
 
+    let capture_group_scan_time = /(\w+)\s(\w+)/;
     let data_to_display = {
         "Firmware name": returnData.name.replace(/\d\//,""),
         "Firmware ID": returnData.name.replace(/\/.*$/,""),
         "Start date": returnData.start_date.replace('T', ' - '),
         "End date": returnData.end_date.replace('T', ' - '),
-        "Scan time": returnData.scan_time,
+        "Scan time": returnData.scan_time.seconds,
         "Vendor": returnData.vendor,
         "Version": returnData.version,
         "Notes": returnData.notes,
