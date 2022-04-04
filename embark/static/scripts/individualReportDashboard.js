@@ -188,7 +188,7 @@ get_individual_report().then(function (returnData) {
         "Firmware ID": returnData.name.replace(/\/.*$/,""),
         "Start date": returnData.start_date.replace('T', ' - '),
         "End date": returnData.end_date.replace('T', ' - '),
-        "Scan time": returnData.scan_time,
+        "Scan time": returnData.scan_time.minutes,
         "Vendor": returnData.vendor,
         "Version": returnData.version,
         "Notes": returnData.notes,
