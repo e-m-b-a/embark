@@ -1,6 +1,5 @@
 # pylint: disable=R1732, C0201, E1129
 import csv
-from datetime import timedelta
 import logging
 import os
 import shutil
