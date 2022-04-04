@@ -88,7 +88,7 @@ class BoundedExecutor:
             # fail
             logger.error("EMBA run was probably not successful!")
             logger.error("run_emba_cmd error: %s", execpt)
-       
+
         finally:
             # finalize db entry
             if primary_key:
@@ -100,7 +100,6 @@ class BoundedExecutor:
                 firmware.save()
 
             logger.info("Successful cleaned up: %s", cmd)
-
 
     @classmethod
     def run_emba_cmd_elavated(cls, cmd, primary_key, active_analyzer_dir):
