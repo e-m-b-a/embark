@@ -456,6 +456,7 @@ uninstall (){
   systemctl stop embark.service
   systemctl disable embark.service
   git checkout HEAD -- embark.service
+  systemctl daemon-reload
 
   #10 reset ownership etc
   # TODO delte the dns resolve
