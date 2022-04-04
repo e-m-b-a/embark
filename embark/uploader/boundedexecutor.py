@@ -94,7 +94,10 @@ class BoundedExecutor:
             if primary_key:
                 firmware = Firmware.objects.get(pk=primary_key)
                 firmware.end_date = datetime.now()
-                # firmware.scan_time = firmware.start_time - datetime.now()   #FIXME
+                try:    #FIXME
+                    firmware.scan_time = firmware.start_date - datetime.now()
+                except BaseException as fail:
+                    logger.error("Writing scan_time did not succeed reason: %s", fail)
                 firmware.finished = True
                 firmware.save()
 
