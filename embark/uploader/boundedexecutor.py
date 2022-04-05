@@ -94,10 +94,7 @@ class BoundedExecutor:
                 firmware = Firmware.objects.get(pk=primary_key)
                 firmware.end_date = datetime.now()
                 firmware.scan_time = datetime.now() - firmware.start_date
-                try:
-                    firmware.duration = str(firmware.scan_time)
-                except BaseException as error:
-                    logger.info("Type Error %s",error)
+                firmware.duration = str(firmware.scan_time)
                 firmware.finished = True
                 firmware.save()
 
