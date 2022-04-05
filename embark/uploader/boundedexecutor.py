@@ -93,7 +93,7 @@ class BoundedExecutor:
             if primary_key:
                 firmware = Firmware.objects.get(pk=primary_key)
                 firmware.end_date = datetime.now()
-                firmware.scan_time = firmware.start_date - datetime.now()
+                firmware.scan_time = datetime.now() - firmware.start_date
                 try:
                     firmware.duration = str(firmware.scan_time)
                 except BaseException as error:
