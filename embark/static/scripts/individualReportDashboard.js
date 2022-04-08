@@ -175,7 +175,7 @@ get_individual_report().then(function (returnData) {
     make_chart(relropie, 'Binaries without RELRO', 'Binaries with RELRO',
         '#493791', '#291771', returnData.bins_checked, returnData.relro, 'RELRO');
     make_chart(nxpie, 'Binaries without NX', 'Binaries with NX',
-        '#1b1534', '#000014', returnData.bins_checked, returnData.nx, 'NX');                    //FIXME NoExec
+        '#1b1534', '#000014', returnData.bins_checked, returnData.no_exec, 'NX');
     make_chart(piepie, 'Binaries without PIE', 'Binaries with PIE',
         '#7b919d', '#5b717d', returnData.bins_checked, returnData.pie, 'PIE');
     make_chart(canarypie, 'Binaries without CANARY', 'Binaries with CANARY',
