@@ -10,6 +10,8 @@ from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 from django.utils.datetime_safe import datetime
 
+from hashid_field import HashidField
+
 logger = logging.getLogger('web')
 
 
@@ -88,21 +90,23 @@ class FirmwareFile(models.Model):
     class FirmwareFile
     Model to store zipped or bin firmware file and upload date
     """
-    def get_storage_path(self, filename):
-        # file will be uploaded to MEDIA_ROOT/pk/<filename>
-        return os.path.join(f"{self.pk}", filename)
-
     MAX_LENGTH = 127
 
-    file = models.FileField(upload_to=get_storage_path)
+    reference_id = HashidField()
     is_archive = models.BooleanField(default=False)
     upload_date = models.DateTimeField(default=datetime.now, blank=True)
 
+    def get_storage_path(self, filename):
+        # file will be uploaded to MEDIA_ROOT/pk/<filename>
+        return os.path.join(f"{self.reference_id}", filename)
+
+    file = models.FileField(upload_to=get_storage_path)
+    
     def get_abs_path(self):
-        return f"{settings.MEDIA_ROOT}/{self.pk}/{self.file.name}"
+        return f"{settings.MEDIA_ROOT}/{self.reference_id}/{self.file.name}"
 
     def get_abs_folder_path(self):
-        return f"{settings.MEDIA_ROOT}/{self.pk}"
+        return f"{settings.MEDIA_ROOT}/{self.reference_id}"
 
     # def __init__(self, *args, **kwargs):
     #    super().__init__(*args, **kwargs)
