@@ -88,27 +88,17 @@ class BoundedExecutor:
             logger.error("EMBA run was probably not successful!")
             logger.error("run_emba_cmd error: %s", execpt)
 
+        finally:
             # finalize db entry
             if primary_key:
                 firmware = Firmware.objects.get(pk=primary_key)
                 firmware.end_date = datetime.now()
-                firmware.failed = True
-                firmware.save()
-
-        else:
-            # finalize db entry
-            if primary_key:
-                firmware = Firmware.objects.get(pk=primary_key)
-                firmware.end_date = datetime.now()
+                firmware.scan_time = datetime.now() - firmware.start_date
+                firmware.duration = str(firmware.scan_time)
                 firmware.finished = True
                 firmware.save()
 
             logger.info("Successful cleaned up: %s", cmd)
-
-        finally:
-            # take care of cleanup
-            if active_analyzer_dir:
-                shutil.rmtree(active_analyzer_dir)
 
     @classmethod
     def run_emba_cmd_elavated(cls, cmd, primary_key, active_analyzer_dir):

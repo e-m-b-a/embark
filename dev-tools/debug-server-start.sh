@@ -72,12 +72,13 @@ docker container logs embark_redis_dev -f > ./logs/redis_dev.log &
 echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.log""$NC"
 docker container logs embark_db_dev -f > ./logs/mysql_dev.log & 
 
-echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
-pipenv run ./embark/manage.py runapscheduler | tee -a ./embark/logs/scheduler.log &
-
-echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-echo "START DAPHNE" >./embark/logs/daphne.log
-pipenv run daphne -v 3 -p 8001 -b "$IP" --root-path="$PWD"/embark embark.asgi:application &>>./embark/logs/daphne.log &
+##
+# echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
+# pipenv run ./embark/manage.py runapscheduler | tee -a ./embark/logs/scheduler.log &
+#
+# echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
+# echo "START DAPHNE" >./embark/logs/daphne.log
+# pipenv run daphne -v 3 -p 8001 -b "$IP" --root-path="$PWD"/embark embark.asgi:application &>>./embark/logs/daphne.log &
 
 # start embark
 echo -e "$ORANGE""$BOLD""start EMBArk server""$NC"

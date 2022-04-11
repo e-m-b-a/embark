@@ -2,6 +2,7 @@ __pycache__/
 *.pyc
 *.log
 *.sqlite3
+cert/
 emba/
 .env
 embark/emba_logs/
@@ -13,9 +14,11 @@ embark/uploadedFirmwareImages/
 documentation/
 embark_db/
 .vscode/
+www/
 
 # other stuff
 *.zip
 *.bin
 *.error
 *.report
+*.service

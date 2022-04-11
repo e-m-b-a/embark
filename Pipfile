@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-Django = ">=4.0.1"
+Django = "*"
 channels = "*"
 channels-redis = "*"
 daphne = "*"

@@ -56,10 +56,17 @@ function cancelLog(currentID) {
 }
 
 /**
- *  start socket connection just once
+ *  start socket connection just once TODO wss compatible? 
  */
+var loc = window.location;
+var wsStart = 'ws://';
+var wsPort = ':8001';
+if (loc.protocol == 'https:') {
+      wsStart = 'wss://';
+      wsPort = ':8000';
+}
 var socket = new WebSocket(
-        'ws://' + location.hostname + ':8001' + '/ws/progress/'
+        wsStart + location.hostname + wsPort + '/ws/progress/'
 );
 /*for log implementation which is currently commented out*/
 var module_array = [];
