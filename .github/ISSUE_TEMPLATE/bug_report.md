@@ -12,9 +12,9 @@ A clear and concise description of what the bug is.
 
 **To Reproduce**
 Steps to reproduce the behavior:
-1. EMBA installation (dev-mode/default mode)
-2. Use the firmware available here: <Insert URL>
-3. Start EMBA with the following parameters: sudo ./emba.sh <insert further parameters>
+1. EMBArk installation (default mode/docker-mode)
+2. Start EMBArk: sudo ./run-server.sh
+3. Use the firmware available here: <Insert URL>
 4. 
 5. See error
 

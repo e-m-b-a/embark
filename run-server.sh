@@ -27,16 +27,20 @@ export FILE_SIZE=262144000  #250MB
 
 
 cleaner() {
-  fuser -k 80/tcp
+  pkill -u root daphne
+  pkill -u root /app/emba/emba.sh
+  pkill -u root runapscheduler
+
+  fuser -k "$HTTP_PORT"/tcp
+  fuser -k "$HTTPS_PORT"/tcp
+  fuser -k 8000/tcp
   fuser -k 8001/tcp
-  killall -9 -q "*daphne*"
-  killall -9 -q "*/app/emba/emba.sh*"
-  kill -9 "$(pgrep "manage.py runapscheduler")"     # TODO add non null cond
-  fuser -k 8001/tcp
+
   docker container stop embark_db
   docker container stop embark_redis
   docker network rm embark_backend
-  docker container prune -f --filter "label=flag"  #Try to only prune container we used not all of em
+  docker container prune -f --filter "label=flag"
+
   systemctl stop embark.service
   exit 1
 }

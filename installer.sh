@@ -459,7 +459,7 @@ uninstall (){
   systemctl daemon-reload
 
   #10 reset ownership etc
-  # TODO delte the dns resolve
+  # TODO delete the dns resolve
 
   #11 remove server-certs
   rm -rf ./cert
