@@ -8,17 +8,16 @@ from uploader import models
 logger = logging.getLogger('web')
 
 
-class FirmwareForm(forms.ModelForm):
+class FirmwareAnalysisForm(forms.ModelForm):
 
     class Meta:
-        model = models.Firmware
+        model = models.FirmwareAnalysis
 
         fields = ('firmware', 'version', 'vendor', 'device', 'notes', 'firmware_Architecture', 'cwe_checker',
                   'dev_mode', 'deep_extraction', 'log_path', 'grep_able_log', 'relative_paths', 'ANSI_color',
                   'web_reporter', 'emulation_test', 'dependency_check', 'multi_threaded', 'firmware_remove')
 
     def __init__(self, *args, **kwargs):
-        # super(FirmwareForm, self).__init__(*args, **kwargs)
         super().__init__(*args, **kwargs)
 
         for field in self.visible_fields():
@@ -53,12 +52,11 @@ class FirmwareForm(forms.ModelForm):
 class DeleteFirmwareForm(forms.ModelForm):
 
     class Meta:
-        model = models.DeleteFirmware
+        model = models.FirmwareFile
 
         fields = ('firmware', )
 
     def __init__(self, *args, **kwargs):
-        # super(DeleteFirmwareForm, self).__init__(*args, **kwargs)
         super().__init__(*args, **kwargs)
         for field in self.visible_fields():
             if isinstance(field.field.widget, django.forms.widgets.Select):

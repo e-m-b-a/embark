@@ -134,8 +134,8 @@ pipenv run ./manage.py migrate | tee -a /app/www/logs/migration.log
 echo -e "\n[""$BLUE JOB""$NC""] Collecting static files"
 pipenv run ./manage.py collectstatic --no-input
 chown www-embark /app/www/ -R
-chown www-embark /app/emba -R
-chmod 770 /app/www/media/ -R
+# chown www-embark /app/emba -R
+chmod 760 /app/www/media/ -R
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
 pipenv run ./manage.py runapscheduler | tee -a /app/www/logs/scheduler.log &

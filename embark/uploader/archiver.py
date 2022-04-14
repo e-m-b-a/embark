@@ -130,7 +130,7 @@ class Archiver:
     @classmethod
     def copy(cls, src, dst):
         """
-            copy file from src to dst
+        copy file from src to dst
 
             :param src: src file to be copied
             :param dst: location to be copied to

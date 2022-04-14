@@ -43,12 +43,12 @@ class BoundedExecutor:
     """
 
     @classmethod
-    def run_emba_cmd(cls, cmd, primary_key=None, active_analyzer_dir=None):
+    def run_emba_cmd(cls, cmd, hashid=None, active_analyzer_dir=None):
         """
         run shell commands from python script as subprocess, waits for termination and evaluates returncode
 
         :param cmd: shell command to be executed
-        :param primary_key: primary key for firmware entry db identification
+        :param hashid: primary key for firmware entry db identification
         :param active_analyzer_dir: active analyzer dir for deletion afterwards
 
         :return:
@@ -68,15 +68,15 @@ class BoundedExecutor:
             logger.info("Success: %s", cmd)
 
             # get csv log location
-            csv_log_location = f"{settings.EMBA_LOG_ROOT}/{primary_key}/f50_base_aggregator.csv"
+            csv_log_location = f"{settings.EMBA_LOG_ROOT}/{hashid}/f50_base_aggregator.csv"
 
             # read f50_aggregator and store it into a Result form
             logger.info('Reading report from: %s', csv_log_location)
             # if Path(csv_log_location).exists:
             if Path(csv_log_location).is_file():
-                cls.csv_read(primary_key, csv_log_location, cmd)
+                cls.csv_read(hashid, csv_log_location, cmd)
             else:
-                logger.error("CSV file %s for report: %s not generated", csv_log_location, primary_key)
+                logger.error("CSV file %s for report: %s not generated", csv_log_location, hashid)
                 logger.error("EMBA run was probably not successful!")
 
             # take care of cleanup
@@ -90,8 +90,8 @@ class BoundedExecutor:
 
         finally:
             # finalize db entry
-            if primary_key:
-                firmware = Firmware.objects.get(pk=primary_key)
+            if hashid:
+                firmware = Firmware.objects.get(id=hashid)
                 firmware.end_date = datetime.now()
                 firmware.scan_time = datetime.now() - firmware.start_date
                 firmware.duration = str(firmware.scan_time)
@@ -101,18 +101,18 @@ class BoundedExecutor:
             logger.info("Successful cleaned up: %s", cmd)
 
     @classmethod
-    def run_emba_cmd_elavated(cls, cmd, primary_key, active_analyzer_dir):
+    def run_emba_cmd_elavated(cls, cmd, hashid, active_analyzer_dir):
         """
         run_shell_cmd but elevated
 
         param cmd: shell command to be executed elevated
-        param primary_key: primary key for firmware entry db identification
+        param hashid: primary key for firmware entry db identification
         param active_analyzer_dir: active analyzer dir for deletion afterwards
 
         :return:
         """
 
-        cls.run_emba_cmd(f"sudo {cmd}", primary_key, active_analyzer_dir)
+        cls.run_emba_cmd(f"sudo {cmd}", hashid, active_analyzer_dir)
 
     @classmethod
     def submit_firmware(cls, firmware_flags, firmware_file):
@@ -125,8 +125,8 @@ class BoundedExecutor:
         return: emba process future on success, None on failure
         """
 
-        # unpack firmware file to </app/embark/{media}/active_{ID}/>
-        active_analyzer_dir = f"{settings.MEDIA_ROOT}/active_{firmware_flags.id}/"
+        # unpack firmware file to </app/www/active/{ID}/>
+        active_analyzer_dir = f"{settings.ACTIVE_FW}{firmware_flags.id}/"
 
         # we do not extract anything in embark -> emba should be able to handle all the cases with deep extraction
         # if firmware_file.is_archive:
@@ -150,7 +150,7 @@ class BoundedExecutor:
 
         # evaluate meta information and safely create log dir
 
-        emba_log_location = f"{settings.EMBA_LOG_ROOT}/{firmware_flags.pk}"
+        emba_log_location = f"{settings.EMBA_LOG_ROOT}/{firmware_flags.id}"
         log_path = Path(emba_log_location)
         log_path.mkdir(parents=True, exist_ok=True)
 
@@ -161,11 +161,11 @@ class BoundedExecutor:
         emba_cmd = f"{EMBA_SCRIPT_LOCATION} -f {image_file_location} -l {emba_log_location} {emba_flags}"
 
         # submit command to executor threadpool
-        emba_fut = BoundedExecutor.submit(cls.run_emba_cmd, emba_cmd, firmware_flags.pk, active_analyzer_dir)
+        emba_fut = BoundedExecutor.submit(cls.run_emba_cmd, emba_cmd, firmware_flags.id, active_analyzer_dir)
 
         # start log_reader TODO: cancel future and return future
         # log_read_fut = BoundedExecutor.submit(LogReader, firmware_flags.pk)
-        BoundedExecutor.submit(LogReader, firmware_flags.pk)
+        BoundedExecutor.submit(LogReader, firmware_flags.id)
 
         return emba_fut
 
@@ -204,7 +204,7 @@ class BoundedExecutor:
         executor.shutdown(wait)
 
     @classmethod
-    def csv_read(cls, primary_key, path, cmd):
+    def csv_read(cls, hashid, path, cmd):
         """
         This job reads the F50_aggregator file and stores its content into the Result model
         """
@@ -236,7 +236,7 @@ class BoundedExecutor:
             entropy_value = entropy_value.strip('.')
 
         res = Result(
-            firmware=Firmware.objects.get(id=primary_key),
+            firmware=Firmware.objects.get(hashid=hashid),
             emba_command=cmd.replace(f"cd {settings.EMBA_ROOT} && ", ""),
             architecture_verified=res_dict.get("architecture_verified", ''),
             # os_unverified=res_dict.get("os_unverified", ''),

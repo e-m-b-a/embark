@@ -199,7 +199,8 @@ install_embark_default() {
   #make dirs
   if ! [[ -d ./www ]]; then
     mkdir ./www
-    mkdir ./www/media
+    mkdir ./www/media/
+    mkdir ./www/active/
     mkdir ./www/emba_logs
     mkdir ./www/static
     mkdir ./www/conf

@@ -8,13 +8,12 @@ from uploader import views
 urlpatterns = [
     path(settings.LOGIN_URL, views.login, name='embark-login'),
     path('register/', views.register, name='embark-register'),
-    # path('home/', views.logout_view, name='embark-logout'), #settings.LOGOUT_REDIRECT_URL
     path('home/', views.home, name='embark-home'),
-    path('home/upload/<int:refreshed>/', views.start_analysis, name='embark-start-analysis'),
+    path('home/start/', views.start_analysis, name='embark-start-analysis'),
     path('home/delete/', views.delete_file, name='embark-fw-delete'),
-    path('home/upload/<int:refreshed>/save_file', views.save_file, name='embark-FileSave'),
+    path('home/upload/save_file/', views.save_file, name='embark-FileSave'),
     path('home/serviceDashboard/', views.service_dashboard, name='embark-ServiceDashboard'),
-    path('mainDashboard/', views.main_dashboard_unauth, name='embark-MainDashboard-unauth'),
+    # path('mainDashboard/', views.main_dashboard_unauth, name='embark-MainDashboard-unauth'),
     path('home/mainDashboard/', views.main_dashboard, name='embark-MainDashboard'),
     path('home/reportDashboard/', views.report_dashboard, name='embark-ReportDashboard'),
     path('home/individualReportDashboard/<int:analyze_id>', views.individual_report_dashboard, name='embark-IndividualReportDashboard'),
@@ -27,5 +26,6 @@ urlpatterns = [
     path('get_load/', views.get_load, name='embark-get-load'),
     path('get_individual_report/<int:analyze_id>/', views.get_individual_report, name='embark-get-individual-report'),
     path('get_accumulated_reports/', views.get_accumulated_reports, name='embark-get-accumulated-reports'),
-    path('check_login/', views.check_login, name='embark-check-login')
+    path('check_login/', views.check_login, name='embark-check-login'),
+    path('logout/', views.logout, name='embark-logout')
 ]

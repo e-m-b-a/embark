@@ -188,6 +188,9 @@ LOGOUT_REDIRECT_URL = ''
 MEDIA_ROOT = '/app/www/media/'
 MEDIA_URL = '/media/'
 
+# Active Firmware
+ACTIVE_FW = '/app/www/active/'
+
 REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
 REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
 

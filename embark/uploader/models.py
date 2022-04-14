@@ -1,7 +1,9 @@
 from datetime import timedelta
+from email.policy import default
 import logging
 import os
 import shutil
+from typing import Any
 
 from django.conf import settings
 from django.db import models
@@ -10,7 +12,9 @@ from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 from django.utils.datetime_safe import datetime
 
-from hashid_field import HashidField
+from users.models import User as Userclass
+
+from hashid_field import HashidAutoField
 
 logger = logging.getLogger('web')
 
@@ -92,21 +96,22 @@ class FirmwareFile(models.Model):
     """
     MAX_LENGTH = 127
 
-    reference_id = HashidField()
+    id = HashidAutoField(primary_key=True, allow_int_lookup=True)
     is_archive = models.BooleanField(default=False)
     upload_date = models.DateTimeField(default=datetime.now, blank=True)
+    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, default=Any, blank=True)
 
     def get_storage_path(self, filename):
-        # file will be uploaded to MEDIA_ROOT/pk/<filename>
-        return os.path.join(f"{self.reference_id}", filename)
+        # file will be uploaded to MEDIA_ROOT/<id>/<filename>
+        return os.path.join(f"{self.id}", filename)
 
     file = models.FileField(upload_to=get_storage_path)
-    
+
     def get_abs_path(self):
-        return f"{settings.MEDIA_ROOT}/{self.reference_id}/{self.file.name}"
+        return f"{settings.MEDIA_ROOT}/{self.id}/{self.file.name}"
 
     def get_abs_folder_path(self):
-        return f"{settings.MEDIA_ROOT}/{self.reference_id}"
+        return f"{settings.MEDIA_ROOT}/{self.id}"
 
     # def __init__(self, *args, **kwargs):
     #    super().__init__(*args, **kwargs)
@@ -117,23 +122,28 @@ class FirmwareFile(models.Model):
 
 
 @receiver(pre_delete, sender=FirmwareFile)
-def delete_img_pre_delete_post(sender, *args, **kwargs):
+def delete_fw_pre_delete_post(sender, *args, **kwargs):
     """
     callback function
     delete the firmwarefile and folder structure in storage on recieve
     """
     if sender.file:
-        shutil.rmtree(sender.get_abs_folder_path(), ignore_errors=True)
+        shutil.rmtree(sender.get_abs_folder_path(), ignore_errors=False, onerror=logger.error("Error when trying to delete %s", sender.get_abs_folder_path()))
+    else:
+        logger.error("No related FW found for delete request: %s", str(sender))
 
 
-class Firmware(models.Model):
+class FirmwareAnalysis(models.Model):
     """
     class Firmware
     Model of firmware to be analyzed, basic/expert emba flags and metadata on the analyze process
+    (1 FirmwareFile --> n FirmwareAnalysis)
     """
     MAX_LENGTH = 127
 
+    id = HashidAutoField(primary_key=True)
     firmware = models.ForeignKey(FirmwareFile, on_delete=models.RESTRICT, help_text='', null=True)
+    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, default=Any, blank=True, related_name='')
 
     # emba basic flags
     version = CharFieldExpertMode(
@@ -187,7 +197,7 @@ class Firmware(models.Model):
         expert_mode=True, blank=True)
 
     # embark meta data
-    path_to_logs = models.FilePathField(default="/", blank=True)    # TODO change
+    path_to_logs = models.FilePathField(default="/", blank=True)
     start_date = models.DateTimeField(default=datetime.now, blank=True)
     end_date = models.DateTimeField(default=datetime.min, blank=True)
     scan_time = models.DurationField(default=timedelta(), blank=True)
@@ -210,7 +220,7 @@ class Firmware(models.Model):
     def __str__(self):
         return f"{self.id}({self.firmware})"
 
-    def get_flags(self):    # FIXME is this comp with recent changes
+    def get_flags(self):    # FIXME add all current options
         """
         build shell command from input fields
 
@@ -259,7 +269,7 @@ class Firmware(models.Model):
 class Result(models.Model):
     # TODO missing: emba_command
 
-    firmware = models.ForeignKey(Firmware, on_delete=models.CASCADE, help_text='')
+    firmware = models.ForeignKey(FirmwareAnalysis, on_delete=models.CASCADE, help_text='')
     architecture_verified = models.CharField(blank=True, null=True, max_length=100, help_text='')
     os_verified = models.CharField(blank=True, null=True, max_length=100, help_text='')
     emba_command = models.CharField(blank=True, null=True, max_length=300, help_text='')
@@ -294,23 +304,6 @@ class Result(models.Model):
     metasploit_modules = models.IntegerField(default=0, help_text='')
     bins_checked = models.IntegerField(default=0, help_text='')
     strcpy_bin = models.TextField(default='{}')
-
-
-class DeleteFirmware(models.Model):
-    """
-    class DeleteFirmware
-    Model of firmware to be selected for deletion
-    """
-
-    MAX_LENGTH = 127
-
-    firmware = models.ForeignKey(FirmwareFile, on_delete=models.CASCADE, help_text='', null=True)
-
-    class Meta:
-        app_label = 'uploader'
-
-    # def __init__(self, *args, **kwargs):
-    #    super().__init__(*args, **kwargs)
 
 
 class ResourceTimestamp(models.Model):

@@ -14,7 +14,7 @@ from django.forms import model_to_dict
 from django.http.response import Http404
 from django.shortcuts import render
 from django.template.loader import get_template
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect, HttpResponseServerError, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.urls import reverse
@@ -29,7 +29,7 @@ logger = logging.getLogger('web')
 
 
 @require_http_methods(['GET'])
-@login_required(login_url='/' + settings.LOGIN_URL)  # FIXME
+@login_required(login_url='/' + settings.LOGIN_URL)
 def check_login(request):
     # TODO
     return HttpResponse('')
@@ -63,7 +63,7 @@ def download_zipped(request, analyze_id):
     """
 
     try:
-        firmware = Firmware.objects.get(pk=analyze_id)
+        firmware = Firmware.objects.get(reference_id=analyze_id)
 
         if os.path.exists(firmware.path_to_logs):
             archive_path = Archiver.pack(firmware.path_to_logs, 'zip', firmware.path_to_logs, '.')
@@ -87,7 +87,8 @@ def download_zipped(request, analyze_id):
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
-def start_analysis(request, refreshed):
+@require_http_methods(["POST"])
+def start_analysis(request):
     """
     View to submit form for flags to run emba with
     if: form is valid
@@ -96,48 +97,32 @@ def start_analysis(request, refreshed):
         else: return Queue full
     else: returns Invalid form error
     Args:
-        request: the http req
-        refreshed: =~id
-    Returns:
+        request: the http req with FirmwareForm
+    Returns: redirect
 
     """
+    form = FirmwareForm(request.POST)
 
-    # Safely create emba_logs directory
-    if request.method == 'POST':
-        form = FirmwareForm(request.POST)
+    if form.is_valid():
+        logger.info("Posted Form is valid")
+        logger.info("Starting analysis with %s", form.Meta.model.id)
 
-        if form.is_valid():
-            logger.info("Posted Form is valid")
-            firmware_flags = form.save()
+        # new_firmware = form.save(commit=False)
+        # new_firmware.user = request.user
+        new_firmware = form.save()
 
-            # get relevant data
-            # TODO: make clean db access
-            firmware_file = FirmwareFile.objects.get(pk=firmware_flags.firmware.pk)
+        # get the id of the firmware-file to submit
+        new_firmware_file = FirmwareFile.objects.get(id=new_firmware.Firmware.id)
+        logger.info("Firmware file: %s", new_firmware_file)
 
-            logger.info("Firmware file: %s", firmware_file)
+        # inject into bounded Executor
+        if BoundedExecutor.submit_firmware(firmware_flags=new_firmware, firmware_file=new_firmware_file):
+            return HttpResponseRedirect("../../serviceDashboard/")
+        logger.error("Server Queue full, or other boundenexec error")
+        return HttpResponseServerError("Queue full")
 
-            # inject into bounded Executor
-            if BoundedExecutor.submit_firmware(firmware_flags=firmware_flags, firmware_file=firmware_file):
-                if refreshed == 1:
-                    return HttpResponseRedirect("../../upload/1/")
-                # else:
-                return HttpResponseRedirect("../../serviceDashboard/")
-            # else:
-            return HttpResponse("Queue full")
-        # else:
-        logger.error("Posted Form is Invalid")
-        logger.error(form.errors)
-        return HttpResponse("Invalid Form")
-
-    analyze_form = FirmwareForm()
-    delete_form = DeleteFirmwareForm()
-
-    if refreshed == 1:
-        return render(request, 'uploader/fileUpload.html',
-                      {'analyze_form': analyze_form, 'delete_form': delete_form, 'username': request.user.username})
-    # else:
-    html_body = get_template('uploader/serviceDashboard.html')
-    return HttpResponse(html_body.render({'username': request.user.username}))
+    logger.error("Posted Form is Invalid: %s", form.errors)
+    return HttpResponseBadRequest("Invalid Form")
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -179,7 +164,7 @@ def individual_report_dashboard(request, analyze_id):
 @csrf_exempt    # FIXME add csrf and put save_file in upload-template into form
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def save_file(request, refreshed):  # FIXME
+def save_file(request):
     """
     file saving on POST requests with attached file
 
@@ -190,28 +175,12 @@ def save_file(request, refreshed):  # FIXME
 
     for file in request.FILES.getlist('file'):
         try:
-            # is_archive = Archiver.check_extensions(file.name)
-
-            # ensure primary key for file saving exists
             firmware_file = FirmwareFile.objects.create()
-
-            # firmware_file.is_archive = is_archive
-            # save file in <media-root>/pk/firmware
             firmware_file.file = file
+            firmware_file.user = request.user
             firmware_file.save()
 
-            #             # not used for now since files get stored in different locations
-            #             firmware_file = FirmwareFile(file=file)
-            #             if(path.exists(firmware_file.get_abs_path())):
-            #                 return HttpResponse("File Exists")
-            #             else:
-            #                 firmware_file.save()
-            #                 return HttpResponse("Firmwares has been successfully saved")
-            #            if is_archive:
-            return HttpResponse("Successfully uploaded firmware")
-        #            else:
-        #                return HttpResponse("Firmware file not supported by archiver (binary file ?). \n"
-        #                                    "Use on your own risk.")
+            return render(request, 'uploader/fileUpload.html', {'firmware': firmware_file, 'username': request.user.username})
 
         except Exception as error:
             logger.error(error)
@@ -271,7 +240,7 @@ def account_dashboard_(request):
     if Result.objects.all().count() > 0:
         html_body = get_template('uploader/passwordChange.html')
         return HttpResponse(html_body.render({'nav_switch': True, 'username': request.user.username}))
-    return HttpResponseRedirect("../../home/upload/1/")
+    return HttpResponseRedirect("../../home/upload/")
 
 
 @csrf_exempt
@@ -280,7 +249,7 @@ def password_change_(request):
     if Result.objects.all().count() > 0:
         html_body = get_template('uploader/password_change.html')
         return HttpResponse(html_body.render({'nav_switch': True, 'username': request.user.username}))
-    return HttpResponseRedirect("../../home/upload/1/")
+    return HttpResponseRedirect("../../home/upload/")
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -288,7 +257,7 @@ def home(request):
     if Result.objects.all().count() > 0:
         html_body = get_template('uploader/mainDashboard.html')
         return HttpResponse(html_body.render({'nav_switch': True, 'username': request.user.username}))
-    return HttpResponseRedirect("../../home/upload/1/")
+    return HttpResponseRedirect("../../home/upload/")
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -296,7 +265,7 @@ def main_dashboard(request):
     if Result.objects.all().count() > 0:
         html_body = get_template('uploader/mainDashboard.html')
         return HttpResponse(html_body.render({'nav_switch': True, 'username': request.user.username}))
-    return HttpResponseRedirect("../../home/upload/1/")
+    return HttpResponseRedirect("../../home/upload/")
 
 
 @csrf_exempt
@@ -385,9 +354,9 @@ def html_report_resource(request, analyze_id, img_file):
 
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def delete_file(request):
+def delete_fw_file(request):
     """
-    file deletion on POST requests with attached present firmware file
+    file deletion on POST requests with attached firmware file
 
     :params request: HTTP request
 
@@ -404,14 +373,14 @@ def delete_file(request):
             firmware_file = form.cleaned_data['firmware']
             firmware_file.delete()
 
-            return HttpResponseRedirect("../../home/upload/1/")
+            return HttpResponseRedirect("../../home/upload/")
 
         # else:
         logger.error("Form %s is invalid", form)
         logger.error("Form error: %s", form.errors)
         return HttpResponse("invalid Form")
 
-    return HttpResponseRedirect("../../home/upload/1/")
+    return HttpResponse("Firmware File successfully deleted")
 
 
 @require_http_methods(["GET"])

@@ -37,7 +37,7 @@ class LogReader:
         self.firmware_id = firmware_id
         self.firmware_id_str = str(self.firmware_id)
         try:
-            self.firmwarefile = Firmware.objects.get(pk=firmware_id).firmware.__str__()
+            self.firmwarefile = Firmware.objects.get(id=firmware_id).firmware.__str__()
         except Exception as error:
             logger.info("Firmware file exception: %s", error)
 
@@ -50,8 +50,8 @@ class LogReader:
         # self.wd = None
 
         # for testing
-        self.test_list1 = []
-        self.test_list2 = []
+        # self.test_list1 = []
+        # self.test_list2 = []
 
         # status update dict (appended to processmap)
         self.status_msg = {
@@ -63,8 +63,10 @@ class LogReader:
 
         # start processing
         time.sleep(1)
-        if firmware_id > 0:
+        if Firmware.objects.filter(id=self.firmware_id).exists():
             self.read_loop()
+        else:
+            self.cleanup()
 
     # update our dict whenever a new module is being processed
     def update_status(self, stream_item_list):
@@ -83,7 +85,7 @@ class LogReader:
 
         # append it to the data structure
         global PROCESS_MAP
-        if self.firmware_id > 0:
+        if Firmware.objects.filter(id=self.firmware_id).exists():
             found = False
             for mes in PROCESS_MAP[self.firmware_id_str]:
                 if mes["phase"] == tmp_mes["phase"] and mes["module"] == tmp_mes["module"]:
@@ -93,13 +95,14 @@ class LogReader:
                 PROCESS_MAP[self.firmware_id_str].append(tmp_mes)
 
                 # send it to room group
-                if self.firmware_id > 0:
-                    async_to_sync(self.channel_layer.group_send)(
-                        self.room_group_name, {
-                            "type": 'send.message',
-                            "message": PROCESS_MAP
-                        }
-                    )
+                async_to_sync(self.channel_layer.group_send)(
+                    self.room_group_name, {
+                        "type": 'send.message',
+                        "message": PROCESS_MAP
+                    }
+                )
+        else:
+            logger.error("Error in update_status, object with id=%s not found", self.firmware_id)
 
     # update dictionary with phase changes
     def update_phase(self, stream_item_list):
@@ -110,7 +113,7 @@ class LogReader:
 
         # append it to the data structure
         global PROCESS_MAP
-        if self.firmware_id > 0:
+        if Firmware.objects.filter(id=self.firmware_id).exists():
             found = False
             for mes in PROCESS_MAP[self.firmware_id_str]:
                 if mes["phase"] == tmp_mes["phase"] and mes["module"] == tmp_mes["module"]:
@@ -120,31 +123,30 @@ class LogReader:
                 PROCESS_MAP[self.firmware_id_str].append(tmp_mes)
 
                 # send it to room group
-                if self.firmware_id > 0:
-                    async_to_sync(self.channel_layer.group_send)(
-                        self.room_group_name, {
-                            'type': 'send.message',
-                            'message': PROCESS_MAP
-                        }
-                    )
+                async_to_sync(self.channel_layer.group_send)(
+                    self.room_group_name, {
+                        'type': 'send.message',
+                        'message': PROCESS_MAP
+                    }
+                )
+        else:
+            logger.error("Error in update_phase, object with id=%s not found", self.firmware_id)
         if "Test ended" in stream_item_list[1]:
             self.finish = True
 
     def read_loop(self):
-
         """
-                 Infinite Loop for waiting for emba.log changes
-                 :param: None
-                 :exit condition: Not in this Function, but if emba.sh has terminated this process is also killed
-                 :return: None
+        Infinite Loop for waiting for emba.log changes
+            :param: None
+            :exit condition: Not in this Function, but if emba.sh has terminated this process is also killed
+            :return: None
        """
-
         logger.info("read loop started for %s", self.firmware_id)
 
         while not self.finish:
 
             # get firmware for id which the BoundedExecutor gave the log_reader
-            firmware = Firmware.objects.get(pk=self.firmware_id)
+            firmware = Firmware.objects.get(id=self.firmware_id)
 
             # if file does not exist create it otherwise delete its content
             pat = f"{settings.EMBA_LOG_ROOT}/emba_new_{self.firmware_id}.log"
@@ -178,23 +180,24 @@ class LogReader:
         # return
 
     def cleanup(self):
-
         """
-            Called when logreader should be cleaned up
+        Called when logreader should be cleaned up
         """
         # inotify = INotify()
         # inotify.rm_watch(self.wd)
         logger.info("Log reader cleaned up for %s", self.firmware_id)
+        # TODO do cleanup of emba_new_<self.firmware_id>.log
+
 
     @classmethod
     # def process_line(self, inp, pat):
     def process_line(cls, inp, pat):
 
         """
-                  Regex function for lambda
-                  :param inp: String to apply regex to
-                  :param pat: Regex pattern
-                  :return: True if regex matches otherwise False
+        Regex function for lambda
+            :param inp: String to apply regex to
+            :param pat: Regex pattern
+            :return: True if regex matches otherwise False
         """
 
         if re.match(pat, inp):
@@ -203,23 +206,21 @@ class LogReader:
         return False
 
     def copy_file_content(self, diff):
-
         """
-                  Helper function to copy new emba log messages to temporary file continuously
-                  :param diff: new line in emba log
-                  :return: None
+        Helper function to copy new emba log messages to temporary file continuously
+            :param diff: new line in emba log
+            :return: None
         """
 
         with open(f"{settings.EMBA_LOG_ROOT}/emba_new_{self.firmware_id}.log", 'a+', encoding='utf-8') as diff_file:
             diff_file.write(diff)
 
     def get_diff(self, log_path):
-
         """
-                  Get diff between two files via difflib
-                  copied from stack overflow : https://stackoverflow.com/questions/15864641/python-difflib-comparing-files
-                  :param: None
-                  :return: result of difflib call without preceding symbols
+        Get diff between two files via difflib
+        copied from stack overflow : https://stackoverflow.com/questions/15864641/python-difflib-comparing-files
+            :param: None
+            :return: result of difflib call without preceding symbols
         """
 
         # open the two files to get diff from
@@ -228,11 +229,10 @@ class LogReader:
             return ''.join(x[2:] for x in diff if x.startswith('- '))
 
     def input_processing(self, tmp_inp):
-
         """
-                  RxPy Function for processing the file diffs and trigger send packet to frontend
-                  :param tmp_inp: file diff = new line in emba log
-                  :return: None
+        RxPy Function for processing the file diffs and trigger send packet to frontend
+            :param tmp_inp: file diff = new line in emba log
+            :return: None
         """
 
         status_pattern = "\\[\\*\\]*"
@@ -254,7 +254,8 @@ class LogReader:
             ops.map(lambda b: b.split(" ")),
             ops.filter(lambda c: c[1] == 'finished')
         ).subscribe(
-            lambda x: [self.update_status(x), self.test_list1.append(x)]
+            lambda x: [self.update_status(x)    # , self.test_list1.append(x)
+            ]
         )
 
         # observer for phase messages
@@ -264,7 +265,8 @@ class LogReader:
             ops.map(lambda v: v.split(" ", 1)),
             ops.filter(lambda w: w[1])
         ).subscribe(
-            lambda x: [self.update_phase(x), self.test_list2.append(x)]
+            lambda x: [self.update_phase(x)     # , self.test_list2.append(x)
+            ]
         )
 
     @classmethod
@@ -276,8 +278,8 @@ class LogReader:
             # add watch on file
             inotify.add_watch(path, watch_flags)
             return inotify.read()
-        except Exception:
-            # logger.info("inotify_event error: emba.log - %s", error)
+        except Exception as error:
+            logger.error("inotify_event error in %s:%s", path, error)
             return []
 
     def produce_test_output(self, inp):
