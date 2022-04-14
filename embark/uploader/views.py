@@ -14,7 +14,8 @@ from django.forms import model_to_dict
 from django.http.response import Http404
 from django.shortcuts import render
 from django.template.loader import get_template
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect, HttpResponseServerError, JsonResponse
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect, HttpResponseServerError, JsonResponse
+from django.contrib.auth import authenticate
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.urls import reverse
@@ -27,28 +28,9 @@ from uploader.models import Firmware, FirmwareFile, Result, ResourceTimestamp
 
 logger = logging.getLogger('web')
 
-
-@require_http_methods(['GET'])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def check_login(request):
-    # TODO
-    return HttpResponse('')
-
-
-def login(request):
-    html_body = get_template('uploader/login.html')
-    return HttpResponse(html_body.render())
-
-
-def register(request):
-    html_body = get_template('uploader/register.html')
-    return HttpResponse(html_body.render())
-
-
-@login_required(login_url='/' + settings.LOGIN_URL)
-def logout(request):
-    html_body = get_template('uploader/logout.html')
-    return HttpResponse(html_body.render())
+def uploader_home(request):
+    return render(request, 'uploader/fileUpload.html', {'nav_switch': False, 'username': request.user.username})
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -159,8 +141,6 @@ def individual_report_dashboard(request, analyze_id):
     return HttpResponse(html_body.render({'username': request.user.username}))
 
 
-# Function which saves the file .
-# request - Post request
 @csrf_exempt    # FIXME add csrf and put save_file in upload-template into form
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -243,38 +223,22 @@ def account_dashboard_(request):
     return HttpResponseRedirect("../../home/upload/")
 
 
-@csrf_exempt
-@login_required(login_url='/' + settings.LOGIN_URL)
-def password_change_(request):
-    if Result.objects.all().count() > 0:
-        html_body = get_template('uploader/password_change.html')
-        return HttpResponse(html_body.render({'nav_switch': True, 'username': request.user.username}))
-    return HttpResponseRedirect("../../home/upload/")
-
-
 @login_required(login_url='/' + settings.LOGIN_URL)
 def home(request):
     if Result.objects.all().count() > 0:
         html_body = get_template('uploader/mainDashboard.html')
         return HttpResponse(html_body.render({'nav_switch': True, 'username': request.user.username}))
-    return HttpResponseRedirect("../../home/upload/")
+    return render(request, 'uploader/fileUpload.html', {'nav_switch': False, 'username': request.user.username})
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
 def main_dashboard(request):
-    if Result.objects.all().count() > 0:
-        html_body = get_template('uploader/mainDashboard.html')
-        return HttpResponse(html_body.render({'nav_switch': True, 'username': request.user.username}))
-    return HttpResponseRedirect("../../home/upload/")
-
-
-@csrf_exempt
-def main_dashboard_unauth(request):     # FIXME
-    if Result.objects.all().count() > 0:
-        html_body = get_template('uploader/mainDashboard.html')
-        return HttpResponse(html_body.render({'nav_switch': False, 'username': request.user.username}))
-    return HttpResponseRedirect("/")
-
+    if request.user.is_authenticated:
+        if Result.objects.all().count() > 0:
+            html_body = get_template('uploader/mainDashboard.html')
+            return HttpResponse(html_body.render({'nav_switch': True, 'username': request.user.username}))
+    
+    return HttpResponseForbidden
 
 @login_required(login_url='/' + settings.LOGIN_URL)
 def reports(request):

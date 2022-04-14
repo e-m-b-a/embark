@@ -1,12 +1,13 @@
-# from django.urls import path, include
+from django.conf import settings
 from django.urls import path
-from . import views
+
+from users import views
 
 
 urlpatterns = [
-    path('signin', views.signin, name='embark-signin'),
-    path('signup', views.signup, name='embark-signup'),
-    path('signout', views.signout, name='embark-signout'),
-    path('password_change', views.password_change, name='embark-password'),
-    path('acc_delete', views.acc_delete, name='embark-acc-delete')
+    path(settings.LOGIN_URL, views.login, name='embark-login'),
+    path('signup/', views.signup, name='embark-signup'),
+    path('logout/', views.logout, name='embark-logout'),
+    path('password_change/', views.password_change, name='embark-password'),
+    path('acc_delete/', views.acc_delete, name='embark-acc-delete')
 ]
