@@ -3,6 +3,7 @@ import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+HASHID_FIELD_SALT = os.environ.get('HASHID_SALT')
 SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = bool(os.environ.get('EMBARK_DEBUG', True))
 ALLOWED_HOSTS = ['*']
@@ -150,10 +151,10 @@ STATICFILES_DIRS = [
 # STATICFILES_FINDERS
 
 # URL of Login-Page
-LOGIN_URL = ''
+LOGIN_URL = 'login/'
 
 # URL of Logout-Page
-LOGOUT_REDIRECT_URL = ''
+LOGOUT_REDIRECT_URL = 'login/'
 
 # Added for FIle storage to get the path to save Firmware images.
 MEDIA_ROOT = os.path.join('/app/', 'uploadedFirmwareImages')  # media directory in the root directory

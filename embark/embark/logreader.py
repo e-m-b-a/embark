@@ -16,7 +16,7 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.conf import settings
 # from uploader.models import Firmware, FirmwareFile
-from uploader.models import Firmware
+from uploader.models import FirmwareAnalysis
 
 
 logger = logging.getLogger('web')
@@ -37,7 +37,7 @@ class LogReader:
         self.firmware_id = firmware_id
         self.firmware_id_str = str(self.firmware_id)
         try:
-            self.firmwarefile = Firmware.objects.get(id=firmware_id).firmware.__str__()
+            self.firmwarefile = FirmwareAnalysis.objects.get(id=firmware_id).firmware.__str__()
         except Exception as error:
             logger.info("Firmware file exception: %s", error)
 
@@ -63,7 +63,7 @@ class LogReader:
 
         # start processing
         time.sleep(1)
-        if Firmware.objects.filter(id=self.firmware_id).exists():
+        if FirmwareAnalysis.objects.filter(id=self.firmware_id).exists():
             self.read_loop()
         else:
             self.cleanup()
@@ -85,7 +85,7 @@ class LogReader:
 
         # append it to the data structure
         global PROCESS_MAP
-        if Firmware.objects.filter(id=self.firmware_id).exists():
+        if FirmwareAnalysis.objects.filter(id=self.firmware_id).exists():
             found = False
             for mes in PROCESS_MAP[self.firmware_id_str]:
                 if mes["phase"] == tmp_mes["phase"] and mes["module"] == tmp_mes["module"]:
@@ -113,7 +113,7 @@ class LogReader:
 
         # append it to the data structure
         global PROCESS_MAP
-        if Firmware.objects.filter(id=self.firmware_id).exists():
+        if FirmwareAnalysis.objects.filter(id=self.firmware_id).exists():
             found = False
             for mes in PROCESS_MAP[self.firmware_id_str]:
                 if mes["phase"] == tmp_mes["phase"] and mes["module"] == tmp_mes["module"]:
@@ -146,7 +146,7 @@ class LogReader:
         while not self.finish:
 
             # get firmware for id which the BoundedExecutor gave the log_reader
-            firmware = Firmware.objects.get(id=self.firmware_id)
+            firmware = FirmwareAnalysis.objects.get(id=self.firmware_id)
 
             # if file does not exist create it otherwise delete its content
             pat = f"{settings.EMBA_LOG_ROOT}/emba_new_{self.firmware_id}.log"

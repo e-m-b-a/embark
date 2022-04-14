@@ -54,7 +54,7 @@ class DeleteFirmwareForm(forms.ModelForm):
     class Meta:
         model = models.FirmwareFile
 
-        fields = ('firmware', )
+        fields = ('file', )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

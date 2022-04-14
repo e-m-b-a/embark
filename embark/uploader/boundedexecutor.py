@@ -15,7 +15,7 @@ from django.utils.datetime_safe import datetime
 from django.conf import settings
 
 from uploader.archiver import Archiver
-from uploader.models import Firmware, Result
+from uploader.models import FirmwareAnalysis, Result
 from embark.logreader import LogReader
 
 
@@ -91,7 +91,7 @@ class BoundedExecutor:
         finally:
             # finalize db entry
             if hashid:
-                firmware = Firmware.objects.get(id=hashid)
+                firmware = FirmwareAnalysis.objects.get(id=hashid)
                 firmware.end_date = datetime.now()
                 firmware.scan_time = datetime.now() - firmware.start_date
                 firmware.duration = str(firmware.scan_time)
@@ -236,7 +236,7 @@ class BoundedExecutor:
             entropy_value = entropy_value.strip('.')
 
         res = Result(
-            firmware=Firmware.objects.get(hashid=hashid),
+            firmware=FirmwareAnalysis.objects.get(hashid=hashid),
             emba_command=cmd.replace(f"cd {settings.EMBA_ROOT} && ", ""),
             architecture_verified=res_dict.get("architecture_verified", ''),
             # os_unverified=res_dict.get("os_unverified", ''),

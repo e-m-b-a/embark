@@ -18,6 +18,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
 RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
+RANDOM_SALT=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
 
 DIR="$(realpath "$(dirname "$0")")"
 
@@ -244,6 +245,7 @@ install_embark_default() {
   export REDIS_HOST="127.0.0.1"
   export REDIS_PORT="7777"
   export SECRET_KEY="$DJANGO_SECRET_KEY"
+  export HASH_ID_SALT="$RANDOM_SALT"
   # this is for pipenv/django # TODO change after 
   {
     echo "DATABASE_NAME=$DATABASE_NAME"
@@ -382,6 +384,7 @@ install_embark_dev(){
   export REDIS_HOST="127.0.0.1"
   export REDIS_PORT="7777"
   export SECRET_KEY="$DJANGO_SECRET_KEY"
+  export HASH_ID_SALT="$RANDOM_SALT"
   export PYTHONPATH="${PYTHONPATH}:${PWD}:${PWD}/embark/"
   {
     echo "DATABASE_NAME=$DATABASE_NAME"

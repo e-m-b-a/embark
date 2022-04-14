@@ -11,6 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
+HASHID_FIELD_SALT = os.environ.get('HASHID_SALT')
 SECRET_KEY = os.environ.get('SECRET_KEY')   # look at .env
 
 # SECURITY WARNING: don't run with debug turned on in production!

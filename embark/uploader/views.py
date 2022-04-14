@@ -23,8 +23,8 @@ from django.views.decorators.csrf import csrf_exempt
 
 from uploader.boundedexecutor import BoundedExecutor
 from uploader.archiver import Archiver
-from uploader.forms import FirmwareForm, DeleteFirmwareForm
-from uploader.models import Firmware, FirmwareFile, Result, ResourceTimestamp
+from uploader.forms import FirmwareAnalysisForm, DeleteFirmwareForm
+from uploader.models import FirmwareAnalysis, FirmwareFile, Result, ResourceTimestamp
 
 logger = logging.getLogger('web')
 
@@ -45,7 +45,7 @@ def download_zipped(request, analyze_id):
     """
 
     try:
-        firmware = Firmware.objects.get(reference_id=analyze_id)
+        firmware = FirmwareAnalysis.objects.get(reference_id=analyze_id)
 
         if os.path.exists(firmware.path_to_logs):
             archive_path = Archiver.pack(firmware.path_to_logs, 'zip', firmware.path_to_logs, '.')
@@ -58,7 +58,7 @@ def download_zipped(request, analyze_id):
         logger.warning("Firmware with ID: %s does not exist", analyze_id)
         return HttpResponse("Firmware with ID: %s does not exist", analyze_id)
 
-    except Firmware.DoesNotExist as excpt:
+    except FirmwareAnalysis.DoesNotExist as excpt:
         logger.warning("Firmware with ID: %s does not exist in DB", analyze_id)
         logger.warning("Exception: %s", excpt)
         return HttpResponse("Firmware ID does not exist in DB")
@@ -83,7 +83,7 @@ def start_analysis(request):
     Returns: redirect
 
     """
-    form = FirmwareForm(request.POST)
+    form = FirmwareAnalysisForm(request.POST)
 
     if form.is_valid():
         logger.info("Posted Form is valid")
@@ -123,7 +123,7 @@ def report_dashboard(request):
     :return: rendered ReportDashboard
     """
 
-    finished_firmwares = Firmware.objects.all().filter(finished=True)
+    finished_firmwares = FirmwareAnalysis.objects.all().filter(finished=True)
     return render(request, 'uploader/reportDashboard.html',
                   {'finished_firmwares': finished_firmwares, 'username': request.user.username})
 
@@ -374,7 +374,7 @@ def get_individual_report(request, analyze_id):
         return JsonResponse(data={'error': 'Bad request'}, status=HTTPStatus.BAD_REQUEST)
     try:
         result = Result.objects.get(firmware_id=int(firmware_id))
-        firmware_object = Firmware.objects.get(pk=int(firmware_id))
+        firmware_object = FirmwareAnalysis.objects.get(pk=int(firmware_id))
 
         return_dict = dict(model_to_dict(result), **model_to_dict(firmware_object))
 
