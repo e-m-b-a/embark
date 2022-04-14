@@ -245,7 +245,7 @@ install_embark_default() {
   export REDIS_HOST="127.0.0.1"
   export REDIS_PORT="7777"
   export SECRET_KEY="$DJANGO_SECRET_KEY"
-  export HASH_ID_SALT="$RANDOM_SALT"
+  export HASHID_SALT="$RANDOM_SALT"
   # this is for pipenv/django # TODO change after 
   {
     echo "DATABASE_NAME=$DATABASE_NAME"
@@ -384,7 +384,7 @@ install_embark_dev(){
   export REDIS_HOST="127.0.0.1"
   export REDIS_PORT="7777"
   export SECRET_KEY="$DJANGO_SECRET_KEY"
-  export HASH_ID_SALT="$RANDOM_SALT"
+  export HASHID_SALT="$RANDOM_SALT"
   export PYTHONPATH="${PYTHONPATH}:${PWD}:${PWD}/embark/"
   {
     echo "DATABASE_NAME=$DATABASE_NAME"

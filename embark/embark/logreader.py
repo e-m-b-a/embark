@@ -12,10 +12,9 @@ import rx.operators as ops
 from inotify_simple import INotify, flags
 from asgiref.sync import async_to_sync
 
-# from channels.generic.websocket import WebsocketConsumer
 from channels.layers import get_channel_layer
 from django.conf import settings
-# from uploader.models import Firmware, FirmwareFile
+
 from uploader.models import FirmwareAnalysis
 
 
