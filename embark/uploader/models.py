@@ -1,3 +1,4 @@
+from datetime import timedelta
 import logging
 import os
 import shutil
@@ -185,6 +186,8 @@ class Firmware(models.Model):
     path_to_logs = models.FilePathField(default="/", blank=True)    # TODO change
     start_date = models.DateTimeField(default=datetime.now, blank=True)
     end_date = models.DateTimeField(default=datetime.min, blank=True)
+    scan_time = models.DurationField(default=timedelta(), blank=True)
+    duration = models.CharField(blank=True, null=True, max_length=100, help_text='')
     finished = models.BooleanField(default=False, blank=False)
     failed = models.BooleanField(default=False, blank=False)
 

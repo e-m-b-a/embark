@@ -27,16 +27,20 @@ export FILE_SIZE=262144000  #250MB
 
 
 cleaner() {
-  fuser -k 80/tcp
+  pkill -u root daphne
+  pkill -u root /app/emba/emba.sh
+  pkill -u root runapscheduler
+
+  fuser -k "$HTTP_PORT"/tcp
+  fuser -k "$HTTPS_PORT"/tcp
+  fuser -k 8000/tcp
   fuser -k 8001/tcp
-  killall -9 -q "*daphne*"
-  #TODO add kill for all p /app/emba
-  kill -9 "$(pgrep "manage.py runapscheduler")"     # TODO add non null cond
-  fuser -k 8001/tcp
+
   docker container stop embark_db
   docker container stop embark_redis
   docker network rm embark_backend
-  docker container prune -f --filter "label=flag"  #Try to only prune container we used not all of em
+  docker container prune -f --filter "label=flag"
+
   systemctl stop embark.service
   exit 1
 }
@@ -64,8 +68,7 @@ if [[ $? -eq 1 ]]; then
   fi
   cd ./emba || exit 1
   git pull
-  docker network rm emba_runs
-  docker-compose up --no-start
+  systemctl restart embark
   /app/emba/emba.sh -d 1>/dev/null
   if [[ $? -eq 1 ]]; then
     echo -e "$RED""EMBA is not configured correctly""$NC"
@@ -144,11 +147,20 @@ pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --url-alias /static/ /app/www/static/ \
 --url-alias /media/ /app/www/media/ \
 --allow-localhost --working-directory /app/www/embark/ --server-root /app/www/httpd80/ \
---include-file /app/www/conf/embark.conf &
-#--https-only --ssl-ca-certificate-file --ssl-certificate FILE-PATH --https-port "$HTTPS_PORT" --enable-debugger
+--include-file /app/www/conf/embark.conf \
+--server-name embark.local \
+--ssl-certificate /app/www/conf/cert/embark.local --ssl-certificate-key-file /app/www/conf/cert/embark.local.key \
+--https-port "$HTTPS_PORT" &
+# --enable-debugger --https-only \
 sleep 5
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-pipenv run daphne --access-log /app/www/logs/daphne.log -p 8001 -b "$BIND_IP" --root-path=/app/www/embark embark.asgi:application
+pipenv run daphne --access-log /app/www/logs/daphne.log -e ssl:8000:privateKey=/app/www/conf/cert/embark-ws.local.key:certKey=/app/www/conf/cert/embark-ws.local.crt -b "$BIND_IP" -p 8001 -s embark-ws.local --root-path=/app/www/embark embark.asgi:application &
+sleep 5
 
+
+echo -e "\n""$ORANGE$BOLD""=============================================================""$NC"
+echo -e "\n""$ORANGE$BOLD""Server started on http://embark.local""$NC"
+echo -e "\n""$ORANGE$BOLD""For SSL you may use https://embark.local (Not recommended for local use)""$NC"
+echo -e "\n\n""$GREEN$BOLD""the trusted rootCA.key for the ssl encryption is in /app/cert""$NC"
 wait

@@ -16,6 +16,9 @@
 
 export DEBIAN_FRONTEND=noninteractive
 
+DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
+
 DIR="$(realpath "$(dirname "$0")")"
 
 RED='\033[0;31m'
@@ -53,6 +56,29 @@ install_emba() {
   ./installer.sh -d
   cp ./config/emba_updater /etc/cron.daily/
   cd .. || exit 1
+}
+
+create_ca (){
+  # TODO could use some work 
+  echo -e "\n$GREEN""$BOLD""Creating SSL Cert""$NC"
+  cd cert || exit 1
+  # create CA
+  openssl genrsa -out rootCA.key 4096
+  openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 1024 -out rootCA.crt -subj '/CN=embark.local/O=EMBA/C=US'
+  # create server sign requests (csr)
+  openssl genrsa -out embark.local.key 2048
+  openssl req -new -sha256 -key embark.local.key -out embark.local.csr  -subj '/CN=embark.local/O=EMBA/C=US'
+  openssl genrsa -out embark-ws.local.key 2048
+  openssl req -new -sha256 -key embark-ws.local.key -out embark-ws.local.csr  -subj '/CN=embark-ws.local/O=EMBA/C=US'
+  # signe csr with ca
+  openssl x509 -req -in embark.local.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out embark.local.crt -days 10000 -sha256
+  openssl x509 -req -in embark-ws.local.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out embark-ws.local.crt -days 10000 -sha256
+  cd .. || exit 1
+}
+
+dns_resolve(){
+  echo -e "\n$GREEN""$BOLD""Install hostnames for local dns-resolve""$NC"
+  printf "0.0.0.0     embark.local\n" >>/etc/hosts
 }
 
 reset_docker() {
@@ -147,6 +173,7 @@ install_debs() {
 }
 
 install_daemon() {
+  echo -e "\n$GREEN""$BOLD""Install embark daemon""$NC"
   sed -i "s|BASEDIR|$DIR|g" ./embark.service
   ln -s /app/embark.service /etc/systemd/system/embark.service
   systemctl enable embark.service
@@ -163,6 +190,7 @@ install_embark_default() {
 
   #Add user for server
   useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /app/www/
+  # TODO add if grep /app/emba/emba.sh
   echo 'www-embark ALL=(ALL) NOPASSWD: /app/emba/emba.sh' | EDITOR='tee -a' visudo
 
   #Add Symlink
@@ -182,6 +210,13 @@ install_embark_default() {
     mkdir ./www/conf
   fi
   
+  #add ssl cert
+  create_ca
+  ln -s /app/cert /app/www/conf/cert || exit 1
+
+  #add dns name
+  dns_resolve
+
   #install packages
   PIPENV_VENV_IN_PROJECT=1 pipenv install
 
@@ -201,8 +236,6 @@ install_embark_default() {
   fi
 
   # setup .env
-  DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
-  RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
   echo -e "$ORANGE""$BOLD""Creating a Developer EMBArk configuration file .env""$NC"
   export DATABASE_NAME="embark"
   export DATABASE_USER="embark"
@@ -262,15 +295,13 @@ install_embark_docker(){
 
   # generating dynamic authentication for backend
   # for MYSQL root pwd check the logs of the container
-  DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
-  PASSWORD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13 )
   echo -e "$ORANGE""$BOLD""Creating a container EMBArk configuration file .env""$NC"
   export DATABASE_NAME="embark"
   export DATABASE_USER="embark"
-  export DATABASE_PASSWORD="$PASSWORD"
+  export DATABASE_PASSWORD="$RANDOM_PW"
   export DATABASE_HOST="172.23.0.5"
   export DATABASE_PORT="3306"
-  export MYSQL_PASSWORD="$PASSWORD"
+  export MYSQL_PASSWORD="$RANDOM_PW"
   export MYSQL_USER="embark"
   export MYSQL_DATABASE="embark"
   export REDIS_HOST="172.23.0.8"
@@ -343,7 +374,6 @@ install_embark_dev(){
   fi
 
   # setup .env with dev network
-  DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
   echo -e "$ORANGE""$BOLD""Creating a Developer EMBArk configuration file .env""$NC"
   export DATABASE_NAME="embark"
   export DATABASE_USER="embark"
@@ -395,7 +425,7 @@ uninstall (){
 
   #1 delete symlink
   echo -e "$ORANGE""$BOLD""Delete Symlink?""$NC"
-  rm -i /app
+  rm /app
 
   #2 delete www
   echo -e "$ORANGE""$BOLD""Delete Apache Directory""$NC"
@@ -430,9 +460,15 @@ uninstall (){
   #9 stop daemon
   systemctl stop embark.service
   systemctl disable embark.service
+  git checkout HEAD -- embark.service
+  systemctl daemon-reload
 
   #10 reset ownership etc
-  # TODO
+  # TODO delete the dns resolve
+
+  #11 remove server-certs
+  rm -rf ./cert
+  git checkout HEAD -- cert
 }
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
