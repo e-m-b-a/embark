@@ -1,4 +1,4 @@
-{% extends "uploader/base.html" %}
+{% extends "base.html" %}
 {% load static %}
 {% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/individualReportDashboard.css' %}"/>{% endblock style %}
 {% block title %}EMBArk individual dashboard{% endblock title %}
@@ -40,7 +40,7 @@
               <form action="javascript:;" onsubmit="return get_dl_report_url();" method='get'>
                 <button class="btn buttonRowElem" type="submit">Download Report</button>
               </form>
-              <form action={% url 'embark-start-analysis' 1 %} method='get'>
+              <form action={% url 'embark-uploader-start-analysis' 1 %} method='get'>
                 <button type="submit" class="btn buttonRowElem" >Rescan/delete</button>
               </form>
               <form action={% url 'embark-MainDashboard' %} method='get'>

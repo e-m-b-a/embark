@@ -4,7 +4,7 @@
     <div id="navigation">
         <div class="logo-content">
             <div class="logo">
-                <a href="{% url 'embark-home' %}" onclick="">
+                <a href="{% url 'embark-login' %}" onclick="">
                     <img src="{% static 'content/images/embark_logo_text.png' %}" alt="EMBArk" height="auto" width="auto"/>
                 </a>
             </div>
@@ -22,7 +22,7 @@
                 </a>
             </li>
             <li>
-                <a href="{% url 'embark-start-analysis' refreshed=1 %}" data-link>
+                <a href="{% url 'embark-uploader-home' %}" data-link>
                     <span class="icon">
                         <svg height="48px" viewBox="0 0 21 21" width="48px" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" transform="translate(4 3)"><path d="m2.5 4.753 4-4.232 4 4.191"/><path d="m6.5.5v11"/><path d="m.5 14.5h12"/></g></svg>
                     </span>
@@ -72,7 +72,7 @@
                     {{ username }}
                     </div>
                 </div>
-                <a href="{% url 'embark-signout' %}">
+                <a href="{% url 'embark-logout' %}">
                     <svg id="log-out" height="48px" viewBox="0 0 21 21" width="48px" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd" transform="translate(4 3)"><path d="m2.5.5h8c1.1045695 0 2 .8954305 2 2v10c0 1.1045695-.8954305 2-2 2h-8c-1.1045695 0-2-.8954305-2-2v-10c0-1.1045695.8954305-2 2-2z" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"/><path d="m10.2022469 14.5-3.64502265-1.9482581c-.65083781-.3478717-1.05722425-1.0258787-1.05722425-1.763852v-6.57577979c0-.73797327.40638644-1.41598036 1.05722425-1.76385201l3.64502265-1.9482581" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7.5" cy="7.5" fill="#fff" r="1"/></g></svg>
                 </a>
             </div>

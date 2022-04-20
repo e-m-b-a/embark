@@ -33,7 +33,7 @@ $(window).bind("load", function() {
     //formData.append('file', fileData);
     $.ajax({
       type: 'POST',
-      url: 'save_file',
+      url: 'uploader/save_file',
       data: formData,
       processData: false,
       contentType: false,

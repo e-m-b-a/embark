@@ -8,6 +8,8 @@ urlpatterns = [
     path(settings.LOGIN_URL, views.login, name='embark-login'),
     path('signup/', views.signup, name='embark-signup'),
     path('logout/', views.logout, name='embark-logout'),
-    path('password_change/', views.password_change, name='embark-password'),
-    path('acc_delete/', views.acc_delete, name='embark-acc-delete')
+    # TODO account menu path('my-account/', views., name='embark-),
+    path('my-account/password_change/', views.password_change, name='embark-password'),
+    path('my-account/acc_delete/', views.acc_delete, name='embark-acc-delete'),
+    path('log/<int:log_type>/<int:lines>/', views.get_log, name='log'),
 ]

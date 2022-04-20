@@ -124,15 +124,7 @@ class BoundedExecutor:
 
         return: emba process future on success, None on failure
         """
-
-        # unpack firmware file to </app/www/active/{ID}/>
         active_analyzer_dir = f"{settings.ACTIVE_FW}{firmware_flags.id}/"
-
-        # we do not extract anything in embark -> emba should be able to handle all the cases with deep extraction
-        # if firmware_file.is_archive:
-        #    Archiver.unpack(firmware_file.file.path, active_analyzer_dir)
-        #    # TODO: maybe descent in directory structure
-        # else:
         Archiver.copy(firmware_file.file.path, active_analyzer_dir)
 
         # find emba start_file

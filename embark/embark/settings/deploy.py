@@ -180,10 +180,10 @@ STATICFILES_DIRS = [
 # STATICFILES_FINDERS
 
 # URL of Login-Page
-LOGIN_URL = 'login/'
+LOGIN_URL = ''
 
 # URL of Logout-Page
-LOGOUT_REDIRECT_URL = '/logout/'
+LOGOUT_REDIRECT_URL = ''
 
 # Upload Media
 MEDIA_ROOT = '/app/www/media/'

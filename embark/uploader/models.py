@@ -143,7 +143,7 @@ class FirmwareAnalysis(models.Model):
 
     id = HashidAutoField(primary_key=True)
     firmware = models.ForeignKey(FirmwareFile, on_delete=models.RESTRICT, help_text='', null=True)
-    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, default=Any, blank=True, related_name='')
+    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, default=Any, blank=True, related_name='Fw_Analysis_User')
 
     # emba basic flags
     version = CharFieldExpertMode(

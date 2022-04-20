@@ -1,10 +1,11 @@
-{% extends "uploader/base.html" %}
+{% extends "base.html" %}
 {% load static %}
 {% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/fileUpload.css' %}"/>{% endblock style %}
 {% block js %}<script type="text/javascript" src="{% static 'scripts/fileUpload.js' %}"></script>{% endblock js %}
 {% block title %}EMBArk file upload{% endblock title %}
 {% block navigation %}{% include "uploader/navigation.html" %}{% endblock navigation %}
 {% block maincontent %}
+
     <div class="row uploadRow">
         <div class="col-sm">
             <div class="box">
@@ -29,31 +30,12 @@
                     </div>
                 </div>
             </div>
-            
-            <div class="box">
-                <p class="mainText">Select and delete a firmware image/archive</p>
-                <form action="{% url 'embark-fw-delete' %}" method="post" id="delete-form" onsubmit="window.confirmDelete(event)">
-                    {% csrf_token %}
-                    {% load filters %}
-                    <!-- Iterate over all fields and set expmode on fields in expert mode -->
-                    {% for field in delete_form %}
-                    <div class="innerBlock">
-                        <div id="firmwareToDelete" class="form-group deleteFirmware" >
-                                {{ field }}
-                        </div>
-                        {% endfor %}
-                    </div>
-                    <div class="buttonRow">
-                        <button type="delete" class="btn buttonRowElem">Delete</button>
-                    </div>
-                </form>
-            </div>
         </div>
 
         <div class="col-sm">
             <div class="box">
                 <p class="mainText">Analyze a firmware image/archive</p>
-                <form action="{% url 'embark-start-analysis' %}" method="post" id="analyze-form">
+                <form action="{% url 'embark-uploader-start-analysis' %}" method="post" id="analyze-form">
                     <div class="innerBlock">
                         <label for="expertMode">Expert mode</label>
                         <label class="switch">

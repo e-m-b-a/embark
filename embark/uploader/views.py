@@ -1,30 +1,17 @@
 # pylint: disable=W0613,C0206
-
-from pathlib import Path
-
-import json
-import os
+from http.client import HTTPResponse
 import logging
-
-from operator import itemgetter
-from http import HTTPStatus
-
 from django.conf import settings
-from django.forms import model_to_dict
-from django.http.response import Http404
 from django.shortcuts import render
-from django.template.loader import get_template
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect, HttpResponseServerError, JsonResponse
-from django.contrib.auth import authenticate
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect, HttpResponseServerError
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
-from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 
 from uploader.boundedexecutor import BoundedExecutor
 from uploader.archiver import Archiver
 from uploader.forms import FirmwareAnalysisForm, DeleteFirmwareForm
-from uploader.models import FirmwareAnalysis, FirmwareFile, Result, ResourceTimestamp
+from uploader.models import FirmwareFile
 
 logger = logging.getLogger('web')
 
@@ -33,39 +20,30 @@ def uploader_home(request):
     return render(request, 'uploader/fileUpload.html', {'nav_switch': False, 'username': request.user.username})
 
 
+@csrf_exempt    # FIXME add csrf and put save_file in upload-template into form
+@require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def download_zipped(request, analyze_id):
+def save_file(request):
     """
-    download zipped log directory
+    file saving on POST requests with attached file
 
     :params request: HTTP request
-    :params analyze_id: analyzed firmware id
 
-    :return: HttpResponse with zipped log directory on success or HttpResponse including error message
+    :return: HttpResponse including the status
     """
 
-    try:
-        firmware = FirmwareAnalysis.objects.get(reference_id=analyze_id)
+    for file in request.FILES.getlist('file'):
+        try:
+            firmware_file = FirmwareFile.objects.create()
+            firmware_file.file = file
+            firmware_file.user = request.user
+            firmware_file.save()
 
-        if os.path.exists(firmware.path_to_logs):
-            archive_path = Archiver.pack(firmware.path_to_logs, 'zip', firmware.path_to_logs, '.')
-            logger.debug("Archive %s created", archive_path)
-            with open(archive_path, 'rb') as requested_log_dir:
-                response = HttpResponse(requested_log_dir.read(), content_type="application/zip")
-                response['Content-Disposition'] = 'inline; filename=' + archive_path
-                return response
+            return render(request, 'uploader/fileUpload.html', {'nav_switch': False, 'firmware': firmware_file, 'username': request.user.username})
 
-        logger.warning("Firmware with ID: %s does not exist", analyze_id)
-        return HttpResponse("Firmware with ID: %s does not exist", analyze_id)
-
-    except FirmwareAnalysis.DoesNotExist as excpt:
-        logger.warning("Firmware with ID: %s does not exist in DB", analyze_id)
-        logger.warning("Exception: %s", excpt)
-        return HttpResponse("Firmware ID does not exist in DB")
-    except Exception as error:
-        logger.error("Error occured while querying for Firmware object: %s", analyze_id)
-        logger.error("Exception: %s", error)
-        return HttpResponse("Error occured while querying for Firmware object")
+        except Exception as error:
+            logger.error(error)
+            return HttpResponse("Firmware could not be uploaded")
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -107,216 +85,7 @@ def start_analysis(request):
     return HttpResponseBadRequest("Invalid Form")
 
 
-@login_required(login_url='/' + settings.LOGIN_URL)
-def service_dashboard(request):
-    html_body = get_template('uploader/serviceDashboard.html')
-    return HttpResponse(html_body.render({'username': request.user.username}))
-
-
-@login_required(login_url='/' + settings.LOGIN_URL)
-def report_dashboard(request):
-    """
-    delivering ReportDashboard with finished_firmwares as dictionary
-
-    :params request: HTTP request
-
-    :return: rendered ReportDashboard
-    """
-
-    finished_firmwares = FirmwareAnalysis.objects.all().filter(finished=True)
-    return render(request, 'uploader/reportDashboard.html',
-                  {'finished_firmwares': finished_firmwares, 'username': request.user.username})
-
-
-def individual_report_dashboard(request, analyze_id):
-    """
-    delivering individualReportDashboard
-
-    :params request: HTTP request
-
-    :return: rendered individualReportDashboard
-    """
-    html_body = get_template('uploader/individualReportDashboard.html')
-    logger.info("individual_dashboard - analyze_id: %s", analyze_id)
-    return HttpResponse(html_body.render({'username': request.user.username}))
-
-
-@csrf_exempt    # FIXME add csrf and put save_file in upload-template into form
-@require_http_methods(["POST"])
-@login_required(login_url='/' + settings.LOGIN_URL)
-def save_file(request):
-    """
-    file saving on POST requests with attached file
-
-    :params request: HTTP request
-
-    :return: HttpResponse including the status
-    """
-
-    for file in request.FILES.getlist('file'):
-        try:
-            firmware_file = FirmwareFile.objects.create()
-            firmware_file.file = file
-            firmware_file.user = request.user
-            firmware_file.save()
-
-            return render(request, 'uploader/fileUpload.html', {'firmware': firmware_file, 'username': request.user.username})
-
-        except Exception as error:
-            logger.error(error)
-            return HttpResponse("Firmware could not be uploaded")
-
-
-@require_http_methods(["GET"])
-# @login_required(login_url='/' + settings.LOGIN_URL)
-def get_log(request, log_type, lines):      # FIXME
-    """
-    View takes a get request with following params:
-    1. log_type: selector of log file (daphne, migration, mysql_db, redis_db, uwsgi, web)
-    2. lines: lines in log file
-    Args:
-        request: HTTPRequest instance
-
-    Returns:
-
-    """
-    log_file_list = ["daphne", "migration", "mysql_db", "redis_db", "uwsgi", "web"]
-    log_file = log_file_list[int(log_type)]
-    file_path = f"{settings.BASE_DIR}/logs/{log_file}.log"
-    logger.info('Load log file: %s', file_path)
-    try:
-        with open(file_path, encoding='utf-8') as file_:
-            try:
-                buffer_ = 500
-                lines_found = []
-                block_counter = -1
-
-                while len(lines_found) <= lines:
-                    try:
-                        file_.seek(block_counter * buffer_, 2)
-                    except IOError:
-                        file_.seek(0)
-                        lines_found = file_.readlines()
-                        break
-
-                    lines_found = file_.readlines()
-                    block_counter -= 1
-
-                result = lines_found[-(lines + 1):]
-            except Exception as error:
-                logger.exception('Wide exception in logstreamer: %s', error)
-
-        return render(request, 'uploader/log.html',
-                      {'header': log_file + '.log', 'log': ''.join(result), 'username': request.user.username})
-    except IOError:
-        return render(request, 'uploader/log.html',
-                      {'header': 'Error', 'log': file_path + ' not found!', 'username': request.user.username})
-
-
-# here is some request for account dashboard Yul
-@csrf_exempt
-@login_required(login_url='/' + settings.LOGIN_URL)
-def account_dashboard_(request):
-    if Result.objects.all().count() > 0:
-        html_body = get_template('uploader/passwordChange.html')
-        return HttpResponse(html_body.render({'nav_switch': True, 'username': request.user.username}))
-    return HttpResponseRedirect("../../home/upload/")
-
-
-@login_required(login_url='/' + settings.LOGIN_URL)
-def home(request):
-    if Result.objects.all().count() > 0:
-        html_body = get_template('uploader/mainDashboard.html')
-        return HttpResponse(html_body.render({'nav_switch': True, 'username': request.user.username}))
-    return render(request, 'uploader/fileUpload.html', {'nav_switch': False, 'username': request.user.username})
-
-
-@login_required(login_url='/' + settings.LOGIN_URL)
-def main_dashboard(request):
-    if request.user.is_authenticated:
-        if Result.objects.all().count() > 0:
-            html_body = get_template('uploader/mainDashboard.html')
-            return HttpResponse(html_body.render({'nav_switch': True, 'username': request.user.username}))
-    
-    return HttpResponseForbidden
-
-@login_required(login_url='/' + settings.LOGIN_URL)
-def reports(request):
-    html_body = get_template('uploader/reports.html')
-    return HttpResponse(html_body.render({'username': request.user.username}))
-
-
-@require_http_methods(["GET"])
-@login_required(login_url='/' + settings.LOGIN_URL)
-def html_report(request, analyze_id, html_file):
-    report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
-
-    html_body = get_template(report_path)
-    logger.info("html_report - analyze_id: %s html_file: %s", analyze_id, html_file)
-    return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
-
-
-@require_http_methods(["GET"])
-@login_required(login_url='/' + settings.LOGIN_URL)
-def html_report_path(request, analyze_id, html_path, html_file):
-    report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
-
-    html_body = get_template(report_path)
-    logger.info("html_report - analyze_id: %s path: %s html_file: %s", analyze_id, html_path, html_file)
-    return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
-
-
-@require_http_methods(["GET"])
-@login_required(login_url='/' + settings.LOGIN_URL)
-def html_report_download(request, analyze_id, html_path, download_file):
-    base_path = f"{settings.EMBA_LOG_ROOT}"
-    if request.path.startswith('/'):
-        file_path = request.path[1:]
-    else:
-        file_path = request.path[2:]
-    full_path = os.path.normpath(os.path.join(base_path, file_path))
-    if full_path.startswith(base_path):
-        with open(full_path, 'rb') as requested_file:
-            response = HttpResponse(requested_file.read(), content_type="text/plain")
-            response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(full_path)
-            logger.info("html_report - analyze_id: %s html_path: %s download_file: %s", analyze_id, html_path,
-                        download_file)
-            return response
-    else:
-        response = Http404
-        return response
-
-
-@require_http_methods(["GET"])
-@login_required(login_url='/' + settings.LOGIN_URL)
-def html_report_resource(request, analyze_id, img_file):
-    content_type = "text/plain"
-
-    if img_file.endswith(".css"):
-        content_type = "text/css"
-    elif img_file.endswith(".svg"):
-        content_type = "image/svg+xml"
-    elif img_file.endswith(".png"):
-        content_type = "image/png"
-
-    resource_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
-    logger.info("html_report_resource - analyze_id: %s request.path: %s", analyze_id, request.path)
-
-    try:
-        # CodeQL issue is not relevant as the urls are defined via urls.py
-        with open(resource_path, "rb") as file_:
-            return HttpResponse(file_.read(), content_type=content_type)
-    except IOError as error:
-        logger.error(error)
-        logger.error(request.path)
-
-    # just in case -> back to report intro
-    report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
-    html_body = get_template(report_path)
-    return HttpResponse(html_body.render())
-
-
-@require_http_methods(["POST"])
+@require_http_methods(["GET", "POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def delete_fw_file(request):
     """
@@ -337,114 +106,10 @@ def delete_fw_file(request):
             firmware_file = form.cleaned_data['firmware']
             firmware_file.delete()
 
-            return HttpResponseRedirect("../../home/upload/")
+            return HTTPResponse("Successfully deleted Firmware")
 
-        # else:
         logger.error("Form %s is invalid", form)
         logger.error("Form error: %s", form.errors)
-        return HttpResponse("invalid Form")
+        return HttpResponseBadRequest("invalid Form")
 
-    return HttpResponse("Firmware File successfully deleted")
-
-
-@require_http_methods(["GET"])
-# @login_required(login_url='/' + settings.LOGIN_URL)
-def get_load(request):
-    try:
-        query_set = ResourceTimestamp.objects.all()
-        result = {}
-        # for k in model_to_dict(query_set[0]).keys():
-        for modelnr in model_to_dict(query_set[0]):
-            result[modelnr] = tuple(model_to_dict(querynr)[modelnr] for querynr in query_set)
-        return JsonResponse(data=result, status=HTTPStatus.OK)
-    except ResourceTimestamp.DoesNotExist:
-        logger.error('ResourceTimestamps not found in database')
-        return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)
-
-
-@require_http_methods(["GET"])
-@login_required(login_url='/' + settings.LOGIN_URL)
-def get_individual_report(request, analyze_id):
-    """
-    Get individual firmware report based on scan id (analyze_id)
-    """
-    firmware_id = analyze_id
-    if not firmware_id:
-        logger.error('Bad request for get_individual_report')
-        return JsonResponse(data={'error': 'Bad request'}, status=HTTPStatus.BAD_REQUEST)
-    try:
-        result = Result.objects.get(firmware_id=int(firmware_id))
-        firmware_object = FirmwareAnalysis.objects.get(pk=int(firmware_id))
-
-        return_dict = dict(model_to_dict(result), **model_to_dict(firmware_object))
-
-        return_dict['name'] = firmware_object.firmware.file.name
-        return_dict['strcpy_bin'] = json.loads(return_dict['strcpy_bin'])
-
-        return JsonResponse(data=return_dict, status=HTTPStatus.OK)
-    except Result.DoesNotExist:
-        logger.error('Report for firmware_id: %s not found in database', firmware_id)
-        return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)
-
-
-@require_http_methods(["GET"])
-# @login_required(login_url='/' + settings.LOGIN_URL)
-def get_accumulated_reports(request):
-    """
-    Sends accumulated results for main dashboard
-    Args:
-        request:
-    Returns:
-        data = {
-            'architecture_verified': {'arch_1': count, ....},
-            'os_verified': {'os_1': count, .....},
-            'all int fields in Result Model': {'sum': float/int, 'count': int, 'mean': float/int}
-        }
-    """
-    results = Result.objects.all()
-    top_5_entropies = results.order_by('-entropy_value')[:5]
-    charfields = ['architecture_verified', 'os_verified']
-    data = {}
-    strcpy_bins = {}
-    for result in results:
-        result = model_to_dict(result)
-        # Pop firmware object_id
-        result.pop('firmware', None)
-        result.pop('emba_command', None)
-
-        # Get counts for all strcpy_bin values
-        strcpy_bin = json.loads(result.pop('strcpy_bin', '{}'))
-        for key in strcpy_bin:
-            if key not in strcpy_bins:
-                strcpy_bins[key] = 0
-            strcpy_bins[key] += int(strcpy_bin[key])
-
-        for charfield in charfields:
-            if charfield not in data:
-                data[charfield] = {}
-
-            value = result.pop(charfield)
-            if value not in data[charfield]:
-                data[charfield][value] = 0
-
-            data[charfield][value] += 1
-        for field in result:
-            if field not in data:
-                data[field] = {'sum': 0, 'count': 0}
-            data[field]['count'] += 1
-            # logger.info("result-field %s", result[field])
-            if result[field] is not None:
-                data[field]['sum'] += result[field]
-
-    for field in data:
-        if field not in charfields:
-            data[field]['mean'] = data[field]['sum'] / data[field]['count']
-    data['total_firmwares'] = len(results)
-    data['top_entropies'] = [{'name': r.firmware.firmware.file.name, 'entropy_value': r.entropy_value} for r in
-                             top_5_entropies]
-
-    # Taking top 10 most commonly occurring strcpy_bin values
-    strcpy_bins = dict(sorted(strcpy_bins.items(), key=itemgetter(1), reverse=True)[:10])
-    data['top_strcpy_bins'] = strcpy_bins
-
-    return JsonResponse(data=data, status=HTTPStatus.OK)
+    return render(request, 'uploader/firmwareDelete.html')

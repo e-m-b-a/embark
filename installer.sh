@@ -259,6 +259,7 @@ install_embark_default() {
     echo "REDIS_HOST=$REDIS_HOST"
     echo "REDIS_PORT=$REDIS_PORT"
     echo "SECRET_KEY=$DJANGO_SECRET_KEY"
+    echo "HASHID_SALT=$RANDOM_SALT"
     echo "PYTHONPATH=${PYTHONPATH}:${PWD}"
   } > .env
 
@@ -398,6 +399,7 @@ install_embark_dev(){
     echo "REDIS_HOST=$REDIS_HOST"
     echo "REDIS_PORT=$REDIS_PORT"
     echo "SECRET_KEY=$DJANGO_SECRET_KEY"
+    echo "HASHID_SALT=$RANDOM_SALT"
     echo "PYTHONPATH=${PYTHONPATH}:${PWD}"
   } > .env
 
