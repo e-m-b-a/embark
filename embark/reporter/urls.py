@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.urls import path
 
-from uploader import views
+from . import views
 
 
 # view routing
