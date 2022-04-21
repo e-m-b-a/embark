@@ -99,7 +99,7 @@ class FirmwareFile(models.Model):
     id = HashidAutoField(primary_key=True, allow_int_lookup=True)
     is_archive = models.BooleanField(default=False)
     upload_date = models.DateTimeField(default=datetime.now, blank=True)
-    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, default=Any, blank=True)
+    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, blank=True)
 
     def get_storage_path(self, filename):
         # file will be uploaded to MEDIA_ROOT/<id>/<filename>
@@ -143,7 +143,7 @@ class FirmwareAnalysis(models.Model):
 
     id = HashidAutoField(primary_key=True)
     firmware = models.ForeignKey(FirmwareFile, on_delete=models.RESTRICT, help_text='', null=True)
-    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, default=Any, blank=True, related_name='Fw_Analysis_User')
+    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, blank=True, related_name='Fw_Analysis_User')
 
     # emba basic flags
     version = CharFieldExpertMode(
