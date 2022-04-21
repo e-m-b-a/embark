@@ -11,6 +11,7 @@ from django import forms
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 from django.utils.datetime_safe import datetime
+from django.contrib.auth.models import AnonymousUser
 
 from users.models import User as Userclass
 
@@ -99,7 +100,7 @@ class FirmwareFile(models.Model):
     id = HashidAutoField(primary_key=True, allow_int_lookup=True)
     is_archive = models.BooleanField(default=False)
     upload_date = models.DateTimeField(default=datetime.now, blank=True)
-    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, blank=True)
+    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, default=AnonymousUser, blank=True)
 
     def get_storage_path(self, filename):
         # file will be uploaded to MEDIA_ROOT/<id>/<filename>
@@ -143,7 +144,7 @@ class FirmwareAnalysis(models.Model):
 
     id = HashidAutoField(primary_key=True)
     firmware = models.ForeignKey(FirmwareFile, on_delete=models.RESTRICT, help_text='', null=True)
-    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, blank=True, related_name='Fw_Analysis_User')
+    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, default=AnonymousUser, blank=True, related_name='Fw_Analysis_User')
 
     # emba basic flags
     version = CharFieldExpertMode(
