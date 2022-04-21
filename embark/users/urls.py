@@ -5,9 +5,9 @@ from users import views
 
 
 urlpatterns = [
-    path(settings.LOGIN_URL, views.login, name='embark-login'),
-    path('signup/', views.signup, name='embark-signup'),
-    path('logout/', views.logout, name='embark-logout'),
+    path(settings.LOGIN_URL, views.embark_login, name='embark-login'),
+    path('register/', views.register, name='embark-register'),
+    path('logout/', views.embark_logout, name='embark-logout'),
     # TODO account menu path('my-account/', views., name='embark-),
     path('my-account/password_change/', views.password_change, name='embark-password'),
     path('my-account/acc_delete/', views.acc_delete, name='embark-acc-delete'),

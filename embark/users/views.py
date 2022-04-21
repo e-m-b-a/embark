@@ -3,6 +3,7 @@ import logging
 from datetime import datetime
 
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -15,8 +16,9 @@ from .models import User
 
 logger = logging.getLogger('web')
 
+@csrf_exempt
 @require_http_methods(["GET", "POST"])
-def signup(request):
+def register(request):
     if request.method == "POST":
         logger.debug(request.POST)
         data = {k: v[0] for k, v in dict(request.POST).items()}
@@ -50,11 +52,11 @@ def signup(request):
             logger.exception('Wide exception in Signup: %s', error)
             return render(request, 'user/register.html',
                             {'error_message': True, 'message': 'Something went wrong when signing up the user.'})
-    return render(request, 'register.html')
+    return render(request, 'user/register.html')
 
 
 @require_http_methods(["GET", "POST"])
-def login(request):
+def embark_login(request):
     if request.method == "POST":
         logger.debug(request.POST)
         data = {k: v[0] for k, v in dict(request.POST).items()}
@@ -75,7 +77,7 @@ def login(request):
                 logger.debug('User authenticated')
                 login(request, user)
                 logger.debug('User logged in')
-                return redirect('embark-login')
+                return HttpResponseRedirect('../../dashboard/main/')
             # else:
             logger.debug('User could not be authenticated')
             messages.info(request, "Invalid user data")
@@ -84,16 +86,15 @@ def login(request):
             logger.exception('Wide exception in Signup: %s', error)
             messages.info(request, "Invalid user data")
             return render(request, 'user/login.html',
-                            {'error_message': True, 'message': 'Something went wrong when signing in the user.'})
+                            {'error_message': True, 'message': 'Something went wrong when logging in the user.'})
     return render(request, 'user/login.html')
 
 
 # @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required(login_url='/' + settings.LOGIN_URL)
-def logout(request):
-    request.session.flush()
-    logger.debug("Logout user %s", request.user)
-    logout(request)
+def embark_logout(request):     # FIXME this just flushes session_id??!
+    logout(request=request)
+    logger.debug("Logout user %s", request)
     return render(request, 'user/login.html', {'success_message': True, 'message': 'Logout successful.'})
 
 
