@@ -100,7 +100,7 @@ class FirmwareFile(models.Model):
     id = HashidAutoField(primary_key=True, allow_int_lookup=True)
     is_archive = models.BooleanField(default=False)
     upload_date = models.DateTimeField(default=datetime.now, blank=True)
-    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, related_name='Fw_Upload_User', default=Userclass.objects.get(name="superuser"))
+    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, related_name='Fw_Upload_User', default=Userclass.objects.filter(is_superuser=True))
 
     def get_storage_path(self, filename):
         # file will be uploaded to MEDIA_ROOT/<id>/<filename>

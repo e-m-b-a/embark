@@ -73,7 +73,7 @@ def start_analysis(request):
         new_firmware = form.save()
 
         # get the id of the firmware-file to submit
-        new_firmware_file = FirmwareFile.objects.get(id=new_firmware.Firmware.id)
+        new_firmware_file = FirmwareFile.objects.get(id=new_firmware.firmware.id)
         logger.info("Firmware file: %s", new_firmware_file)
 
         # inject into bounded Executor
