@@ -4,7 +4,7 @@ from datetime import datetime
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
-from django.shortcuts import redirect, render
+from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
@@ -159,7 +159,6 @@ def acc_delete(request):
         user.save()
         return render(request, 'user/register.html', {'success_message': True, 'message': 'Account successfully deleted.'})
     return render (request, 'user/accountDelete.html')
-    
 
 
 @require_http_methods(["GET"])

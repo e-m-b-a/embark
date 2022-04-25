@@ -1,10 +1,7 @@
 from datetime import timedelta
-from email.policy import default
 import logging
 import os
 import shutil
-from typing import Any
-from unicodedata import name
 
 from django.conf import settings
 from django.db import models
@@ -13,9 +10,11 @@ from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 from django.utils.datetime_safe import datetime
 
+from hashid_field import HashidAutoField
+
 from users.models import User as Userclass
 
-from hashid_field import HashidAutoField
+
 
 logger = logging.getLogger('web')
 
@@ -144,7 +143,7 @@ class FirmwareAnalysis(models.Model):
 
     id = HashidAutoField(primary_key=True)
     firmware = models.ForeignKey(FirmwareFile, on_delete=models.RESTRICT, help_text='', null=True)
-    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, related_name='Fw_Analysis_User', null=True)   #FIXME cascade or just restrict?? 
+    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, related_name='Fw_Analysis_User', null=True)   #FIXME cascade or just restrict??
 
     # emba basic flags
     version = CharFieldExpertMode(
