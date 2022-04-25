@@ -19,6 +19,9 @@ export DEBIAN_FRONTEND=noninteractive
 DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
 RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
 RANDOM_SALT=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
+SUPER_PW="embark"
+SUPER_EMAIL="idk@lol.com"
+SUPER_USER="superuser"
 
 DIR="$(realpath "$(dirname "$0")")"
 
@@ -401,6 +404,9 @@ install_embark_dev(){
     echo "SECRET_KEY=$DJANGO_SECRET_KEY"
     echo "HASHID_SALT=$RANDOM_SALT"
     echo "PYTHONPATH=${PYTHONPATH}:${PWD}"
+    echo "DJANGO_SUPERUSER_PASSWORD=$SUPER_PW"
+    echo "DJANGO_SUPERUSER_USERNAME=$SUPER_USER"
+    echo "DJANGO_SUPERUSER_EMAIL=$SUPER_EMAIL"
   } > .env
 
   #Add Symlink
