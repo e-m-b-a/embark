@@ -16,11 +16,13 @@ from uploader.models import FirmwareFile
 logger = logging.getLogger('web')
 
 @login_required(login_url='/' + settings.LOGIN_URL)
+@require_http_methods(["GET", "POST"])
 def uploader_home(request):
+    if request.method == 'POST':
+        save_file(request)
     return render(request, 'uploader/fileUpload.html', {'nav_switch': False, 'username': request.user.username})
 
 
-@csrf_exempt    # FIXME add csrf and put save_file in upload-template into form
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def save_file(request):
@@ -31,19 +33,18 @@ def save_file(request):
 
     :return: HttpResponse including the status
     """
-
-    for file in request.FILES.getlist('file'):
+    logger.info("User %s tryied to upload %s", request.user.username, request.FILES.getlist('file'))
+    for file in request.FILES.getlist('file'):      # FIXME determin usecase for multi-file-upload in one request
         try:
             firmware_file = FirmwareFile.objects.create()
             firmware_file.file = file
-            firmware_file.user = request.user
+            firmware_file.user = request.user   # TODO
             firmware_file.save()
-
-            return render(request, 'uploader/fileUpload.html', {'nav_switch': False, 'firmware': firmware_file, 'username': request.user.username})
 
         except Exception as error:
             logger.error(error)
             return HttpResponse("Firmware could not be uploaded")
+    return render(request, 'uploader/fileUpload.html', {'nav_switch': False, 'firmware': firmware_file, 'username': request.user.username})
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)

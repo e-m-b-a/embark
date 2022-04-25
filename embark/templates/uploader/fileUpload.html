@@ -16,6 +16,7 @@
                     Selected file: <div id="file-name" class="uploadedFile">None selected.</div>
                 </div>
                 <div class="buttonRow">
+                    {% csrf_token %}
                     <button type="submit" id="uploadFirmware-btn" class="btn buttonRowElem" onclick="saveFiles()" disabled>
                         Upload
                     </button>
