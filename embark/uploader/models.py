@@ -100,7 +100,7 @@ class FirmwareFile(models.Model):
     id = HashidAutoField(primary_key=True, allow_int_lookup=True)
     is_archive = models.BooleanField(default=False)
     upload_date = models.DateTimeField(default=datetime.now, blank=True)
-    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, related_name='Fw_Upload_User', default=Userclass.objects.filter(is_superuser=True))
+    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, related_name='Fw_Upload_User', null=True)
 
     def get_storage_path(self, filename):
         # file will be uploaded to MEDIA_ROOT/<id>/<filename>
@@ -144,7 +144,7 @@ class FirmwareAnalysis(models.Model):
 
     id = HashidAutoField(primary_key=True)
     firmware = models.ForeignKey(FirmwareFile, on_delete=models.RESTRICT, help_text='', null=True)
-    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, related_name='Fw_Analysis_User')   #FIXME cascade or just restrict?? 
+    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, related_name='Fw_Analysis_User', null=True)   #FIXME cascade or just restrict?? 
 
     # emba basic flags
     version = CharFieldExpertMode(

@@ -31,10 +31,14 @@ cleaner() {
   if [[ -f ./embark/embark.log ]]; then
     chmod 755 ./embark/embark.log
   fi
-  fuser -k "$PORT"/tcp
-  killall -9 -q "*daphne*"
+  
+  # killall -9 -q "*daphne*"
   docker container stop embark_db_dev
   docker container stop embark_redis_dev
+
+  docker container prune -f --filter "label=flag"
+
+  fuser -k "$PORT"/tcp
   exit 1
 }
 
@@ -61,6 +65,9 @@ fi
 if ! [[ -d ./logs ]]; then
   mkdir ./logs
 fi
+
+# superuser
+pipenv run ./embark/manage.py createsuperuser --noinput
 
 # db_init
 echo -e "[*] Starting migrations - log to embark/logs/migration.log"
