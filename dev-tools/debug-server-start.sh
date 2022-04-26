@@ -66,13 +66,13 @@ if ! [[ -d ./logs ]]; then
   mkdir ./logs
 fi
 
-# superuser
-pipenv run ./embark/manage.py createsuperuser --noinput
-
 # db_init
 echo -e "[*] Starting migrations - log to embark/logs/migration.log"
 pipenv run ./embark/manage.py makemigrations users uploader | tee -a ./logs/migration.log
 pipenv run ./embark/manage.py migrate | tee -a ./logs/migration.log
+
+# superuser
+pipenv run ./embark/manage.py createsuperuser --noinput
 
 echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./embark/logs/redis_dev.log""$NC" 
 docker container logs embark_redis_dev -f > ./logs/redis_dev.log &

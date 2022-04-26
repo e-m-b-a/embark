@@ -124,14 +124,13 @@ cp -Ru ./embark/ /app/www/embark/
 # !DIRECTORY-CHANGE!
 cd /app/www/embark/ || exit 1
 
-# superuser
-pipenv run ./manage.py createsuperuser --noinput
-
 # db_init
 echo -e "\n[""$BLUE JOB""$NC""] Starting migrations - log to embark/logs/migration.log"
 pipenv run ./manage.py makemigrations users uploader | tee -a /app/www/logs/migration.log
 pipenv run ./manage.py migrate | tee -a /app/www/logs/migration.log
 
+# superuser
+pipenv run ./manage.py createsuperuser --noinput
 
 # collect staticfiles and make accesable for server
 echo -e "\n[""$BLUE JOB""$NC""] Collecting static files"
