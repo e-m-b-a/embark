@@ -44,7 +44,7 @@ def save_file(request):
         except Exception as error:
             logger.error("Error uploading %s", error)
             return HttpResponseServerError
-    return HttpResponse("successful upload") 
+    return HttpResponse("successful upload")
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -81,14 +81,14 @@ def start_analysis(request):
                 return HttpResponseRedirect("../../serviceDashboard/")
             logger.error("Server Queue full, or other boundenexec error")
             return HttpResponseServerError("Queue full")
-            
+
     analysis_form = FirmwareAnalysisForm(initial={ 'firmware': FirmwareFile.objects.latest('upload_date')})
     return render (request, 'uploader/fileUpload.html', {
         'success_message': True,
         'message': "Successfull upload",
         'analysis_form': analysis_form
     })
- 
+
 
 @require_http_methods(["GET", "POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
