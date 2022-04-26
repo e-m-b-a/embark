@@ -18,7 +18,10 @@ export DEBIAN_FRONTEND=noninteractive
 
 DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
 RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
+
 RANDOM_SALT=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
+FIELD_LENGTH=15
+
 SUPER_PW="embark"
 SUPER_EMAIL="idk@lol.com"
 SUPER_USER="superuser"
@@ -40,9 +43,43 @@ print_help() {
   echo -e "$CYAN-e$NC         Install EMBA only"
   echo -e "$CYAN-D$NC         Install for Docker deployment"
   echo -e "---------------------------------------------------------------------------"
-  echo -e "$CYAN-U$NC         Uninstall EMBArk" # TODO
+  echo -e "$CYAN-U$NC         Uninstall EMBArk"
   echo -e "$CYAN-r$NC         Reinstallation of EMBArk with all dependencies"
   echo -e "$RED               ! Both options delete all Database-files as well !""$NC"
+}
+
+write_env() {
+  echo -e "$ORANGE""$BOLD""Creating a Developer EMBArk configuration file .env""$NC"
+  cd 
+  export DATABASE_NAME="embark"
+  export DATABASE_USER="embark"
+  export DATABASE_PASSWORD="$RANDOM_PW"
+  export DATABASE_HOST="127.0.0.1"
+  export DATABASE_PORT="3306"
+  export MYSQL_PASSWORD="$RANDOM_PW"
+  export MYSQL_USER="embark"
+  export MYSQL_DATABASE="embark"
+  export REDIS_HOST="127.0.0.1"
+  export REDIS_PORT="7777"
+  export SECRET_KEY="$DJANGO_SECRET_KEY"
+  export HASHID_SALT="$RANDOM_SALT"
+  export HASHID_FIELD_MIN_LENGTH="$FIELD_LENGTH" 
+  {
+    echo "DATABASE_NAME=$DATABASE_NAME"
+    echo "DATABASE_USER=$DATABASE_USER" 
+    echo "DATABASE_PASSWORD=$DATABASE_PASSWORD"
+    echo "DATABASE_HOST=$DATABASE_HOST"
+    echo "DATABASE_PORT=$DATABASE_PORT"
+    echo "MYSQL_PASSWORD=$MYSQL_PASSWORD"
+    echo "MYSQL_USER=$MYSQL_USER"
+    echo "MYSQL_DATABASE=$MYSQL_DATABASE"
+    echo "REDIS_HOST=$REDIS_HOST"
+    echo "REDIS_PORT=$REDIS_PORT"
+    echo "SECRET_KEY=$DJANGO_SECRET_KEY"
+    echo "HASHID_SALT=$RANDOM_SALT"
+    echo "HASHID_FIELD_MIN_LENGTH=$FIELD_LENGTH"
+    echo "PYTHONPATH=${PYTHONPATH}:${PWD}"
+  } > .env
 }
 
 install_emba() {
@@ -235,36 +272,8 @@ install_embark_default() {
     find ./embark/static/external/ -type f -exec sed -i '/sourceMappingURL/d' {} \;
   fi
 
-  # setup .env
-  echo -e "$ORANGE""$BOLD""Creating a Developer EMBArk configuration file .env""$NC"
-  export DATABASE_NAME="embark"
-  export DATABASE_USER="embark"
-  export DATABASE_PASSWORD="$RANDOM_PW"
-  export DATABASE_HOST="127.0.0.1"
-  export DATABASE_PORT="3306"
-  export MYSQL_PASSWORD="$RANDOM_PW"
-  export MYSQL_USER="embark"
-  export MYSQL_DATABASE="embark"
-  export REDIS_HOST="127.0.0.1"
-  export REDIS_PORT="7777"
-  export SECRET_KEY="$DJANGO_SECRET_KEY"
-  export HASHID_SALT="$RANDOM_SALT"
-  # this is for pipenv/django # TODO change after 
-  {
-    echo "DATABASE_NAME=$DATABASE_NAME"
-    echo "DATABASE_USER=$DATABASE_USER" 
-    echo "DATABASE_PASSWORD=$DATABASE_PASSWORD"
-    echo "DATABASE_HOST=$DATABASE_HOST"
-    echo "DATABASE_PORT=$DATABASE_PORT"
-    echo "MYSQL_PASSWORD=$MYSQL_PASSWORD"
-    echo "MYSQL_USER=$MYSQL_USER"
-    echo "MYSQL_DATABASE=$MYSQL_DATABASE"
-    echo "REDIS_HOST=$REDIS_HOST"
-    echo "REDIS_PORT=$REDIS_PORT"
-    echo "SECRET_KEY=$DJANGO_SECRET_KEY"
-    echo "HASHID_SALT=$RANDOM_SALT"
-    echo "PYTHONPATH=${PYTHONPATH}:${PWD}"
-  } > .env
+  # write env-vars into ./.env
+  write_env
 
   # download images for container
   docker-compose -f ./docker-compose.yml up --no-start
@@ -279,7 +288,81 @@ install_embark_default() {
   echo -e "$GREEN""$BOLD""Which starts the server on (0.0.0.0) port 80 ""$NC"
 }
 
-#install as docker-service
+install_embark_dev(){
+  echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
+  apt-get install -y -q npm pycodestyle python3-pylint-django python3-dev default-libmysqlclient-dev build-essential pipenv bandit
+  npm install -g jshint dockerlinter js-cookie
+  PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
+  # download externals
+  if ! [[ -d ./embark/static/external ]]; then
+    echo -e "\n$GREEN""$BOLD""Downloading of external files, e.g. jQuery, for the offline usability of EMBArk""$NC"
+    mkdir -p ./embark/static/external/{scripts,css}
+    wget -O ./embark/static/external/scripts/jquery.js https://code.jquery.com/jquery-3.6.0.min.js
+    wget -O ./embark/static/external/scripts/confirm.js https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js
+    wget -O ./embark/static/external/scripts/bootstrap.js https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js
+    wget -O ./embark/static/external/scripts/datatable.js https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.js
+    wget -O ./embark/static/external/scripts/charts.js https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js
+    wget -O ./embark/static/external/css/confirm.css https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css
+    wget -O ./embark/static/external/css/bootstrap.css https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css
+    wget -O ./embark/static/external/css/datatable.css https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.css
+    find ./embark/static/external/ -type f -exec sed -i '/sourceMappingURL/d' {} \;
+  fi
+
+  # setup .env with dev network
+  echo -e "$ORANGE""$BOLD""Creating a Developer EMBArk configuration file .env""$NC"
+  export DATABASE_NAME="embark"
+  export DATABASE_USER="embark"
+  export DATABASE_PASSWORD="embark"
+  export DATABASE_HOST="127.0.0.1"
+  export DATABASE_PORT="3306"
+  export MYSQL_PASSWORD="embark"
+  export MYSQL_USER="embark"
+  export MYSQL_DATABASE="embark"
+  export REDIS_HOST="127.0.0.1"
+  export REDIS_PORT="7777"
+  export SECRET_KEY="$DJANGO_SECRET_KEY"
+  export HASHID_SALT="$RANDOM_SALT"
+  export HASHID_FIELD_MIN_LENGTH="$FIELD_LENGTH"
+  export PYTHONPATH="${PYTHONPATH}:${PWD}:${PWD}/embark/"
+  {
+    echo "DATABASE_NAME=$DATABASE_NAME"
+    echo "DATABASE_USER=$DATABASE_USER" 
+    echo "DATABASE_PASSWORD=$DATABASE_PASSWORD"
+    echo "DATABASE_HOST=$DATABASE_HOST"
+    echo "DATABASE_PORT=$DATABASE_PORT"
+    echo "MYSQL_PASSWORD=$MYSQL_PASSWORD"
+    echo "MYSQL_USER=$MYSQL_USER"
+    echo "MYSQL_DATABASE=$MYSQL_DATABASE"
+    echo "REDIS_HOST=$REDIS_HOST"
+    echo "REDIS_PORT=$REDIS_PORT"
+    echo "SECRET_KEY=$DJANGO_SECRET_KEY"
+    echo "HASHID_SALT=$RANDOM_SALT"
+    echo "HASHID_FIELD_MIN_LENGTH=$FIELD_LENGTH"
+    echo "PYTHONPATH=${PYTHONPATH}:${PWD}"
+    echo "DJANGO_SUPERUSER_PASSWORD=$SUPER_PW"
+    echo "DJANGO_SUPERUSER_USERNAME=$SUPER_USER"
+    echo "DJANGO_SUPERUSER_EMAIL=$SUPER_EMAIL"
+  } > .env
+
+  #Add Symlink
+  if ! [[ -d /app ]]; then
+    ln -s "$PWD" /app || exit 1
+  fi
+
+  # daemon
+  install_daemon
+
+  # download images for container
+  docker-compose -f ./docker-compose-dev.yml up --no-start
+  docker-compose -f ./docker-compose-dev.yml up &>/dev/null &
+  sleep 30
+  kill %1
+
+  echo -e "$GREEN""$BOLD""Ready to use \$sudo ./dev-tools/debug-server-start.sh""$NC"
+  echo -e "$GREEN""$BOLD""Or use otherwise""$NC"
+}
+
+#install as docker-service # TODO
 install_embark_docker(){
   echo -e "\n$GREEN""$BOLD""Installing EMBArk as docker-container""$NC"
 
@@ -355,78 +438,6 @@ install_embark_docker(){
   echo -e "$GREEN""EMBArk is on (0.0.0.0) port 80 ""$NC"
 }
 
-install_embark_dev(){
-  echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
-  apt-get install -y -q npm pycodestyle python3-pylint-django python3-dev default-libmysqlclient-dev build-essential pipenv bandit
-  npm install -g jshint dockerlinter js-cookie
-  PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
-  # download externals
-  if ! [[ -d ./embark/static/external ]]; then
-    echo -e "\n$GREEN""$BOLD""Downloading of external files, e.g. jQuery, for the offline usability of EMBArk""$NC"
-    mkdir -p ./embark/static/external/{scripts,css}
-    wget -O ./embark/static/external/scripts/jquery.js https://code.jquery.com/jquery-3.6.0.min.js
-    wget -O ./embark/static/external/scripts/confirm.js https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js
-    wget -O ./embark/static/external/scripts/bootstrap.js https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js
-    wget -O ./embark/static/external/scripts/datatable.js https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.js
-    wget -O ./embark/static/external/scripts/charts.js https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js
-    wget -O ./embark/static/external/css/confirm.css https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css
-    wget -O ./embark/static/external/css/bootstrap.css https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css
-    wget -O ./embark/static/external/css/datatable.css https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.css
-    find ./embark/static/external/ -type f -exec sed -i '/sourceMappingURL/d' {} \;
-  fi
-
-  # setup .env with dev network
-  echo -e "$ORANGE""$BOLD""Creating a Developer EMBArk configuration file .env""$NC"
-  export DATABASE_NAME="embark"
-  export DATABASE_USER="embark"
-  export DATABASE_PASSWORD="embark"
-  export DATABASE_HOST="127.0.0.1"
-  export DATABASE_PORT="3306"
-  export MYSQL_PASSWORD="embark"
-  export MYSQL_USER="embark"
-  export MYSQL_DATABASE="embark"
-  export REDIS_HOST="127.0.0.1"
-  export REDIS_PORT="7777"
-  export SECRET_KEY="$DJANGO_SECRET_KEY"
-  export HASHID_SALT="$RANDOM_SALT"
-  export PYTHONPATH="${PYTHONPATH}:${PWD}:${PWD}/embark/"
-  {
-    echo "DATABASE_NAME=$DATABASE_NAME"
-    echo "DATABASE_USER=$DATABASE_USER" 
-    echo "DATABASE_PASSWORD=$DATABASE_PASSWORD"
-    echo "DATABASE_HOST=$DATABASE_HOST"
-    echo "DATABASE_PORT=$DATABASE_PORT"
-    echo "MYSQL_PASSWORD=$MYSQL_PASSWORD"
-    echo "MYSQL_USER=$MYSQL_USER"
-    echo "MYSQL_DATABASE=$MYSQL_DATABASE"
-    echo "REDIS_HOST=$REDIS_HOST"
-    echo "REDIS_PORT=$REDIS_PORT"
-    echo "SECRET_KEY=$DJANGO_SECRET_KEY"
-    echo "HASHID_SALT=$RANDOM_SALT"
-    echo "PYTHONPATH=${PYTHONPATH}:${PWD}"
-    echo "DJANGO_SUPERUSER_PASSWORD=$SUPER_PW"
-    echo "DJANGO_SUPERUSER_USERNAME=$SUPER_USER"
-    echo "DJANGO_SUPERUSER_EMAIL=$SUPER_EMAIL"
-  } > .env
-
-  #Add Symlink
-  if ! [[ -d /app ]]; then
-    ln -s "$PWD" /app || exit 1
-  fi
-
-  # daemon
-  install_daemon
-
-  # download images for container
-  docker-compose -f ./docker-compose-dev.yml up --no-start
-  docker-compose -f ./docker-compose-dev.yml up &>/dev/null &
-  sleep 30
-  kill %1
-
-  echo -e "$GREEN""$BOLD""Ready to use \$sudo ./dev-tools/debug-server-start.sh""$NC"
-  echo -e "$GREEN""$BOLD""Or use otherwise""$NC"
-}
-
 uninstall (){
   echo -e "$ORANGE""$BOLD""Deleting Configuration and reseting""$NC"
 
@@ -434,9 +445,10 @@ uninstall (){
   echo -e "$ORANGE""$BOLD""Delete Symlink?""$NC"
   rm /app
 
-  #2 delete www
-  echo -e "$ORANGE""$BOLD""Delete Apache Directory""$NC"
+  #2 delete www and upload-dir
+  echo -e "$ORANGE""$BOLD""Delete Directories""$NC"
   rm -R ./www
+  rm -R ./uploadedFirmwareImages
 
   #3 delete user www-embark and reset visudo
   echo -e "$ORANGE""$BOLD""Delete user""$NC"
