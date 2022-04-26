@@ -12,6 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 HASHID_FIELD_SALT = os.environ.get('HASHID_SALT')
+HASHID_FIELD_MIN_LENGTH = os.environ.get('HASHID_FIELD_MIN_LENGTH', 15)
 SECRET_KEY = os.environ.get('SECRET_KEY')   # look at .env
 
 # SECURITY WARNING: don't run with debug turned on in production!
