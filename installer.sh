@@ -50,7 +50,6 @@ print_help() {
 
 write_env() {
   echo -e "$ORANGE""$BOLD""Creating a Developer EMBArk configuration file .env""$NC"
-  cd 
   export DATABASE_NAME="embark"
   export DATABASE_USER="embark"
   export DATABASE_PASSWORD="$RANDOM_PW"
