@@ -2,7 +2,7 @@
 from http.client import HTTPResponse
 import logging
 from django.conf import settings
-from django.shortcuts import redirect, render
+from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect, HttpResponseServerError
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
@@ -40,14 +40,11 @@ def save_file(request):
             firmware_file.file = file
             firmware_file.user = request.user
             firmware_file.save()
-            
+
         except Exception as error:
             logger.error("Error uploading %s", error)
             return HttpResponseServerError
-    return HttpResponse("successful upload")
-    
-    
-    
+    return HttpResponse("successful upload") 
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -68,7 +65,7 @@ def start_analysis(request):
     if request.method == 'POST':
         form = FirmwareAnalysisForm(request.POST)
         if form.is_valid():
-            logger.info("Posted Form is valid")
+            logger.debug("Posted Form is valid")
             logger.info("Starting analysis with %s", form.Meta.model.id)
 
             # new_firmware = form.save(commit=False)
@@ -91,8 +88,7 @@ def start_analysis(request):
         'message': "Successfull upload",
         'analysis_form': analysis_form
     })
-    
-     
+ 
 
 @require_http_methods(["GET", "POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -104,12 +100,11 @@ def delete_fw_file(request):
 
     :return: HttpResponse including the status
     """
-
     if request.method == 'POST':
         form = DeleteFirmwareForm(request.POST)
 
         if form.is_valid():
-            logger.info("Form %s is valid", form)
+            logger.debug("Form %s is valid", form)
 
             # get relevant data
             firmware_file = form.cleaned_data['firmware']
