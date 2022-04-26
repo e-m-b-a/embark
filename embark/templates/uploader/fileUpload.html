@@ -5,8 +5,14 @@
 {% block title %}EMBArk file upload{% endblock title %}
 {% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
 {% block maincontent %}
-
+<!-- success_message, message, analyze_form, -->
+{% if success_message %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <medium>{{ message }}</medium>
+    </div>
+{% endif %}
     <div class="row uploadRow">
+       
         <div class="col-sm">
             <div class="box">
                 <p class="mainText">Upload firmware image/archive</p>
@@ -16,7 +22,6 @@
                     Selected file: <div id="file-name" class="uploadedFile">None selected.</div>
                 </div>
                 <div class="buttonRow">
-                    {% csrf_token %}
                     <button type="submit" id="uploadFirmware-btn" class="btn buttonRowElem" onclick="saveFiles()" disabled>
                         Upload
                     </button>
@@ -37,6 +42,7 @@
             <div class="box">
                 <p class="mainText">Analyze a firmware image/archive</p>
                 <form action="{% url 'embark-uploader-start-analysis' %}" method="post" id="analyze-form">
+                    {% csrf_token %}
                     <div class="innerBlock">
                         <label for="expertMode">Expert mode</label>
                         <label class="switch">
@@ -44,10 +50,9 @@
                             <span class="slider round"></span>
                         </label>
 
-                        {% csrf_token %}
                         {% load filters %}
                         <!-- Iterate over all fields and set expmode on fields in expert mode -->
-                        {% for field in analyze_form %}
+                        {% for field in analysis_form %}
 
                             {% if field.expert_mode %}
                                 <div class="form-group expertModeOptions" value="expmode_off">

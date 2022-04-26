@@ -2,7 +2,7 @@
 from http.client import HTTPResponse
 import logging
 from django.conf import settings
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect, HttpResponseServerError
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
@@ -14,11 +14,13 @@ from uploader.models import FirmwareFile
 logger = logging.getLogger('web')
 
 @login_required(login_url='/' + settings.LOGIN_URL)
-@require_http_methods(["GET", "POST"])
+@require_http_methods(["GET"])
 def uploader_home(request):
-    if request.method == 'POST':
-        save_file(request)
-    return render(request, 'uploader/fileUpload.html', {'nav_switch': False, 'username': request.user.username})
+    analysis_form = FirmwareAnalysisForm()
+    return render (request, 'uploader/fileUpload.html', {
+        'success_message': False,
+        'analysis_form': analysis_form
+    })
 
 
 @require_http_methods(["POST"])
@@ -36,17 +38,20 @@ def save_file(request):
         try:
             firmware_file = FirmwareFile.objects.create()
             firmware_file.file = file
-            firmware_file.user = request.user   # TODO
+            firmware_file.user = request.user
             firmware_file.save()
-
+            
         except Exception as error:
-            logger.error(error)
-            return HttpResponse("Firmware could not be uploaded")
-    return render(request, 'uploader/fileUpload.html', {'nav_switch': False, 'firmware': firmware_file, 'username': request.user.username})
+            logger.error("Error uploading %s", error)
+            return HttpResponseServerError
+    return HttpResponse("successful upload")
+    
+    
+    
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
-@require_http_methods(["POST"])
+@require_http_methods(["GET", "POST"])
 def start_analysis(request):
     """
     View to submit form for flags to run emba with
@@ -60,29 +65,34 @@ def start_analysis(request):
     Returns: redirect
 
     """
-    form = FirmwareAnalysisForm(request.POST)
+    if request.method == 'POST':
+        form = FirmwareAnalysisForm(request.POST)
+        if form.is_valid():
+            logger.info("Posted Form is valid")
+            logger.info("Starting analysis with %s", form.Meta.model.id)
 
-    if form.is_valid():
-        logger.info("Posted Form is valid")
-        logger.info("Starting analysis with %s", form.Meta.model.id)
+            # new_firmware = form.save(commit=False)
+            # new_firmware.user = request.user
+            new_firmware = form.save()
 
-        # new_firmware = form.save(commit=False)
-        # new_firmware.user = request.user
-        new_firmware = form.save()
+            # get the id of the firmware-file to submit
+            new_firmware_file = FirmwareFile.objects.get(id=new_firmware.firmware.id)
+            logger.info("Firmware file: %s", new_firmware_file)
 
-        # get the id of the firmware-file to submit
-        new_firmware_file = FirmwareFile.objects.get(id=new_firmware.firmware.id)
-        logger.info("Firmware file: %s", new_firmware_file)
-
-        # inject into bounded Executor
-        if BoundedExecutor.submit_firmware(firmware_flags=new_firmware, firmware_file=new_firmware_file):
-            return HttpResponseRedirect("../../serviceDashboard/")
-        logger.error("Server Queue full, or other boundenexec error")
-        return HttpResponseServerError("Queue full")
-
-    logger.error("Posted Form is Invalid: %s", form.errors)
-    return HttpResponseBadRequest("Invalid Form")
-
+            # inject into bounded Executor
+            if BoundedExecutor.submit_firmware(firmware_flags=new_firmware, firmware_file=new_firmware_file):
+                return HttpResponseRedirect("../../serviceDashboard/")
+            logger.error("Server Queue full, or other boundenexec error")
+            return HttpResponseServerError("Queue full")
+            
+    analysis_form = FirmwareAnalysisForm(initial={ 'firmware': FirmwareFile.objects.latest('upload_date')})
+    return render (request, 'uploader/fileUpload.html', {
+        'success_message': True,
+        'message': "Successfull upload",
+        'analysis_form': analysis_form
+    })
+    
+     
 
 @require_http_methods(["GET", "POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
