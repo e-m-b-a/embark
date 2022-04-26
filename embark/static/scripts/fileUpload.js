@@ -10,6 +10,7 @@ function dragOverHandler(ev) {
 }
 
 function getCookie(name) {
+    "use strict";
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
         const cookies = document.cookie.split(';');
@@ -82,10 +83,12 @@ $(window).bind("load", function() {
             }
           } else {
             console.log("The file is not saved");
-            errorAlert("" + data);
+            //errorAlert("" + data);
           }
         } else {
-          if(data === "successful upload") location.href = "/uploader/start/"
+          if(data === "successful upload"){
+            location.href = "/uploader/start/";
+          }
         }
       }
     });
