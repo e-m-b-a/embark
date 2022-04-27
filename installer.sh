@@ -221,7 +221,12 @@ install_daemon() {
 
 install_embark_default() {
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanning environment EMBArk""$NC"
-  apt-get install -y -q python3-dev default-libmysqlclient-dev build-essential pipenv
+  
+  #debs
+  apt-get install -y -q python3-dev default-libmysqlclient-dev build-essential
+  
+  # install pipenv
+  pip3 install pipenv
 
   #Add user for server
   useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /app/www/
