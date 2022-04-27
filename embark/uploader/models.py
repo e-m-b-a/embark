@@ -15,7 +15,6 @@ from hashid_field import HashidAutoField
 from users.models import User as Userclass
 
 
-
 logger = logging.getLogger('web')
 
 
@@ -143,7 +142,12 @@ class FirmwareAnalysis(models.Model):
 
     id = HashidAutoField(primary_key=True,  prefix="_fwA_")
     firmware = models.ForeignKey(FirmwareFile, on_delete=models.RESTRICT, help_text='', null=True)
-    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, related_name='Fw_Analysis_User', null=True)   #FIXME cascade or just restrict??
+    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, related_name='Fw_Analysis_User', null=True)
+
+    # pid from within boundedexec
+    pid = models.BigIntegerField(
+        help_text='process id of subproc', verbose_name='PID', blank=True
+    )
 
     # emba basic flags
     version = CharFieldExpertMode(

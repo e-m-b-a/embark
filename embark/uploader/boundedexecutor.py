@@ -3,7 +3,7 @@ import csv
 import logging
 import os
 import shutil
-import subprocess
+from subprocess import Popen, PIPE
 import re
 import json
 
@@ -60,9 +60,12 @@ class BoundedExecutor:
         # see emba.sh for further information
         try:
 
-            # run emba_process and wait for completion
-            # emba_process = subprocess.call(cmd, shell=True)
-            subprocess.call(cmd, shell=True)    # nosec
+            analysis = FirmwareAnalysis.objects.get(id=hashid)
+
+            # The os.setsid() is passed in the argument preexec_fn so it's run after the fork() and before  exec() to run the shell.
+            proc = Popen(cmd, stdout=PIPE, shell=True, preexec_fn=os.setsid)  #nosec
+            # Add proc to FirmwareAnalysis-Object
+            analysis.pid=proc.pid
 
             # success
             logger.info("Success: %s", cmd)
@@ -91,28 +94,13 @@ class BoundedExecutor:
         finally:
             # finalize db entry
             if hashid:
-                firmware = FirmwareAnalysis.objects.get(id=hashid)
-                firmware.end_date = datetime.now()
-                firmware.scan_time = datetime.now() - firmware.start_date
-                firmware.duration = str(firmware.scan_time)
-                firmware.finished = True
-                firmware.save()
+                analysis.end_date = datetime.now()
+                analysis.scan_time = datetime.now() - analysis.start_date
+                analysis.duration = str(analysis.scan_time)
+                analysis.finished = True
+                analysis.save()
 
             logger.info("Successful cleaned up: %s", cmd)
-
-    @classmethod
-    def run_emba_cmd_elavated(cls, cmd, hashid, active_analyzer_dir):
-        """
-        run_shell_cmd but elevated
-
-        param cmd: shell command to be executed elevated
-        param hashid: primary key for firmware entry db identification
-        param active_analyzer_dir: active analyzer dir for deletion afterwards
-
-        :return:
-        """
-
-        cls.run_emba_cmd(f"sudo {cmd}", hashid, active_analyzer_dir)
 
     @classmethod
     def submit_firmware(cls, firmware_flags, firmware_file):

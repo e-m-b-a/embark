@@ -64,3 +64,19 @@ class DeleteFirmwareForm(forms.ModelForm):
                 field.field.widget.attrs['class'] = 'form-control select dropdownSelect'
 
         self.base_fields['file'] = forms.ModelChoiceField(queryset=models.FirmwareFile.objects, empty_label='Select firmware to delete')
+
+
+class StopAnalysisForm(forms.ModelForm):
+
+    class Meta:
+        model = models.FirmwareAnalysis
+
+        fields = ('analysis', )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.visible_fields():
+            if isinstance(field.field.widget, django.forms.widgets.Select):
+                field.field.widget.attrs['class'] = 'form-control select dropdownSelect'
+
+        self.base_fields['analysis'] = forms.ModelChoiceField(queryset=models.FirmwareAnalysis.objects, empty_label='Select analysis to stop')

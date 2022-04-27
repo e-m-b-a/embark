@@ -1,6 +1,8 @@
 # pylint: disable=W0613,C0206
 from http.client import HTTPResponse
 import logging
+import os
+import signal
 from django.conf import settings
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect, HttpResponseServerError
@@ -8,8 +10,8 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 
 from uploader.boundedexecutor import BoundedExecutor
-from uploader.forms import FirmwareAnalysisForm, DeleteFirmwareForm
-from uploader.models import FirmwareFile
+from uploader.forms import FirmwareAnalysisForm, DeleteFirmwareForm, StopAnalysisForm
+from uploader.models import FirmwareAnalysis, FirmwareFile
 
 logger = logging.getLogger('web')
 
@@ -58,7 +60,7 @@ def start_analysis(request):
         else: return Queue full
     else: returns Invalid form error
     Args:
-        request: the http req with FirmwareForm
+        request: the http req with FirmwareAnalysisForm
     Returns: redirect
 
     """
@@ -78,7 +80,7 @@ def start_analysis(request):
 
             # inject into bounded Executor
             if BoundedExecutor.submit_firmware(firmware_flags=new_firmware, firmware_file=new_firmware_file):
-                return HttpResponseRedirect("../../serviceDashboard/")
+                return HttpResponseRedirect("/serviceDashboard/")
             logger.error("Server Queue full, or other boundenexec error")
             return HttpResponseServerError("Queue full")
 
@@ -88,6 +90,34 @@ def start_analysis(request):
         'message': "Successfull upload",
         'analysis_form': analysis_form
     })
+
+
+@login_required(login_url='/' + settings.LOGIN_URL)
+@require_http_methods(["GET"])
+def stop_analysis(request):
+    """
+    View to submit form for flags to run emba with
+    if: form is valid
+        send interrupt to hashid.pid
+    Args:
+        request: the http req with FirmwareForm
+    Returns: redirect
+    """
+    form = StopAnalysisForm(request.POST)
+    if form.is_valid():
+        logger.debug("Posted Form is valid")
+        try:
+            # get id
+            analysis = FirmwareAnalysis.objects.get(id=form.Meta.model.id)
+            logger.info("Stopping analysis with %s", analysis)
+
+            os.killpg(os.getpgid(analysis.pid), signal.SIGTERM)
+
+            return HttpResponse("Stopped successfully")
+        
+        except Exception as error:
+            logger.error("Error %s", error)
+            return HttpResponseServerError("Failed to stop procs")
 
 
 @require_http_methods(["GET", "POST"])

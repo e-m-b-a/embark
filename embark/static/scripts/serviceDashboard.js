@@ -42,13 +42,29 @@ function livelog_module(module, cur_ID) {
 
 /**
  * Removes the container from the UI
- * @param {*} currentID Id of the contaniner which is passed backend to pull information
+ * @param {*} currentID Id of the container which is passed backend to pull information
  */
 function cancelLog(currentID) {
     "use strict";
     try {
+        // TODO send POST req with hashid associated with currentID
         var idOfDIV = "#Container_" + currentID;
         $(idOfDIV).remove();
+    } catch (error) {
+        //console.log(error.message);
+        console.log(error);
+    }
+}
+
+/**
+ * simple redirect to hashid associated with currentID
+ * @param {*} currentID Id of the contaniner which is passed backend to pull information
+ */
+ function viewLog(currentID) {
+    "use strict";
+    try {
+        // TODO get hashid of div-id
+        window.location("/log/" + analysisID);
     } catch (error) {
         //console.log(error.message);
         console.log(error);
@@ -111,6 +127,9 @@ socket.onmessage = function (event) {
                     </div>
                 </div>
                 <div class="buttonRow">
+                    <button type="view-log" class="btn buttonRowElem" id="` + Object.keys(data)[cur_len] + `" onclick="viewLog(this.id)" >
+                        EMBA-log
+                    </button>
                     <button type="reset" class="btn buttonRowElem" id="` + Object.keys(data)[cur_len] + `" onclick="cancelLog(this.id)" >
                         Cancel
                     </button>
