@@ -41,6 +41,7 @@ def save_file(request):
     for file in request.FILES.getlist('file'):      # FIXME determin usecase for multi-file-upload in one request
         try:
             firmware_file = FirmwareFile.objects.create()
+            logger.debug("1. fw_file created")
             firmware_file.file = file
             firmware_file.user = request.user
             firmware_file.save()
