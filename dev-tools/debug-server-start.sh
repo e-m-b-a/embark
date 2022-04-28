@@ -88,6 +88,7 @@ docker container logs embark_db_dev -f > ./logs/mysql_dev.log &
 # pipenv run daphne -v 3 -p 8001 -b "$IP" --root-path="$PWD"/embark embark.asgi:application &>>./embark/logs/daphne.log &
 
 # start embark
+systemctl start embark.service
 echo -e "$ORANGE""$BOLD""start EMBArk server""$NC"
 pipenv run ./embark/manage.py runserver "$IP":"$PORT" |& tee -a ./logs/debug-server.log
 

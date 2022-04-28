@@ -271,9 +271,7 @@ class FirmwareAnalysis(models.Model):
 
 
 class Result(models.Model):
-    # TODO missing: emba_command
-
-    firmware = models.ForeignKey(FirmwareAnalysis, on_delete=models.CASCADE, help_text='')
+    firmware_analysis = models.ForeignKey(FirmwareAnalysis, on_delete=models.CASCADE, help_text='')
     architecture_verified = models.CharField(blank=True, null=True, max_length=100, help_text='')
     os_verified = models.CharField(blank=True, null=True, max_length=100, help_text='')
     emba_command = models.CharField(blank=True, null=True, max_length=300, help_text='')
