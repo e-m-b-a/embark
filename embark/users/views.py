@@ -145,6 +145,11 @@ def password_change(request):
     return render(request, 'user/passwordChange.html')
 
 
+@login_required(login_url='/' + settings.LOGIN_URL)
+@require_http_methods(["GET"])
+def menu(request):
+    return render(request, 'user/menu.html')
+
 @csrf_exempt
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["GET", "POST"])

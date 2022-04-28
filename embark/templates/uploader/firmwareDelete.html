@@ -3,12 +3,12 @@
 {% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/fileUpload.css' %}"/>{% endblock style %}
 {% block js %}<script type="text/javascript" src="{% static 'scripts/fileUpload.js' %}"></script>{% endblock js %}
 {% block title %}EMBArk file upload{% endblock title %}
-{% block navigation %}{% include "uploader/navigation.html" %}{% endblock navigation %}
+{% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
 {% block maincontent %}
     <div class="row DeleteRow">
             <div class="box">
                 <p class="mainText">Select and delete a firmware file</p>
-                <form action="{% url 'embark-fw-delete' %}" method="post" id="delete-form" onsubmit="window.confirmDelete(event)">
+                <form action="{% url 'embark-uploader-delete' %}" method="post" id="delete-form" onsubmit="window.confirmDelete(event)">
                     {% csrf_token %}
                     {% load filters %}
                     <!-- Iterate over all fields and set expmode on fields in expert mode -->

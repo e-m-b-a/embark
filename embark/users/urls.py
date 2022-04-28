@@ -6,6 +6,7 @@ from users import views
 
 urlpatterns = [
     path(settings.LOGIN_URL, views.embark_login, name='embark-login'),
+    path('user/', views.menu, name='embark-user-menu'),
     path('register/', views.register, name='embark-register'),
     path('logout/', views.embark_logout, name='embark-logout'),
     # TODO account menu path('my-account/', views., name='embark-),

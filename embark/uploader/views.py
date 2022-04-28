@@ -18,11 +18,13 @@ logger = logging.getLogger('web')
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["GET"])
 def uploader_home(request):
-    analysis_form = FirmwareAnalysisForm()
-    return render (request, 'uploader/fileUpload.html', {
-        'success_message': False,
-        'analysis_form': analysis_form
-    })
+    if FirmwareFile.objects.all().count() > 0:
+        analysis_form = FirmwareAnalysisForm()
+        return render (request, 'uploader/fileUpload.html', {
+            'success_message': False,
+            'analysis_form': analysis_form
+        })
+    return render (request, 'uploader/fileUpload.html')
 
 
 @require_http_methods(["POST"])
@@ -70,26 +72,31 @@ def start_analysis(request):
             logger.debug("Posted Form is valid")
             logger.info("Starting analysis with %s", form.Meta.model.id)
 
-            # new_firmware = form.save(commit=False)
-            # new_firmware.user = request.user
-            new_firmware = form.save()
+            new_analysis = form.save(commit=False)
+            new_analysis.user = request.user
+            new_analysis = form.save()
 
             # get the id of the firmware-file to submit
-            new_firmware_file = FirmwareFile.objects.get(id=new_firmware.firmware.id)
+            new_firmware_file = FirmwareFile.objects.get(id=new_analysis.firmware.id)
             logger.info("Firmware file: %s", new_firmware_file)
 
             # inject into bounded Executor
-            if BoundedExecutor.submit_firmware(firmware_flags=new_firmware, firmware_file=new_firmware_file):
+            if BoundedExecutor.submit_firmware(firmware_flags=new_analysis, firmware_file=new_firmware_file):
                 return HttpResponseRedirect("/serviceDashboard/")
             logger.error("Server Queue full, or other boundenexec error")
             return HttpResponseServerError("Queue full")
 
-    analysis_form = FirmwareAnalysisForm(initial={ 'firmware': FirmwareFile.objects.latest('upload_date')})
+    if FirmwareFile.objects.all().count() > 0:
+        analysis_form = FirmwareAnalysisForm(initial={ 'firmware': FirmwareFile.objects.latest('upload_date')})
+        return render (request, 'uploader/fileUpload.html', {
+            'success_message': True,
+            'message': "Successfull upload",
+            'analysis_form': analysis_form
+        })
     return render (request, 'uploader/fileUpload.html', {
-        'success_message': True,
-        'message': "Successfull upload",
-        'analysis_form': analysis_form
-    })
+            'success_message': True,
+            'message': "Please Upload a File first",
+        })
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
