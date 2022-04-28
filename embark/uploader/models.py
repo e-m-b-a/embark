@@ -95,7 +95,7 @@ class FirmwareFile(models.Model):
     """
     MAX_LENGTH = 127
 
-    id = HashidAutoField(primary_key=True, allow_int_lookup=True, prefix="_fw_")
+    id = HashidAutoField(primary_key=True, prefix="_fw_")
     is_archive = models.BooleanField(default=False)
     upload_date = models.DateTimeField(default=datetime.now, blank=True)
     user = models.ForeignKey(Userclass, on_delete=models.CASCADE, related_name='Fw_Upload_User', null=True)
