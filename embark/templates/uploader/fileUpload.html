@@ -19,7 +19,8 @@
                 <p class="subText">Supported archive types : firmware binary and most archive types</p>
                 <div class="innerBlock">
                     <!--TODO display filename if one is selected or make select upload directly-->
-                    Selected file: <div id="file-name" class="uploadedFile">None selected.</div>
+                    Selected file:
+                    <div id="file-name" class="uploadedFile">None</div>
                 </div>
                 <div class="buttonRow">
                     <button type="submit" id="uploadFirmware-btn" class="btn buttonRowElem" onclick="saveFiles()" disabled>
@@ -28,7 +29,7 @@
                     <button type="button" class="btn buttonRowElem" >
                         <label for="file-input">Select file</label>
                     </button>
-                    <input id="file-input" type="file"/>
+                    <input id="file-input" type="file" multiple>
                 </div>
                 <div class="progress-wrapper" id="progress-wrapper">
                     <div class="progress-bar" id="progressBar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">

@@ -27,16 +27,20 @@ function getCookie(name) {
 }
 
 $(window).bind("load", function() {
-  "use strict";
-  document.querySelector("#file-input").onchange = function(){
-    var fileNames = "";
-    for (var i = 0; i < this.files.length; i++) {
-        fileNames = fileNames + this.files[i].name + "<br>";
+    "use strict";
+    try{
+        document.querySelector("#file-input").onchange = function(){
+            var fileNames = "";
+            for (var i = 0; i < this.files.length; i++) {
+                fileNames = fileNames + this.value + "<br>";
+            }
+            var target = document.querySelector("#file-name");
+            target.innerHTML = fileNames;
+            $("#uploadFirmware-btn").attr("disabled", false);
+        };
+    }catch (error){
+        console.log(error.message);
     }
-    var target = document.querySelector("#file-name");
-    $.find(target).innerHTML = fileNames;
-    $("#uploadFirmware-btn").attr("disabled", false);
-  };
 });
 
 /**
