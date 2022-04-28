@@ -58,7 +58,7 @@ def delete_old_job_executions(max_age=1_209_600):
     ResourceTimestamp.objects.all().filter(timestamp__lt=time_delta).delete()
 
 
-class Command(BaseCommand):
+class Command(BaseCommand):     # FIXME change cycle times
     """
     Extends Base command to feature another command called runapscheduler by the manage.py script
     like this "python3 manage.py runapscheduler"

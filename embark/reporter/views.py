@@ -231,6 +231,9 @@ def download_zipped(request, analysis_id):
 @require_http_methods(["GET"])
 # @login_required(login_url='/' + settings.LOGIN_URL)
 def get_load(request):
+    """
+    JSON request of system-load
+    """
     try:
         query_set = ResourceTimestamp.objects.all()
         result = {}
