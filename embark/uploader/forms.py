@@ -71,7 +71,7 @@ class StopAnalysisForm(forms.ModelForm):
     class Meta:
         model = models.FirmwareAnalysis
 
-        fields = ('id', )
+        fields = ('fwA_id', )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -79,4 +79,4 @@ class StopAnalysisForm(forms.ModelForm):
             if isinstance(field.field.widget, django.forms.widgets.Select):
                 field.field.widget.attrs['class'] = 'form-control select dropdownSelect'
 
-        self.base_fields['id'] = forms.ModelChoiceField(queryset=models.FirmwareAnalysis.objects, empty_label='Select analysis to stop')
+        self.base_fields['fwA_id'] = forms.ModelChoiceField(queryset=models.FirmwareAnalysis.objects, empty_label='Select analysis to stop')

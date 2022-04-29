@@ -60,7 +60,7 @@ class BoundedExecutor:
         # see emba.sh for further information
         try:
 
-            analysis = FirmwareAnalysis.objects.get(id=hashid)
+            analysis = FirmwareAnalysis.objects.get(fwA_id=hashid)
 
             # The os.setsid() is passed in the argument preexec_fn so it's run after the fork() and before  exec() to run the shell.
             proc = Popen(cmd, stdout=PIPE, shell=True, preexec_fn=os.setsid)  #nosec
@@ -216,7 +216,7 @@ class BoundedExecutor:
             entropy_value = entropy_value.strip('.')
 
         res = Result(
-            firmware=FirmwareAnalysis.objects.get(hashid=hashid),
+            firmware=FirmwareAnalysis.objects.get(fwA_id=hashid),
             emba_command=cmd.replace(f"cd {settings.EMBA_ROOT} && ", ""),
             architecture_verified=res_dict.get("architecture_verified", ''),
             # os_unverified=res_dict.get("os_unverified", ''),

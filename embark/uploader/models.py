@@ -95,22 +95,22 @@ class FirmwareFile(models.Model):
     """
     MAX_LENGTH = 127
 
-    id = HashidAutoField(primary_key=True, prefix="_fw_")
+    fw_id = HashidAutoField(primary_key=True, prefix="_fw_", enable_descriptor=False)
     is_archive = models.BooleanField(default=False)
     upload_date = models.DateTimeField(default=datetime.now, blank=True)
     user = models.ForeignKey(Userclass, on_delete=models.CASCADE, related_name='Fw_Upload_User', null=True)
 
     def get_storage_path(self, filename):
         # file will be uploaded to MEDIA_ROOT/<id>/<filename>
-        return os.path.join(f"{self.id}", filename)
+        return os.path.join(f"{self.fw_id}", filename)
 
     file = models.FileField(upload_to=get_storage_path)
 
     def get_abs_path(self):
-        return f"{settings.MEDIA_ROOT}/{self.id}/{self.file.name}"
+        return f"{settings.MEDIA_ROOT}/{self.fw_id}/{self.file.name}"
 
     def get_abs_folder_path(self):
-        return f"{settings.MEDIA_ROOT}/{self.id}"
+        return f"{settings.MEDIA_ROOT}/{self.fw_id}"
 
     # def __init__(self, *args, **kwargs):
     #    super().__init__(*args, **kwargs)
@@ -140,7 +140,7 @@ class FirmwareAnalysis(models.Model):
     """
     MAX_LENGTH = 127
 
-    id = HashidAutoField(primary_key=True,  prefix="_fwA_")
+    fwA_id = HashidAutoField(primary_key=True,  prefix="_fwA_")
     firmware = models.ForeignKey(FirmwareFile, on_delete=models.RESTRICT, help_text='', null=True)
     user = models.ForeignKey(Userclass, on_delete=models.CASCADE, related_name='Fw_Analysis_User', null=True)
 

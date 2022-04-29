@@ -87,7 +87,7 @@ $(window).bind("load", function() {
             }
           } else {
             console.log("The file is not saved");
-            //errorAlert("" + data);
+            errorAlert("" + data);
           }
         } else {
           if(data === "successful upload"){
@@ -117,7 +117,6 @@ function saveFiles() {
     for (let index = 0; index < fileData.length; index++) {
       fileData[index].inputFileName = fileData[index].name;
       formData.append('file', fileData[index]);
-
     }
   postFiles(formData);
 }
