@@ -19,7 +19,7 @@ export DEBIAN_FRONTEND=noninteractive
 DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
 RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
 
-RANDOM_SALT=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
+RANDOM_SALT=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 43 | head -n 1)
 FIELD_LENGTH=15
 
 SUPER_PW="embark"
@@ -467,9 +467,11 @@ uninstall (){
   echo -e "$ORANGE""$BOLD""Delete env""$NC"
   rm -R ./.env
 
-  #6 delete shared volumes
+  #6 delete shared volumes and migrations
   echo -e "$ORANGE""$BOLD""Delete Database-files""$NC"
   rm -R ./embark_db
+  find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
+  find . -path "*/migrations/*.pyc"  -delete
 
   #7 delete all docker interfaces and containers + images
   reset_docker

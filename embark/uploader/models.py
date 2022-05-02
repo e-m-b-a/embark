@@ -95,10 +95,10 @@ class FirmwareFile(models.Model):
     """
     MAX_LENGTH = 127
 
-    id = HashidAutoField(primary_key=True, prefix="fw_")
-    is_archive = models.BooleanField(default=False)
+    id = HashidAutoField(primary_key=True, prefix='fw_')
+    is_archive = models.BooleanField(default=False, blank=True)
     upload_date = models.DateTimeField(default=datetime.now, blank=True)
-    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, related_name='Fw_Upload_User', null=True)
+    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, related_name='Fw_Upload_User', null=True, blank=True)
 
     def get_storage_path(self, filename):
         # file will be uploaded to MEDIA_ROOT/<id>/<filename>
@@ -141,7 +141,7 @@ class FirmwareAnalysis(models.Model):
     MAX_LENGTH = 127
 
     # pk
-    id = HashidAutoField(primary_key=True,  prefix="fwA_")
+    id = HashidAutoField(primary_key=True, prefix='fwA_')
     # user
     user = models.ForeignKey(Userclass, on_delete=models.CASCADE, related_name='Fw_Analysis_User', null=True)
     # pid from within boundedexec

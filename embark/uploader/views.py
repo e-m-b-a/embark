@@ -39,8 +39,7 @@ def save_file(request):
     """
     logger.info("User %s tryied to upload %s", request.user.username, request.FILES.getlist('file'))
     for file in request.FILES.getlist('file'):      # FIXME determin usecase for multi-file-upload in one request
-        firmware_file = FirmwareFile.objects.create()
-        firmware_file.file = file
+        firmware_file = FirmwareFile.objects.create(file = file)
         firmware_file.save()
         
     return HttpResponse("successful upload")
