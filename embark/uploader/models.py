@@ -95,22 +95,22 @@ class FirmwareFile(models.Model):
     """
     MAX_LENGTH = 127
 
-    fw_id = HashidAutoField(primary_key=True, prefix="_fw_", enable_descriptor=False)
+    id = HashidAutoField(primary_key=True, prefix="fw_")
     is_archive = models.BooleanField(default=False)
     upload_date = models.DateTimeField(default=datetime.now, blank=True)
     user = models.ForeignKey(Userclass, on_delete=models.CASCADE, related_name='Fw_Upload_User', null=True)
 
     def get_storage_path(self, filename):
         # file will be uploaded to MEDIA_ROOT/<id>/<filename>
-        return os.path.join(f"{self.fw_id}", filename)
+        return os.path.join(f"{self.id}", filename)
 
     file = models.FileField(upload_to=get_storage_path)
 
     def get_abs_path(self):
-        return f"{settings.MEDIA_ROOT}/{self.fw_id}/{self.file.name}"
+        return f"{settings.MEDIA_ROOT}/{self.id}/{self.file.name}"
 
     def get_abs_folder_path(self):
-        return f"{settings.MEDIA_ROOT}/{self.fw_id}"
+        return f"{settings.MEDIA_ROOT}/{self.id}"
 
     # def __init__(self, *args, **kwargs):
     #    super().__init__(*args, **kwargs)
@@ -140,14 +140,16 @@ class FirmwareAnalysis(models.Model):
     """
     MAX_LENGTH = 127
 
-    fwA_id = HashidAutoField(primary_key=True,  prefix="_fwA_")
-    firmware = models.ForeignKey(FirmwareFile, on_delete=models.RESTRICT, help_text='', null=True)
+    # pk
+    id = HashidAutoField(primary_key=True,  prefix="fwA_")
+    # user
     user = models.ForeignKey(Userclass, on_delete=models.CASCADE, related_name='Fw_Analysis_User', null=True)
-
     # pid from within boundedexec
     pid = models.BigIntegerField(
         help_text='process id of subproc', verbose_name='PID', blank=True
     )
+
+    firmware = models.ForeignKey(FirmwareFile, on_delete=models.RESTRICT, help_text='', null=True)
 
     # emba basic flags
     version = CharFieldExpertMode(

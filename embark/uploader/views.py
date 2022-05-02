@@ -39,7 +39,8 @@ def save_file(request):
     """
     logger.info("User %s tryied to upload %s", request.user.username, request.FILES.getlist('file'))
     for file in request.FILES.getlist('file'):      # FIXME determin usecase for multi-file-upload in one request
-        firmware_file = FirmwareFile(file=file, user=request.user)
+        firmware_file = FirmwareFile.objects.create()
+        firmware_file.file = file
         firmware_file.save()
         
     return HttpResponse("successful upload")
@@ -71,7 +72,7 @@ def start_analysis(request):
             new_analysis = form.save()
 
             # get the id of the firmware-file to submit
-            new_firmware_file = FirmwareFile.objects.get(fw_id=new_analysis.firmware.fw_id)
+            new_firmware_file = FirmwareFile.objects.get(id=new_analysis.firmware.id)
             logger.info("Firmware file: %s", new_firmware_file)
 
             # inject into bounded Executor
@@ -109,7 +110,7 @@ def stop_analysis(request):
         logger.debug("Posted Form is valid")
         try:
             # get id
-            analysis = FirmwareAnalysis.objects.get(fwA_id=form.Meta.model.fwA_id)
+            analysis = FirmwareAnalysis.objects.get(id=form.Meta.model.id)
             logger.info("Stopping analysis with %s", analysis)
 
             os.killpg(os.getpgid(analysis.pid), signal.SIGTERM)

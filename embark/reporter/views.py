@@ -36,7 +36,7 @@ def reports(request):
 def html_report(request, analysis_id, html_file):
     report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
 
-    if FirmwareAnalysis.objects.get(fwA_id=analysis_id).exists()and FirmwareAnalysis.objects.get(fwA_id=analysis_id).user == request.user:
+    if FirmwareAnalysis.objects.get(id=analysis_id).exists()and FirmwareAnalysis.objects.get(id=analysis_id).user == request.user:
             html_body = get_template(report_path)
             logger.info("html_report - analysis_id: %s html_file: %s", analysis_id, html_file)
             return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
@@ -49,7 +49,7 @@ def html_report(request, analysis_id, html_file):
 def html_report_path(request, analysis_id, html_path, html_file):
     report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
 
-    if FirmwareAnalysis.objects.get(fwA_id=analysis_id).exists()and FirmwareAnalysis.objects.get(fwA_id=analysis_id).user == request.user:
+    if FirmwareAnalysis.objects.get(id=analysis_id).exists()and FirmwareAnalysis.objects.get(id=analysis_id).user == request.user:
         html_body = get_template(report_path)
         logger.info("html_report - analysis_id: %s path: %s html_file: %s", analysis_id, html_path, html_file)
         return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
@@ -116,7 +116,7 @@ def get_individual_report(request, analysis_id):
         logger.error('Bad request for get_individual_report')
         return JsonResponse(data={'error': 'Bad request'}, status=HTTPStatus.BAD_REQUEST)
     try:
-        analysis_object = FirmwareAnalysis.objects.get(fwA_id=int(analysis_id))
+        analysis_object = FirmwareAnalysis.objects.get(id=int(analysis_id))
         result = Result.objects.filter(firmware_analysis=analysis_object)
 
         return_dict = dict(model_to_dict(result), **model_to_dict(analysis_object))
@@ -205,7 +205,7 @@ def download_zipped(request, analysis_id):
     """
 
     try:
-        firmware = FirmwareAnalysis.objects.get(fwA_id=analysis_id)
+        firmware = FirmwareAnalysis.objects.get(id=analysis_id)
 
         if os.path.exists(firmware.path_to_logs):
             archive_path = Archiver.pack(firmware.path_to_logs, 'zip', firmware.path_to_logs, '.')
