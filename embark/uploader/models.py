@@ -2,6 +2,7 @@ from datetime import timedelta
 import logging
 import os
 import shutil
+import uuid
 
 from django.conf import settings
 from django.db import models
@@ -95,22 +96,24 @@ class FirmwareFile(models.Model):
     """
     MAX_LENGTH = 127
 
-    id = HashidAutoField(primary_key=True, prefix='fw_')
+    # id = HashidAutoField(primary_key=True, prefix='fw_')
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
     is_archive = models.BooleanField(default=False, blank=True)
     upload_date = models.DateTimeField(default=datetime.now, blank=True)
     user = models.ForeignKey(Userclass, on_delete=models.CASCADE, related_name='Fw_Upload_User', null=True, blank=True)
 
     def get_storage_path(self, filename):
         # file will be uploaded to MEDIA_ROOT/<id>/<filename>
-        return os.path.join(f"{self.id}", filename)
+        return os.path.join(f"{self.pk}", filename)
 
     file = models.FileField(upload_to=get_storage_path)
 
     def get_abs_path(self):
-        return f"{settings.MEDIA_ROOT}/{self.id}/{self.file.name}"
+        return f"{settings.MEDIA_ROOT}/{self.pk}/{self.file.name}"
 
     def get_abs_folder_path(self):
-        return f"{settings.MEDIA_ROOT}/{self.id}"
+        return f"{settings.MEDIA_ROOT}/{self.pk}"
 
     # def __init__(self, *args, **kwargs):
     #    super().__init__(*args, **kwargs)
@@ -142,6 +145,7 @@ class FirmwareAnalysis(models.Model):
 
     # pk
     id = HashidAutoField(primary_key=True, prefix='fwA_')
+    # id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     # user
     user = models.ForeignKey(Userclass, on_delete=models.CASCADE, related_name='Fw_Analysis_User', null=True)
     # pid from within boundedexec
@@ -270,44 +274,6 @@ class FirmwareAnalysis(models.Model):
         # running emba
         logger.info("final emba parameters %s", command)
         return command
-
-
-class Result(models.Model):
-    firmware_analysis = models.ForeignKey(FirmwareAnalysis, on_delete=models.CASCADE, help_text='')
-    architecture_verified = models.CharField(blank=True, null=True, max_length=100, help_text='')
-    os_verified = models.CharField(blank=True, null=True, max_length=100, help_text='')
-    emba_command = models.CharField(blank=True, null=True, max_length=300, help_text='')
-    files = models.IntegerField(default=0, help_text='')
-    directories = models.IntegerField(default=0, help_text='')
-    entropy_value = models.FloatField(default=0.0, help_text='')
-    certificates = models.IntegerField(default=0, help_text='')
-    certificates_outdated = models.IntegerField(default=0, help_text='')
-    shell_scripts = models.IntegerField(default=0, help_text='')
-    shell_script_vulns = models.IntegerField(default=0, help_text='')
-    yara_rules_match = models.IntegerField(default=0, help_text='')
-    kernel_modules = models.IntegerField(default=0, help_text='')
-    kernel_modules_lic = models.IntegerField(default=0, help_text='')
-    interesting_files = models.IntegerField(default=0, help_text='')
-    post_files = models.IntegerField(default=0, help_text='')
-    canary = models.IntegerField(default=0, help_text='')
-    canary_per = models.IntegerField(default=0, help_text='')
-    relro = models.IntegerField(default=0, help_text='')
-    relro_per = models.IntegerField(default=0, help_text='')
-    no_exec = models.IntegerField(default=0, help_text='')
-    no_exec_per = models.IntegerField(default=0, help_text='')
-    pie = models.IntegerField(default=0, help_text='')
-    pie_per = models.IntegerField(default=0, help_text='')
-    stripped = models.IntegerField(default=0, help_text='')
-    stripped_per = models.IntegerField(default=0, help_text='')
-    strcpy = models.IntegerField(default=0, help_text='')
-    versions_identified = models.IntegerField(default=0, help_text='')
-    cve_high = models.IntegerField(default=0, help_text='')
-    cve_medium = models.IntegerField(default=0, help_text='')
-    cve_low = models.IntegerField(default=0, help_text='')
-    exploits = models.IntegerField(default=0, help_text='')
-    metasploit_modules = models.IntegerField(default=0, help_text='')
-    bins_checked = models.IntegerField(default=0, help_text='')
-    strcpy_bin = models.TextField(default='{}')
 
 
 class ResourceTimestamp(models.Model):

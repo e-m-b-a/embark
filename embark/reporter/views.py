@@ -20,7 +20,8 @@ from django.urls import reverse
 
 from uploader.archiver import Archiver
 
-from uploader.models import FirmwareAnalysis, ResourceTimestamp, Result
+from uploader.models import FirmwareAnalysis, ResourceTimestamp
+from dashboard.models import Result
 
 logger = logging.getLogger('web')
 

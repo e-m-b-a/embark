@@ -20,7 +20,10 @@ DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_ran
 RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
 
 RANDOM_SALT=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 43 | head -n 1)
-FIELD_LENGTH=15
+HASHID_FIELD_LENGTH=7
+HASHID_DESCRIPTOR=False
+HASHID_DESCRIPTOR=False
+
 
 SUPER_PW="embark"
 SUPER_EMAIL="idk@lol.com"
@@ -49,7 +52,7 @@ print_help() {
 }
 
 write_env() {
-  echo -e "$ORANGE""$BOLD""Creating a Developer EMBArk configuration file .env""$NC"
+  echo -e "$ORANGE""$BOLD""Creating a EMBArk configuration file .env""$NC"
   export DATABASE_NAME="embark"
   export DATABASE_USER="embark"
   export DATABASE_PASSWORD="$RANDOM_PW"
@@ -62,7 +65,9 @@ write_env() {
   export REDIS_PORT="7777"
   export SECRET_KEY="$DJANGO_SECRET_KEY"
   export HASHID_SALT="$RANDOM_SALT"
-  export HASHID_FIELD_MIN_LENGTH="$FIELD_LENGTH" 
+  export HASHID_FIELD_MIN_LENGTH="$HASHID_FIELD_LENGTH"
+  export HASHID_FIELD_ENABLE_HASHID_OBJECT="$HASHID_OBJECT"
+  export HASHID_FIELD_ENABLE_DESCRIPTOR="$HASHID_DESCRIPTOR"
   {
     echo "DATABASE_NAME=$DATABASE_NAME"
     echo "DATABASE_USER=$DATABASE_USER" 
@@ -76,7 +81,9 @@ write_env() {
     echo "REDIS_PORT=$REDIS_PORT"
     echo "SECRET_KEY=$DJANGO_SECRET_KEY"
     echo "HASHID_SALT=$RANDOM_SALT"
-    echo "HASHID_FIELD_MIN_LENGTH=$FIELD_LENGTH"
+    echo "HASHID_FIELD_MIN_LENGTH=$HASHID_FIELD_LENGTH"
+    echo "HASHID_FIELD_ENABLE_HASHID_OBJECT=$HASHID_OBJECT"
+    echo "HASHID_FIELD_ENABLE_DESCRIPTOR=$HASHID_DESCRIPTOR"
     echo "PYTHONPATH=${PYTHONPATH}:${PWD}"
   } > .env
 }
@@ -295,8 +302,11 @@ install_embark_default() {
 install_embark_dev(){
   echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
   apt-get install -y -q npm pycodestyle python3-pylint-django python3-dev default-libmysqlclient-dev build-essential pipenv bandit
-  npm install -g jshint dockerlinter js-cookie
+  npm install -g jshint dockerlinter
+
+  #pipenv
   PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
+
   # download externals
   if ! [[ -d ./embark/static/external ]]; then
     echo -e "\n$GREEN""$BOLD""Downloading of external files, e.g. jQuery, for the offline usability of EMBArk""$NC"
@@ -312,41 +322,8 @@ install_embark_dev(){
     find ./embark/static/external/ -type f -exec sed -i '/sourceMappingURL/d' {} \;
   fi
 
-  # setup .env with dev network
-  echo -e "$ORANGE""$BOLD""Creating a Developer EMBArk configuration file .env""$NC"
-  export DATABASE_NAME="embark"
-  export DATABASE_USER="embark"
-  export DATABASE_PASSWORD="embark"
-  export DATABASE_HOST="127.0.0.1"
-  export DATABASE_PORT="3306"
-  export MYSQL_PASSWORD="embark"
-  export MYSQL_USER="embark"
-  export MYSQL_DATABASE="embark"
-  export REDIS_HOST="127.0.0.1"
-  export REDIS_PORT="7777"
-  export SECRET_KEY="$DJANGO_SECRET_KEY"
-  export HASHID_SALT="$RANDOM_SALT"
-  export HASHID_FIELD_MIN_LENGTH="$FIELD_LENGTH"
-  export PYTHONPATH="${PYTHONPATH}:${PWD}:${PWD}/embark/"
-  {
-    echo "DATABASE_NAME=$DATABASE_NAME"
-    echo "DATABASE_USER=$DATABASE_USER" 
-    echo "DATABASE_PASSWORD=$DATABASE_PASSWORD"
-    echo "DATABASE_HOST=$DATABASE_HOST"
-    echo "DATABASE_PORT=$DATABASE_PORT"
-    echo "MYSQL_PASSWORD=$MYSQL_PASSWORD"
-    echo "MYSQL_USER=$MYSQL_USER"
-    echo "MYSQL_DATABASE=$MYSQL_DATABASE"
-    echo "REDIS_HOST=$REDIS_HOST"
-    echo "REDIS_PORT=$REDIS_PORT"
-    echo "SECRET_KEY=$DJANGO_SECRET_KEY"
-    echo "HASHID_SALT=$RANDOM_SALT"
-    echo "HASHID_FIELD_MIN_LENGTH=$FIELD_LENGTH"
-    echo "PYTHONPATH=${PYTHONPATH}:${PWD}"
-    echo "DJANGO_SUPERUSER_PASSWORD=$SUPER_PW"
-    echo "DJANGO_SUPERUSER_USERNAME=$SUPER_USER"
-    echo "DJANGO_SUPERUSER_EMAIL=$SUPER_EMAIL"
-  } > .env
+  # write env-vars into ./.env
+  write_env
 
   #Add Symlink
   if ! [[ -d /app ]]; then
@@ -354,7 +331,7 @@ install_embark_dev(){
   fi
 
   # daemon
-  install_daemon
+  # install_daemon
 
   # download images for container
   docker-compose -f ./docker-compose-dev.yml up --no-start

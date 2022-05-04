@@ -19,7 +19,7 @@ logger = logging.getLogger('web')
 @require_http_methods(["GET"])
 def uploader_home(request):
     if FirmwareFile.objects.all().count() > 0:
-        analysis_form = FirmwareAnalysisForm()
+        analysis_form = FirmwareAnalysisForm(initial={ 'firmware': FirmwareFile.objects.latest('upload_date')})
         return render (request, 'uploader/fileUpload.html', {
             'success_message': False,
             'analysis_form': analysis_form
@@ -147,4 +147,7 @@ def delete_fw_file(request):
         logger.error("Form error: %s", form.errors)
         return HttpResponseBadRequest("invalid Form")
 
-    return render(request, 'uploader/firmwareDelete.html')
+    form = DeleteFirmwareForm(initial={ 'firmware': FirmwareFile.objects.latest('upload_date')})
+    return render(request, 'uploader/firmwareDelete.html', {
+            'delete_form': form
+        })

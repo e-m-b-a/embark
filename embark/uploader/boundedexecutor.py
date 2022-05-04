@@ -15,7 +15,8 @@ from django.utils.datetime_safe import datetime
 from django.conf import settings
 
 from uploader.archiver import Archiver
-from uploader.models import FirmwareAnalysis, Result
+from uploader.models import FirmwareAnalysis
+from dashboard.models import Result
 from embark.logreader import LogReader
 
 
