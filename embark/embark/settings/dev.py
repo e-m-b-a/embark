@@ -25,8 +25,10 @@ INSTALLED_APPS = [
     'mod_wsgi.server',
     'django_apscheduler',
     'channels',
-    'uploader',
-    'users'
+    'embark.apps.uploader',
+    'embark.apps.users',
+    'embark.apps.reporter',
+    'embark.apps.dashboard'
 ]
 
 AUTH_USER_MODEL = 'users.User'
