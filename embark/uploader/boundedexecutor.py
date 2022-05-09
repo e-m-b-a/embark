@@ -67,8 +67,8 @@ class BoundedExecutor:
             # The os.setsid() is passed in the argument preexec_fn so it's run after the fork() and before  exec() to run the shell.
             with open(f"{settings.EMBA_LOG_ROOT}/{id}/run.log", "w+") as file:
                 proc = Popen(cmd, stdout=file , shell=True, preexec_fn=os.setsid)
-            # Add proc to FirmwareAnalysis-Object
-            analysis.pid=proc.pid
+                # Add proc to FirmwareAnalysis-Object
+                analysis.pid=proc.pid
 
             # success
             logger.info("Success: %s", cmd)
