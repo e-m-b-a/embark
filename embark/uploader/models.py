@@ -144,8 +144,8 @@ class FirmwareAnalysis(models.Model):
     MAX_LENGTH = 127
 
     # pk
-    id = HashidAutoField(primary_key=True, prefix='fwA_')
-    # id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    # id = HashidAutoField(primary_key=True, prefix='fwA_')
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     # user
     user = models.ForeignKey(Userclass, on_delete=models.CASCADE, related_name='Fw_Analysis_User', null=True)
     # pid from within boundedexec

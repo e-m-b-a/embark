@@ -68,7 +68,7 @@ fi
 
 # db_init
 echo -e "[*] Starting migrations - log to embark/logs/migration.log"
-pipenv run ./embark/manage.py makemigrations users uploader | tee -a ./logs/migration.log
+pipenv run ./embark/manage.py makemigrations users uploader reporter dashboard | tee -a ./logs/migration.log
 pipenv run ./embark/manage.py migrate | tee -a ./logs/migration.log
 
 # superuser
@@ -80,8 +80,8 @@ echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.lo
 docker container logs embark_db_dev -f > ./logs/mysql_dev.log & 
 
 ##
-# echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
-# pipenv run ./embark/manage.py runapscheduler | tee -a ./embark/logs/scheduler.log &
+echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
+pipenv run ./embark/manage.py runapscheduler | tee -a ./embark/logs/scheduler.log &
 #
 # echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
 # echo "START DAPHNE" >./embark/logs/daphne.log
@@ -89,7 +89,7 @@ docker container logs embark_db_dev -f > ./logs/mysql_dev.log &
 
 # start embark
 systemctl start embark.service
-echo -e "$ORANGE""$BOLD""start EMBArk server""$NC"
+echo -e "$ORANGE""$BOLD""start EMBArk server (WS/WSS not enabled -a also asgi)""$NC"
 pipenv run ./embark/manage.py runserver "$IP":"$PORT" |& tee -a ./logs/debug-server.log
 
 wait

@@ -21,22 +21,26 @@
                     <span class="nav-link">Dashboard</span>
                 </a>
             </li>
-            <li>
-                <a href="{% url 'embark-uploader-home' %}" data-link>
-                    <span class="icon">
-                        <svg height="48px" viewBox="0 0 21 21" width="48px" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" transform="translate(4 3)"><path d="m2.5 4.753 4-4.232 4 4.191"/><path d="m6.5.5v11"/><path d="m.5 14.5h12"/></g></svg>
-                    </span>
-                    <span class="nav-link">Operation</span>
-                </a>
-            </li>
-            <li>
-                <a href="{% url 'embark-uploader-delete' %}">
-                    <span class="icon">
-                        <svg height="48px" viewBox="0 0 21 21" width="48px" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" transform="matrix(-1 0 0 1 19 2)"><circle cx="8.5" cy="8.5" r="8"/><path d="m8.5 5.5v4h-3.5"/></g></svg>
-                    </span>
-                    <span class="nav-link">Delete</span>
-                </a>
-            </li>
+
+            <li class="submenu">
+                <div class="dropdown">
+                    <a data-toggle="collapse" aria-expanded="true">
+                        <span class="icon" onclick="navToggle()">
+                            <svg height="48px" viewBox="0 0 21 21" width="48px" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" transform="translate(4 3)"><path d="m2.5 4.753 4-4.232 4 4.191"/><path d="m6.5.5v11"/><path d="m.5 14.5h12"/></g></svg>
+                        </span>
+                        <span class="nav-link" >Uploader</span>
+                    </a>
+                    <ul class="dropdown-content">
+                            <a href="{% url 'embark-uploader-home' %}" data-link>
+                                <span class="nav-link">Operation</span>
+                            </a>
+                            <a href="{% url 'embark-uploader-delete' %}" data-link>
+                                <span class="nav-link">Delete Firmware</span>
+                            </a>
+                    </ul>
+                 </div>
+             </li>
+
             <li>
                 <a href="{% url 'embark-ServiceDashboard' %}">
                     <span class="icon">
@@ -60,12 +64,15 @@
                     <span class="nav-link" >My Account</span>
                    </a>
                    <ul class="dropdown-content">
-                           <a href="{% url 'embark-password' %}">
-                           <span class="nav-link">Change password</span></a>
-                           <a href="{% url 'embark-acc-delete' %}">
-                           <span class="nav-link">Delete account</span></a>
-                           <!-- <a href="/password_change">
-                           <span class="nav-link">Reset password</span></a> -->
+                        <a href="{% url 'embark-user-menu' %}">
+                           <span class="nav-link">Change password</span>
+                        </a>
+                        <a href="{% url 'embark-password-change' %}">
+                            <span class="nav-link">Change password</span>
+                        </a>
+                        <a href="{% url 'embark-acc-delete' %}">
+                            <span class="nav-link">Delete account</span>
+                        </a>
                    </ul>
                 </div>
             </li>
