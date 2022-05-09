@@ -12,7 +12,7 @@ DEBUG = bool(os.environ.get('EMBARK_DEBUG', True))
 ALLOWED_HOSTS = ['*']
 
 EMBA_ROOT = '/app/emba/'
-EMBA_LOG_ROOT = os.path.join(BASE_DIR, 'emba_logs')
+EMBA_LOG_ROOT = os.path.join(BASE_DIR.parent, 'emba_logs')
 EMBA_LOG_URL = '/emba_logs/'
 
 INSTALLED_APPS = [
@@ -166,7 +166,7 @@ MEDIA_ROOT = os.path.join('/app/', 'uploadedFirmwareImages')  # media directory 
 MEDIA_URL = '/uploadedFirmwareImages/'
 
 # Active Firmware
-ACTIVE_FW = '/app/uploadedFirmwareImages/'
+ACTIVE_FW = '/app/uploadedFirmwareImages/active/'
 
 REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
 REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))

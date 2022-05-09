@@ -7,6 +7,7 @@ import shutil
 from subprocess import Popen, PIPE
 import re
 import json
+import time
 
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
@@ -65,22 +66,26 @@ class BoundedExecutor:
             analysis = FirmwareAnalysis.objects.get(id=id)
 
             # The os.setsid() is passed in the argument preexec_fn so it's run after the fork() and before  exec() to run the shell.
-            with open(f"{settings.EMBA_LOG_ROOT}/{id}/run.log", "w+") as file:
-                proc = Popen(cmd, stdout=file , shell=True, preexec_fn=os.setsid)
+            # attached but synchronous 
+            with open(f"{settings.EMBA_LOG_ROOT}/{id}/emba_run.log", "w+") as file:
+                proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True, preexec_fn=os.setsid)
                 # Add proc to FirmwareAnalysis-Object
                 analysis.pid=proc.pid
+                #wait for completion
+                proc.communicate()
 
             # success
             logger.info("Success: %s", cmd)
 
             # get csv log location
-            csv_log_location = f"{settings.EMBA_LOG_ROOT}/{id}/f50_base_aggregator.csv"
+            csv_log_location = f"{settings.EMBA_LOG_ROOT}/{id}/emba_logs/f50_base_aggregator.csv"
 
             # read f50_aggregator and store it into a Result form
             logger.info('Reading report from: %s', csv_log_location)
+            logger.debug("contents of that dir are %r", Path(csv_log_location).exists())
             # if Path(csv_log_location).exists:
             if Path(csv_log_location).is_file():
-                cls.csv_read(id, csv_log_location, cmd)
+                cls.csv_read(id=id, path=csv_log_location, cmd=cmd)
             else:
                 logger.error("CSV file %s for report: %s not generated", csv_log_location, id)
                 logger.error("EMBA run was probably not successful!")
@@ -116,10 +121,13 @@ class BoundedExecutor:
         return: emba process future on success, None on failure
         """
         active_analyzer_dir = f"{settings.ACTIVE_FW}{firmware_flags.id}/"
-        Archiver.copy(firmware_file.file.path, active_analyzer_dir)
+        logger.info("submitting firmware %s to emba", active_analyzer_dir)
 
-        # find emba start_file
+        Archiver.copy(src=firmware_file.file.path, dst=active_analyzer_dir)
+
+        # copy success
         emba_startfile = os.listdir(active_analyzer_dir)
+        logger.debug("active dir contents %s", emba_startfile)
         if len(emba_startfile) == 1:
             image_file_location = f"{active_analyzer_dir}{emba_startfile.pop()}"
         else:
@@ -133,9 +141,9 @@ class BoundedExecutor:
 
         # evaluate meta information and safely create log dir
 
-        emba_log_location = f"{settings.EMBA_LOG_ROOT}/{firmware_flags.id}"
-        log_path = Path(emba_log_location)
-        log_path.mkdir(parents=True, exist_ok=True)
+        emba_log_location = f"{settings.EMBA_LOG_ROOT}/{firmware_flags.id}/emba_logs"
+        log_path = Path(emba_log_location).parent
+        log_path.mkdir(parents=True, exist_ok=False)     #false since unique id
 
         firmware_flags.path_to_logs = emba_log_location
         firmware_flags.save()

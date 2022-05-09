@@ -29,7 +29,7 @@ export PIPENV_VENV_IN_PROJECT="True"
 
 cleaner() {
   if [[ -f ./embark/embark.log ]]; then
-    chmod 755 ./embark/embark.log
+    rm ./embark/embark.log -f
   fi
   
   # killall -9 -q "*daphne*"
@@ -81,11 +81,13 @@ docker container logs embark_db_dev -f > ./logs/mysql_dev.log &
 
 ##
 echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
-pipenv run ./embark/manage.py runapscheduler | tee -a ./embark/logs/scheduler.log &
+pipenv run ./embark/manage.py runapscheduler | tee -a ./logs/scheduler.log &
 #
-# echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-# echo "START DAPHNE" >./embark/logs/daphne.log
-# pipenv run daphne -v 3 -p 8001 -b "$IP" --root-path="$PWD"/embark embark.asgi:application &>>./embark/logs/daphne.log &
+echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
+echo "START DAPHNE" >./logs/daphne.log
+cd ./embark
+pipenv run daphne -v 3 -p 8001 -b "$IP" --root-path="$PWD"/embark embark.asgi:application &>../logs/daphne.log &
+cd ..
 
 # start embark
 systemctl start embark.service
