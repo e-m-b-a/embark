@@ -76,7 +76,7 @@ def start_analysis(request):
 
             # inject into bounded Executor
             if BoundedExecutor.submit_firmware(firmware_flags=new_analysis, firmware_file=new_firmware_file):
-                return HttpResponseRedirect("/serviceDashboard/")
+                return HttpResponseRedirect("/dashboard/serviceDashboard/")
             logger.error("Server Queue full, or other boundenexec error")
             return HttpResponseServerError("Queue full")
 

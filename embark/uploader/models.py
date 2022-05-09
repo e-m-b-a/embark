@@ -145,13 +145,11 @@ class FirmwareAnalysis(models.Model):
 
     # pk
     # id = HashidAutoField(primary_key=True, prefix='fwA_')
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
     # user
     user = models.ForeignKey(Userclass, on_delete=models.CASCADE, related_name='Fw_Analysis_User', null=True)
     # pid from within boundedexec
-    pid = models.BigIntegerField(
-        help_text='process id of subproc', verbose_name='PID', blank=True
-    )
+    pid = models.BigIntegerField(help_text='process id of subproc', verbose_name='PID', blank=True, null=True)
 
     firmware = models.ForeignKey(FirmwareFile, on_delete=models.RESTRICT, help_text='', null=True)
 

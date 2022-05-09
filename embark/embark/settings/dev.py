@@ -165,6 +165,9 @@ LOGOUT_REDIRECT_URL = ''
 MEDIA_ROOT = os.path.join('/app/', 'uploadedFirmwareImages')  # media directory in the root directory
 MEDIA_URL = '/uploadedFirmwareImages/'
 
+# Active Firmware
+ACTIVE_FW = '/app/uploadedFirmwareImages/'
+
 REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
 REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
 
