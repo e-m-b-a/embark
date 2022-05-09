@@ -1,4 +1,5 @@
 # pylint: disable=R1732, C0201, E1129
+from asyncio.subprocess import STDOUT
 import csv
 import logging
 import os
@@ -44,12 +45,12 @@ class BoundedExecutor:
     """
 
     @classmethod
-    def run_emba_cmd(cls, cmd, hashid=None, active_analyzer_dir=None):
+    def run_emba_cmd(cls, cmd, id=None, active_analyzer_dir=None):
         """
         run shell commands from python script as subprocess, waits for termination and evaluates returncode
 
         :param cmd: shell command to be executed
-        :param hashid: primary key for firmware entry db identification
+        :param id: primary key for firmware entry db identification
         :param active_analyzer_dir: active analyzer dir for deletion afterwards
 
         :return:
@@ -61,26 +62,26 @@ class BoundedExecutor:
         # see emba.sh for further information
         try:
 
-            analysis = FirmwareAnalysis.objects.get(id=hashid)
+            analysis = FirmwareAnalysis.objects.get(id=id)
 
             # The os.setsid() is passed in the argument preexec_fn so it's run after the fork() and before  exec() to run the shell.
-            proc = Popen(cmd, stdout=PIPE, shell=True, preexec_fn=os.setsid)  #nosec
+            proc = Popen(cmd,stdin=PIPE, stdout=STDOUT, shell=True, preexec_fn=os.setsid)
             # Add proc to FirmwareAnalysis-Object
             analysis.pid=proc.pid
-
+            
             # success
             logger.info("Success: %s", cmd)
 
             # get csv log location
-            csv_log_location = f"{settings.EMBA_LOG_ROOT}/{hashid}/f50_base_aggregator.csv"
+            csv_log_location = f"{settings.EMBA_LOG_ROOT}/{id}/f50_base_aggregator.csv"
 
             # read f50_aggregator and store it into a Result form
             logger.info('Reading report from: %s', csv_log_location)
             # if Path(csv_log_location).exists:
             if Path(csv_log_location).is_file():
-                cls.csv_read(hashid, csv_log_location, cmd)
+                cls.csv_read(id, csv_log_location, cmd)
             else:
-                logger.error("CSV file %s for report: %s not generated", csv_log_location, hashid)
+                logger.error("CSV file %s for report: %s not generated", csv_log_location, id)
                 logger.error("EMBA run was probably not successful!")
 
             # take care of cleanup
@@ -94,7 +95,7 @@ class BoundedExecutor:
 
         finally:
             # finalize db entry
-            if hashid:
+            if id:
                 analysis.end_date = datetime.now()
                 analysis.scan_time = datetime.now() - analysis.start_date
                 analysis.duration = str(analysis.scan_time)
@@ -185,7 +186,7 @@ class BoundedExecutor:
         executor.shutdown(wait)
 
     @classmethod
-    def csv_read(cls, hashid, path, cmd):
+    def csv_read(cls, id, path, cmd):
         """
         This job reads the F50_aggregator file and stores its content into the Result model
         """
@@ -217,7 +218,7 @@ class BoundedExecutor:
             entropy_value = entropy_value.strip('.')
 
         res = Result(
-            firmware=FirmwareAnalysis.objects.get(id=hashid),
+            firmware=FirmwareAnalysis.objects.get(id=id),
             emba_command=cmd.replace(f"cd {settings.EMBA_ROOT} && ", ""),
             architecture_verified=res_dict.get("architecture_verified", ''),
             # os_unverified=res_dict.get("os_unverified", ''),
