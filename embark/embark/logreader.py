@@ -38,7 +38,7 @@ class LogReader:
         try:
             self.firmwarefile = FirmwareAnalysis.objects.get(id=firmware_id).firmware.__str__()
         except Exception as error:
-            logger.info("Firmware file exception: %s", error)
+            logger.error("Firmware file exception: %s", error)
 
         # set variables for channels communication
         self.room_group_name = 'updatesgroup'
@@ -158,7 +158,7 @@ class LogReader:
             if self.firmware_id_str not in PROCESS_MAP:
                 PROCESS_MAP[self.firmware_id_str] = []
 
-            # look for new events
+            # look for new events in log
             got_event = self.inotify_events(f"{firmware.path_to_logs}/emba.log")
 
             for eve in got_event:
@@ -169,13 +169,14 @@ class LogReader:
                     # Act on file change
                     elif flag is flags.MODIFY:
                         # get the actual difference
-                        tmp = self.get_diff(firmware.path_to_logs)
+                        tmp = self.get_diff(firmware.path_to_logs + '/emba.log')
                         # send changes to frontend
                         self.input_processing(tmp)
                         # copy diff to tmp file
                         self.copy_file_content(tmp)
 
         self.cleanup()
+        logger.info("read loop done for %s", self.firmware_id)
         # return
 
     def cleanup(self):
@@ -184,7 +185,7 @@ class LogReader:
         """
         # inotify = INotify()
         # inotify.rm_watch(self.wd)
-        logger.info("Log reader cleaned up for %s", self.firmware_id)
+        logger.debug("Log reader cleaned up for %s", self.firmware_id)
         # TODO do cleanup of emba_new_<self.firmware_id>.log
 
     @classmethod
