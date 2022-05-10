@@ -223,7 +223,6 @@ install_daemon() {
   echo -e "\n$GREEN""$BOLD""Install embark daemon""$NC"
   sed -i "s|BASEDIR|$DIR|g" ./embark.service
   ln -s /app/embark.service /etc/systemd/system/embark.service
-  systemctl disable embark.service
 }
 
 install_embark_default() {

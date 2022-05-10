@@ -42,6 +42,7 @@ cleaner() {
   docker container prune -f --filter "label=flag"
 
   systemctl stop embark.service
+  systemctl disable embark.service
   exit 1
 }
 
@@ -67,9 +68,8 @@ if [[ $? -eq 1 ]]; then
     exit 1
   fi
   cd ./emba || exit 1
-  git pull
   systemctl restart embark
-  /app/emba/emba.sh -d 1>/dev/null
+  ./emba.sh -d 1>/dev/null
   if [[ $? -eq 1 ]]; then
     echo -e "$RED""EMBA is not configured correctly""$NC"
     exit 1
@@ -106,6 +106,7 @@ echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.lo
 docker container logs embark_db -f &> /app/www/logs/mysql.log &
 
 #start the supervisor
+systemctl enable embark.service
 systemctl start embark.service
 
 # copy django server
