@@ -96,13 +96,8 @@ write_env() {
 
 install_emba() {
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner EMBA on host""$NC"
-  if [[ -f ./emba ]]; then
     git submodule init
     git submodule update
-  else
-    echo "Somethings wrong with this repo"
-    exit 1
-  fi
     cd emba || exit 1
     ./installer.sh -d
     cp ./config/emba_updater /etc/cron.daily/
