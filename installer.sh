@@ -96,7 +96,7 @@ write_env() {
 
 install_emba() {
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner EMBA on host""$NC"
-  if ! [[ -d ./emba ]]; then
+  if [[ -d ./emba ]]; then
     cd emba || exit 1
     git pull
     ./installer.sh -d
