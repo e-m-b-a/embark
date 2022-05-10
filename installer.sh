@@ -96,19 +96,16 @@ write_env() {
 
 install_emba() {
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner EMBA on host""$NC"
-
   if ! [[ -d ./emba ]]; then
-    git clone https://github.com/e-m-b-a/emba.git
-  else
     cd emba || exit 1
     git pull
+    ./installer.sh -d
+    cp ./config/emba_updater /etc/cron.daily/
     cd .. || exit 1
+  else
+    echo "Somethings wrong with this repo"
+    exit 1
   fi
-
-  cd emba || exit 1
-  ./installer.sh -d
-  cp ./config/emba_updater /etc/cron.daily/
-  cd .. || exit 1
 }
 
 create_ca (){
