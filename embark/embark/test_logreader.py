@@ -1,6 +1,6 @@
 import logging
 from django.test import TestCase
-from uploader.models import Firmware, FirmwareFile
+from uploader.models import FirmwareAnalysis, FirmwareFile
 
 from . import logreader
 
@@ -23,7 +23,7 @@ class TestLogreader(TestCase):
 
         # creat DB entry
         test_file = FirmwareFile.objects.create()
-        firmware = Firmware(firmware=test_file)
+        firmware = FirmwareAnalysis(firmware=test_file)
         firmware.pk = -1
         firmware.save()
 

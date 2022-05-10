@@ -1,5 +1,5 @@
 // jshint unused:false
-// ^ this should only be added AFTER successful check (disables waring for global functions)
+// ^ this should only be added AFTER successful check (disables warning for global functions)
 /**
  * The following event calls prevent default to turn off the browsers default drag and drop handler
  * @param {*} ev Event

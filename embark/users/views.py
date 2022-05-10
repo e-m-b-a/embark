@@ -16,6 +16,7 @@ from .models import User
 
 logger = logging.getLogger('web')
 
+
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def register(request):
@@ -39,19 +40,19 @@ def register(request):
                 else:
                     logger.debug('Passwords do not match')
                     return render(request, 'user/register.html',
-                                    {'error_message': True, 'message': 'Passwords do not match.'})
+                        {'error_message': True, 'message': 'Passwords do not match.'})
 
                 return render(request, 'user/login.html',
-                                {'success_message': True, 'message': 'Registration successful.'})
+                    {'success_message': True, 'message': 'Registration successful.'})
 
             except KeyError:
                 logger.exception('Missing keys from data- Username, password, password_confirm')
                 return render(request, 'user/register.html',
-                                {'error_message': True, 'message': 'User data is invalid.'})
+                    {'error_message': True, 'message': 'User data is invalid.'})
         except Exception as error:
             logger.exception('Wide exception in Signup: %s', error)
             return render(request, 'user/register.html',
-                            {'error_message': True, 'message': 'Something went wrong when signing up the user.'})
+                {'error_message': True, 'message': 'Something went wrong when signing up the user.'})
     return render(request, 'user/register.html')
 
 
@@ -69,7 +70,7 @@ def embark_login(request):
             except KeyError:
                 logger.exception('Missing keys from data- Username and password')
                 return render(request, 'user/login.html',
-                                {'error_message': True, 'message': 'Username or password are wrong.'})
+                    {'error_message': True, 'message': 'Username or password are wrong.'})
 
             logger.debug('Found user name and password')
             user = authenticate(request, username=username, password=password)
@@ -86,7 +87,7 @@ def embark_login(request):
             logger.exception('Wide exception in Signup: %s', error)
             messages.info(request, "Invalid user data")
             return render(request, 'user/login.html',
-                            {'error_message': True, 'message': 'Something went wrong when logging in the user.'})
+                {'error_message': True, 'message': 'Something went wrong when logging in the user.'})
     return render(request, 'user/login.html')
 
 
@@ -118,7 +119,7 @@ def password_change(request):
                     if old_password == new_password:
                         logger.debug('New password = old password')
                         return render(request, 'user/passwordChange.html',
-                                        {'error_message': True, 'message': 'New password matches the old password'})
+                            {'error_message': True, 'message': 'New password matches the old password'})
                     if new_password == confirm_password:
                         user.set_password(new_password)
                         user.save()
@@ -126,22 +127,23 @@ def password_change(request):
                         login(request, user)
                         logger.debug('New password set, user authenticated')
                         return render(request, 'user/passwordChangeDone.html',
-                                        {'success_message': True, 'message': 'Password change successful.'})
+                            {'success_message': True, 'message': 'Password change successful.'})
                     else:
                         logger.debug('Passwords do not match')
                         return render(request, 'user/passwordChange.html',
-                                        {'error_message': True, 'message': 'Passwords do not match.'})
+                            {'error_message': True, 'message': 'Passwords do not match.'})
                 else:
                     logger.debug('Old password is incorrect')
                     return render(request, 'user/passwordChange.html',
-                                    {'error_message': True, 'message': 'Old password is incorrect.'})
+                        {'error_message': True, 'message': 'Old password is incorrect.'})
             except KeyError:
                 logger.exception('Missing keys from data-passwords')
                 return render(request, 'user/passwordChange.html',
-                                {'error_message': True, 'message': 'Some fields are empty!'})
+                    {'error_message': True, 'message': 'Some fields are empty!'})
         except Exception as error:
             logger.exception('Wide exception in Password Change: %s', error)
-            return render(request, 'user/passwordChange.html', {'error_message': True, 'message': 'Something went wrong when changing the password for the user.'})
+            return render(request, 'user/passwordChange.html', 
+                {'error_message': True, 'message': 'Something went wrong when changing the password for the user.'})
     return render(request, 'user/passwordChange.html')
 
 
@@ -162,8 +164,9 @@ def acc_delete(request):
             "%H:%M:%S")  # workaround for not duplicating entry users_user.username
         user.is_active = False
         user.save()
-        return render(request, 'user/register.html', {'success_message': True, 'message': 'Account successfully deleted.'})
-    return render (request, 'user/accountDelete.html')
+        return render(request, 'user/register.html',
+            {'success_message': True, 'message': 'Account successfully deleted.'})
+    return render(request, 'user/accountDelete.html')
 
 
 @require_http_methods(["GET"])
@@ -206,7 +209,7 @@ def get_log(request, log_type, lines):      # FIXME update or remove
                 logger.exception('Wide exception in logstreamer: %s', error)
 
         return render(request, 'user/log.html',
-                    {'header': log_file + '.log', 'log': ''.join(result), 'username': request.user.username})
+            {'header': log_file + '.log', 'log': ''.join(result), 'username': request.user.username})
     except IOError:
         return render(request, 'user/log.html',
-                    {'header': 'Error', 'log': file_path + ' not found!', 'username': request.user.username})
+            {'header': 'Error', 'log': file_path + ' not found!', 'username': request.user.username})

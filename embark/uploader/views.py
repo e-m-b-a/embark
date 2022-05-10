@@ -15,15 +15,14 @@ from uploader.models import FirmwareAnalysis, FirmwareFile
 
 logger = logging.getLogger('web')
 
+
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["GET"])
 def uploader_home(request):
     if FirmwareFile.objects.all().count() > 0:
-        analysis_form = FirmwareAnalysisForm(initial={ 'firmware': FirmwareFile.objects.latest('upload_date')})
-        return render (request, 'uploader/fileUpload.html', {
-            'success_message': False,
-            'analysis_form': analysis_form
-        })
+        analysis_form = FirmwareAnalysisForm(initial={'firmware': FirmwareFile.objects.latest('upload_date')})
+        return render (request, 'uploader/fileUpload.html',
+            {'success_message': False, 'analysis_form': analysis_form})
     return render (request, 'uploader/fileUpload.html')
 
 
@@ -39,9 +38,9 @@ def save_file(request):
     """
     logger.info("User %s tryied to upload %s", request.user.username, request.FILES.getlist('file'))
     for file in request.FILES.getlist('file'):      # FIXME determin usecase for multi-file-upload in one request
-        firmware_file = FirmwareFile.objects.create(file = file)
+        firmware_file = FirmwareFile.objects.create(file=file)
         firmware_file.save()
-        
+
     return HttpResponse("successful upload")
 
 
@@ -81,16 +80,11 @@ def start_analysis(request):
             return HttpResponseServerError("Queue full")
 
     if FirmwareFile.objects.all().count() > 0:
-        analysis_form = FirmwareAnalysisForm(initial={ 'firmware': FirmwareFile.objects.latest('upload_date')})
-        return render (request, 'uploader/fileUpload.html', {
-            'success_message': True,
-            'message': "Successfull upload",
-            'analysis_form': analysis_form
-        })
-    return render (request, 'uploader/fileUpload.html', {
-            'success_message': True,
-            'message': "Please Upload a File first",
-        })
+        analysis_form = FirmwareAnalysisForm(initial={'firmware': FirmwareFile.objects.latest('upload_date')})
+        return render (request, 'uploader/fileUpload.html', 
+            {'success_message': True, 'message': "Successfull upload", 'analysis_form': analysis_form})
+    return render (request, 'uploader/fileUpload.html',
+        {'success_message': True, 'message': "Please Upload a File first"})
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)

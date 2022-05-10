@@ -47,7 +47,8 @@ function livelog_module(module, cur_ID) {
 function cancelLog(currentID) {
     "use strict";
     try {
-        // TODO send POST req with hashid associated with currentID
+        // TODO send POST req with id associated with currentID
+        // Use StopAnalysis-form
         var idOfDIV = "#Container_" + currentID;
         $(idOfDIV).remove();
     } catch (error) {
@@ -64,7 +65,7 @@ function cancelLog(currentID) {
     "use strict";
     try {
         // TODO get hashid of div-id
-        window.location("/log/" + analysisID);
+        window.location("/log/" + currentID);
     } catch (error) {
         //console.log(error.message);
         console.log(error);

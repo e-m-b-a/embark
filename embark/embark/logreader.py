@@ -187,7 +187,6 @@ class LogReader:
         logger.info("Log reader cleaned up for %s", self.firmware_id)
         # TODO do cleanup of emba_new_<self.firmware_id>.log
 
-
     @classmethod
     # def process_line(self, inp, pat):
     def process_line(cls, inp, pat):
@@ -253,8 +252,7 @@ class LogReader:
             ops.map(lambda b: b.split(" ")),
             ops.filter(lambda c: c[1] == 'finished')
         ).subscribe(
-            lambda x: [self.update_status(x)    # , self.test_list1.append(x)
-            ]
+            lambda x: [self.update_status(x)]    # , self.test_list1.append(x)]
         )
 
         # observer for phase messages
@@ -264,8 +262,7 @@ class LogReader:
             ops.map(lambda v: v.split(" ", 1)),
             ops.filter(lambda w: w[1])
         ).subscribe(
-            lambda x: [self.update_phase(x)     # , self.test_list2.append(x)
-            ]
+            lambda x: [self.update_phase(x)]     # , self.test_list2.append(x)
         )
 
     @classmethod

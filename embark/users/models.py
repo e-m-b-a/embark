@@ -8,10 +8,10 @@ from lib.choice_enum import ChoiceIntEnum
 
 @enum.unique
 class Role(ChoiceIntEnum):
-    viewer = 0
-    editor = 1
-    owner = 2
-    manager = 3
+    Viewer = 0
+    Editor = 1
+    Owner = 2
+    Manager = 3
 
 
 class Team(models.Model):

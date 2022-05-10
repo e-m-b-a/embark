@@ -25,6 +25,7 @@ from dashboard.models import Result
 
 logger = logging.getLogger('web')
 
+
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def reports(request):
@@ -37,10 +38,10 @@ def reports(request):
 def html_report(request, analysis_id, html_file):
     report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
 
-    if FirmwareAnalysis.objects.get(id=analysis_id).exists()and FirmwareAnalysis.objects.get(id=analysis_id).user == request.user:
-            html_body = get_template(report_path)
-            logger.info("html_report - analysis_id: %s html_file: %s", analysis_id, html_file)
-            return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
+    if FirmwareAnalysis.objects.get(id=analysis_id).exists() and FirmwareAnalysis.objects.get(id=analysis_id).user == request.user:
+        html_body = get_template(report_path)
+        logger.info("html_report - analysis_id: %s html_file: %s", analysis_id, html_file)
+        return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
     logger.debug("could  not get template - %s", request)
     return HttpResponseBadRequest
 

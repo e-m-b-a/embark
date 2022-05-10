@@ -66,12 +66,12 @@ class BoundedExecutor:
             analysis = FirmwareAnalysis.objects.get(id=id)
 
             # The os.setsid() is passed in the argument preexec_fn so it's run after the fork() and before  exec() to run the shell.
-            # attached but synchronous 
+            # attached but synchronous
             with open(f"{settings.EMBA_LOG_ROOT}/{id}/emba_run.log", "w+") as file:
                 proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True, preexec_fn=os.setsid)
                 # Add proc to FirmwareAnalysis-Object
-                analysis.pid=proc.pid
-                #wait for completion
+                analysis.pid = proc.pid
+                # wait for completion
                 proc.communicate()
 
             # success
@@ -143,7 +143,7 @@ class BoundedExecutor:
 
         emba_log_location = f"{settings.EMBA_LOG_ROOT}/{firmware_flags.id}/emba_logs"
         log_path = Path(emba_log_location).parent
-        log_path.mkdir(parents=True, exist_ok=False)     #false since unique id
+        log_path.mkdir(parents=True, exist_ok=False)     # false since unique id
 
         firmware_flags.path_to_logs = emba_log_location
         firmware_flags.save()

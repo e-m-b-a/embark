@@ -90,6 +90,7 @@
     "globals"       : {
         "$": false,
         "successAlert": false,
+        "errorAlert": false,
         "Chart": false
     }
 }

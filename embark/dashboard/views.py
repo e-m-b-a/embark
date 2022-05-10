@@ -11,13 +11,14 @@ from .models import Result
 
 logger = logging.getLogger('web')
 
+
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def main_dashboard(request):
     if request.user.is_authenticated:
         if Result.objects.all().count() > 0:
             return render(request, 'dashboard/mainDashboard.html',
-                    {'nav_switch': True, 'username': request.user.username})
+                {'nav_switch': True, 'username': request.user.username})
         return HttpResponseRedirect('../../uploader/')
     return HttpResponseForbidden
 
@@ -32,7 +33,7 @@ def service_dashboard(request):
     :return httpresp: html servicedashboard
     """
     return render(request, 'dashboard/serviceDashboard.html',
-                  {'username': request.user.username})
+        {'username': request.user.username})
 
 
 @require_http_methods(["GET"])
@@ -47,7 +48,7 @@ def report_dashboard(request):
     """
     finished_firmwares = FirmwareAnalysis.objects.all().filter(finished=True)
     return render(request, 'dashboard/reportDashboard.html',
-                    {'finished_firmwares': finished_firmwares, 'username': request.user.username})
+        {'finished_firmwares': finished_firmwares, 'username': request.user.username})
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -61,4 +62,4 @@ def individual_report_dashboard(request, hash_id):
     """
     logger.info("individual_dashboard - analyze_id: %s", hash_id)
     return render(request, 'dashboard/individualReportDashboard.html',
-                    {'username': request.user.username})
+        {'username': request.user.username})

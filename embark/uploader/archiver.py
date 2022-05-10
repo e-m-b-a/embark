@@ -143,5 +143,5 @@ class Archiver:
             path = Path(dst)
             path.mkdir(parents=True, exist_ok=False)
             return shutil.copy(src, dst)
-        except Exception as E:
-            logger.error("Error copping firmware to active dir: %s", E)
+        except Exception as error:
+            logger.error("Error copping firmware to active dir: %s", error)

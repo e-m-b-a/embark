@@ -2,7 +2,6 @@
 import logging
 import django
 from django import forms
-from django.utils.datetime_safe import datetime
 
 from uploader import models
 

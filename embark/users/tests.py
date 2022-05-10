@@ -8,6 +8,7 @@ from users.models import User
 
 # FIXME these are not up-to-date
 
+
 class TestUsers(TestCase):
     def __init__(self):
         super().__init__(self)

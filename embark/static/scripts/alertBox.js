@@ -1,5 +1,5 @@
 // jshint unused:false
-// ^ this should only be added AFTER successfull check (disables waring for global functions)
+// ^ this should only be added AFTER successfull check (disables warning for global functions)
 
 /** Error alert - Displays Alert message if something is failed
  * @param {*} message - message to be shown to user

@@ -2,6 +2,7 @@ from django.db import models
 
 from uploader.models import FirmwareAnalysis
 
+
 class Result(models.Model):
     firmware_analysis = models.ForeignKey(FirmwareAnalysis, on_delete=models.CASCADE, help_text='')
     architecture_verified = models.CharField(blank=True, null=True, max_length=100, help_text='')
@@ -38,4 +39,3 @@ class Result(models.Model):
     metasploit_modules = models.IntegerField(default=0, help_text='')
     bins_checked = models.IntegerField(default=0, help_text='')
     strcpy_bin = models.TextField(default='{}')
-
