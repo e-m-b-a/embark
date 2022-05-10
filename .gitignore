@@ -3,7 +3,6 @@ __pycache__/
 *.log
 *.sqlite3
 cert/
-emba/
 .env
 emba_logs/
 migrations/
