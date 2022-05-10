@@ -74,15 +74,18 @@
 }
 
 #navigation ul li {
-    line-height: 50px;
+    line-height: 40px;
     font-size: 20px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin: 45px 0 0 0;
 }
 
 #navigation ul li a {
     display: flex;
     text-decoration: none;
     color: #eee;
-    margin-left: 10px;
+    margin-left: 15px;
 }
 
 #navigation .nav-link {
@@ -199,9 +202,9 @@
     position: absolute;
     width: 150%;
     overflow: initial;
-    font-size: 18px;
-    line-height: 0.5em;
-    margin-left: 30px;
+    font-size: 15px;
+    line-height: 0.3em;
+    margin-left: 70px;
 }
 
 .dropdown:hover .dropdown-content {
@@ -210,7 +213,7 @@
 .dropdown-content a {
   display: block;
   color: #000000;
-  padding: 15px;
+  padding-top: 5px;
   text-decoration: none;
 }
 .dropdown-content a:hover {
