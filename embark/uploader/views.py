@@ -21,8 +21,7 @@ logger = logging.getLogger('web')
 def uploader_home(request):
     if FirmwareFile.objects.all().count() > 0:
         analysis_form = FirmwareAnalysisForm(initial={'firmware': FirmwareFile.objects.latest('upload_date')})
-        return render (request, 'uploader/fileUpload.html',
-            {'success_message': False, 'analysis_form': analysis_form})
+        return render (request, 'uploader/fileUpload.html', {'success_message': False, 'analysis_form': analysis_form})
     return render (request, 'uploader/fileUpload.html')
 
 
@@ -81,10 +80,8 @@ def start_analysis(request):
 
     if FirmwareFile.objects.all().count() > 0:
         analysis_form = FirmwareAnalysisForm(initial={'firmware': FirmwareFile.objects.latest('upload_date')})
-        return render (request, 'uploader/fileUpload.html', 
-            {'success_message': True, 'message': "Successfull upload", 'analysis_form': analysis_form})
-    return render (request, 'uploader/fileUpload.html',
-        {'success_message': True, 'message': "Please Upload a File first"})
+        return render (request, 'uploader/fileUpload.html', {'success_message': True, 'message': "Successfull upload", 'analysis_form': analysis_form})
+    return render (request, 'uploader/fileUpload.html', {'success_message': True, 'message': "Please Upload a File first"})
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -142,6 +139,4 @@ def delete_fw_file(request):
         return HttpResponseBadRequest("invalid Form")
 
     form = DeleteFirmwareForm(initial={ 'firmware': FirmwareFile.objects.latest('upload_date')})
-    return render(request, 'uploader/firmwareDelete.html', {
-            'delete_form': form
-        })
+    return render(request, 'uploader/firmwareDelete.html', {'delete_form': form})

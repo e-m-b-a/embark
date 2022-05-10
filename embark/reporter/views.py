@@ -51,7 +51,7 @@ def html_report(request, analysis_id, html_file):
 def html_report_path(request, analysis_id, html_path, html_file):
     report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
 
-    if FirmwareAnalysis.objects.get(id=analysis_id).exists()and FirmwareAnalysis.objects.get(id=analysis_id).user == request.user:
+    if FirmwareAnalysis.objects.get(id=analysis_id).exists() and FirmwareAnalysis.objects.get(id=analysis_id).user == request.user:
         html_body = get_template(report_path)
         logger.info("html_report - analysis_id: %s path: %s html_file: %s", analysis_id, html_path, html_file)
         return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
@@ -107,6 +107,7 @@ def html_report_resource(request, analysis_id, img_file):
     report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
     html_body = get_template(report_path)
     return HttpResponse(html_body.render())
+
 
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)

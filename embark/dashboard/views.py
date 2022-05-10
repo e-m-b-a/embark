@@ -17,8 +17,7 @@ logger = logging.getLogger('web')
 def main_dashboard(request):
     if request.user.is_authenticated:
         if Result.objects.all().count() > 0:
-            return render(request, 'dashboard/mainDashboard.html',
-                {'nav_switch': True, 'username': request.user.username})
+            return render(request, 'dashboard/mainDashboard.html', {'nav_switch': True, 'username': request.user.username})
         return HttpResponseRedirect('../../uploader/')
     return HttpResponseForbidden
 
