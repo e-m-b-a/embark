@@ -96,16 +96,18 @@ write_env() {
 
 install_emba() {
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner EMBA on host""$NC"
-  if [[ -d ./emba ]]; then
-    cd emba || exit 1
-    git pull
-    ./installer.sh -d
-    cp ./config/emba_updater /etc/cron.daily/
-    cd .. || exit 1
+  if [[ -f ./emba ]]; then
+    git submodule init
+    git submodule update
   else
     echo "Somethings wrong with this repo"
     exit 1
   fi
+    cd emba || exit 1
+    ./installer.sh -d
+    cp ./config/emba_updater /etc/cron.daily/
+    cd .. || exit 1
+  
 }
 
 create_ca (){
@@ -460,7 +462,7 @@ uninstall (){
   #8 delete/uninstall EMBA
   echo -e "$ORANGE""$BOLD""Delete EMBA?""$NC"
   docker network rm emba_runs
-  git submodule foreach --recursive git reset --hard
+  git submodule foreach deinit --all
 
   #9 stop daemon
   systemctl stop embark.service
