@@ -457,6 +457,7 @@ uninstall (){
   #8 delete/uninstall EMBA
   echo -e "$ORANGE""$BOLD""Delete EMBA?""$NC"
   docker network rm emba_runs
+  git submodule foreach git reset --hard
   git submodule foreach deinit --all
 
   #9 stop daemon
@@ -471,6 +472,9 @@ uninstall (){
   #11 remove server-certs
   rm -rf ./cert
   git checkout HEAD -- cert
+
+  #final
+  git reset
 }
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
