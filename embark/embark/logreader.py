@@ -148,7 +148,7 @@ class LogReader:
             firmware = FirmwareAnalysis.objects.get(id=self.firmware_id)
 
             # if file does not exist create it otherwise delete its content
-            pat = f"{settings.EMBA_LOG_ROOT}/{self.firmware_id}/emba_logs/logreader.log"
+            pat = f"{settings.EMBA_LOG_ROOT}/{self.firmware_id}/logreader.log"
             if not pathlib.Path(pat).exists():
                 with open(pat, 'w+', encoding='utf-8'):
                     pass
@@ -159,6 +159,7 @@ class LogReader:
                 PROCESS_MAP[self.firmware_id_str] = []
 
             # look for new events in log
+            logger.debug("looking for events in " + f"{firmware.path_to_logs}/emba.log")
             got_event = self.inotify_events(f"{firmware.path_to_logs}/emba.log")
 
             for eve in got_event:
@@ -169,7 +170,7 @@ class LogReader:
                     # Act on file change
                     elif flag is flags.MODIFY:
                         # get the actual difference
-                        tmp = self.get_diff(firmware.path_to_logs + '/emba.log')
+                        tmp = self.get_diff(f"{firmware.path_to_logs}/emba.log")
                         # send changes to frontend
                         self.input_processing(tmp)
                         # copy diff to tmp file
@@ -189,7 +190,6 @@ class LogReader:
         # TODO do cleanup of emba_new_<self.firmware_id>.log
 
     @classmethod
-    # def process_line(self, inp, pat):
     def process_line(cls, inp, pat):
 
         """
@@ -214,7 +214,7 @@ class LogReader:
         with open(f"{settings.EMBA_LOG_ROOT}/{self.firmware_id}/logreader.log", 'a+', encoding='utf-8') as diff_file:
             diff_file.write(diff)
 
-    def get_diff(self, log_path):
+    def get_diff(self, log_file):
         """
         Get diff between two files via difflib
         copied from stack overflow : https://stackoverflow.com/questions/15864641/python-difflib-comparing-files
@@ -223,7 +223,8 @@ class LogReader:
         """
 
         # open the two files to get diff from
-        with open(f"{log_path}/emba.log", encoding='utf-8') as old_file, open(f"{settings.EMBA_LOG_ROOT}/{self.firmware_id}/logreader.log", encoding='utf-8') as new_file:
+        logger.debug("getting diff from %s", log_file)
+        with open(log_file, encoding='utf-8') as old_file, open(f"{settings.EMBA_LOG_ROOT}/{self.firmware_id}/logreader.log", encoding='utf-8') as new_file:
             diff = difflib.ndiff(old_file.readlines(), new_file.readlines())
             return ''.join(x[2:] for x in diff if x.startswith('- '))
 

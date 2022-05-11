@@ -143,7 +143,7 @@ class BoundedExecutor:
 
         emba_log_location = f"{settings.EMBA_LOG_ROOT}/{firmware_flags.id}/emba_logs"
         log_path = Path(emba_log_location).parent
-        log_path.mkdir(parents=True, exist_ok=False)     # false since unique id
+        log_path.mkdir(parents=True, exist_ok=True)
 
         firmware_flags.path_to_logs = emba_log_location
         firmware_flags.save()
