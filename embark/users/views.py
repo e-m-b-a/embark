@@ -53,7 +53,7 @@ def register(request):
 
             except KeyError:
                 logger.exception('Missing keys from data- Username, password, password_confirm')
-                return render(request, 'user/register.html',{'error_message': True, 'message': 'User data is invalid.'})
+                return render(request, 'user/register.html', {'error_message': True, 'message': 'User data is invalid.'})
         except Exception as error:
             logger.exception('Wide exception in Signup: %s', error)
             return render(

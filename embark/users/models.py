@@ -8,10 +8,10 @@ from lib.choice_enum import ChoiceIntEnum
 
 @enum.unique
 class Role(ChoiceIntEnum):
-    Viewer = 0
-    Editor = 1
-    Owner = 2
-    Manager = 3
+    VIEWER = 0
+    EDITOR = 1
+    OWNER = 2
+    MANAGER = 3
 
 
 class Team(models.Model):
@@ -30,7 +30,7 @@ class User(AbstractUser):
 class TeamMember(models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='team_member')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_team_member')
-    role = models.IntegerField(choices=Role.choices(), default=Role.Viewer)
+    role = models.IntegerField(choices=Role.choices(), default=Role.VIEWER)
     is_active = models.BooleanField(default=True, help_text='Whether this team member is active or not')
     created = models.DateTimeField(auto_now_add=True, help_text='Date time when this entry was created')
     modified = models.DateTimeField(auto_now=True, help_text='Date time when this entry was modified')

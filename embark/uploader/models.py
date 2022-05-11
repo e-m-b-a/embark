@@ -11,7 +11,7 @@ from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 from django.utils.datetime_safe import datetime
 
-from hashid_field import HashidAutoField
+# from hashid_field import HashidAutoField
 
 from users.models import User as Userclass
 

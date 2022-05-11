@@ -31,8 +31,7 @@ def service_dashboard(request):
     :params request: req
     :return httpresp: html servicedashboard
     """
-    return render(request, 'dashboard/serviceDashboard.html',
-        {'username': request.user.username})
+    return render(request, 'dashboard/serviceDashboard.html', {'username': request.user.username})
 
 
 @require_http_methods(["GET"])
@@ -46,8 +45,7 @@ def report_dashboard(request):
     :return: rendered ReportDashboard
     """
     finished_firmwares = FirmwareAnalysis.objects.all().filter(finished=True)
-    return render(request, 'dashboard/reportDashboard.html',
-        {'finished_firmwares': finished_firmwares, 'username': request.user.username})
+    return render(request, 'dashboard/reportDashboard.html', {'finished_firmwares': finished_firmwares, 'username': request.user.username})
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -60,5 +58,4 @@ def individual_report_dashboard(request, analysis_id):
     :return: rendered individualReportDashboard of Results for fw_analysis
     """
     logger.info("individual_dashboard - analyze_id: %s", analysis_id)
-    return render(request, 'dashboard/individualReportDashboard.html',
-        {'username': request.user.username, 'analysis_id': analysis_id})
+    return render(request, 'dashboard/individualReportDashboard.html', {'username': request.user.username, 'analysis_id': analysis_id})

@@ -40,6 +40,23 @@ function livelog_module(module, cur_ID) {
     $List.append($entry);
 }
 
+function getCookie(name) {
+    "use strict";
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 /**
  * Makes Ajax call
  * @param {*} formData {id, }
@@ -79,8 +96,8 @@ async function postFiles(formData) {
 function cancelLog(currentID) {
     "use strict";
     try {
-        var formData = new FormData()
-        formData.append("id", currentID)
+        var formData = new FormData();
+        formData.append("id", currentID);
         if (postFiles(formData)) {
             var idOfDIV = "#Container_" + currentID;
             $(idOfDIV).remove();

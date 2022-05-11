@@ -145,3 +145,4 @@ class Archiver:
             return shutil.copy(src, dst)
         except Exception as error:
             logger.error("Error copping firmware to active dir: %s", error)
+        return None

@@ -21,8 +21,8 @@ logger = logging.getLogger('web')
 def uploader_home(request):
     if FirmwareFile.objects.all().count() > 0:
         analysis_form = FirmwareAnalysisForm(initial={'firmware': FirmwareFile.objects.latest('upload_date')})
-        return render (request, 'uploader/fileUpload.html', {'success_message': False, 'analysis_form': analysis_form})
-    return render (request, 'uploader/fileUpload.html')
+        return render(request, 'uploader/fileUpload.html', {'success_message': False, 'analysis_form': analysis_form})
+    return render(request, 'uploader/fileUpload.html')
 
 
 @require_http_methods(["POST"])
@@ -80,8 +80,8 @@ def start_analysis(request):
 
     if FirmwareFile.objects.all().count() > 0:
         analysis_form = FirmwareAnalysisForm(initial={'firmware': FirmwareFile.objects.latest('upload_date')})
-        return render (request, 'uploader/fileUpload.html', {'success_message': True, 'message': "Successfull upload", 'analysis_form': analysis_form})
-    return render (request, 'uploader/fileUpload.html', {'success_message': True, 'message': "Please Upload a File first"})
+        return render(request, 'uploader/fileUpload.html', {'success_message': True, 'message': "Successfull upload", 'analysis_form': analysis_form})
+    return render(request, 'uploader/fileUpload.html', {'success_message': True, 'message': "Please Upload a File first"})
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -106,10 +106,11 @@ def stop_analysis(request):
             os.killpg(os.getpgid(analysis.pid), signal.SIGTERM)
 
             return HttpResponse("Stopped successfully")
-        
+
         except Exception as error:
             logger.error("Error %s", error)
             return HttpResponseServerError("Failed to stop procs")
+    return HttpResponseBadRequest("invail form")
 
 
 @require_http_methods(["GET", "POST"])
@@ -138,5 +139,5 @@ def delete_fw_file(request):
         logger.error("Form error: %s", form.errors)
         return HttpResponseBadRequest("invalid Form")
 
-    form = DeleteFirmwareForm(initial={ 'firmware': FirmwareFile.objects.latest('upload_date')})
+    form = DeleteFirmwareForm(initial={'firmware': FirmwareFile.objects.latest('upload_date')})
     return render(request, 'uploader/firmwareDelete.html', {'delete_form': form})
