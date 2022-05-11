@@ -37,9 +37,10 @@
               <form action={% url 'embark-html-report' analysis_id 'index.html' %} method='get'>
                 <button class="btn buttonRowElem" type="submit">Open Report</button>
               </form>
-              <form action={% url 'embark-html-report-download' analysis_id %} method='get'>
+              <form action={% url 'embark-html-download' analysis_id %} method='get'>
                 <button class="btn buttonRowElem" type="submit">Download Report</button>
               </form>
+              <!-- TODO add another uploader/start pattern for firmware_id-->
               <form action={% url 'embark-uploader-start-analysis' %} method='get'>
                 <button type="submit" class="btn buttonRowElem" >Rescan</button>
               </form>
