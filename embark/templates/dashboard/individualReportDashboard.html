@@ -34,7 +34,7 @@
             <table class="table table-striped table-borderless table-individualrep">
               <div class="buttonRow">
               <!-- Quick and dirty JS solution. Need to fix the report id for using django mechanisms -->
-              <form action={% url 'embark-html-report' analysis_id %} method='get'>
+              <form action={% url 'embark-html-report' analysis_id 'index.html' %} method='get'>
                 <button class="btn buttonRowElem" type="submit">Open Report</button>
               </form>
               <form action={% url 'embark-html-report-download' analysis_id %} method='get'>
