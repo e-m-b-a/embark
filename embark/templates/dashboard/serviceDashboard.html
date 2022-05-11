@@ -5,4 +5,5 @@
 {% block title %}EMBArk service dashboard{% endblock title %}
 {% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
 {% block maincontent %}
+    {% csrf_token %}
 {% endblock maincontent %}

@@ -41,16 +41,50 @@ function livelog_module(module, cur_ID) {
 }
 
 /**
+ * Makes Ajax call
+ * @param {*} formData {id, }
+ */
+async function postFiles(formData) {
+    "use strict";
+    try {
+        $.ajax({
+        type: 'POST',
+        url: '/uploader/stop/',
+        data: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        processData: false,
+        contentType: false,
+        success: function (data) {
+            if (data == "Stopped successfully") {
+                return true;
+                
+            } else {
+                console.log("Couldn't stop Analysis");
+                errorAlert("" + data);
+                return false;
+            }
+        }
+        });
+    } catch (error) {
+        console.log(error.message);
+    }
+}
+  
+/**
  * Removes the container from the UI
  * @param {*} currentID Id of the container which is passed backend to pull information
  */
 function cancelLog(currentID) {
     "use strict";
     try {
-        // TODO send POST req with id associated with currentID
-        // Use StopAnalysis-form
-        var idOfDIV = "#Container_" + currentID;
-        $(idOfDIV).remove();
+        var formData = new FormData()
+        formData.append("id", currentID)
+        if (postFiles(formData)) {
+            var idOfDIV = "#Container_" + currentID;
+            $(idOfDIV).remove();
+        };
     } catch (error) {
         //console.log(error.message);
         console.log(error);
@@ -128,9 +162,11 @@ socket.onmessage = function (event) {
                     </div>
                 </div>
                 <div class="buttonRow">
+                    <!--
                     <button type="view-log" class="btn buttonRowElem" id="` + Object.keys(data)[cur_len] + `" onclick="viewLog(this.id)" >
                         EMBA-log
                     </button>
+                    -->
                     <button type="reset" class="btn buttonRowElem" id="` + Object.keys(data)[cur_len] + `" onclick="cancelLog(this.id)" >
                         Cancel
                     </button>
