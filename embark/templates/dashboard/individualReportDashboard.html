@@ -34,14 +34,17 @@
             <table class="table table-striped table-borderless table-individualrep">
               <div class="buttonRow">
               <!-- Quick and dirty JS solution. Need to fix the report id for using django mechanisms -->
-              <form action="javascript:;" onsubmit="return get_report_url();" method='get'>
+              <form action={% url 'embark-html-report' analysis_id %} method='get'>
                 <button class="btn buttonRowElem" type="submit">Open Report</button>
               </form>
-              <form action="javascript:;" onsubmit="return get_dl_report_url();" method='get'>
+              <form action={% url 'embark-html-report-download' analysis_id %} method='get'>
                 <button class="btn buttonRowElem" type="submit">Download Report</button>
               </form>
               <form action={% url 'embark-uploader-start-analysis' %} method='get'>
-                <button type="submit" class="btn buttonRowElem" >Rescan/delete</button>
+                <button type="submit" class="btn buttonRowElem" >Rescan</button>
+              </form>
+              <form action={% url 'embark-uploader-delete' %} method='get'>
+                <button type="submit" class="btn buttonRowElem" >Delete Firmware</button>
               </form>
               <form action={% url 'embark-MainDashboard' %} method='get'>
                 <button type="submit" class="btn buttonRowElem" >Main dashboard</button>

@@ -51,7 +51,7 @@ def report_dashboard(request):
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
-def individual_report_dashboard(request, hash_id):
+def individual_report_dashboard(request, analysis_id):
     """
     delivering individualReportDashboard
 
@@ -59,6 +59,6 @@ def individual_report_dashboard(request, hash_id):
 
     :return: rendered individualReportDashboard of Results for fw_analysis
     """
-    logger.info("individual_dashboard - analyze_id: %s", hash_id)
+    logger.info("individual_dashboard - analyze_id: %s", analysis_id)
     return render(request, 'dashboard/individualReportDashboard.html',
-        {'username': request.user.username})
+        {'username': request.user.username, 'analysis_id': analysis_id})
