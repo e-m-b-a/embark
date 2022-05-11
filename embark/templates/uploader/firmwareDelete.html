@@ -11,20 +11,10 @@
                 <form action="{% url 'embark-uploader-delete' %}" method="post" id="delete-form" onsubmit="window.confirmDelete(event)">
                     {% csrf_token %}
                     {% load filters %}
-                    <!-- Iterate over all fields and set expmode on fields in expert mode -->
                     {% for field in delete_form %}
                     <div class="innerBlock">
                         <div id="firmwareToDelete" class="form-group deleteFirmware" >
-                            {% if field.field.widget|is_checkbox %}
-                                {{ field }}
-                                {{ field.label_tag }}
-                            {% else %}
-                                {% comment %} {{ field.label_tag }} {% endcomment %}
-                                {{ field }}
-                            {% endif %}
-                            {% if field.help_text %}
-                                <small class="form-text text-muted" value="help_text_off">{{ field.help_text }}</small>
-                            {% endif %}
+                            {{ field }}
                         </div>
                     {% endfor %}
                     </div>
