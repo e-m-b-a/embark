@@ -59,13 +59,12 @@ function getCookie(name) {
 
 /**
  * Makes Ajax call
- * @param {*} formData {id, }
+ * @param {*} currentID
  */
-async function postFiles(formData) {
+async function postFiles(currentID) {
     "use strict";
     try {
-        formData.append('csrfmiddlewaretoken', getCookie('csrftoken'))
-        var xhr = new XMLHttpRequest();
+        var xhr = new XMLHttpRequest;
         xhr.open("POST", '/uploader/stop/', true);
         xhr.addEventListener( "Stopped successfully", function( event ) {
             return true;
@@ -73,7 +72,7 @@ async function postFiles(formData) {
         xhr.addEventListener( "Couldn't stop Analysis", function( event ) {
             return false;
         } );
-        xhr.send(formData);
+        xhr.send("id=" + currentID + "\n" + "csrfmiddlewaretoken" + getCookie('csrftoken'));
     } catch (error) {
         console.log(error.message);
     }
@@ -86,9 +85,7 @@ async function postFiles(formData) {
 function cancelLog(currentID) {
     "use strict";
     try {
-        var formData = new FormData();
-        formData.append("id", currentID);
-        if (postFiles(formData)) {
+        if (postFiles(currentID)) {
             var idOfDIV = "#Container_" + currentID;
             $(idOfDIV).remove();
         }
