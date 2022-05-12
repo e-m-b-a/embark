@@ -72,7 +72,8 @@ async function postFiles(currentID) {
         xhr.addEventListener( "Couldn't stop Analysis", function( event ) {
             return false;
         } );
-        xhr.send("id=" + currentID + "\n" + "csrfmiddlewaretoken=" + getCookie('csrftoken'));
+        var body = JSON.stringify({ "id": currentID, "csrfmiddlewaretoken": getCookie('csrftoken')})
+        xhr.send(body);
     } catch (error) {
         console.log(error.message);
     }
