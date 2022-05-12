@@ -10,27 +10,8 @@ var canarypie = document.getElementById('canarypie').getContext('2d');
 var strippedpie = document.getElementById('strippedpie').getContext('2d');
 
 let report_id = window.location.pathname.split("/").pop();
-let entropy_url = "/emba_logs/REPORT_ID_REPLACE/html-report/style/firmware_entropy.png".replace(/REPORT_ID_REPLACE/,report_id);
+let entropy_url = "/emba_logs/REPORT_ID_REPLACE/emba_logs/html-report/style/firmware_entropy.png".replace(/REPORT_ID_REPLACE/,report_id);
 document.getElementById("entropy").src = entropy_url;
-
-/**
- * get the id of the current report -> we use this for the buttons and the entropy graph
- */
-function get_report_url() {
-  "use strict";
-  let report_id = window.location.pathname.split("/").pop();
-  let report_url = "/emba_logs/REPORT_ID_REPLACE/html-report/index.html".replace(/REPORT_ID_REPLACE/,report_id);
-  window.location.href = report_url;
-  console.log(report_url);
-}
-
-function get_dl_report_url() {
-  "use strict";
-  let report_id = window.location.pathname.split("/").pop();
-  let report_url = "/download_zipped/REPORT_ID_REPLACE".replace(/REPORT_ID_REPLACE/,report_id);
-  window.location.href = report_url;
-  console.log(report_url);
-}
 
 /**
  * Gets data to generate Reports for Individual Firmware
