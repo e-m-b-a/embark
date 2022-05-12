@@ -68,7 +68,7 @@ if [[ $? -eq 1 ]]; then
     exit 1
   fi
   cd ./emba || exit 1
-  systemctl restart embark
+  systemctl restart NetworkManager docker
   ./emba.sh -d 1>/dev/null
   if [[ $? -eq 1 ]]; then
     echo -e "$RED""EMBA is not configured correctly""$NC"

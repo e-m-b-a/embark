@@ -101,7 +101,7 @@ function cancelLog(currentID) {
         if (postFiles(formData)) {
             var idOfDIV = "#Container_" + currentID;
             $(idOfDIV).remove();
-        };
+        }
     } catch (error) {
         //console.log(error.message);
         console.log(error);

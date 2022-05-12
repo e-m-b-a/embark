@@ -77,7 +77,7 @@ def embark_login(request):
                 password = body['password']
             except KeyError:
                 logger.exception('Missing keys from data- Username and password')
-                return render(request, 'user/login.html',{'error_message': True, 'message': 'Username or password are wrong.'})
+                return render(request, 'user/login.html', {'error_message': True, 'message': 'Username or password are wrong.'})
 
             logger.debug('Found user name and password')
             user = authenticate(request, username=username, password=password)

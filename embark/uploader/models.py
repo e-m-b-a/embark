@@ -3,6 +3,7 @@ import logging
 import os
 import shutil
 import uuid
+import re
 
 from django.conf import settings
 from django.db import models
@@ -153,9 +154,9 @@ class FirmwareAnalysis(models.Model):
 
     firmware = models.ForeignKey(FirmwareFile, on_delete=models.RESTRICT, help_text='', null=True)
 
-    # emba basic flags
+    # emba basic flags  FIXME change to int 
     version = CharFieldExpertMode(
-        help_text='Firmware version (double quote your input)', verbose_name="Firmware version", max_length=MAX_LENGTH,
+        help_text='Firmware version (only integers)', verbose_name="Firmware version", max_length=MAX_LENGTH,
         blank=True, expert_mode=False)
     vendor = CharFieldExpertMode(
         help_text='Firmware vendor (double quote your input)', verbose_name="Firmware vendor", max_length=MAX_LENGTH,
@@ -228,7 +229,7 @@ class FirmwareAnalysis(models.Model):
     def __str__(self):
         return f"{self.id}({self.firmware})"
 
-    def get_flags(self):    # FIXME add all current options
+    def get_flags(self):    # FIXME add all current options, DIRECT INPUT!! remove or sanitize 
         """
         build shell command from input fields
 
@@ -236,13 +237,13 @@ class FirmwareAnalysis(models.Model):
         """
         command = ""
         if self.version:
-            command = command + " -X " + str(self.version)
+            command = command + " -X " + re.sub("[^0-9]", "", str(self.version))
         if self.vendor:
-            command = command + " -Y " + str(self.vendor)
+            command = command + " -Y " + re.sub("[^A-Za-z0–9]", "", str(self.vendor))
         if self.device:
-            command = command + " -Z " + str(self.device)
+            command = command + " -Z " + re.sub("[^A-Za-z0–9]", "", str(self.device))
         if self.notes:
-            command = command + " -N " + str(self.notes)
+            command = command + " -N " + re.sub("[^A-Za-z0–9]", "", str(self.notes))
         if self.firmware_Architecture:
             command = command + " -a " + str(self.firmware_Architecture)
         if self.cwe_checker:

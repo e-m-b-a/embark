@@ -49,8 +49,8 @@ class LogReader:
         # self.wd = None
 
         # for testing
-        # self.test_list1 = []
-        # self.test_list2 = []
+        self.test_list1 = []
+        self.test_list2 = []
 
         # status update dict (appended to processmap)
         self.status_msg = {
@@ -159,7 +159,7 @@ class LogReader:
                 PROCESS_MAP[self.firmware_id_str] = []
 
             # look for new events in log
-            logger.debug("looking for events in " + f"{firmware.path_to_logs}/emba.log")
+            logger.debug("looking for events in %s", f"{firmware.path_to_logs}/emba.log")
             got_event = self.inotify_events(f"{firmware.path_to_logs}/emba.log")
 
             for eve in got_event:
