@@ -1,5 +1,4 @@
 # pylint: disable=W0613,C0206
-from http.client import HTTPResponse
 import logging
 import os
 import signal
@@ -85,7 +84,7 @@ def start_analysis(request):
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
-@require_http_methods(["GET"])
+@require_http_methods(["GET", "POST"])
 def stop_analysis(request):
     """
     View to submit form for flags to run emba with
@@ -100,7 +99,7 @@ def stop_analysis(request):
         logger.debug("Posted Form is valid")
         try:
             # get id
-            analysis = FirmwareAnalysis.objects.get(id=form.Meta.model.id)
+            analysis = form.cleaned_data['analysis']
             logger.info("Stopping analysis with %s", analysis)
 
             os.killpg(os.getpgid(analysis.pid), signal.SIGTERM)
@@ -131,13 +130,14 @@ def delete_fw_file(request):
 
             # get relevant data
             firmware_file = form.cleaned_data['firmware']
+            # if firmware_file.user is request.user: 
             firmware_file.delete()
-
-            return HTTPResponse("Successfully deleted Firmware")
+            return render(request, 'uploader/firmwareDelete.html', {'success_message': True, 'message': "Successfull delete"})
 
         logger.error("Form %s is invalid", form)
         logger.error("Form error: %s", form.errors)
         return HttpResponseBadRequest("invalid Form")
-
-    form = DeleteFirmwareForm(initial={'firmware': FirmwareFile.objects.latest('upload_date')})
-    return render(request, 'uploader/firmwareDelete.html', {'delete_form': form})
+    if FirmwareFile.objects.all().count() > 0:
+        form = DeleteFirmwareForm(initial={'firmware': FirmwareFile.objects.latest('upload_date').id})
+        return render(request, 'uploader/firmwareDelete.html', {'form': form})
+    return HttpResponseRedirect('/uploader/')

@@ -5,6 +5,11 @@
 {% block title %}EMBArk file upload{% endblock title %}
 {% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
 {% block maincontent %}
+{% if success_message %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <medium>{{ message }}</medium>
+    </div>
+{% endif %}
     <div class="row DeleteRow">
             <div class="box">
                 <p class="mainText">Select and delete a firmware file</p>
@@ -13,7 +18,7 @@
                     {% csrf_token %}
                     <div class="innerBlock">
                         <div id="firmwareToDelete" class="form-group deleteFirmware" >
-                            {{ delete_form }}
+                            {{ form }}
                         </div>
                     </div>
                     <div class="buttonRow">
