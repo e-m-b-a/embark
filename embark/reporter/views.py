@@ -8,9 +8,10 @@ import logging
 
 from operator import itemgetter
 from http import HTTPStatus
+from uuid import UUID
 
 from django.conf import settings
-from django.forms import model_to_dict
+from django.forms import UUIDField, model_to_dict
 from django.http.response import Http404
 from django.template.loader import get_template
 from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
@@ -180,9 +181,12 @@ def get_accumulated_reports(request):
             if field not in data:
                 data[field] = {'sum': 0, 'count': 0}
             data[field]['count'] += 1
-            # logger.info("result-field %s", result[field])
+            logger.debug("result-field %s", result[field])
             if result[field] is not None:
-                data[field]['sum'] += result[field]
+                if isinstance(result[field], UUIDField):
+                    pass
+                else:
+                    data[field]['sum'] += result[field]
 
     for field in data:
         if field not in charfields:
