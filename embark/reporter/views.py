@@ -122,6 +122,8 @@ def get_individual_report(request, analysis_id):
         analysis_object = FirmwareAnalysis.objects.get(id=analysis_id)
         result = Result.objects.filter(firmware_analysis=analysis_object)
 
+        logger.debug("getting individual report for %s", result)
+
         return_dict = dict(model_to_dict(result), **model_to_dict(analysis_object))
 
         return_dict['name'] = analysis_object.firmware.file.name
@@ -130,6 +132,9 @@ def get_individual_report(request, analysis_id):
         return JsonResponse(data=return_dict, status=HTTPStatus.OK)
     except Result.DoesNotExist:
         logger.error('Report for firmware_id: %s not found in database', analysis_id)
+        return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)
+    except Exception as error:
+        logger.error('Report for firmware_id: %s produced error', analysis_id, error)
         return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)
 
 
