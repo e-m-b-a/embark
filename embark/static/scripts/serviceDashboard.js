@@ -66,7 +66,7 @@ async function postFiles(formData) {
     try {
         formData.append('X-CSRFToken', getCookie('csrftoken'))
         var xhr = new XMLHttpRequest();
-        xhr.open("POST", location.hostname + '/uploader/stop/', true);
+        xhr.open("POST", '/uploader/stop/', true);
         xhr.addEventListener( "Stopped successfully", function( event ) {
             return true;
         } );
