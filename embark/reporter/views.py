@@ -120,7 +120,7 @@ def get_individual_report(request, analysis_id):
         return JsonResponse(data={'error': 'Bad request'}, status=HTTPStatus.BAD_REQUEST)
     try:
         analysis_object = FirmwareAnalysis.objects.get(id=analysis_id)
-        result = Result.objects.filter(firmware_analysis=analysis_object)
+        result = Result.objects.get(firmware_analysis=analysis_object)
 
         logger.debug("getting individual report for %s", result)
 
