@@ -64,26 +64,16 @@ function getCookie(name) {
 async function postFiles(formData) {
     "use strict";
     try {
-        $.ajax({
-        type: 'POST',
-        url: '/uploader/stop/',
-        data: formData,
-        headers: {
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        processData: false,
-        contentType: false,
-        success: function (data) {
-            if (data == "Stopped successfully") {
-                return true;
-                
-            } else {
-                console.log("Couldn't stop Analysis");
-                errorAlert("" + data);
-                return false;
-            }
-        }
-        });
+        formData.append('X-CSRFToken', getCookie('csrftoken'))
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", location.hostname + '/uploader/stop/', true);
+        xhr.addEventListener( "Stopped successfully", function( event ) {
+            return true;
+        } );
+        xhr.addEventListener( "Couldn't stop Analysis", function( event ) {
+            return false;
+        } );
+        xhr.send(formData);
     } catch (error) {
         console.log(error.message);
     }

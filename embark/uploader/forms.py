@@ -50,7 +50,7 @@ class FirmwareAnalysisForm(forms.ModelForm):
 
 
 class StopAnalysisForm(forms.Form):
-    analysis = forms.ModelChoiceField(queryset=models.FirmwareAnalysis.objects, empty_label='Select analysis to stop')
+    id = forms.UUIDField
 
 
 class DeleteFirmwareForm(forms.Form):
