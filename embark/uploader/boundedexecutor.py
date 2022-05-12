@@ -225,7 +225,7 @@ class BoundedExecutor:
             entropy_value = entropy_value.strip('.')
 
         res = Result(
-            firmware=FirmwareAnalysis.objects.get(id=analysis_id),
+            firmware_analysis=FirmwareAnalysis.objects.get(id=analysis_id),
             emba_command=cmd.replace(f"cd {settings.EMBA_ROOT} && ", ""),
             architecture_verified=res_dict.get("architecture_verified", ''),
             # os_unverified=res_dict.get("os_unverified", ''),
