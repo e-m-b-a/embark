@@ -133,9 +133,6 @@ def get_individual_report(request, analysis_id):
     except Result.DoesNotExist:
         logger.error('Report for firmware_id: %s not found in database', analysis_id)
         return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)
-    except Exception as error:
-        logger.error('Report for firmware_id: %s produced error', analysis_id, error)
-        return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)
 
 
 @require_http_methods(["GET"])
