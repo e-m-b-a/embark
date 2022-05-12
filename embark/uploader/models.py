@@ -154,7 +154,7 @@ class FirmwareAnalysis(models.Model):
 
     firmware = models.ForeignKey(FirmwareFile, on_delete=models.RESTRICT, help_text='', null=True)
 
-    # emba basic flags  FIXME change to int 
+    # emba basic flags  FIXME change to int
     version = CharFieldExpertMode(
         help_text='Firmware version (only integers)', verbose_name="Firmware version", max_length=MAX_LENGTH,
         blank=True, expert_mode=False)
@@ -229,7 +229,7 @@ class FirmwareAnalysis(models.Model):
     def __str__(self):
         return f"{self.id}({self.firmware})"
 
-    def get_flags(self):    # FIXME add all current options, DIRECT INPUT!! remove or sanitize 
+    def get_flags(self):    # FIXME add all current options, DIRECT INPUT!! remove or sanitize
         """
         build shell command from input fields
 
