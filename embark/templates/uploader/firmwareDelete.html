@@ -8,7 +8,8 @@
     <div class="row DeleteRow">
             <div class="box">
                 <p class="mainText">Select and delete a firmware file</p>
-                <form action="{% url 'embark-uploader-delete' %}" method="post" id="delete-form" onsubmit="window.confirmDelete(event)">
+                <form action="{% url 'embark-uploader-delete' %}" method="post" id="delete-form">
+                    <!--  onsubmit="window.confirmDelete(event)" -->
                     {% csrf_token %}
                     {% load filters %}
                     {% for field in delete_form %}
