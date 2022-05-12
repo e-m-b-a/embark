@@ -99,8 +99,10 @@ def stop_analysis(request):
         logger.debug("Posted Form is valid")
         try:
             # get id
-            analysis = form.cleaned_data['analysis']
-            logger.info("Stopping analysis with %s", analysis)
+            id = form.cleaned_data['id']
+            logger.info("Stopping analysis with %s", id)
+
+            analysis = FirmwareAnalysis.objects.filter(id=id)
 
             os.killpg(os.getpgid(analysis.pid), signal.SIGTERM)
 
@@ -109,7 +111,7 @@ def stop_analysis(request):
         except Exception as error:
             logger.error("Error %s", error)
             return HttpResponseServerError("Failed to stop procs")
-    return HttpResponseBadRequest("invail form")
+    return HttpResponseBadRequest("invalid form")
 
 
 @require_http_methods(["GET", "POST"])
