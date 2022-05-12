@@ -97,7 +97,7 @@ class FirmwareFile(models.Model):
     MAX_LENGTH = 127
 
     # id = HashidAutoField(primary_key=True, prefix='fw_')
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
 
     is_archive = models.BooleanField(default=False, blank=True)
     upload_date = models.DateTimeField(default=datetime.now, blank=True)
