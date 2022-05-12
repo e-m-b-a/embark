@@ -64,7 +64,7 @@ function getCookie(name) {
 async function postFiles(formData) {
     "use strict";
     try {
-        formData.append('X-CSRFToken', getCookie('csrftoken'))
+        formData.append('csrfmiddlewaretoken', getCookie('csrftoken'))
         var xhr = new XMLHttpRequest();
         xhr.open("POST", '/uploader/stop/', true);
         xhr.addEventListener( "Stopped successfully", function( event ) {
