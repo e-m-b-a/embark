@@ -183,7 +183,7 @@ def get_accumulated_reports(request):
             data[field]['count'] += 1
             logger.debug("result-field %s", result[field])
             if result[field] is not None:
-                if isinstance(result[field], UUIDField):
+                if isinstance(result[field], UUID):
                     pass
                 else:
                     data[field]['sum'] += result[field]
