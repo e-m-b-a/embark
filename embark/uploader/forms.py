@@ -49,20 +49,8 @@ class FirmwareAnalysisForm(forms.ModelForm):
         self.base_fields['firmware'] = forms.ModelChoiceField(queryset=models.FirmwareFile.objects, empty_label='Select firmware')
 
 
-class DeleteFirmwareForm(forms.ModelForm):
-
-    class Meta:
-        model = models.FirmwareFile
-
-        fields = ('id', )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field in self.visible_fields():
-            if isinstance(field.field.widget, django.forms.widgets.Select):
-                field.field.widget.attrs['class'] = 'form-control select dropdownSelect'
-
-        self.base_fields['id'] = forms.ModelChoiceField(queryset=models.FirmwareFile.objects, empty_label='Select firmware to delete')
+class DeleteFirmwareForm(forms.Form):
+    delete_id = forms.ModelChoiceField(queryset=models.FirmwareFile.objects, empty_label='Select firmware to delete')
 
 
 class StopAnalysisForm(forms.ModelForm):

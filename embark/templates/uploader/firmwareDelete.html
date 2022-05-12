@@ -11,13 +11,10 @@
                 <form action="{% url 'embark-uploader-delete' %}" method="post" id="delete-form">
                     <!--  onsubmit="window.confirmDelete(event)" -->
                     {% csrf_token %}
-                    {% load filters %}
-                    {% for field in delete_form %}
                     <div class="innerBlock">
                         <div id="firmwareToDelete" class="form-group deleteFirmware" >
-                            {{ field }}
+                            {{ delete_form }}
                         </div>
-                    {% endfor %}
                     </div>
                     <div class="buttonRow">
                         <button type="delete" class="btn buttonRowElem">Delete</button>
