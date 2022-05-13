@@ -46,11 +46,12 @@ def stop_analysis(request):
         logger.debug("PID is %s", pid)
         try:
             os.killpg(os.getpgid(pid), signal.SIGTERM)
-            return HttpResponse("Stopped successfully")
-
+            form = StopAnalysisForm()
+            form.fields['analysis'].queryset = FirmwareAnalysis.objects.filter(finished=False)
+            return render(request, 'dashboard/serviceDashboard.html', {'username': request.user.username, 'form': form, 'success_message': True, 'message': "Stopped successfully"})
         except Exception as error:
             logger.error("Error %s", error)
-            return HttpResponseServerError("Failed to stop procs")
+            return HttpResponseServerError("Failed to stop procs, because" + str(error))
     return HttpResponseBadRequest("invalid form")
 
 
