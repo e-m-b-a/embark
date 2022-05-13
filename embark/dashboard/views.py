@@ -31,7 +31,7 @@ def stop_analysis(request):
     """
     View to submit form for flags to run emba with
     if: form is valid
-        send interrupt to hashid.pid
+        send interrupt to analysis.pid
     Args:
         request: the http req with FirmwareForm
     Returns: redirect
@@ -46,7 +46,6 @@ def stop_analysis(request):
         logger.debug("PID is %s", pid)
         try:
             os.killpg(os.getpgid(pid), signal.SIGTERM)
-
             return HttpResponse("Stopped successfully")
 
         except Exception as error:
