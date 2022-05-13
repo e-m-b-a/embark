@@ -1,7 +1,6 @@
 # pylint: disable=W0613,C0206
 import logging
-import os
-import signal
+
 from django.conf import settings
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect, HttpResponseServerError
@@ -9,8 +8,8 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 
 from uploader.boundedexecutor import BoundedExecutor
-from uploader.forms import FirmwareAnalysisForm, DeleteFirmwareForm, StopAnalysisForm
-from uploader.models import FirmwareAnalysis, FirmwareFile
+from uploader.forms import FirmwareAnalysisForm, DeleteFirmwareForm
+from uploader.models import FirmwareFile
 
 logger = logging.getLogger('web')
 
@@ -81,37 +80,6 @@ def start_analysis(request):
         analysis_form = FirmwareAnalysisForm(initial={'firmware': FirmwareFile.objects.latest('upload_date')})
         return render(request, 'uploader/fileUpload.html', {'success_message': True, 'message': "Successfull upload", 'analysis_form': analysis_form})
     return render(request, 'uploader/fileUpload.html', {'success_message': True, 'message': "Please Upload a File first"})
-
-
-@login_required(login_url='/' + settings.LOGIN_URL)
-@require_http_methods(["GET", "POST"])
-def stop_analysis(request):
-    """
-    View to submit form for flags to run emba with
-    if: form is valid
-        send interrupt to hashid.pid
-    Args:
-        request: the http req with FirmwareForm
-    Returns: redirect
-    """
-    form = StopAnalysisForm(request.POST)
-    if form.is_valid():
-        logger.debug("Posted Form is valid")
-        try:
-            # get id
-            id = form.cleaned_data['id']
-            logger.info("Stopping analysis with %s", id)
-
-            analysis = FirmwareAnalysis.objects.filter(id=id)
-
-            os.killpg(os.getpgid(analysis.pid), signal.SIGTERM)
-
-            return HttpResponse("Stopped successfully")
-
-        except Exception as error:
-            logger.error("Error %s", error)
-            return HttpResponseServerError("Failed to stop procs")
-    return HttpResponseBadRequest("invalid form")
 
 
 @require_http_methods(["GET", "POST"])

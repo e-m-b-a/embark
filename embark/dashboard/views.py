@@ -1,13 +1,16 @@
 import logging
+import os
+import signal
 
 from django.conf import settings
 from django.shortcuts import render
-from django.http import HttpResponseForbidden, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect, HttpResponseServerError
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 
 from uploader.models import FirmwareAnalysis
 from .models import Result
+from .forms import StopAnalysisForm
 
 logger = logging.getLogger('web')
 
@@ -22,6 +25,37 @@ def main_dashboard(request):
     return HttpResponseForbidden
 
 
+@login_required(login_url='/' + settings.LOGIN_URL)
+@require_http_methods(["POST"])
+def stop_analysis(request):
+    """
+    View to submit form for flags to run emba with
+    if: form is valid
+        send interrupt to hashid.pid
+    Args:
+        request: the http req with FirmwareForm
+    Returns: redirect
+    """
+    form = StopAnalysisForm(request.POST)
+    if form.is_valid():
+        logger.debug("Posted Form is valid")
+        try:
+            # get id
+            id = form.cleaned_data['id']
+            logger.info("Stopping analysis with %s", id)
+
+            analysis = FirmwareAnalysis.objects.filter(id=id)
+
+            os.killpg(os.getpgid(analysis.pid), signal.SIGTERM)
+
+            return HttpResponse("Stopped successfully")
+
+        except Exception as error:
+            logger.error("Error %s", error)
+            return HttpResponseServerError("Failed to stop procs")
+    return HttpResponseBadRequest("invalid form")
+
+
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def service_dashboard(request):
@@ -31,7 +65,9 @@ def service_dashboard(request):
     :params request: req
     :return httpresp: html servicedashboard
     """
-    return render(request, 'dashboard/serviceDashboard.html', {'username': request.user.username})
+    # if FirmwareAnalysis.objects.all().count() > 0:
+    form = StopAnalysisForm()
+    return render(request, 'dashboard/serviceDashboard.html', {'username': request.user.username, 'form': form, 'success_message': False})
 
 
 @require_http_methods(["GET"])

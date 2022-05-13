@@ -49,9 +49,5 @@ class FirmwareAnalysisForm(forms.ModelForm):
         self.base_fields['firmware'] = forms.ModelChoiceField(queryset=models.FirmwareFile.objects, empty_label='Select firmware')
 
 
-class StopAnalysisForm(forms.Form):
-    id = forms.UUIDField
-
-
 class DeleteFirmwareForm(forms.Form):
     firmware = forms.ModelChoiceField(queryset=models.FirmwareFile.objects, empty_label='Select firmware-file to delete')

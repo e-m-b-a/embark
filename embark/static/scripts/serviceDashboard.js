@@ -56,27 +56,6 @@ function getCookie(name) {
     }
     return cookieValue;
 }
-
-/**
- * Makes Ajax call
- * @param {*} currentID
- */
-async function postFiles(currentID) {
-    "use strict";
-    try {
-        var xhr = new XMLHttpRequest;
-        xhr.open("POST", '/uploader/stop/', true);
-        xhr.addEventListener( "Stopped successfully", function( event ) {
-            return true;
-        } );
-        xhr.addEventListener( "Couldn't stop Analysis", function( event ) {
-            return false;
-        } );
-        xhr.send("id=" + currentID + "&" + "csrfmiddlewaretoken=" + getCookie('csrftoken'));
-    } catch (error) {
-        console.log(error.message);
-    }
-}
   
 /**
  * Removes the container from the UI
@@ -85,10 +64,8 @@ async function postFiles(currentID) {
 function cancelLog(currentID) {
     "use strict";
     try {
-        if (postFiles(currentID)) {
-            var idOfDIV = "#Container_" + currentID;
-            $(idOfDIV).remove();
-        }
+        var idOfDIV = "#Container_" + currentID;
+        $(idOfDIV).remove();
     } catch (error) {
         //console.log(error.message);
         console.log(error);
@@ -170,10 +147,10 @@ socket.onmessage = function (event) {
                     <button type="view-log" class="btn buttonRowElem" id="` + Object.keys(data)[cur_len] + `" onclick="viewLog(this.id)" >
                         EMBA-log
                     </button>
-                    -->
                     <button type="reset" class="btn buttonRowElem" id="` + Object.keys(data)[cur_len] + `" onclick="cancelLog(this.id)" >
                         Cancel
                     </button>
+                    -->
                 </div>`;
                 //Todo: on non service dashboard web sites we get an exception:
                 document.getElementsByClassName("main")[0].insertAdjacentHTML('beforeend', htmlToAdd);
