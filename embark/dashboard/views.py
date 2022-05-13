@@ -65,6 +65,7 @@ def service_dashboard(request):
     """
     # if FirmwareAnalysis.objects.all().count() > 0:
     form = StopAnalysisForm()
+    form.fields['firmware'].queryset = FirmwareAnalysis.objects.filter(finished=False)
     return render(request, 'dashboard/serviceDashboard.html', {'username': request.user.username, 'form': form, 'success_message': False})
 
 
