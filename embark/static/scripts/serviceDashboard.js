@@ -40,15 +40,47 @@ function livelog_module(module, cur_ID) {
     $List.append($entry);
 }
 
+function getCookie(name) {
+    "use strict";
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+  
 /**
  * Removes the container from the UI
- * @param {*} currentID Id of the contaniner which is passed backend to pull information
+ * @param {*} currentID Id of the container which is passed backend to pull information
  */
 function cancelLog(currentID) {
     "use strict";
     try {
         var idOfDIV = "#Container_" + currentID;
         $(idOfDIV).remove();
+    } catch (error) {
+        //console.log(error.message);
+        console.log(error);
+    }
+}
+
+/**
+ * simple redirect to hashid associated with currentID
+ * @param {*} currentID Id of the contaniner which is passed backend to pull information
+ */
+ function viewLog(currentID) {
+    "use strict";
+    try {
+        // TODO get hashid of div-id
+        window.location("/log/" + currentID);
     } catch (error) {
         //console.log(error.message);
         console.log(error);
@@ -111,9 +143,14 @@ socket.onmessage = function (event) {
                     </div>
                 </div>
                 <div class="buttonRow">
+                    <!--
+                    <button type="view-log" class="btn buttonRowElem" id="` + Object.keys(data)[cur_len] + `" onclick="viewLog(this.id)" >
+                        EMBA-log
+                    </button>
                     <button type="reset" class="btn buttonRowElem" id="` + Object.keys(data)[cur_len] + `" onclick="cancelLog(this.id)" >
                         Cancel
                     </button>
+                    -->
                 </div>`;
                 //Todo: on non service dashboard web sites we get an exception:
                 document.getElementsByClassName("main")[0].insertAdjacentHTML('beforeend', htmlToAdd);

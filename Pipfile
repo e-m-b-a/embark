@@ -17,6 +17,7 @@ inotify-simple = "*"
 psutil = "*"
 msgpack = "*"
 django = "*"
+django-hashid-field = "*"
 
 [dev-packages]
 pycodestyle = "*"

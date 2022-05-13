@@ -1,6 +1,5 @@
 // jshint unused:false
-// ^ this should only be added AFTER successfull check (disables waring for global functions)
-
+// ^ this should only be added AFTER successful check (disables warning for global functions)
 /**
  * The following event calls prevent default to turn off the browsers default drag and drop handler
  * @param {*} ev Event
@@ -10,17 +9,38 @@ function dragOverHandler(ev) {
   ev.preventDefault();
 }
 
-$(window).bind("load", function() {
-  "use strict";
-  document.querySelector("#file-input").onchange = function(){
-    var fileNames = "";
-    for (var i = 0; i < this.files.length; i++) {
-        fileNames = fileNames + this.files[i].name + "<br>";
+function getCookie(name) {
+    "use strict";
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
     }
-    var target = document.querySelector("#file-name");
-    $.find(target).innerHTML = fileNames;
-    $("#uploadFirmware-btn").attr("disabled", false);
-  };
+    return cookieValue;
+}
+
+$(window).bind("load", function() {
+    "use strict";
+    try{
+        document.querySelector("#file-input").onchange = function(){
+            var fileNames = "";
+            for (var i = 0; i < this.files.length; i++) {
+                fileNames = fileNames + this.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + "<br>";
+            }
+            var target = document.querySelector("#file-name");
+            target.innerHTML = fileNames;
+            $("#uploadFirmware-btn").attr("disabled", false);
+        };
+    }catch (error){
+        console.log(error.message);
+    }
 });
 
 /**
@@ -33,8 +53,11 @@ $(window).bind("load", function() {
     //formData.append('file', fileData);
     $.ajax({
       type: 'POST',
-      url: 'save_file',
+      url: '/uploader/save/',
       data: formData,
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken')
+      },
       processData: false,
       contentType: false,
       xhr: function () {
@@ -64,11 +87,12 @@ $(window).bind("load", function() {
             }
           } else {
             console.log("The file is not saved");
-            location.reload();
+            errorAlert("" + data);
           }
         } else {
-          /* location.reload(); */
-          successAlert("" + data);
+          if(data === "successful upload"){
+            location.href = "/uploader/start/";
+          }
         }
       }
     });
@@ -93,7 +117,6 @@ function saveFiles() {
     for (let index = 0; index < fileData.length; index++) {
       fileData[index].inputFileName = fileData[index].name;
       formData.append('file', fileData[index]);
-
     }
   postFiles(formData);
 }

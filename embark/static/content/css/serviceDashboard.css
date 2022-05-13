@@ -81,6 +81,111 @@ h3 {
     --thumbBG: #b8cedb;
 }
 
+/* Styles for the dataform fields */
+
+.form-check-input:checked {
+    background-color: #493791;
+    border-color: #493791;
+}
+
+.formTxtField,
+.dropdownSelect {
+    width: 80%;
+    height: 2rem;
+    border: none;
+    border-radius: 0;
+    padding: 6px 12px 6px 12px;
+    margin-top: 15px;
+    background-color: #acacac;
+}
+
+.form-control:focus {
+    background-color: #acacac;
+}
+
+.dataRow {
+    border-left-style: solid;
+    border-color: #b8cedb;
+    height: 90vh;
+    overflow: scroll;
+    overflow-x: hidden;
+    padding: 20px;
+    padding-top: 0px;
+    padding-right: 5px;
+    font-size: small;
+}
+
+/*Uploaded Files*/
+.statusTile {
+    background-color: #009999;
+}
+
+.iconLabel {
+    display: block;
+    text-align: center;
+}
+
+.stopBtnRow {
+    justify-content: center;
+}
+
+
+.fileName {
+    display: block;
+    align-items: center;
+}
+
+.stopAnalysis {
+    display: flex;
+    align-items: baseline;
+}
+
+.stopAnalysis>select {
+    margin-left: 10px;
+}
+
+#file-input {
+    visibility: hidden;
+    width: 0;
+}
+
+.form-check-input[type="checkbox"] {
+    border-radius: 0;
+}
+
+#analysisToStop {
+    margin-bottom: 10px;
+}
+
+/* Analysis */
+
+.form-group>.form-check-input {
+    left: 22px;
+}
+
+.expertModeOptions[value="expmode_off"] {
+    display: none;
+}
+.expertModeOptions[value="expmode_on"] {
+    display: block;
+}
+
+
+.form-group>label {
+    padding-left: 30px;
+}
+
+.text-muted[value="help_text_off"] {
+    display:none;
+}
+
+.text-muted[value="help_text_on"] {
+    display:block;
+}
+
+.alert {
+    margin: 30px;
+}
 /* ::-webkit-scrollbar {
     width: 11px;
 }

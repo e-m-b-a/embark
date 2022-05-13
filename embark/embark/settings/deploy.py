@@ -11,7 +11,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
-SECRET_KEY = os.environ.get('SECRET_KEY')   # look at .env
+HASHID_FIELD_SALT = os.environ.get('HASHID_SALT')
+HASHID_FIELD_MIN_LENGTH = os.environ.get('HASHID_FIELD_MIN_LENGTH', 7)
+HASHID_FIELD_ENABLE_HASHID_OBJECT = os.environ.get('HASHID_FIELD_ENABLE_HASHID_OBJECT', False)
+HASHID_FIELD_ENABLE_DESCRIPTOR = os.environ.get('HASHID_FIELD_ENABLE_DESCRIPTOR', False)
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.environ.get('EMBARK_DEBUG', True))
@@ -22,7 +26,7 @@ ALLOWED_HOSTS = ['*']
 # EMBA location
 EMBA_ROOT = '/app/emba/'
 EMBA_LOG_ROOT = '/app/www/emba_logs'
-EMBA_LOG_URL = '/emba_logs/'
+EMBA_LOG_URL = 'emba_logs/'
 
 # Application definition - defines what apps gets migrated
 INSTALLED_APPS = [
@@ -36,7 +40,9 @@ INSTALLED_APPS = [
     'mod_wsgi.server',
     'channels',
     'uploader',
-    'users'
+    'users',
+    'reporter',
+    'dashboard'
 ]
 
 AUTH_USER_MODEL = 'users.User'
@@ -187,6 +193,9 @@ LOGOUT_REDIRECT_URL = ''
 # Upload Media
 MEDIA_ROOT = '/app/www/media/'
 MEDIA_URL = '/media/'
+
+# Active Firmware
+ACTIVE_FW = '/app/www/active/'
 
 REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
 REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))

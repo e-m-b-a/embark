@@ -1,6 +1,7 @@
 import gzip
 import logging
 import os
+from pathlib import Path
 import re
 import shutil
 
@@ -130,13 +131,18 @@ class Archiver:
     @classmethod
     def copy(cls, src, dst):
         """
-            copy file from src to dst
+        copy file from src to dst
 
             :param src: src file to be copied
             :param dst: location to be copied to
 
             :return: path on success
         """
-
-        os.makedirs(os.path.dirname(dst), exist_ok=True)
-        return shutil.copy(src, dst)
+        logger.debug("copping file %s to %s", src, dst)
+        try:
+            path = Path(dst)
+            path.mkdir(parents=True, exist_ok=False)
+            return shutil.copy(src, dst)
+        except Exception as error:
+            logger.error("Error copping firmware to active dir: %s", error)
+        return None

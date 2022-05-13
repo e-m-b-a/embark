@@ -1,9 +1,12 @@
 from http import HTTPStatus
+from django.http import HttpResponseRedirect
 
 from django.test import TestCase
 from django.test import Client
 
 from users.models import User
+
+# FIXME these are not up-to-date
 
 
 class TestUsers(TestCase):
@@ -26,11 +29,11 @@ class TestUsers(TestCase):
     def test_signin(self):
         """
         Right password would redirect to home.
-        Returns:
+        Returns: redirect (302) to mainDashboard
 
         """
         response = self.client.post('/signin', {'username': 'testuser1', 'password': '12345'})
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.status_code, HttpResponseRedirect)
 
     def test_signin_wrong_password(self):
         """

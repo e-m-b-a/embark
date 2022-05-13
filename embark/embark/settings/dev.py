@@ -3,13 +3,17 @@ import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+HASHID_FIELD_SALT = os.environ.get('HASHID_SALT')
+HASHID_FIELD_MIN_LENGTH = os.environ.get('HASHID_FIELD_MIN_LENGTH', 7)
+HASHID_FIELD_ENABLE_HASHID_OBJECT = os.environ.get('HASHID_FIELD_ENABLE_HASHID_OBJECT', False)
+HASHID_FIELD_ENABLE_DESCRIPTOR = os.environ.get('HASHID_FIELD_ENABLE_DESCRIPTOR', False)
 SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = bool(os.environ.get('EMBARK_DEBUG', True))
 ALLOWED_HOSTS = ['*']
 
 EMBA_ROOT = '/app/emba/'
-EMBA_LOG_ROOT = os.path.join(BASE_DIR, 'emba_logs')
-EMBA_LOG_URL = '/emba_logs/'
+EMBA_LOG_ROOT = os.path.join(BASE_DIR.parent, 'emba_logs')
+EMBA_LOG_URL = 'emba_logs/'
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -22,7 +26,9 @@ INSTALLED_APPS = [
     'django_apscheduler',
     'channels',
     'uploader',
-    'users'
+    'users',
+    'reporter',
+    'dashboard'
 ]
 
 AUTH_USER_MODEL = 'users.User'
@@ -158,6 +164,9 @@ LOGOUT_REDIRECT_URL = ''
 # Added for FIle storage to get the path to save Firmware images.
 MEDIA_ROOT = os.path.join('/app/', 'uploadedFirmwareImages')  # media directory in the root directory
 MEDIA_URL = '/uploadedFirmwareImages/'
+
+# Active Firmware
+ACTIVE_FW = '/app/uploadedFirmwareImages/active/'
 
 REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
 REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))

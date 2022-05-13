@@ -29,12 +29,16 @@ export PIPENV_VENV_IN_PROJECT="True"
 
 cleaner() {
   if [[ -f ./embark/embark.log ]]; then
-    chmod 755 ./embark/embark.log
+    rm ./embark/embark.log -f
   fi
-  fuser -k "$PORT"/tcp
-  killall -9 -q "*daphne*"
+  
+  # killall -9 -q "*daphne*"
   docker container stop embark_db_dev
   docker container stop embark_redis_dev
+
+  docker container prune -f --filter "label=flag"
+
+  fuser -k "$PORT"/tcp
   exit 1
 }
 
@@ -64,8 +68,11 @@ fi
 
 # db_init
 echo -e "[*] Starting migrations - log to embark/logs/migration.log"
-pipenv run ./embark/manage.py makemigrations users uploader | tee -a ./logs/migration.log
+pipenv run ./embark/manage.py makemigrations users uploader reporter dashboard | tee -a ./logs/migration.log
 pipenv run ./embark/manage.py migrate | tee -a ./logs/migration.log
+
+# superuser
+pipenv run ./embark/manage.py createsuperuser --noinput
 
 echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./embark/logs/redis_dev.log""$NC" 
 docker container logs embark_redis_dev -f > ./logs/redis_dev.log &
@@ -73,15 +80,18 @@ echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.lo
 docker container logs embark_db_dev -f > ./logs/mysql_dev.log & 
 
 ##
-# echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
-# pipenv run ./embark/manage.py runapscheduler | tee -a ./embark/logs/scheduler.log &
-#
+echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
+pipenv run ./embark/manage.py runapscheduler | tee -a ./logs/scheduler.log &
+
 # echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-# echo "START DAPHNE" >./embark/logs/daphne.log
-# pipenv run daphne -v 3 -p 8001 -b "$IP" --root-path="$PWD"/embark embark.asgi:application &>>./embark/logs/daphne.log &
+# echo "START DAPHNE" >./logs/daphne.log
+# cd ./embark || exit 1
+# pipenv run daphne -v 3 -p 8001 -b "$IP" --root-path="$PWD"/embark embark.asgi:application &>../logs/daphne.log &
+# cd .. || exit 1
 
 # start embark
-echo -e "$ORANGE""$BOLD""start EMBArk server""$NC"
+systemctl start embark.service
+echo -e "$ORANGE""$BOLD""start EMBArk server (WS/WSS not enabled -a also asgi)""$NC"
 pipenv run ./embark/manage.py runserver "$IP":"$PORT" |& tee -a ./logs/debug-server.log
 
 wait

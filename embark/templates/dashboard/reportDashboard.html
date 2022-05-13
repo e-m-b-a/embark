@@ -1,8 +1,8 @@
-{% extends "uploader/base.html" %}
+{% extends "base.html" %}
 {% load static %}
 {% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/reportDashboard.css' %}"/>{% endblock style %}
 {% block title %}EMBArk report dashboard{% endblock title %}
-{% block navigation %}{% include "uploader/navigation.html" %}{% endblock navigation %}
+{% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
 {% block maincontent %}
     <div class="row reportRow">
     <div class="col-sm" id="reportDashboardMainContainer">
@@ -35,7 +35,7 @@
                     <tbody>
                     {% for firmware in finished_firmwares %}
                         <tr>
-                            <td>{{ firmware.pk }}</td>
+                            <td>{{ firmware.id }}</td>
                             <td>{{ firmware.firmware }}</td>
                             <td>{{ firmware.vendor }}</td>
                             <td>{{ firmware.device }}</td>
@@ -44,16 +44,16 @@
                             <td>{{ firmware.end_date }}</td>
                             <td>
                                 <div class="buttonRow">
-                                    <form action={% url 'embark-download' firmware.pk %} method='get'>
+                                    <form action={% url 'embark-download' firmware.id %} method='get'>
                                         <button type="submit" class="btn buttonRowElem" >Download Logs</button>
                                     </form>
-                                    <form action={% url 'embark-html-report' firmware.pk 'index.html' %} method='get'>
+                                    <form action={% url 'embark-html-report' firmware.id 'index.html' %} method='get'>
                                         <button type="submit" class="btn buttonRowElem" >Open Report</button>
                                     </form>
-                                    <form action={% url 'embark-IndividualReportDashboard' firmware.pk %} method='get'>
+                                    <form action={% url 'embark-IndividualReportDashboard' firmware.id %} method='get'>
                                         <button type="submit" class="btn buttonRowElem" >Detail View</button>
                                     </form>
-                                    <form action={% url 'embark-start-analysis' 1 %} method='get'>
+                                    <form action={% url 'embark-uploader-home' %} method='get'>
                                         <button type="submit" class="btn buttonRowElem" >Rescan/delete</button>
                                     </form>
                                 </div>

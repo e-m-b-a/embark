@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from .models import Firmware, FirmwareFile
+from .models import FirmwareAnalysis, FirmwareFile
 
 
 class TestModels(TestCase):
@@ -16,7 +16,7 @@ class TestModels(TestCase):
         test get_flags() if all flags set to String/True
         """
 
-        firmware = Firmware(firmware=self.fw_file)
+        firmware = FirmwareAnalysis(firmware=self.fw_file)
 
         firmware.version = "version"
         firmware.vendor = "vendor"
@@ -44,7 +44,7 @@ class TestModels(TestCase):
         test get_flags() if all flags set to None/False
         """
 
-        firmware = Firmware(firmware=self.fw_file)
+        firmware = FirmwareAnalysis(firmware=self.fw_file)
 
         firmware.version = None
         firmware.vendor = None

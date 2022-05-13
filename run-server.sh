@@ -42,6 +42,7 @@ cleaner() {
   docker container prune -f --filter "label=flag"
 
   systemctl stop embark.service
+  systemctl disable embark.service
   exit 1
 }
 
@@ -67,9 +68,8 @@ if [[ $? -eq 1 ]]; then
     exit 1
   fi
   cd ./emba || exit 1
-  git pull
-  systemctl restart embark
-  /app/emba/emba.sh -d 1>/dev/null
+  systemctl restart NetworkManager docker
+  ./emba.sh -d 1>/dev/null
   if [[ $? -eq 1 ]]; then
     echo -e "$RED""EMBA is not configured correctly""$NC"
     exit 1
@@ -106,6 +106,7 @@ echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.lo
 docker container logs embark_db -f &> /app/www/logs/mysql.log &
 
 #start the supervisor
+systemctl enable embark.service
 systemctl start embark.service
 
 # copy django server
@@ -126,16 +127,15 @@ cd /app/www/embark/ || exit 1
 
 # db_init
 echo -e "\n[""$BLUE JOB""$NC""] Starting migrations - log to embark/logs/migration.log"
-pipenv run ./manage.py makemigrations users uploader | tee -a /app/www/logs/migration.log
+pipenv run ./manage.py makemigrations users uploader dashboard reporter | tee -a /app/www/logs/migration.log
 pipenv run ./manage.py migrate | tee -a /app/www/logs/migration.log
-
 
 # collect staticfiles and make accesable for server
 echo -e "\n[""$BLUE JOB""$NC""] Collecting static files"
 pipenv run ./manage.py collectstatic --no-input
 chown www-embark /app/www/ -R
-chown www-embark /app/emba -R
-chmod 770 /app/www/media/ -R
+# chown www-embark /app/emba -R
+chmod 760 /app/www/media/ -R
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
 pipenv run ./manage.py runapscheduler | tee -a /app/www/logs/scheduler.log &

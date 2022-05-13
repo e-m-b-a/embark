@@ -1,4 +1,4 @@
-{% extends "uploader/base.html" %}
+{% extends "base.html" %}
 {% load static %}
 {% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/login.css' %}"/>{% endblock style %}
 {% block title %}EMBArk login{% endblock title %}
@@ -16,7 +16,7 @@
         {% endif %}
         <div id="embarkLogo"><img src="{% static 'content/images/embark_logo.svg' %}" alt="EMBArk logo graphic" height="auto" width="auto"/></div>
         <div class="login">
-            <form action="{% url 'embark-signin' %}" class="login-form" method="post">
+            <form action="{% url 'embark-login' %}" class="login-form" method="post">
                 {% csrf_token %}
                 <h2 class="title">Sign in</h2>
                 <div class="input-field" data-error="Username is required">
@@ -31,9 +31,6 @@
             </form> 
         </div>
         <div id="login_footer">
-            <a href="{% url 'embark-MainDashboard-unauth' %}">
-                <input class="solid btn-login" type="submit" value="Dashboard" />
-            </a>
             <a href="{% url 'embark-register' %}">
                 <input class="solid btn-login" type="submit" value="Register" />
             </a>

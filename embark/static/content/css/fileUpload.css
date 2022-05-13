@@ -7,8 +7,7 @@
 }
 
 .uploadRow {
-    height: 100vh;
-    padding-top: 30px;
+    height: 100px;
 }
 
 /* Styles for the slider */
@@ -199,4 +198,8 @@ input:checked+.slider:before {
 
 .text-muted[value="help_text_on"] {
     display:block;
+}
+
+.alert {
+    margin: 30px;
 }

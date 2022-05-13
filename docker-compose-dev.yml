@@ -5,6 +5,8 @@ services:
   embark_db_dev:
     container_name: embark_db_dev
     image: mysql:latest
+    labels:
+      flag: "dev_EMBArk_server_mysql_container"
     env_file:
       - .env
     environment:
@@ -33,6 +35,8 @@ services:
     ports:
       - "7777:7777"
     restart: always
+    labels:
+      flag: "dev_EMBArk_server_redis_container"
     env_file:
       - .env
     volumes:

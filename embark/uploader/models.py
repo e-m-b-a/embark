@@ -2,6 +2,8 @@ from datetime import timedelta
 import logging
 import os
 import shutil
+import uuid
+import re
 
 from django.conf import settings
 from django.db import models
@@ -9,6 +11,11 @@ from django import forms
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 from django.utils.datetime_safe import datetime
+
+# from hashid_field import HashidAutoField
+
+from users.models import User as Userclass
+
 
 logger = logging.getLogger('web')
 
@@ -88,15 +95,20 @@ class FirmwareFile(models.Model):
     class FirmwareFile
     Model to store zipped or bin firmware file and upload date
     """
-    def get_storage_path(self, filename):
-        # file will be uploaded to MEDIA_ROOT/pk/<filename>
-        return os.path.join(f"{self.pk}", filename)
-
     MAX_LENGTH = 127
 
-    file = models.FileField(upload_to=get_storage_path)
-    is_archive = models.BooleanField(default=False)
+    # id = HashidAutoField(primary_key=True, prefix='fw_')
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
+
+    is_archive = models.BooleanField(default=False, blank=True)
     upload_date = models.DateTimeField(default=datetime.now, blank=True)
+    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, related_name='Fw_Upload_User', null=True, blank=True)
+
+    def get_storage_path(self, filename):
+        # file will be uploaded to MEDIA_ROOT/<id>/<filename>
+        return os.path.join(f"{self.pk}", filename)
+
+    file = models.FileField(upload_to=get_storage_path)
 
     def get_abs_path(self):
         return f"{settings.MEDIA_ROOT}/{self.pk}/{self.file.name}"
@@ -113,27 +125,38 @@ class FirmwareFile(models.Model):
 
 
 @receiver(pre_delete, sender=FirmwareFile)
-def delete_img_pre_delete_post(sender, *args, **kwargs):
+def delete_fw_pre_delete_post(sender, instance, **kwargs):
     """
     callback function
     delete the firmwarefile and folder structure in storage on recieve
     """
     if sender.file:
-        shutil.rmtree(sender.get_abs_folder_path(), ignore_errors=True)
+        shutil.rmtree(instance.get_abs_folder_path(), ignore_errors=False, onerror=logger.error("Error when trying to delete %s", instance.get_abs_folder_path()))
+    else:
+        logger.error("No related FW found for delete request: %s", str(sender))
 
 
-class Firmware(models.Model):
+class FirmwareAnalysis(models.Model):
     """
     class Firmware
     Model of firmware to be analyzed, basic/expert emba flags and metadata on the analyze process
+    (1 FirmwareFile --> n FirmwareAnalysis)
     """
     MAX_LENGTH = 127
 
+    # pk
+    # id = HashidAutoField(primary_key=True, prefix='fwA_')
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
+    # user
+    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, related_name='Fw_Analysis_User', null=True)
+    # pid from within boundedexec
+    pid = models.BigIntegerField(help_text='process id of subproc', verbose_name='PID', blank=True, null=True)
+
     firmware = models.ForeignKey(FirmwareFile, on_delete=models.RESTRICT, help_text='', null=True)
 
-    # emba basic flags
+    # emba basic flags  FIXME change to int
     version = CharFieldExpertMode(
-        help_text='Firmware version (double quote your input)', verbose_name="Firmware version", max_length=MAX_LENGTH,
+        help_text='Firmware version (only integers)', verbose_name="Firmware version", max_length=MAX_LENGTH,
         blank=True, expert_mode=False)
     vendor = CharFieldExpertMode(
         help_text='Firmware vendor (double quote your input)', verbose_name="Firmware vendor", max_length=MAX_LENGTH,
@@ -183,7 +206,7 @@ class Firmware(models.Model):
         expert_mode=True, blank=True)
 
     # embark meta data
-    path_to_logs = models.FilePathField(default="/", blank=True)    # TODO change
+    path_to_logs = models.FilePathField(default="/", blank=True)
     start_date = models.DateTimeField(default=datetime.now, blank=True)
     end_date = models.DateTimeField(default=datetime.min, blank=True)
     scan_time = models.DurationField(default=timedelta(), blank=True)
@@ -206,7 +229,7 @@ class Firmware(models.Model):
     def __str__(self):
         return f"{self.id}({self.firmware})"
 
-    def get_flags(self):    # FIXME is this comp with recent changes
+    def get_flags(self):    # FIXME add all current options, DIRECT INPUT!! remove or sanitize
         """
         build shell command from input fields
 
@@ -214,13 +237,13 @@ class Firmware(models.Model):
         """
         command = ""
         if self.version:
-            command = command + " -X " + str(self.version)
+            command = command + " -X " + re.sub("[^0-9]", "", str(self.version))
         if self.vendor:
-            command = command + " -Y " + str(self.vendor)
+            command = command + " -Y " + re.sub("[^A-Za-z0–9]", "", str(self.vendor))
         if self.device:
-            command = command + " -Z " + str(self.device)
+            command = command + " -Z " + re.sub("[^A-Za-z0–9]", "", str(self.device))
         if self.notes:
-            command = command + " -N " + str(self.notes)
+            command = command + " -N " + re.sub("[^A-Za-z0–9]", "", str(self.notes))
         if self.firmware_Architecture:
             command = command + " -a " + str(self.firmware_Architecture)
         if self.cwe_checker:
@@ -250,63 +273,6 @@ class Firmware(models.Model):
         # running emba
         logger.info("final emba parameters %s", command)
         return command
-
-
-class Result(models.Model):
-    # TODO missing: emba_command
-
-    firmware = models.ForeignKey(Firmware, on_delete=models.CASCADE, help_text='')
-    architecture_verified = models.CharField(blank=True, null=True, max_length=100, help_text='')
-    os_verified = models.CharField(blank=True, null=True, max_length=100, help_text='')
-    emba_command = models.CharField(blank=True, null=True, max_length=300, help_text='')
-    files = models.IntegerField(default=0, help_text='')
-    directories = models.IntegerField(default=0, help_text='')
-    entropy_value = models.FloatField(default=0.0, help_text='')
-    certificates = models.IntegerField(default=0, help_text='')
-    certificates_outdated = models.IntegerField(default=0, help_text='')
-    shell_scripts = models.IntegerField(default=0, help_text='')
-    shell_script_vulns = models.IntegerField(default=0, help_text='')
-    yara_rules_match = models.IntegerField(default=0, help_text='')
-    kernel_modules = models.IntegerField(default=0, help_text='')
-    kernel_modules_lic = models.IntegerField(default=0, help_text='')
-    interesting_files = models.IntegerField(default=0, help_text='')
-    post_files = models.IntegerField(default=0, help_text='')
-    canary = models.IntegerField(default=0, help_text='')
-    canary_per = models.IntegerField(default=0, help_text='')
-    relro = models.IntegerField(default=0, help_text='')
-    relro_per = models.IntegerField(default=0, help_text='')
-    no_exec = models.IntegerField(default=0, help_text='')
-    no_exec_per = models.IntegerField(default=0, help_text='')
-    pie = models.IntegerField(default=0, help_text='')
-    pie_per = models.IntegerField(default=0, help_text='')
-    stripped = models.IntegerField(default=0, help_text='')
-    stripped_per = models.IntegerField(default=0, help_text='')
-    strcpy = models.IntegerField(default=0, help_text='')
-    versions_identified = models.IntegerField(default=0, help_text='')
-    cve_high = models.IntegerField(default=0, help_text='')
-    cve_medium = models.IntegerField(default=0, help_text='')
-    cve_low = models.IntegerField(default=0, help_text='')
-    exploits = models.IntegerField(default=0, help_text='')
-    metasploit_modules = models.IntegerField(default=0, help_text='')
-    bins_checked = models.IntegerField(default=0, help_text='')
-    strcpy_bin = models.TextField(default='{}')
-
-
-class DeleteFirmware(models.Model):
-    """
-    class DeleteFirmware
-    Model of firmware to be selected for deletion
-    """
-
-    MAX_LENGTH = 127
-
-    firmware = models.ForeignKey(FirmwareFile, on_delete=models.CASCADE, help_text='', null=True)
-
-    class Meta:
-        app_label = 'uploader'
-
-    # def __init__(self, *args, **kwargs):
-    #    super().__init__(*args, **kwargs)
 
 
 class ResourceTimestamp(models.Model):
