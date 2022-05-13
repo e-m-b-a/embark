@@ -39,12 +39,14 @@ def stop_analysis(request):
     form = StopAnalysisForm(request.POST)
     if form.is_valid():
         logger.debug("Posted Form is valid")
+        
+        # get id
+        analysis = form.cleaned_data['analysis']
+        logger.info("Stopping analysis with id %s", analysis.id)
+        pid = FirmwareAnalysis.objects.get(id=analysis.id).pid
+        logger.debug("PID is %", pid)
         try:
-            # get id
-            analysis = form.cleaned_data['analysis']
-            logger.info("Stopping analysis with %s", id)
-
-            os.killpg(os.getpgid(analysis.pid), signal.SIGTERM)
+            os.killpg(os.getpgid(pid), signal.SIGTERM)
 
             return HttpResponse("Stopped successfully")
 
@@ -65,7 +67,7 @@ def service_dashboard(request):
     """
     # if FirmwareAnalysis.objects.all().count() > 0:
     form = StopAnalysisForm()
-    form.fields['firmware'].queryset = FirmwareAnalysis.objects.filter(finished=False)
+    form.fields['analysis'].queryset = FirmwareAnalysis.objects.filter(finished=False)
     return render(request, 'dashboard/serviceDashboard.html', {'username': request.user.username, 'form': form, 'success_message': False})
 
 

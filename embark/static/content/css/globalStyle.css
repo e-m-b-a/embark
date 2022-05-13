@@ -90,12 +90,14 @@ button[type="button"]:hover {
 
 /* reset /cancel / delete buttons */
 button[type="reset"],
+button[type="stop"],
 button[type="delete"] {
     background: #e3141b;
     color: #FFFFFF;
 }
 
 button[type="reset"]:hover,
+button[type="stop"]:hover,
 button[type="delete"]:hover {
     background: #870005;
     color: #FFFFFF;
