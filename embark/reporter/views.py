@@ -11,7 +11,7 @@ from http import HTTPStatus
 from uuid import UUID
 
 from django.conf import settings
-from django.forms import UUIDField, model_to_dict
+from django.forms import model_to_dict
 from django.http.response import Http404
 from django.template.loader import get_template
 from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse

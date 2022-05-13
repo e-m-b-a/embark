@@ -100,7 +100,7 @@ def delete_fw_file(request):
 
             # get relevant data
             firmware_file = form.cleaned_data['firmware']
-            # if firmware_file.user is request.user: 
+            # if firmware_file.user is request.user:
             firmware_file.delete()
             return render(request, 'uploader/firmwareDelete.html', {'success_message': True, 'message': "Successfull delete"})
 

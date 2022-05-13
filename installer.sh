@@ -29,7 +29,7 @@ SUPER_PW="embark"
 SUPER_EMAIL="idk@lol.com"
 SUPER_USER="superuser"
 
-DIR="$(realpath "$(dirname "$0")")"
+# DIR="$(realpath "$(dirname "$0")")"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
