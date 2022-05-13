@@ -41,10 +41,8 @@ def stop_analysis(request):
         logger.debug("Posted Form is valid")
         try:
             # get id
-            id = form.cleaned_data['id']
+            analysis = form.cleaned_data['analysis']
             logger.info("Stopping analysis with %s", id)
-
-            analysis = FirmwareAnalysis.objects.filter(id=id)
 
             os.killpg(os.getpgid(analysis.pid), signal.SIGTERM)
 
