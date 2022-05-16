@@ -101,7 +101,7 @@ def delete_fw_file(request):
             # get relevant data
             firmware_file = form.cleaned_data['firmware']
             # if firmware_file.user is request.user:
-            analysis_list = FirmwareAnalysis.objects.filter(firmware=firmware_file) # TODO update foreignkey Null
+            analysis_list = FirmwareAnalysis.objects.filter(firmware=firmware_file)
             if analysis_list.count() > 0:
                 for analysis in analysis_list:
                     analysis.firmware = None
