@@ -4,7 +4,7 @@ import signal
 
 from django.conf import settings
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect, HttpResponseServerError
+from django.http import HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect, HttpResponseServerError
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 
