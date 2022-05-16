@@ -152,7 +152,7 @@ class FirmwareAnalysis(models.Model):
     # pid from within boundedexec
     pid = models.BigIntegerField(help_text='process id of subproc', verbose_name='PID', blank=True, null=True)
 
-    firmware = models.ForeignKey(FirmwareFile, on_delete=models.RESTRICT, help_text='', null=True)
+    firmware = models.ForeignKey(FirmwareFile, on_delete=models.RESTRICT, help_text='', null=True, editable=True)
 
     # emba basic flags  FIXME change to int
     version = CharFieldExpertMode(
