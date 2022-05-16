@@ -23,7 +23,7 @@ export EMBARK_DEBUG=True
 export HTTP_PORT=80
 export HTTPS_PORT=443
 export BIND_IP='0.0.0.0'
-export FILE_SIZE=491040828
+export FILE_SIZE=2000000000
 
 
 cleaner() {
