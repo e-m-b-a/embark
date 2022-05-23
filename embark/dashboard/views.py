@@ -4,7 +4,7 @@ import signal
 
 from django.conf import settings
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect, HttpResponseServerError
+from django.http import HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect, HttpResponseServerError
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 
@@ -31,7 +31,7 @@ def stop_analysis(request):
     """
     View to submit form for flags to run emba with
     if: form is valid
-        send interrupt to hashid.pid
+        send interrupt to analysis.pid
     Args:
         request: the http req with FirmwareForm
     Returns: redirect
@@ -46,12 +46,12 @@ def stop_analysis(request):
         logger.debug("PID is %s", pid)
         try:
             os.killpg(os.getpgid(pid), signal.SIGTERM)
-
-            return HttpResponse("Stopped successfully")
-
+            form = StopAnalysisForm()
+            form.fields['analysis'].queryset = FirmwareAnalysis.objects.filter(finished=False)
+            return render(request, 'dashboard/serviceDashboard.html', {'username': request.user.username, 'form': form, 'success_message': True, 'message': "Stopped successfully"})
         except Exception as error:
             logger.error("Error %s", error)
-            return HttpResponseServerError("Failed to stop procs")
+            return HttpResponseServerError("Failed to stop procs, because" + str(error))
     return HttpResponseBadRequest("invalid form")
 
 
