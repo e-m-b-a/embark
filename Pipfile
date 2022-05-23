@@ -18,6 +18,7 @@ psutil = "*"
 msgpack = "*"
 django = "*"
 django-hashid-field = "*"
+django-environ = "*"
 
 [dev-packages]
 pycodestyle = "*"

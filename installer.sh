@@ -56,12 +56,12 @@ write_env() {
   export DATABASE_NAME="embark"
   export DATABASE_USER="embark"
   export DATABASE_PASSWORD="$RANDOM_PW"
-  export DATABASE_HOST="127.0.0.1"
+  export DATABASE_HOST="127.22.0.5"
   export DATABASE_PORT="3306"
   export MYSQL_PASSWORD="$RANDOM_PW"
   export MYSQL_USER="embark"
   export MYSQL_DATABASE="embark"
-  export REDIS_HOST="127.0.0.1"
+  export REDIS_HOST="127.22.0.8"
   export REDIS_PORT="7777"
   export SECRET_KEY="$DJANGO_SECRET_KEY"
   export HASHID_SALT="$RANDOM_SALT"
@@ -221,7 +221,7 @@ install_debs() {
 
 install_daemon() {
   echo -e "\n$GREEN""$BOLD""Install embark daemon""$NC"
-  ln -s /app/embark.service /etc/systemd/system/embark.service
+  ln -sf "$(pwd)"/embark.service /etc/systemd/system/embark.service
 }
 
 install_embark_default() {
@@ -231,7 +231,7 @@ install_embark_default() {
   apt-get install -y -q python3-dev default-libmysqlclient-dev build-essential
   
   # install pipenv
-  pip3 install pipenv
+  pip3 install pipenv --upgrade
 
   #Add user for server
   useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /app/www/
@@ -240,7 +240,7 @@ install_embark_default() {
 
   #Add Symlink
   if ! [[ -d /app ]]; then
-    ln -s "$PWD" /app || exit 1
+    ln -sf "$PWD" /app || exit 1
   fi
 
   # daemon
@@ -258,7 +258,7 @@ install_embark_default() {
   
   #add ssl cert
   create_ca
-  ln -s /app/cert /app/www/conf/cert || exit 1
+  ln -sf "$(pwd)"/cert /app/www/conf/cert || exit 1
 
   #add dns name
   dns_resolve
@@ -325,7 +325,7 @@ install_embark_dev(){
 
   #Add Symlink
   if ! [[ -d /app ]]; then
-    ln -s "$PWD" /app || exit 1
+    ln -sf "$PWD" /app || exit 1
   fi
 
   # daemon
