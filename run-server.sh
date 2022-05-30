@@ -58,7 +58,7 @@ if ! [[ $EUID -eq 0 ]] ; then
 fi
 
 # check emba
-echo -e "$BLUE""$BOLD""checking EMBA""$RED"
+echo -e "$BLUE""$BOLD""checking EMBA""$NC"
 /app/emba/emba.sh -d
 if [[ $? -eq 1 ]]; then
   echo -e "$BLUE""Trying auto-maintain""$NC"
