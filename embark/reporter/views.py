@@ -39,7 +39,7 @@ def reports(request):
 def html_report(request, analysis_id, html_file):
     report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
 
-    if FirmwareAnalysis.objects.filter(id=analysis_id).exists() and FirmwareAnalysis.objects.get(id=analysis_id).user == request.user:
+    if FirmwareAnalysis.objects.filter(id=analysis_id).exists() and FirmwareAnalysis.objects.filter(id=analysis_id).user == request.user:   #FIXME
         html_body = get_template(report_path)
         logger.info("html_report - analysis_id: %s html_file: %s", analysis_id, html_file)
         return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
@@ -52,7 +52,7 @@ def html_report(request, analysis_id, html_file):
 def html_report_path(request, analysis_id, html_path, html_file):
     report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
 
-    if FirmwareAnalysis.objects.get(id=analysis_id).exists() and FirmwareAnalysis.objects.get(id=analysis_id).user == request.user:
+    if FirmwareAnalysis.objects.filter(id=analysis_id).exists() and FirmwareAnalysis.objects.filter(id=analysis_id).user == request.user:   #FIXME
         html_body = get_template(report_path)
         logger.info("html_report - analysis_id: %s path: %s html_file: %s", analysis_id, html_path, html_file)
         return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
