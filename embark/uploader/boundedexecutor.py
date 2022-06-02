@@ -69,6 +69,7 @@ class BoundedExecutor:
                 proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
                 # Add proc to FirmwareAnalysis-Object
                 analysis.pid = proc.pid
+                analysis.firmware_name = analysis.firmware.file.name
                 analysis.save()
                 logger.debug("subprocess got pid %s", proc.pid)
                 # wait for completion

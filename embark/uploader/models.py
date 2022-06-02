@@ -153,6 +153,7 @@ class FirmwareAnalysis(models.Model):
     pid = models.BigIntegerField(help_text='process id of subproc', verbose_name='PID', blank=True, null=True)
 
     firmware = models.ForeignKey(FirmwareFile, on_delete=models.SET_NULL, help_text='', null=True, editable=True)
+    firmware_name = models.CharField(editable=True, default="File unknown")
 
     # emba basic flags  FIXME change to int
     version = CharFieldExpertMode(
@@ -223,8 +224,9 @@ class FirmwareAnalysis(models.Model):
         :return:
         """
 
-    # def __init__(self, *args, **kwargs):
+    #def __init__(self, *args, **kwargs):
     #    super().__init__(*args, **kwargs)
+    #    self.firmware_name = self.firmware.file.name
 
     def __str__(self):
         return f"{self.id}({self.firmware})"

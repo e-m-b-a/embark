@@ -125,7 +125,7 @@ def get_individual_report(request, analysis_id):
 
         return_dict = dict(model_to_dict(result), **model_to_dict(analysis_object))
 
-        return_dict['name'] = analysis_object.firmware.file.name
+        return_dict['name'] = analysis_object.firmware_name
         return_dict['strcpy_bin'] = json.loads(return_dict['strcpy_bin'])
 
         return JsonResponse(data=return_dict, status=HTTPStatus.OK)
@@ -190,7 +190,7 @@ def get_accumulated_reports(request):
         if field not in charfields:
             data[field]['mean'] = data[field]['sum'] / data[field]['count']
     data['total_firmwares'] = len(results)
-    data['top_entropies'] = [{'name': r.firmware_analysis.firmware.file.name, 'entropy_value': r.entropy_value} for r in
+    data['top_entropies'] = [{'name': r.firmware_analysis.firmware_name, 'entropy_value': r.entropy_value} for r in
                              top_5_entropies]
 
     # Taking top 10 most commonly occurring strcpy_bin values
