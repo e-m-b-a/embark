@@ -64,6 +64,7 @@ def start_analysis(request):
 
             new_analysis = form.save(commit=False)
             new_analysis.user = request.user
+            new_analysis.firmware_name = form.Meta.fields['firmware']
             new_analysis = form.save()
 
             # get the id of the firmware-file to submit
