@@ -64,6 +64,7 @@ def start_analysis(request):
 
             new_analysis = form.save(commit=False)
             new_analysis.user = request.user
+            logger.debug(" FILE_NAME is %s", new_analysis.firmware.file.name)
             new_analysis.firmware_name = new_analysis.firmware.file.name
             new_analysis = form.save()
 
