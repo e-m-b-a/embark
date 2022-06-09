@@ -9,7 +9,7 @@ from django.views.decorators.http import require_http_methods
 
 from uploader.boundedexecutor import BoundedExecutor
 from uploader.forms import FirmwareAnalysisForm, DeleteFirmwareForm
-from uploader.models import FirmwareAnalysis, FirmwareFile
+from uploader.models import FirmwareFile
 
 logger = logging.getLogger('web')
 

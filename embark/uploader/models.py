@@ -224,7 +224,7 @@ class FirmwareAnalysis(models.Model):
         :return:
         """
 
-    #def __init__(self, *args, **kwargs):
+    # def __init__(self, *args, **kwargs):
     #    super().__init__(*args, **kwargs)
     #    self.firmware_name = self.firmware.file.name
 
