@@ -216,7 +216,7 @@ install_debs() {
     apt-get install -y -q docker-compose
   fi
   # we need the django package on the host for generating the django SECRET_KEY and pip
-  apt-get install -y -q python3-django python3-pip python3.9-dev
+  apt-get install -y -q python3-django python3-pip python3-dev
 
   git config --global --add safe.directory "$PWD"
 }
