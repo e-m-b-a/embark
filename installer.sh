@@ -29,7 +29,7 @@ SUPER_PW="embark"
 SUPER_EMAIL="idk@lol.com"
 SUPER_USER="superuser"
 
-DIR="$(realpath "$(dirname "$0")")"
+# DIR="$(realpath "$(dirname "$0")")"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -218,7 +218,7 @@ install_debs() {
   # we need the django package on the host for generating the django SECRET_KEY and pip
   apt-get install -y -q python3-django python3-pip python3.9-dev
 
-  git config --global --add safe.directory "$DIR"/embark
+  git config --global --add safe.directory "$PWD"
 }
 
 install_daemon() {
