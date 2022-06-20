@@ -59,7 +59,7 @@ class BoundedExecutor:
 
         # get return code to evaluate: 0 = success, 1 = failure,
         # see emba.sh for further information
-        failed = False
+        exit = False
         try:
 
             analysis = FirmwareAnalysis.objects.get(id=analysis_id)
@@ -99,7 +99,7 @@ class BoundedExecutor:
             # fail
             logger.error("EMBA run was probably not successful!")
             logger.error("run_emba_cmd error: %s", execpt)
-            failed = True
+            exit = True
         finally:
             # finalize db entry
             if analysis_id:
@@ -107,7 +107,7 @@ class BoundedExecutor:
                 analysis.scan_time = datetime.now() - analysis.start_date
                 analysis.duration = str(analysis.scan_time)
                 analysis.finished = True
-                analysis.failed = failed
+                analysis.failed = exit
                 analysis.save()
 
             logger.info("Successful cleaned up: %s", cmd)
