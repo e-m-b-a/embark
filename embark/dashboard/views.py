@@ -1,6 +1,7 @@
 import logging
 import os
 import signal
+import psutil
 
 from django.conf import settings
 from django.shortcuts import render
@@ -46,6 +47,10 @@ def stop_analysis(request):
         logger.debug("PID is %s", pid)
         try:
             os.killpg(os.getpgid(pid), signal.SIGTERM)
+            for proc in psutil.process_iter():
+                # check whether the process name matches
+                if proc.name() == analysis.id:
+                    proc.kill()
             form = StopAnalysisForm()
             form.fields['analysis'].queryset = FirmwareAnalysis.objects.filter(finished=False)
             return render(request, 'dashboard/serviceDashboard.html', {'username': request.user.username, 'form': form, 'success_message': True, 'message': "Stopped successfully"})
