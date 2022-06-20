@@ -14,6 +14,9 @@
 
 # Description: Installer for EMBArk
 
+# it the installer fails you can try to change it to 0
+STRICT_MODE=1
+
 export DEBIAN_FRONTEND=noninteractive
 
 DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
@@ -38,6 +41,18 @@ CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m' # no color
 
+if [[ "$STRICT_MODE" -eq 1 ]]; then
+  # http://redsymbol.net/articles/unofficial-bash-strict-mode/
+  # https://github.com/tests-always-included/wick/blob/master/doc/bash-strict-mode.md
+  set -e          # Exit immediately if a command exits with a non-zero status
+  set -u          # Exit and trigger the ERR trap when accessing an unset variable
+  set -o pipefail # The return value of a pipeline is the value of the last (rightmost) command to exit with a non-zero status
+  set -E          # The ERR trap is inherited by shell functions, command substitutions and commands in subshells
+  shopt -s extdebug # Enable extended debugging
+  IFS=$'\n\t'     # Set the "internal field separator"
+  trap 'wickStrictModeFail $? | tee -a /tmp/embark_installer.log' ERR  # The ERR trap is triggered when a script catches an error
+fi
+
 print_help() {
   echo -e "\\n""$CYAN""USAGE""$NC"
   echo -e "$CYAN-h$NC         Print this help message"
@@ -47,7 +62,8 @@ print_help() {
   echo -e "$CYAN-D$NC         Install for Docker deployment"
   echo -e "---------------------------------------------------------------------------"
   echo -e "$CYAN-U$NC         Uninstall EMBArk"
-  echo -e "$CYAN-r$NC         Reinstallation of EMBArk with all dependencies"
+  echo -e "$CYAN-rd$NC        Reinstallation of EMBArk with all dependencies"
+  echo -e "$CYAN-rF$NC        Reinstallation of EMBArk with all dependencies in Developer-mode"
   echo -e "$RED               ! Both options delete all Database-files as well !""$NC"
 }
 
