@@ -98,7 +98,7 @@ class BoundedExecutor:
             # fail
             logger.error("EMBA run was probably not successful!")
             logger.error("run_emba_cmd error: %s", execpt)
-
+            analysis.failed = True
         finally:
             # finalize db entry
             if analysis_id:
