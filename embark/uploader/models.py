@@ -213,7 +213,7 @@ class FirmwareAnalysis(models.Model):
     scan_time = models.DurationField(default=timedelta(), blank=True)
     duration = models.CharField(blank=True, null=True, max_length=100, help_text='')
     finished = models.BooleanField(default=False, blank=False)
-    failed = models.BooleanField(default=False, blank=True)
+    failed = models.BooleanField(default=True, blank=False)
 
     class Meta:
         app_label = 'uploader'
