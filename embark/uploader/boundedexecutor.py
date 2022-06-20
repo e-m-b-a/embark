@@ -98,7 +98,6 @@ class BoundedExecutor:
             # fail
             logger.error("EMBA run was probably not successful!")
             logger.error("run_emba_cmd error: %s", execpt)
-            analysis.failed = True
         finally:
             # finalize db entry
             if analysis_id:
@@ -106,6 +105,7 @@ class BoundedExecutor:
                 analysis.scan_time = datetime.now() - analysis.start_date
                 analysis.duration = str(analysis.scan_time)
                 analysis.finished = True
+                analysis.failed = False
                 analysis.save()
 
             logger.info("Successful cleaned up: %s", cmd)
