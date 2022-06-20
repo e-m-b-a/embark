@@ -39,7 +39,7 @@ def reports(request):
 def html_report(request, analysis_id, html_file):
     report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
     if FirmwareAnalysis.objects.filter(id=analysis_id).exists():
-        analysis = FirmwareAnalysis.objects.filter(id=analysis_id)
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         if analysis.user == request.user:
             html_body = get_template(report_path)
             logger.info("html_report - analysis_id: %s html_file: %s", analysis_id, html_file)
@@ -53,7 +53,7 @@ def html_report(request, analysis_id, html_file):
 def html_report_path(request, analysis_id, html_path, html_file):
     report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
     if FirmwareAnalysis.objects.filter(id=analysis_id).exists():
-        analysis = FirmwareAnalysis.objects.filter(id=analysis_id)
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         if analysis.user == request.user:
             html_body = get_template(report_path)
             logger.info("html_report - analysis_id: %s path: %s html_file: %s", analysis_id, html_path, html_file)
