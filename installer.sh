@@ -206,17 +206,38 @@ reset_docker() {
 install_debs() {
   echo -e "\n$GREEN""$BOLD""Install debian packages for EMBArk installation""$NC"
   apt-get update -y
+  # Git
   if ! command -v git > /dev/null ; then
-    apt-get install -y -q git
+    apt-get install -y git
   fi
+  # Python3
+  if ! command -v python3.9 > /dev/null ; then
+    apt-get install -y python3.9
+  fi
+  # Pip
+  if ! command -v pip3 > /dev/null ; then
+    apt-get install -y python3-pip
+  fi
+  # Docker
   if ! command -v docker > /dev/null ; then
-    apt-get install -y -q docker.io
+    apt-get install -y docker.io
   fi
+  # docker-compose
   if ! command -v docker-compose > /dev/null ; then
-    apt-get install -y -q docker-compose
+    pip3 install docker-compose --upgrade
+    if ! [[ -d /usr/bin/docker-compose ]]; then
+      ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
+    fi
+  else
+    DOCKER_COMP_VER=$(docker-compose -v | grep version | awk '{print $3}' | tr -d ',')
+    if [[ $(version "$DOCKER_COMP_VER") -lt $(version "1.28.5") ]]; then
+      echo -e "\n${ORANGE}WARNING: compatibility of the used docker-compose version is unknown!$NC"
+      echo -e "\n${ORANGE}Please consider updating your docker-compose installation to version 1.28.5 or later.$NC"
+      read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
+    fi
   fi
-  # we need the django package on the host for generating the django SECRET_KEY and pip
-  apt-get install -y -q python3-django python3-pip python3-dev
+  # python3.9-dev python3-django
+  apt-get install -y python3-dev python3-django
   # mark dir as safe for git
   git config --global --add safe.directory "$PWD"
 }
@@ -230,7 +251,7 @@ install_embark_default() {
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanning environment EMBArk""$NC"
   
   #debs
-  apt-get install -y -q python3-dev default-libmysqlclient-dev build-essential
+  apt-get install -y -q default-libmysqlclient-dev build-essential
   
   # install pipenv
   pip3 install pipenv
@@ -301,7 +322,7 @@ install_embark_default() {
 
 install_embark_dev(){
   echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
-  apt-get install -y -q npm pycodestyle python3-pylint-django python3-dev default-libmysqlclient-dev build-essential pipenv bandit
+  apt-get install -y npm pycodestyle python3-pylint-django default-libmysqlclient-dev build-essential pipenv bandit
   npm install -g jshint dockerlinter
 
   #pipenv
