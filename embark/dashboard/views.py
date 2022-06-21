@@ -85,7 +85,7 @@ def report_dashboard(request):
 
     :return: rendered ReportDashboard
     """
-    finished_firmwares = FirmwareAnalysis.objects.filter(finished=True).exclude(failed=True)
+    finished_firmwares = FirmwareAnalysis.objects.exclude(failed=True)
     return render(request, 'dashboard/reportDashboard.html', {'finished_firmwares': finished_firmwares, 'username': request.user.username})
 
 
