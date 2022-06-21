@@ -90,6 +90,7 @@ class BoundedExecutor:
             else:
                 logger.error("CSV file %s for report: %s not generated", csv_log_location, analysis_id)
                 logger.error("EMBA run was probably not successful!")
+                exit=True
 
             # take care of cleanup
             if active_analyzer_dir:
