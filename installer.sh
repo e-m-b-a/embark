@@ -237,7 +237,7 @@ install_debs() {
     fi
   fi
   # python3.9-dev python3-django
-  apt-get install -y python3-dev python3-django
+  apt-get install -y python3.9-dev python3-django
   # mark dir as safe for git
   git config --global --add safe.directory "$PWD"
 }
