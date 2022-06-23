@@ -1,4 +1,4 @@
-# pylint: disable=R1732, C0201, E1129
+# pylint: disable=R1732, C0201, E1129, W1509
 import csv
 import logging
 import os
@@ -59,7 +59,7 @@ class BoundedExecutor:
 
         # get return code to evaluate: 0 = success, 1 = failure,
         # see emba.sh for further information
-        exit = False
+        exit_fail = False
         try:
 
             analysis = FirmwareAnalysis.objects.get(id=analysis_id)
@@ -90,7 +90,7 @@ class BoundedExecutor:
             else:
                 logger.error("CSV file %s for report: %s not generated", csv_log_location, analysis_id)
                 logger.error("EMBA run was probably not successful!")
-                exit=True
+                exit_fail=True
 
             # take care of cleanup
             if active_analyzer_dir:
@@ -100,7 +100,7 @@ class BoundedExecutor:
             # fail
             logger.error("EMBA run was probably not successful!")
             logger.error("run_emba_cmd error: %s", execpt)
-            exit = True
+            exit_fail = True
         finally:
             # finalize db entry
             if analysis_id:
@@ -108,7 +108,7 @@ class BoundedExecutor:
                 analysis.scan_time = datetime.now() - analysis.start_date
                 analysis.duration = str(analysis.scan_time)
                 analysis.finished = True
-                analysis.failed = exit
+                analysis.failed = exit_fail
                 analysis.save()
 
             logger.info("Successful cleaned up: %s", cmd)
