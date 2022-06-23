@@ -1,1 +1,0 @@
-model-has-unicode:9:0:9:15:SomeModel:Found __unicode__ method on model (SomeModel). Python3 uses __str__.:UNDEFINED

@@ -1,3 +1,0 @@
-_nvx_utf8validator
-autobahn
-twisted

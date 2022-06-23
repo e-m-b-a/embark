@@ -13,6 +13,7 @@ documentation/
 embark_db/
 .vscode/
 www/
+.venv/
 
 # other stuff
 *.zip
