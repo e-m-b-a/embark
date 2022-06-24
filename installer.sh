@@ -279,7 +279,7 @@ install_embark_default() {
 
   #Add Symlink
   if ! [[ -d /app ]]; then
-    if [[ $( readlink /app ) != "$PWD"]]; then
+    if [[ $( readlink /app ) != "$PWD" ]]; then
       echo -e "\n$RED""$BOLD""EMBArk wants to create a symlink, but the link-name is already in use""$NC"
       rm /app
     fi
@@ -369,7 +369,7 @@ install_embark_dev(){
 
   #Add Symlink
   if ! [[ -d /app ]]; then
-    if [[ $( readlink /app ) != "$PWD"]]; then
+    if [[ $( readlink /app ) != "$PWD" ]]; then
       echo -e "\n$RED""$BOLD""EMBArk wants to create a symlink, but the link-name is already in use""$NC"
       rm /app
     fi
