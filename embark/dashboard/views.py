@@ -8,6 +8,7 @@ from django.shortcuts import render
 from django.http import HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect, HttpResponseServerError
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
+from embark.uploader.boundedexecutor import BoundedExecutor
 
 from uploader.models import FirmwareAnalysis
 from .models import Result
@@ -46,11 +47,8 @@ def stop_analysis(request):
         pid = FirmwareAnalysis.objects.get(id=analysis.id).pid
         logger.debug("PID is %s", pid)
         try:
+            BoundedExecutor.submit(analysis.id)
             os.killpg(os.getpgid(pid), signal.SIGTERM)
-            for proc in psutil.process_iter():
-                # check whether the process name matches
-                if proc.name() == analysis.id:
-                    proc.kill()
             form = StopAnalysisForm()
             form.fields['analysis'].queryset = FirmwareAnalysis.objects.filter(finished=False)
             return render(request, 'dashboard/serviceDashboard.html', {'username': request.user.username, 'form': form, 'success_message': True, 'message': "Stopped successfully"})

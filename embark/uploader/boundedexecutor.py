@@ -67,7 +67,7 @@ class BoundedExecutor:
             # The os.setsid() is passed in the argument preexec_fn so it's run after the fork() and before  exec() to run the shell.
             # attached but synchronous
             with open(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_run.log", "w+", encoding="utf-8") as file:
-                proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True, preexec_fn=os.setsid)   # nosec
+                proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
                 # Add proc to FirmwareAnalysis-Object
                 analysis.pid = proc.pid
                 analysis.save()
@@ -112,6 +112,35 @@ class BoundedExecutor:
                 analysis.save()
 
             logger.info("Successful cleaned up: %s", cmd)
+    
+    @classmethod
+    def kill_emba_cmd(cls, analysis_id):
+        """
+        run shell commands from python script as subprocess, waits for termination and evaluates returncode
+
+        :param analysis_id: primary key for firmware-analysis entry
+        :param active_analyzer_dir: active analyzer dir for deletion afterwards
+
+        :return:
+        """
+        logger.info("Killing ID: %s", analysis_id)
+        try:
+            logger.debug("subprocess got pid %s", proc.pid)
+            cmd = f"sudo pkill -f {analysis_id}"
+            with open(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/kill.log", "w+", encoding="utf-8") as file:
+                proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
+                # wait for completion
+                proc.communicate()
+            # success
+            logger.info("Kill Successful: %s", cmd)
+        except BaseException as exce:
+            logger.error("kill_emba_cmd error: %s", exce)
+        
+    @classmethod
+    def submit_kill(cls, uuid):
+        # submit command to executor threadpool
+        emba_fut = BoundedExecutor.submit(cls.kill_emba_cmd, uuid)
+        return emba_fut
 
     @classmethod
     def submit_firmware(cls, firmware_flags, firmware_file):
