@@ -46,7 +46,7 @@ def stop_analysis(request):
         pid = FirmwareAnalysis.objects.get(id=analysis.id).pid
         logger.debug("PID is %s", pid)
         try:
-            BoundedExecutor.submit(analysis.id)
+            BoundedExecutor.submit_kill(analysis.id)
             os.killpg(os.getpgid(pid), signal.SIGTERM)
             form = StopAnalysisForm()
             form.fields['analysis'].queryset = FirmwareAnalysis.objects.filter(finished=False)
