@@ -252,7 +252,7 @@ install_debs() {
     apt-get install -y python3-django
   fi
   # mark dir as safe for git
-  git config --global --add safe.directory "$PWD"
+  git config --global --add safe.directory "$PWD"/emba
 }
 
 install_daemon() {
