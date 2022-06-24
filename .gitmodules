@@ -1,4 +1,3 @@
-[submodule "EMBA"]
+[submodule "emba"]
 	path = emba
 	url = https://github.com/BenediktMKuehne/emba
-	branch = master
