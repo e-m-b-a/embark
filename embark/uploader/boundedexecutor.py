@@ -135,7 +135,7 @@ class BoundedExecutor:
             logger.info("Kill Successful: %s", cmd)
         except BaseException as exce:
             logger.error("kill_emba_cmd error: %s", exce)
- 
+
     @classmethod
     def submit_kill(cls, uuid):
         # submit command to executor threadpool
