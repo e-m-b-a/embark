@@ -51,6 +51,9 @@ print_help() {
   echo -e "$RED               ! Both options delete all Database-files as well !""$NC"
 }
 
+# Source: https://stackoverflow.com/questions/4023830/how-to-compare-two-strings-in-dot-separated-version-format-in-bash
+version() { echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; }
+
 write_env() {
   echo -e "$ORANGE""$BOLD""Creating a EMBArk configuration file .env""$NC"
   export DATABASE_NAME="embark"
@@ -242,11 +245,7 @@ install_debs() {
   fi
   # python3.9-dev
   if ! $(dpkg -l python3.9-dev); then
-    if $(apt-get search python3.9-dev | grep -E python3.9-dev ); then
-      apt-get install -y python3-dev
-    else
-      apt-get install -y python3.9-dev
-    fi
+      apt-get install -y python3.9-dev || apt-get install -y -q python3-dev
   fi
   #  python3-django
   if ! $(dpkg -l python3.9-dev); then
