@@ -2,3 +2,5 @@
 	path = emba
 	url = https://github.com/e-m-b-a/emba.git
 	branch = master
+[submodule "emba"]
+	url = https://github.com/BenediktMKuehne/emba
