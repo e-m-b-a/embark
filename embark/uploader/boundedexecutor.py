@@ -112,7 +112,7 @@ class BoundedExecutor:
                 analysis.save()
 
             logger.info("Successful cleaned up: %s", cmd)
-    
+
     @classmethod
     def kill_emba_cmd(cls, analysis_id):
         """
@@ -125,9 +125,9 @@ class BoundedExecutor:
         """
         logger.info("Killing ID: %s", analysis_id)
         try:
-            logger.debug("subprocess got pid %s", proc.pid)
+            # logger.debug("%s", id)
             cmd = f"sudo pkill -f {analysis_id}"
-            with open(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/kill.log", "w+", encoding="utf-8") as file:
+            with open(f"{settings.EMBA_LOG_ROOT}/{analysis_id}_kill.log", "w+", encoding="utf-8") as file:
                 proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
                 # wait for completion
                 proc.communicate()
@@ -135,7 +135,7 @@ class BoundedExecutor:
             logger.info("Kill Successful: %s", cmd)
         except BaseException as exce:
             logger.error("kill_emba_cmd error: %s", exce)
-        
+ 
     @classmethod
     def submit_kill(cls, uuid):
         # submit command to executor threadpool
