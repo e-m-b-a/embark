@@ -101,14 +101,12 @@ install_emba() {
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner EMBA on host""$NC"
   git submodule init
   git submodule update
-  if ! [[ -d ./emba ]]; then
-    cd emba || echo "Could not install EMBA" && exit 1
-    ./installer.sh -d
-    if ! [[ -f /etc/cron.daily/emba_updater ]]; then
-      cp ./config/emba_updater /etc/cron.daily/
-    fi
-    cd .. || echo "Could not install EMBA" && exit 1
+  cd emba || echo "Could not install EMBA" && exit 1
+  ./installer.sh -d
+  if ! [[ -f /etc/cron.daily/emba_updater ]]; then
+    cp ./config/emba_updater /etc/cron.daily/
   fi
+  cd .. || echo "Could not install EMBA" && exit 1
   echo -e "\n""--------------------------------------------------------------------""$NC"
 }
 
