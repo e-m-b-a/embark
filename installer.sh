@@ -96,13 +96,17 @@ write_env() {
 
 install_emba() {
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner EMBA on host""$NC"
-    git submodule init
-    git submodule update
-    cd emba || exit 1
+  git submodule init
+  git submodule update
+  if [[ -d ./emba ]]; then
+    cd emba || echo "Could not install EMBA" && exit 1
     ./installer.sh -d
-    cp ./config/emba_updater /etc/cron.daily/
-    cd .. || exit 1
-  
+    if ! [[ -f /etc/cron.daily/emba_updater ]]; then
+      cp ./config/emba_updater /etc/cron.daily/
+    fi
+    cd .. || echo "Could not install EMBA" && exit 1
+  fi
+  echo -e "\n""--------------------------------------------------------------------""$NC"
 }
 
 create_ca (){
@@ -236,8 +240,18 @@ install_debs() {
       read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
     fi
   fi
-  # python3.9-dev python3-django
-  apt-get install -y python3.9-dev python3-django
+  # python3.9-dev
+  if ! $(dpkg -l python3.9-dev); then
+    if $(apt-get search python3.9-dev | grep -E python3.9-dev ); then
+      apt-get install -y python3-dev
+    else
+      apt-get install -y python3.9-dev
+    fi
+  fi
+  #  python3-django
+  if ! $(dpkg -l python3.9-dev); then
+    apt-get install -y python3-django
+  fi
   # mark dir as safe for git
   git config --global --add safe.directory "$PWD"
 }
