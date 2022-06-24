@@ -1,4 +1,4 @@
-# pylint: disable=R1732, C0201, E1129
+# pylint: disable=R1732, C0201, E1129, W1509
 import csv
 import logging
 import os
@@ -59,6 +59,7 @@ class BoundedExecutor:
 
         # get return code to evaluate: 0 = success, 1 = failure,
         # see emba.sh for further information
+        exit_fail = False
         try:
 
             analysis = FirmwareAnalysis.objects.get(id=analysis_id)
@@ -89,6 +90,7 @@ class BoundedExecutor:
             else:
                 logger.error("CSV file %s for report: %s not generated", csv_log_location, analysis_id)
                 logger.error("EMBA run was probably not successful!")
+                exit_fail = True
 
             # take care of cleanup
             if active_analyzer_dir:
@@ -98,7 +100,7 @@ class BoundedExecutor:
             # fail
             logger.error("EMBA run was probably not successful!")
             logger.error("run_emba_cmd error: %s", execpt)
-
+            exit_fail = True
         finally:
             # finalize db entry
             if analysis_id:
@@ -106,9 +108,39 @@ class BoundedExecutor:
                 analysis.scan_time = datetime.now() - analysis.start_date
                 analysis.duration = str(analysis.scan_time)
                 analysis.finished = True
+                analysis.failed = exit_fail
                 analysis.save()
 
             logger.info("Successful cleaned up: %s", cmd)
+
+    @classmethod
+    def kill_emba_cmd(cls, analysis_id):
+        """
+        run shell commands from python script as subprocess, waits for termination and evaluates returncode
+
+        :param analysis_id: primary key for firmware-analysis entry
+        :param active_analyzer_dir: active analyzer dir for deletion afterwards
+
+        :return:
+        """
+        logger.info("Killing ID: %s", analysis_id)
+        try:
+            # logger.debug("%s", id)
+            cmd = f"sudo pkill -f {analysis_id}"
+            with open(f"{settings.EMBA_LOG_ROOT}/{analysis_id}_kill.log", "w+", encoding="utf-8") as file:
+                proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
+                # wait for completion
+                proc.communicate()
+            # success
+            logger.info("Kill Successful: %s", cmd)
+        except BaseException as exce:
+            logger.error("kill_emba_cmd error: %s", exce)
+
+    @classmethod
+    def submit_kill(cls, uuid):
+        # submit command to executor threadpool
+        emba_fut = BoundedExecutor.submit(cls.kill_emba_cmd, uuid)
+        return emba_fut
 
     @classmethod
     def submit_firmware(cls, firmware_flags, firmware_file):

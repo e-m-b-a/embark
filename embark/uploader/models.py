@@ -102,7 +102,7 @@ class FirmwareFile(models.Model):
 
     is_archive = models.BooleanField(default=False, blank=True)
     upload_date = models.DateTimeField(default=datetime.now, blank=True)
-    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, related_name='Fw_Upload_User', null=True, blank=True)
+    user = models.ForeignKey(Userclass, on_delete=models.SET_NULL, related_name='Fw_Upload_User', null=True, blank=True)
 
     def get_storage_path(self, filename):
         # file will be uploaded to MEDIA_ROOT/<id>/<filename>
@@ -148,11 +148,12 @@ class FirmwareAnalysis(models.Model):
     # id = HashidAutoField(primary_key=True, prefix='fwA_')
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
     # user
-    user = models.ForeignKey(Userclass, on_delete=models.CASCADE, related_name='Fw_Analysis_User', null=True)
+    user = models.ForeignKey(Userclass, on_delete=models.SET_NULL, related_name='Fw_Analysis_User', null=True)
     # pid from within boundedexec
     pid = models.BigIntegerField(help_text='process id of subproc', verbose_name='PID', blank=True, null=True)
 
-    firmware = models.ForeignKey(FirmwareFile, on_delete=models.RESTRICT, help_text='', null=True, editable=True)
+    firmware = models.ForeignKey(FirmwareFile, on_delete=models.SET_NULL, help_text='', null=True, editable=True)
+    firmware_name = models.CharField(editable=True, default="File unknown", max_length=MAX_LENGTH)
 
     # emba basic flags  FIXME change to int
     version = CharFieldExpertMode(
@@ -212,7 +213,7 @@ class FirmwareAnalysis(models.Model):
     scan_time = models.DurationField(default=timedelta(), blank=True)
     duration = models.CharField(blank=True, null=True, max_length=100, help_text='')
     finished = models.BooleanField(default=False, blank=False)
-    failed = models.BooleanField(default=False, blank=False)
+    failed = models.BooleanField(default=True, blank=False)
 
     class Meta:
         app_label = 'uploader'
@@ -225,6 +226,7 @@ class FirmwareAnalysis(models.Model):
 
     # def __init__(self, *args, **kwargs):
     #    super().__init__(*args, **kwargs)
+    #    self.firmware_name = self.firmware.file.name
 
     def __str__(self):
         return f"{self.id}({self.firmware})"

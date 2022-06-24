@@ -217,6 +217,9 @@ install_debs() {
   fi
   # we need the django package on the host for generating the django SECRET_KEY and pip
   apt-get install -y -q python3-django python3-pip python3.9-dev
+  # python3-dev
+  # mark dir as safe for git
+  # git config --global --add safe.directory "$PWD"
 }
 
 install_daemon() {
@@ -237,6 +240,7 @@ install_embark_default() {
   useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /app/www/
   # TODO add if grep /app/emba/emba.sh
   echo 'www-embark ALL=(ALL) NOPASSWD: /app/emba/emba.sh' | EDITOR='tee -a' visudo
+  echo 'www-embark ALL=(ALL) NOPASSWD: /bin/pkill' | EDITOR='tee -a' visudo
 
   #Add Symlink
   if ! [[ -d /app ]]; then

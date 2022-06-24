@@ -38,11 +38,12 @@ def reports(request):
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report(request, analysis_id, html_file):
     report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
-
-    if FirmwareAnalysis.objects.filter(id=analysis_id).exists() and FirmwareAnalysis.objects.get(id=analysis_id).user == request.user:
-        html_body = get_template(report_path)
-        logger.info("html_report - analysis_id: %s html_file: %s", analysis_id, html_file)
-        return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
+    if FirmwareAnalysis.objects.filter(id=analysis_id).exists():
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        if analysis.user == request.user:
+            html_body = get_template(report_path)
+            logger.info("html_report - analysis_id: %s html_file: %s", analysis_id, html_file)
+            return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
     logger.debug("could  not get template - %s", request)
     return HttpResponseBadRequest
 
@@ -51,11 +52,12 @@ def html_report(request, analysis_id, html_file):
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report_path(request, analysis_id, html_path, html_file):
     report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
-
-    if FirmwareAnalysis.objects.get(id=analysis_id).exists() and FirmwareAnalysis.objects.get(id=analysis_id).user == request.user:
-        html_body = get_template(report_path)
-        logger.info("html_report - analysis_id: %s path: %s html_file: %s", analysis_id, html_path, html_file)
-        return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
+    if FirmwareAnalysis.objects.filter(id=analysis_id).exists():
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        if analysis.user == request.user:
+            html_body = get_template(report_path)
+            logger.info("html_report - analysis_id: %s path: %s html_file: %s", analysis_id, html_path, html_file)
+            return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
     logger.debug("could  not get path - %s", request)
     return HttpResponseBadRequest
 
@@ -127,7 +129,7 @@ def get_individual_report(request, analysis_id):
 
         return_dict = dict(model_to_dict(result), **model_to_dict(analysis_object))
 
-        return_dict['name'] = analysis_object.firmware.file.name
+        return_dict['name'] = analysis_object.firmware_name
         return_dict['strcpy_bin'] = json.loads(return_dict['strcpy_bin'])
 
         return JsonResponse(data=return_dict, status=HTTPStatus.OK)
@@ -192,7 +194,7 @@ def get_accumulated_reports(request):
         if field not in charfields:
             data[field]['mean'] = data[field]['sum'] / data[field]['count']
     data['total_firmwares'] = len(results)
-    data['top_entropies'] = [{'name': r.firmware_analysis.firmware.file.name, 'entropy_value': r.entropy_value} for r in
+    data['top_entropies'] = [{'name': r.firmware_analysis.firmware_name, 'entropy_value': r.entropy_value} for r in
                              top_5_entropies]
 
     # Taking top 10 most commonly occurring strcpy_bin values
