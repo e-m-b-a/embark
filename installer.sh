@@ -272,13 +272,18 @@ install_embark_default() {
   pip3 install pipenv
 
   #Add user for server
-  useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /app/www/
-  # TODO add if grep /app/emba/emba.sh
-  echo 'www-embark ALL=(ALL) NOPASSWD: /app/emba/emba.sh' | EDITOR='tee -a' visudo
+  if ! $( cut -d: -f1 /etc/passwd | grep -E www-emabrk); then
+    useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /app/www/
+    echo 'www-embark ALL=(ALL) NOPASSWD: /app/emba/emba.sh' | EDITOR='tee -a' visudo
+  fi
 
   #Add Symlink
   if ! [[ -d /app ]]; then
-    ln -s "$PWD" /app || exit 1
+    if [[ $( readlink /app ) != "$PWD"]]; then
+      echo -e "\n$RED""$BOLD""EMBArk wants to create a symlink, but the link-name is already in use""$NC"
+      rm /app
+    fi
+    ln -s "$PWD" /app || ( echo "could not create symlink" && exit 1 )
   fi
 
   # daemon
@@ -296,7 +301,7 @@ install_embark_default() {
   
   #add ssl cert
   create_ca
-  ln -s /app/cert /app/www/conf/cert || exit 1
+  ln -s /app/cert /app/www/conf/cert
 
   #add dns name
   dns_resolve
@@ -337,9 +342,10 @@ install_embark_default() {
 
 install_embark_dev(){
   echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
+  # apt packages
   apt-get install -y npm pycodestyle python3-pylint-django default-libmysqlclient-dev build-essential pipenv bandit
+  # npm packages
   npm install -g jshint dockerlinter
-
   #pipenv
   PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
 
@@ -363,7 +369,11 @@ install_embark_dev(){
 
   #Add Symlink
   if ! [[ -d /app ]]; then
-    ln -s "$PWD" /app || exit 1
+    if [[ $( readlink /app ) != "$PWD"]]; then
+      echo -e "\n$RED""$BOLD""EMBArk wants to create a symlink, but the link-name is already in use""$NC"
+      rm /app
+    fi
+    ln -s "$PWD" /app || ( echo "could not create symlink" && exit 1 )
   fi
 
   # daemon
