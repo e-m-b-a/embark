@@ -219,8 +219,8 @@ install_debs() {
     apt-get install -y git
   fi
   # Python3
-  if ! command -v python3.9 > /dev/null ; then
-    apt-get install -y python3.9
+  if ! command -v python3 > /dev/null ; then
+    apt-get install -y python3
   fi
   # Pip
   if ! command -v pip3 > /dev/null ; then
