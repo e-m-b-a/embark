@@ -102,7 +102,7 @@ install_emba() {
   git submodule init
   git submodule update
   cd emba || ( echo "Could not install EMBA" && exit 1 )
-  ./installer.sh -d
+  ./installer.sh -d || ( echo "Could not install EMBA" && exit 1 )
   if ! [[ -f /etc/cron.daily/emba_updater ]]; then
     cp ./config/emba_updater /etc/cron.daily/
   fi
@@ -253,8 +253,6 @@ install_debs() {
   if ! $(dpkg -l python3.9-dev); then
     apt-get install -y python3-django
   fi
-  # mark dir as safe for git
-  git config --global --add safe.directory "$PWD"/emba
 }
 
 install_daemon() {
@@ -585,6 +583,10 @@ elif [[ $UNINSTALL -eq 1 ]]; then
 fi
 
 install_debs
+
+# mark dir as safe for git
+git config --global --add safe.directory "$PWD"
+
 install_emba
 
 if [[ $DEFAULT -eq 1 ]]; then
