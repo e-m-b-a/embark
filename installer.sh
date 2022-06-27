@@ -16,7 +16,6 @@
 
 export DEBIAN_FRONTEND=noninteractive
 
-DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
 RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
 
 RANDOM_SALT=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 43 | head -n 1)
@@ -307,6 +306,9 @@ install_embark_default() {
   #install packages
   PIPENV_VENV_IN_PROJECT=1 pipenv install
 
+  # set secret-key
+  DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+
   # download externals
   if ! [[ -d ./embark/static/external ]]; then
     echo -e "\n$GREEN""$BOLD""Downloading of external files, e.g. jQuery, for the offline usability of EMBArk""$NC"
@@ -346,6 +348,9 @@ install_embark_dev(){
   npm install -g jshint dockerlinter
   #pipenv
   PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
+
+  # set secret-key
+  DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
 
   # download externals
   if ! [[ -d ./embark/static/external ]]; then
