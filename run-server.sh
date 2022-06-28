@@ -148,9 +148,9 @@ pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --url-alias /media/ /app/www/media/ \
 --allow-localhost --working-directory /app/www/embark/ --server-root /app/www/httpd80/ \
 --include-file /app/www/conf/embark.conf \
---server-name embark.local \
---ssl-certificate /app/www/conf/cert/embark.local --ssl-certificate-key-file /app/www/conf/cert/embark.local.key \
---https-port "$HTTPS_PORT" &
+--server-name embark.local &
+# --ssl-certificate /app/www/conf/cert/embark.local --ssl-certificate-key-file /app/www/conf/cert/embark.local.key \
+# --https-port "$HTTPS_PORT" &
 # --enable-debugger --https-only \
 sleep 5
 
@@ -161,6 +161,6 @@ sleep 5
 
 echo -e "\n""$ORANGE$BOLD""=============================================================""$NC"
 echo -e "\n""$ORANGE$BOLD""Server started on http://embark.local""$NC"
-echo -e "\n""$ORANGE$BOLD""For SSL you may use https://embark.local (Not recommended for local use)""$NC"
-echo -e "\n\n""$GREEN$BOLD""the trusted rootCA.key for the ssl encryption is in /app/cert""$NC"
+# echo -e "\n""$ORANGE$BOLD""For SSL you may use https://embark.local (Not recommended for local use)""$NC"
+# echo -e "\n\n""$GREEN$BOLD""the trusted rootCA.key for the ssl encryption is in /app/cert""$NC"
 wait

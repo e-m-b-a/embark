@@ -7,6 +7,7 @@ from django.shortcuts import render
 from django.http import HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect, HttpResponseServerError
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
+from uploader.boundedexecutor import BoundedExecutor
 
 from uploader.models import FirmwareAnalysis
 from .models import Result
@@ -45,6 +46,7 @@ def stop_analysis(request):
         pid = FirmwareAnalysis.objects.get(id=analysis.id).pid
         logger.debug("PID is %s", pid)
         try:
+            BoundedExecutor.submit_kill(analysis.id)
             os.killpg(os.getpgid(pid), signal.SIGTERM)
             form = StopAnalysisForm()
             form.fields['analysis'].queryset = FirmwareAnalysis.objects.filter(finished=False)
@@ -80,7 +82,7 @@ def report_dashboard(request):
 
     :return: rendered ReportDashboard
     """
-    finished_firmwares = FirmwareAnalysis.objects.all().filter(finished=True)
+    finished_firmwares = FirmwareAnalysis.objects.filter(failed=False, finished=True)
     return render(request, 'dashboard/reportDashboard.html', {'finished_firmwares': finished_firmwares, 'username': request.user.username})
 
 

@@ -272,6 +272,7 @@ install_embark_default() {
   if ! cut -d: -f1 /etc/passwd | grep -E www-emabrk; then
     useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /app/www/
     echo 'www-embark ALL=(ALL) NOPASSWD: /app/emba/emba.sh' | EDITOR='tee -a' visudo
+    echo 'www-embark ALL=(ALL) NOPASSWD: /bin/pkill' | EDITOR='tee -a' visudo
   fi
 
   #Add Symlink
