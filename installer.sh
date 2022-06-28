@@ -220,7 +220,7 @@ install_debs() {
   fi
   # Python3
   if ! command -v python3 > /dev/null ; then
-    apt-get install -y python3
+    apt-get install -y python3.9 || apt get install -y python3.10
   fi
   # Pip
   if ! command -v pip3 > /dev/null ; then
@@ -245,11 +245,11 @@ install_debs() {
     fi
   fi
   # python3.9-dev
-  if ! $(dpkg -l python3.9-dev); then
+  if ! dpkg -l python3.9-dev &>/dev/null; then
       apt-get install -y python3.9-dev || apt-get install -y -q python3-dev
   fi
   #  python3-django
-  if ! $(dpkg -l python3.9-dev); then
+  if ! dpkg -l python3.9-dev &>/dev/null; then
     apt-get install -y python3-django
   fi
 }
@@ -269,7 +269,7 @@ install_embark_default() {
   pip3 install pipenv
 
   #Add user for server
-  if ! $( cut -d: -f1 /etc/passwd | grep -E www-emabrk); then
+  if ! cut -d: -f1 /etc/passwd | grep -E www-emabrk; then
     useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /app/www/
     echo 'www-embark ALL=(ALL) NOPASSWD: /app/emba/emba.sh' | EDITOR='tee -a' visudo
   fi
