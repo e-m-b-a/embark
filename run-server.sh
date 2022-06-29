@@ -125,6 +125,9 @@ cp -Ru ./embark/ /app/www/embark/
 # !DIRECTORY-CHANGE!
 cd /app/www/embark/ || exit 1
 
+WORKDIR=$(realpath "$PWD")
+SERVERROOT=$(realpath "$PWD"/../httpd80 )
+
 # db_init
 echo -e "\n[""$BLUE JOB""$NC""] Starting migrations - log to embark/logs/migration.log"
 pipenv run ./manage.py makemigrations users uploader dashboard reporter | tee -a /app/www/logs/migration.log
@@ -146,7 +149,7 @@ pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --host "$BIND_IP" --port="$HTTP_PORT" --limit-request-body "$FILE_SIZE" \
 --url-alias /static/ /app/www/static/ \
 --url-alias /media/ /app/www/media/ \
---allow-localhost --working-directory /app/www/embark/ --server-root /app/www/httpd80/ \
+--allow-localhost --working-directory "$WORKDIR" --server-root "$SERVERROOT" \
 --include-file /app/www/conf/embark.conf \
 --server-name embark.local &
 # --ssl-certificate /app/www/conf/cert/embark.local --ssl-certificate-key-file /app/www/conf/cert/embark.local.key \
