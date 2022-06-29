@@ -277,11 +277,11 @@ install_embark_default() {
 
   #Add Symlink
   if ! [[ -d /app ]]; then
-    if [[ $( readlink /app ) != "$PWD" ]]; then
+    if [[ $( readlink /app ) != $( realpath "$PWD") ]]; then
       echo -e "\n$RED""$BOLD""EMBArk wants to create a symlink, but the link-name is already in use""$NC"
       rm /app
     fi
-    ln -s "$PWD" /app || ( echo "could not create symlink" && exit 1 )
+    ln -s $( realpath "$PWD") /app || ( echo "could not create symlink" && exit 1 )
   fi
 
   # daemon
