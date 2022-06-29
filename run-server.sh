@@ -138,6 +138,7 @@ echo -e "\n[""$BLUE JOB""$NC""] Collecting static files"
 pipenv run ./manage.py collectstatic --no-input
 chown www-embark /app/www/ -R
 chown www-embark /app/www/embark/ -R
+chmod 770 "$WORKDIR"
 chmod 760 /app/www/media/ -R
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
