@@ -143,7 +143,6 @@ sleep 5
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting Apache"
 pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
---home /app/www \
 --host "$BIND_IP" --port="$HTTP_PORT" --limit-request-body "$FILE_SIZE" \
 --url-alias /static/ /app/www/static/ \
 --url-alias /media/ /app/www/media/ \
