@@ -22,7 +22,7 @@ Furthermore *EMBArk* improves the data provision by aggregating the various scan
 [![Watch EMBArk](https://raw.githubusercontent.com/wiki/e-m-b-a/embark/static/images/EMBArk-YouTube.png)](https://youtu.be/qSHuPWbfhmI "Watch EMBArk")
 
 
-## Automated setup (on Kali Linux)
+## Automated setup (on Kali Linux or Ubuntu22LTS)
 1. Checkout the repository (e.g. `git clone https://github.com/e-m-b-a/embark.git`)
 2. Change directory to root of the repository i.e `cd embark`
 3. Run `sudo ./installer.sh -d ` to run the default installation.
