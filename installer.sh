@@ -219,7 +219,7 @@ install_debs() {
     apt-get install -y git
   fi
   # Python3
-  if ! command -v python3 > /dev/null ; then
+  if ! command -v python3.10 > /dev/null ; then
     apt get install -y python3.10
   fi
   # Pip
@@ -244,12 +244,12 @@ install_debs() {
       read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
     fi
   fi
-  # python3.9-dev TODO
-  if ! dpkg -l python3.9-dev &>/dev/null; then
-      apt-get install -y python3.9-dev || apt-get install -y -q python3-dev
+  # python3-dev
+  if ! dpkg -l python3.10-dev &>/dev/null; then
+      apt-get install -y python3.10-dev || apt-get install -y -q python3-dev
   fi
   #  python3-django
-  if ! dpkg -l python3.9-dev &>/dev/null; then
+  if ! dpkg -l python3-django &>/dev/null; then
     apt-get install -y python3-django
   fi
   # apache/httpd
