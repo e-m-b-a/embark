@@ -119,7 +119,9 @@ cp -Ru ./embark/ /app/www/embark/
 # add all modules we want (mod_ssl mod_auth_basic etc)
 # post_max_size increase
 {
-  echo ''
+  echo -e '<Directory /app>\n
+  Options +FollowSymLinks\n
+  </Directory>\n'
 } > /app/www/conf/embark.conf
 
 # !DIRECTORY-CHANGE!
