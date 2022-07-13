@@ -55,24 +55,24 @@ version() { echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; 
 
 write_env() {
   echo -e "$ORANGE""$BOLD""Creating a EMBArk configuration file .env""$NC"
-  export DATABASE_NAME="embark"
-  export DATABASE_USER="embark"
-  export DATABASE_PASSWORD="$RANDOM_PW"
-  export DATABASE_HOST="127.0.0.1"
-  export DATABASE_PORT="3306"
-  export MYSQL_PASSWORD="$RANDOM_PW"
-  export MYSQL_USER="embark"
-  export MYSQL_DATABASE="embark"
-  export REDIS_HOST="127.0.0.1"
-  export REDIS_PORT="7777"
-  export SECRET_KEY="$DJANGO_SECRET_KEY"
-  export HASHID_SALT="$RANDOM_SALT"
-  export HASHID_FIELD_MIN_LENGTH="$HASHID_FIELD_LENGTH"
-  export HASHID_FIELD_ENABLE_HASHID_OBJECT="$HASHID_OBJECT"
-  export HASHID_FIELD_ENABLE_DESCRIPTOR="$HASHID_DESCRIPTOR"
-  export DJANGO_SUPERUSER_USERNAME="$SUPER_USER"
-  export DJANGO_SUPERUSER_EMAIL="$SUPER_EMAIL"
-  export DJANGO_SUPERUSER_PASSWORD="$SUPER_PW"
+  DATABASE_NAME="embark"
+  DATABASE_USER="embark"
+  DATABASE_PASSWORD="$RANDOM_PW"
+  DATABASE_HOST="127.0.0.1"
+  DATABASE_PORT="3306"
+  MYSQL_PASSWORD="$RANDOM_PW"
+  MYSQL_USER="embark"
+  MYSQL_DATABASE="embark"
+  REDIS_HOST="127.0.0.1"
+  REDIS_PORT="7777"
+  SECRET_KEY="$DJANGO_SECRET_KEY"
+  HASHID_SALT="$RANDOM_SALT"
+  HASHID_FIELD_MIN_LENGTH="$HASHID_FIELD_LENGTH"
+  HASHID_FIELD_ENABLE_HASHID_OBJECT="$HASHID_OBJECT"
+  HASHID_FIELD_ENABLE_DESCRIPTOR="$HASHID_DESCRIPTOR"
+  DJANGO_SUPERUSER_USERNAME="$SUPER_USER"
+  DJANGO_SUPERUSER_EMAIL="$SUPER_EMAIL"
+  DJANGO_SUPERUSER_PASSWORD="$SUPER_PW"
   {
     echo "DATABASE_NAME=$DATABASE_NAME"
     echo "DATABASE_USER=$DATABASE_USER" 
@@ -259,11 +259,14 @@ install_debs() {
   if ! dpkg -l apache2-dev &>/dev/null; then
     apt-get install -y apache2-dev
   fi
+  if ! dpkg -l apache2-bin &>/dev/null; then
+    apt-get install -y apache2-bin
+  fi
 }
 
 install_daemon() {
   echo -e "\n$GREEN""$BOLD""Install embark daemon""$NC"
-  ln -s /app/embark.service /etc/systemd/system/embark.service
+  ln -s "$PWD"/embark.service /etc/systemd/system/embark.service
 }
 
 install_embark_default() {
@@ -277,36 +280,36 @@ install_embark_default() {
 
   #Add user for server
   if ! cut -d: -f1 /etc/passwd | grep -E www-emabrk; then
-    useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /app/www/
-    echo 'www-embark ALL=(ALL) NOPASSWD: /app/emba/emba.sh' | EDITOR='tee -a' visudo
+    useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /var/www/
+    echo 'www-embark ALL=(ALL) NOPASSWD: /var/www/emba/emba.sh' | EDITOR='tee -a' visudo
     echo 'www-embark ALL=(ALL) NOPASSWD: /bin/pkill' | EDITOR='tee -a' visudo
   fi
 
-  #Add Symlink
-  if ! [[ -f /app ]]; then
-    if [[ $( readlink /app ) != $( realpath "$PWD") ]]; then
-      echo -e "\n$RED""$BOLD""EMBArk wants to create a symlink, but the link-name is already in use""$NC"
-      rm /app
-    fi
-    ln -s $( realpath "$PWD") /app || ( echo "could not create symlink" && exit 1 )
+  #Server-Dir
+  if ! [[ -d /var/www ]]; then
+    sudo -u www-embark mkdir /var/www/
+  fi
+  if ! [[ -d /var/www/media ]]; then
+    mkdir /var/www/media
+  fi
+  if ! [[ -d /var/www/active ]]; then
+    mkdir /var/www/active
+  fi
+  if ! [[ -d /var/www/emba_logs ]]; then
+    mkdir /var/www/emba_logs
+  fi
+  if ! [[ -d /var/www/static ]]; then
+    mkdir /var/www/static
+  fi
+  if ! [[ -d /var/www/conf ]]; then
+    mkdir /var/www/conf
   fi
 
   # daemon
   install_daemon
-
-  #make dirs
-  if ! [[ -d ./www ]]; then
-    mkdir ./www
-    mkdir ./www/media/
-    mkdir ./www/active/
-    mkdir ./www/emba_logs
-    mkdir ./www/static
-    mkdir ./www/conf
-  fi
   
   #add ssl cert
   create_ca
-  ln -s /app/cert /app/www/conf/cert
 
   #add dns name
   dns_resolve
@@ -379,7 +382,7 @@ install_embark_dev(){
   write_env
 
   #Add Symlink
-  if ! [[ -d /app ]]; then
+  if ! [[ -f /app ]]; then
     if [[ $( readlink /app ) != "$PWD" ]]; then
       echo -e "\n$RED""$BOLD""EMBArk wants to create a symlink, but the link-name is already in use""$NC"
       rm /app
@@ -481,11 +484,15 @@ uninstall (){
 
   #1 delete symlink
   echo -e "$ORANGE""$BOLD""Delete Symlink?""$NC"
-  rm /app
+  if ! [[ -f /app ]]; then
+    if [[ $( readlink /app ) == "$PWD" ]]; then
+      rm /app
+    fi
+  fi
 
   #2 delete www and upload-dir
   echo -e "$ORANGE""$BOLD""Delete Directories""$NC"
-  rm -R ./www
+  rm -R /var/www
   rm -R ./uploadedFirmwareImages
 
   #3 delete user www-embark and reset visudo
@@ -499,7 +506,7 @@ uninstall (){
 
   #5 delete .env
   echo -e "$ORANGE""$BOLD""Delete env""$NC"
-  rm -R ./.env
+  rm ./.env
 
   #6 delete shared volumes and migrations
   echo -e "$ORANGE""$BOLD""Delete Database-files""$NC"
