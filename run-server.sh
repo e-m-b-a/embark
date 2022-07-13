@@ -135,15 +135,16 @@ cp -u "$PWD"/cert/embark-ws.local /var/www/conf/cert
 # !DIRECTORY-CHANGE!
 cd /var/www/embark/ || exit 1
 
+# TODO move to parent
 # logs
-if ! [[ -d ./logs ]]; then
-  mkdir logs
+if ! [[ -d /var/www/logs ]]; then
+  mkdir /var/www/logs
 fi
 
 # db_init
 echo -e "\n[""$BLUE JOB""$NC""] Starting migrations - log to embark/logs/migration.log"
-pipenv run ./manage.py makemigrations users uploader dashboard reporter | tee -a ./logs/migration.log
-pipenv run ./manage.py migrate | tee -a ./logs/migration.log
+pipenv run ./manage.py makemigrations users uploader dashboard reporter | tee -a /var/www/logs/migration.log
+pipenv run ./manage.py migrate | tee -a /var/www/logs/migration.log
 
 # collect staticfiles and make accesable for server
 echo -e "\n[""$BLUE JOB""$NC""] Collecting static files"
@@ -153,7 +154,7 @@ chmod 760 /var/www/media/ -R
 # TODO other fileperms
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
-pipenv run ./manage.py runapscheduler | tee -a ./logs/scheduler.log &
+pipenv run ./manage.py runapscheduler | tee -a /var/www/logs/scheduler.log &
 sleep 5
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting Apache"
