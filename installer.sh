@@ -280,14 +280,14 @@ install_embark_default() {
 
   #Add user for server
   if ! cut -d: -f1 /etc/passwd | grep -E www-emabrk; then
-    useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /var/www/
+    useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /var/www/embark
     echo 'www-embark ALL=(ALL) NOPASSWD: /var/www/emba/emba.sh' | EDITOR='tee -a' visudo
     echo 'www-embark ALL=(ALL) NOPASSWD: /bin/pkill' | EDITOR='tee -a' visudo
   fi
 
   #Server-Dir
   if ! [[ -d /var/www ]]; then
-    sudo -u www-embark mkdir /var/www/
+    mkdir /var/www/
   fi
   if ! [[ -d /var/www/media ]]; then
     mkdir /var/www/media
