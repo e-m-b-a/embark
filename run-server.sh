@@ -53,7 +53,7 @@ trap cleaner INT
 cd "$(dirname "$0")" || exit 1
 
 if ! [[ $EUID -eq 0 ]] ; then
-  echo -e "\\n$RED""Run EMBArk installation script with root permissions!""$NC\\n"
+  echo -e "\\n$RED""Run Server script with root permissions!""$NC\\n"
   exit 1
 fi
 
