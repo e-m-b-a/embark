@@ -54,6 +54,7 @@ print_help() {
 version() { echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; }
 
 write_env() {
+  # TODO get rid of exports
   echo -e "$ORANGE""$BOLD""Creating a EMBArk configuration file .env""$NC"
   export DATABASE_NAME="embark"
   export DATABASE_USER="embark"
@@ -94,6 +95,7 @@ write_env() {
     echo "HASHID_FIELD_ENABLE_DESCRIPTOR=$HASHID_DESCRIPTOR"
     echo "PYTHONPATH=${PYTHONPATH}:${PWD}"
   } > .env
+  chmod 600 .env
 }
 
 install_emba() {
