@@ -59,7 +59,7 @@ confidence=
 #
 # Kubeflow disables string-interpolation because we are starting to use f
 # style strings
-disable=C0115,C0114,C0116,W0703,W0603,R1705#,W0511
+disable=C0115,C0114,C0116,W0703,W0603,R1705  # ,W0511
 #import-star-module-level,old-octal-literal,oct-method,print-statement,unpacking-in-except,
 #parameter-unpacking,backtick,old-raise-syntax,old-ne-operator,long-suffix,dict-view-method,dict-iter-method,
 #metaclass-assignment,next-method-called,raising-string,indexing-exception,raw_input-builtin,long-builtin,file-builtin,
