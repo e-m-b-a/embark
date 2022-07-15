@@ -77,12 +77,11 @@ if [[ $? -eq 1 ]]; then
   cd .. || exit 1
 fi
 
+# check venv TODO
+(cd /var/www && pipenv check)
+
 # copy emba
 cp -Ru ./emba/ /var/www/emba/
-
-# start venv (ignore source in script)
-# shellcheck disable=SC1091
-source ./.venv/bin/activate || exit 1
 
 # Start container
 echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
@@ -137,6 +136,10 @@ cp -u ./.env /var/www/embark/embark/settings/
 
 # !DIRECTORY-CHANGE!
 cd /var/www/embark/ || exit 1
+
+# start venv (ignore source in script)
+# shellcheck disable=SC1091
+source /var/www/.venv/bin/activate || exit 1
 
 # TODO move to parent
 # logs
