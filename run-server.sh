@@ -132,6 +132,9 @@ cp -u "$PWD"/cert/embark-ws.local.key /var/www/conf/cert
 cp -u "$PWD"/cert/embark-ws.local.crt /var/www/conf/cert
 cp -u "$PWD"/cert/embark-ws.local /var/www/conf/cert
 
+# cp .env
+cp -u ./.env /var/www/embark/embark/settings/
+
 # !DIRECTORY-CHANGE!
 cd /var/www/embark/ || exit 1
 
