@@ -54,7 +54,7 @@ print_help() {
 version() { echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; }
 
 write_env() {
-  # TODO get rid of exports
+  # TODO change to locals
   echo -e "$ORANGE""$BOLD""Creating a EMBArk configuration file .env""$NC"
   export DATABASE_NAME="embark"
   export DATABASE_USER="embark"
@@ -93,7 +93,7 @@ write_env() {
     echo "HASHID_FIELD_MIN_LENGTH=$HASHID_FIELD_LENGTH"
     echo "HASHID_FIELD_ENABLE_HASHID_OBJECT=$HASHID_OBJECT"
     echo "HASHID_FIELD_ENABLE_DESCRIPTOR=$HASHID_DESCRIPTOR"
-    echo "PYTHONPATH=${PYTHONPATH}:${PWD}"
+    echo "PYTHONPATH=${PYTHONPATH}:/var/www/.venv/"
   } > .env
   chmod 600 .env
 }
@@ -317,8 +317,9 @@ install_embark_default() {
   dns_resolve
 
   #install packages
-  PIPENV_VENV_IN_PROJECT=1 pipenv install
-
+  cp ./Pipfile* /var/www/
+  (cd /var/www && PIPENV_VENV_IN_PROJECT=1 pipenv install)
+  
   # set secret-key
   DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
 
