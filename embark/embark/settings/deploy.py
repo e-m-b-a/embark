@@ -107,7 +107,7 @@ DATABASES = {
         'PORT': os.environ.get('DATABASE_PORT'),
         'CONN_MAX_AGE': 300,
         'OPTIONS': {
-            'threaded': True,
+            # 'threaded': True,
         },
     },
 }
