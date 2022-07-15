@@ -93,7 +93,7 @@ write_env() {
     echo "HASHID_FIELD_MIN_LENGTH=$HASHID_FIELD_LENGTH"
     echo "HASHID_FIELD_ENABLE_HASHID_OBJECT=$HASHID_OBJECT"
     echo "HASHID_FIELD_ENABLE_DESCRIPTOR=$HASHID_DESCRIPTOR"
-    echo "PYTHONPATH=${PYTHONPATH}:/var/www/.venv/"
+    echo "PYTHONPATH=${PYTHONPATH}:${PWD}:/var/www/"
   } > .env
   chmod 600 .env
 }
