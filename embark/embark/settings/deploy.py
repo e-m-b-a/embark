@@ -155,7 +155,7 @@ LOGGING = {
             'class': 'logging.handlers.RotatingFileHandler',
             'maxBytes': 1024 * 1024 * 10,  # 10 MiB
             'backupCount': 2,
-            'propagate': True,
+            'propagate': False,
         }
     }
 }
