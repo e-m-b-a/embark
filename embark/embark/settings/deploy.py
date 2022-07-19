@@ -165,7 +165,7 @@ logging.config.dictConfig({
     'loggers': {
         '': {
             'level': 'WARNING',
-            'handlers': ['console_handler', 'info_handler'],
+            'handlers': ['console_handler', 'info_handler', 'debug_handler'],
         },
         'uploader': {
             'handlers': ['debug_handler'],
@@ -181,7 +181,7 @@ logging.config.dictConfig({
         'django.server': DEFAULT_LOGGING['loggers']['django.server'],
 
     }
-}
+})
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
