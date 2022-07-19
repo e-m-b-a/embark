@@ -144,7 +144,7 @@ LOGGING = {
         'debug_handler': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filters': ['require_debug_true'],
+            # 'filters': ['require_debug_true'],
             'formatter': 'verbose',
             'filename': BASE_DIR / 'debug.log',
         },
@@ -157,13 +157,12 @@ LOGGING = {
     },
     'loggers': {
         '': {
-            'level': 'WARNING',
-            'handlers': ['console_handler', 'info_handler', 'debug_handler'],
+            'level': 'DEBUG',
+            'handlers': ['debug_handler'],
         },
         'uploader': {
             'handlers': ['debug_handler'],
             'level': 'DEBUG',
-            'propagate': False,
         },
         'requests': {
             'handlers': ['info_handler'],
