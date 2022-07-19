@@ -170,10 +170,10 @@ pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --url-alias /media/ /var/www/media/ \
 --allow-localhost --working-directory /var/www/embark/ --server-root /var/www/httpd80/ \
 --include-file /var/www/conf/embark.conf \
---server-name embark.local --enable-debugger &
+--server-name embark.local &
 # --ssl-certificate /var/www/conf/cert/embark.local --ssl-certificate-key-file /var/www/conf/cert/embark.local.key \
 # --https-port "$HTTPS_PORT" &
-#  --https-only \
+#  --https-only --enable-debugger \
 sleep 5
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
