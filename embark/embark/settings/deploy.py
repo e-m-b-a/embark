@@ -144,12 +144,12 @@ LOGGING = {
         }
     },
     'loggers': {
-        'web': {
+        'django.requests': {
             'handlers': ['console'],
             'level': 'ERROR',
             'propagate': False,
         },
-        'django': {
+        'web': {
             'handlers': ['file'],
             'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
