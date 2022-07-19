@@ -23,7 +23,7 @@ HASHID_FIELD_ENABLE_DESCRIPTOR = os.environ.get('HASHID_FIELD_ENABLE_DESCRIPTOR'
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(os.environ.get('EMBARK_DEBUG', True))
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
