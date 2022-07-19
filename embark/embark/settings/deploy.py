@@ -121,42 +121,63 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
-        'console': {
-            'format': '%(name)-12s %(levelname)-8s %(message)s',
-            'datefmt': "%Y-%m-%d %H:%M:%S"
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
         },
-        'file': {
-            'format': '%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-            'datefmt': "%Y-%m-%d %H:%M:%S"
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
         },
     },
     'handlers': {
         'console': {
             'level': 'ERROR',
             'class': 'logging.StreamHandler',
-            'formatter': 'console'
+            'filters': ['require_debug_true'],
+            'formatter': 'simple'
         },
-        'file': {
+        'debug': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'formatter': 'file',
-            'filename': BASE_DIR / 'embark.log',
-        }
+            'filters': ['require_debug_true'],
+            'formatter': 'verbose',
+            'filename': BASE_DIR / 'debug.log',
+        },
+        'info': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'formatter': 'verbose',
+            'filename': BASE_DIR / 'web.log',
+        },
     },
     'loggers': {
+        'django': {
+            'handlers': ['info'],
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'maxBytes': 1024 * 1024 * 10,  # 10 MiB
+            'backupCount': 2,
+            'propagate': True,
+        },
         'django.requests': {
             'handlers': ['console'],
             'level': 'ERROR',
             'propagate': False,
         },
         'web': {
-            'handlers': ['file'],
+            'handlers': ['debug'],
             'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
             'maxBytes': 1024 * 1024 * 10,  # 10 MiB
             'backupCount': 2,
-            'propagate': False,
-        }
+        },
+
     }
 }
 
