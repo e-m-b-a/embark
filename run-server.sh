@@ -109,7 +109,7 @@ systemctl enable embark.service
 systemctl start embark.service
 
 # copy django server
-cp -Ru ./embark/ /var/www/embark/
+cp -R ./embark/ /var/www/embark/
 
 # config apache
 # add all modules we want (mod_ssl mod_auth_basic etc)
