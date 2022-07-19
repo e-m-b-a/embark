@@ -113,7 +113,10 @@ DATABASES = {
     },
 }
 
-LOG_LEVEL = os.environ.get('DJANGO_LOG_LEVEL', 'DEBUG').upper()
+# Logging stuff
+# ERRORS/WARNINGS->console
+# DEBUG->embark.log
+# INFO->embark.log
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -129,11 +132,12 @@ LOGGING = {
     },
     'handlers': {
         'console': {
+            'level': 'ERROR',
             'class': 'logging.StreamHandler',
             'formatter': 'console'
         },
         'file': {
-            'level': LOG_LEVEL,
+            'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'formatter': 'file',
             'filename': BASE_DIR / 'embark.log',
@@ -141,12 +145,18 @@ LOGGING = {
     },
     'loggers': {
         'web': {
-            'level': LOG_LEVEL,
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django': {
             'handlers': ['file'],
+            'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
             'maxBytes': 1024 * 1024 * 10,  # 10 MiB
             'backupCount': 2,
-        },
+            'propagate': True,
+        }
     }
 }
 
