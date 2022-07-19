@@ -254,16 +254,6 @@ install_debs() {
   if ! dpkg -l python3-django &>/dev/null; then
     apt-get install -y python3-django
   fi
-  # apache/httpd
-  if ! dpkg -l apache2 &>/dev/null; then
-    apt-get install -y apache2
-  fi
-  if ! dpkg -l apache2-dev &>/dev/null; then
-    apt-get install -y apache2-dev
-  fi
-  if ! dpkg -l apache2-bin &>/dev/null; then
-    apt-get install -y apache2-bin
-  fi
 }
 
 install_daemon() {
