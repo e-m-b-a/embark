@@ -168,7 +168,7 @@ pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --host "$BIND_IP" --port="$HTTP_PORT" --limit-request-body "$FILE_SIZE" \
 --url-alias /static/ /var/www/static/ \
 --url-alias /media/ /var/www/media/ \
---allow-localhost --working-directory ./embark/ --server-root /var/www/httpd80/ \
+--allow-localhost --working-directory /var/www/embark/ --server-root /var/www/httpd80/ \
 --include-file /var/www/conf/embark.conf \
 --server-name embark.local --enable-debugger &
 # --ssl-certificate /var/www/conf/cert/embark.local --ssl-certificate-key-file /var/www/conf/cert/embark.local.key \
