@@ -4,7 +4,7 @@ from uploader.models import FirmwareAnalysis, FirmwareFile
 
 from . import logreader
 
-logger = logging.getLogger('web')
+logger = logging.getLogger(__name__)
 
 
 class TestLogreader(TestCase):

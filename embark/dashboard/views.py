@@ -13,7 +13,7 @@ from uploader.models import FirmwareAnalysis
 from .models import Result
 from .forms import StopAnalysisForm
 
-logger = logging.getLogger('web')
+logger = logging.getLogger(__name__)
 
 
 @require_http_methods(["GET"])

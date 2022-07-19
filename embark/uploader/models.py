@@ -17,7 +17,7 @@ from django.utils.datetime_safe import datetime
 from users.models import User as Userclass
 
 
-logger = logging.getLogger('web')
+logger = logging.getLogger(__name__)
 
 
 class BooleanFieldExpertModeForm(forms.BooleanField):

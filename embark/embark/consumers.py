@@ -15,7 +15,7 @@ from channels.layers import get_channel_layer
 # from django.conf import settings
 # from uploader.models import Firmware
 
-logger = logging.getLogger('web')
+logger = logging.getLogger(__name__)
 
 
 # consumer class for synchronous/asynchronous websocket communication

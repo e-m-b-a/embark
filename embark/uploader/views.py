@@ -11,7 +11,7 @@ from uploader.boundedexecutor import BoundedExecutor
 from uploader.forms import FirmwareAnalysisForm, DeleteFirmwareForm
 from uploader.models import FirmwareFile
 
-logger = logging.getLogger('web')
+logger = logging.getLogger(__name__)
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)

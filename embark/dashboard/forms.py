@@ -3,7 +3,7 @@ from django import forms
 
 from uploader.models import FirmwareAnalysis
 
-logger = logging.getLogger('web')
+logger = logging.getLogger(__name__)
 
 
 class StopAnalysisForm(forms.Form):

@@ -20,7 +20,7 @@ from dashboard.models import Result
 from embark.logreader import LogReader
 
 
-logger = logging.getLogger('web')
+logger = logging.getLogger(__name__)
 
 # maximum concurrent running workers
 MAX_WORKERS = 4

@@ -119,7 +119,7 @@ DATABASES = {
 # INFO->embark.log
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': False,
+    'disable_existing_loggers': True,
     'formatters': {
         'verbose': {
             'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
@@ -136,47 +136,62 @@ LOGGING = {
         },
     },
     'handlers': {
-        'console': {
+        'console_handler': {
             'level': 'ERROR',
             'class': 'logging.StreamHandler',
             'filters': ['require_debug_true'],
             'formatter': 'simple'
         },
-        'debug': {
+        'debug_handler': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'filters': ['require_debug_true'],
             'formatter': 'verbose',
             'filename': BASE_DIR / 'debug.log',
         },
-        'info': {
+        'info_handler': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
             'formatter': 'verbose',
-            'filename': BASE_DIR / 'web.log',
+            'filename': BASE_DIR / 'embark.log',
         },
     },
     'loggers': {
-        'django': {
-            'handlers': ['info'],
+        '': {
             'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'maxBytes': 1024 * 1024 * 10,  # 10 MiB
-            'backupCount': 2,
+            'handlers': ['console_handler'],
+        },
+        'embark': {
+            'handlers': ['debug_handler',  'console_handler'],
+            'level': 'DEBUG',
             'propagate': True,
         },
-        'django.requests': {
-            'handlers': ['console'],
+        'users': {
+            'handlers': ['debug_handler',  'console_handler'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'uploader': {
+            'handlers': ['debug_handler',  'console_handler'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'reporter': {
+            'handlers': ['debug_handler',  'console_handler'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'dashboard': {
+            'handlers': ['debug_handler',  'console_handler'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'requests': {
+            'handlers': ['info_handler'],
             'level': 'ERROR',
             'propagate': False,
         },
-        'web': {
-            'handlers': ['debug'],
-            'level': 'DEBUG',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'maxBytes': 1024 * 1024 * 10,  # 10 MiB
-            'backupCount': 2,
-        },
+        
 
     }
 }
