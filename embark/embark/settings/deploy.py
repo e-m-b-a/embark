@@ -122,11 +122,11 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'format': '{asctime} {process:d} {thread:d} {module} {levelname} {message}',
             'style': '{',
         },
         'simple': {
-            'format': '{levelname} {message}',
+            'format': '{asctime} {levelname} {message}',
             'style': '{',
         },
     },
@@ -158,22 +158,22 @@ LOGGING = {
     'loggers': {
         '': {
             'level': 'WARNING',
-            'handlers': ['info_handler'],
+            'handlers': ['info_handler', 'console_handler'],
         },
         'uploader': {
-            'handlers': ['debug_handler'],
+            'handlers': ['debug_handler', 'info_handler', 'console_handler'],
             'level': 'DEBUG',
         },
         'dashboard': {
-            'handlers': ['debug_handler'],
+            'handlers': ['debug_handler', 'info_handler', 'console_handler'],
             'level': 'DEBUG',
         },
         'users': {
-            'handlers': ['info_handler'],
+            'handlers': ['debug_handler', 'info_handler', 'console_handler'],
             'level': 'INFO',
         },
         'reporter' : {
-            'handlers': ['info_handler'],
+            'handlers': ['debug_handler', 'info_handler', 'console_handler'],
             'level': 'INFO',
         },
         # TODO add specific logger for requests

@@ -77,17 +77,21 @@ if [[ $? -eq 1 ]]; then
   cd .. || exit 1
 fi
 
-# check venv TODO
-(cd /var/www && pipenv check)
+# check venv 
+if ! [[ -d /var/www/.venv ]]; then
+  echo -e "$RED""$BOLD""Pip-enviroment not found!""$NC"
+  exit 1
+fi
+if ! nc -zw1 google.com 443 &>/dev/null ; then
+  (cd /var/www && pipenv check)
+fi
 
 # copy emba
 cp -Ru ./emba/ /var/www/emba/
 
 # Start container
 echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
-docker-compose -f ./docker-compose.yml up -d
-DU_RETURN=$?
-if [[ $DU_RETURN -eq 0 ]] ; then
+if ! docker-compose -f ./docker-compose.yml up -d ; then
   echo -e "$GREEN""$BOLD""Finished setup mysql and redis docker images""$NC"
 else
   echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
@@ -170,6 +174,8 @@ pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --url-alias /media/ /var/www/media/ \
 --allow-localhost --working-directory /var/www/embark/ --server-root /var/www/httpd80/ \
 --include-file /var/www/conf/embark.conf \
+--processes 4 --threads 4\
+--graceful-timeout 5 \
 --server-name embark.local &
 # --ssl-certificate /var/www/conf/cert/embark.local --ssl-certificate-key-file /var/www/conf/cert/embark.local.key \
 # --https-port "$HTTPS_PORT" &
