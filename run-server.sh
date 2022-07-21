@@ -87,6 +87,9 @@ if ! nc -zw1 google.com 443 &>/dev/null ; then
 fi
 
 # copy emba
+if [[ -d /var/www/emba ]]; then
+  rm -Rf /var/www/emba
+fi
 cp -Ru ./emba/ /var/www/emba/
 
 # Start container
@@ -113,6 +116,9 @@ systemctl enable embark.service
 systemctl start embark.service
 
 # copy django server
+if [[ -d /var/www/embark ]]; then
+  rm -Rf /var/www/embark
+fi
 cp -R ./embark/ /var/www/embark/
 
 # config apache
