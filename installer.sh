@@ -258,6 +258,7 @@ install_debs() {
 
 install_daemon() {
   echo -e "\n$GREEN""$BOLD""Install embark daemon""$NC"
+  sed -i "s|{\$EMBARK_ROOT_DIR}|$PWD|g" embark.service
   ln -s "$PWD"/embark.service /etc/systemd/system/embark.service
 }
 
@@ -473,9 +474,9 @@ install_embark_docker(){
 }
 
 uninstall (){
-  echo -e "$ORANGE""$BOLD""Deleting Configuration and reseting""$NC"
+  echo -e "[+]$BLUE""$BOLD""Deleting Configuration and reseting""$NC"
 
-  #1 delete symlink
+  #1 delete symlink (lagacy)
   echo -e "$ORANGE""$BOLD""Delete Symlink?""$NC"
   if ! [[ -f /app ]]; then
     if [[ $( readlink /app ) == "$PWD" ]]; then
@@ -483,10 +484,32 @@ uninstall (){
     fi
   fi
 
-  #2 delete www and upload-dir
+  #2 delete dirs
   echo -e "$ORANGE""$BOLD""Delete Directories""$NC"
-  rm -R /var/www
-  rm -R ./uploadedFirmwareImages
+  if [[ -d /var/www ]]; then
+    rm -R /var/www
+  fi
+  if [[ -d ./media ]]; then
+    rm -R ./media
+  fi
+  if [[ -d ./active ]]; then
+    rm -R ./active
+  fi
+  if [[ -d ./static ]]; then
+    rm -R ./static
+  fi
+  if [[ "$REFORCE" -eq 0 ]]; then
+    # user-files
+    if [[ -d ./emba_logs ]]; then
+      echo -e "$RED""$BOLD""Do you wish to remove the EMBA-Logs (and backups)""$NC"
+      rm -Riv ./emba_logs
+    fi
+    if [[ -d ./embark_db ]]; then
+      echo -e "$RED""$BOLD""Do you wish to remove the database(and backups)""$NC"
+      rm -Riv ./embark_db
+    fi
+  fi
+
 
   #3 delete user www-embark and reset visudo
   echo -e "$ORANGE""$BOLD""Delete user""$NC"
@@ -503,7 +526,6 @@ uninstall (){
 
   #6 delete shared volumes and migrations
   echo -e "$ORANGE""$BOLD""Delete Database-files""$NC"
-  rm -R ./embark_db
   find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
   find . -path "*/migrations/*.pyc"  -delete
 
@@ -517,7 +539,7 @@ uninstall (){
   git submodule foreach git reset --hard
   git submodule foreach deinit --all
 
-  #9 stop daemon
+  #9 stop&reset daemon
   systemctl stop embark.service
   systemctl disable embark.service
   git checkout HEAD -- embark.service
@@ -560,7 +582,7 @@ while getopts eFUrdDh OPT ; do
     r)
       export UNINSTALL=1
       export REFORCE=1
-      echo -e "$GREEN""$BOLD""Install all dependecies including docker cleanup""$NC"
+      echo -e "$GREEN""$BOLD""Re-Install all dependecies while keeping user-files""$NC"
       ;;
     d)
       export DEFAULT=1
