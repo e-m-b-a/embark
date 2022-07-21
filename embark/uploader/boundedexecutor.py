@@ -181,6 +181,8 @@ class BoundedExecutor:
         firmware_flags.save()
 
         # build command
+        # FIXME remove all flags
+        # TODO add note with uuid
         emba_cmd = f"{EMBA_SCRIPT_LOCATION} -f {image_file_location} -l {emba_log_location} {emba_flags}"
 
         # submit command to executor threadpool
