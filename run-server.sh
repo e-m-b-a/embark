@@ -83,7 +83,7 @@ if ! [[ -d /var/www/.venv ]]; then
   exit 1
 fi
 if ! nc -zw1 google.com 443 &>/dev/null ; then
-  (cd /var/www && pipenv check)
+  (cd /var/www && pipenv check && pipenv verify)
 fi
 
 # copy emba

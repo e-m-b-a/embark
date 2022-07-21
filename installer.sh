@@ -135,7 +135,11 @@ create_ca (){
 
 dns_resolve(){
   echo -e "\n$GREEN""$BOLD""Install hostnames for local dns-resolve""$NC"
-  printf "0.0.0.0     embark.local\n" >>/etc/hosts
+  if ! grep -q "embark.local" /etc/hosts
+    printf "0.0.0.0     embark.local\n" >>/etc/hosts
+  else
+    echo -e "\n$ORANGE""$BOLD""hostanme already in use!""$NC"
+  fi
 }
 
 reset_docker() {
@@ -474,9 +478,9 @@ install_embark_docker(){
 }
 
 uninstall (){
-  echo -e "[+]$BLUE""$BOLD""Deleting Configuration and reseting""$NC"
+  echo -e "[+]$CYAN""$BOLD""Deleting Configuration and reseting""$NC"
 
-  #1 delete symlink (lagacy)
+  # delete symlink (lagacy)
   echo -e "$ORANGE""$BOLD""Delete Symlink?""$NC"
   if ! [[ -f /app ]]; then
     if [[ $( readlink /app ) == "$PWD" ]]; then
@@ -484,19 +488,25 @@ uninstall (){
     fi
   fi
 
-  #2 delete dirs
+  # delete dirs
   echo -e "$ORANGE""$BOLD""Delete Directories""$NC"
   if [[ -d /var/www ]]; then
-    rm -R /var/www
+    rm -Rv /var/www
   fi
   if [[ -d ./media ]]; then
-    rm -R ./media
+    rm -Rv ./media
   fi
   if [[ -d ./active ]]; then
-    rm -R ./active
+    rm -Rv ./active
   fi
   if [[ -d ./static ]]; then
-    rm -R ./static
+    rm -Rv ./static
+  fi
+  if [[ -d ./cert ]]; then
+    rm -Rv ./cert
+  fi
+  if [[ -d ./.venv ]]; then
+    rm -Rvf ./.venv
   fi
   if [[ "$REFORCE" -eq 0 ]]; then
     # user-files
@@ -511,49 +521,47 @@ uninstall (){
   fi
 
 
-  #3 delete user www-embark and reset visudo
+  # delete user www-embark and reset visudo
   echo -e "$ORANGE""$BOLD""Delete user""$NC"
   # sed -i 's/www\-embark\ ALL\=\(ALL\)\ NOPASSWD\:\ \/app\/emba\/emba.sh//g' /etc/sudoers #TODO doesnt work yet
   userdel www-embark
 
-  #4 delete venv
-  echo -e "$ORANGE""$BOLD""Delete Venv""$NC"
-  rm -R ./.venv
-
-  #5 delete .env
+  # delete .env
   echo -e "$ORANGE""$BOLD""Delete env""$NC"
   rm ./.env
 
-  #6 delete shared volumes and migrations
-  echo -e "$ORANGE""$BOLD""Delete Database-files""$NC"
+  # delete shared volumes and migrations
+  echo -e "$ORANGE""$BOLD""Delete migration-files""$NC"
   find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
   find . -path "*/migrations/*.pyc"  -delete
 
-  #7 delete all docker interfaces and containers + images
+  # delete all docker interfaces and containers + images
   reset_docker
   echo -e "$ORANGE""$BOLD""Consider running \$docker system prune""$NC"
 
-  #8 delete/uninstall EMBA
+  # delete/uninstall EMBA
   echo -e "$ORANGE""$BOLD""Delete EMBA?""$NC"
   docker network rm emba_runs
   git submodule foreach git reset --hard
   git submodule foreach deinit --all
 
-  #9 stop&reset daemon
+  # stop&reset daemon
   systemctl stop embark.service
   systemctl disable embark.service
   git checkout HEAD -- embark.service
   systemctl daemon-reload
 
-  #10 reset ownership etc
+  # reset ownership etc
   # TODO delete the dns resolve
 
-  #11 remove server-certs
-  rm -rf ./cert
+  # reset server-certs
   git checkout HEAD -- cert
 
-  #final
-  git reset
+  # final
+  if [[ "$REFORCE" -eq 0 ]]; then
+    git reset
+  fi
+  echo -e "$ORANGE""$BOLD""Consider""$CYAN""\$git pull""$NC"
 }
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
