@@ -29,8 +29,8 @@ ALLOWED_HOSTS = ['*']
 
 # EMBA stuff
 # EMBA location
-EMBA_ROOT = '/var/www/emba/'
-EMBA_LOG_ROOT = '/var/www/emba_logs'
+EMBA_ROOT = os.path.join(BASE_DIR.parent, 'emba')
+EMBA_LOG_ROOT = os.path.join(BASE_DIR.parent, 'emba_logs')
 EMBA_LOG_URL = 'emba_logs/'
 
 # Application definition - defines what apps gets migrated
@@ -115,7 +115,7 @@ DATABASES = {
 
 # Logging stuff
 # ERRORS/WARNINGS->console
-# DEBUG->embark.log
+# DEBUG->debug.log
 # INFO->embark.log
 LOGGING = {
     'version': 1,
@@ -219,7 +219,7 @@ USE_TZ = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 STATIC_URL = '/static/'
-STATIC_ROOT = '/var/www/static/'
+STATIC_ROOT = os.path.join(BASE_DIR.parent, 'static')
 STATICFILES_DIRS = [
     BASE_DIR / 'static/'
 ]
@@ -233,11 +233,11 @@ LOGIN_URL = ''
 LOGOUT_REDIRECT_URL = ''
 
 # Upload Media
-MEDIA_ROOT = '/var/www/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR.parent, 'media')
 MEDIA_URL = '/media/'
 
 # Active Firmware
-ACTIVE_FW = '/var/www/active/'
+ACTIVE_FW = os.path.join(BASE_DIR.parent, 'active')
 
 REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
 REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
