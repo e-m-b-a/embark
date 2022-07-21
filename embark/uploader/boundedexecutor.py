@@ -232,12 +232,13 @@ class BoundedExecutor:
         This job reads the F50_aggregator file and stores its content into the Result model
         """
 
+        res_dict = {}
         with open(path, newline='\n', encoding='utf-8') as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=';')
             csv_list = []
             for row in csv_reader:
-                csv_list.append(row)
-                res_dict = {}
+                row.remove("NA")
+                csv_list.append(row)         
                 for ele in csv_list:
                     if len(ele) == 2:
                         res_dict[ele[0]] = ele[1]
