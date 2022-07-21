@@ -239,7 +239,9 @@ class BoundedExecutor:
             csv_reader = csv.reader(csv_file, delimiter=';')
             csv_list = []
             for row in csv_reader:
-                row.remove("NA")
+                # remove NAs from csv
+                if row[-1] == "NA":
+                    row.pop(-1)
                 csv_list.append(row)         
                 for ele in csv_list:
                     if len(ele) == 2:
