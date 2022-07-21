@@ -12,6 +12,7 @@ from uploader.forms import FirmwareAnalysisForm, DeleteFirmwareForm
 from uploader.models import FirmwareFile
 
 logger = logging.getLogger(__name__)
+req_logger = logging.getLogger("requests")
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -104,7 +105,7 @@ def delete_fw_file(request):
             firmware_file = form.cleaned_data['firmware']
             # if firmware_file.user is request.user:
             firmware_file.delete()
-            return render(request, 'uploader/firmwareDelete.html', {'success_message': True, 'message': "Successfull delete"})
+            return render(request, 'uploader/firmwareDelete.html', {'success_message': True, 'message': "Successful delete"})
 
         logger.error("Form %s is invalid", form)
         logger.error("Form error: %s", form.errors)
@@ -113,3 +114,11 @@ def delete_fw_file(request):
         form = DeleteFirmwareForm(initial={'firmware': FirmwareFile.objects.latest('upload_date').id})
         return render(request, 'uploader/firmwareDelete.html', {'form': form})
     return HttpResponseRedirect('/uploader/')
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def import_analysis (request):
+    req_logger.info("%s requested with: %s", __name__, request)
+    return render(request, 'uploader/analysisImport.html', {'success_message': True, 'message': "This Functionality is coming soon(ish)"})
+
+# TODO add store & read func
