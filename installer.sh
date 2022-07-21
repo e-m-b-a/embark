@@ -135,7 +135,7 @@ create_ca (){
 
 dns_resolve(){
   echo -e "\n$GREEN""$BOLD""Install hostnames for local dns-resolve""$NC"
-  if ! grep -q "embark.local" /etc/hosts
+  if ! grep -q "embark.local" /etc/hosts ; then
     printf "0.0.0.0     embark.local\n" >>/etc/hosts
   else
     echo -e "\n$ORANGE""$BOLD""hostanme already in use!""$NC"
