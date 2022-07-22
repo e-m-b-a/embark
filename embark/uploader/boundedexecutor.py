@@ -242,7 +242,7 @@ class BoundedExecutor:
                 # remove NAs from csv
                 if row[-1] == "NA":
                     row.pop(-1)
-                csv_list.append(row)         
+                csv_list.append(row)
                 for ele in csv_list:
                     if len(ele) == 2:
                         res_dict[ele[0]] = ele[1]
