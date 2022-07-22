@@ -115,6 +115,7 @@ def delete_fw_file(request):
         return render(request, 'uploader/firmwareDelete.html', {'form': form})
     return HttpResponseRedirect('/uploader/')
 
+
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def import_analysis (request):
