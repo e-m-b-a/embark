@@ -20,7 +20,7 @@ RUN apt-get update && apt-get -y -q --no-install-recommends install wget \
     pipenv \
     && rm -rf /var/lib/apt/lists/*
 
-RUN mkdir /var/www
+RUN mkdir /app
 # * use emba from host or copy [root]
 USER root
 COPY ./emba/ /var/www/emba/
@@ -32,35 +32,29 @@ RUN useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/n
 
 # * mkdir for apache
 USER www-embark
-RUN mkdir /var/www/media
-RUN mkdir /var/www/media/uploadedFirmwareImages
-RUN mkdir /app/media/emba_logs
-RUN mkdir /app/static
-RUN mkdir /app/conf
+RUN mkdir /app/media && mkdir /app/media/uploadedFirmwareImages && mkdir /app/media/emba_logs && \
+    mkdir /app/static && mkdir /app/conf
 
 # * copy pipfile(s) and install pipenv [www-embark]
 USER root
 COPY --chown=www-embark:sudo ./Pipfile.lock /var/www/Pipfile.lock
 
 USER www-embark
-RUN PIPENV_VENV_IN_PROJECT=1 pipenv install
+COPY ./Pipfile.lock /app/Pipfile.lock
+RUN pipenv install
 
 # * copy embark [www-embark]
-USER root
-COPY --chown=www-embark:sudo ./embark /var/www/embark
+USER www-embark
+COPY ./embark /app/embark
 
-# * write .env[-]
-
-# * copy entrypoint.sh [root]
-USER root
-COPY ./entrypoint.sh /var/www/entrypoint.sh
-
-WORKDIR /var/www/
+# * copy .env[-]
+COPY ./.env /app/.env
+WORKDIR /app/
 
 EXPOSE 80
 # Opening on extra port for our ASGI setup
 EXPOSE 8001
 
-# source start-script
+# source start-script TODO basically run-server.sh
 ENTRYPOINT  ["./entrypoint.sh"]
 

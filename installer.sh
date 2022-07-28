@@ -116,7 +116,7 @@ create_ca (){
   echo -e "\n$GREEN""$BOLD""Creating SSL Cert""$NC"
   cd cert || exit 1
   if [[ -f embark.local.csr ]] || [[ -f embark-ws.local.csr ]] || [[ -f embark.local.crt ]] || [[ -f embark-ws.local.crt ]]; then 
-    echo -e "\n$GREEN""$BOLD""Certs already generated, scipping""$NC"
+    echo -e "\n$GREEN""$BOLD""Certs already generated, skipping""$NC"
   else
     # create CA
     openssl genrsa -out rootCA.key 4096
@@ -229,7 +229,7 @@ install_debs() {
     apt get install -y python3.10
   fi
   # Pip
-  if ! command -v pip3 > /dev/null ; then
+  if ! command -v pip3.10 > /dev/null ; then
     apt-get install -y python3-pip
   fi
   # Docker
@@ -238,7 +238,7 @@ install_debs() {
   fi
   # docker-compose
   if ! command -v docker-compose > /dev/null ; then
-    pip3 install docker-compose --upgrade
+    pip3.10 install docker-compose --upgrade
     if ! [[ -d /usr/bin/docker-compose ]]; then
       ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
     fi
@@ -273,7 +273,7 @@ install_embark_default() {
   apt-get install -y -q default-libmysqlclient-dev build-essential
   
   # install pipenv
-  pip3 install pipenv
+  pip3.10 install pipenv
 
   #Add user for server
   if ! cut -d: -f1 /etc/passwd | grep -E www-emabrk; then
@@ -316,7 +316,7 @@ install_embark_default() {
   (cd /var/www && PIPENV_VENV_IN_PROJECT=1 pipenv install)
   
   # set secret-key
-  DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+  DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
 
   # download externals
   if ! [[ -d ./embark/static/external ]]; then
