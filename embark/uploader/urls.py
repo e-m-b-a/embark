@@ -9,4 +9,6 @@ urlpatterns = [
     path('uploader/save/', views.save_file, name='embark-uploader-save'),
     path('uploader/delete/', views.delete_fw_file, name='embark-uploader-delete'),
     path('uploader/start/', views.start_analysis, name='embark-uploader-start-analysis'),
+    path('uploader/import/', views.import_analysis, name='embark-uploader-import'),
+    # path('uploader/read/', views.read_analysis, name='embark-uploader-read'),
 ]

@@ -27,8 +27,7 @@ services:
     env_file:
       - .env
     volumes:
-        - /var/run/docker.sock:/var/run/docker.sock 
-        - ./emba/:/app/emba/
+        # TODO PIPEvolume for emba
         - /etc/timezone:/etc/timezone:ro
         - /etc/localtime:/etc/localtime:ro
     ports:

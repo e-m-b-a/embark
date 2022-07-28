@@ -10,14 +10,14 @@ channels-redis = "*"
 daphne = "*"
 mysqlclient = "*"
 django-apscheduler = "*"
-mod-wsgi-standalone = "*"
-django-dotenv = "*"
+python-dotenv = "*"
 Rx = "*"
 inotify-simple = "*"
 psutil = "*"
 msgpack = "*"
 django = "*"
 django-hashid-field = "*"
+mod-wsgi-standalone = "*"
 
 [dev-packages]
 pycodestyle = "*"
@@ -25,4 +25,4 @@ djlint = "*"
 pylint-django = "*"
 
 [requires]
-python_version = "3.9"
+python_version = "3.10"
