@@ -478,9 +478,9 @@ install_embark_docker(){
 }
 
 uninstall (){
-  echo -e "[+]$CYAN""$BOLD""Deleting Configuration and reseting""$NC"
+  echo -e "[+]$CYAN""$BOLD""Uninstalling EMBArk""$NC"
 
-  # delete symlink (lagacy)
+  # delete symlink (legacy)
   echo -e "$ORANGE""$BOLD""Delete Symlink?""$NC"
   if ! [[ -f /app ]]; then
     if [[ $( readlink /app ) == "$PWD" ]]; then
@@ -488,7 +488,7 @@ uninstall (){
     fi
   fi
 
-  # delete dirs
+  # delete directories
   echo -e "$ORANGE""$BOLD""Delete Directories""$NC"
   if [[ -d /var/www ]]; then
     rm -Rv /var/www
