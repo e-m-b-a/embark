@@ -543,7 +543,7 @@ uninstall (){
   echo -e "$ORANGE""$BOLD""Delete EMBA?""$NC"
   docker network rm emba_runs
   git submodule foreach git reset --hard
-  git submodule foreach deinit --all
+  git submodule deinit --all
 
   # stop&reset daemon
   systemctl stop embark.service
