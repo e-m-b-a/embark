@@ -13,6 +13,8 @@
   <a href="https://twitter.com/intent/tweet?text=Check%20out%20EMBArk%20-%20The%20Firmware%20security%20scanning%20environment!%20https://github.com/e-m-b-a/embark"><img src="https://img.shields.io/twitter/url.svg?style=social&url=https%3A%2F%2Fgithub.com%2Fe-m-b-a%2Fembark"></a>
 </p>
 
+## Quick-Start
+`git clone https://github.com/e-m-b-a/embark.git; cd embark; sudo ./installer.sh -d`
 ## About
 
 *EMBArk* is the web based enterprise interface for the firmware security scanner *EMBA*. It is developed to provide the firmware security analyzer *[EMBA](https://github.com/e-m-b-a/emba)* as a containerized service and to ease accessibility to the firmware scanning backend *EMBA* regardless of system and operating system.
@@ -22,7 +24,7 @@ Furthermore *EMBArk* improves the data provision by aggregating the various scan
 [![Watch EMBArk](https://raw.githubusercontent.com/wiki/e-m-b-a/embark/static/images/EMBArk-YouTube.png)](https://youtu.be/qSHuPWbfhmI "Watch EMBArk")
 
 
-## Automated setup (on Kali Linux or Ubuntu22LTS)
+## Automated setup on Ubuntu 22.04 LTS
 1. Checkout the repository (e.g. `git clone https://github.com/e-m-b-a/embark.git`)
 2. Change directory to root of the repository i.e `cd embark`
 3. Run `sudo ./installer.sh -d ` to run the default installation.
