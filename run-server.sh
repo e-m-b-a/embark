@@ -28,7 +28,7 @@ export FILE_SIZE=2000000000
 
 cleaner() {
   pkill -u root daphne
-  pkill -u root /app/emba/emba.sh
+  pkill -u root "$PWD"/emba/emba.sh
   pkill -u root runapscheduler
 
   fuser -k "$HTTP_PORT"/tcp
@@ -53,13 +53,13 @@ trap cleaner INT
 cd "$(dirname "$0")" || exit 1
 
 if ! [[ $EUID -eq 0 ]] ; then
-  echo -e "\\n$RED""Run EMBArk installation script with root permissions!""$NC\\n"
+  echo -e "\\n$RED""Run Server script with root permissions!""$NC\\n"
   exit 1
 fi
 
 # check emba
 echo -e "$BLUE""$BOLD""checking EMBA""$NC"
-/app/emba/emba.sh -d
+"$PWD"/emba/emba.sh -d
 if [[ $? -eq 1 ]]; then
   echo -e "$BLUE""Trying auto-maintain""$NC"
   # automaintain
@@ -77,90 +77,124 @@ if [[ $? -eq 1 ]]; then
   cd .. || exit 1
 fi
 
-# start venv (ignore source in script)
-# shellcheck disable=SC1091
-source ./.venv/bin/activate || exit 1
+# check venv 
+if ! [[ -d /var/www/.venv ]]; then
+  echo -e "$RED""$BOLD""Pip-enviroment not found!""$NC"
+  exit 1
+fi
+if ! nc -zw1 google.com 443 &>/dev/null ; then
+  (cd /var/www && pipenv check && pipenv verify)
+fi
+
+# copy emba
+if [[ -d /var/www/emba ]]; then
+  rm -Rf /var/www/emba
+fi
+cp -Ru ./emba/ /var/www/emba/
 
 # Start container
 echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
-docker-compose -f ./docker-compose.yml up -d
-DU_RETURN=$?
-if [[ $DU_RETURN -eq 0 ]] ; then
+if ! docker-compose -f ./docker-compose.yml up -d ; then
   echo -e "$GREEN""$BOLD""Finished setup mysql and redis docker images""$NC"
 else
   echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
 fi
 
-if ! [[ -d /app/www/logs ]]; then
-  mkdir /app/www/logs
-fi
-
-if ! [[ -d /app/www/conf ]]; then
-  mkdir /app/www/conf
+# logs
+if ! [[ -d ./docker_logs ]]; then
+  mkdir docker_logs
 fi
 
 # container-logs (2 jobs)
-echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./embark/logs/redis_dev.log" 
-docker container logs embark_redis -f &> /app/www/logs/redis.log & 
-echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.log"
-docker container logs embark_db -f &> /app/www/logs/mysql.log &
+echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./docker_logs/redis.log" 
+docker container logs embark_redis -f &> ./docker_logs/redis.log & 
+echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql.log"
+docker container logs embark_db -f &> ./docker_logs/mysql.log &
 
-#start the supervisor
+# start the supervisor
 systemctl enable embark.service
 systemctl start embark.service
 
 # copy django server
-if [[ -d /app/www/embark ]]; then
-  rm -R /app/www/embark
+if [[ -d /var/www/embark ]]; then
+  rm -Rf /var/www/embark
 fi
-cp -Ru ./embark/ /app/www/embark/
+cp -R ./embark/ /var/www/embark/
 
 # config apache
 # add all modules we want (mod_ssl mod_auth_basic etc)
 # post_max_size increase
+if ! [[ -d /var/www/conf ]]; then
+  mkdir /var/www/conf
+fi
 {
-  echo ''
-} > /app/www/conf/embark.conf
+  echo -e ''
+} > /var/www/conf/embark.conf
+
+# certs
+if ! [[ -d /var/www/conf/cert ]]; then
+  mkdir /var/www/conf/cert
+fi
+cp -u "$PWD"/cert/embark.local /var/www/conf/cert
+cp -u "$PWD"/cert/embark.local.key /var/www/conf/cert
+cp -u "$PWD"/cert/embark-ws.local.key /var/www/conf/cert
+cp -u "$PWD"/cert/embark-ws.local.crt /var/www/conf/cert
+cp -u "$PWD"/cert/embark-ws.local /var/www/conf/cert
+
+# cp .env
+cp -u ./.env /var/www/embark/embark/settings/
 
 # !DIRECTORY-CHANGE!
-cd /app/www/embark/ || exit 1
+cd /var/www/embark/ || exit 1
+
+# start venv (ignore source in script)
+# shellcheck disable=SC1091
+source /var/www/.venv/bin/activate || exit 1
+
+# TODO move to parent
+# logs
+if ! [[ -d /var/www/logs ]]; then
+  mkdir /var/www/logs
+fi
 
 # db_init
 echo -e "\n[""$BLUE JOB""$NC""] Starting migrations - log to embark/logs/migration.log"
-pipenv run ./manage.py makemigrations users uploader dashboard reporter | tee -a /app/www/logs/migration.log
-pipenv run ./manage.py migrate | tee -a /app/www/logs/migration.log
+pipenv run ./manage.py makemigrations users uploader dashboard reporter | tee -a /var/www/logs/migration.log
+pipenv run ./manage.py migrate | tee -a /var/www/logs/migration.log
 
 # collect staticfiles and make accesable for server
 echo -e "\n[""$BLUE JOB""$NC""] Collecting static files"
 pipenv run ./manage.py collectstatic --no-input
-chown www-embark /app/www/ -R
-# chown www-embark /app/emba -R
-chmod 760 /app/www/media/ -R
+chown www-embark /var/www/ -R
+chmod 760 /var/www/media/ -R
+# TODO other fileperms
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
-pipenv run ./manage.py runapscheduler | tee -a /app/www/logs/scheduler.log &
+pipenv run ./manage.py runapscheduler | tee -a /var/www/logs/scheduler.log &
 sleep 5
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting Apache"
 pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --host "$BIND_IP" --port="$HTTP_PORT" --limit-request-body "$FILE_SIZE" \
---url-alias /static/ /app/www/static/ \
---url-alias /media/ /app/www/media/ \
---allow-localhost --working-directory /app/www/embark/ --server-root /app/www/httpd80/ \
---include-file /app/www/conf/embark.conf \
+--url-alias /static/ /var/www/static/ \
+--url-alias /media/ /var/www/media/ \
+--allow-localhost --working-directory /var/www/embark/ --server-root /var/www/httpd80/ \
+--include-file /var/www/conf/embark.conf \
+--processes 4 --threads 4 \
+--graceful-timeout 5 \
 --server-name embark.local &
-# --ssl-certificate /app/www/conf/cert/embark.local --ssl-certificate-key-file /app/www/conf/cert/embark.local.key \
+# --ssl-certificate /var/www/conf/cert/embark.local --ssl-certificate-key-file /var/www/conf/cert/embark.local.key \
 # --https-port "$HTTPS_PORT" &
-# --enable-debugger --https-only \
+#  --https-only --enable-debugger \
 sleep 5
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-pipenv run daphne --access-log /app/www/logs/daphne.log -e ssl:8000:privateKey=/app/www/conf/cert/embark-ws.local.key:certKey=/app/www/conf/cert/embark-ws.local.crt -b "$BIND_IP" -p 8001 -s embark-ws.local --root-path=/app/www/embark embark.asgi:application &
+pipenv run daphne --access-log /var/www/logs/daphne.log -e ssl:8000:privateKey=/var/www/conf/cert/embark-ws.local.key:certKey=/var/www/conf/cert/embark-ws.local.crt -b "$BIND_IP" -p 8001 -s embark-ws.local --root-path=/var/www/embark embark.asgi:application &
 sleep 5
 
 
 echo -e "\n""$ORANGE$BOLD""=============================================================""$NC"
 echo -e "\n""$ORANGE$BOLD""Server started on http://embark.local""$NC"
 # echo -e "\n""$ORANGE$BOLD""For SSL you may use https://embark.local (Not recommended for local use)""$NC"
-# echo -e "\n\n""$GREEN$BOLD""the trusted rootCA.key for the ssl encryption is in /app/cert""$NC"
+# echo -e "\n\n""$GREEN$BOLD""the trusted rootCA.key for the ssl encryption is in ./cert""$NC"
 wait

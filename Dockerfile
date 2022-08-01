@@ -22,6 +22,8 @@ RUN apt-get update && apt-get -y -q --no-install-recommends install wget \
 
 RUN mkdir /app
 # * use emba from host or copy [root]
+USER root
+COPY ./emba/ /var/www/emba/
 
 # * create user and add to sudoers [root]
 USER root
@@ -34,6 +36,9 @@ RUN mkdir /app/media && mkdir /app/media/uploadedFirmwareImages && mkdir /app/me
     mkdir /app/static && mkdir /app/conf
 
 # * copy pipfile(s) and install pipenv [www-embark]
+USER root
+COPY --chown=www-embark:sudo ./Pipfile.lock /var/www/Pipfile.lock
+
 USER www-embark
 COPY ./Pipfile.lock /app/Pipfile.lock
 RUN pipenv install

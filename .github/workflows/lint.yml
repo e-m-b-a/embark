@@ -21,12 +21,12 @@ jobs:
       uses: actions/checkout@v2
     - name: Install dependencies for linting
       run: |
-        sudo apt-get install -y python3-dev npm pycodestyle python3-pylint-django bandit
+        sudo apt-get install -y python3-dev npm pycodestyle python3-pylint-django bandit apache2 apache2-bin apache2-dev
         sudo npm install -g jshint
     - name: Install Python, pipenv and Pipfile packages
       uses: palewire/install-python-pipenv-pipfile@v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
     - name: Make dirs
       run: |
         mkdir ./embark/logs

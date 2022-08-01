@@ -13,7 +13,7 @@ from uploader.models import FirmwareAnalysis
 from .models import Result
 from .forms import StopAnalysisForm
 
-logger = logging.getLogger('web')
+logger = logging.getLogger(__name__)
 
 
 @require_http_methods(["GET"])
@@ -53,7 +53,7 @@ def stop_analysis(request):
             return render(request, 'dashboard/serviceDashboard.html', {'username': request.user.username, 'form': form, 'success_message': True, 'message': "Stopped successfully"})
         except Exception as error:
             logger.error("Error %s", error)
-            return HttpResponseServerError("Failed to stop procs, because" + str(error))
+            return HttpResponseServerError("Failed to stop process, please handle manually: PID=" + str(pid))
     return HttpResponseBadRequest("invalid form")
 
 

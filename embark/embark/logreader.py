@@ -18,7 +18,7 @@ from django.conf import settings
 from uploader.models import FirmwareAnalysis
 
 
-logger = logging.getLogger('web')
+logger = logging.getLogger(__name__)
 
 # global map for storing messages from all processes
 PROCESS_MAP = {}

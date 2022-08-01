@@ -5,7 +5,7 @@ from django import forms
 
 from uploader import models
 
-logger = logging.getLogger('web')
+logger = logging.getLogger(__name__)
 
 
 class FirmwareAnalysisForm(forms.ModelForm):

@@ -24,7 +24,7 @@ from uploader.archiver import Archiver
 from uploader.models import FirmwareAnalysis, ResourceTimestamp
 from dashboard.models import Result
 
-logger = logging.getLogger('web')
+logger = logging.getLogger(__name__)
 
 
 @require_http_methods(["GET"])
