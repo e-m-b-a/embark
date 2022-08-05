@@ -13,9 +13,8 @@ class FirmwareAnalysisForm(forms.ModelForm):
     class Meta:
         model = models.FirmwareAnalysis
 
-        fields = ('firmware', 'version', 'vendor', 'device', 'notes', 'firmware_Architecture', 'cwe_checker', 'deep_extraction', 'online_checks', 
-                 # 'dev_mode',  'dependency_check', 'multi_threaded', 'firmware_remove', 'log_path', 'grep_able_log', 'relative_paths', 'ANSI_color',
-                  'web_reporter', 'user_emulation_test', 'system_emulation_test',)
+        fields = ('firmware', 'version', 'vendor', 'device', 'notes', 'firmware_Architecture', 'cwe_checker', 'deep_extraction', 'online_checks',
+                 'user_emulation_test', 'system_emulation_test',)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
