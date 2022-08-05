@@ -1,7 +1,6 @@
 from datetime import timedelta
 import logging
 import os
-from random import choices
 import shutil
 import uuid
 import re
@@ -178,9 +177,8 @@ class FirmwareAnalysis(models.Model):
         max_length=MAX_LENGTH, blank=True, expert_mode=True)
     user_emulation_test = BooleanFieldExpertMode(help_text='Enables automated qemu emulation tests', default=False, expert_mode=True, blank=True)
     system_emulation_test = BooleanFieldExpertMode(help_text='Enables automated qemu system emulation tests', default=False, expert_mode=True, blank=True)
-    deep_extraction = BooleanFieldExpertMode(help_text='Enable deep extraction - try to extract every file two times with binwalk (WARNING: Uses a lot of disk space)'
-        , default=False, expert_mode=True, blank=True)
-    cwe_checker = BooleanFieldExpertMode(help_text='Enables cwe-checker,-c will be added', default=False, expert_mode=True, blank=True)
+    deep_extraction = BooleanFieldExpertMode(help_text='Enable deep extraction - try to extract every file two times with binwalk', default=False, expert_mode=True, blank=True)
+    cwe_checker = BooleanFieldExpertMode(help_text='Enables cwe-checker', default=False, expert_mode=True, blank=True)
     online_checks = BooleanFieldExpertMode(help_text='Activate online checks (e.g. upload and test with VirusTotal)', default=False, expert_mode=True, blank=True)
 
     # TODO add -C and -k option
@@ -243,15 +241,16 @@ class FirmwareAnalysis(models.Model):
 
         :return: string formatted input flags for emba
         """
+
         command = ""
         if self.version:
-            command = command + " -X " + re.sub("[^a-zA-Z0–9\.\-\_]+", "", str(self.version))
+            command = command + " -X " + re.sub(r"[^a-zA-Z0–9\.\-\_]+", "", str(self.version))
         if self.vendor:
-            command = command + " -Y " + re.sub("[^a-zA-Z0–9\-\_]+", "", str(self.vendor))
+            command = command + " -Y " + re.sub(r"[^a-zA-Z0–9\-\_]+", "", str(self.vendor))
         if self.device:
-            command = command + " -Z " + re.sub("[^a-zA-Z0–9\-\_]+", "", str(self.device))
+            command = command + " -Z " + re.sub(r"[^a-zA-Z0–9\-\_]+", "", str(self.device))
         if self.notes:
-            command = command + " -N " + re.sub("[^a-zA-Z0–9\-\_]+", "", str(self.notes))
+            command = command + " -N " + re.sub(r"[^a-zA-Z0–9\-\_]+", "", str(self.notes))
         if self.firmware_Architecture:
             command = command + " -a " + str(self.firmware_Architecture)
         if self.cwe_checker:
