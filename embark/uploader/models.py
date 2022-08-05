@@ -176,8 +176,8 @@ class FirmwareAnalysis(models.Model):
         verbose_name="Select architecture of the linux firmware",
         help_text='Architecture of the linux firmware [MIPS, ARM, x86, x64, PPC] -a will be added',
         max_length=MAX_LENGTH, blank=True, expert_mode=True)
-    user_emulation_test = BooleanFieldExpertMode(help_text='Enables automated qemu emulation tests', default=True, expert_mode=True, blank=True)
-    system_emulation_test = BooleanFieldExpertMode(help_text='Enables automated qemu system emulation tests', default=True, expert_mode=True, blank=True)
+    user_emulation_test = BooleanFieldExpertMode(help_text='Enables automated qemu emulation tests', default=False, expert_mode=True, blank=True)
+    system_emulation_test = BooleanFieldExpertMode(help_text='Enables automated qemu system emulation tests', default=False, expert_mode=True, blank=True)
     deep_extraction = BooleanFieldExpertMode(help_text='Enable deep extraction - try to extract every file two times with binwalk (WARNING: Uses a lot of disk space)'
         , default=False, expert_mode=True, blank=True)
     cwe_checker = BooleanFieldExpertMode(help_text='Enables cwe-checker,-c will be added', default=False, expert_mode=True, blank=True)
