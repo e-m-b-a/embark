@@ -263,6 +263,7 @@ install_debs() {
 install_daemon() {
   echo -e "\n$GREEN""$BOLD""Install embark daemon""$NC"
   sed -i "s|{\$EMBARK_ROOT_DIR}|$PWD|g" embark.service
+  # FIXME test this
   ln -s "$PWD"/embark.service /etc/systemd/system/embark.service
 }
 
