@@ -237,7 +237,7 @@ class FirmwareAnalysis(models.Model):
     def __str__(self):
         return f"{self.id}({self.firmware})"
 
-    def get_flags(self):    # FIXME 
+    def get_flags(self):
         """
         build shell command from input fields
 
@@ -245,13 +245,13 @@ class FirmwareAnalysis(models.Model):
         """
         command = ""
         if self.version:
-            command = command + " -X " + re.sub("[^A-Za-z0–9\.\-\_]+", "", str(self.version))
+            command = command + " -X " + re.sub("[^a-zA-Z0–9\.\-\_]+", "", str(self.version))
         if self.vendor:
-            command = command + " -Y " + re.sub("[^A-Za-z0–9\-\_]+", "", str(self.vendor))
+            command = command + " -Y " + re.sub("[^a-zA-Z0–9\-\_]+", "", str(self.vendor))
         if self.device:
-            command = command + " -Z " + re.sub("[^A-Za-z0–9\-\_]+", "", str(self.device))
+            command = command + " -Z " + re.sub("[^a-zA-Z0–9\-\_]+", "", str(self.device))
         if self.notes:
-            command = command + " -N " + re.sub("[^A-Za-z0–9\-\_]+", "", str(self.notes))
+            command = command + " -N " + re.sub("[^a-zA-Z0–9\-\_]+", "", str(self.notes))
         if self.firmware_Architecture:
             command = command + " -a " + str(self.firmware_Architecture)
         if self.cwe_checker:
