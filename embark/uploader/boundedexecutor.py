@@ -183,7 +183,7 @@ class BoundedExecutor:
         # build command
         # FIXME remove all flags
         # TODO add note with uuid
-        emba_cmd = f"{EMBA_SCRIPT_LOCATION} -f {image_file_location} -l {emba_log_location} {emba_flags}"
+        emba_cmd = f"{EMBA_SCRIPT_LOCATION} -p scan-profiles/default-scan-no-notify.emba -f {image_file_location} -l {emba_log_location} {emba_flags}"
 
         # submit command to executor threadpool
         emba_fut = BoundedExecutor.submit(cls.run_emba_cmd, emba_cmd, firmware_flags.id, active_analyzer_dir)

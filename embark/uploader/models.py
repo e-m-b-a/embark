@@ -155,18 +155,18 @@ class FirmwareAnalysis(models.Model):
     firmware = models.ForeignKey(FirmwareFile, on_delete=models.SET_NULL, help_text='', null=True, editable=True)
     firmware_name = models.CharField(editable=True, default="File unknown", max_length=MAX_LENGTH)
 
-    # emba basic flags  FIXME change to int
+    # emba basic flags
     version = CharFieldExpertMode(
-        help_text='Firmware version (only integers)', verbose_name="Firmware version", max_length=MAX_LENGTH,
+        help_text='Firmware version', verbose_name="Firmware version", max_length=MAX_LENGTH,
         blank=True, expert_mode=False)
     vendor = CharFieldExpertMode(
-        help_text='Firmware vendor (double quote your input)', verbose_name="Firmware vendor", max_length=MAX_LENGTH,
+        help_text='Firmware vendor', verbose_name="Firmware vendor", max_length=MAX_LENGTH,
         blank=True, expert_mode=False)
     device = CharFieldExpertMode(
-        help_text='Device (double quote your input)', verbose_name="Device", max_length=MAX_LENGTH, blank=True,
+        help_text='Device', verbose_name="Device", max_length=MAX_LENGTH, blank=True,
         expert_mode=False)
     notes = CharFieldExpertMode(
-        help_text='Testing notes (double quote your input)', verbose_name="Testing notes", max_length=MAX_LENGTH,
+        help_text='Testing notes', verbose_name="Testing notes", max_length=MAX_LENGTH,
         blank=True, expert_mode=False)
 
     # emba expert flags
@@ -175,12 +175,18 @@ class FirmwareAnalysis(models.Model):
         verbose_name="Select architecture of the linux firmware",
         help_text='Architecture of the linux firmware [MIPS, ARM, x86, x64, PPC] -a will be added',
         max_length=MAX_LENGTH, blank=True, expert_mode=True)
-    cwe_checker = BooleanFieldExpertMode(
-        help_text='Enables cwe-checker,-c will be added', default=False, expert_mode=True, blank=True)
+    user_emulation_test = BooleanFieldExpertMode(help_text='Enables automated qemu emulation tests', default=False, expert_mode=True, blank=True)
+    system_emulation_test = BooleanFieldExpertMode(help_text='Enables automated qemu system emulation tests', default=False, expert_mode=True, blank=True)
+    deep_extraction = BooleanFieldExpertMode(help_text='Enable deep extraction - try to extract every file two times with binwalk', default=False, expert_mode=True, blank=True)
+    cwe_checker = BooleanFieldExpertMode(help_text='Enables cwe-checker', default=False, expert_mode=True, blank=True)
+    online_checks = BooleanFieldExpertMode(help_text='Activate online checks (e.g. upload and test with VirusTotal)', default=False, expert_mode=True, blank=True)
+
+    # TODO add -C and -k option
+
+    # removed
+    """
     dev_mode = BooleanFieldExpertMode(
         help_text='Run emba in developer mode, -D will be added ', default=False, expert_mode=True, blank=True)
-    deep_extraction = BooleanFieldExpertMode(
-        help_text='Enable deep extraction, -x will be added', default=False, expert_mode=True, blank=True)
     log_path = BooleanFieldExpertMode(
         help_text='Ignores log path check, -i will be added', default=False, expert_mode=True, blank=True)
     grep_able_log = BooleanFieldExpertMode(
@@ -193,9 +199,6 @@ class FirmwareAnalysis(models.Model):
     web_reporter = BooleanFieldExpertMode(
         help_text='Activates web report creation in log path, -W will be added', default=True, expert_mode=True,
         blank=True)
-    emulation_test = BooleanFieldExpertMode(
-        help_text='Enables automated qemu emulation tests, -E will be added', default=True, expert_mode=True,
-        blank=True)
     dependency_check = BooleanFieldExpertMode(
         help_text=' Checks dependencies but ignore errors, -F will be added', default=True, expert_mode=True,
         blank=True)
@@ -205,6 +208,7 @@ class FirmwareAnalysis(models.Model):
     firmware_remove = BooleanFieldExpertMode(
         help_text='Remove extracted firmware file/directory after testint, -r will be added', default=True,
         expert_mode=True, blank=True)
+    """
 
     # embark meta data
     path_to_logs = models.FilePathField(default="/", blank=True)
@@ -231,47 +235,32 @@ class FirmwareAnalysis(models.Model):
     def __str__(self):
         return f"{self.id}({self.firmware})"
 
-    def get_flags(self):    # FIXME add all current options, DIRECT INPUT!! remove or sanitize
+    def get_flags(self):
         """
         build shell command from input fields
 
         :return: string formatted input flags for emba
         """
+
         command = ""
         if self.version:
-            command = command + " -X " + re.sub("[^0-9]", "", str(self.version))
+            command = command + " -X " + re.sub(r"[^a-zA-Z0–9\.\-\_]+", "", str(self.version))
         if self.vendor:
-            command = command + " -Y " + re.sub("[^A-Za-z0–9]", "", str(self.vendor))
+            command = command + " -Y " + re.sub(r"[^a-zA-Z0–9\-\_]+", "", str(self.vendor))
         if self.device:
-            command = command + " -Z " + re.sub("[^A-Za-z0–9]", "", str(self.device))
+            command = command + " -Z " + re.sub(r"[^a-zA-Z0–9\-\_]+", "", str(self.device))
         if self.notes:
-            command = command + " -N " + re.sub("[^A-Za-z0–9]", "", str(self.notes))
+            command = command + " -N " + re.sub(r"[^a-zA-Z0–9\-\_]+", "", str(self.notes))
         if self.firmware_Architecture:
             command = command + " -a " + str(self.firmware_Architecture)
         if self.cwe_checker:
             command = command + " -c"
-        if self.dev_mode:
-            command = command + " -D"
         if self.deep_extraction:
             command = command + " -x"
-        if self.log_path:
-            command = command + " -i"
-        if self.grep_able_log:
-            command = command + " -g"
-        if self.relative_paths:
-            command = command + " -s"
-        if self.ANSI_color:
-            command = command + " -z"
-        if self.web_reporter:
-            command = command + " -W"
-        if self.emulation_test:
+        if self.user_emulation_test:
             command = command + " -E"
-        if self.dependency_check:
-            command = command + " -F"
-        if self.multi_threaded:
-            command = command + " -t"
-        if self.firmware_remove:
-            command = command + " -r"
+        if self.system_emulation_test:
+            command = command + " -Q"
         # running emba
         logger.info("final emba parameters %s", command)
         return command
