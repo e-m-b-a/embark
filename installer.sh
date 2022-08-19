@@ -28,9 +28,6 @@ export DEBIAN_FRONTEND=noninteractive
 RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
 
 RANDOM_SALT=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 43 | head -n 1)
-HASHID_FIELD_LENGTH=7
-HASHID_DESCRIPTOR=False
-HASHID_DESCRIPTOR=False
 
 
 SUPER_PW="embark"
@@ -49,12 +46,12 @@ NC='\033[0m' # no color
 if [[ "$STRICT_MODE" -eq 1 ]]; then
   # http://redsymbol.net/articles/unofficial-bash-strict-mode/
   # https://github.com/tests-always-included/wick/blob/master/doc/bash-strict-mode.md
-  set -e          # Exit immediately if a command exits with a non-zero status
-  set -u          # Exit and trigger the ERR trap when accessing an unset variable
-  set -o pipefail # The return value of a pipeline is the value of the last (rightmost) command to exit with a non-zero status
-  set -E          # The ERR trap is inherited by shell functions, command substitutions and commands in subshells
-  shopt -s extdebug # Enable extended debugging
-  IFS=$'\n\t'     # Set the "internal field separator"
+  set -e                # Exit immediately if a command exits with a non-zero status
+  set -u                # Exit and trigger the ERR trap when accessing an unset variable
+  set -o pipefail       # The return value of a pipeline is the value of the last (rightmost) command to exit with a non-zero status
+  set -E                # The ERR trap is inherited by shell functions, command substitutions and commands in subshells
+  shopt -s extdebug     # Enable extended debugging
+  IFS=$'\n\t'           # Set the "internal field separator"
   trap 'wickStrictModeFail $? | tee -a /tmp/embark_installer.log' ERR  # The ERR trap is triggered when a script catches an error
 fi
 
@@ -78,43 +75,21 @@ version() { echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; 
 write_env() {
   # TODO change to locals
   echo -e "$ORANGE""$BOLD""Creating a EMBArk configuration file .env""$NC"
-  export DATABASE_NAME="embark"
-  export DATABASE_USER="embark"
-  export DATABASE_PASSWORD="$RANDOM_PW"
-  export DATABASE_HOST="127.0.0.1"
-  export DATABASE_PORT="3306"
-  export MYSQL_PASSWORD="$RANDOM_PW"
-  export MYSQL_USER="embark"
-  export MYSQL_DATABASE="embark"
-  export REDIS_HOST="127.0.0.1"
-  export REDIS_PORT="7777"
-  export SECRET_KEY="$DJANGO_SECRET_KEY"
-  export HASHID_SALT="$RANDOM_SALT"
-  export HASHID_FIELD_MIN_LENGTH="$HASHID_FIELD_LENGTH"
-  export HASHID_FIELD_ENABLE_HASHID_OBJECT="$HASHID_OBJECT"
-  export HASHID_FIELD_ENABLE_DESCRIPTOR="$HASHID_DESCRIPTOR"
-  export DJANGO_SUPERUSER_USERNAME="$SUPER_USER"
-  export DJANGO_SUPERUSER_EMAIL="$SUPER_EMAIL"
-  export DJANGO_SUPERUSER_PASSWORD="$SUPER_PW"
   {
-    echo "DATABASE_NAME=$DATABASE_NAME"
-    echo "DATABASE_USER=$DATABASE_USER" 
-    echo "DATABASE_PASSWORD=$DATABASE_PASSWORD"
-    echo "DATABASE_HOST=$DATABASE_HOST"
-    echo "DATABASE_PORT=$DATABASE_PORT"
-    echo "MYSQL_PASSWORD=$MYSQL_PASSWORD"
-    echo "MYSQL_USER=$MYSQL_USER"
-    echo "MYSQL_DATABASE=$MYSQL_DATABASE"
-    echo "REDIS_HOST=$REDIS_HOST"
-    echo "REDIS_PORT=$REDIS_PORT"
+    echo "DATABASE_NAME=embark"
+    echo "DATABASE_USER=embark" 
+    echo "DATABASE_PASSWORD=$RANDOM_PW"
+    echo "DATABASE_HOST=127.0.0.1"
+    echo "DATABASE_PORT=3306"
+    echo "MYSQL_PASSWORD=$RANDOM_PW"
+    echo "MYSQL_USER=embark"
+    echo "MYSQL_DATABASE=embark"
+    echo "REDIS_HOST=127.0.0.1"
+    echo "REDIS_PORT=7777"
     echo "SECRET_KEY=$DJANGO_SECRET_KEY"
     echo "DJANGO_SUPERUSER_USERNAME=$SUPER_USER"
     echo "DJANGO_SUPERUSER_EMAIL=$SUPER_EMAIL"
     echo "DJANGO_SUPERUSER_PASSWORD=$SUPER_PW"
-    echo "HASHID_SALT=$RANDOM_SALT"
-    echo "HASHID_FIELD_MIN_LENGTH=$HASHID_FIELD_LENGTH"
-    echo "HASHID_FIELD_ENABLE_HASHID_OBJECT=$HASHID_OBJECT"
-    echo "HASHID_FIELD_ENABLE_DESCRIPTOR=$HASHID_DESCRIPTOR"
     echo "PYTHONPATH=${PYTHONPATH}:${PWD}:/var/www/:/var/www/embark"
   } > .env
   chmod 600 .env
