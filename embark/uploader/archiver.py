@@ -5,7 +5,7 @@ from pathlib import Path
 import re
 import shutil
 
-logger = logging.getLogger('web')
+logger = logging.getLogger(__name__)
 
 
 class Archiver:

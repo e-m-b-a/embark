@@ -14,7 +14,7 @@ from django.conf import settings
 
 from .models import User
 
-logger = logging.getLogger('web')
+logger = logging.getLogger(__name__)
 
 
 @csrf_exempt

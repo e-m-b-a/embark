@@ -8,11 +8,11 @@ emba_logs/
 migrations/
 logs/
 embark/static/external/
-uploadedFirmwareImages/
 documentation/
 embark_db/
 .vscode/
 www/
+.venv/
 
 # other stuff
 *.zip

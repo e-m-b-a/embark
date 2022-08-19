@@ -19,7 +19,6 @@ STRICT_MODE=1
 
 export DEBIAN_FRONTEND=noninteractive
 
-DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
 RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
 
 RANDOM_SALT=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 43 | head -n 1)
@@ -67,7 +66,11 @@ print_help() {
   echo -e "$RED               ! Both options delete all Database-files as well !""$NC"
 }
 
+# Source: https://stackoverflow.com/questions/4023830/how-to-compare-two-strings-in-dot-separated-version-format-in-bash
+version() { echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; }
+
 write_env() {
+  # TODO change to locals
   echo -e "$ORANGE""$BOLD""Creating a EMBArk configuration file .env""$NC"
   export DATABASE_NAME="embark"
   export DATABASE_USER="embark"
@@ -106,42 +109,53 @@ write_env() {
     echo "HASHID_FIELD_MIN_LENGTH=$HASHID_FIELD_LENGTH"
     echo "HASHID_FIELD_ENABLE_HASHID_OBJECT=$HASHID_OBJECT"
     echo "HASHID_FIELD_ENABLE_DESCRIPTOR=$HASHID_DESCRIPTOR"
-    echo "PYTHONPATH=${PYTHONPATH}:${PWD}"
+    echo "PYTHONPATH=${PYTHONPATH}:${PWD}:/var/www/:/var/www/embark"
   } > .env
+  chmod 600 .env
 }
 
 install_emba() {
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner EMBA on host""$NC"
-    git submodule init
-    git submodule update
-    cd emba || exit 1
-    ./installer.sh -d
+  git submodule init
+  git submodule update --remote --merge
+  cd emba || ( echo "Could not install EMBA" && exit 1 )
+  ./installer.sh -d || ( echo "Could not install EMBA" && exit 1 )
+  if ! [[ -f /etc/cron.daily/emba_updater ]]; then
     cp ./config/emba_updater /etc/cron.daily/
-    cd .. || exit 1
-  
+  fi
+  cd .. || ( echo "Could not install EMBA" && exit 1 )
+  echo -e "\n""--------------------------------------------------------------------""$NC"
 }
 
 create_ca (){
   # TODO could use some work 
   echo -e "\n$GREEN""$BOLD""Creating SSL Cert""$NC"
   cd cert || exit 1
-  # create CA
-  openssl genrsa -out rootCA.key 4096
-  openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 1024 -out rootCA.crt -subj '/CN=embark.local/O=EMBA/C=US'
-  # create server sign requests (csr)
-  openssl genrsa -out embark.local.key 2048
-  openssl req -new -sha256 -key embark.local.key -out embark.local.csr  -subj '/CN=embark.local/O=EMBA/C=US'
-  openssl genrsa -out embark-ws.local.key 2048
-  openssl req -new -sha256 -key embark-ws.local.key -out embark-ws.local.csr  -subj '/CN=embark-ws.local/O=EMBA/C=US'
-  # signe csr with ca
-  openssl x509 -req -in embark.local.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out embark.local.crt -days 10000 -sha256
-  openssl x509 -req -in embark-ws.local.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out embark-ws.local.crt -days 10000 -sha256
+  if [[ -f embark.local.csr ]] || [[ -f embark-ws.local.csr ]] || [[ -f embark.local.crt ]] || [[ -f embark-ws.local.crt ]]; then 
+    echo -e "\n$GREEN""$BOLD""Certs already generated, skipping""$NC"
+  else
+    # create CA
+    openssl genrsa -out rootCA.key 4096
+    openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 1024 -out rootCA.crt -subj '/CN=embark.local/O=EMBA/C=US'
+    # create server sign requests (csr)
+    openssl genrsa -out embark.local.key 2048
+    openssl req -new -sha256 -key embark.local.key -out embark.local.csr  -subj '/CN=embark.local/O=EMBA/C=US'
+    openssl genrsa -out embark-ws.local.key 2048
+    openssl req -new -sha256 -key embark-ws.local.key -out embark-ws.local.csr  -subj '/CN=embark-ws.local/O=EMBA/C=US'
+    # signe csr with ca
+    openssl x509 -req -in embark.local.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out embark.local.crt -days 10000 -sha256
+    openssl x509 -req -in embark-ws.local.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out embark-ws.local.crt -days 10000 -sha256
+  fi
   cd .. || exit 1
 }
 
 dns_resolve(){
   echo -e "\n$GREEN""$BOLD""Install hostnames for local dns-resolve""$NC"
-  printf "0.0.0.0     embark.local\n" >>/etc/hosts
+  if ! grep -q "embark.local" /etc/hosts ; then
+    printf "0.0.0.0     embark.local\n" >>/etc/hosts
+  else
+    echo -e "\n$ORANGE""$BOLD""hostanme already in use!""$NC"
+  fi
 }
 
 reset_docker() {
@@ -222,67 +236,104 @@ reset_docker() {
 install_debs() {
   echo -e "\n$GREEN""$BOLD""Install debian packages for EMBArk installation""$NC"
   apt-get update -y
+  # Git
   if ! command -v git > /dev/null ; then
-    apt-get install -y -q git
+    apt-get install -y git
   fi
+  # Python3
+  if ! command -v python3.10 > /dev/null ; then
+    apt get install -y python3.10
+  fi
+  # Pip
+  if ! command -v pip3.10 > /dev/null ; then
+    apt-get install -y python3-pip
+  fi
+  # Docker
   if ! command -v docker > /dev/null ; then
-    apt-get install -y -q docker.io
+    apt-get install -y docker.io
   fi
+  # docker-compose
   if ! command -v docker-compose > /dev/null ; then
-    apt-get install -y -q docker-compose
+    pip3.10 install docker-compose --upgrade
+    if ! [[ -d /usr/bin/docker-compose ]]; then
+      ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
+    fi
+  else
+    DOCKER_COMP_VER=$(docker-compose -v | grep version | awk '{print $3}' | tr -d ',')
+    if [[ $(version "$DOCKER_COMP_VER") -lt $(version "1.28.5") ]]; then
+      echo -e "\n${ORANGE}WARNING: compatibility of the used docker-compose version is unknown!$NC"
+      echo -e "\n${ORANGE}Please consider updating your docker-compose installation to version 1.28.5 or later.$NC"
+      read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
+    fi
   fi
-  # we need the django package on the host for generating the django SECRET_KEY and pip
-  apt-get install -y -q python3-django python3-pip python3-dev
-  # mark dir as safe for git
-  git config --global --add safe.directory "$PWD"
+  # python3-dev
+  if ! dpkg -l python3.10-dev &>/dev/null; then
+      apt-get install -y python3.10-dev || apt-get install -y -q python3-dev
+  fi
+  #  python3-django
+  if ! dpkg -l python3-django &>/dev/null; then
+    apt-get install -y python3-django
+  fi
 }
 
 install_daemon() {
   echo -e "\n$GREEN""$BOLD""Install embark daemon""$NC"
-  ln -s /app/embark.service /etc/systemd/system/embark.service
+  sed -i "s|{\$EMBARK_ROOT_DIR}|$PWD|g" embark.service
+  # FIXME test this
+  ln -s "$PWD"/embark.service /etc/systemd/system/embark.service
 }
 
 install_embark_default() {
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanning environment EMBArk""$NC"
   
   #debs
-  apt-get install -y -q python3-dev default-libmysqlclient-dev build-essential
+  apt-get install -y -q default-libmysqlclient-dev build-essential
   
   # install pipenv
-  pip3 install pipenv
+  pip3.10 install pipenv
 
   #Add user for server
-  useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /app/www/
-  # TODO add if grep /app/emba/emba.sh
-  echo 'www-embark ALL=(ALL) NOPASSWD: /app/emba/emba.sh' | EDITOR='tee -a' visudo
+  if ! cut -d: -f1 /etc/passwd | grep -E www-emabrk; then
+    useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /var/www/embark
+    echo 'www-embark ALL=(ALL) NOPASSWD: /var/www/emba/emba.sh' | EDITOR='tee -a' visudo
+    echo 'www-embark ALL=(ALL) NOPASSWD: /bin/pkill' | EDITOR='tee -a' visudo
+  fi
 
-  #Add Symlink
-  if ! [[ -d /app ]]; then
-    ln -s "$PWD" /app || exit 1
+  #Server-Dir
+  if ! [[ -d /var/www ]]; then
+    mkdir /var/www/
+  fi
+  if ! [[ -d /var/www/media ]]; then
+    mkdir /var/www/media
+  fi
+  if ! [[ -d /var/www/active ]]; then
+    mkdir /var/www/active
+  fi
+  if ! [[ -d /var/www/emba_logs ]]; then
+    mkdir /var/www/emba_logs
+  fi
+  if ! [[ -d /var/www/static ]]; then
+    mkdir /var/www/static
+  fi
+  if ! [[ -d /var/www/conf ]]; then
+    mkdir /var/www/conf
   fi
 
   # daemon
   install_daemon
-
-  #make dirs
-  if ! [[ -d ./www ]]; then
-    mkdir ./www
-    mkdir ./www/media/
-    mkdir ./www/active/
-    mkdir ./www/emba_logs
-    mkdir ./www/static
-    mkdir ./www/conf
-  fi
   
   #add ssl cert
   create_ca
-  ln -s /app/cert /app/www/conf/cert || exit 1
 
   #add dns name
   dns_resolve
 
   #install packages
-  PIPENV_VENV_IN_PROJECT=1 pipenv install
+  cp ./Pipfile* /var/www/
+  (cd /var/www && PIPENV_VENV_IN_PROJECT=1 pipenv install)
+  
+  # set secret-key
+  DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
 
   # download externals
   if ! [[ -d ./embark/static/external ]]; then
@@ -317,11 +368,15 @@ install_embark_default() {
 
 install_embark_dev(){
   echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
-  apt-get install -y -q npm pycodestyle python3-pylint-django python3-dev default-libmysqlclient-dev build-essential pipenv bandit
+  # apt packages
+  apt-get install -y npm pycodestyle python3-pylint-django default-libmysqlclient-dev build-essential pipenv bandit
+  # npm packages
   npm install -g jshint dockerlinter
-
   #pipenv
   PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
+
+  # set secret-key
+  DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
 
   # download externals
   if ! [[ -d ./embark/static/external ]]; then
@@ -342,8 +397,12 @@ install_embark_dev(){
   write_env
 
   #Add Symlink
-  if ! [[ -d /app ]]; then
-    ln -s "$PWD" /app || exit 1
+  if ! [[ -f /app ]]; then
+    if [[ $( readlink /app ) != "$PWD" ]]; then
+      echo -e "\n$RED""$BOLD""EMBArk wants to create a symlink, but the link-name is already in use""$NC"
+      rm /app
+    fi
+    ln -s "$PWD" /app || ( echo "could not create symlink" && exit 1 )
   fi
 
   # daemon
@@ -436,61 +495,90 @@ install_embark_docker(){
 }
 
 uninstall (){
-  echo -e "$ORANGE""$BOLD""Deleting Configuration and reseting""$NC"
+  echo -e "[+]$CYAN""$BOLD""Uninstalling EMBArk""$NC"
 
-  #1 delete symlink
+  # delete symlink (legacy)
   echo -e "$ORANGE""$BOLD""Delete Symlink?""$NC"
-  rm /app
+  if ! [[ -f /app ]]; then
+    if [[ $( readlink /app ) == "$PWD" ]]; then
+      rm /app
+    fi
+  fi
 
-  #2 delete www and upload-dir
+  # delete directories
   echo -e "$ORANGE""$BOLD""Delete Directories""$NC"
-  rm -R ./www
-  rm -R ./uploadedFirmwareImages
+  if [[ -d /var/www ]]; then
+    rm -Rv /var/www
+  fi
+  if [[ -d ./media ]]; then
+    rm -Rv ./media
+  fi
+  if [[ -d ./active ]]; then
+    rm -Rv ./active
+  fi
+  if [[ -d ./static ]]; then
+    rm -Rv ./static
+  fi
+  if [[ -d ./cert ]]; then
+    rm -Rv ./cert
+  fi
+  if [[ -d ./.venv ]]; then
+    rm -Rvf ./.venv
+  fi
+  if [[ "$REFORCE" -eq 0 ]]; then
+    # user-files
+    if [[ -d ./emba_logs ]]; then
+      echo -e "$RED""$BOLD""Do you wish to remove the EMBA-Logs (and backups)""$NC"
+      rm -Riv ./emba_logs
+    fi
+    if [[ -d ./embark_db ]]; then
+      echo -e "$RED""$BOLD""Do you wish to remove the database(and backups)""$NC"
+      rm -Riv ./embark_db
+    fi
+  fi
 
-  #3 delete user www-embark and reset visudo
+
+  # delete user www-embark and reset visudo
   echo -e "$ORANGE""$BOLD""Delete user""$NC"
   # sed -i 's/www\-embark\ ALL\=\(ALL\)\ NOPASSWD\:\ \/app\/emba\/emba.sh//g' /etc/sudoers #TODO doesnt work yet
   userdel www-embark
 
-  #4 delete venv
-  echo -e "$ORANGE""$BOLD""Delete Venv""$NC"
-  rm -R ./.venv
-
-  #5 delete .env
+  # delete .env
   echo -e "$ORANGE""$BOLD""Delete env""$NC"
-  rm -R ./.env
+  rm ./.env
 
-  #6 delete shared volumes and migrations
-  echo -e "$ORANGE""$BOLD""Delete Database-files""$NC"
-  rm -R ./embark_db
+  # delete shared volumes and migrations
+  echo -e "$ORANGE""$BOLD""Delete migration-files""$NC"
   find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
   find . -path "*/migrations/*.pyc"  -delete
 
-  #7 delete all docker interfaces and containers + images
+  # delete all docker interfaces and containers + images
   reset_docker
   echo -e "$ORANGE""$BOLD""Consider running \$docker system prune""$NC"
 
-  #8 delete/uninstall EMBA
+  # delete/uninstall EMBA
   echo -e "$ORANGE""$BOLD""Delete EMBA?""$NC"
   docker network rm emba_runs
   git submodule foreach git reset --hard
-  git submodule foreach deinit --all
+  git submodule deinit --all
 
-  #9 stop daemon
+  # stop&reset daemon
   systemctl stop embark.service
   systemctl disable embark.service
   git checkout HEAD -- embark.service
   systemctl daemon-reload
 
-  #10 reset ownership etc
+  # reset ownership etc
   # TODO delete the dns resolve
 
-  #11 remove server-certs
-  rm -rf ./cert
+  # reset server-certs
   git checkout HEAD -- cert
 
-  #final
-  git reset
+  # final
+  if [[ "$REFORCE" -eq 0 ]]; then
+    git reset
+  fi
+  echo -e "$ORANGE""$BOLD""Consider""$CYAN""\$git pull""$NC"
 }
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
@@ -519,7 +607,7 @@ while getopts eFUrdDh OPT ; do
     r)
       export UNINSTALL=1
       export REFORCE=1
-      echo -e "$GREEN""$BOLD""Install all dependecies including docker cleanup""$NC"
+      echo -e "$GREEN""$BOLD""Re-Install all dependecies while keeping user-files""$NC"
       ;;
     d)
       export DEFAULT=1
@@ -555,6 +643,10 @@ elif [[ $UNINSTALL -eq 1 ]]; then
 fi
 
 install_debs
+
+# mark dir as safe for git
+git config --global --add safe.directory "$PWD"
+
 install_emba
 
 if [[ $DEFAULT -eq 1 ]]; then

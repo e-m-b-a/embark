@@ -1,4 +1,4 @@
-# pylint: disable=R1732, C0201, E1129
+# pylint: disable=R1732, C0201, E1129, W1509
 import csv
 import logging
 import os
@@ -20,7 +20,7 @@ from dashboard.models import Result
 from embark.logreader import LogReader
 
 
-logger = logging.getLogger('web')
+logger = logging.getLogger(__name__)
 
 # maximum concurrent running workers
 MAX_WORKERS = 4
@@ -59,6 +59,7 @@ class BoundedExecutor:
 
         # get return code to evaluate: 0 = success, 1 = failure,
         # see emba.sh for further information
+        exit_fail = False
         try:
 
             analysis = FirmwareAnalysis.objects.get(id=analysis_id)
@@ -89,6 +90,7 @@ class BoundedExecutor:
             else:
                 logger.error("CSV file %s for report: %s not generated", csv_log_location, analysis_id)
                 logger.error("EMBA run was probably not successful!")
+                exit_fail = True
 
             # take care of cleanup
             if active_analyzer_dir:
@@ -98,7 +100,7 @@ class BoundedExecutor:
             # fail
             logger.error("EMBA run was probably not successful!")
             logger.error("run_emba_cmd error: %s", execpt)
-
+            exit_fail = True
         finally:
             # finalize db entry
             if analysis_id:
@@ -106,9 +108,39 @@ class BoundedExecutor:
                 analysis.scan_time = datetime.now() - analysis.start_date
                 analysis.duration = str(analysis.scan_time)
                 analysis.finished = True
+                analysis.failed = exit_fail
                 analysis.save()
 
             logger.info("Successful cleaned up: %s", cmd)
+
+    @classmethod
+    def kill_emba_cmd(cls, analysis_id):
+        """
+        run shell commands from python script as subprocess, waits for termination and evaluates returncode
+
+        :param analysis_id: primary key for firmware-analysis entry
+        :param active_analyzer_dir: active analyzer dir for deletion afterwards
+
+        :return:
+        """
+        logger.info("Killing ID: %s", analysis_id)
+        try:
+            # logger.debug("%s", id)
+            cmd = f"sudo pkill -f {analysis_id}"
+            with open(f"{settings.EMBA_LOG_ROOT}/{analysis_id}_kill.log", "w+", encoding="utf-8") as file:
+                proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
+                # wait for completion
+                proc.communicate()
+            # success
+            logger.info("Kill Successful: %s", cmd)
+        except BaseException as exce:
+            logger.error("kill_emba_cmd error: %s", exce)
+
+    @classmethod
+    def submit_kill(cls, uuid):
+        # submit command to executor threadpool
+        emba_fut = BoundedExecutor.submit(cls.kill_emba_cmd, uuid)
+        return emba_fut
 
     @classmethod
     def submit_firmware(cls, firmware_flags, firmware_file):
@@ -149,7 +181,9 @@ class BoundedExecutor:
         firmware_flags.save()
 
         # build command
-        emba_cmd = f"{EMBA_SCRIPT_LOCATION} -f {image_file_location} -l {emba_log_location} {emba_flags}"
+        # FIXME remove all flags
+        # TODO add note with uuid
+        emba_cmd = f"{EMBA_SCRIPT_LOCATION} -p scan-profiles/default-scan-no-notify.emba -f {image_file_location} -l {emba_log_location} {emba_flags}"
 
         # submit command to executor threadpool
         emba_fut = BoundedExecutor.submit(cls.run_emba_cmd, emba_cmd, firmware_flags.id, active_analyzer_dir)
@@ -200,12 +234,15 @@ class BoundedExecutor:
         This job reads the F50_aggregator file and stores its content into the Result model
         """
 
+        res_dict = {}
         with open(path, newline='\n', encoding='utf-8') as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=';')
             csv_list = []
             for row in csv_reader:
+                # remove NAs from csv
+                if row[-1] == "NA":
+                    row.pop(-1)
                 csv_list.append(row)
-                res_dict = {}
                 for ele in csv_list:
                     if len(ele) == 2:
                         res_dict[ele[0]] = ele[1]

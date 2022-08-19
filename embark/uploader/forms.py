@@ -5,7 +5,7 @@ from django import forms
 
 from uploader import models
 
-logger = logging.getLogger('web')
+logger = logging.getLogger(__name__)
 
 
 class FirmwareAnalysisForm(forms.ModelForm):
@@ -13,9 +13,7 @@ class FirmwareAnalysisForm(forms.ModelForm):
     class Meta:
         model = models.FirmwareAnalysis
 
-        fields = ('firmware', 'version', 'vendor', 'device', 'notes', 'firmware_Architecture', 'cwe_checker',
-                  'dev_mode', 'deep_extraction', 'log_path', 'grep_able_log', 'relative_paths', 'ANSI_color',
-                  'web_reporter', 'emulation_test', 'dependency_check', 'multi_threaded', 'firmware_remove')
+        fields = ('firmware', 'version', 'vendor', 'device', 'notes', 'firmware_Architecture', 'cwe_checker', 'deep_extraction', 'online_checks', 'user_emulation_test', 'system_emulation_test')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -14,7 +14,7 @@ services:
     expose:
       - "3306"
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
     restart: always
     volumes:
       - ./embark_db:/var/lib/mysql
@@ -30,12 +30,12 @@ services:
     labels:
       flag: "deploy_EMBArk_server_redis_container"
     env_file:
-      - ./.env
+      - .env
     command: --port 7777
     expose:
       - "7777"
     ports:
-      - "7777:7777"
+      - "127.0.0.1:7777:7777"
     restart: always
     volumes:
       - /etc/timezone:/etc/timezone:ro

@@ -24,7 +24,7 @@ from uploader.archiver import Archiver
 from uploader.models import FirmwareAnalysis, ResourceTimestamp
 from dashboard.models import Result
 
-logger = logging.getLogger('web')
+logger = logging.getLogger(__name__)
 
 
 @require_http_methods(["GET"])
@@ -38,10 +38,12 @@ def reports(request):
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report(request, analysis_id, html_file):
     report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
-    if FirmwareAnalysis.objects.filter(id=analysis_id).exists() and FirmwareAnalysis.objects.filter(id=analysis_id).user == request.user:
-        html_body = get_template(report_path)
-        logger.info("html_report - analysis_id: %s html_file: %s", analysis_id, html_file)
-        return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
+    if FirmwareAnalysis.objects.filter(id=analysis_id).exists():
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        if analysis.user == request.user:
+            html_body = get_template(report_path)
+            logger.info("html_report - analysis_id: %s html_file: %s", analysis_id, html_file)
+            return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
     logger.debug("could  not get template - %s", request)
     return HttpResponseBadRequest
 
@@ -50,10 +52,12 @@ def html_report(request, analysis_id, html_file):
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report_path(request, analysis_id, html_path, html_file):
     report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
-    if FirmwareAnalysis.objects.filter(id=analysis_id).exists() and FirmwareAnalysis.objects.filter(id=analysis_id).user == request.user:
-        html_body = get_template(report_path)
-        logger.info("html_report - analysis_id: %s path: %s html_file: %s", analysis_id, html_path, html_file)
-        return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
+    if FirmwareAnalysis.objects.filter(id=analysis_id).exists():
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        if analysis.user == request.user:
+            html_body = get_template(report_path)
+            logger.info("html_report - analysis_id: %s path: %s html_file: %s", analysis_id, html_path, html_file)
+            return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
     logger.debug("could  not get path - %s", request)
     return HttpResponseBadRequest
 

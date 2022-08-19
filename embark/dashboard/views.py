@@ -7,12 +7,13 @@ from django.shortcuts import render
 from django.http import HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect, HttpResponseServerError
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
+from uploader.boundedexecutor import BoundedExecutor
 
 from uploader.models import FirmwareAnalysis
 from .models import Result
 from .forms import StopAnalysisForm
 
-logger = logging.getLogger('web')
+logger = logging.getLogger(__name__)
 
 
 @require_http_methods(["GET"])
@@ -45,13 +46,14 @@ def stop_analysis(request):
         pid = FirmwareAnalysis.objects.get(id=analysis.id).pid
         logger.debug("PID is %s", pid)
         try:
+            BoundedExecutor.submit_kill(analysis.id)
             os.killpg(os.getpgid(pid), signal.SIGTERM)
             form = StopAnalysisForm()
             form.fields['analysis'].queryset = FirmwareAnalysis.objects.filter(finished=False)
             return render(request, 'dashboard/serviceDashboard.html', {'username': request.user.username, 'form': form, 'success_message': True, 'message': "Stopped successfully"})
         except Exception as error:
             logger.error("Error %s", error)
-            return HttpResponseServerError("Failed to stop procs, because" + str(error))
+            return HttpResponseServerError("Failed to stop process, please handle manually: PID=" + str(pid))
     return HttpResponseBadRequest("invalid form")
 
 
@@ -80,7 +82,7 @@ def report_dashboard(request):
 
     :return: rendered ReportDashboard
     """
-    finished_firmwares = FirmwareAnalysis.objects.all().filter(finished=True)
+    finished_firmwares = FirmwareAnalysis.objects.filter(failed=False, finished=True)
     return render(request, 'dashboard/reportDashboard.html', {'finished_firmwares': finished_firmwares, 'username': request.user.username})
 
 

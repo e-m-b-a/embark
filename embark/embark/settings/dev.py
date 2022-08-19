@@ -1,8 +1,11 @@
 from pathlib import Path
 import os
 
+from dotenv import load_dotenv
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+load_dotenv(os.path.join(BASE_DIR.parent, '.env'))
 HASHID_FIELD_SALT = os.environ.get('HASHID_SALT')
 HASHID_FIELD_MIN_LENGTH = os.environ.get('HASHID_FIELD_MIN_LENGTH', 7)
 HASHID_FIELD_ENABLE_HASHID_OBJECT = os.environ.get('HASHID_FIELD_ENABLE_HASHID_OBJECT', False)
@@ -11,7 +14,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = bool(os.environ.get('EMBARK_DEBUG', True))
 ALLOWED_HOSTS = ['*']
 
-EMBA_ROOT = '/app/emba/'
+EMBA_ROOT = os.path.join(BASE_DIR.parent, 'emba')
 EMBA_LOG_ROOT = os.path.join(BASE_DIR.parent, 'emba_logs')
 EMBA_LOG_URL = 'emba_logs/'
 
@@ -74,47 +77,80 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': os.environ.get('DATABASE_NAME'),
         'USER': os.environ.get('DATABASE_USER'),
-        'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
+        'PASSWORD': os.environ.get("DATABASE_PASSWORD"),
         'HOST': os.environ.get('DATABASE_HOST'),
         'PORT': os.environ.get('DATABASE_PORT'),
         'CONN_MAX_AGE': 300,
-        'OPTIONS': {'charset': 'utf8mb4'},
     },
 }
 
-LOG_LEVEL = os.environ.get('DJANGO_LOG_LEVEL', 'DEBUG').upper()
+# Logging stuff
+# ERRORS/WARNINGS->console
+# DEBUG->debug.log
+# INFO->embark.log
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
-        'console': {
-            'format': '%(name)-12s %(levelname)-8s %(message)s',
-            'datefmt': "%Y-%m-%d %H:%M:%S"
+        'verbose': {
+            'format': '{asctime} {process:d} {thread:d} {module} {levelname} {message}',
+            'style': '{',
         },
-        'file': {
-            'format': '%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-            'datefmt': "%Y-%m-%d %H:%M:%S"
+        'simple': {
+            'format': '{asctime} {levelname} {message}',
+            'style': '{',
+        },
+    },
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
         },
     },
     'handlers': {
-        'console': {
+        'console_handler': {
+            'level': 'ERROR',
             'class': 'logging.StreamHandler',
-            'formatter': 'console'
+            'formatter': 'simple'
         },
-        'file': {
-            'level': LOG_LEVEL,
+        'debug_handler': {
+            'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'formatter': 'file',
-            'filename': str(BASE_DIR / 'embark.log'),
-        }
+            'filters': ['require_debug_true'],
+            'formatter': 'verbose',
+            'filename': BASE_DIR / 'debug.log',
+        },
+        'info_handler': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'formatter': 'verbose',
+            'filename': BASE_DIR / 'embark.log',
+        },
     },
     'loggers': {
-        'web': {
-            'level': LOG_LEVEL,
-            'handlers': ['file'],
-            'class': 'logging.handlers.RotatingFileHandler',
-            'maxBytes': 1024 * 1024 * 10,  # 10 MiB
-            'backupCount': 2,
+        '': {
+            'level': 'WARNING',
+            'handlers': ['info_handler', 'console_handler'],
+        },
+        'uploader': {
+            'handlers': ['debug_handler', 'info_handler', 'console_handler'],
+            'level': 'DEBUG',
+        },
+        'dashboard': {
+            'handlers': ['debug_handler', 'info_handler', 'console_handler'],
+            'level': 'DEBUG',
+        },
+        'users': {
+            'handlers': ['debug_handler', 'info_handler', 'console_handler'],
+            'level': 'INFO',
+        },
+        'reporter': {
+            'handlers': ['debug_handler', 'info_handler', 'console_handler'],
+            'level': 'INFO',
+        },
+        'requests': {
+            'handlers': ['info_handler'],
+            'level': 'INFO',
+            'propagate': False,
         },
     }
 }
@@ -147,8 +183,10 @@ USE_L10N = True
 
 USE_TZ = False
 
-
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/3.2/howto/static-files/
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR.parent, 'static')
 STATICFILES_DIRS = [
     BASE_DIR / 'static/'
 ]
@@ -162,11 +200,11 @@ LOGIN_URL = ''
 LOGOUT_REDIRECT_URL = ''
 
 # Added for FIle storage to get the path to save Firmware images.
-MEDIA_ROOT = os.path.join('/app/', 'uploadedFirmwareImages')  # media directory in the root directory
-MEDIA_URL = '/uploadedFirmwareImages/'
+MEDIA_ROOT = os.path.join(BASE_DIR.parent, 'media')
+MEDIA_URL = '/media/'
 
 # Active Firmware
-ACTIVE_FW = '/app/uploadedFirmwareImages/active/'
+ACTIVE_FW = os.path.join(BASE_DIR.parent, 'uploadedFirmwareImages/active/')
 
 REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
 REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
