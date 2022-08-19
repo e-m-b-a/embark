@@ -155,6 +155,7 @@ class FirmwareAnalysis(models.Model):
     firmware = models.ForeignKey(FirmwareFile, on_delete=models.SET_NULL, help_text='', null=True, editable=True)
     firmware_name = models.CharField(editable=True, default="File unknown", max_length=MAX_LENGTH)
 
+    # FIXME these fields should be searchable and prob be models
     # emba basic flags
     version = CharFieldExpertMode(
         help_text='Firmware version', verbose_name="Firmware version", max_length=MAX_LENGTH,
