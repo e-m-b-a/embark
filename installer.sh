@@ -14,6 +14,12 @@
 
 # Description: Installer for EMBArk
 
+REFORCE=0
+UNINSTALL=0
+DEFAULT=0
+DEV=0
+EMBA_ONLY=0
+DOCKER=0
 # it the installer fails you can try to change it to 0
 STRICT_MODE=1
 
