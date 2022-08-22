@@ -149,7 +149,7 @@ reset_docker() {
     echo -e "\n$GREEN""$BOLD""Found EMBA docker environment - removing it""$NC"
     CONTAINER_ID=$(docker images | grep -E "embeddedanalyzer/emba" | awk '{print $3}')
     echo -e "$GREEN""$BOLD""Remove EMBA docker image""$NC"
-    docker image rm "$IMAGE_ID" -f
+    docker image rm "$CONTAINER_ID" -f
   fi
 
   if docker images | grep -qE "^embark[[:space:]]*latest"; then
