@@ -26,10 +26,6 @@ STRICT_MODE=1
 export DEBIAN_FRONTEND=noninteractive
 
 RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
-
-RANDOM_SALT=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 43 | head -n 1)
-
-
 SUPER_PW="embark"
 SUPER_EMAIL="idk@lol.com"
 SUPER_USER="superuser"
