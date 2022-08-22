@@ -19,7 +19,6 @@ BOLD='\033[1m'
 NC='\033[0m'
 
 export DJANGO_SETTINGS_MODULE=embark.settings.deploy
-export EMBARK_DEBUG=True
 export HTTP_PORT=80
 export HTTPS_PORT=443
 export BIND_IP='0.0.0.0'
