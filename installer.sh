@@ -131,7 +131,7 @@ dns_resolve(){
   if ! grep -q "embark.local" /etc/hosts ; then
     printf "0.0.0.0     embark.local\n" >>/etc/hosts
   else
-    echo -e "\n$ORANGE""$BOLD""hostanme already in use!""$NC"
+    echo -e "\n$ORANGE""$BOLD""hostname already in use!""$NC"
   fi
 }
 
