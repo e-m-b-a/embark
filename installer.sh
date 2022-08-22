@@ -380,23 +380,11 @@ install_embark_dev(){
   # write env-vars into ./.env
   write_env
 
-  #Add Symlink
-  if ! [[ -f /app ]]; then
-    if [[ $( readlink /app ) != "$PWD" ]]; then
-      echo -e "\n$RED""$BOLD""EMBArk wants to create a symlink, but the link-name is already in use""$NC"
-      rm /app
-    fi
-    ln -s "$PWD" /app || ( echo "could not create symlink" && exit 1 )
-  fi
-
   # daemon
   # install_daemon
 
   # download images for container
   docker-compose -f ./docker-compose-dev.yml up --no-start
-  docker-compose -f ./docker-compose-dev.yml up &>/dev/null &
-  sleep 30
-  kill %1
 
   echo -e "$GREEN""$BOLD""Ready to use \$sudo ./dev-tools/debug-server-start.sh""$NC"
   echo -e "$GREEN""$BOLD""Or use otherwise""$NC"
