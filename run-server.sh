@@ -42,7 +42,6 @@ cleaner() {
   docker container prune -f --filter "label=flag"
 
   systemctl stop embark.service
-  systemctl disable embark.service
   exit 1
 }
 
