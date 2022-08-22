@@ -14,17 +14,39 @@ from django.conf import settings
 from django.forms import model_to_dict
 from django.http.response import Http404
 from django.template.loader import get_template
-from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
+from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.urls import reverse
 
 from uploader.archiver import Archiver
 
-from uploader.models import FirmwareAnalysis, ResourceTimestamp
+from uploader.models import FirmwareAnalysis, ResourceTimestamp, Device
 from dashboard.models import Result
 
 logger = logging.getLogger(__name__)
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def tracker(request):
+    if FirmwareAnalysis.objects != 0:
+        html_body = get_template('reporter/tracker.html')
+        return HttpResponse(html_body.render({'username': request.user.username}))
+    logger.info("no data for the tracker yet - %s", request)
+    return HttpResponseRedirect('/uploader/')
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def get_report_for_device(request, device_id):
+    if Device.objects.filter(id=device_id).exists():
+        device = Device.objects.get(id=device_id)
+        html_body = get_template('reporter/device.html')
+        return HttpResponse(html_body.render({'username': request.user.username, 'device': device}))
+    logger.error("device id nonexistent: %s", device_id)
+    logger.error("could  not get template - %s", request)
+    return HttpResponseBadRequest
 
 
 @require_http_methods(["GET"])
@@ -42,9 +64,9 @@ def html_report(request, analysis_id, html_file):
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         if analysis.user == request.user:
             html_body = get_template(report_path)
-            logger.info("html_report - analysis_id: %s html_file: %s", analysis_id, html_file)
+            logger.debug("html_report - analysis_id: %s html_file: %s", analysis_id, html_file)
             return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
-    logger.debug("could  not get template - %s", request)
+    logger.error("could  not get template - %s", request)
     return HttpResponseBadRequest
 
 
@@ -56,9 +78,9 @@ def html_report_path(request, analysis_id, html_path, html_file):
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         if analysis.user == request.user:
             html_body = get_template(report_path)
-            logger.info("html_report - analysis_id: %s path: %s html_file: %s", analysis_id, html_path, html_file)
+            logger.debug("html_report - analysis_id: %s path: %s html_file: %s", analysis_id, html_path, html_file)
             return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
-    logger.debug("could  not get path - %s", request)
+    logger.error("could  not get path - %s", request)
     return HttpResponseBadRequest
 
 
