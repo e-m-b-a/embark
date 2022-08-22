@@ -1,8 +1,8 @@
 #!/bin/bash
 # EMBArk - The firmware security scanning environment
 #
-# Copyright 2020-2021 Siemens Energy AG
-# Copyright 2020-2021 Siemens AG
+# Copyright 2020-2022 Siemens Energy AG
+# Copyright 2020-2022 Siemens AG
 #
 # EMBArk comes with ABSOLUTELY NO WARRANTY.
 #
@@ -11,6 +11,7 @@
 # Author(s): Benedikt Kuehne
 
 # Description:  Script for cleaning up all docker- container and images
+
 cd "$(dirname "$0")" || exit 1
 echo -e "\n$GREEN""$BOLD""Reset docker container & networks""$NC"
 
@@ -27,7 +28,7 @@ if docker images | grep -qE "^embeddedanalyzer/emba"; then
   echo -e "\n$GREEN""$BOLD""Found EMBA docker environment - removing it""$NC"
   CONTAINER_ID=$(docker images | grep -E "embeddedanalyzer/emba" | awk '{print $3}')
   echo -e "$GREEN""$BOLD""Remove EMBA docker image""$NC"
-  docker image rm "$IMAGE_ID" -f
+  docker image rm "$CONTAINER_ID" -f
 fi
 
 if docker images | grep -qE "^embark[[:space:]]*latest"; then

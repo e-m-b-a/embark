@@ -1,8 +1,8 @@
 #!/bin/bash
 # EMBArk - The firmware security scanning environment
 #
-# Copyright 2020-2021 Siemens Energy AG
-# Copyright 2020-2021 Siemens AG
+# Copyright 2020-2022 Siemens Energy AG
+# Copyright 2020-2022 Siemens AG
 #
 # EMBArk comes with ABSOLUTELY NO WARRANTY.
 #
@@ -24,15 +24,12 @@ IP="127.0.0.1"
 
 
 export DJANGO_SETTINGS_MODULE=embark.settings.dev
-export EMBARK_DEBUG=True
-export PIPENV_VENV_IN_PROJECT="True"
 
 cleaner() {
-  if [[ -f ./embark/embark.log ]]; then
-    rm ./embark/embark.log -f
-  fi
-  
-  # killall -9 -q "*daphne*"
+  pkill -u root daphne
+  pkill -u root "$PWD"/emba/emba.sh
+  pkill -u root runapscheduler
+
   docker container stop embark_db_dev
   docker container stop embark_redis_dev
 
@@ -46,25 +43,34 @@ set -a
 trap cleaner INT
 
 cd "$(dirname "$0")" || exit 1
+
+if ! [[ $EUID -eq 0 ]] ; then
+  echo -e "\\n$RED""Run script with root permissions!""$NC\\n"
+  exit 1
+fi
+
 cd .. || exit 1
 
-echo -e "\n$GREEN""$BOLD""Configuring Embark""$NC"
-
-# shellcheck disable=SC1091
-source ./.venv/bin/activate || exit 1
+# check emba
+# echo -e "$BLUE""$BOLD""checking EMBA""$NC"
+# if ! emba/emba.sh -d 1>/dev/null ; then
+#   echo -e "$RED""EMBA is not configured correctly""$NC"
+#   exit 1
+# fi
 
 echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
-docker-compose -f ./docker-compose-dev.yml up -d
-DU_RETURN=$?
-if [[ $DU_RETURN -eq 0 ]] ; then
+if docker-compose -f ./docker-compose-dev.yml up -d ; then
   echo -e "$GREEN""$BOLD""Finished setup mysql and redis docker images""$NC"
 else
   echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
 fi
 
-if ! [[ -d ./logs ]]; then
-  mkdir ./logs
+if ! [[ -d "$PWD"/logs ]]; then
+  mkdir logs
 fi
+
+# shellcheck disable=SC1091
+source ./.venv/bin/activate || exit 1
 
 # db_init
 echo -e "[*] Starting migrations - log to embark/logs/migration.log"
@@ -90,7 +96,8 @@ pipenv run ./embark/manage.py runapscheduler | tee -a ./logs/scheduler.log &
 # cd .. || exit 1
 
 # start embark
-systemctl start embark.service
+# systemctl start embark.service
+
 echo -e "$ORANGE""$BOLD""start EMBArk server (WS/WSS not enabled -a also asgi)""$NC"
 pipenv run ./embark/manage.py runserver "$IP":"$PORT" |& tee -a ./logs/debug-server.log
 
