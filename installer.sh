@@ -140,10 +140,10 @@ reset_docker() {
 
   docker image ls -a
 
-  docker container stop embark_db
-  docker container stop embark_redis
-  docker container stop embark_server
-  docker container prune -f --filter "label=flag"
+  docker container stop embark_db || true
+  docker container stop embark_redis || true
+  docker container stop embark_server || true
+  docker container prune -f --filter "label=flag" || true
 
   if docker images | grep -qE "^embeddedanalyzer/emba"; then
     echo -e "\n$GREEN""$BOLD""Found EMBA docker environment - removing it""$NC"
@@ -518,11 +518,11 @@ uninstall (){
   # delete user www-embark and reset visudo
   echo -e "$ORANGE""$BOLD""Delete user""$NC"
   # sed -i 's/www\-embark\ ALL\=\(ALL\)\ NOPASSWD\:\ \/app\/emba\/emba.sh//g' /etc/sudoers #TODO doesnt work yet
-  userdel www-embark
+  userdel www-embark || true
 
   # delete .env
   echo -e "$ORANGE""$BOLD""Delete env""$NC"
-  rm ./.env
+  rm ./.env || true
 
   # delete shared volumes and migrations
   echo -e "$ORANGE""$BOLD""Delete migration-files""$NC"
@@ -535,13 +535,13 @@ uninstall (){
 
   # delete/uninstall EMBA
   echo -e "$ORANGE""$BOLD""Delete EMBA?""$NC"
-  docker network rm emba_runs
+  docker network rm emba_runs || true
   git submodule foreach git reset --hard
   git submodule deinit --all
 
   # stop&reset daemon
-  systemctl stop embark.service
-  systemctl disable embark.service
+  systemctl stop embark.service || true
+  systemctl disable embark.service || true
   git checkout HEAD -- embark.service
   systemctl daemon-reload
 
