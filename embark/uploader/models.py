@@ -136,6 +136,31 @@ def delete_fw_pre_delete_post(sender, instance, **kwargs):
         logger.error("No related FW found for delete request: %s", str(sender))
 
 
+class Device(models.Model):
+    """
+    class Device
+    Model of the device under test
+    (m Devices <---> n FirmwareFiles)
+    (m Device <----> p Analyses )
+    * assumes device revisions as different devices etc.
+    """
+    MAX_LENGTH = 127
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
+    vendor = models.CharField(
+        help_text='Device vendor', verbose_name="Device vendor", max_length=MAX_LENGTH,
+        blank=True)
+    name = models.CharField(
+        help_text='Device name', verbose_name="Device name", max_length=MAX_LENGTH,
+        blank=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
 class FirmwareAnalysis(models.Model):
     """
     class Firmware
@@ -155,20 +180,16 @@ class FirmwareAnalysis(models.Model):
     firmware = models.ForeignKey(FirmwareFile, on_delete=models.SET_NULL, help_text='', null=True, editable=True)
     firmware_name = models.CharField(editable=True, default="File unknown", max_length=MAX_LENGTH)
 
-    # FIXME these fields should be searchable and prob be models
     # emba basic flags
     version = CharFieldExpertMode(
         help_text='Firmware version', verbose_name="Firmware version", max_length=MAX_LENGTH,
         blank=True, expert_mode=False)
-    vendor = CharFieldExpertMode(
-        help_text='Firmware vendor', verbose_name="Firmware vendor", max_length=MAX_LENGTH,
-        blank=True, expert_mode=False)
-    device = CharFieldExpertMode(
-        help_text='Device', verbose_name="Device", max_length=MAX_LENGTH, blank=True,
-        expert_mode=False)
     notes = CharFieldExpertMode(
         help_text='Testing notes', verbose_name="Testing notes", max_length=MAX_LENGTH,
         blank=True, expert_mode=False)
+
+    # new hardware oriented tracking
+    device = models.ManyToManyField(Device,on_delete=models.SET_NULL, help_text='device/platform', related_query_name='device', null=True, editable=True,)
 
     # emba expert flags
     firmware_Architecture = CharFieldExpertMode(
@@ -243,13 +264,14 @@ class FirmwareAnalysis(models.Model):
         :return: string formatted input flags for emba
         """
 
+        # TODO add :space:
         command = ""
         if self.version:
             command = command + " -X " + re.sub(r"[^a-zA-Z0–9\.\-\_]+", "", str(self.version))
-        if self.vendor:
-            command = command + " -Y " + re.sub(r"[^a-zA-Z0–9\-\_]+", "", str(self.vendor))
+        # device is manytomany how to add to emba
         if self.device:
-            command = command + " -Z " + re.sub(r"[^a-zA-Z0–9\-\_]+", "", str(self.device))
+            command = command + " -Z " + re.sub(r"[^a-zA-Z0–9\-\_]+", "", str(self.device.name))
+            command = command + " -Y " + re.sub(r"[^a-zA-Z0–9\-\_]+", "", str(self.device.vendor))
         if self.notes:
             command = command + " -N " + re.sub(r"[^a-zA-Z0–9\-\_]+", "", str(self.notes))
         if self.firmware_Architecture:

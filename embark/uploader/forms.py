@@ -13,7 +13,7 @@ class FirmwareAnalysisForm(forms.ModelForm):
     class Meta:
         model = models.FirmwareAnalysis
 
-        fields = ('firmware', 'version', 'vendor', 'device', 'notes', 'firmware_Architecture', 'cwe_checker', 'deep_extraction', 'online_checks', 'user_emulation_test', 'system_emulation_test')
+        fields = ('firmware', 'version', 'device', 'notes', 'firmware_Architecture', 'cwe_checker', 'deep_extraction', 'online_checks', 'user_emulation_test', 'system_emulation_test')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -45,6 +45,7 @@ class FirmwareAnalysisForm(forms.ModelForm):
                 # pass
 
         self.base_fields['firmware'] = forms.ModelChoiceField(queryset=models.FirmwareFile.objects, empty_label='Select firmware')
+        # self.base_fields['device']
 
 
 class DeleteFirmwareForm(forms.Form):
