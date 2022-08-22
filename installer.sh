@@ -86,7 +86,7 @@ write_env() {
     echo "DJANGO_SUPERUSER_USERNAME=$SUPER_USER"
     echo "DJANGO_SUPERUSER_EMAIL=$SUPER_EMAIL"
     echo "DJANGO_SUPERUSER_PASSWORD=$SUPER_PW"
-    echo "PYTHONPATH=${PYTHONPATH}:${PWD}:/var/www/:/var/www/embark"
+    echo "PYTHONPATH=${PWD}:/var/www/:/var/www/embark"
   } > .env
   chmod 600 .env
 }
