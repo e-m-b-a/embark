@@ -189,7 +189,7 @@ class FirmwareAnalysis(models.Model):
         blank=True, expert_mode=False)
 
     # new hardware oriented tracking
-    device = models.ManyToManyField(Device,on_delete=models.SET_NULL, help_text='device/platform', related_query_name='device', null=True, editable=True,)
+    device = models.ManyToManyField(Device, help_text='device/platform', related_query_name='device', null=True, editable=True, max_length=MAX_LENGTH)
 
     # emba expert flags
     firmware_Architecture = CharFieldExpertMode(
