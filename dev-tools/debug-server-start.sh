@@ -59,7 +59,7 @@ cd .. || exit 1
 # fi
 
 echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
-if ! docker-compose -f ./docker-compose-dev.yml up -d ; then
+if ! docker-compose -f ./docker-compose.yml up -d ; then
   echo -e "$GREEN""$BOLD""Finished setup mysql and redis docker images""$NC"
 else
   echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
