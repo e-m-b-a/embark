@@ -383,9 +383,6 @@ install_embark_dev(){
   # daemon
   # install_daemon
 
-  # download images for container
-  docker-compose -f ./docker-compose-dev.yml up --no-start
-
   echo -e "$GREEN""$BOLD""Ready to use \$sudo ./dev-tools/debug-server-start.sh""$NC"
   echo -e "$GREEN""$BOLD""Or use otherwise""$NC"
 }

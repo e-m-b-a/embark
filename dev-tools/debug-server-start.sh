@@ -59,15 +59,21 @@ cd .. || exit 1
 # fi
 
 echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
-if docker-compose -f ./docker-compose-dev.yml up -d ; then
+if ! docker-compose -f ./docker-compose-dev.yml up -d ; then
   echo -e "$GREEN""$BOLD""Finished setup mysql and redis docker images""$NC"
 else
   echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
+  exit 1
 fi
 
 if ! [[ -d "$PWD"/logs ]]; then
   mkdir logs
 fi
+
+echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./logs/redis_dev.log""$NC" 
+docker container logs embark_redis_dev -f > ./logs/redis_dev.log &
+echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./logs/mysql_dev.log""$NC"
+docker container logs embark_db_dev -f > ./logs/mysql_dev.log & 
 
 # shellcheck disable=SC1091
 source ./.venv/bin/activate || exit 1
@@ -79,11 +85,6 @@ pipenv run ./embark/manage.py migrate | tee -a ./logs/migration.log
 
 # superuser
 pipenv run ./embark/manage.py createsuperuser --noinput
-
-echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./embark/logs/redis_dev.log""$NC" 
-docker container logs embark_redis_dev -f > ./logs/redis_dev.log &
-echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.log""$NC"
-docker container logs embark_db_dev -f > ./logs/mysql_dev.log & 
 
 ##
 echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
