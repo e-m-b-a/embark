@@ -41,7 +41,6 @@ cleaner() {
   docker container prune -f --filter "label=flag"
 
   systemctl stop embark.service
-  systemctl disable embark.service
   exit 1
 }
 
@@ -134,11 +133,10 @@ fi
 if ! [[ -d /var/www/conf/cert ]]; then
   mkdir /var/www/conf/cert
 fi
-cp -u "$PWD"/cert/embark.local /var/www/conf/cert
+cp -u "$PWD"/cert/embark.local.crt /var/www/conf/cert
 cp -u "$PWD"/cert/embark.local.key /var/www/conf/cert
 cp -u "$PWD"/cert/embark-ws.local.key /var/www/conf/cert
 cp -u "$PWD"/cert/embark-ws.local.crt /var/www/conf/cert
-cp -u "$PWD"/cert/embark-ws.local /var/www/conf/cert
 
 # cp .env
 cp -u ./.env /var/www/embark/embark/settings/
@@ -149,6 +147,7 @@ cd /var/www/embark/ || exit 1
 # start venv (ignore source in script)
 # shellcheck disable=SC1091
 source /var/www/.venv/bin/activate || exit 1
+export PIPENV_VERBOSITY=-1
 
 # TODO move to parent
 # logs

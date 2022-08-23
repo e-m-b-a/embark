@@ -14,16 +14,18 @@
 
 # Description: Installer for EMBArk
 
+REFORCE=0
+UNINSTALL=0
+DEFAULT=0
+DEV=0
+EMBA_ONLY=0
+DOCKER=0
+# it the installer fails you can try to change it to 0
+STRICT_MODE=1
+
 export DEBIAN_FRONTEND=noninteractive
 
 RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
-
-RANDOM_SALT=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 43 | head -n 1)
-HASHID_FIELD_LENGTH=7
-HASHID_DESCRIPTOR=False
-HASHID_DESCRIPTOR=False
-
-
 SUPER_PW="embark"
 SUPER_EMAIL="idk@lol.com"
 SUPER_USER="superuser"
@@ -37,6 +39,18 @@ CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m' # no color
 
+if [[ "$STRICT_MODE" -eq 1 ]]; then
+  # http://redsymbol.net/articles/unofficial-bash-strict-mode/
+  # https://github.com/tests-always-included/wick/blob/master/doc/bash-strict-mode.md
+  set -e                # Exit immediately if a command exits with a non-zero status
+  set -u                # Exit and trigger the ERR trap when accessing an unset variable
+  set -o pipefail       # The return value of a pipeline is the value of the last (rightmost) command to exit with a non-zero status
+  set -E                # The ERR trap is inherited by shell functions, command substitutions and commands in subshells
+  shopt -s extdebug     # Enable extended debugging
+  IFS=$'\n\t'           # Set the "internal field separator"
+  trap 'wickStrictModeFail $? | tee -a /tmp/embark_installer.log' ERR  # The ERR trap is triggered when a script catches an error
+fi
+
 print_help() {
   echo -e "\\n""$CYAN""USAGE""$NC"
   echo -e "$CYAN-h$NC         Print this help message"
@@ -46,7 +60,8 @@ print_help() {
   echo -e "$CYAN-D$NC         Install for Docker deployment"
   echo -e "---------------------------------------------------------------------------"
   echo -e "$CYAN-U$NC         Uninstall EMBArk"
-  echo -e "$CYAN-r$NC         Reinstallation of EMBArk with all dependencies"
+  echo -e "$CYAN-rd$NC        Reinstallation of EMBArk with all dependencies"
+  echo -e "$CYAN-rF$NC        Reinstallation of EMBArk with all dependencies in Developer-mode"
   echo -e "$RED               ! Both options delete all Database-files as well !""$NC"
 }
 
@@ -56,44 +71,22 @@ version() { echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; 
 write_env() {
   # TODO change to locals
   echo -e "$ORANGE""$BOLD""Creating a EMBArk configuration file .env""$NC"
-  export DATABASE_NAME="embark"
-  export DATABASE_USER="embark"
-  export DATABASE_PASSWORD="$RANDOM_PW"
-  export DATABASE_HOST="127.0.0.1"
-  export DATABASE_PORT="3306"
-  export MYSQL_PASSWORD="$RANDOM_PW"
-  export MYSQL_USER="embark"
-  export MYSQL_DATABASE="embark"
-  export REDIS_HOST="127.0.0.1"
-  export REDIS_PORT="7777"
-  export SECRET_KEY="$DJANGO_SECRET_KEY"
-  export HASHID_SALT="$RANDOM_SALT"
-  export HASHID_FIELD_MIN_LENGTH="$HASHID_FIELD_LENGTH"
-  export HASHID_FIELD_ENABLE_HASHID_OBJECT="$HASHID_OBJECT"
-  export HASHID_FIELD_ENABLE_DESCRIPTOR="$HASHID_DESCRIPTOR"
-  export DJANGO_SUPERUSER_USERNAME="$SUPER_USER"
-  export DJANGO_SUPERUSER_EMAIL="$SUPER_EMAIL"
-  export DJANGO_SUPERUSER_PASSWORD="$SUPER_PW"
   {
-    echo "DATABASE_NAME=$DATABASE_NAME"
-    echo "DATABASE_USER=$DATABASE_USER" 
-    echo "DATABASE_PASSWORD=$DATABASE_PASSWORD"
-    echo "DATABASE_HOST=$DATABASE_HOST"
-    echo "DATABASE_PORT=$DATABASE_PORT"
-    echo "MYSQL_PASSWORD=$MYSQL_PASSWORD"
-    echo "MYSQL_USER=$MYSQL_USER"
-    echo "MYSQL_DATABASE=$MYSQL_DATABASE"
-    echo "REDIS_HOST=$REDIS_HOST"
-    echo "REDIS_PORT=$REDIS_PORT"
+    echo "DATABASE_NAME=embark"
+    echo "DATABASE_USER=embark" 
+    echo "DATABASE_PASSWORD=$RANDOM_PW"
+    echo "DATABASE_HOST=127.0.0.1"
+    echo "DATABASE_PORT=3306"
+    echo "MYSQL_PASSWORD=$RANDOM_PW"
+    echo "MYSQL_USER=embark"
+    echo "MYSQL_DATABASE=embark"
+    echo "REDIS_HOST=127.0.0.1"
+    echo "REDIS_PORT=7777"
     echo "SECRET_KEY=$DJANGO_SECRET_KEY"
     echo "DJANGO_SUPERUSER_USERNAME=$SUPER_USER"
     echo "DJANGO_SUPERUSER_EMAIL=$SUPER_EMAIL"
     echo "DJANGO_SUPERUSER_PASSWORD=$SUPER_PW"
-    echo "HASHID_SALT=$RANDOM_SALT"
-    echo "HASHID_FIELD_MIN_LENGTH=$HASHID_FIELD_LENGTH"
-    echo "HASHID_FIELD_ENABLE_HASHID_OBJECT=$HASHID_OBJECT"
-    echo "HASHID_FIELD_ENABLE_DESCRIPTOR=$HASHID_DESCRIPTOR"
-    echo "PYTHONPATH=${PYTHONPATH}:${PWD}:/var/www/:/var/www/embark"
+    echo "PYTHONPATH=${PWD}:/var/www/:/var/www/embark"
   } > .env
   chmod 600 .env
 }
@@ -138,7 +131,7 @@ dns_resolve(){
   if ! grep -q "embark.local" /etc/hosts ; then
     printf "0.0.0.0     embark.local\n" >>/etc/hosts
   else
-    echo -e "\n$ORANGE""$BOLD""hostanme already in use!""$NC"
+    echo -e "\n$ORANGE""$BOLD""hostname already in use!""$NC"
   fi
 }
 
@@ -147,16 +140,16 @@ reset_docker() {
 
   docker image ls -a
 
-  docker container stop embark_db
-  docker container stop embark_redis
-  docker container stop embark_server
-  docker container prune -f --filter "label=flag"
+  docker container stop embark_db || true
+  docker container stop embark_redis || true
+  docker container stop embark_server || true
+  docker container prune -f --filter "label=flag" || true
 
   if docker images | grep -qE "^embeddedanalyzer/emba"; then
     echo -e "\n$GREEN""$BOLD""Found EMBA docker environment - removing it""$NC"
     CONTAINER_ID=$(docker images | grep -E "embeddedanalyzer/emba" | awk '{print $3}')
     echo -e "$GREEN""$BOLD""Remove EMBA docker image""$NC"
-    docker image rm "$IMAGE_ID" -f
+    docker image rm "$CONTAINER_ID" -f
   fi
 
   if docker images | grep -qE "^embark[[:space:]]*latest"; then
@@ -510,11 +503,11 @@ uninstall (){
   # delete user www-embark and reset visudo
   echo -e "$ORANGE""$BOLD""Delete user""$NC"
   # sed -i 's/www\-embark\ ALL\=\(ALL\)\ NOPASSWD\:\ \/app\/emba\/emba.sh//g' /etc/sudoers #TODO doesnt work yet
-  userdel www-embark
+  userdel www-embark || true
 
   # delete .env
   echo -e "$ORANGE""$BOLD""Delete env""$NC"
-  rm ./.env
+  rm ./.env || true
 
   # delete shared volumes and migrations
   echo -e "$ORANGE""$BOLD""Delete migration-files""$NC"
@@ -527,13 +520,13 @@ uninstall (){
 
   # delete/uninstall EMBA
   echo -e "$ORANGE""$BOLD""Delete EMBA?""$NC"
-  docker network rm emba_runs
+  docker network rm emba_runs || true
   git submodule foreach git reset --hard
-  git submodule deinit --all
+  git submodule deinit --all -f
 
   # stop&reset daemon
-  systemctl stop embark.service
-  systemctl disable embark.service
+  systemctl stop embark.service || true
+  systemctl disable embark.service || true
   git checkout HEAD -- embark.service
   systemctl daemon-reload
 
