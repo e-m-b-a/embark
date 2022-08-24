@@ -30,8 +30,8 @@ cleaner() {
   pkill -u root "$PWD"/emba/emba.sh
   pkill -u root runapscheduler
 
-  docker container stop embark_db_dev
-  docker container stop embark_redis_dev
+  docker container stop embark_db
+  docker container stop embark_redis
 
   docker container prune -f --filter "label=flag"
 
@@ -59,7 +59,7 @@ cd .. || exit 1
 # fi
 
 echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
-if docker-compose -f ./docker-compose-dev.yml up -d ; then
+if docker-compose -f ./docker-compose.yml up -d ; then
   echo -e "$GREEN""$BOLD""Finished setup mysql and redis docker images""$NC"
 else
   echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
@@ -71,9 +71,9 @@ if ! [[ -d "$PWD"/logs ]]; then
 fi
 
 echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./logs/redis_dev.log""$NC" 
-docker container logs embark_redis_dev -f > ./logs/redis_dev.log &
+docker container logs embark_redis -f > ./logs/redis_dev.log &
 echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./logs/mysql_dev.log""$NC"
-docker container logs embark_db_dev -f > ./logs/mysql_dev.log & 
+docker container logs embark_db -f > ./logs/mysql_dev.log & 
 
 # shellcheck disable=SC1091
 source ./.venv/bin/activate || exit 1

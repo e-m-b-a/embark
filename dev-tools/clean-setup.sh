@@ -13,6 +13,7 @@
 # Description:  Script for cleaning up all docker- container and images
 
 cd "$(dirname "$0")" || exit 1
+cd ..
 echo -e "\n$GREEN""$BOLD""Reset docker container & networks""$NC"
 
 docker images
@@ -90,6 +91,8 @@ fi
 fuser -k 8001/tcp
 fuser -k 80/tcp
 fuser -k 8080/tcp
+
 docker container prune
 
 echo -e "$ORANGE""$BOLD""Consider running \$docker system prune""$NC"
+rm -Rf -I ./embark_db

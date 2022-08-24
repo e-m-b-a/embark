@@ -13,16 +13,17 @@ services:
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
     expose:
       - "3306"
-    ports:
-      - "127.0.0.1:3306:3306"
     restart: always
     volumes:
+      - ./mysql.cnf:/etc/my.cnf
       - ./embark_db:/var/lib/mysql
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     networks:
       embark_backend:
         ipv4_address: "172.22.0.5"
+    logging:
+      driver: "local"
 
   embark_redis:
     container_name: embark_redis
@@ -34,8 +35,6 @@ services:
     command: --port 7777
     expose:
       - "7777"
-    ports:
-      - "127.0.0.1:7777:7777"
     restart: always
     volumes:
       - /etc/timezone:/etc/timezone:ro
