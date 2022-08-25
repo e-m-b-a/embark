@@ -52,8 +52,10 @@ copy_file(){
   # $2 : destination
   if ! [[ -f "$1" ]] ; then
     echo -e "\\n$RED""Could not find ""$1""$NC\\n"
-  elif  ! [[ -d "$2" ]] || ! [[ -f "$2" ]] ; then
+    return 1
+  elif  ! [[ -d $(dirname "$2") ]] ; then
     echo -e "\\n$RED""Could not find ""$2""$NC\\n"
+    return 1
   fi
   cp -f "$1" "$2"
 }
