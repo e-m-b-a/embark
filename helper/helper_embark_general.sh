@@ -12,6 +12,40 @@
 
 # Description: Helper functions
 
+docker_image_rm(){
+  # removes image by name and version
+  # $1 name
+  # $2 version
+  local IMAGE_NAME_="$1"
+  local IMAGE_VERSION_="$2"
+
+  if docker image ls -q "$IMAGE_NAME_"":""$IMAGE_VERSION_" ; then
+    if [[ $(docker ps -a -q --filter "ancestor=""$IMAGE_NAME_"":""$IMAGE_VERSION_" | wc -c) -ne 0 ]]; then
+      local CONTAINERS_
+      mapfile -t CONTAINERS_ < <(docker ps -a -q --filter ancestor="$IMAGE_NAME_"":""$IMAGE_VERSION_" --format="{{.ID}}")
+      for CONTAINER_ID_ in "${CONTAINERS_[@]}" ; do
+        echo -e "$GREEN""$BOLD""Stopping ""$CONTAINER_ID_"" docker container""$NC"
+        docker stop "$CONTAINER_ID_"
+        echo -e "$GREEN""$BOLD""Remove ""$CONTAINER_ID_"" docker container""$NC"
+        docker container rm "$CONTAINER_ID_" -f
+      done
+    fi
+    echo -e "$GREEN$BOLD""Removing ""$IMAGE_NAME_"":""$IMAGE_VERSION_" "docker image""$NC\\n"
+    docker image rm "$IMAGE_NAME_"":""$IMAGE_VERSION_" -f
+  fi
+}
+
+docker_network_rm(){
+  # removes docker networks by name
+  local NET_ID
+  if docker network ls | grep -E "$1"; then
+    echo -e "\n$GREEN""$BOLD""Found ""$1"" - removing it""$NC"
+    NET_ID=$(docker network ls | grep -E "$1" | awk '{print $1}')
+    echo -e "$GREEN""$BOLD""Remove ""$1"" network""$NC"
+    docker network rm "$NET_ID" 
+  fi
+}
+
 copy_file(){
   # check and copy file forcing overwrite
   # $1 : source

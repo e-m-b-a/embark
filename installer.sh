@@ -47,6 +47,23 @@ print_help() {
   echo -e "$RED               ! Both options delete all Database-files as well !""$NC"
 }
 
+import_helper()
+{
+  local HELPERS=()
+  local HELPER_COUNT=0
+  local HELPER_FILE=""
+  mapfile -d '' HELPERS < <(find "$HELP_DIR" -iname "helper_embark_*.sh" -print0 2> /dev/null)
+  for HELPER_FILE in "${HELPERS[@]}" ; do
+    if ( file "$HELPER_FILE" | grep -q "shell script" ) && ! [[ "$HELPER_FILE" =~ \ |\' ]] ; then
+      # https://github.com/koalaman/shellcheck/wiki/SC1090
+      # shellcheck source=/dev/null
+      source "$HELPER_FILE"
+      (( HELPER_COUNT+=1 ))
+    fi
+  done
+  echo -e "\\n""==> ""$GREEN""Imported ""$HELPER_COUNT"" necessary files""$NC\\n"
+}
+
 # Source: https://stackoverflow.com/questions/4023830/how-to-compare-two-strings-in-dot-separated-version-format-in-bash
 version() { echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; }
 
@@ -123,78 +140,22 @@ dns_resolve(){
   fi
 }
 
-docker_network_rm(){
-  # removes docker networks by name
-  local NET_ID
-  if docker network ls | grep -E "$1"; then
-    echo -e "\n$GREEN""$BOLD""Found ""$1"" - removing it""$NC"
-    NET_ID=$(docker network ls | grep -E "$1" | awk '{print $1}')
-    echo -e "$GREEN""$BOLD""Remove ""$1"" network""$NC"
-    docker network rm "$NET_ID" 
-  fi
-}
-
-
 reset_docker() {
   local CONTAINER_ID
-  echo -e "\n$GREEN""$BOLD""Reset EMBArk docker images""$NC"
+  echo -e "\\n$GREEN""$BOLD""Reset EMBArk docker images""$NC\\n"
 
-  docker image ls -a
-
-  docker container stop embark_db || true
-  docker container stop embark_redis || true
-  docker container stop embark_server || true
-  docker container prune -f --filter "label=flag" || true
-
-  if docker images | grep -qE "^embeddedanalyzer/emba"; then
-    echo -e "\n$GREEN""$BOLD""Found EMBA docker environment - removing it""$NC"
-    CONTAINER_ID=$(docker images | grep -E "embeddedanalyzer/emba" | awk '{print $3}')
-    echo -e "$GREEN""$BOLD""Remove EMBA docker image""$NC"
-    docker image rm "$CONTAINER_ID" -f
-  fi
-
-  if docker images | grep -qE "^embark[[:space:]]*latest*"; then
-    echo -e "\n$GREEN""$BOLD""Found EMBArk docker environment - removing it""$NC"
-    CONTAINER_ID=$(docker container ls -a | grep -E "embark_embark_1" | awk '{print $1}')
-    echo -e "$GREEN""$BOLD""Stop EMBArk docker container""$NC"
-    docker container stop "$CONTAINER_ID"
-    echo -e "$GREEN""$BOLD""Remove EMBArk docker container""$NC"
-    docker container rm "$CONTAINER_ID" -f
-    echo -e "$GREEN""$BOLD""Remove EMBArk docker image""$NC"
-    docker image rm embark:latest -f
-  fi
-
-  if docker images | grep -qE "^mysql[[:space:]]*latest*"; then
-    echo -e "\n$GREEN""$BOLD""Found mysql docker environment - removing it""$NC"
-    CONTAINER_ID=$(docker container ls -a | grep -E "embark_db" | awk '{print $1}')
-    echo -e "$GREEN""$BOLD""Stop mysql docker container""$NC"
-    docker container stop "$CONTAINER_ID"
-    echo -e "$GREEN""$BOLD""Remove mysql docker container""$NC"
-    docker container rm "$CONTAINER_ID" -f
-    echo -e "$GREEN""$BOLD""Remove mysql docker image""$NC"
-    docker image rm mysql:latest -f
-  fi
-
-  if docker images | grep -qE "^redis[[:space:]]*5*"; then
-    echo -e "\n$GREEN""$BOLD""Found redis docker environment - removing it""$NC"
-    CONTAINER_ID=$(docker container ls -a | grep -E "embark_redis" | awk '{print $1}')
-    echo -e "$GREEN""$BOLD""Stop redis docker container""$NC"
-    docker container stop "$CONTAINER_ID"
-    echo -e "$GREEN""$BOLD""Remove redis docker container""$NC"
-    docker container rm "$CONTAINER_ID" -f
-    echo -e "$GREEN""$BOLD""Remove redis docker image""$NC"
-    docker image rm redis:5 -f
-  fi
-
-  #networks
-
-  docker_network_rm "embark_dev"
-
-  docker_network_rm "embark_frontend"
-
-  docker_network_rm "embark_backend"
+  # images
+  docker_image_rm "mysql" "latest"
+  docker_image_rm "redis" "5"
+  docker_image_rm "embeddedanalyzer/emba" "latest"
   
+  #networks
+  docker_network_rm "embark_dev"
+  # docker_network_rm "embark_frontend"
+  docker_network_rm "embark_backend"
   docker_network_rm "emba_runs"
+
+  docker container prune -f --filter "label=flag" || true
 
 }
 
@@ -553,6 +514,8 @@ uninstall (){
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
 echo -e "$ORANGE""$BOLD""WARNING: This script can harm your environment!""$NC\n"
+
+import_helper
 
 if [[ "$STRICT_MODE" -eq 1 ]]; then
   # http://redsymbol.net/articles/unofficial-bash-strict-mode/
