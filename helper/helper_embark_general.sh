@@ -19,7 +19,7 @@ docker_image_rm(){
   local IMAGE_NAME_="$1"
   local IMAGE_VERSION_="$2"
 
-  if docker image ls -q "$IMAGE_NAME_"":""$IMAGE_VERSION_" ; then
+  if [[ $(docker image ls -q "$IMAGE_NAME_"":""$IMAGE_VERSION_" | wc -c ) -ne 0 ]] ; then
     if [[ $(docker ps -a -q --filter "ancestor=""$IMAGE_NAME_"":""$IMAGE_VERSION_" | wc -c) -ne 0 ]]; then
       local CONTAINERS_
       mapfile -t CONTAINERS_ < <(docker ps -a -q --filter ancestor="$IMAGE_NAME_"":""$IMAGE_VERSION_" --format="{{.ID}}")
