@@ -3,7 +3,7 @@
 # EMBArk - The firmware security scanning environment
 #
 # Copyright 2020-2022 Siemens Energy AG
-# Copyright 2020-2021 Siemens AG
+# Copyright 2020-2022 Siemens AG
 #
 # EMBArk comes with ABSOLUTELY NO WARRANTY.
 #
@@ -14,30 +14,30 @@
 
 # Description: Installer for EMBArk
 
-REFORCE=0
-UNINSTALL=0
-DEFAULT=0
-DEV=0
-EMBA_ONLY=0
-DOCKER=0
+local REFORCE=0
+local UNINSTALL=0
+local DEFAULT=0
+local DEV=0
+local EMBA_ONLY=0
+local DOCKER=0
 # it the installer fails you can try to change it to 0
-STRICT_MODE=1
+local STRICT_MODE=1
 
 export DEBIAN_FRONTEND=noninteractive
 
-RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
-SUPER_PW="embark"
-SUPER_EMAIL="idk@lol.com"
-SUPER_USER="superuser"
+local RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
+local SUPER_PW="embark"
+local SUPER_EMAIL="idk@lol.com"
+local SUPER_USER="superuser"
 
 # DIR="$(realpath "$(dirname "$0")")"
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-ORANGE='\033[0;33m'
-CYAN='\033[0;36m'
-BOLD='\033[1m'
-NC='\033[0m' # no color
+local RED='\033[0;31m'
+local GREEN='\033[0;32m'
+local ORANGE='\033[0;33m'
+local CYAN='\033[0;36m'
+local BOLD='\033[1m'
+local NC='\033[0m' # no color
 
 if [[ "$STRICT_MODE" -eq 1 ]]; then
   # http://redsymbol.net/articles/unofficial-bash-strict-mode/
@@ -135,6 +135,17 @@ dns_resolve(){
   fi
 }
 
+docker_network_rm(){
+  # removes docker networks by name
+  if docker network ls | grep -E "$1"; then
+    echo -e "\n$GREEN""$BOLD""Found ""$1"" - removing it""$NC"
+    local NET_ID=$(docker network ls | grep -E "$1" | awk '{print $1}')
+    echo -e "$GREEN""$BOLD""Remove ""$1"" network""$NC"
+    docker network rm "$NET_ID" 
+  fi
+}
+
+
 reset_docker() {
   echo -e "\n$GREEN""$BOLD""Reset EMBArk docker images""$NC"
 
@@ -147,14 +158,14 @@ reset_docker() {
 
   if docker images | grep -qE "^embeddedanalyzer/emba"; then
     echo -e "\n$GREEN""$BOLD""Found EMBA docker environment - removing it""$NC"
-    CONTAINER_ID=$(docker images | grep -E "embeddedanalyzer/emba" | awk '{print $3}')
+    local CONTAINER_ID=$(docker images | grep -E "embeddedanalyzer/emba" | awk '{print $3}')
     echo -e "$GREEN""$BOLD""Remove EMBA docker image""$NC"
     docker image rm "$CONTAINER_ID" -f
   fi
 
   if docker images | grep -qE "^embark[[:space:]]*latest"; then
     echo -e "\n$GREEN""$BOLD""Found EMBArk docker environment - removing it""$NC"
-    CONTAINER_ID=$(docker container ls -a | grep -E "embark_embark_1" | awk '{print $1}')
+    local CONTAINER_ID=$(docker container ls -a | grep -E "embark_embark_1" | awk '{print $1}')
     echo -e "$GREEN""$BOLD""Stop EMBArk docker container""$NC"
     docker container stop "$CONTAINER_ID"
     echo -e "$GREEN""$BOLD""Remove EMBArk docker container""$NC"
@@ -165,7 +176,7 @@ reset_docker() {
 
   if docker images | grep -qE "^mysql[[:space:]]*latest"; then
     echo -e "\n$GREEN""$BOLD""Found mysql docker environment - removing it""$NC"
-    CONTAINER_ID=$(docker container ls -a | grep -E "embark_db" | awk '{print $1}')
+    local CONTAINER_ID=$(docker container ls -a | grep -E "embark_db" | awk '{print $1}')
     echo -e "$GREEN""$BOLD""Stop mysql docker container""$NC"
     docker container stop "$CONTAINER_ID"
     echo -e "$GREEN""$BOLD""Remove mysql docker container""$NC"
@@ -176,7 +187,7 @@ reset_docker() {
 
   if docker images | grep -qE "^redis[[:space:]]*5"; then
     echo -e "\n$GREEN""$BOLD""Found redis docker environment - removing it""$NC"
-    CONTAINER_ID=$(docker container ls -a | grep -E "embark_redis" | awk '{print $1}')
+    local CONTAINER_ID=$(docker container ls -a | grep -E "embark_redis" | awk '{print $1}')
     echo -e "$GREEN""$BOLD""Stop redis docker container""$NC"
     docker container stop "$CONTAINER_ID"
     echo -e "$GREEN""$BOLD""Remove redis docker container""$NC"
@@ -187,27 +198,14 @@ reset_docker() {
 
   #networks
 
-  if docker network ls | grep -E "embark_dev"; then
-    echo -e "\n$GREEN""$BOLD""Found EMBArk_dev network - removing it""$NC"
-    NET_ID=$(docker network ls | grep -E "embark_dev" | awk '{print $1}')
-    echo -e "$GREEN""$BOLD""Remove EMBArk_dev network""$NC"
-    docker network rm "$NET_ID" 
-  fi
+  docker_network_rm "embark_dev"
 
-  if docker network ls | grep -E "embark_frontend"; then
-    echo -e "\n$GREEN""$BOLD""Found EMBArk_frontend network - removing it""$NC"
-    NET_ID=$(docker network ls | grep -E "embark_frontend" | awk '{print $1}')
-    echo -e "$GREEN""$BOLD""Remove EMBArk_frontend network""$NC"
-    docker network rm "$NET_ID" 
-  fi
+  docker_network_rm "embark_frontend"
 
-  if docker network ls | grep -E "embark_backend"; then
-    echo -e "\n$GREEN""$BOLD""Found EMBArk_backend network - removing it""$NC"
-    NET_ID=$(docker network ls | grep -E "embark_backend" | awk '{print $1}')
-    echo -e "$GREEN""$BOLD""Remove EMBArk_backend network""$NC"
-    docker network rm "$NET_ID" 
-  fi
+  docker_network_rm "embark_backend"
   
+  docker_network_rm "emba_runs"
+
 }
 
 install_debs() {
@@ -236,7 +234,7 @@ install_debs() {
       ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
     fi
   else
-    DOCKER_COMP_VER=$(docker-compose -v | grep version | awk '{print $3}' | tr -d ',')
+    local DOCKER_COMP_VER=$(docker-compose -v | grep version | awk '{print $3}' | tr -d ',')
     if [[ $(version "$DOCKER_COMP_VER") -lt $(version "1.28.5") ]]; then
       echo -e "\n${ORANGE}WARNING: compatibility of the used docker-compose version is unknown!$NC"
       echo -e "\n${ORANGE}Please consider updating your docker-compose installation to version 1.28.5 or later.$NC"
@@ -310,7 +308,7 @@ install_embark_default() {
   (cd /var/www && PIPENV_VENV_IN_PROJECT=1 pipenv install)
   
   # set secret-key
-  DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+  local DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
 
   # download externals
   if ! [[ -d ./embark/static/external ]]; then
@@ -518,11 +516,15 @@ uninstall (){
   # delete user www-embark and reset visudo
   echo -e "$ORANGE""$BOLD""Delete user""$NC"
   # sed -i 's/www\-embark\ ALL\=\(ALL\)\ NOPASSWD\:\ \/app\/emba\/emba.sh//g' /etc/sudoers #TODO doesnt work yet
-  userdel www-embark || true
+  if id -u www-embark &>/dev/null ; then
+    userdel www-embark
+  fi
 
   # delete .env
   echo -e "$ORANGE""$BOLD""Delete env""$NC"
-  rm ./.env || true
+  if [[ -f ./.env ]]; then
+    rm ./.env
+  fi
 
   # delete shared volumes and migrations
   echo -e "$ORANGE""$BOLD""Delete migration-files""$NC"
@@ -534,14 +536,14 @@ uninstall (){
   echo -e "$ORANGE""$BOLD""Consider running \$docker system prune""$NC"
 
   # delete/uninstall EMBA
-  echo -e "$ORANGE""$BOLD""Delete EMBA?""$NC"
-  docker network rm emba_runs || true
   git submodule foreach git reset --hard
   git submodule deinit --all -f
 
   # stop&reset daemon
-  systemctl stop embark.service || true
-  systemctl disable embark.service || true
+  if [[ -e /etc/systemd/system/embark.service ]] ; then
+    systemctl stop embark.service
+    systemctl disable embark.service
+  fi
   git checkout HEAD -- embark.service
   systemctl daemon-reload
 
