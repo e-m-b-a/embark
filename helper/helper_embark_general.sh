@@ -12,6 +12,12 @@
 
 # Description: Helper functions
 
+export GREEN='\033[0;32m'
+export ORANGE='\033[0;33m'
+export BLUE='\033[0;34m'
+export BOLD='\033[1m'
+export NC='\033[0m'
+
 docker_image_rm(){
   # removes image by name and version
   # $1 name
