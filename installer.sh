@@ -78,7 +78,7 @@ write_env() {
   local DJANGO_SECRET_KEY
   
   DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
-  RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
+  RANDOM_PW=$(openssl rand -base64 12)
   
   echo -e "$ORANGE""$BOLD""Creating a EMBArk configuration file .env""$NC"
   {
