@@ -28,7 +28,7 @@ export HTTPS_PORT=443
 export BIND_IP='0.0.0.0'
 export FILE_SIZE=2000000000
 
-STRICT_MODE=1
+STRICT_MODE=0
 
 import_helper()
 {
