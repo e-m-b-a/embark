@@ -3,7 +3,7 @@
 # EMBArk - The firmware security scanning environment
 #
 # Copyright 2020-2022 Siemens Energy AG
-# Copyright 2020-2021 Siemens AG
+# Copyright 2020-2022 Siemens AG
 #
 # EMBArk comes with ABSOLUTELY NO WARRANTY.
 #
@@ -14,42 +14,26 @@
 
 # Description: Installer for EMBArk
 
-REFORCE=0
-UNINSTALL=0
-DEFAULT=0
-DEV=0
-EMBA_ONLY=0
-DOCKER=0
 # it the installer fails you can try to change it to 0
 STRICT_MODE=1
 
 export DEBIAN_FRONTEND=noninteractive
 
-RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
-SUPER_PW="embark"
-SUPER_EMAIL="idk@lol.com"
-SUPER_USER="superuser"
+export HELP_DIR='helper'
 
-# DIR="$(realpath "$(dirname "$0")")"
+export REFORCE=0
+export UNINSTALL=0
+export DEFAULT=0
+export DEV=0
+export EMBA_ONLY=0
+export DOCKER=0
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-ORANGE='\033[0;33m'
-CYAN='\033[0;36m'
-BOLD='\033[1m'
-NC='\033[0m' # no color
-
-if [[ "$STRICT_MODE" -eq 1 ]]; then
-  # http://redsymbol.net/articles/unofficial-bash-strict-mode/
-  # https://github.com/tests-always-included/wick/blob/master/doc/bash-strict-mode.md
-  set -e                # Exit immediately if a command exits with a non-zero status
-  set -u                # Exit and trigger the ERR trap when accessing an unset variable
-  set -o pipefail       # The return value of a pipeline is the value of the last (rightmost) command to exit with a non-zero status
-  set -E                # The ERR trap is inherited by shell functions, command substitutions and commands in subshells
-  shopt -s extdebug     # Enable extended debugging
-  IFS=$'\n\t'           # Set the "internal field separator"
-  trap 'wickStrictModeFail $? | tee -a /tmp/embark_installer.log' ERR  # The ERR trap is triggered when a script catches an error
-fi
+export RED='\033[0;31m'
+export GREEN='\033[0;32m'
+export ORANGE='\033[0;33m'
+export CYAN='\033[0;36m'
+export BOLD='\033[1m'
+export NC='\033[0m' # no color
 
 print_help() {
   echo -e "\\n""$CYAN""USAGE""$NC"
@@ -65,11 +49,38 @@ print_help() {
   echo -e "$RED               ! Both options delete all Database-files as well !""$NC"
 }
 
+import_helper()
+{
+  local HELPERS=()
+  local HELPER_COUNT=0
+  local HELPER_FILE=""
+  mapfile -d '' HELPERS < <(find "$HELP_DIR" -iname "helper_embark_*.sh" -print0 2> /dev/null)
+  for HELPER_FILE in "${HELPERS[@]}" ; do
+    if ( file "$HELPER_FILE" | grep -q "shell script" ) && ! [[ "$HELPER_FILE" =~ \ |\' ]] ; then
+      # https://github.com/koalaman/shellcheck/wiki/SC1090
+      # shellcheck source=/dev/null
+      source "$HELPER_FILE"
+      (( HELPER_COUNT+=1 ))
+    fi
+  done
+  echo -e "\\n""==> ""$GREEN""Imported ""$HELPER_COUNT"" necessary files""$NC\\n"
+}
+
 # Source: https://stackoverflow.com/questions/4023830/how-to-compare-two-strings-in-dot-separated-version-format-in-bash
 version() { echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; }
 
 write_env() {
-  # TODO change to locals
+  local SUPER_PW="embark"
+  local SUPER_EMAIL="idk@lol.com"
+  local SUPER_USER="superuser"
+
+  RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
+  readonly RANDOM_PW
+
+  # set secret-key
+  local DJANGO_SECRET_KEY
+  DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+
   echo -e "$ORANGE""$BOLD""Creating a EMBArk configuration file .env""$NC"
   {
     echo "DATABASE_NAME=embark"
@@ -136,81 +147,25 @@ dns_resolve(){
 }
 
 reset_docker() {
-  echo -e "\n$GREEN""$BOLD""Reset EMBArk docker images""$NC"
+  echo -e "\\n$GREEN""$BOLD""Reset EMBArk docker images""$NC\\n"
 
-  docker image ls -a
+  # images
+  docker_image_rm "mysql" "latest"
+  docker_image_rm "redis" "5"
+  docker_image_rm "embeddedanalyzer/emba" "latest"
+  
+  #networks
+  docker_network_rm "embark_dev"
+  # docker_network_rm "embark_frontend"
+  docker_network_rm "embark_backend"
+  docker_network_rm "emba_runs"
 
-  docker container stop embark_db || true
-  docker container stop embark_redis || true
-  docker container stop embark_server || true
   docker container prune -f --filter "label=flag" || true
 
-  if docker images | grep -qE "^embeddedanalyzer/emba"; then
-    echo -e "\n$GREEN""$BOLD""Found EMBA docker environment - removing it""$NC"
-    CONTAINER_ID=$(docker images | grep -E "embeddedanalyzer/emba" | awk '{print $3}')
-    echo -e "$GREEN""$BOLD""Remove EMBA docker image""$NC"
-    docker image rm "$CONTAINER_ID" -f
-  fi
-
-  if docker images | grep -qE "^embark[[:space:]]*latest"; then
-    echo -e "\n$GREEN""$BOLD""Found EMBArk docker environment - removing it""$NC"
-    CONTAINER_ID=$(docker container ls -a | grep -E "embark_embark_1" | awk '{print $1}')
-    echo -e "$GREEN""$BOLD""Stop EMBArk docker container""$NC"
-    docker container stop "$CONTAINER_ID"
-    echo -e "$GREEN""$BOLD""Remove EMBArk docker container""$NC"
-    docker container rm "$CONTAINER_ID" -f
-    echo -e "$GREEN""$BOLD""Remove EMBArk docker image""$NC"
-    docker image rm embark:latest -f
-  fi
-
-  if docker images | grep -qE "^mysql[[:space:]]*latest"; then
-    echo -e "\n$GREEN""$BOLD""Found mysql docker environment - removing it""$NC"
-    CONTAINER_ID=$(docker container ls -a | grep -E "embark_db" | awk '{print $1}')
-    echo -e "$GREEN""$BOLD""Stop mysql docker container""$NC"
-    docker container stop "$CONTAINER_ID"
-    echo -e "$GREEN""$BOLD""Remove mysql docker container""$NC"
-    docker container rm "$CONTAINER_ID" -f
-    echo -e "$GREEN""$BOLD""Remove mysql docker image""$NC"
-    docker image rm mysql:latest -f
-  fi
-
-  if docker images | grep -qE "^redis[[:space:]]*5"; then
-    echo -e "\n$GREEN""$BOLD""Found redis docker environment - removing it""$NC"
-    CONTAINER_ID=$(docker container ls -a | grep -E "embark_redis" | awk '{print $1}')
-    echo -e "$GREEN""$BOLD""Stop redis docker container""$NC"
-    docker container stop "$CONTAINER_ID"
-    echo -e "$GREEN""$BOLD""Remove redis docker container""$NC"
-    docker container rm "$CONTAINER_ID" -f
-    echo -e "$GREEN""$BOLD""Remove redis docker image""$NC"
-    docker image rm redis:5 -f
-  fi
-
-  #networks
-
-  if docker network ls | grep -E "embark_dev"; then
-    echo -e "\n$GREEN""$BOLD""Found EMBArk_dev network - removing it""$NC"
-    NET_ID=$(docker network ls | grep -E "embark_dev" | awk '{print $1}')
-    echo -e "$GREEN""$BOLD""Remove EMBArk_dev network""$NC"
-    docker network rm "$NET_ID" 
-  fi
-
-  if docker network ls | grep -E "embark_frontend"; then
-    echo -e "\n$GREEN""$BOLD""Found EMBArk_frontend network - removing it""$NC"
-    NET_ID=$(docker network ls | grep -E "embark_frontend" | awk '{print $1}')
-    echo -e "$GREEN""$BOLD""Remove EMBArk_frontend network""$NC"
-    docker network rm "$NET_ID" 
-  fi
-
-  if docker network ls | grep -E "embark_backend"; then
-    echo -e "\n$GREEN""$BOLD""Found EMBArk_backend network - removing it""$NC"
-    NET_ID=$(docker network ls | grep -E "embark_backend" | awk '{print $1}')
-    echo -e "$GREEN""$BOLD""Remove EMBArk_backend network""$NC"
-    docker network rm "$NET_ID" 
-  fi
-  
 }
 
 install_debs() {
+  local DOCKER_COMP_VER
   echo -e "\n$GREEN""$BOLD""Install debian packages for EMBArk installation""$NC"
   apt-get update -y
   # Git
@@ -309,8 +264,6 @@ install_embark_default() {
   cp ./Pipfile* /var/www/
   (cd /var/www && PIPENV_VENV_IN_PROJECT=1 pipenv install)
   
-  # set secret-key
-  DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
 
   # download externals
   if ! [[ -d ./embark/static/external ]]; then
@@ -495,7 +448,7 @@ uninstall (){
     fi
     if [[ -d ./embark_db ]]; then
       echo -e "$RED""$BOLD""Do you wish to remove the database(and backups)""$NC"
-      rm -Riv ./embark_db
+      rm -RIv ./embark_db
     fi
   fi
 
@@ -503,11 +456,15 @@ uninstall (){
   # delete user www-embark and reset visudo
   echo -e "$ORANGE""$BOLD""Delete user""$NC"
   # sed -i 's/www\-embark\ ALL\=\(ALL\)\ NOPASSWD\:\ \/app\/emba\/emba.sh//g' /etc/sudoers #TODO doesnt work yet
-  userdel www-embark || true
+  if id -u www-embark &>/dev/null ; then
+    userdel www-embark
+  fi
 
   # delete .env
   echo -e "$ORANGE""$BOLD""Delete env""$NC"
-  rm ./.env || true
+  if [[ -f ./.env ]]; then
+    rm ./.env
+  fi
 
   # delete shared volumes and migrations
   echo -e "$ORANGE""$BOLD""Delete migration-files""$NC"
@@ -516,17 +473,17 @@ uninstall (){
 
   # delete all docker interfaces and containers + images
   reset_docker
-  echo -e "$ORANGE""$BOLD""Consider running \$docker system prune""$NC"
+  echo -e "$ORANGE""$BOLD""Consider running " "$CYAN""\$docker system prune""$NC"
 
   # delete/uninstall EMBA
-  echo -e "$ORANGE""$BOLD""Delete EMBA?""$NC"
-  docker network rm emba_runs || true
   git submodule foreach git reset --hard
   git submodule deinit --all -f
 
   # stop&reset daemon
-  systemctl stop embark.service || true
-  systemctl disable embark.service || true
+  if [[ -e /etc/systemd/system/embark.service ]] ; then
+    systemctl stop embark.service
+    systemctl disable embark.service
+  fi
   git checkout HEAD -- embark.service
   systemctl daemon-reload
 
@@ -545,6 +502,20 @@ uninstall (){
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
 echo -e "$ORANGE""$BOLD""WARNING: This script can harm your environment!""$NC\n"
+
+import_helper
+
+if [[ "$STRICT_MODE" -eq 1 ]]; then
+  # http://redsymbol.net/articles/unofficial-bash-strict-mode/
+  # https://github.com/tests-always-included/wick/blob/master/doc/bash-strict-mode.md
+  set -e                # Exit immediately if a command exits with a non-zero status
+  set -u                # Exit and trigger the ERR trap when accessing an unset variable
+  set -o pipefail       # The return value of a pipeline is the value of the last (rightmost) command to exit with a non-zero status
+  set -E                # The ERR trap is inherited by shell functions, command substitutions and commands in subshells
+  shopt -s extdebug     # Enable extended debugging
+  IFS=$'\n\t'           # Set the "internal field separator"
+  trap 'wickStrictModeFail $? | tee -a /tmp/embark_installer.log' ERR  # The ERR trap is triggered when a script catches an error
+fi
 
 if [ "$#" -ne 1 ]; then
   echo -e "$RED""$BOLD""Invalid number of arguments""$NC"
