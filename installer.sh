@@ -74,11 +74,9 @@ write_env() {
   local SUPER_EMAIL="idk@lol.com"
   local SUPER_USER="superuser"
 
-  local RANDOM_PW
   RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
 
   # set secret-key
-  local DJANGO_SECRET_KEY
   DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
 
   echo -e "$ORANGE""$BOLD""Creating a EMBArk configuration file .env""$NC"
