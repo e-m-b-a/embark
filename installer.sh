@@ -77,6 +77,10 @@ write_env() {
   RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
   readonly RANDOM_PW
 
+  # set secret-key
+  local DJANGO_SECRET_KEY
+  DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+
   echo -e "$ORANGE""$BOLD""Creating a EMBArk configuration file .env""$NC"
   {
     echo "DATABASE_NAME=embark"
@@ -143,7 +147,6 @@ dns_resolve(){
 }
 
 reset_docker() {
-  local CONTAINER_ID
   echo -e "\\n$GREEN""$BOLD""Reset EMBArk docker images""$NC\\n"
 
   # images
@@ -261,8 +264,6 @@ install_embark_default() {
   cp ./Pipfile* /var/www/
   (cd /var/www && PIPENV_VENV_IN_PROJECT=1 pipenv install)
   
-  # set secret-key
-  local DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
 
   # download externals
   if ! [[ -d ./embark/static/external ]]; then
@@ -487,7 +488,7 @@ uninstall (){
 
   # delete all docker interfaces and containers + images
   reset_docker
-  echo -e "$ORANGE""$BOLD""Consider running \$docker system prune""$NC"
+  echo -e "$ORANGE""$BOLD""Consider running " "$CYAN""\$docker system prune""$NC"
 
   # delete/uninstall EMBA
   git submodule foreach git reset --hard
