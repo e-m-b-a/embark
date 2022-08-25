@@ -18,6 +18,8 @@ local BLUE='\033[0;34m'
 local BOLD='\033[1m'
 local NC='\033[0m'
 
+export HELP_DIR='helper'
+
 export DJANGO_SETTINGS_MODULE=embark.settings.deploy
 export EMBARK_DEBUG=True
 export HTTP_PORT=80
