@@ -74,8 +74,9 @@ write_env() {
   local SUPER_EMAIL="idk@lol.com"
   local SUPER_USER="superuser"
 
+  local RANDOM_PW
   RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
-  readonly RANDOM_PW
+
 
   # set secret-key
   local DJANGO_SECRET_KEY
@@ -186,7 +187,7 @@ install_debs() {
   fi
   # docker-compose
   if ! command -v docker-compose > /dev/null ; then
-    pip3.10 install docker-compose --upgrade
+    pip3 install docker-compose --upgrade
     if ! [[ -d /usr/bin/docker-compose ]]; then
       ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
     fi
