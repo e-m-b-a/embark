@@ -74,8 +74,7 @@ enable_strict_mode() {
     IFS=$'\n\t'     # Set the "internal field separator"
     trap 'wickStrictModeFail $? | tee -a /tmp/embark_error.log' ERR  # The ERR trap is triggered when a script catches an error
 
-    if [[ "$PRINTER" -eq 1 ]]; then
-      echo -e "[!] INFO: EMBArk STRICT mode enabled!"
-    fi
+    echo -e "[!] INFO: EMBArk STRICT mode enabled!"
+
   fi
 }
