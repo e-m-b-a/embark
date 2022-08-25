@@ -508,7 +508,7 @@ uninstall (){
     fi
     if [[ -d ./embark_db ]]; then
       echo -e "$RED""$BOLD""Do you wish to remove the database(and backups)""$NC"
-      rm -Riv ./embark_db
+      rm -RIv ./embark_db
     fi
   fi
 
