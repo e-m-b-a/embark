@@ -105,13 +105,14 @@ install_emba() {
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner EMBA on host""$NC"
   su "${SUDO_USER:-${USER}}" -c 'git submodule init'
   su "${SUDO_USER:-${USER}}" -c 'git submodule update --remote --merge'
-  su "${SUDO_USER:-${USER}}" -c 'git config --global --add safe.directory "$PWD"/emba'
+  su "${SUDO_USER:-${USER}}" -c "git config --global --add safe.directory ""$PWD""/emba"
   cd emba || ( echo "Could not install EMBA" && exit 1 )
   ./installer.sh -d || ( echo "Could not install EMBA" && exit 1 )
   if ! [[ -f /etc/cron.daily/emba_updater ]]; then
     cp ./config/emba_updater /etc/cron.daily/
   fi
   cd .. || ( echo "Could not install EMBA" && exit 1 )
+  chown -R "${SUDO_USER:-${USER}}" emba
   echo -e "\n""--------------------------------------------------------------------""$NC"
 }
 
