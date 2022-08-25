@@ -12,11 +12,11 @@
 
 # Description: Starts the EMBArk on host
 
-local GREEN='\033[0;32m'
-local ORANGE='\033[0;33m'
-local BLUE='\033[0;34m'
-local BOLD='\033[1m'
-local NC='\033[0m'
+export GREEN='\033[0;32m'
+export ORANGE='\033[0;33m'
+export BLUE='\033[0;34m'
+export BOLD='\033[1m'
+export NC='\033[0m'
 
 export HELP_DIR='helper'
 
@@ -27,7 +27,7 @@ export HTTPS_PORT=443
 export BIND_IP='0.0.0.0'
 export FILE_SIZE=2000000000
 
-local STRICT_MODE=1
+STRICT_MODE=1
 
 import_helper()
 {
