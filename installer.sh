@@ -74,11 +74,12 @@ write_env() {
   local SUPER_EMAIL="idk@lol.com"
   local SUPER_USER="superuser"
 
-  RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
-
-  # set secret-key
+  local RANDOM_PW
+  local DJANGO_SECRET_KEY
+  
   DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
-
+  RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
+  
   echo -e "$ORANGE""$BOLD""Creating a EMBArk configuration file .env""$NC"
   {
     echo "DATABASE_NAME=embark"
@@ -224,7 +225,7 @@ install_embark_default() {
   pip3.10 install pipenv
 
   #Add user for server
-  if ! cut -d: -f1 /etc/passwd | grep -E www-emabrk; then
+  if ! cut -d: -f1 /etc/passwd | grep -E www-embark ; then
     useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /var/www/embark
     echo 'www-embark ALL=(ALL) NOPASSWD: /var/www/emba/emba.sh' | EDITOR='tee -a' visudo
     echo 'www-embark ALL=(ALL) NOPASSWD: /bin/pkill' | EDITOR='tee -a' visudo
