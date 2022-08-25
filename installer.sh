@@ -153,7 +153,7 @@ reset_docker() {
     docker image rm "$CONTAINER_ID" -f
   fi
 
-  if docker images | grep -qE "^embark[[:space:]]*latest"; then
+  if docker images | grep -qE "^embark[[:space:]]*latest*"; then
     echo -e "\n$GREEN""$BOLD""Found EMBArk docker environment - removing it""$NC"
     CONTAINER_ID=$(docker container ls -a | grep -E "embark_embark_1" | awk '{print $1}')
     echo -e "$GREEN""$BOLD""Stop EMBArk docker container""$NC"
@@ -164,7 +164,7 @@ reset_docker() {
     docker image rm embark:latest -f
   fi
 
-  if docker images | grep -qE "^mysql[[:space:]]*latest"; then
+  if docker images | grep -qE "^mysql[[:space:]]*latest*"; then
     echo -e "\n$GREEN""$BOLD""Found mysql docker environment - removing it""$NC"
     CONTAINER_ID=$(docker container ls -a | grep -E "embark_db" | awk '{print $1}')
     echo -e "$GREEN""$BOLD""Stop mysql docker container""$NC"
@@ -175,7 +175,7 @@ reset_docker() {
     docker image rm mysql:latest -f
   fi
 
-  if docker images | grep -qE "^redis[[:space:]]*5"; then
+  if docker images | grep -qE "^redis[[:space:]]*5*"; then
     echo -e "\n$GREEN""$BOLD""Found redis docker environment - removing it""$NC"
     CONTAINER_ID=$(docker container ls -a | grep -E "embark_redis" | awk '{print $1}')
     echo -e "$GREEN""$BOLD""Stop redis docker container""$NC"
