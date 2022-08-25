@@ -77,7 +77,6 @@ write_env() {
   local RANDOM_PW
   RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
 
-
   # set secret-key
   local DJANGO_SECRET_KEY
   DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
@@ -105,8 +104,9 @@ write_env() {
 
 install_emba() {
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner EMBA on host""$NC"
-  git submodule init
-  git submodule update --remote --merge
+  sudo -u "${SUDO_USER:-${USER}}" git submodule init
+  sudo -u "${SUDO_USER:-${USER}}" git submodule update --remote --merge
+  sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "$PWD"/emba
   cd emba || ( echo "Could not install EMBA" && exit 1 )
   ./installer.sh -d || ( echo "Could not install EMBA" && exit 1 )
   if ! [[ -f /etc/cron.daily/emba_updater ]]; then
