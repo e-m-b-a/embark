@@ -14,42 +14,24 @@
 
 # Description: Installer for EMBArk
 
-local REFORCE=0
-local UNINSTALL=0
-local DEFAULT=0
-local DEV=0
-local EMBA_ONLY=0
-local DOCKER=0
 # it the installer fails you can try to change it to 0
-local STRICT_MODE=1
+STRICT_MODE=1
 
 export DEBIAN_FRONTEND=noninteractive
 
-local RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
-local SUPER_PW="embark"
-local SUPER_EMAIL="idk@lol.com"
-local SUPER_USER="superuser"
+export REFORCE=0
+export UNINSTALL=0
+export DEFAULT=0
+export DEV=0
+export EMBA_ONLY=0
+export DOCKER=0
 
-# DIR="$(realpath "$(dirname "$0")")"
-
-local RED='\033[0;31m'
-local GREEN='\033[0;32m'
-local ORANGE='\033[0;33m'
-local CYAN='\033[0;36m'
-local BOLD='\033[1m'
-local NC='\033[0m' # no color
-
-if [[ "$STRICT_MODE" -eq 1 ]]; then
-  # http://redsymbol.net/articles/unofficial-bash-strict-mode/
-  # https://github.com/tests-always-included/wick/blob/master/doc/bash-strict-mode.md
-  set -e                # Exit immediately if a command exits with a non-zero status
-  set -u                # Exit and trigger the ERR trap when accessing an unset variable
-  set -o pipefail       # The return value of a pipeline is the value of the last (rightmost) command to exit with a non-zero status
-  set -E                # The ERR trap is inherited by shell functions, command substitutions and commands in subshells
-  shopt -s extdebug     # Enable extended debugging
-  IFS=$'\n\t'           # Set the "internal field separator"
-  trap 'wickStrictModeFail $? | tee -a /tmp/embark_installer.log' ERR  # The ERR trap is triggered when a script catches an error
-fi
+export RED='\033[0;31m'
+export GREEN='\033[0;32m'
+export ORANGE='\033[0;33m'
+export CYAN='\033[0;36m'
+export BOLD='\033[1m'
+export NC='\033[0m' # no color
 
 print_help() {
   echo -e "\\n""$CYAN""USAGE""$NC"
@@ -69,7 +51,10 @@ print_help() {
 version() { echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; }
 
 write_env() {
-  # TODO change to locals
+  local RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
+  local SUPER_PW="embark"
+  local SUPER_EMAIL="idk@lol.com"
+  local SUPER_USER="superuser"
   echo -e "$ORANGE""$BOLD""Creating a EMBArk configuration file .env""$NC"
   {
     echo "DATABASE_NAME=embark"
@@ -562,6 +547,18 @@ uninstall (){
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
 echo -e "$ORANGE""$BOLD""WARNING: This script can harm your environment!""$NC\n"
+
+if [[ "$STRICT_MODE" -eq 1 ]]; then
+  # http://redsymbol.net/articles/unofficial-bash-strict-mode/
+  # https://github.com/tests-always-included/wick/blob/master/doc/bash-strict-mode.md
+  set -e                # Exit immediately if a command exits with a non-zero status
+  set -u                # Exit and trigger the ERR trap when accessing an unset variable
+  set -o pipefail       # The return value of a pipeline is the value of the last (rightmost) command to exit with a non-zero status
+  set -E                # The ERR trap is inherited by shell functions, command substitutions and commands in subshells
+  shopt -s extdebug     # Enable extended debugging
+  IFS=$'\n\t'           # Set the "internal field separator"
+  trap 'wickStrictModeFail $? | tee -a /tmp/embark_installer.log' ERR  # The ERR trap is triggered when a script catches an error
+fi
 
 if [ "$#" -ne 1 ]; then
   echo -e "$RED""$BOLD""Invalid number of arguments""$NC"
