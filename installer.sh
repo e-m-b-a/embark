@@ -33,7 +33,7 @@ export GREEN='\033[0;32m'
 export ORANGE='\033[0;33m'
 export CYAN='\033[0;36m'
 export BOLD='\033[1m'
-export NC='\033[0m' # no color
+export NC='\033[0m' # no 
 
 print_help() {
   echo -e "\\n""$CYAN""USAGE""$NC"
@@ -302,11 +302,17 @@ install_embark_dev(){
   apt-get install -y npm pycodestyle python3-pylint-django default-libmysqlclient-dev build-essential pipenv bandit
   # npm packages
   npm install -g jshint dockerlinter
+  
+  # install pipenv
+  pip3.10 install pipenv
+
+  #Add user nosudo
+  echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD: ""$PWD""/emba/emba.sh" | EDITOR='tee -a' visudo
+  echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD: /bin/pkill" | EDITOR='tee -a' visudo
+  
+
   #pipenv
   PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
-
-  # set secret-key
-  DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
 
   # download externals
   if ! [[ -d ./embark/static/external ]]; then
