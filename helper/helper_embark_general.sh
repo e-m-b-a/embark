@@ -32,8 +32,6 @@ docker_image_rm(){
     fi
     echo -e "$GREEN$BOLD""Removing ""$IMAGE_NAME_"":""$IMAGE_VERSION_" "docker image""$NC\\n"
     docker image rm "$IMAGE_NAME_"":""$IMAGE_VERSION_" -f
-  else
-    echo -e "\\n$RED""Could not find docker image:" "$IMAGE_NAME_"":""$IMAGE_VERSION_""$NC\\n"
   fi
 }
 
