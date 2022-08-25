@@ -51,10 +51,13 @@ print_help() {
 version() { echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; }
 
 write_env() {
-  local RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
   local SUPER_PW="embark"
   local SUPER_EMAIL="idk@lol.com"
   local SUPER_USER="superuser"
+
+  RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
+  readonly RANDOM_PW
+
   echo -e "$ORANGE""$BOLD""Creating a EMBArk configuration file .env""$NC"
   {
     echo "DATABASE_NAME=embark"
@@ -122,9 +125,10 @@ dns_resolve(){
 
 docker_network_rm(){
   # removes docker networks by name
+  local NET_ID
   if docker network ls | grep -E "$1"; then
     echo -e "\n$GREEN""$BOLD""Found ""$1"" - removing it""$NC"
-    local NET_ID=$(docker network ls | grep -E "$1" | awk '{print $1}')
+    NET_ID=$(docker network ls | grep -E "$1" | awk '{print $1}')
     echo -e "$GREEN""$BOLD""Remove ""$1"" network""$NC"
     docker network rm "$NET_ID" 
   fi
@@ -132,6 +136,7 @@ docker_network_rm(){
 
 
 reset_docker() {
+  local CONTAINER_ID
   echo -e "\n$GREEN""$BOLD""Reset EMBArk docker images""$NC"
 
   docker image ls -a
@@ -143,14 +148,14 @@ reset_docker() {
 
   if docker images | grep -qE "^embeddedanalyzer/emba"; then
     echo -e "\n$GREEN""$BOLD""Found EMBA docker environment - removing it""$NC"
-    local CONTAINER_ID=$(docker images | grep -E "embeddedanalyzer/emba" | awk '{print $3}')
+    CONTAINER_ID=$(docker images | grep -E "embeddedanalyzer/emba" | awk '{print $3}')
     echo -e "$GREEN""$BOLD""Remove EMBA docker image""$NC"
     docker image rm "$CONTAINER_ID" -f
   fi
 
   if docker images | grep -qE "^embark[[:space:]]*latest"; then
     echo -e "\n$GREEN""$BOLD""Found EMBArk docker environment - removing it""$NC"
-    local CONTAINER_ID=$(docker container ls -a | grep -E "embark_embark_1" | awk '{print $1}')
+    CONTAINER_ID=$(docker container ls -a | grep -E "embark_embark_1" | awk '{print $1}')
     echo -e "$GREEN""$BOLD""Stop EMBArk docker container""$NC"
     docker container stop "$CONTAINER_ID"
     echo -e "$GREEN""$BOLD""Remove EMBArk docker container""$NC"
@@ -161,7 +166,7 @@ reset_docker() {
 
   if docker images | grep -qE "^mysql[[:space:]]*latest"; then
     echo -e "\n$GREEN""$BOLD""Found mysql docker environment - removing it""$NC"
-    local CONTAINER_ID=$(docker container ls -a | grep -E "embark_db" | awk '{print $1}')
+    CONTAINER_ID=$(docker container ls -a | grep -E "embark_db" | awk '{print $1}')
     echo -e "$GREEN""$BOLD""Stop mysql docker container""$NC"
     docker container stop "$CONTAINER_ID"
     echo -e "$GREEN""$BOLD""Remove mysql docker container""$NC"
@@ -172,7 +177,7 @@ reset_docker() {
 
   if docker images | grep -qE "^redis[[:space:]]*5"; then
     echo -e "\n$GREEN""$BOLD""Found redis docker environment - removing it""$NC"
-    local CONTAINER_ID=$(docker container ls -a | grep -E "embark_redis" | awk '{print $1}')
+    CONTAINER_ID=$(docker container ls -a | grep -E "embark_redis" | awk '{print $1}')
     echo -e "$GREEN""$BOLD""Stop redis docker container""$NC"
     docker container stop "$CONTAINER_ID"
     echo -e "$GREEN""$BOLD""Remove redis docker container""$NC"
@@ -194,6 +199,7 @@ reset_docker() {
 }
 
 install_debs() {
+  local DOCKER_COMP_VER
   echo -e "\n$GREEN""$BOLD""Install debian packages for EMBArk installation""$NC"
   apt-get update -y
   # Git
@@ -219,7 +225,7 @@ install_debs() {
       ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
     fi
   else
-    local DOCKER_COMP_VER=$(docker-compose -v | grep version | awk '{print $3}' | tr -d ',')
+    DOCKER_COMP_VER=$(docker-compose -v | grep version | awk '{print $3}' | tr -d ',')
     if [[ $(version "$DOCKER_COMP_VER") -lt $(version "1.28.5") ]]; then
       echo -e "\n${ORANGE}WARNING: compatibility of the used docker-compose version is unknown!$NC"
       echo -e "\n${ORANGE}Please consider updating your docker-compose installation to version 1.28.5 or later.$NC"
