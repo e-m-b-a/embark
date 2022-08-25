@@ -19,6 +19,8 @@ STRICT_MODE=1
 
 export DEBIAN_FRONTEND=noninteractive
 
+export HELP_DIR='helper'
+
 export REFORCE=0
 export UNINSTALL=0
 export DEFAULT=0
