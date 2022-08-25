@@ -175,7 +175,7 @@ install_debs() {
   fi
   # Python3
   if ! command -v python3.10 > /dev/null ; then
-    apt get install -y python3.10
+    apt-get install -y python3.10
   fi
   # Pip
   if ! command -v pip3.10 > /dev/null ; then
