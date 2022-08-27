@@ -74,8 +74,8 @@ write_env() {
   local SUPER_EMAIL="idk@lol.com"
   local SUPER_USER="superuser"
 
-  local RANDOM_PW
-  local DJANGO_SECRET_KEY
+  local RANDOM_PW=""
+  local DJANGO_SECRET_KEY=""
   
   DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
   RANDOM_PW=$(openssl rand -base64 12)
@@ -166,7 +166,7 @@ reset_docker() {
 }
 
 install_debs() {
-  local DOCKER_COMP_VER
+  local DOCKER_COMP_VER=""
   echo -e "\n$GREEN""$BOLD""Install debian packages for EMBArk installation""$NC"
   apt-get update -y
   # Git
