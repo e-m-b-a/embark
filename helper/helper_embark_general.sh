@@ -16,8 +16,8 @@ docker_image_rm(){
   # removes image by name and version
   # $1 name
   # $2 version
-  local IMAGE_NAME_="$1"
-  local IMAGE_VERSION_="$2"
+  local IMAGE_NAME_="${1:-}"
+  local IMAGE_VERSION_="${2:-}"
 
   if [[ $(docker image ls -q "$IMAGE_NAME_"":""$IMAGE_VERSION_" | wc -c ) -ne 0 ]] ; then
     if [[ $(docker ps -a -q --filter "ancestor=""$IMAGE_NAME_"":""$IMAGE_VERSION_" | wc -c) -ne 0 ]]; then
@@ -37,7 +37,7 @@ docker_image_rm(){
 
 docker_network_rm(){
   # removes docker networks by name
-  local NET_ID
+  local NET_ID="${1:-}"
   if docker network ls | grep -E "$1"; then
     echo -e "\n$GREEN""$BOLD""Found ""$1"" - removing it""$NC"
     NET_ID=$(docker network ls | grep -E "$1" | awk '{print $1}')
@@ -48,20 +48,20 @@ docker_network_rm(){
 
 copy_file(){
   # check and copy file forcing overwrite
-  # $1 : source
-  # $2 : destination
-  if ! [[ -f "$1" ]] ; then
-    echo -e "\\n$RED""Could not find ""$1""$NC\\n"
+  local SOURCE_="${1:-}"
+  local DESTINATION_="${2:-}"
+  if ! [[ -f "$SOURCE_" ]] ; then
+    echo -e "\\n$RED""Could not find ""$SOURCE_""$NC\\n"
     return 1
-  elif  ! [[ -d $(dirname "$2") ]] ; then
-    echo -e "\\n$RED""Could not find ""$2""$NC\\n"
+  elif  ! [[ -d $(dirname "$DESTINATION_") ]] ; then
+    echo -e "\\n$RED""Could not find ""$DESTINATION_""$NC\\n"
     return 1
   fi
-  cp -f "$1" "$2"
+  cp -f "$SOURCE_" "$DESTINATION_"
 }
 
 enable_strict_mode() {
-  local STRICT_MODE_="$1"
+  local STRICT_MODE_="${1:-}"
 
   if [[ "$STRICT_MODE_" -eq 1 ]]; then
     # http://redsymbol.net/articles/unofficial-bash-strict-mode/
