@@ -37,11 +37,12 @@ docker_image_rm(){
 
 docker_network_rm(){
   # removes docker networks by name
-  local NET_ID="${1:-}"
-  if docker network ls | grep -E "$1"; then
-    echo -e "\n$GREEN""$BOLD""Found ""$1"" - removing it""$NC"
-    NET_ID=$(docker network ls | grep -E "$1" | awk '{print $1}')
-    echo -e "$GREEN""$BOLD""Remove ""$1"" network""$NC"
+  local NET_NAME="${1:-}"
+  local NET_ID=""
+  if docker network ls | grep -E "$NET_NAME"; then
+    echo -e "\n$GREEN""$BOLD""Found ""$NET_NAME"" - removing it""$NC"
+    NET_ID=$(docker network ls | grep -E "$NET_NAME" | awk '{print $1}')
+    echo -e "$GREEN""$BOLD""Remove ""$NET_NAME"" network""$NC"
     docker network rm "$NET_ID" 
   fi
 }
