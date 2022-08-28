@@ -1,8 +1,8 @@
 #!/bin/bash
 # EMBArk - The firmware security scanning environment
 #
-# Copyright 2020-2021 Siemens Energy AG
-# Copyright 2020-2021 Siemens AG
+# Copyright 2020-2022 Siemens Energy AG
+# Copyright 2020-2022 Siemens AG
 #
 # EMBArk comes with ABSOLUTELY NO WARRANTY.
 #
@@ -12,11 +12,14 @@
 
 # Description: Starts the EMBArk on host
 
-GREEN='\033[0;32m'
-ORANGE='\033[0;33m'
-BLUE='\033[0;34m'
-BOLD='\033[1m'
-NC='\033[0m'
+export GREEN='\033[0;32m'
+export RED='\033[0;31m'
+export ORANGE='\033[0;33m'
+export BLUE='\033[0;34m'
+export BOLD='\033[1m'
+export NC='\033[0m'
+
+export HELP_DIR='helper'
 
 export DJANGO_SETTINGS_MODULE=embark.settings.deploy
 export EMBARK_DEBUG=True
@@ -25,6 +28,24 @@ export HTTPS_PORT=443
 export BIND_IP='0.0.0.0'
 export FILE_SIZE=2000000000
 
+STRICT_MODE=0
+
+import_helper()
+{
+  local HELPERS=()
+  local HELPER_COUNT=0
+  local HELPER_FILE=""
+  mapfile -d '' HELPERS < <(find "$HELP_DIR" -iname "helper_embark_*.sh" -print0 2> /dev/null)
+  for HELPER_FILE in "${HELPERS[@]}" ; do
+    if ( file "$HELPER_FILE" | grep -q "shell script" ) && ! [[ "$HELPER_FILE" =~ \ |\' ]] ; then
+      # https://github.com/koalaman/shellcheck/wiki/SC1090
+      # shellcheck source=/dev/null
+      source "$HELPER_FILE"
+      (( HELPER_COUNT+=1 ))
+    fi
+  done
+  echo -e "\\n""==> ""$GREEN""Imported ""$HELPER_COUNT"" necessary files""$NC\\n"
+}
 
 cleaner() {
   pkill -u root daphne
@@ -42,15 +63,16 @@ cleaner() {
   docker container prune -f --filter "label=flag"
 
   systemctl stop embark.service
-  systemctl disable embark.service
   exit 1
 }
 
+
 # main
+cd "$(dirname "$0")" || exit 1
+import_helper
+enable_strict_mode "$STRICT_MODE"
 set -a
 trap cleaner INT
-
-cd "$(dirname "$0")" || exit 1
 
 if ! [[ $EUID -eq 0 ]] ; then
   echo -e "\\n$RED""Run Server script with root permissions!""$NC\\n"
@@ -135,14 +157,13 @@ fi
 if ! [[ -d /var/www/conf/cert ]]; then
   mkdir /var/www/conf/cert
 fi
-cp -u "$PWD"/cert/embark.local /var/www/conf/cert
-cp -u "$PWD"/cert/embark.local.key /var/www/conf/cert
-cp -u "$PWD"/cert/embark-ws.local.key /var/www/conf/cert
-cp -u "$PWD"/cert/embark-ws.local.crt /var/www/conf/cert
-cp -u "$PWD"/cert/embark-ws.local /var/www/conf/cert
+copy_file "$PWD"/cert/embark.local.crt /var/www/conf/cert
+copy_file "$PWD"/cert/embark.local.key /var/www/conf/cert
+copy_file "$PWD"/cert/embark-ws.local.key /var/www/conf/cert
+copy_file "$PWD"/cert/embark-ws.local.crt /var/www/conf/cert
 
 # cp .env
-cp -u ./.env /var/www/embark/embark/settings/
+copy_file ./.env /var/www/embark/embark/settings/
 
 # !DIRECTORY-CHANGE!
 cd /var/www/embark/ || exit 1
@@ -150,6 +171,7 @@ cd /var/www/embark/ || exit 1
 # start venv (ignore source in script)
 # shellcheck disable=SC1091
 source /var/www/.venv/bin/activate || exit 1
+export PIPENV_VERBOSITY=-1
 
 # TODO move to parent
 # logs

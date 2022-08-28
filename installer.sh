@@ -3,7 +3,7 @@
 # EMBArk - The firmware security scanning environment
 #
 # Copyright 2020-2022 Siemens Energy AG
-# Copyright 2020-2021 Siemens AG
+# Copyright 2020-2022 Siemens AG
 #
 # EMBArk comes with ABSOLUTELY NO WARRANTY.
 #
@@ -14,28 +14,26 @@
 
 # Description: Installer for EMBArk
 
+# it the installer fails you can try to change it to 0
+STRICT_MODE=1
+
 export DEBIAN_FRONTEND=noninteractive
 
-RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
+export HELP_DIR='helper'
 
-RANDOM_SALT=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 43 | head -n 1)
-HASHID_FIELD_LENGTH=7
-HASHID_DESCRIPTOR=False
-HASHID_DESCRIPTOR=False
+export REFORCE=0
+export UNINSTALL=0
+export DEFAULT=0
+export DEV=0
+export EMBA_ONLY=0
+export DOCKER=0
 
-
-SUPER_PW="embark"
-SUPER_EMAIL="idk@lol.com"
-SUPER_USER="superuser"
-
-# DIR="$(realpath "$(dirname "$0")")"
-
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-ORANGE='\033[0;33m'
-CYAN='\033[0;36m'
-BOLD='\033[1m'
-NC='\033[0m' # no color
+export RED='\033[0;31m'
+export GREEN='\033[0;32m'
+export ORANGE='\033[0;33m'
+export CYAN='\033[0;36m'
+export BOLD='\033[1m'
+export NC='\033[0m' # no color
 
 print_help() {
   echo -e "\\n""$CYAN""USAGE""$NC"
@@ -46,68 +44,75 @@ print_help() {
   echo -e "$CYAN-D$NC         Install for Docker deployment"
   echo -e "---------------------------------------------------------------------------"
   echo -e "$CYAN-U$NC         Uninstall EMBArk"
-  echo -e "$CYAN-r$NC         Reinstallation of EMBArk with all dependencies"
+  echo -e "$CYAN-rd$NC        Reinstallation of EMBArk with all dependencies"
+  echo -e "$CYAN-rF$NC        Reinstallation of EMBArk with all dependencies in Developer-mode"
   echo -e "$RED               ! Both options delete all Database-files as well !""$NC"
+}
+
+import_helper()
+{
+  local HELPERS=()
+  local HELPER_COUNT=0
+  local HELPER_FILE=""
+  mapfile -d '' HELPERS < <(find "$HELP_DIR" -iname "helper_embark_*.sh" -print0 2> /dev/null)
+  for HELPER_FILE in "${HELPERS[@]}" ; do
+    if ( file "$HELPER_FILE" | grep -q "shell script" ) && ! [[ "$HELPER_FILE" =~ \ |\' ]] ; then
+      # https://github.com/koalaman/shellcheck/wiki/SC1090
+      # shellcheck source=/dev/null
+      source "$HELPER_FILE"
+      (( HELPER_COUNT+=1 ))
+    fi
+  done
+  echo -e "\\n""==> ""$GREEN""Imported ""$HELPER_COUNT"" necessary files""$NC\\n"
 }
 
 # Source: https://stackoverflow.com/questions/4023830/how-to-compare-two-strings-in-dot-separated-version-format-in-bash
 version() { echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; }
 
 write_env() {
-  # TODO change to locals
+  local SUPER_PW="embark"
+  local SUPER_EMAIL="idk@lol.com"
+  local SUPER_USER="superuser"
+
+  local RANDOM_PW=""
+  local DJANGO_SECRET_KEY=""
+  
+  DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+  RANDOM_PW=$(openssl rand -base64 12)
+  
   echo -e "$ORANGE""$BOLD""Creating a EMBArk configuration file .env""$NC"
-  export DATABASE_NAME="embark"
-  export DATABASE_USER="embark"
-  export DATABASE_PASSWORD="$RANDOM_PW"
-  export DATABASE_HOST="127.0.0.1"
-  export DATABASE_PORT="3306"
-  export MYSQL_PASSWORD="$RANDOM_PW"
-  export MYSQL_USER="embark"
-  export MYSQL_DATABASE="embark"
-  export REDIS_HOST="127.0.0.1"
-  export REDIS_PORT="7777"
-  export SECRET_KEY="$DJANGO_SECRET_KEY"
-  export HASHID_SALT="$RANDOM_SALT"
-  export HASHID_FIELD_MIN_LENGTH="$HASHID_FIELD_LENGTH"
-  export HASHID_FIELD_ENABLE_HASHID_OBJECT="$HASHID_OBJECT"
-  export HASHID_FIELD_ENABLE_DESCRIPTOR="$HASHID_DESCRIPTOR"
-  export DJANGO_SUPERUSER_USERNAME="$SUPER_USER"
-  export DJANGO_SUPERUSER_EMAIL="$SUPER_EMAIL"
-  export DJANGO_SUPERUSER_PASSWORD="$SUPER_PW"
   {
-    echo "DATABASE_NAME=$DATABASE_NAME"
-    echo "DATABASE_USER=$DATABASE_USER" 
-    echo "DATABASE_PASSWORD=$DATABASE_PASSWORD"
-    echo "DATABASE_HOST=$DATABASE_HOST"
-    echo "DATABASE_PORT=$DATABASE_PORT"
-    echo "MYSQL_PASSWORD=$MYSQL_PASSWORD"
-    echo "MYSQL_USER=$MYSQL_USER"
-    echo "MYSQL_DATABASE=$MYSQL_DATABASE"
-    echo "REDIS_HOST=$REDIS_HOST"
-    echo "REDIS_PORT=$REDIS_PORT"
+    echo "DATABASE_NAME=embark"
+    echo "DATABASE_USER=embark" 
+    echo "DATABASE_PASSWORD=$RANDOM_PW"
+    echo "DATABASE_HOST=127.0.0.1"
+    echo "DATABASE_PORT=3306"
+    echo "MYSQL_PASSWORD=$RANDOM_PW"
+    echo "MYSQL_USER=embark"
+    echo "MYSQL_DATABASE=embark"
+    echo "REDIS_HOST=127.0.0.1"
+    echo "REDIS_PORT=7777"
     echo "SECRET_KEY=$DJANGO_SECRET_KEY"
     echo "DJANGO_SUPERUSER_USERNAME=$SUPER_USER"
     echo "DJANGO_SUPERUSER_EMAIL=$SUPER_EMAIL"
     echo "DJANGO_SUPERUSER_PASSWORD=$SUPER_PW"
-    echo "HASHID_SALT=$RANDOM_SALT"
-    echo "HASHID_FIELD_MIN_LENGTH=$HASHID_FIELD_LENGTH"
-    echo "HASHID_FIELD_ENABLE_HASHID_OBJECT=$HASHID_OBJECT"
-    echo "HASHID_FIELD_ENABLE_DESCRIPTOR=$HASHID_DESCRIPTOR"
-    echo "PYTHONPATH=${PYTHONPATH}:${PWD}:/var/www/:/var/www/embark"
+    echo "PYTHONPATH=${PWD}:/var/www/:/var/www/embark"
   } > .env
   chmod 600 .env
 }
 
 install_emba() {
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner EMBA on host""$NC"
-  git submodule init
-  git submodule update --remote --merge
+  su "${SUDO_USER:-${USER}}" -c 'git submodule init'
+  su "${SUDO_USER:-${USER}}" -c 'git submodule update --remote --merge'
+  su "${SUDO_USER:-${USER}}" -c "git config --global --add safe.directory ""$PWD""/emba"
   cd emba || ( echo "Could not install EMBA" && exit 1 )
   ./installer.sh -d || ( echo "Could not install EMBA" && exit 1 )
   if ! [[ -f /etc/cron.daily/emba_updater ]]; then
     cp ./config/emba_updater /etc/cron.daily/
   fi
   cd .. || ( echo "Could not install EMBA" && exit 1 )
+  chown -R "${SUDO_USER:-${USER}}" emba
   echo -e "\n""--------------------------------------------------------------------""$NC"
 }
 
@@ -138,86 +143,30 @@ dns_resolve(){
   if ! grep -q "embark.local" /etc/hosts ; then
     printf "0.0.0.0     embark.local\n" >>/etc/hosts
   else
-    echo -e "\n$ORANGE""$BOLD""hostanme already in use!""$NC"
+    echo -e "\n$ORANGE""$BOLD""hostname already in use!""$NC"
   fi
 }
 
 reset_docker() {
-  echo -e "\n$GREEN""$BOLD""Reset EMBArk docker images""$NC"
+  echo -e "\\n$GREEN""$BOLD""Reset EMBArk docker images""$NC\\n"
 
-  docker image ls -a
-
-  docker container stop embark_db
-  docker container stop embark_redis
-  docker container stop embark_server
-  docker container prune -f --filter "label=flag"
-
-  if docker images | grep -qE "^embeddedanalyzer/emba"; then
-    echo -e "\n$GREEN""$BOLD""Found EMBA docker environment - removing it""$NC"
-    CONTAINER_ID=$(docker images | grep -E "embeddedanalyzer/emba" | awk '{print $3}')
-    echo -e "$GREEN""$BOLD""Remove EMBA docker image""$NC"
-    docker image rm "$IMAGE_ID" -f
-  fi
-
-  if docker images | grep -qE "^embark[[:space:]]*latest"; then
-    echo -e "\n$GREEN""$BOLD""Found EMBArk docker environment - removing it""$NC"
-    CONTAINER_ID=$(docker container ls -a | grep -E "embark_embark_1" | awk '{print $1}')
-    echo -e "$GREEN""$BOLD""Stop EMBArk docker container""$NC"
-    docker container stop "$CONTAINER_ID"
-    echo -e "$GREEN""$BOLD""Remove EMBArk docker container""$NC"
-    docker container rm "$CONTAINER_ID" -f
-    echo -e "$GREEN""$BOLD""Remove EMBArk docker image""$NC"
-    docker image rm embark:latest -f
-  fi
-
-  if docker images | grep -qE "^mysql[[:space:]]*latest"; then
-    echo -e "\n$GREEN""$BOLD""Found mysql docker environment - removing it""$NC"
-    CONTAINER_ID=$(docker container ls -a | grep -E "embark_db" | awk '{print $1}')
-    echo -e "$GREEN""$BOLD""Stop mysql docker container""$NC"
-    docker container stop "$CONTAINER_ID"
-    echo -e "$GREEN""$BOLD""Remove mysql docker container""$NC"
-    docker container rm "$CONTAINER_ID" -f
-    echo -e "$GREEN""$BOLD""Remove mysql docker image""$NC"
-    docker image rm mysql:latest -f
-  fi
-
-  if docker images | grep -qE "^redis[[:space:]]*5"; then
-    echo -e "\n$GREEN""$BOLD""Found redis docker environment - removing it""$NC"
-    CONTAINER_ID=$(docker container ls -a | grep -E "embark_redis" | awk '{print $1}')
-    echo -e "$GREEN""$BOLD""Stop redis docker container""$NC"
-    docker container stop "$CONTAINER_ID"
-    echo -e "$GREEN""$BOLD""Remove redis docker container""$NC"
-    docker container rm "$CONTAINER_ID" -f
-    echo -e "$GREEN""$BOLD""Remove redis docker image""$NC"
-    docker image rm redis:5 -f
-  fi
-
-  #networks
-
-  if docker network ls | grep -E "embark_dev"; then
-    echo -e "\n$GREEN""$BOLD""Found EMBArk_dev network - removing it""$NC"
-    NET_ID=$(docker network ls | grep -E "embark_dev" | awk '{print $1}')
-    echo -e "$GREEN""$BOLD""Remove EMBArk_dev network""$NC"
-    docker network rm "$NET_ID" 
-  fi
-
-  if docker network ls | grep -E "embark_frontend"; then
-    echo -e "\n$GREEN""$BOLD""Found EMBArk_frontend network - removing it""$NC"
-    NET_ID=$(docker network ls | grep -E "embark_frontend" | awk '{print $1}')
-    echo -e "$GREEN""$BOLD""Remove EMBArk_frontend network""$NC"
-    docker network rm "$NET_ID" 
-  fi
-
-  if docker network ls | grep -E "embark_backend"; then
-    echo -e "\n$GREEN""$BOLD""Found EMBArk_backend network - removing it""$NC"
-    NET_ID=$(docker network ls | grep -E "embark_backend" | awk '{print $1}')
-    echo -e "$GREEN""$BOLD""Remove EMBArk_backend network""$NC"
-    docker network rm "$NET_ID" 
-  fi
+  # images
+  docker_image_rm "mysql" "latest"
+  docker_image_rm "redis" "5"
+  docker_image_rm "embeddedanalyzer/emba" "latest"
   
+  #networks
+  docker_network_rm "embark_dev"
+  # docker_network_rm "embark_frontend"
+  docker_network_rm "embark_backend"
+  docker_network_rm "emba_runs"
+
+  docker container prune -f --filter "label=flag" || true
+
 }
 
 install_debs() {
+  local DOCKER_COMP_VER=""
   echo -e "\n$GREEN""$BOLD""Install debian packages for EMBArk installation""$NC"
   apt-get update -y
   # Git
@@ -226,7 +175,7 @@ install_debs() {
   fi
   # Python3
   if ! command -v python3.10 > /dev/null ; then
-    apt get install -y python3.10
+    apt-get install -y python3.10
   fi
   # Pip
   if ! command -v pip3.10 > /dev/null ; then
@@ -238,7 +187,7 @@ install_debs() {
   fi
   # docker-compose
   if ! command -v docker-compose > /dev/null ; then
-    pip3.10 install docker-compose --upgrade
+    pip3 install docker-compose --upgrade
     if ! [[ -d /usr/bin/docker-compose ]]; then
       ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
     fi
@@ -277,7 +226,7 @@ install_embark_default() {
   pip3.10 install pipenv
 
   #Add user for server
-  if ! cut -d: -f1 /etc/passwd | grep -E www-emabrk; then
+  if ! cut -d: -f1 /etc/passwd | grep -E www-embark ; then
     useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /var/www/embark
     echo 'www-embark ALL=(ALL) NOPASSWD: /var/www/emba/emba.sh' | EDITOR='tee -a' visudo
     echo 'www-embark ALL=(ALL) NOPASSWD: /bin/pkill' | EDITOR='tee -a' visudo
@@ -316,8 +265,6 @@ install_embark_default() {
   cp ./Pipfile* /var/www/
   (cd /var/www && PIPENV_VENV_IN_PROJECT=1 pipenv install)
   
-  # set secret-key
-  DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
 
   # download externals
   if ! [[ -d ./embark/static/external ]]; then
@@ -517,7 +464,7 @@ uninstall (){
     fi
     if [[ -d ./embark_db ]]; then
       echo -e "$RED""$BOLD""Do you wish to remove the database(and backups)""$NC"
-      rm -Riv ./embark_db
+      rm -RIv ./embark_db
     fi
   fi
 
@@ -525,11 +472,15 @@ uninstall (){
   # delete user www-embark and reset visudo
   echo -e "$ORANGE""$BOLD""Delete user""$NC"
   # sed -i 's/www\-embark\ ALL\=\(ALL\)\ NOPASSWD\:\ \/app\/emba\/emba.sh//g' /etc/sudoers #TODO doesnt work yet
-  userdel www-embark
+  if id -u www-embark &>/dev/null ; then
+    userdel www-embark
+  fi
 
   # delete .env
   echo -e "$ORANGE""$BOLD""Delete env""$NC"
-  rm ./.env
+  if [[ -f ./.env ]]; then
+    rm ./.env
+  fi
 
   # delete shared volumes and migrations
   echo -e "$ORANGE""$BOLD""Delete migration-files""$NC"
@@ -538,17 +489,17 @@ uninstall (){
 
   # delete all docker interfaces and containers + images
   reset_docker
-  echo -e "$ORANGE""$BOLD""Consider running \$docker system prune""$NC"
+  echo -e "$ORANGE""$BOLD""Consider running " "$CYAN""\$docker system prune""$NC"
 
   # delete/uninstall EMBA
-  echo -e "$ORANGE""$BOLD""Delete EMBA?""$NC"
-  docker network rm emba_runs
   git submodule foreach git reset --hard
-  git submodule deinit --all
+  git submodule deinit --all -f
 
   # stop&reset daemon
-  systemctl stop embark.service
-  systemctl disable embark.service
+  if [[ -e /etc/systemd/system/embark.service ]] ; then
+    systemctl stop embark.service
+    systemctl disable embark.service
+  fi
   git checkout HEAD -- embark.service
   systemctl daemon-reload
 
@@ -567,6 +518,20 @@ uninstall (){
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
 echo -e "$ORANGE""$BOLD""WARNING: This script can harm your environment!""$NC\n"
+
+import_helper
+
+if [[ "$STRICT_MODE" -eq 1 ]]; then
+  # http://redsymbol.net/articles/unofficial-bash-strict-mode/
+  # https://github.com/tests-always-included/wick/blob/master/doc/bash-strict-mode.md
+  set -e                # Exit immediately if a command exits with a non-zero status
+  set -u                # Exit and trigger the ERR trap when accessing an unset variable
+  set -o pipefail       # The return value of a pipeline is the value of the last (rightmost) command to exit with a non-zero status
+  set -E                # The ERR trap is inherited by shell functions, command substitutions and commands in subshells
+  shopt -s extdebug     # Enable extended debugging
+  IFS=$'\n\t'           # Set the "internal field separator"
+  trap 'wickStrictModeFail $? | tee -a /tmp/embark_installer.log' ERR  # The ERR trap is triggered when a script catches an error
+fi
 
 if [ "$#" -ne 1 ]; then
   echo -e "$RED""$BOLD""Invalid number of arguments""$NC"
