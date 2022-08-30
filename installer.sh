@@ -74,13 +74,12 @@ write_env() {
   local SUPER_EMAIL="idk@lol.com"
   local SUPER_USER="superuser"
 
-  RANDOM_PW=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 10 | head -n 1)
-  readonly RANDOM_PW
-
-  # set secret-key
-  local DJANGO_SECRET_KEY
+  local RANDOM_PW=""
+  local DJANGO_SECRET_KEY=""
+  
   DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
-
+  RANDOM_PW=$(openssl rand -base64 12)
+  
   echo -e "$ORANGE""$BOLD""Creating a EMBArk configuration file .env""$NC"
   {
     echo "DATABASE_NAME=embark"
@@ -104,14 +103,16 @@ write_env() {
 
 install_emba() {
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner EMBA on host""$NC"
-  git submodule init
-  git submodule update --remote --merge
+  su "${SUDO_USER:-${USER}}" -c 'git submodule init'
+  su "${SUDO_USER:-${USER}}" -c 'git submodule update --remote --merge'
+  su "${SUDO_USER:-${USER}}" -c "git config --global --add safe.directory ""$PWD""/emba"
   cd emba || ( echo "Could not install EMBA" && exit 1 )
   ./installer.sh -d || ( echo "Could not install EMBA" && exit 1 )
   if ! [[ -f /etc/cron.daily/emba_updater ]]; then
     cp ./config/emba_updater /etc/cron.daily/
   fi
   cd .. || ( echo "Could not install EMBA" && exit 1 )
+  chown -R "${SUDO_USER:-${USER}}" emba
   echo -e "\n""--------------------------------------------------------------------""$NC"
 }
 
@@ -165,7 +166,7 @@ reset_docker() {
 }
 
 install_debs() {
-  local DOCKER_COMP_VER
+  local DOCKER_COMP_VER=""
   echo -e "\n$GREEN""$BOLD""Install debian packages for EMBArk installation""$NC"
   apt-get update -y
   # Git
@@ -186,7 +187,7 @@ install_debs() {
   fi
   # docker-compose
   if ! command -v docker-compose > /dev/null ; then
-    pip3.10 install docker-compose --upgrade
+    pip3 install docker-compose --upgrade
     if ! [[ -d /usr/bin/docker-compose ]]; then
       ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
     fi
@@ -225,7 +226,7 @@ install_embark_default() {
   pip3.10 install pipenv
 
   #Add user for server
-  if ! cut -d: -f1 /etc/passwd | grep -E www-emabrk; then
+  if ! cut -d: -f1 /etc/passwd | grep -E www-embark ; then
     useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /var/www/embark
     echo 'www-embark ALL=(ALL) NOPASSWD: /var/www/emba/emba.sh' | EDITOR='tee -a' visudo
     echo 'www-embark ALL=(ALL) NOPASSWD: /bin/pkill' | EDITOR='tee -a' visudo

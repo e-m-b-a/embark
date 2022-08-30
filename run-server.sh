@@ -13,6 +13,7 @@
 # Description: Starts the EMBArk on host
 
 export GREEN='\033[0;32m'
+export RED='\033[0;31m'
 export ORANGE='\033[0;33m'
 export BLUE='\033[0;34m'
 export BOLD='\033[1m'
@@ -26,7 +27,7 @@ export HTTPS_PORT=443
 export BIND_IP='0.0.0.0'
 export FILE_SIZE=2000000000
 
-STRICT_MODE=1
+STRICT_MODE=0
 
 import_helper()
 {
