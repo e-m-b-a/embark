@@ -181,6 +181,10 @@ install_debs() {
   if ! command -v pip3.10 > /dev/null ; then
     apt-get install -y python3-pip
   fi
+  # Gcc
+  if ! command -v gcc > /dev/null ; then
+    apt-get install build-essential
+  fi
   # Docker
   if ! command -v docker > /dev/null ; then
     apt-get install -y docker.io
