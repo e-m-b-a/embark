@@ -81,3 +81,11 @@ enable_strict_mode() {
 
   fi
 }
+
+check_docker_wsl() {
+  # checks if service docker is running
+  echo -e "$BLUE""$BOLD""checking docker""$NC\\n"
+  if service docker status != "running" ; then
+    service docker restart
+  fi
+}

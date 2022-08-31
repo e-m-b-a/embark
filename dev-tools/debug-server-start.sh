@@ -12,18 +12,20 @@
 
 # Description: Automates setup of developer environment for Debug-Server
 
-# RED='\033[0;31m'
-GREEN='\033[0;32m'
-ORANGE='\033[0;33m'
-# BLUE='\033[0;34m'
-BOLD='\033[1m'
-NC='\033[0m' # no color
-
+# http-server options
 PORT="8000"
 IP="127.0.0.1"
 
+export RED='\033[0;31m'
+export GREEN='\033[0;32m'
+export ORANGE='\033[0;33m'
+export BLUE='\033[0;34m'
+export BOLD='\033[1m'
+export NC='\033[0m' # no color
 
 export DJANGO_SETTINGS_MODULE=embark.settings.dev
+
+export WSL=0
 
 cleaner() {
   pkill -u root daphne
@@ -39,6 +41,23 @@ cleaner() {
   exit 1
 }
 
+import_helper()
+{
+  local HELPERS=()
+  local HELPER_COUNT=0
+  local HELPER_FILE=""
+  mapfile -d '' HELPERS < <(find "$HELP_DIR" -iname "helper_embark_*.sh" -print0 2> /dev/null)
+  for HELPER_FILE in "${HELPERS[@]}" ; do
+    if ( file "$HELPER_FILE" | grep -q "shell script" ) && ! [[ "$HELPER_FILE" =~ \ |\' ]] ; then
+      # https://github.com/koalaman/shellcheck/wiki/SC1090
+      # shellcheck source=/dev/null
+      source "$HELPER_FILE"
+      (( HELPER_COUNT+=1 ))
+    fi
+  done
+  echo -e "\\n""==> ""$GREEN""Imported ""$HELPER_COUNT"" necessary files""$NC\\n"
+}
+
 set -a
 trap cleaner INT
 
@@ -51,12 +70,26 @@ fi
 
 cd .. || exit 1
 
+import_helper
+
+# WSL/OS version check
+# WSL support - currently experimental!
+if grep -q -i wsl /proc/version; then
+  echo -e "\n${ORANGE}INFO: System running in WSL environment!$NC"
+  echo -e "\n${ORANGE}INFO: WSL is currently experimental!$NC"
+  WSL=1
+fi
+
+if [[ "$WSL" -eq 1 ]]; then
+  check_docker_wsl
+fi
+
 # check emba
-# echo -e "$BLUE""$BOLD""checking EMBA""$NC"
-# if ! emba/emba.sh -d 1>/dev/null ; then
-#   echo -e "$RED""EMBA is not configured correctly""$NC"
-#   exit 1
-# fi
+echo -e "$BLUE""$BOLD""checking EMBA""$NC"
+if ! emba/emba.sh -d 1>/dev/null ; then
+  echo -e "$RED""EMBA is not configured correctly""$NC"
+  exit 1
+fi
 
 echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
 if docker-compose -f ./docker-compose.yml up -d ; then

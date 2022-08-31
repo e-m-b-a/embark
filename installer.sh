@@ -26,7 +26,9 @@ export UNINSTALL=0
 export DEFAULT=0
 export DEV=0
 export EMBA_ONLY=0
-export DOCKER=0
+export NO_EMBA=0
+
+export WSL=0
 
 export RED='\033[0;31m'
 export GREEN='\033[0;32m'
@@ -41,6 +43,7 @@ print_help() {
   echo -e "$CYAN-d$NC         EMBArk default installation"
   echo -e "$CYAN-F$NC         Installation of EMBArk for developers"
   echo -e "$CYAN-e$NC         Install EMBA only"
+  echo -e "$CYAN-s$NC         Installation without EMBA"
   echo -e "$CYAN-D$NC         Install for Docker deployment"
   echo -e "---------------------------------------------------------------------------"
   echo -e "$CYAN-U$NC         Uninstall EMBArk"
@@ -104,7 +107,7 @@ write_env() {
 install_emba() {
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner EMBA on host""$NC"
   sudo -u "${SUDO_USER:-${USER}}" git submodule init
-  sudo -u "${SUDO_USER:-${USER}}" git submodule update --remote --merge
+  sudo -u "${SUDO_USER:-${USER}}" git submodule update # --remote --merge
   sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "$PWD"/emba
   cd emba || ( echo "Could not install EMBA" && exit 1 )
   ./installer.sh -d || ( echo "Could not install EMBA" && exit 1 )
@@ -220,8 +223,22 @@ install_daemon() {
   ln -s "$PWD"/embark.service /etc/systemd/system/embark.service
 }
 
+uninstall_daemon() {
+  echo -e "\n$ORANGE""$BOLD""Uninstalling embark daemon""$NC"
+  if [[ -e /etc/systemd/system/embark.service ]] ; then
+    systemctl stop embark.service
+    systemctl disable embark.service
+  fi
+  sudo -u "${SUDO_USER:-${USER}}" git checkout HEAD -- embark.service
+  systemctl daemon-reload
+}
+
 install_embark_default() {
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanning environment EMBArk""$NC"
+
+  if [[ "$WSL" -eq 1 ]]; then
+    echo -e "$RED""$BOLD""EMBArk currently does not support WSL in default mode. (only in Dev-mode)""$NC"
+  fi
   
   #debs
   apt-get install -y -q default-libmysqlclient-dev build-essential
@@ -288,6 +305,10 @@ install_embark_default() {
   # write env-vars into ./.env
   write_env
 
+  if [[ "$WSL" -eq 1 ]]; then
+    check_docker_wsl
+  fi
+
   # download images for container
   docker-compose -f ./docker-compose.yml up --no-start
   docker-compose -f ./docker-compose.yml up &>/dev/null &
@@ -304,12 +325,13 @@ install_embark_default() {
 install_embark_dev(){
   echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
   # apt packages
-  apt-get install -y npm pycodestyle python3-pylint-django default-libmysqlclient-dev build-essential pipenv bandit
+  apt-get install -y npm pycodestyle python3-pylint-django default-libmysqlclient-dev build-essential bandit
   # npm packages
-  npm install -g jshint dockerlinter
+  npm install -g jshint 
+  # npm install -g dockerlinter
   
   # install pipenv
-  pip3.10 install pipenv
+  pip3 install pipenv
 
   #Add user nosudo
   echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD: ""$PWD""/emba/emba.sh" | EDITOR='tee -a' visudo
@@ -340,84 +362,12 @@ install_embark_dev(){
   # daemon
   # install_daemon
 
+  # if [[ "$WSL" -eq 1 ]]; then
+  #   echo -e "$GREEN""$BOLD""dockerd needs to be started manually! ""$CYAN""\$sudo dockerd --iptables=false &""$NC"
+  # fi
+
   echo -e "$GREEN""$BOLD""Ready to use \$sudo ./dev-tools/debug-server-start.sh""$NC"
   echo -e "$GREEN""$BOLD""Or use otherwise""$NC"
-}
-
-#install as docker-service # TODO
-install_embark_docker(){
-  echo -e "\n$GREEN""$BOLD""Installing EMBArk as docker-container""$NC"
-
-  echo -e "\n$GREEN""$BOLD""Downloading of external files, e.g. jQuery, for the offline usability of EMBArk""$NC"
-  mkdir -p ./embark/static/external/{scripts,css}
-  wget -O ./embark/static/external/scripts/jquery.js https://code.jquery.com/jquery-3.6.0.min.js
-  wget -O ./embark/static/external/scripts/confirm.js https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js
-  wget -O ./embark/static/external/scripts/bootstrap.js https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js
-  wget -O ./embark/static/external/scripts/datatable.js https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.js
-  wget -O ./embark/static/external/scripts/charts.js https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js
-  wget -O ./embark/static/external/css/confirm.css https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css
-  wget -O ./embark/static/external/css/bootstrap.css https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css
-  wget -O ./embark/static/external/css/datatable.css https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.css
-  find ./embark/static/external/ -type f -exec sed -i '/sourceMappingURL/d' {} \;
-
-  # generating dynamic authentication for backend
-  # for MYSQL root pwd check the logs of the container
-  echo -e "$ORANGE""$BOLD""Creating a container EMBArk configuration file .env""$NC"
-  export DATABASE_NAME="embark"
-  export DATABASE_USER="embark"
-  export DATABASE_PASSWORD="$RANDOM_PW"
-  export DATABASE_HOST="172.23.0.5"
-  export DATABASE_PORT="3306"
-  export MYSQL_PASSWORD="$RANDOM_PW"
-  export MYSQL_USER="embark"
-  export MYSQL_DATABASE="embark"
-  export REDIS_HOST="172.23.0.8"
-  export REDIS_PORT="7777"
-  export SECRET_KEY="$DJANGO_SECRET_KEY"
-  # this is for pipenv/django # TODO change/lock after deploy
-  {
-    echo "DATABASE_NAME=$DATABASE_NAME"
-    echo "DATABASE_USER=$DATABASE_USER" 
-    echo "DATABASE_PASSWORD=$DATABASE_PASSWORD"
-    echo "DATABASE_HOST=$DATABASE_HOST"
-    echo "DATABASE_PORT=$DATABASE_PORT"
-    echo "MYSQL_PASSWORD=$MYSQL_PASSWORD"
-    echo "MYSQL_USER=$MYSQL_USER"
-    echo "MYSQL_DATABASE=$MYSQL_DATABASE"
-    echo "REDIS_HOST=$REDIS_HOST"
-    echo "REDIS_PORT=$REDIS_PORT"
-    echo "SECRET_KEY=$DJANGO_SECRET_KEY"
-    echo "PYTHONPATH=${PYTHONPATH}:${PWD}:${PWD}/embark/"
-  } > .env
-
-  # setup dbs-container and detach build could be skipt
-  echo -e "\n$GREEN""$BOLD""Building EMBArk docker images""$NC"
-  docker-compose -f ./docker-compose-docker.yml build
-  DB_RETURN=$?
-  if [[ $DB_RETURN -eq 0 ]] ; then
-    echo -e "$GREEN""$BOLD""Finished building EMBArk docker images""$NC"
-  else
-    echo -e "$ORANGE""$BOLD""Failed building EMBArk docker images""$NC"
-  fi
-
-  echo -e "\n$GREEN""$BOLD""Starting EMBArk docker images""$NC"
-  docker-compose -f ./docker-compose-docker.yml up -d
-  DS_RETURN=$?
-  if [[ $DS_RETURN -eq 0 ]] ; then
-    echo -e "$GREEN""$BOLD""Finished starting EMBArk""$NC"
-  else
-    echo -e "$ORANGE""$BOLD""Failed starting EMBArk""$NC"
-  fi
-
-  echo -e "$GREEN""$BOLD""Testing EMBArk installation""$NC"
-  # need to wait a few seconds until everyting is up and running
-  sleep 5
-  if ! curl -XGET 'http://0.0.0.0:80' | grep -q embark; then
-    echo -e "$ORANGE""$BOLD""Failed installing EMBArk - check the output from the installation process""$NC"
-  fi
-
-  echo -e "$GREEN""$BOLD""Server ready to use""$NC"
-  echo -e "$GREEN""EMBArk is on (0.0.0.0) port 80 ""$NC"
 }
 
 uninstall (){
@@ -491,12 +441,9 @@ uninstall (){
   sudo -u "${SUDO_USER:-${USER}}" git submodule deinit --all -f
 
   # stop&reset daemon
-  if [[ -e /etc/systemd/system/embark.service ]] ; then
-    systemctl stop embark.service
-    systemctl disable embark.service
+  if [[ "$WSL" -ne 1 ]]; then
+    uninstall_daemon
   fi
-  sudo -u "${SUDO_USER:-${USER}}" git checkout HEAD -- embark.service
-  systemctl daemon-reload
 
   # reset ownership etc
   # TODO delete the dns resolve
@@ -534,11 +481,25 @@ if [ "$#" -ne 1 ]; then
   exit 1
 fi
 
-while getopts eFUrdDh OPT ; do
+# WSL/OS version check
+# WSL support - currently experimental!
+if grep -q -i wsl /proc/version; then
+  echo -e "\n${ORANGE}INFO: System running in WSL environment!$NC"
+  echo -e "\n${ORANGE}INFO: WSL is currently experimental!$NC"
+  echo -e "\n${ORANGE}INFO: Ubuntu 22.04 is required for WSL!$NC"
+  read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
+  WSL=1
+fi
+
+while getopts esFUrdDh OPT ; do
   case $OPT in
     e)
       export EMBA_ONLY=1
       echo -e "$GREEN""$BOLD""Install only emba""$NC"
+      ;;
+    s)
+      export NO_EMBA=1
+      echo -e "$GREEN""$BOLD""Install without emba""$NC"
       ;;
     F)
       export DEV=1
@@ -556,10 +517,6 @@ while getopts eFUrdDh OPT ; do
     d)
       export DEFAULT=1
       echo -e "$GREEN""$BOLD""Default installation of EMBArk""$NC"
-      ;;
-    D)
-      export DOCKER=1
-      echo -e "$GREEN""$BOLD""Install all dependecies for EMBArk-docker-container""$NC"
       ;;
     h)
       print_help
@@ -591,14 +548,14 @@ install_debs
 # mark dir as safe for git
 sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "$PWD"
 
-install_emba
+if [[ "$NO_EMBA" -eq 0 ]]; then
+  install_emba
+fi
 
 if [[ $DEFAULT -eq 1 ]]; then
   install_embark_default
 elif [[ $DEV -eq 1 ]]; then
   install_embark_dev
-elif [[ $DOCKER -eq 1 ]]; then
-  install_embark_docker
 fi
 
 exit 0
