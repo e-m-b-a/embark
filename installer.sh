@@ -103,9 +103,9 @@ write_env() {
 
 install_emba() {
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner EMBA on host""$NC"
-  su "${SUDO_USER:-${USER}}" -c 'git submodule init'
-  su "${SUDO_USER:-${USER}}" -c 'git submodule update --remote --merge'
-  su "${SUDO_USER:-${USER}}" -c "git config --global --add safe.directory ""$PWD""/emba"
+  sudo -u "${SUDO_USER:-${USER}}" git submodule init
+  sudo -u "${SUDO_USER:-${USER}}" git submodule update
+  sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "$PWD"/emba
   cd emba || ( echo "Could not install EMBA" && exit 1 )
   ./installer.sh -d || ( echo "Could not install EMBA" && exit 1 )
   if ! [[ -f /etc/cron.daily/emba_updater ]]; then
@@ -176,6 +176,10 @@ install_debs() {
   # Python3
   if ! command -v python3.10 > /dev/null ; then
     apt-get install -y python3.10
+  fi
+  # GCC
+  if ! command -v gcc > /dev/null ; then
+    apt-get install -y build-essential
   fi
   # Pip
   if ! command -v pip3.10 > /dev/null ; then
@@ -492,26 +496,26 @@ uninstall (){
   echo -e "$ORANGE""$BOLD""Consider running " "$CYAN""\$docker system prune""$NC"
 
   # delete/uninstall EMBA
-  git submodule foreach git reset --hard
-  git submodule deinit --all -f
+  sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git reset --hard
+  sudo -u "${SUDO_USER:-${USER}}" git submodule deinit --all -f
 
   # stop&reset daemon
   if [[ -e /etc/systemd/system/embark.service ]] ; then
     systemctl stop embark.service
     systemctl disable embark.service
   fi
-  git checkout HEAD -- embark.service
+  sudo -u "${SUDO_USER:-${USER}}" git checkout HEAD -- embark.service
   systemctl daemon-reload
 
   # reset ownership etc
   # TODO delete the dns resolve
 
   # reset server-certs
-  git checkout HEAD -- cert
+  sudo -u "${SUDO_USER:-${USER}}" git checkout HEAD -- cert
 
   # final
   if [[ "$REFORCE" -eq 0 ]]; then
-    git reset
+    sudo -u "${SUDO_USER:-${USER}}" git reset
   fi
   echo -e "$ORANGE""$BOLD""Consider""$CYAN""\$git pull""$NC"
 }
@@ -594,7 +598,7 @@ fi
 install_debs
 
 # mark dir as safe for git
-git config --global --add safe.directory "$PWD"
+sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "$PWD"
 
 install_emba
 
