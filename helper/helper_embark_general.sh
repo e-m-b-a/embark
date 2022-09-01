@@ -2,7 +2,6 @@
 # EMBArk - The firmware security scanning environment
 #
 # Copyright 2020-2022 Siemens Energy AG
-# Copyright 2020-2022 Siemens AG
 #
 # EMBArk comes with ABSOLUTELY NO WARRANTY.
 #
@@ -10,7 +9,7 @@
 #
 # Author(s): Benedikt Kuehne
 
-# Description: Helper functions
+# Description: Miscellaneous helper functions
 
 docker_image_rm(){
   # removes image by name and version
@@ -85,7 +84,7 @@ enable_strict_mode() {
 check_docker_wsl() {
   # checks if service docker is running
   echo -e "$BLUE""$BOLD""checking docker""$NC\\n"
-  if service docker status != "running" ; then
-    service docker restart
+  if service docker status >/dev/null; then
+    service docker start &
   fi
 }

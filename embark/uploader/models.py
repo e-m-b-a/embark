@@ -136,6 +136,45 @@ def delete_fw_pre_delete_post(sender, instance, **kwargs):
         logger.error("No related FW found for delete request: %s", str(sender))
 
 
+class Vendor (models.Model):
+    """
+    class Vendor
+    Model of vendor for devices
+    (1 vendor --> n devices)
+    """
+    MAX_LENGTH = 127
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
+    vendor_name = models.CharField(
+        help_text='Vendor name', verbose_name="vendor name", max_length=MAX_LENGTH,
+        blank=True)
+
+    class Meta:
+        ordering = ['vendor_name']
+
+    def __str__(self):
+        return self.name
+
+
+class Label (models.Model):
+    """
+    class Label
+    Model for labels 
+    ( 1 device --> n labels )
+    """
+    MAX_LENGTH = 127
+
+    label_name = models.CharField(
+        help_text='label name', verbose_name="label name", max_length=MAX_LENGTH,
+        blank=True)
+
+    class Meta:
+        ordering = ['label_name']
+
+    def __str__(self):
+        return self.name
+
+
 class Device(models.Model):
     """
     class Device
@@ -147,18 +186,17 @@ class Device(models.Model):
     MAX_LENGTH = 127
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
-    vendor = models.CharField(
-        help_text='Device vendor', verbose_name="Device vendor", max_length=MAX_LENGTH,
-        blank=True)
-    name = models.CharField(
+    device_name = models.CharField(
         help_text='Device name', verbose_name="Device name", max_length=MAX_LENGTH,
         blank=True)
+    device_vendor = models.ForeignKey(Vendor, on_delete=models.SET_NULL, related_name='Vendor', null=True)
+    device_label = models.ManyToManyField(Label, help_text='labels/tags', related_query_name='label', editable=True, max_length=MAX_LENGTH)
 
     class Meta:
-        ordering = ['name']
+        ordering = ['device_name']
 
     def __str__(self):
-        return self.name
+        return f"{self.name}({self.vendor})"
 
 
 class FirmwareAnalysis(models.Model):
@@ -189,7 +227,7 @@ class FirmwareAnalysis(models.Model):
         blank=True, expert_mode=False)
 
     # new hardware oriented tracking
-    device = models.ManyToManyField(Device, help_text='device/platform', related_query_name='device', null=True, editable=True, max_length=MAX_LENGTH)
+    device = models.ManyToManyField(Device, help_text='device/platform', related_query_name='device', editable=True, max_length=MAX_LENGTH)
 
     # emba expert flags
     firmware_Architecture = CharFieldExpertMode(

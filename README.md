@@ -38,6 +38,7 @@ To start the EMBArk-Server simply run `$ sudo ./run-server.sh`.
 This starts the http-Server on 0.0.0.0:80
 
 ## Developer
+(Supports WSL) \
 For developers we recommend simply using: `sudo ./installer.sh -F ` and the `./dev-tools/debug-server-start.sh` script.
 
 ## Get involved

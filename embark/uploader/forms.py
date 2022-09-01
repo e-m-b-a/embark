@@ -7,17 +7,47 @@ from uploader import models
 
 logger = logging.getLogger(__name__)
 
+class MultiSelect(forms.Select):
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex, attrs)
+        if value:
+            option['attrs']['name'] = value.instance.name
+        return option
+
+
+class VendorForm(forms.ModelForm):
+
+    class Meta:
+        model = models.Vendor
+
+        exclude = ()
+
+
+class LabelForm(forms.ModelForm):
+
+    class Meta:
+        model = models.Label
+
+        exclude = ()
+
+
+class DeviceForm(forms.ModelForm):
+
+    class Meta:
+        model = models.Device
+
+        exclude = ()
+
 
 class FirmwareAnalysisForm(forms.ModelForm):
 
     class Meta:
         model = models.FirmwareAnalysis
-
+        
         fields = ('firmware', 'version', 'device', 'notes', 'firmware_Architecture', 'cwe_checker', 'deep_extraction', 'online_checks', 'user_emulation_test', 'system_emulation_test')
+        widgets = {'device': MultiSelect }
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
         for field in self.visible_fields():
 
             if isinstance(field.field.widget, django.forms.widgets.TextInput):
@@ -45,7 +75,7 @@ class FirmwareAnalysisForm(forms.ModelForm):
                 # pass
 
         self.base_fields['firmware'] = forms.ModelChoiceField(queryset=models.FirmwareFile.objects, empty_label='Select firmware')
-        # self.base_fields['device']
+        self.base_fields['device'] = forms.ModelMultipleChoiceField(queryset=models.Device.objects, to_field_name="name")
 
 
 class DeleteFirmwareForm(forms.Form):

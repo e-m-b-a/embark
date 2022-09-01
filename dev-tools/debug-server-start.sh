@@ -46,6 +46,7 @@ import_helper()
   local HELPERS=()
   local HELPER_COUNT=0
   local HELPER_FILE=""
+  local HELP_DIR='helper'
   mapfile -d '' HELPERS < <(find "$HELP_DIR" -iname "helper_embark_*.sh" -print0 2> /dev/null)
   for HELPER_FILE in "${HELPERS[@]}" ; do
     if ( file "$HELPER_FILE" | grep -q "shell script" ) && ! [[ "$HELPER_FILE" =~ \ |\' ]] ; then
@@ -86,7 +87,7 @@ fi
 
 # check emba
 echo -e "$BLUE""$BOLD""checking EMBA""$NC"
-if ! emba/emba.sh -d 1>/dev/null ; then
+if ! ./emba/emba.sh -d 1>/dev/null ; then
   echo -e "$RED""EMBA is not configured correctly""$NC"
   exit 1
 fi

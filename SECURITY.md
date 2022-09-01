@@ -12,4 +12,4 @@
 
 ## Reporting a Vulnerability
 
-If there is a problem within the code or the dependencies feel free to contact me.
+If there is a problem within the code or the dependencies feel free to open a issue or contact the maintainer directly.

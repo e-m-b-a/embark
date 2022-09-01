@@ -13,6 +13,8 @@ EMBA_ROOT = os.path.join(BASE_DIR.parent, 'emba')
 EMBA_LOG_ROOT = os.path.join(BASE_DIR.parent, 'emba_logs')
 EMBA_LOG_URL = 'emba_logs/'
 
+DEBUG=True
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',

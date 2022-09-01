@@ -336,10 +336,26 @@ install_embark_dev(){
   #Add user nosudo
   echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD: ""$PWD""/emba/emba.sh" | EDITOR='tee -a' visudo
   echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD: /bin/pkill" | EDITOR='tee -a' visudo
+  echo "root ALL=(ALL) NOPASSWD: ""$PWD""/emba/emba.sh" | EDITOR='tee -a' visudo
+  echo "root ALL=(ALL) NOPASSWD: /bin/pkill" | EDITOR='tee -a' visudo
   
 
   #pipenv
   PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
+
+  #Server-Dir
+  if ! [[ -d media ]]; then
+    mkdir media
+  fi
+  if ! [[ -d media ]]; then
+    mkdir static
+  fi
+  if ! [[ -d uploadedFirmwareImages ]]; then
+    mkdir uploadedFirmwareImages
+  fi
+  if ! [[ -d uploadedFirmwareImages/active/ ]]; then
+    mkdir uploadedFirmwareImages/active
+  fi
 
   # download externals
   if ! [[ -d ./embark/static/external ]]; then
