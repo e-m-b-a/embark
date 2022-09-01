@@ -250,7 +250,7 @@ class FirmwareAnalysis(models.Model):
         if self.device:
             command = command + " -Z " + re.sub(r"[^a-zA-Z0-9\-\_]+", "", str(self.device))
         if self.notes:
-            command = command + " -N " + re.sub(r"[^a-zA-Z0-9\-\_]+", "", str(self.notes))
+            command = command + " -N " + re.sub(r"[^a-zA-Z0-9\-\_\ ]+", "", str(self.notes))
         if self.firmware_Architecture:
             command = command + " -a " + str(self.firmware_Architecture)
         if self.cwe_checker:
