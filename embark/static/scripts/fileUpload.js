@@ -91,7 +91,7 @@ $(window).bind("load", function() {
           }
         } else {
           if(data === "successful upload"){
-            location.href = "/uploader/start/";
+            location.href = "";
           }
         }
       }

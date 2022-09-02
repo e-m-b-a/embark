@@ -1,59 +1,69 @@
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8"/>
-    <meta name="description" content="EMBArk - The firmware security scanning environment"/>
-    <meta name="keywords" content="HTML, CSS, JavaScript"/>
-    <meta name="author" content="EMBArk-team"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
 
-    <link rel="icon" type="image/png" href="{% static 'content/images/favicon.png' %}"/>
+{% load django_bootstrap5 %}
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="description" content="EMBArk - The firmware security scanning environment"/>
+        <meta name="keywords" content="HTML, CSS, JavaScript"/>
+        <meta name="author" content="EMBArk-team"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
 
-    <title>{% block title %}{% endblock title %}</title>
+        <link rel="icon" type="image/png" href="{% static 'content/images/favicon.png' %}"/>
 
-    <!-- jQuery-confirm style sheet -->
-    <link rel="stylesheet" href="{% static 'external/css/confirm.css' %}"/>
+        <title>{% block title %}{% endblock title %}</title>
 
-    <!-- Bootstrap and jquery-confirm style sheet -->
-    <link rel="stylesheet" href="{% static 'external/css/bootstrap.css' %}"/>
+        {# Load CSS and JavaScript #}
+        {% bootstrap_css %}
+        {% bootstrap_javascript %}
 
-    <!--DataTables style sheets-->
-    <link rel="stylesheet" type="text/css" href="{% static 'external/css/datatable.css' %}"/>
+        <!-- jQuery-confirm style sheet -->
+        <link rel="stylesheet" href="{% static 'external/css/confirm.css' %}"/>
 
-    <!-- Style sheets-->
-    <link rel="stylesheet" type="text/css" href="{% static 'content/css/globalStyle.css' %}"/>
-    {% block style %}{% endblock style %}
+        <!--DataTables style sheets-->
+        <link rel="stylesheet" type="text/css" href="{% static 'external/css/datatable.css' %}"/>
 
-    <!-- jQuery script -->
-    <script type="text/javascript" src="{% static 'external/scripts/jquery.js' %}"></script>
+        <!-- Style sheets-->
+        <link rel="stylesheet" type="text/css" href="{% static 'content/css/globalStyle.css' %}"/>
+        {% block style %}{% endblock style %}
 
-    <!-- jQuery confirm script -->
-    <script type="text/javascript" src="{% static 'external/scripts/confirm.js' %}"></script>
+        <!-- jQuery script -->
+        <script type="text/javascript" src="{% static 'external/scripts/jquery.js' %}"></script>
 
-    <!-- Bootstrap script -->
-    <script type="text/javascript" src="{% static 'external/scripts/bootstrap.js' %}"></script>
+        <!-- jQuery confirm script -->
+        <script type="text/javascript" src="{% static 'external/scripts/confirm.js' %}"></script>
 
-    <!--DataTables script-->
-    <script type="text/javascript" src="{% static 'external/scripts/datatable.js' %}"></script>
+        <!--DataTables script-->
+        <script type="text/javascript" src="{% static 'external/scripts/datatable.js' %}"></script>
 
-    <!-- Charts script -->
-    <script type="text/javascript" src="{% static 'external/scripts/charts.js' %}"></script>
+        <!-- Charts script -->
+        <script type="text/javascript" src="{% static 'external/scripts/charts.js' %}"></script>
 
-    <!-- local Javascript files-->
-    <script type="text/javascript" src="{% static 'scripts/main.js' %}"></script>
-    <script type="text/javascript" src="{% static 'scripts/alertBox.js' %}"></script>
-    {% block js %}{% endblock js %}
+        <!-- local Javascript files-->
+        <script type="text/javascript" src="{% static 'scripts/main.js' %}"></script>
+        <script type="text/javascript" src="{% static 'scripts/alertBox.js' %}"></script>
+        {% block js %}{% endblock js %}
 
-</head>
-<body>
-    <div class="container-fluid">
-        {% block navigation %}{% endblock navigation %}
-        <!--Main container-->
-        <div class="main">
-            {% block maincontent %}{% endblock maincontent %}
+    </head>
+    <body>
+        <div class="container-fluid">
+            {% block navigation %}{% endblock navigation %}
+            <!--Main container-->
+            <div class="main">
+                {% if messages %}
+                <ul class="messages">
+                    {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
+                        {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}Important: {% endif %}
+                        {{ message }}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% block maincontent %}{% endblock maincontent %}
+            </div>
         </div>
-    </div>
-    {% block inlinejs %}{% endblock inlinejs %}
-</body>
-</html>
+        {% block inlinejs %}{% endblock inlinejs %}
+    </body>
+    </html>

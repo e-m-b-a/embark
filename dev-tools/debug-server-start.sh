@@ -38,6 +38,7 @@ cleaner() {
   docker container prune -f --filter "label=flag"
 
   fuser -k "$PORT"/tcp
+  chown "${SUDO_USER:-${USER}}" "$PWD" -R
   exit 1
 }
 
@@ -70,6 +71,8 @@ if ! [[ $EUID -eq 0 ]] ; then
 fi
 
 cd .. || exit 1
+
+echo "USER is ${SUDO_USER:-${USER}}"
 
 import_helper
 
@@ -114,15 +117,15 @@ source ./.venv/bin/activate || exit 1
 
 # db_init
 echo -e "[*] Starting migrations - log to embark/logs/migration.log"
-pipenv run ./embark/manage.py makemigrations users uploader reporter dashboard | tee -a ./logs/migration.log
-pipenv run ./embark/manage.py migrate | tee -a ./logs/migration.log
+python3 ./embark/manage.py makemigrations users uploader reporter dashboard | tee -a ./logs/migration.log
+python3 ./embark/manage.py migrate | tee -a ./logs/migration.log
 
 # superuser
-pipenv run ./embark/manage.py createsuperuser --noinput
+python3 ./embark/manage.py createsuperuser --noinput
 
 ##
 echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
-pipenv run ./embark/manage.py runapscheduler | tee -a ./logs/scheduler.log &
+python3 ./embark/manage.py runapscheduler | tee -a ./logs/scheduler.log &
 
 # echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
 # echo "START DAPHNE" >./logs/daphne.log
@@ -134,8 +137,9 @@ pipenv run ./embark/manage.py runapscheduler | tee -a ./logs/scheduler.log &
 # systemctl start embark.service
 
 echo -e "$ORANGE""$BOLD""start EMBArk server (WS/WSS not enabled -a also asgi)""$NC"
-pipenv run ./embark/manage.py runserver "$IP":"$PORT" |& tee -a ./logs/debug-server.log
+python3 ./embark/manage.py runserver "$IP":"$PORT" |& tee -a ./logs/debug-server.log
 
 wait
+
 
 echo -e "\n$ORANGE""$BOLD""Done. To clean-up use the clean-setup script""$NC"

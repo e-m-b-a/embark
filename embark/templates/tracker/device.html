@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% load bootstrap5 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% bootstrap_messages %}
+
+{% block bootstrap5_content %}
+    <div class="container">
+        <h1>{% block title %}(no title){% endblock %}</h1>
+
+        <form action="/dashboard/" method="post" class="form">
+        {% csrf_token %}
+        {% bootstrap_form xxformname %}
+        {% buttons %}
+            <button type="submit" class="btn btn-primary">
+            Submit
+            </button>
+        {% endbuttons %}
+        </form>
+        
+        {% autoescape off %}{% bootstrap_messages %}{% endautoescape %}
+
+        {% block content %}(no content){% endblock %}
+
+
+    </div>
+
+{% endblock %}

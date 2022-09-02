@@ -107,7 +107,7 @@ write_env() {
 install_emba() {
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner EMBA on host""$NC"
   sudo -u "${SUDO_USER:-${USER}}" git submodule init
-  sudo -u "${SUDO_USER:-${USER}}" git submodule update # --remote --merge
+  sudo -u "${SUDO_USER:-${USER}}" git submodule update
   sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "$PWD"/emba
   cd emba || ( echo "Could not install EMBA" && exit 1 )
   ./installer.sh -d || ( echo "Could not install EMBA" && exit 1 )
@@ -179,6 +179,10 @@ install_debs() {
   # Python3
   if ! command -v python3.10 > /dev/null ; then
     apt-get install -y python3.10
+  fi
+  # GCC
+  if ! command -v gcc > /dev/null ; then
+    apt-get install -y build-essential
   fi
   # Pip
   if ! command -v pip3.10 > /dev/null ; then
@@ -374,6 +378,7 @@ install_embark_dev(){
 
   # write env-vars into ./.env
   write_env
+  chmod 644 .env
 
   # daemon
   # install_daemon
@@ -460,6 +465,8 @@ uninstall (){
   if [[ "$WSL" -ne 1 ]]; then
     uninstall_daemon
   fi
+  git checkout HEAD -- embark.service
+  systemctl daemon-reload
 
   # reset ownership etc
   # TODO delete the dns resolve

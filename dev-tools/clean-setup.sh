@@ -96,3 +96,5 @@ docker container prune
 
 echo -e "$ORANGE""$BOLD""Consider running \$docker system prune""$NC"
 rm -Rf -I ./embark_db
+
+pipenv run ./embark/manage.py flush

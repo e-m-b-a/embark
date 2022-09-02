@@ -22,13 +22,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_bootstrap5',
     'mod_wsgi.server',
     'django_apscheduler',
     'channels',
     'uploader',
     'users',
     'reporter',
-    'dashboard'
+    'dashboard',
+    'tracker'
 ]
 
 AUTH_USER_MODEL = 'users.User'

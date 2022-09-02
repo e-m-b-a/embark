@@ -144,7 +144,6 @@ class Vendor (models.Model):
     """
     MAX_LENGTH = 127
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
     vendor_name = models.CharField(
         help_text='Vendor name', verbose_name="vendor name", max_length=MAX_LENGTH,
         blank=True)
@@ -153,13 +152,13 @@ class Vendor (models.Model):
         ordering = ['vendor_name']
 
     def __str__(self):
-        return self.name
+        return self.vendor_name
 
 
 class Label (models.Model):
     """
     class Label
-    Model for labels 
+    Model for labels
     ( 1 device --> n labels )
     """
     MAX_LENGTH = 127
@@ -172,7 +171,7 @@ class Label (models.Model):
         ordering = ['label_name']
 
     def __str__(self):
-        return self.name
+        return self.label_name
 
 
 class Device(models.Model):
@@ -185,18 +184,15 @@ class Device(models.Model):
     """
     MAX_LENGTH = 127
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
-    device_name = models.CharField(
-        help_text='Device name', verbose_name="Device name", max_length=MAX_LENGTH,
-        blank=True)
+    device_name = models.CharField(help_text='Device name', verbose_name="Device name", max_length=MAX_LENGTH, blank=True)
     device_vendor = models.ForeignKey(Vendor, on_delete=models.SET_NULL, related_name='Vendor', null=True)
-    device_label = models.ManyToManyField(Label, help_text='labels/tags', related_query_name='label', editable=True, max_length=MAX_LENGTH)
+    device_label = models.ForeignKey(Label, on_delete=models.SET_NULL, related_name='Vendor', null=True, help_text='label/tag', related_query_name='label', editable=True)
 
     class Meta:
         ordering = ['device_name']
 
     def __str__(self):
-        return f"{self.name}({self.vendor})"
+        return f"{self.device_name}({self.device_vendor})"
 
 
 class FirmwareAnalysis(models.Model):
@@ -227,7 +223,7 @@ class FirmwareAnalysis(models.Model):
         blank=True, expert_mode=False)
 
     # new hardware oriented tracking
-    device = models.ManyToManyField(Device, help_text='device/platform', related_query_name='device', editable=True, max_length=MAX_LENGTH)
+    device = models.ManyToManyField(Device, help_text='device/platform', related_query_name='device', editable=True, max_length=MAX_LENGTH, blank=True)
 
     # emba expert flags
     firmware_Architecture = CharFieldExpertMode(
@@ -305,13 +301,22 @@ class FirmwareAnalysis(models.Model):
         # TODO add :space:
         command = ""
         if self.version:
-            command = command + " -X " + re.sub(r"[^a-zA-Z0–9\.\-\_]+", "", str(self.version))
-        # device is manytomany how to add to emba
+            command = command + " -X " + re.sub(r"[^a-zA-Z0-9\.\-\_]+", "", str(self.version))
         if self.device:
-            command = command + " -Z " + re.sub(r"[^a-zA-Z0–9\-\_]+", "", str(self.device.name))
-            command = command + " -Y " + re.sub(r"[^a-zA-Z0–9\-\_]+", "", str(self.device.vendor))
+            devices = self.device.all()
+            logger.debug("get_flags - device - to dict query returns %s", devices)
+            _device_name_list = []
+            _device_vendor_list = []
+            for _device in devices:
+                _device_name_list.append(_device.device_name)
+                _device_obj = Device.objects.get(device_name=_device.device_name)
+                _device_vendor_list.append(_device_obj.device_vendor.vendor_name)
+            logger.debug("get_flags - device_name - to name dict %s", _device_name_list)
+            logger.debug("get_flags - vendor_name - to name dict %s", _device_vendor_list)
+            command = command + " -Z " + re.sub(r"[^a-zA-Z0-9\-\_\ ]+", "", str(_device_name_list))
+            command = command + " -Y " + re.sub(r"[^a-zA-Z0-9\-\_\ ]+", "", str(_device_vendor_list))
         if self.notes:
-            command = command + " -N " + re.sub(r"[^a-zA-Z0–9\-\_]+", "", str(self.notes))
+            command = command + " -N " + re.sub(r"[^a-zA-Z0-9\-\_\ ]+", "", str(self.notes)) + f" uuid:{self.id}"
         if self.firmware_Architecture:
             command = command + " -a " + str(self.firmware_Architecture)
         if self.cwe_checker:

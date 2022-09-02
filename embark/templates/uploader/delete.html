@@ -1,0 +1,20 @@
+{% load static %}
+{% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/fileUpload.css' %}"/>{% endblock style %}
+
+<div class="row DeleteRow">
+    <div class="box">
+        <p class="mainText">Select and delete a firmware file</p>
+        <form action="{% url 'embark-uploader-delete' %}" method="post" id="delete-form">
+            <!--  onsubmit="window.confirmDelete(event)" -->
+            {% csrf_token %}
+            <div class="innerBlock">
+                <div id="firmwareToDelete" class="form-group deleteFirmware" >
+                    {{ delete_form }}
+                </div>
+            </div>
+            <div class="buttonRow">
+                <button type="delete" class="btn buttonRowElem">Delete</button>
+            </div>
+        </form>
+    </div>
+</div>

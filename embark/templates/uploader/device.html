@@ -1,0 +1,20 @@
+{% load django_bootstrap5 %}
+
+        <div class="col-sm">
+            {% block vendor %}{% include "uploader/vendor.html" %}{% endblock vendor %}
+            {% block label %}{% include "uploader/label.html" %}{% endblock label %}
+            <div class="box">
+                <p class="mainText">Device Configuration</p>
+                <p class="subText">Define firmware parameters for tracking</p>
+
+                <form action="{% url 'embark-uploader-device' %}" method="post" id="form">
+                    {% csrf_token %}
+                    <div class="innerBlock">
+                        {% load filters %}
+                        {% bootstrap_form device_form %}
+                        {% bootstrap_button "Create" button_type="submit" button_class="btn-primary" %}
+                    </div>
+                </form>
+
+            </div>
+        </div>
