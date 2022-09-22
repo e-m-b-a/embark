@@ -1,28 +1,14 @@
 {% extends "base.html" %}
 
-{% load bootstrap5 %}
-{% bootstrap_css %}
-{% bootstrap_javascript %}
+<!--
+    Input: device id/name/label
 
-{% bootstrap_messages %}
+        Label: FW Version /Analysis or notes
+        Data:  basically all models.Results
+            Can be Sortable by:    CVE count
+            Kernel version
+            ...etc
 
-{% block bootstrap5_content %}
-    <div class="container">
-        <h1>{% block title %}(no title){% endblock %}</h1>
-
-        <form action="/tracker/device/" method="post" class="form">
-        {% csrf_token %}
-        {% bootstrap_form device_list_form %}
-        {% buttons %}
-            <button type="submit" class="btn btn-primary">
-            Submit
-            </button>
-        {% endbuttons %}
-        </form>
-        
-        {% autoescape off %}{% bootstrap_messages %}{% endautoescape %}
-
-        {% block content %}(no content){% endblock %}
-    </div>
-
-{% endblock %}
+        Canvas 1: radio chart of all analysis
+        Canvas 2: Time graph over version sorted by creation date
+-->
