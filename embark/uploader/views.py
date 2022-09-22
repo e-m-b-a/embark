@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.shortcuts import redirect
+from django.views.decorators.csrf import csrf_protect
 
 from uploader.boundedexecutor import BoundedExecutor
 from uploader.forms import DeviceForm, FirmwareAnalysisForm, DeleteFirmwareForm, LabelForm, VendorForm
@@ -34,6 +35,7 @@ def uploader_home(request):
     return render(request, 'uploader/index.html', {'analysis_form': analysis_form, 'device_form': device_form, 'vendor_form': vendor_form, 'label_form': label_form})
 
 
+@csrf_protect
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def save_file(request):
@@ -44,17 +46,15 @@ def save_file(request):
 
     :return: HttpResponse including the status
     """
-    if request.method == 'POST':
-        logger.info("User %s tryied to upload %s", request.user.username, request.FILES.getlist('file'))
-        for file in request.FILES.getlist('file'):      # FIXME determin usecase for multi-file-upload in one request
-            firmware_file = FirmwareFile.objects.create(file=file)
-            firmware_file.save()
-        messages.info(request, 'upload successful.')
-        return HttpResponse("successful upload")
-    messages.error(request, 'error in form')
-    return redirect(request.META['HTTP_REFERER'])
+    logger.info("User %s tryied to upload %s", request.user.username, request.FILES.getlist('file'))
+    for file in request.FILES.getlist('file'):      # FIXME determin usecase for multi-file-upload in one request
+        firmware_file = FirmwareFile.objects.create(file=file)
+        firmware_file.save()
+    messages.info(request, 'upload successful.')
+    return HttpResponse("successful upload")
 
 
+@csrf_protect
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def device_setup(request):
@@ -65,13 +65,14 @@ def device_setup(request):
 
         new_device = form.save(commit=True)
 
-        messages.info(request, 'creation successful of %s.', new_device)
-        return redirect(request.META['HTTP_REFERER'])
+        messages.info(request, 'creation successful of ' + str(new_device))
+        return redirect('..')
     logger.error("device form invalid %s ", request.POST )
     messages.error(request, 'creation failed.')
-    return redirect(request.META['HTTP_REFERER'])
+    return redirect('..')
 
 
+@csrf_protect
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def vendor(request):
@@ -81,13 +82,14 @@ def vendor(request):
 
         new_vendor = form.save(commit=True)
 
-        messages.info(request, 'creation successful of %s.', new_vendor)
-        return redirect(request.META['HTTP_REFERER'])
+        messages.info(request, 'creation successful of ' + str(new_vendor))
+        return redirect('..')
     logger.error("vendor form invalid %s ", request.POST )
     messages.error(request, 'creation failed.')
-    return redirect(request.META['HTTP_REFERER'])
+    return redirect('..')
 
 
+@csrf_protect
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def label(request):
@@ -97,13 +99,14 @@ def label(request):
 
         new_label= form.save(commit=True)
 
-        messages.info(request, 'creation successful of %s.', new_label)
-        return redirect(request.META['HTTP_REFERER'])
+        messages.info(request, 'creation successful of' + str(new_label))
+        return redirect('..')
     logger.error("label form invalid %s ", request.POST )
     messages.error(request, 'creation failed.')
-    return redirect(request.META['HTTP_REFERER'])
+    return redirect('..')
 
 
+@csrf_protect
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["GET", "POST"])
 def start_analysis(request):
@@ -159,6 +162,7 @@ def manage_file(request):
     return render(request, 'uploader/manage.html', {'delete_form': form})
 
 
+@csrf_protect
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def delete_fw_file(request):
@@ -179,12 +183,13 @@ def delete_fw_file(request):
         # if firmware_file.user is request.user:
         firmware_file.delete()
         messages.info(request, 'delete successful.')
-        return redirect(request.META['HTTP_REFERER'])
+        return redirect('..')
 
     logger.error("Form %s is invalid", form)
     logger.error("Form error: %s", form.errors)
     messages.error(request, 'error in form')
-    return redirect(request.META['HTTP_REFERER'])
+    return redirect('..')
+
 
 
 @require_http_methods(["GET"])

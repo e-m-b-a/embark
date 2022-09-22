@@ -166,7 +166,7 @@ class Label (models.Model):
     label_name = models.CharField(
         help_text='label name', verbose_name="label name", max_length=MAX_LENGTH,
         blank=True)
-
+    label_date = models.DateTimeField(default=datetime.now, blank=True)
     class Meta:
         ordering = ['label_name']
 
@@ -187,6 +187,7 @@ class Device(models.Model):
     device_name = models.CharField(help_text='Device name', verbose_name="Device name", max_length=MAX_LENGTH, blank=True)
     device_vendor = models.ForeignKey(Vendor, on_delete=models.SET_NULL, related_name='Vendor', null=True)
     device_label = models.ForeignKey(Label, on_delete=models.SET_NULL, related_name='Vendor', null=True, help_text='label/tag', related_query_name='label', editable=True)
+    device_date = models.DateTimeField(default=datetime.now, blank=True)
 
     class Meta:
         ordering = ['device_name']
@@ -227,7 +228,7 @@ class FirmwareAnalysis(models.Model):
 
     # emba expert flags
     firmware_Architecture = CharFieldExpertMode(
-        choices=[(None, 'Select architecture'), ('MIPS', 'MIPS'), ('ARM', 'ARM'), ('x86', 'x86'), ('x64', 'x64'), ('PPC', 'PPC')],
+        choices=[(None, 'Select architecture'), ('MIPS', 'MIPS'), ('ARM', 'ARM'), ('x86', 'x86'), ('x64', 'x64'), ('PPC', 'PPC')], # TODO add NIOS2
         verbose_name="Select architecture of the linux firmware",
         help_text='Architecture of the linux firmware [MIPS, ARM, x86, x64, PPC] -a will be added',
         max_length=MAX_LENGTH, blank=True, expert_mode=True)
@@ -298,10 +299,9 @@ class FirmwareAnalysis(models.Model):
         :return: string formatted input flags for emba
         """
 
-        # TODO add :space:
         command = ""
         if self.version:
-            command = command + " -X " + re.sub(r"[^a-zA-Z0-9\.\-\_]+", "", str(self.version))
+            command = command + " -X " + re.sub(r"[^a-zA-Z0-9\.\-\_\ \+]+", "", str(self.version))
         if self.device:
             devices = self.device.all()
             logger.debug("get_flags - device - to dict query returns %s", devices)
@@ -316,7 +316,7 @@ class FirmwareAnalysis(models.Model):
             command = command + " -Z " + re.sub(r"[^a-zA-Z0-9\-\_\ ]+", "", str(_device_name_list))
             command = command + " -Y " + re.sub(r"[^a-zA-Z0-9\-\_\ ]+", "", str(_device_vendor_list))
         if self.notes:
-            command = command + " -N " + re.sub(r"[^a-zA-Z0-9\-\_\ ]+", "", str(self.notes)) + f" uuid:{self.id}"
+            command = command + " -N " + re.sub(r"[^a-zA-Z0-9\-\_\ ]+", "", str(self.notes)) + f" (uuid:{self.id})"
         if self.firmware_Architecture:
             command = command + " -a " + str(self.firmware_Architecture)
         if self.cwe_checker:

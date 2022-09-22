@@ -10,9 +10,9 @@
     <div class="container">
         <h1>{% block title %}(no title){% endblock %}</h1>
 
-        <form action="/dashboard/" method="post" class="form">
+        <form action="/tracker/device/" method="post" class="form">
         {% csrf_token %}
-        {% bootstrap_form xxformname %}
+        {% bootstrap_form device_list_form %}
         {% buttons %}
             <button type="submit" class="btn btn-primary">
             Submit
@@ -23,8 +23,6 @@
         {% autoescape off %}{% bootstrap_messages %}{% endautoescape %}
 
         {% block content %}(no content){% endblock %}
-
-
     </div>
 
 {% endblock %}

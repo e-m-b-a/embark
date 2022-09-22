@@ -1,32 +1,73 @@
 {% extends "base.html" %}
 {% load static %}
+{% load django_bootstrap5 %}
+
 {% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/tracker.css' %}"/>{% endblock style %}
-{% block js %}<script type="text/javascript" src="{% static 'scripts/tracker.js' %}"></script>{% endblock js %}
+{% block js %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock js %}
+
 {% block title %}EMBArk tracker dashboard{% endblock title %}
 {% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
+{% block sidebar %}{% include "tracker/sidebar.html" %}{% endblock sidebar %}
+
+{% bootstrap_messages %}
 
 {% block maincontent %}
 
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">Tracking-board</h1>
-        <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-3">
-            <button type="button" class="btn btn-sm btn-outline-secondary">Share</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary">Import</button>
-        </div>
-        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle">
-            <span data-feather="calendar"></span>
-            This week
-        </button>
-        </div>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mx-auto border-bottom">
+    <h1 class="h2">Tracking-board</h1>
+    <div class="btn-toolbar mx-auto">
+        <div class="btn-group me-3 mx-auto">
+            <button type="button" class="btn btn-sm btn-outline-secondary mx-3">Share(TODO)</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary mx-3">Export(TODO)</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary mx-3">Import(TODO)</button>
+            <!-- Has to create get request with timedelta value to ./-->
+            <form action="{% url 'embark-tracker' %}" method="post" id="form">
+                {% csrf_token %}
+                <div class="innerBlock">
+                    {% load filters %}
+                    {% bootstrap_form time_form %}
+                    {% bootstrap_button "Set" button_type="submit" button_class="btn btn-primary" %}
+                </div>
+            </form>
+        </div>  
     </div>
+</div>
+<div>
+    <canvas id="trackerChart" width="900" height="380"></canvas>
+    <script>
+        const data = {
+            labels: {{ labels|safe }},
+            datasets: [{
+                label: 'Vendor Chart',
+                backgroundColor: 'rgb(255, 99, 132)',
+                borderColor: 'rgb(255, 99, 132)',
+                data: {{ data|safe }},
+            },
+            ]
+        };
 
-    <canvas class="my-4 w-100" id="myChart" width="900" height="380"></canvas>
+        const config = {
+            type: 'bar',
+            data: data,
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        };
 
+        const trackerChart = new Chart(document.getElementById('trackerChart'), config);
+    </script>
+</div>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-top"></div>
     <h2>Devices</h2>
-    <div class="table-responsive">
-        {{ table }}
-    </div>
+    {% load django_tables2 %}
+    {% render_table table %}
+</div>
 
 {% endblock %}
