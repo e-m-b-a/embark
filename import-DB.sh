@@ -9,7 +9,7 @@
 #
 # Author(s): Benedikt Kuehne
 
-# Description: Automates export of db files for quick transfer between systems and general backup
+# Description: Automates import of db file for quick transfer between systems and general usability
 
 export WSL=0
 
@@ -38,6 +38,7 @@ import_helper()
   echo -e "\\n""==> ""$GREEN""Imported ""$HELPER_COUNT"" necessary files""$NC\\n"
 }
 
+SQL_FILE="${1:-}"
 
 cd "$(dirname "$0")" || exit 1
 
@@ -65,4 +66,10 @@ fi
 # read .env file
 export $(grep -v '^#' .env | xargs)
 
-docker-compose exec -T --privileged --user root embark_db mysqldump --user="$DATABASE_USER" --password="$DATABASE_PASSWORD" "$DATABASE_NAME" --no-tablespaces > full-backup-$(date +%F).sql
+docker-compose -f ./docker-compose.yml up -d
+
+echo "$SQL_FILE"
+
+docker-compose exec -T --privileged --user root embark_db mysql --user="$DATABASE_USER" --password="$DATABASE_PASSWORD" "$DATABASE_NAME" < "$SQL_FILE"
+
+echo -e "\\n""==> ""$GREEN""Import successful""$NC"
