@@ -1,6 +1,5 @@
 # pylint: disable=E1101
 import logging
-from tkinter import Widget
 from django import forms
 
 from uploader import models
