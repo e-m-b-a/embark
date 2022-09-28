@@ -504,16 +504,6 @@ if [ "$#" -ne 1 ]; then
   exit 1
 fi
 
-# WSL/OS version check
-# WSL support - currently experimental!
-if grep -q -i wsl /proc/version; then
-  echo -e "\n${ORANGE}INFO: System running in WSL environment!$NC"
-  echo -e "\n${ORANGE}INFO: WSL is currently experimental!$NC"
-  echo -e "\n${ORANGE}INFO: Ubuntu 22.04 is required for WSL!$NC"
-  read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
-  WSL=1
-fi
-
 while getopts esFUrdDh OPT ; do
   case $OPT in
     e)
@@ -552,6 +542,16 @@ while getopts esFUrdDh OPT ; do
       ;;
   esac
 done
+
+# WSL/OS version check
+# WSL support - currently experimental!
+if grep -q -i wsl /proc/version; then
+  echo -e "\n${ORANGE}INFO: System running in WSL environment!$NC"
+  echo -e "\n${ORANGE}INFO: WSL is currently experimental!$NC"
+  echo -e "\n${ORANGE}INFO: Ubuntu 22.04 is required for WSL!$NC"
+  read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
+  WSL=1
+fi
 
 if ! [[ $EUID -eq 0 ]] && [[ $LIST_DEP -eq 0 ]] ; then
   echo -e "\\n$RED""Run EMBArk installation script with root permissions!""$NC\\n"

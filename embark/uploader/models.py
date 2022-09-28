@@ -185,8 +185,8 @@ class Device(models.Model):
     MAX_LENGTH = 127
 
     device_name = models.CharField(help_text='Device name', verbose_name="Device name", max_length=MAX_LENGTH, blank=True)
-    device_vendor = models.ForeignKey(Vendor, on_delete=models.SET_NULL, related_name='Vendor', null=True)
-    device_label = models.ForeignKey(Label, on_delete=models.SET_NULL, related_name='Vendor', null=True, help_text='label/tag', related_query_name='label', editable=True)
+    device_vendor = models.ForeignKey(Vendor, on_delete=models.SET_NULL, null=True)
+    device_label = models.ForeignKey(Label, on_delete=models.SET_NULL, null=True, help_text='label/tag', related_query_name='label', editable=True, blank=True)
     device_date = models.DateTimeField(default=datetime.now, blank=True)
 
     class Meta:

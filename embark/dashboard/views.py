@@ -10,7 +10,7 @@ from django.views.decorators.http import require_http_methods
 from uploader.boundedexecutor import BoundedExecutor
 
 from uploader.models import FirmwareAnalysis
-from .models import Result
+from dashboard.models import Result
 from .forms import StopAnalysisForm
 
 logger = logging.getLogger(__name__)

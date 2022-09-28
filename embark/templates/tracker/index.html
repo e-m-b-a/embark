@@ -39,13 +39,7 @@
     <script>
         const data = {
             labels: {{ labels|safe }},
-            datasets: [{
-                label: 'Vendor Chart',
-                backgroundColor: 'rgb(255, 99, 132)',
-                borderColor: 'rgb(255, 99, 132)',
-                data: {{ data|safe }},
-            },
-            ]
+            datasets: {{ data|safe }},
         };
 
         const config = {
