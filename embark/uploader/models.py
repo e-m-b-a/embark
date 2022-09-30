@@ -167,6 +167,7 @@ class Label (models.Model):
         help_text='label name', verbose_name="label name", max_length=MAX_LENGTH,
         blank=True)
     label_date = models.DateTimeField(default=datetime.now, blank=True)
+
     class Meta:
         ordering = ['label_name']
 
@@ -228,7 +229,7 @@ class FirmwareAnalysis(models.Model):
 
     # emba expert flags
     firmware_Architecture = CharFieldExpertMode(
-        choices=[(None, 'Select architecture'), ('MIPS', 'MIPS'), ('ARM', 'ARM'), ('x86', 'x86'), ('x64', 'x64'), ('PPC', 'PPC')], # TODO add NIOS2
+        choices=[(None, 'Select architecture'), ('MIPS', 'MIPS'), ('ARM', 'ARM'), ('x86', 'x86'), ('x64', 'x64'), ('PPC', 'PPC')],  # TODO add NIOS2
         verbose_name="Select architecture of the linux firmware",
         help_text='Architecture of the linux firmware [MIPS, ARM, x86, x64, PPC] -a will be added',
         max_length=MAX_LENGTH, blank=True, expert_mode=True)
@@ -314,7 +315,7 @@ class FirmwareAnalysis(models.Model):
             logger.debug("get_flags - device_name - to name dict %s", _device_name_list)
             logger.debug("get_flags - vendor_name - to name dict %s", _device_vendor_list)
             command = command + r" -Z " + r"\"" + re.sub(r"[^a-zA-Z0-9\-\_\ ]+", "", str(_device_name_list)) + r"\""
-            command = command + r" -Y " +  r"\"" + re.sub(r"[^a-zA-Z0-9\-\_\ ]+", "", str(_device_vendor_list)) + r"\""
+            command = command + r" -Y " + r"\"" + re.sub(r"[^a-zA-Z0-9\-\_\ ]+", "", str(_device_vendor_list)) + r"\""
         if self.notes:
             command = command + r" -N " + r"\"" + re.sub(r"[^a-zA-Z0-9\-\_\ ]+", "", str(self.notes)) + f" (uuid:{self.id})" + r"\""
         if self.firmware_Architecture:

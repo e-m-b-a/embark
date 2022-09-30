@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from .boundedexecutor import BoundedExecutor, MAX_WORKERS, MAX_QUEUE
+from uploader.boundedexecutor import BoundedExecutor, MAX_WORKERS, MAX_QUEUE
 
 
 class TestBoundedExecutor(TestCase):

@@ -11,7 +11,7 @@ from uploader.boundedexecutor import BoundedExecutor
 
 from uploader.models import FirmwareAnalysis
 from dashboard.models import Result
-from .forms import StopAnalysisForm
+from dashboard.forms import StopAnalysisForm
 
 logger = logging.getLogger(__name__)
 

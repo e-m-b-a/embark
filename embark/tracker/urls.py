@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from tracker import views
 
 
 # view routing

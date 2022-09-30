@@ -1,5 +1,5 @@
 from django.contrib import admin
 
-from .models import FirmwareAnalysis
+from uploader.models import FirmwareAnalysis
 
 admin.site.register(FirmwareAnalysis)

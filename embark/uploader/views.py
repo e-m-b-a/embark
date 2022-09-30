@@ -3,7 +3,7 @@ import logging
 
 from django.conf import settings
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseServerError
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
@@ -12,7 +12,7 @@ from django.views.decorators.csrf import csrf_protect
 
 from uploader.boundedexecutor import BoundedExecutor
 from uploader.forms import DeviceForm, FirmwareAnalysisForm, DeleteFirmwareForm, LabelForm, VendorForm
-from uploader.models import FirmwareFile,  Vendor
+from uploader.models import FirmwareFile
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ def device_setup(request):
 
         messages.info(request, 'creation successful of ' + str(new_device))
         return redirect('..')
-    logger.error("device form invalid %s ", request.POST )
+    logger.error("device form invalid %s ", request.POST)
     messages.error(request, 'creation failed.')
     return redirect('..')
 
@@ -78,13 +78,13 @@ def device_setup(request):
 def vendor(request):
     form = VendorForm(request.POST)
     if form.is_valid():
-        logger.info("User %s tryied to create vendor %s" , request.user.username, request.POST['vendor_name'])
+        logger.info("User %s tryied to create vendor %s", request.user.username, request.POST['vendor_name'])
 
         new_vendor = form.save(commit=True)
 
         messages.info(request, 'creation successful of ' + str(new_vendor))
         return redirect('..')
-    logger.error("vendor form invalid %s ", request.POST )
+    logger.error("vendor form invalid %s ", request.POST)
     messages.error(request, 'creation failed.')
     return redirect('..')
 
@@ -97,11 +97,11 @@ def label(request):
     if form.is_valid():
         logger.info("User %s tryied to create label %s", request.user.username, request.POST['label_name'])
 
-        new_label= form.save(commit=True)
+        new_label = form.save(commit=True)
 
         messages.info(request, 'creation successful of' + str(new_label))
         return redirect('..')
-    logger.error("label form invalid %s ", request.POST )
+    logger.error("label form invalid %s ", request.POST)
     messages.error(request, 'creation failed.')
     return redirect('..')
 
@@ -140,16 +140,17 @@ def start_analysis(request):
 
             # inject into bounded Executor
             if BoundedExecutor.submit_firmware(firmware_flags=new_analysis, firmware_file=new_firmware_file):
-                return HttpResponseRedirect("/dashboard/service/")
+                return redirect('embark-dashboard-service')
             logger.error("Server Queue full, or other boundenexec error")
             return HttpResponseServerError("Queue full")
-    if request.method == 'GET':
-        if FirmwareFile.objects.all().count() > 0:
-            analysis_form = FirmwareAnalysisForm(initial={'firmware': FirmwareFile.objects.latest('upload_date')})
-            return render(request, 'uploader/index.html', {'analysis_form': analysis_form})
-        analysis_form = FirmwareAnalysisForm()
-        device_form = DeviceForm()
-        return render(request, 'uploader/index.html', {'analysis_form': analysis_form, 'device_form': device_form})
+        logger.error("Form invalid %s", request.POST)
+        return HttpResponseBadRequest
+    if FirmwareFile.objects.all().count() > 0:
+        analysis_form = FirmwareAnalysisForm(initial={'firmware': FirmwareFile.objects.latest('upload_date')})
+        return render(request, 'uploader/index.html', {'analysis_form': analysis_form})
+    analysis_form = FirmwareAnalysisForm()
+    device_form = DeviceForm()
+    return render(request, 'uploader/index.html', {'analysis_form': analysis_form, 'device_form': device_form})
 
 
 @require_http_methods(["GET"])
@@ -189,7 +190,6 @@ def delete_fw_file(request):
     logger.error("Form error: %s", form.errors)
     messages.error(request, 'error in form')
     return redirect('..')
-
 
 
 @require_http_methods(["GET"])

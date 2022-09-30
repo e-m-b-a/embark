@@ -12,7 +12,7 @@ from django.contrib.auth import authenticate, login, logout, get_user
 from django.contrib import messages
 from django.conf import settings
 
-from .models import User
+from users.models import User
 
 logger = logging.getLogger(__name__)
 
