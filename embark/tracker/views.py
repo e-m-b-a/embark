@@ -49,8 +49,10 @@ def tracker(request):
         data = []
         for _vendor in queryset:
             label_list.append(_vendor.vendor_name)
-            data.append(Device.objects.filter(device_vendor=_vendor, device_date__gte=date).count())
-        device_table = SimpleDeviceTable(data=Device.objects.all(), template_name="django_tables2/bootstrap-responsive.html")
+            _device_count = Device.objects.filter(device_vendor=_vendor, device_date__gte=date).count()
+            logger.debug("device count in tracker is : %d", _device_count)
+            data.append(_device_count) 
+        device_table = SimpleDeviceTable(data=Device.objects.filter(device_date__gte=date), template_name="django_tables2/bootstrap-responsive.html")
         time_form = TimeForm()
         return render(request=request, template_name='tracker/index.html', context={'username': request.user.username, 'table': device_table, 'labels': label_list, 'data': data, 'time_form': time_form})
     logger.info("no data for the tracker yet - %s", request)
