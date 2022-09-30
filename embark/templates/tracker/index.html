@@ -38,12 +38,11 @@
     <canvas id="trackerChart" width="900" height="380"></canvas>
     <script>
         const data = {
-            labels: "VendorChart",
-            datasets: {
-              labels: {{ labels|safe }},
-              data: {{ data|safe }},
-
-            }
+            labels: {{ labels|safe }},
+            datasets: [{
+              label: 'Vendor Dataset',
+              data: {{ datasets|safe }},
+            }]
         };
 
         const config = {
