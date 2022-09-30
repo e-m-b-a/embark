@@ -63,6 +63,6 @@ if [[ "$WSL" -eq 1 ]]; then
 fi
 
 # read .env file
-export $(grep -v '^#' .env | xargs)
+export "$(grep -v '^#' .env | xargs)"
 
-docker-compose exec -T --privileged --user root embark_db mysqldump --user="$DATABASE_USER" --password="$DATABASE_PASSWORD" "$DATABASE_NAME" --no-tablespaces > full-backup-$(date +%F).sql
+docker-compose exec -T --privileged --user root embark_db mysqldump --user="$DATABASE_USER" --password="$DATABASE_PASSWORD" "$DATABASE_NAME" --no-tablespaces > full-backup-"$(date +%F)".sql

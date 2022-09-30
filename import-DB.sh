@@ -64,7 +64,7 @@ if [[ "$WSL" -eq 1 ]]; then
 fi
 
 # read .env file
-export $(grep -v '^#' .env | xargs)
+export "$(grep -v '^#' .env | xargs)"
 
 docker-compose -f ./docker-compose.yml up -d
 
