@@ -303,7 +303,7 @@ class FirmwareAnalysis(models.Model):
 
         command = ""
         if self.version:
-            command = command + r" -X " + r"\"" + re.sub(r"[^a-zA-Z0-9\.\-\_\ \+]+", "", str(self.version)) + r"\""
+            command = command + r" -X " + "\"" + re.sub(r"[^a-zA-Z0-9\.\-\_\ \+]+", "", str(self.version)) + "\""
         if self.device:
             devices = self.device.all()
             logger.debug("get_flags - device - to dict query returns %s", devices)
@@ -315,10 +315,10 @@ class FirmwareAnalysis(models.Model):
                 _device_vendor_list.append(_device_obj.device_vendor.vendor_name)
             logger.debug("get_flags - device_name - to name dict %s", _device_name_list)
             logger.debug("get_flags - vendor_name - to name dict %s", _device_vendor_list)
-            command = command + r" -Z " + r"\"" + re.sub(r"[^a-zA-Z0-9\-\_\ ]+", "", str(_device_name_list)) + r"\""
-            command = command + r" -Y " + r"\"" + re.sub(r"[^a-zA-Z0-9\-\_\ ]+", "", str(_device_vendor_list)) + r"\""
+            command = command + r" -Z " + "\"" + re.sub(r"[^a-zA-Z0-9\-\_\ ]+", "", str(_device_name_list)) + "\""
+            command = command + r" -Y " + "\"" + re.sub(r"[^a-zA-Z0-9\-\_\ ]+", "", str(_device_vendor_list)) + "\""
         if self.notes:
-            command = command + r" -N " + r"\"" + re.sub(r"[^a-zA-Z0-9\-\_\ ]+", "", str(self.notes)) + f" (uuid:{self.id})" + r"\""
+            command = command + r" -N " + "\"" + re.sub(r"[^a-zA-Z0-9\-\_\ ]+", "", str(self.notes)) + f" (uuid:{self.id})" + "\""
         if self.firmware_Architecture:
             command = command + r" -a " + str(self.firmware_Architecture)
         if self.cwe_checker:
