@@ -63,7 +63,9 @@ def device_setup(request):
     if form.is_valid():
         logger.info("User %s tryied to create device", request.user.username)
 
-        new_device = form.save(commit=True)
+        new_device = form.save(commit=False)
+        new_device.device_user = request.user
+        new_device = form.save()
 
         messages.info(request, 'creation successful of ' + str(new_device))
         return redirect('..')
