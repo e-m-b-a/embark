@@ -9,6 +9,7 @@ from django.views.decorators.http import require_http_methods
 from django.shortcuts import redirect
 from django.contrib import messages
 
+from django_tables2 import RequestConfig
 
 from dashboard.models import Result
 from embark.helper import rnd_rgb_color, rnd_rgb_full
@@ -35,6 +36,7 @@ def tracker(request):
                     label_list.append(_vendor.vendor_name)
                     data.append(Device.objects.filter(device_vendor=_vendor, device_date__gte=date).count())  # TODO better intervall?
                 device_table = SimpleDeviceTable(data=Device.objects.all(), template_name="django_tables2/bootstrap-responsive.html")
+                RequestConfig(request).configure(device_table)
                 time_form = TimeForm()
                 return render(request=request, template_name='tracker/index.html', context={'username': request.user.username, 'table': device_table, 'labels': label_list, 'data': data, 'time_form': time_form})
             logger.info("no data for the tracker yet %s", request)
@@ -57,6 +59,7 @@ def tracker(request):
             color_list.append(rnd_rgb_full())
             border_list.append(rnd_rgb_color())
         device_table = SimpleDeviceTable(data=Device.objects.filter(device_date__gte=date), template_name="django_tables2/bootstrap-responsive.html")
+        RequestConfig(request).configure(device_table)
         time_form = TimeForm()
         logger.debug("device data : %s , %s, %s", data, color_list, border_list)
         return render(request=request, template_name='tracker/index.html', context={'username': request.user.username, 'table': device_table, 'labels': label_list, 'data': data, 'colors': color_list, 'borders': border_list, 'time_form': time_form})

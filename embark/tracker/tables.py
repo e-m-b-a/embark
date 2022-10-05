@@ -8,9 +8,7 @@ class SimpleDeviceTable(tables.Table):
 
     class Meta:
         model = Device
-        attr = {
-
-        }
+        orderable = True
 
     def render_id(self, value):
         return format_html("<a href=\"%s\">%s</a>" % (reverse(viewname='embark-tracker-device', args=[value]), value))
