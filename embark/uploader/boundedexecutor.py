@@ -152,7 +152,7 @@ class BoundedExecutor:
 
         return: emba process future on success, None on failure
         """
-        active_analyzer_dir = f"{settings.ACTIVE_FW}{firmware_flags.id}/"
+        active_analyzer_dir = f"{settings.ACTIVE_FW}/{firmware_flags.id}/"
         logger.info("submitting firmware %s to emba", active_analyzer_dir)
 
         Archiver.copy(src=firmware_file.file.path, dst=active_analyzer_dir)
