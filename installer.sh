@@ -464,10 +464,10 @@ uninstall (){
   # stop&reset daemon
   if [[ "$WSL" -ne 1 ]]; then
     uninstall_daemon
+    systemctl daemon-reload
   fi
   git checkout HEAD -- embark.service
-  systemctl daemon-reload
-
+  
   # reset ownership etc
   # TODO delete the dns resolve
 

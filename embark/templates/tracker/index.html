@@ -19,9 +19,10 @@
     <h1 class="h2">Tracking-board</h1>
     <div class="btn-toolbar mx-auto">
         <div class="btn-group me-3 mx-auto">
-            <button type="button" class="btn btn-sm btn-outline-secondary mx-3">Share(TODO)</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary mx-3">Export(TODO)</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary mx-3">Import(TODO)</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary mx-3">Share(TODO export to dashboard, menu missing)</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary mx-3">Export(TODO export menu missing)</button>
+            <!--https://django-tables2.readthedocs.io/en/latest/pages/export.html-->
+            <button type="button" class="btn btn-sm btn-outline-secondary mx-3">Import(TODO import menu missing)</button>
             <!-- Has to create get request with timedelta value to ./-->
             <form action="{% url 'embark-tracker' %}" method="post" id="form">
                 {% csrf_token %}
