@@ -41,7 +41,10 @@
             labels: {{ labels|safe }},
             datasets: [{
               label: 'Vendor Dataset',
-              data: {{ datasets|safe }},
+              data: {{ data|safe }},
+              backgroundColor: {{ colors|safe }},
+              borderColor: {{ borders|safe }},
+              borderWidth: 1
             }]
         };
 
@@ -62,9 +65,11 @@
     </script>
 </div>
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-top">
-    <h2>Devices</h2>
-    {% load django_tables2 %}
-    {% render_table table %}
+    <div class="justify-content-between flex-wrap flex-md-nowrap align-items-center mx-auto">
+        <h2>Devices</h2>
+        {% load django_tables2 %}
+        {% render_table table %}
+    </div>
 </div>
 
 {% endblock %}
