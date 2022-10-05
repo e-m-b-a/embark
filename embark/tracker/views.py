@@ -11,7 +11,7 @@ from django.contrib import messages
 
 
 from dashboard.models import Result
-from embark.helper import rnd_rgb_color
+from embark.helper import rnd_rgb_color, rnd_rgb_full
 from uploader.models import FirmwareAnalysis, Device, Vendor
 from tracker.tables import SimpleDeviceTable
 from tracker.forms import TimeForm
@@ -43,18 +43,23 @@ def tracker(request):
         logger.error("invalid date form")
         return redirect('..')
     date = datetime.today() - timedelta(days=7)
-    queryset = Vendor.objects.all()
-    if queryset.count() != 0:
+    vendor_list = Vendor.objects.all()
+    if vendor_list.count() != 0:
         label_list = []
         data = []
-        for _vendor in queryset:
+        color_list = []
+        border_list = []
+        for _vendor in vendor_list:
             label_list.append(_vendor.vendor_name)
             _device_count = Device.objects.filter(device_vendor=_vendor, device_date__gte=date).count()
             logger.debug("device count in tracker is : %d", _device_count)
             data.append(_device_count)
+            color_list.append(rnd_rgb_full())
+            border_list.append(rnd_rgb_color())
         device_table = SimpleDeviceTable(data=Device.objects.filter(device_date__gte=date), template_name="django_tables2/bootstrap-responsive.html")
         time_form = TimeForm()
-        return render(request=request, template_name='tracker/index.html', context={'username': request.user.username, 'table': device_table, 'labels': label_list, 'data': data, 'time_form': time_form})
+        logger.debug("device data : %s , %s, %s", data, color_list, border_list)
+        return render(request=request, template_name='tracker/index.html', context={'username': request.user.username, 'table': device_table, 'labels': label_list, 'data': data, 'colors': color_list, 'borders': border_list, 'time_form': time_form})
     logger.info("no data for the tracker yet - %s", request)
     return redirect('embark-uploader-home')
 

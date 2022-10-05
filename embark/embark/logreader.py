@@ -28,7 +28,8 @@ EMBA_MODULE_CNT = 53
 
 
 class LogReader:
-
+    # TODO fix!!!!
+    # TODO send update on refresh!!!
     def __init__(self, firmware_id):
 
         # global module count and status_msg directory
@@ -283,3 +284,7 @@ class LogReader:
     def produce_test_output(self, inp):
         self.input_processing(inp)
         return self.test_list1, self.test_list2
+
+    @classmethod
+    def listen(self):
+      pass
