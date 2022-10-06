@@ -79,7 +79,7 @@ class BoundedExecutor:
             logger.info("Success: %s", cmd)
 
             # get csv log location
-            csv_log_location = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/f50_base_aggregator.csv"
+            csv_log_location = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/csv_logs/f50_base_aggregator.csv"
 
             # read f50_aggregator and store it into a Result form
             logger.info('Reading report from: %s', csv_log_location)
