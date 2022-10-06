@@ -63,8 +63,7 @@ def tracker(request):
         time_form = TimeForm()
         logger.debug("device data : %s , %s, %s", data, color_list, border_list)
         return render(request=request, template_name='tracker/index.html', context={
-                'username': request.user.username, 'table': device_table, 'labels': label_list, 'data': data, 'colors': color_list, 'borders': border_list, 'time_form': time_form
-            }
+            'username': request.user.username, 'table': device_table, 'labels': label_list, 'data': data, 'colors': color_list, 'borders': border_list, 'time_form': time_form}
         )
     logger.info("no data for the tracker yet - %s", request)
     return redirect('embark-uploader-home')

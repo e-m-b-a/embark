@@ -35,7 +35,8 @@ cleaner() {
   docker container stop embark_db
   docker container stop embark_redis
 
-  docker container prune -f --filter "label=flag"
+  # docker container prune -f --filter "label=flag"
+  # rm embark_db/* -rf
 
   fuser -k "$PORT"/tcp
   chown "${SUDO_USER:-${USER}}" "$PWD" -R
@@ -127,11 +128,11 @@ python3 ./embark/manage.py createsuperuser --noinput
 echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
 python3 ./embark/manage.py runapscheduler | tee -a ./logs/scheduler.log &
 
-# echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-# echo "START DAPHNE" >./logs/daphne.log
-# cd ./embark || exit 1
-# pipenv run daphne -v 3 -p 8001 -b "$IP" --root-path="$PWD"/embark embark.asgi:application &>../logs/daphne.log &
-# cd .. || exit 1
+echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
+echo "START DAPHNE" >./logs/daphne.log
+cd ./embark || exit 1
+pipenv run daphne -v 3 -p 8001 -b "$IP" --root-path="$PWD"/embark embark.asgi:application &>../logs/daphne.log &
+cd .. || exit 1
 
 # start embark
 # systemctl start embark.service

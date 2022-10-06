@@ -165,11 +165,11 @@ LOGGING = {
         },
         'uploader': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
-            'level': 'DEBUG',
+            'level': 'INFO',
         },
         'dashboard': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
-            'level': 'DEBUG',
+            'level': 'INFO',
         },
         'users': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
@@ -181,7 +181,7 @@ LOGGING = {
         },
         'tracker': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
-            'level': 'DEBUG',
+            'level': 'INFO',
         },
         # TODO add specific logger for requests
         'requests': {

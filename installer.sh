@@ -113,7 +113,6 @@ install_emba(){
   # if ! [[ -f /etc/cron.daily/emba_updater ]]; then
   #   cp ./config/emba_updater /etc/cron.daily/
   # fi
-  cd .. || ( echo "Could not install EMBA" && exit 1 )
   chown -R "${SUDO_USER:-${USER}}" emba
   echo -e "\n""--------------------------------------------------------------------""$NC"
 }
