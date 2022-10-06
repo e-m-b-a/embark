@@ -1,6 +1,5 @@
 import logging
 import os
-import queue
 import signal
 
 from django.conf import settings

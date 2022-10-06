@@ -286,5 +286,6 @@ class LogReader:
         return self.test_list1, self.test_list2
 
     @classmethod
-    def listen(self):
-      pass
+    def listen(cls):
+        # TODO listen for resend req
+        pass

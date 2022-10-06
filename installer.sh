@@ -37,7 +37,7 @@ export CYAN='\033[0;36m'
 export BOLD='\033[1m'
 export NC='\033[0m' # no 
 
-print_help() {
+print_help(){
   echo -e "\\n""$CYAN""USAGE""$NC"
   echo -e "$CYAN-h$NC         Print this help message"
   echo -e "$CYAN-d$NC         EMBArk default installation"
@@ -52,8 +52,7 @@ print_help() {
   echo -e "$RED               ! Both options delete all Database-files as well !""$NC"
 }
 
-import_helper()
-{
+import_helper(){
   local HELPERS=()
   local HELPER_COUNT=0
   local HELPER_FILE=""
@@ -70,9 +69,9 @@ import_helper()
 }
 
 # Source: https://stackoverflow.com/questions/4023830/how-to-compare-two-strings-in-dot-separated-version-format-in-bash
-version() { echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; }
+version(){ echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; }
 
-write_env() {
+write_env(){
   local SUPER_PW="embark"
   local SUPER_EMAIL="idk@lol.com"
   local SUPER_USER="superuser"
@@ -104,16 +103,16 @@ write_env() {
   chmod 600 .env
 }
 
-install_emba() {
+install_emba(){
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner EMBA on host""$NC"
   sudo -u "${SUDO_USER:-${USER}}" git submodule init
-  sudo -u "${SUDO_USER:-${USER}}" git submodule update
+  sudo -u "${SUDO_USER:-${USER}}" git submodule update --remote
   sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "$PWD"/emba
-  cd emba || ( echo "Could not install EMBA" && exit 1 )
-  ./installer.sh -d || ( echo "Could not install EMBA" && exit 1 )
-  if ! [[ -f /etc/cron.daily/emba_updater ]]; then
-    cp ./config/emba_updater /etc/cron.daily/
-  fi
+  ( cd emba && ./installer.sh -d ) || ( echo "Could not install EMBA" && exit 1 )
+  # TODO costom crom updater for only cve stuff
+  # if ! [[ -f /etc/cron.daily/emba_updater ]]; then
+  #   cp ./config/emba_updater /etc/cron.daily/
+  # fi
   cd .. || ( echo "Could not install EMBA" && exit 1 )
   chown -R "${SUDO_USER:-${USER}}" emba
   echo -e "\n""--------------------------------------------------------------------""$NC"
@@ -150,7 +149,7 @@ dns_resolve(){
   fi
 }
 
-reset_docker() {
+reset_docker(){
   echo -e "\\n$GREEN""$BOLD""Reset EMBArk docker images""$NC\\n"
 
   # images
@@ -168,7 +167,7 @@ reset_docker() {
 
 }
 
-install_debs() {
+install_debs(){
   local DOCKER_COMP_VER=""
   echo -e "\n$GREEN""$BOLD""Install debian packages for EMBArk installation""$NC"
   apt-get update -y
@@ -220,14 +219,14 @@ install_debs() {
   fi
 }
 
-install_daemon() {
+install_daemon(){
   echo -e "\n$GREEN""$BOLD""Install embark daemon""$NC"
   sed -i "s|{\$EMBARK_ROOT_DIR}|$PWD|g" embark.service
   # FIXME test this
   ln -s "$PWD"/embark.service /etc/systemd/system/embark.service
 }
 
-uninstall_daemon() {
+uninstall_daemon(){
   echo -e "\n$ORANGE""$BOLD""Uninstalling embark daemon""$NC"
   if [[ -e /etc/systemd/system/embark.service ]] ; then
     systemctl stop embark.service
@@ -237,7 +236,7 @@ uninstall_daemon() {
   systemctl daemon-reload
 }
 
-install_embark_default() {
+install_embark_default(){
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanning environment EMBArk""$NC"
 
   if [[ "$WSL" -eq 1 ]]; then
