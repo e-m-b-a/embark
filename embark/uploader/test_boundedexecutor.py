@@ -7,7 +7,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 TEST_PATH = f"{BASE_DIR}/test-data"
 
-TEST_CMD = f"cd /var/www/emba && test"
+TEST_CMD = "cd /var/www/emba && test"
 
 # class TestBoundedExecutor(TestCase):
 #
