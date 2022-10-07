@@ -94,7 +94,7 @@ def get_report_for_device(request, device_id):
                 logger.error("result empty for %s", str(_analysis.id))
                 dataset['data'] = [0, 0, 0, 0, 0]
             else:
-                result_list = result_queryset.values_list(label_list) # wants *str but gets str[]
+                result_list = result_queryset.values_list(_label for _label in label_list)
                 logger.debug("result querset: %s", result_list)
                 data_list = [ int(_entry) for _entry in result_list ]
                 dataset['data'] = data_list
