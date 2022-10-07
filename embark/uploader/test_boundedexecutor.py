@@ -7,30 +7,32 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 TEST_PATH = f"{BASE_DIR}/test-data"
 
-TEST_CMD = f"cd /var/www/emba && sudo ./emba.sh -p ./scan-profiles/default-scan-no-notify.emba -f /var/www/active/a4ca8bb3-e95e-42bb-a812-67f5a7ee0987/DIR300B5_FW214WWB01.bin"
+TEST_CMD = f"cd /var/www/emba && test"
 
 # class TestBoundedExecutor(TestCase):
-
+#
 #     def setUp(self):
 #         pass
-
+#
 #     # TODO: add timeout
 #     def test_non_blocking_overflow(self):
-# 
+#
 #         fut_list = []
-
+#
 #         for _ in range(MAX_WORKERS + MAX_QUEUE):
 #             # if testing under windows use "timeout /T 5" instead of "sleep 5"
 #             fut = BoundedExecutor.submit(BoundedExecutor.run_emba_cmd, "sleep 5")
 #             self.assertIsNotNone(fut)
 #             fut_list.append(fut)
-
+#
 #         for _ in range(MAX_WORKERS):
 #             fut = BoundedExecutor.submit(BoundedExecutor.run_emba_cmd, "sleep 5")
 #             self.assertIsNone(fut)
-
+#
 #         for fut in fut_list:
 #             fut.result()
+
+
 def csv_read(path):
     res_dict = {}
     with open(path, newline='\n', encoding='utf-8') as csv_file:
