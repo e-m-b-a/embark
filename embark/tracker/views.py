@@ -94,7 +94,9 @@ def get_report_for_device(request, device_id):
                 logger.error("result empty for %s", str(_analysis.id))
                 dataset['data'] = [0, 0, 0, 0, 0]
             else:
+                logger.debug("result querset: %s", result_queryset)
                 dataset['data'] = [(_res) for _res in result_queryset if _res in label_list]   # get integers from result for the labels
+                logger.debug("result data: %s", dataset['data'])
             dataset['fill'] = "true"
             dataset['backgroundColor'] = rnd_rgb_full()
             dataset['borderColor'] = rnd_rgb_color()
