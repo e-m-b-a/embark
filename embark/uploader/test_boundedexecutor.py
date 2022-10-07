@@ -1,40 +1,34 @@
+# pylint: disable= C0201
 import csv
-from os import popen
 import re
-import uuid
 
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 TEST_PATH = f"{BASE_DIR}/test-data"
 
-TEST_CMD = f"cd /var/www/emba && sudo ./emba.sh -p ./scan-profiles/default-scan-no-notify.emba \
--f /var/www/active/a4ca8bb3-e95e-42bb-a812-67f5a7ee0987/DIR300B5_FW214WWB01.bin \
--l /var/www/emba_logs/a4ca8bb3-e95e-42bb-a812-67f5a7ee0987/emba_logs" + \
-f"-X \"b5\" -Z \"dir300\" -Y \"dlink\" -N \"asdasdlk a test (uuid:a4ca8bb3-e95e-42bb-a812-67f5a7ee0987)\""
-
-TEST_ID = uuid.uuid4()
+TEST_CMD = f"cd /var/www/emba && sudo ./emba.sh -p ./scan-profiles/default-scan-no-notify.emba -f /var/www/active/a4ca8bb3-e95e-42bb-a812-67f5a7ee0987/DIR300B5_FW214WWB01.bin"
 
 # class TestBoundedExecutor(TestCase):
-# 
+
 #     def setUp(self):
 #         pass
-# 
+
 #     # TODO: add timeout
 #     def test_non_blocking_overflow(self):
 # 
 #         fut_list = []
-# 
+
 #         for _ in range(MAX_WORKERS + MAX_QUEUE):
 #             # if testing under windows use "timeout /T 5" instead of "sleep 5"
 #             fut = BoundedExecutor.submit(BoundedExecutor.run_emba_cmd, "sleep 5")
 #             self.assertIsNotNone(fut)
 #             fut_list.append(fut)
-# 
+
 #         for _ in range(MAX_WORKERS):
 #             fut = BoundedExecutor.submit(BoundedExecutor.run_emba_cmd, "sleep 5")
 #             self.assertIsNone(fut)
-# 
+
 #         for fut in fut_list:
 #             fut.result()
 def csv_read(path):
@@ -72,6 +66,7 @@ def csv_read(path):
         entropy_value = entropy_value.strip('.')
 
     return res_dict
+
 
 if __name__ == "__main__":
     print(csv_read(path=f"{TEST_PATH}/boundedexecutor/test.csv"))
