@@ -90,21 +90,23 @@ def get_report_for_device(request, device_id):
         for _analysis in analysis_queryset:
             dataset = {}
             dataset['label'] = str(_analysis.version)
-            result_dict = Result.objects.filter(firmware_analysis=_analysis).only('strcpy', 'cve_high', 'cve_medium', 'cve_low', 'exploits')
-            logger.debug("result querset: %s", result_dict)
+            result_obj = Result.objects.get(firmware_analysis=_analysis)  # should only be one obj
+            logger.debug("result object: %s", result_obj)
             try:
-                if not result_dict:
+                if not result_obj:
                     logger.error("result empty for %s", str(_analysis.id))
                     dataset['data'] = [0, 0, 0, 0, 0]
                 else:
                     data_list = []
+                    result_obj  # .only('strcpy', 'cve_high', 'cve_medium', 'cve_low', 'exploits')
                     for _label in label_list:
-                        data_list.append(result_dict.get(_label))
+                        data_list.append(getattr(result_obj, _label))
                     dataset['data'] = data_list
                     logger.debug("result data: %s", dataset['data'])
-            except BaseException:
+            except BaseException as Excep:
                 logger.error("result empty for %s", str(_analysis.id))
                 dataset['data'] = [0, 0, 0, 0, 0]
+                logger.error("ERROR: %s", Excep )
             dataset['fill'] = "true"
             dataset['backgroundColor'] = rnd_rgb_full()
             dataset['borderColor'] = rnd_rgb_color()
