@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 import logging
 
 from django.conf import settings
-from django.forms import model_to_dict
 from django.shortcuts import render
 from django.http import HttpResponseBadRequest
 from django.contrib.auth.decorators import login_required
@@ -90,7 +89,7 @@ def get_report_for_device(request, device_id):
         for _analysis in analysis_queryset:
             dataset = {}
             dataset['label'] = str(_analysis.version)
-            result_queryset = Result.objects.filter(firmware_analysis=_analysis)  
+            result_queryset = Result.objects.filter(firmware_analysis=_analysis)
             logger.debug("result object: %s", result_queryset)
             try:
                 if not result_queryset:
@@ -99,15 +98,14 @@ def get_report_for_device(request, device_id):
                 else:
                     result_obj = result_queryset.first()  # should only be one obj
                     data_list = []
-                    result_obj  # .only('strcpy', 'cve_high', 'cve_medium', 'cve_low', 'exploits')
                     for _label in label_list:
                         data_list.append(getattr(result_obj, _label))
                     dataset['data'] = data_list
                     logger.debug("result data: %s", dataset['data'])
-            except BaseException as Excep:
+            except BaseException as excep:
                 logger.error("result empty for %s", str(_analysis.id))
                 dataset['data'] = [0, 0, 0, 0, 0]
-                logger.error("ERROR: %s", Excep )
+                logger.error("ERROR: %s", excep )
             dataset['fill'] = "true"
             dataset['backgroundColor'] = rnd_rgb_full()
             dataset['borderColor'] = rnd_rgb_color()

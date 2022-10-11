@@ -191,28 +191,28 @@ install_debs(){
     apt-get install build-essential
   fi
   # Docker
-  if [[ "$WSL" -eq 0 ]]; then
-    if ! command -v docker > /dev/null ; then
-        apt-get install -y docker.io
-    fi
-    # docker-compose
-    if ! command -v docker-compose > /dev/null ; then
-        pip3 install docker-compose --upgrade
-        if ! [[ -d /usr/bin/docker-compose ]]; then
-        ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
-        fi
-    else
-        DOCKER_COMP_VER=$(docker-compose -v | grep version | awk '{print $3}' | tr -d ',')
-        if [[ $(version "$DOCKER_COMP_VER") -lt $(version "1.28.5") ]]; then
-        echo -e "\n${ORANGE}WARNING: compatibility of the used docker-compose version is unknown!$NC"
-        echo -e "\n${ORANGE}Please consider updating your docker-compose installation to version 1.28.5 or later.$NC"
-        read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
-        fi
-    fi
-  else
-    echo -e "\n${ORANGE}WARNING: If you are using WSL2 with docker integration run something like this: \$apt-get purge docker-ce docker-ce-cli containerd.io docker-compose-plugin !$NC"
-    read -p "Fix docker stuff in other terminal. Press any key to continue ..." -n1 -s -r
+  if [[ "$WSL" -eq 1 ]]; then
+    echo -e "\n${ORANGE}WARNING: If you are using WSL2, disable docker integration from the docker-desktop daemon!$NC"
+    read -p "Fix docker stuff, then continue. Press any key to continue ..." -n1 -s -r
   fi
+  if ! command -v docker > /dev/null ; then
+      apt-get install -y docker.io
+  fi
+  # docker-compose
+  if ! command -v docker-compose > /dev/null ; then
+      pip3 install docker-compose --upgrade
+      if ! [[ -d /usr/bin/docker-compose ]]; then
+      ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
+      fi
+  else
+      DOCKER_COMP_VER=$(docker-compose -v | grep version | awk '{print $3}' | tr -d ',')
+      if [[ $(version "$DOCKER_COMP_VER") -lt $(version "1.28.5") ]]; then
+      echo -e "\n${ORANGE}WARNING: compatibility of the used docker-compose version is unknown!$NC"
+      echo -e "\n${ORANGE}Please consider updating your docker-compose installation to version 1.28.5 or later.$NC"
+      read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
+      fi
+  fi
+
   # python3-dev
   if ! dpkg -l python3.10-dev &>/dev/null; then
       apt-get install -y python3.10-dev || apt-get install -y -q python3-dev
