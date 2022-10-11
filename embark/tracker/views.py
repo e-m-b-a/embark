@@ -90,13 +90,14 @@ def get_report_for_device(request, device_id):
         for _analysis in analysis_queryset:
             dataset = {}
             dataset['label'] = str(_analysis.version)
-            result_obj = Result.objects.get(firmware_analysis=_analysis)  # should only be one obj
-            logger.debug("result object: %s", result_obj)
+            result_queryset = Result.objects.filter(firmware_analysis=_analysis)  
+            logger.debug("result object: %s", result_queryset)
             try:
-                if not result_obj:
+                if not result_queryset:
                     logger.error("result empty for %s", str(_analysis.id))
                     dataset['data'] = [0, 0, 0, 0, 0]
                 else:
+                    result_obj = result_queryset.first()  # should only be one obj
                     data_list = []
                     result_obj  # .only('strcpy', 'cve_high', 'cve_medium', 'cve_low', 'exploits')
                     for _label in label_list:
