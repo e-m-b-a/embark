@@ -105,7 +105,7 @@ def get_report_for_device(request, device_id):
             except BaseException as excep:
                 logger.error("result empty for %s", str(_analysis.id))
                 dataset['data'] = [0, 0, 0, 0, 0]
-                logger.error("ERROR: %s", excep )
+                logger.error("ERROR: %s", excep)
             dataset['fill'] = "true"
             dataset['backgroundColor'] = rnd_rgb_full()
             dataset['borderColor'] = rnd_rgb_color()
