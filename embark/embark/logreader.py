@@ -44,7 +44,6 @@ class LogReader:
 
         # global module count and status_msg directory
         self.module_cnt = 0
-        self.percentage = 0.0
         self.firmware_id = firmware_id
         self.firmware_id_str = str(self.firmware_id)
         try:
@@ -81,49 +80,49 @@ class LogReader:
 
     def phase_identify(self):
         # phase patterns to match
-        pre_checker_phase_pattern = "*Pre\-checking\ phase\ started*"
-        testing_phase_pattern = "*Testing\ phase\ started*"
-        simulation_phase_pattern = "*System\ emulation\ phase\ started*"
-        reporting_phase_pattern = "*Reporting\ phase\ started*"
-        done_pattern = "*Test\ ended\ on*"
+        pre_checker_phase_pattern = r"*Pre\-checking\ phase\ started*"
+        testing_phase_pattern = r"*Testing\ phase\ started*"
+        simulation_phase_pattern = r"*System\ emulation\ phase\ started*"
+        reporting_phase_pattern = r"*Reporting\ phase\ started*"
+        done_pattern = r"*Test\ ended\ on*"
 
         # calculate percentage
         max_module = 0
         phase_nmbr = 0
-        if re.match( pattern=pre_checker_phase_pattern, string=self.status_msg["phase"]):
+        if re.match(pattern=pre_checker_phase_pattern, string=self.status_msg["phase"]):
             max_module = EMBA_P_MOD_CNT
             phase_nmbr = EMBA_P_PHASE
-        elif re.match( pattern=testing_phase_pattern, string=self.status_msg["phase"]):
+        elif re.match(pattern=testing_phase_pattern, string=self.status_msg["phase"]):
             max_module = EMBA_S_MOD_CNT
             phase_nmbr = EMBA_S_PHASE
-        elif re.match( pattern=simulation_phase_pattern, string=self.status_msg["phase"]):
+        elif re.match(pattern=simulation_phase_pattern, string=self.status_msg["phase"]):
             max_module = EMBA_L_MOD_CNT
             phase_nmbr = EMBA_L_PHASE
-        elif re.match( pattern=reporting_phase_pattern, string=self.status_msg["phase"]):
+        elif re.match(pattern=reporting_phase_pattern, string=self.status_msg["phase"]):
             max_module = EMBA_F_MOD_CNT
             phase_nmbr = EMBA_F_PHASE
-        elif re.match( pattern=done_pattern, string=self.status_msg["phase"]):
+        elif re.match(pattern=done_pattern, string=self.status_msg["phase"]):
             max_module = -1
             phase_nmbr = EMBA_PHASE_CNT
         return max_module, phase_nmbr
 
     # update our dict whenever a new module is being processed
     def update_status(self, stream_item_list):
-        max_module, phase_nmbr = self.phase_nmbr()
+        max_module, phase_nmbr = self.phase_identify()
         if max_module > 0:
             self.module_cnt += 1
             self.module_cnt = self.module_cnt % max_module  # make sure it's in range
-            self.percentage =  phase_nmbr * ( 100 / EMBA_PHASE_CNT ) + (( 100 / EMBA_PHASE_CNT ) / max_module ) * self.module_cnt # increments: F=6.25, S=0.65, L=3.57, P=1.25
+            percentage = phase_nmbr * (100 / EMBA_PHASE_CNT) + ((100 / EMBA_PHASE_CNT) / max_module) * self.module_cnt   # increments: F=6.25, S=0.65, L=3.57, P=1.25
         else:
-            self.percentage = 100
-            logger.debug("Undefined state in logreader %s ", self.status_msg )
-        
+            percentage = 100
+            logger.debug("Undefined state in logreader %s ", self.status_msg)
+
         # smarty conversion
-        self.percentage = self.percentage / 100
+        percentage = percentage / 100
 
         # set attributes of current message
         self.status_msg["module"] = stream_item_list[0]
-        self.status_msg["percentage"] = self.percentage
+        self.status_msg["percentage"] = percentage
 
         # get copy of the current status message
         tmp_mes = copy.deepcopy(self.status_msg)
