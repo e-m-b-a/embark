@@ -115,11 +115,3 @@ def delete_fw_file(request):
         return render(request, 'uploader/firmwareDelete.html', {'form': form})
     return HttpResponseRedirect('/uploader/')
 
-
-@require_http_methods(["GET"])
-@login_required(login_url='/' + settings.LOGIN_URL)
-def import_analysis(request):
-    req_logger.info("%s requested with: %s", __name__, request)
-    return render(request, 'uploader/analysisImport.html', {'success_message': True, 'message': "This Functionality is coming soon(ish)"})
-
-# TODO add store & read func

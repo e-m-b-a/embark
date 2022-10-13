@@ -23,4 +23,5 @@ urlpatterns = [
     path('', include('users.urls')),
     path('', include('dashboard.urls')),
     path('', include('reporter.urls')),
+    path('', include('porter.urls')),
 ] + staticfiles_urlpatterns()
