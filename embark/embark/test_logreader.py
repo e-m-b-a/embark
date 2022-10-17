@@ -15,8 +15,11 @@ logger = logging.getLogger(__name__)
 STATUS_PATTERN = "\\[\\*\\]*"
 PHASE_PATTERN = "\\[\\!\\]*"
 
+
 class TestLogreader(TestCase):
-    def setUp(self):
+
+    def __init__(self):
+        super().__init__()
         analysis = FirmwareAnalysis.objects.create()
         analysis.failed = False
         analysis.save()   # args??
@@ -54,7 +57,7 @@ class TestLogreader(TestCase):
                     self.assertGreaterEqual(logr.status_msg['percentage'], 0.50)
                 elif phase_identifier == EMBA_F_PHASE:
                     self.assertGreaterEqual(logr.status_msg['percentage'], 0.75)
-                elif phase_identifier in (0,4):
+                elif phase_identifier in (0, 4):
                     self.assertEqual(logr.status_msg['percentage'], 1.0)
                 elif phase_identifier < 0:
                     self.assertEqual(logr.status_msg['percentage'], 0.0)
@@ -63,7 +66,6 @@ class TestLogreader(TestCase):
                     raise Exception
             # logreader file should be identical to emba.log
             self.assertEqual(logr.finish, True)
-
 
     def write_to_log(self, line):
         """

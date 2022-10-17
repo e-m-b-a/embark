@@ -79,34 +79,34 @@ class LogReader:
             self.cleanup()
 
     @staticmethod
-    def phase_identify(status_msg):
+    def phase_identify(status_message):
         # phase patterns to match
         pre_checker_phase_pattern = "Pre-checking phase"
         testing_phase_pattern = "Testing phase"
         simulation_phase_pattern = "System emulation phase"
         reporting_phase_pattern = "Reporting phase"
         done_pattern = "Test ended on"
-        failed_pattern ="EMBA failed in docker mode!"
+        failed_pattern = "EMBA failed in docker mode!"
 
         # calculate percentage
         max_module = -1
         phase_nmbr = -1
-        if re.search(pattern=re.escape(pre_checker_phase_pattern), string=status_msg["phase"]):
+        if re.search(pattern=re.escape(pre_checker_phase_pattern), string=status_message["phase"]):
             max_module = EMBA_P_MOD_CNT
             phase_nmbr = EMBA_P_PHASE
-        elif re.search(pattern=re.escape(testing_phase_pattern), string=status_msg["phase"]):
+        elif re.search(pattern=re.escape(testing_phase_pattern), string=status_message["phase"]):
             max_module = EMBA_S_MOD_CNT
             phase_nmbr = EMBA_S_PHASE
-        elif re.search(pattern=re.escape(simulation_phase_pattern), string=status_msg["phase"]):
+        elif re.search(pattern=re.escape(simulation_phase_pattern), string=status_message["phase"]):
             max_module = EMBA_L_MOD_CNT
             phase_nmbr = EMBA_L_PHASE
-        elif re.search(pattern=re.escape(reporting_phase_pattern), string=status_msg["phase"]):
+        elif re.search(pattern=re.escape(reporting_phase_pattern), string=status_message["phase"]):
             max_module = EMBA_F_MOD_CNT
             phase_nmbr = EMBA_F_PHASE
-        elif re.search(pattern=re.escape(done_pattern), string=status_msg["phase"]):
+        elif re.search(pattern=re.escape(done_pattern), string=status_message["phase"]):
             max_module = 0
             phase_nmbr = EMBA_PHASE_CNT
-        elif re.search(pattern=re.escape(failed_pattern), string=status_msg["phase"]):
+        elif re.search(pattern=re.escape(failed_pattern), string=status_message["phase"]):
             max_module = -2
             phase_nmbr = 0
         return max_module, phase_nmbr
@@ -352,9 +352,9 @@ if __name__ == "__main__":
         "module": "",
         "phase": "",
     }
-    phase_pattern = "\\[\\!\\]*"
+    phase = "\\[\\!\\]*"
     with open(f"{test_dir}/test/logreader/test-run-good.log", 'r', encoding='UTF-8') as test_file:
         for line in test_file:
-            if re.match(phase_pattern, line) is not None:
+            if re.match(phase, line) is not None:
                 status_msg["phase"] = line
             LogReader.phase_identify(status_msg)

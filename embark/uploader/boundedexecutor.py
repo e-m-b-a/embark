@@ -80,7 +80,7 @@ class BoundedExecutor:
             # success
             logger.info("Success: %s", cmd)
             logger.info("EMBA returned: %d", return_code)
-            if return_code !=0:
+            if return_code != 0:
                 raise Exception
 
             # get csv log location
