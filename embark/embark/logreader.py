@@ -345,6 +345,7 @@ class LogReader:
 
 
 if __name__ == "__main__":
+    PHASE = "\\[\\!\\]*"
     test_dir = pathlib.Path(__file__).resolve().parent.parent.parent
     status_msg = {
         "firmwarename": "LogTestFirmware",
@@ -352,9 +353,9 @@ if __name__ == "__main__":
         "module": "",
         "phase": "",
     }
-    phase = "\\[\\!\\]*"
+
     with open(f"{test_dir}/test/logreader/test-run-good.log", 'r', encoding='UTF-8') as test_file:
         for line in test_file:
-            if re.match(phase, line) is not None:
+            if re.match(PHASE, line) is not None:
                 status_msg["phase"] = line
             LogReader.phase_identify(status_msg)
