@@ -63,6 +63,7 @@ class BoundedExecutor:
         try:
 
             analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+            return_code = 0
 
             # The os.setsid() is passed in the argument preexec_fn so it's run after the fork() and before  exec() to run the shell.
             # attached but synchronous
@@ -74,9 +75,13 @@ class BoundedExecutor:
                 logger.debug("subprocess got pid %s", proc.pid)
                 # wait for completion
                 proc.communicate()
+                return_code = proc.wait()
 
             # success
             logger.info("Success: %s", cmd)
+            logger.info("EMBA returned: %d", return_code)
+            if return_code !=0:
+                raise Exception
 
             # get csv log location
             csv_log_location = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/f50_base_aggregator.csv"

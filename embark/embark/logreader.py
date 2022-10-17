@@ -15,7 +15,7 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.conf import settings
 
-#from uploader.models import FirmwareAnalysis
+from uploader.models import FirmwareAnalysis
 
 
 logger = logging.getLogger(__name__)
@@ -296,7 +296,6 @@ class LogReader:
 
         status_pattern = "\\[\\*\\]*"
         phase_pattern = "\\[\\!\\]*"
-        # TODO error_pattern = [-] EMBA failed in docker mode!
 
         color_pattern = "\\x1b\\[.{1,5}m"
 
