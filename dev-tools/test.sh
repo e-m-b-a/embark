@@ -18,10 +18,6 @@ ORANGE='\033[0;33m'
 BOLD='\033[1m'
 NC='\033[0m' # no color
 
-PORT="8000"
-IP="127.0.0.1"
-
-
 export DJANGO_SETTINGS_MODULE=embark.settings.dev
 export EMBARK_DEBUG=True
 export PIPENV_VENV_IN_PROJECT="True"
