@@ -120,6 +120,9 @@ install_emba(){
 create_ca (){
   # TODO could use some work 
   echo -e "\n$GREEN""$BOLD""Creating SSL Cert""$NC"
+  if ! [[ -d cert]]; then
+    sudo -u "${SUDO_USER:-${USER}}" git checkout -- cert
+  fi
   cd cert || exit 1
   if [[ -f embark.local.csr ]] || [[ -f embark-ws.local.csr ]] || [[ -f embark.local.crt ]] || [[ -f embark-ws.local.crt ]]; then 
     echo -e "\n$GREEN""$BOLD""Certs already generated, skipping""$NC"
@@ -226,8 +229,9 @@ install_debs(){
 install_daemon(){
   echo -e "\n$GREEN""$BOLD""Install embark daemon""$NC"
   sed -i "s|{\$EMBARK_ROOT_DIR}|$PWD|g" embark.service
-  # FIXME test this
-  ln -s "$PWD"/embark.service /etc/systemd/system/embark.service
+  if ! [[ -e /etc/systemd/system/embark.service ]] ; then
+    ln -s "$PWD"/embark.service /etc/systemd/system/embark.service
+  fi
 }
 
 uninstall_daemon(){
@@ -465,7 +469,7 @@ uninstall (){
     uninstall_daemon
     systemctl daemon-reload
   fi
-  git checkout HEAD -- embark.service
+  sudo -u "${SUDO_USER:-${USER}}" git checkout HEAD -- embark.service
   
   # reset ownership etc
   # TODO delete the dns resolve
