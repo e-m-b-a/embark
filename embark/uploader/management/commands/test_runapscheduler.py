@@ -3,7 +3,7 @@ import time
 from django.test import TestCase
 
 from uploader.models import ResourceTimestamp
-from .runapscheduler import resource_tracker, delete_old_job_executions
+from uploader.management.commands.runapscheduler import resource_tracker, delete_old_job_executions
 
 
 class UnpackerTest(TestCase):

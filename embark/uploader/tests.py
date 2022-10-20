@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from .models import FirmwareAnalysis, FirmwareFile
+from uploader.models import FirmwareAnalysis, FirmwareFile
 
 
 class TestModels(TestCase):

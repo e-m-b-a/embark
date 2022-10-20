@@ -20,3 +20,4 @@ www/
 *.error
 *.report
 *.service
+*.sql

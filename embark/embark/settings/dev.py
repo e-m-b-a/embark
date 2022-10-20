@@ -5,18 +5,15 @@ from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-load_dotenv(os.path.join(BASE_DIR.parent, '.env'))
-HASHID_FIELD_SALT = os.environ.get('HASHID_SALT')
-HASHID_FIELD_MIN_LENGTH = os.environ.get('HASHID_FIELD_MIN_LENGTH', 7)
-HASHID_FIELD_ENABLE_HASHID_OBJECT = os.environ.get('HASHID_FIELD_ENABLE_HASHID_OBJECT', False)
-HASHID_FIELD_ENABLE_DESCRIPTOR = os.environ.get('HASHID_FIELD_ENABLE_DESCRIPTOR', False)
+load_dotenv(dotenv_path=os.path.join(BASE_DIR.parent, '.env'))
 SECRET_KEY = os.environ.get('SECRET_KEY')
-DEBUG = bool(os.environ.get('EMBARK_DEBUG', True))
 ALLOWED_HOSTS = ['*']
 
 EMBA_ROOT = os.path.join(BASE_DIR.parent, 'emba')
 EMBA_LOG_ROOT = os.path.join(BASE_DIR.parent, 'emba_logs')
 EMBA_LOG_URL = 'emba_logs/'
+
+DEBUG = True
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -25,13 +22,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_bootstrap5',
+    'django_tables2',
     'mod_wsgi.server',
     'django_apscheduler',
     'channels',
     'uploader',
     'users',
     'reporter',
-    'dashboard'
+    'dashboard',
+    'tracker'
 ]
 
 AUTH_USER_MODEL = 'users.User'
@@ -93,7 +93,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{asctime} {process:d} {thread:d} {module} {levelname} {message}',
+            'format': '{asctime} {process:d} {thread:d} {pathname} {levelname} {message}',
             'style': '{',
         },
         'simple': {
@@ -122,7 +122,7 @@ LOGGING = {
         'info_handler': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'formatter': 'verbose',
+            'formatter': 'simple',
             'filename': BASE_DIR / 'embark.log',
         },
     },
@@ -146,6 +146,10 @@ LOGGING = {
         'reporter': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
             'level': 'INFO',
+        },
+        'tracker': {
+            'handlers': ['debug_handler', 'info_handler', 'console_handler'],
+            'level': 'DEBUG',
         },
         'requests': {
             'handlers': ['info_handler'],

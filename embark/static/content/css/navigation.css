@@ -1,6 +1,7 @@
 /* navigation menu */
 #navigation {
     position: fixed;
+    overflow: hidden;
     width: 80px;
     height: 100%;
     background: #29043f;

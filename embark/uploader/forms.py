@@ -1,6 +1,5 @@
 # pylint: disable=E1101
 import logging
-import django
 from django import forms
 
 from uploader import models
@@ -8,43 +7,39 @@ from uploader import models
 logger = logging.getLogger(__name__)
 
 
+class VendorForm(forms.ModelForm):
+
+    class Meta:
+        model = models.Vendor
+
+        fields = ['vendor_name']
+
+
+class LabelForm(forms.ModelForm):
+
+    class Meta:
+        model = models.Label
+
+        fields = ['label_name']
+
+
+class DeviceForm(forms.ModelForm):
+
+    class Meta:
+        model = models.Device
+
+        fields = ['device_name', 'device_label', 'device_vendor']
+
+
 class FirmwareAnalysisForm(forms.ModelForm):
 
     class Meta:
         model = models.FirmwareAnalysis
 
-        fields = ('firmware', 'version', 'vendor', 'device', 'notes', 'firmware_Architecture', 'cwe_checker', 'deep_extraction', 'online_checks', 'user_emulation_test', 'system_emulation_test')
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        for field in self.visible_fields():
-
-            if isinstance(field.field.widget, django.forms.widgets.TextInput):
-                field.field.widget.attrs['class'] = 'form-control formTxtField'
-                field.field.widget.attrs['placeholder'] = field.label
-
-            if isinstance(field.field.widget, django.forms.widgets.CheckboxInput):
-                field.field.widget.attrs['class'] = 'form-check-input active'
-
-            if isinstance(field.field.widget, django.forms.widgets.Select):
-                field.field.widget.attrs['class'] = 'form-control select dropdownSelect'
-
-            # TODO work to get rid of
-            try:
-                if field.field.readonly:
-                    field.field.widget.attrs["disabled"] = "disabled"
-            except Exception as error:
-                logger.info("Exception passed: %s", error)
-                # pass
-
-            try:
-                field.expert_mode = field.field.expert_mode
-            except Exception as error:
-                logger.info("Exception passed: %s", error)
-                # pass
-
-        self.base_fields['firmware'] = forms.ModelChoiceField(queryset=models.FirmwareFile.objects, empty_label='Select firmware')
+        fields = ['firmware', 'version', 'device', 'notes', 'firmware_Architecture', 'cwe_checker', 'deep_extraction', 'online_checks', 'user_emulation_test', 'system_emulation_test']
+        widgets = {
+            "device": forms.CheckboxSelectMultiple
+        }
 
 
 class DeleteFirmwareForm(forms.Form):

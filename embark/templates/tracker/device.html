@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+<!--
+    Input: device id/name/label
+
+        Label(X-axis): FW Version /Analysis or notes
+        Data(y-axis):  basically all models.Results
+            Can be Sortable by:    CVE count
+            Kernel version
+            ...etc
+
+        Canvas 1: radio chart of all analysis
+        Canvas 2: Time graph over version sorted by creation date
+-->
+
+{% load static %}
+{% load django_bootstrap5 %}
+
+{% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/tracker.css' %}"/>{% endblock style %}
+{% block js %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock js %}
+
+{% block title %}EMBArk tracker device{% endblock title %}
+{% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
+{% block sidebar %}{% include "tracker/sidebar.html" %}{% endblock sidebar %}
+
+{% bootstrap_messages %}
+
+{% block maincontent %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mx-auto border-bottom">
+  {% for _info in device %}
+    <h3>{{ info }}</h3>
+  {% endfor %}
+
+</div>
+<div class="mx-auto border-bottom">
+  <canvas id="trackerChart" width="900" height="380"></canvas>
+  <script>
+      const data = {
+          labels: {{ labels|safe }},
+          datasets: {{ data|safe }}
+      };
+
+      const config = {
+          type: 'radar',
+          data: data,
+          options: {
+              elements: {
+                  line: {
+                      borderWidth: 3
+                  }
+              }
+          },
+      };
+
+      const trackerChart = new Chart(document.getElementById('trackerChart'), config);
+  </script>
+</div>
+{% endblock %}

@@ -18,6 +18,8 @@ msgpack = "*"
 django = "*"
 django-hashid-field = "*"
 mod-wsgi-standalone = "*"
+django-bootstrap5 = "*"
+django-tables2 = "*"
 
 [dev-packages]
 pycodestyle = "*"

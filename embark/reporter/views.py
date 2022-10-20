@@ -42,9 +42,9 @@ def html_report(request, analysis_id, html_file):
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         if analysis.user == request.user:
             html_body = get_template(report_path)
-            logger.info("html_report - analysis_id: %s html_file: %s", analysis_id, html_file)
+            logger.debug("html_report - analysis_id: %s html_file: %s", analysis_id, html_file)
             return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
-    logger.debug("could  not get template - %s", request)
+    logger.error("could  not get template - %s", request)
     return HttpResponseBadRequest
 
 
@@ -56,9 +56,9 @@ def html_report_path(request, analysis_id, html_path, html_file):
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         if analysis.user == request.user:
             html_body = get_template(report_path)
-            logger.info("html_report - analysis_id: %s path: %s html_file: %s", analysis_id, html_path, html_file)
+            logger.debug("html_report - analysis_id: %s path: %s html_file: %s", analysis_id, html_path, html_file)
             return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
-    logger.debug("could  not get path - %s", request)
+    logger.error("could  not get path - %s", request)
     return HttpResponseBadRequest
 
 

@@ -14,9 +14,9 @@ from channels.routing import ProtocolTypeRouter
 from channels.routing import URLRouter
 from django.core.asgi import get_asgi_application
 
-from .routing import ws_urlpatterns
+from embark.routing import ws_urlpatterns
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'embark.settings.deploy')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'embark.settings.dev')
 asgi_application = get_asgi_application()
 
 application = ProtocolTypeRouter({

@@ -136,6 +136,68 @@ def delete_fw_pre_delete_post(sender, instance, **kwargs):
         logger.error("No related FW found for delete request: %s", str(sender))
 
 
+class Vendor (models.Model):
+    """
+    class Vendor
+    Model of vendor for devices
+    (1 vendor --> n devices)
+    """
+    MAX_LENGTH = 127
+
+    vendor_name = models.CharField(
+        help_text='Vendor name', verbose_name="vendor name", max_length=MAX_LENGTH,
+        blank=True)
+
+    class Meta:
+        ordering = ['vendor_name']
+
+    def __str__(self):
+        return self.vendor_name
+
+
+class Label (models.Model):
+    """
+    class Label
+    Model for labels
+    ( 1 device --> n labels )
+    """
+    MAX_LENGTH = 127
+
+    label_name = models.CharField(
+        help_text='label name', verbose_name="label name", max_length=MAX_LENGTH,
+        blank=True)
+    label_date = models.DateTimeField(default=datetime.now, blank=True)
+
+    class Meta:
+        ordering = ['label_name']
+
+    def __str__(self):
+        return self.label_name
+
+
+class Device(models.Model):
+    """
+    class Device
+    Model of the device under test
+    (m Devices <---> n FirmwareFiles)
+    (m Device <----> p Analyses )
+    * assumes device revisions as different devices etc.
+    """
+    MAX_LENGTH = 127
+
+    device_name = models.CharField(help_text='Device name', verbose_name="Device name", max_length=MAX_LENGTH, blank=True)
+    device_vendor = models.ForeignKey(Vendor, on_delete=models.SET_NULL, null=True)
+    device_label = models.ForeignKey(Label, on_delete=models.SET_NULL, null=True, help_text='label/tag', related_query_name='label', editable=True, blank=True)
+    device_date = models.DateTimeField(default=datetime.now, blank=True)
+    device_user = models.ForeignKey(Userclass, on_delete=models.SET_NULL, related_name='Device_User', null=True)
+
+    class Meta:
+        ordering = ['device_name']
+
+    def __str__(self):
+        return f"{self.device_name}({self.device_vendor})"
+
+
 class FirmwareAnalysis(models.Model):
     """
     class Firmware
@@ -159,19 +221,16 @@ class FirmwareAnalysis(models.Model):
     version = CharFieldExpertMode(
         help_text='Firmware version', verbose_name="Firmware version", max_length=MAX_LENGTH,
         blank=True, expert_mode=False)
-    vendor = CharFieldExpertMode(
-        help_text='Firmware vendor', verbose_name="Firmware vendor", max_length=MAX_LENGTH,
-        blank=True, expert_mode=False)
-    device = CharFieldExpertMode(
-        help_text='Device', verbose_name="Device", max_length=MAX_LENGTH, blank=True,
-        expert_mode=False)
     notes = CharFieldExpertMode(
         help_text='Testing notes', verbose_name="Testing notes", max_length=MAX_LENGTH,
         blank=True, expert_mode=False)
 
+    # new hardware oriented tracking
+    device = models.ManyToManyField(Device, help_text='device/platform', related_query_name='device', editable=True, max_length=MAX_LENGTH, blank=True)
+
     # emba expert flags
     firmware_Architecture = CharFieldExpertMode(
-        choices=[(None, 'Select architecture'), ('MIPS', 'MIPS'), ('ARM', 'ARM'), ('x86', 'x86'), ('x64', 'x64'), ('PPC', 'PPC')],
+        choices=[(None, 'Select architecture'), ('MIPS', 'MIPS'), ('ARM', 'ARM'), ('x86', 'x86'), ('x64', 'x64'), ('PPC', 'PPC')],  # TODO add NIOS2
         verbose_name="Select architecture of the linux firmware",
         help_text='Architecture of the linux firmware [MIPS, ARM, x86, x64, PPC] -a will be added',
         max_length=MAX_LENGTH, blank=True, expert_mode=True)
@@ -244,23 +303,32 @@ class FirmwareAnalysis(models.Model):
 
         command = ""
         if self.version:
-            command = command + " -X " + re.sub(r"[^a-zA-Z0-9\.\-\_]+", "", str(self.version))
-        if self.vendor:
-            command = command + " -Y " + re.sub(r"[^a-zA-Z0-9\-\_]+", "", str(self.vendor))
+            command = command + r" -X " + "\"" + re.sub(r"[^a-zA-Z0-9\.\-\_\ \+]+", "", str(self.version)) + "\""
         if self.device:
-            command = command + " -Z " + re.sub(r"[^a-zA-Z0-9\-\_]+", "", str(self.device))
+            devices = self.device.all()
+            logger.debug("get_flags - device - to dict query returns %s", devices)
+            _device_name_list = []
+            _device_vendor_list = []
+            for _device in devices:
+                _device_name_list.append(_device.device_name)
+                _device_obj = Device.objects.get(device_name=_device.device_name)
+                _device_vendor_list.append(_device_obj.device_vendor.vendor_name)
+            logger.debug("get_flags - device_name - to name dict %s", _device_name_list)
+            logger.debug("get_flags - vendor_name - to name dict %s", _device_vendor_list)
+            command = command + r" -Z " + "\"" + re.sub(r"[^a-zA-Z0-9\-\_\ ]+", "", str(_device_name_list)) + "\""
+            command = command + r" -Y " + "\"" + re.sub(r"[^a-zA-Z0-9\-\_\ ]+", "", str(_device_vendor_list)) + "\""
         if self.notes:
-            command = command + " -N " + re.sub(r"[^a-zA-Z0-9\-\_\ ]+", "", str(self.notes))
+            command = command + r" -N " + "\"" + re.sub(r"[^a-zA-Z0-9\-\_\ ]+", "", str(self.notes)) + f" (uuid:{self.id})" + "\""
         if self.firmware_Architecture:
-            command = command + " -a " + str(self.firmware_Architecture)
+            command = command + r" -a " + str(self.firmware_Architecture)
         if self.cwe_checker:
-            command = command + " -c"
+            command = command + r" -c"
         if self.deep_extraction:
-            command = command + " -x"
+            command = command + r" -x"
         if self.user_emulation_test:
-            command = command + " -E"
+            command = command + r" -E"
         if self.system_emulation_test:
-            command = command + " -Q"
+            command = command + r" -Q"
         # running emba
         logger.info("final emba parameters %s", command)
         return command

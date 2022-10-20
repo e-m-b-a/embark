@@ -1,5 +1,5 @@
 from django.contrib import admin
 
-from .models import Result
+from dashboard.models import Result
 
 admin.register(Result)

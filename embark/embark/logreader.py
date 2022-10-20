@@ -39,7 +39,8 @@ EMBA_F_PHASE = 4
 
 
 class LogReader:
-
+    # TODO fix!!!!
+    # TODO send update on refresh!!!
     def __init__(self, firmware_id):
 
         # global module count and status_msg directory
