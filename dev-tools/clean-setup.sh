@@ -1,8 +1,7 @@
 #!/bin/bash
 # EMBArk - The firmware security scanning environment
 #
-# Copyright 2020-2021 Siemens Energy AG
-# Copyright 2020-2021 Siemens AG
+# Copyright 2020-2022 Siemens Energy AG
 #
 # EMBArk comes with ABSOLUTELY NO WARRANTY.
 #
@@ -11,7 +10,9 @@
 # Author(s): Benedikt Kuehne
 
 # Description:  Script for cleaning up all docker- container and images
+
 cd "$(dirname "$0")" || exit 1
+cd ..
 echo -e "\n$GREEN""$BOLD""Reset docker container & networks""$NC"
 
 docker images
@@ -22,24 +23,6 @@ while docker images | grep -qE "\<none\>"; do
   echo -e "$GREEN""$BOLD""Remove failed docker image""$NC"
   docker image rm "$IMAGE_ID" -f
 done
-
-if docker images | grep -qE "^embeddedanalyzer/emba"; then
-  echo -e "\n$GREEN""$BOLD""Found EMBA docker environment - removing it""$NC"
-  CONTAINER_ID=$(docker images | grep -E "embeddedanalyzer/emba" | awk '{print $3}')
-  echo -e "$GREEN""$BOLD""Remove EMBA docker image""$NC"
-  docker image rm "$IMAGE_ID" -f
-fi
-
-if docker images | grep -qE "^embark[[:space:]]*latest"; then
-  echo -e "\n$GREEN""$BOLD""Found EMBArk docker environment - removing it""$NC"
-  CONTAINER_ID=$(docker container ls -a | grep -E "embark_embark_1" | awk '{print $1}')
-  echo -e "$GREEN""$BOLD""Stop EMBArk docker container""$NC"
-  docker container stop "$CONTAINER_ID"
-  echo -e "$GREEN""$BOLD""Remove EMBArk docker container""$NC"
-  docker container rm "$CONTAINER_ID" -f
-  echo -e "$GREEN""$BOLD""Remove EMBArk docker image""$NC"
-  docker image rm embark:latest -f
-fi
 
 if docker images | grep -qE "^mysql[[:space:]]*latest"; then
   echo -e "\n$GREEN""$BOLD""Found mysql docker environment - removing it""$NC"
@@ -89,6 +72,10 @@ fi
 fuser -k 8001/tcp
 fuser -k 80/tcp
 fuser -k 8080/tcp
+
 docker container prune
 
 echo -e "$ORANGE""$BOLD""Consider running \$docker system prune""$NC"
+rm -Rf -I ./embark_db
+
+pipenv run ./embark/manage.py flush

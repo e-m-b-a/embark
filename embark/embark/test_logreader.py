@@ -2,7 +2,7 @@ import logging
 from django.test import TestCase
 from uploader.models import FirmwareAnalysis, FirmwareFile
 
-from . import logreader
+from embark import logreader
 
 logger = logging.getLogger(__name__)
 

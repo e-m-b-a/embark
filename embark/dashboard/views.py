@@ -10,8 +10,8 @@ from django.views.decorators.http import require_http_methods
 from uploader.boundedexecutor import BoundedExecutor
 
 from uploader.models import FirmwareAnalysis
-from .models import Result
-from .forms import StopAnalysisForm
+from dashboard.models import Result
+from dashboard.forms import StopAnalysisForm
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +66,7 @@ def service_dashboard(request):
     :params request: req
     :return httpresp: html servicedashboard
     """
+    # TODO send logreader update on refresh!!!
     # if FirmwareAnalysis.objects.all().count() > 0:
     form = StopAnalysisForm()
     form.fields['analysis'].queryset = FirmwareAnalysis.objects.filter(finished=False)

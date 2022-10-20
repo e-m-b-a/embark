@@ -9,7 +9,7 @@
 body {
     overflow-x: hidden;
     background: #1a1a1a;
-    background-image: url('../images/bg.png');
+    background-image: url('/static/content/images/bg.png');
     background-repeat: repeat;
 }
 

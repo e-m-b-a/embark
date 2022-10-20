@@ -22,7 +22,6 @@ export NC='\033[0m'
 export HELP_DIR='helper'
 
 export DJANGO_SETTINGS_MODULE=embark.settings.deploy
-export EMBARK_DEBUG=True
 export HTTP_PORT=80
 export HTTPS_PORT=443
 export BIND_IP='0.0.0.0'
@@ -116,7 +115,7 @@ cp -Ru ./emba/ /var/www/emba/
 
 # Start container
 echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
-if ! docker-compose -f ./docker-compose.yml up -d ; then
+if docker-compose -f ./docker-compose.yml up -d ; then
   echo -e "$GREEN""$BOLD""Finished setup mysql and redis docker images""$NC"
 else
   echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"

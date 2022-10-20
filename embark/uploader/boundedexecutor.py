@@ -79,7 +79,7 @@ class BoundedExecutor:
             logger.info("Success: %s", cmd)
 
             # get csv log location
-            csv_log_location = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/f50_base_aggregator.csv"
+            csv_log_location = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/csv_logs/f50_base_aggregator.csv"
 
             # read f50_aggregator and store it into a Result form
             logger.info('Reading report from: %s', csv_log_location)
@@ -152,7 +152,7 @@ class BoundedExecutor:
 
         return: emba process future on success, None on failure
         """
-        active_analyzer_dir = f"{settings.ACTIVE_FW}{firmware_flags.id}/"
+        active_analyzer_dir = f"{settings.ACTIVE_FW}/{firmware_flags.id}/"
         logger.info("submitting firmware %s to emba", active_analyzer_dir)
 
         Archiver.copy(src=firmware_file.file.path, dst=active_analyzer_dir)
@@ -183,7 +183,7 @@ class BoundedExecutor:
         # build command
         # FIXME remove all flags
         # TODO add note with uuid
-        emba_cmd = f"{EMBA_SCRIPT_LOCATION} -p scan-profiles/default-scan-no-notify.emba -f {image_file_location} -l {emba_log_location} {emba_flags}"
+        emba_cmd = f"{EMBA_SCRIPT_LOCATION} -p ./scan-profiles/default-scan-no-notify.emba -f {image_file_location} -l {emba_log_location} {emba_flags}"
 
         # submit command to executor threadpool
         emba_fut = BoundedExecutor.submit(cls.run_emba_cmd, emba_cmd, firmware_flags.id, active_analyzer_dir)
@@ -238,18 +238,23 @@ class BoundedExecutor:
         with open(path, newline='\n', encoding='utf-8') as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=';')
             csv_list = []
-            for row in csv_reader:
-                # remove NAs from csv
-                if row[-1] == "NA":
-                    row.pop(-1)
-                csv_list.append(row)
-                for ele in csv_list:
-                    if len(ele) == 2:
-                        res_dict[ele[0]] = ele[1]
-                    elif len(ele) == 3:
-                        if not ele[0] in res_dict.keys():
-                            res_dict[ele[0]] = {}
-                        res_dict[ele[0]][ele[1]] = ele[2]
+            for _row in csv_reader:
+                # remove NA
+                if "NA" in _row:
+                    _row.remove("NA")
+                # remove empty
+                if "" in _row:
+                    _row.remove("")
+                csv_list.append(_row)
+                for _element in csv_list:
+                    if _element[0] == "version_details":
+                        res_dict[_element[1]] = _element[2:]
+                    elif len(_element) == 2:
+                        res_dict[_element[0]] = _element[1]
+                    elif len(_element) == 3:
+                        if not _element[0] in res_dict.keys():
+                            res_dict[_element[0]] = {}
+                        res_dict[_element[0]][_element[1]] = _element[2]
                     else:
                         pass
 

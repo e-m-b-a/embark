@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}EMBArk file upload{% endblock title %}
+{% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
+{% block maincontent %}
+    {% block upload %}{% include "uploader/upload.html" %}{% endblock upload %}
+    {% block delete %}{% include "uploader/delete.html" %}{% endblock delete %}
+{% endblock maincontent %}

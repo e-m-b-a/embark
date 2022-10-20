@@ -117,7 +117,7 @@ property-classes=
 function-rgx=[a-z_][a-z0-9_]{2,32}$
 
 # Regular expression matching correct variable names
-variable-rgx=[a-z_][a-z0-9_]{2,32}$
+variable-rgx=[_a-z_][a-z0-9_]{2,32}$
 
 # Regular expression matching correct constant names
 const-rgx=(([A-Z_][A-Z0-9_]*)|(__.*__))$

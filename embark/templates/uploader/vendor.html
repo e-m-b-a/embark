@@ -1,0 +1,17 @@
+{% load django_bootstrap5 %}
+
+<div class="box">
+
+    <p class="mainText">Vendor Configuration</p>
+    <p class="subText">Define vendor parameters for tracking</p>
+
+    <form action="{% url 'embark-uploader-vendor' %}" method="post" id="form">
+        {% csrf_token %}
+        <div class="innerBlock">
+            {% load filters %}
+            {% bootstrap_form vendor_form layout='inline' %}
+            {% bootstrap_button "Create" button_type="submit" button_class="btn-primary" %}
+        </div>
+    </form>
+
+</div>

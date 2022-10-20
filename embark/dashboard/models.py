@@ -6,8 +6,8 @@ from uploader.models import FirmwareAnalysis
 class Result(models.Model):
     firmware_analysis = models.ForeignKey(FirmwareAnalysis, on_delete=models.CASCADE, help_text='')
     architecture_verified = models.CharField(blank=True, null=True, max_length=100, help_text='')
-    os_verified = models.CharField(blank=True, null=True, max_length=100, help_text='')
-    emba_command = models.CharField(blank=True, null=True, max_length=300, help_text='')
+    os_verified = models.CharField(blank=True, null=True, max_length=256, help_text='')
+    emba_command = models.CharField(blank=True, null=True, max_length=(FirmwareAnalysis.MAX_LENGTH * 6), help_text='')
     files = models.IntegerField(default=0, help_text='')
     directories = models.IntegerField(default=0, help_text='')
     entropy_value = models.FloatField(default=0.0, help_text='')

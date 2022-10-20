@@ -1,0 +1,16 @@
+[client]
+port=3306
+socket=/tmp/mysql.sock
+
+[mysqld]
+port=3306
+socket=/tmp/mysql.sock
+key_buffer_size=16M
+max_allowed_packet=128M
+
+# My application special configuration
+# max_allowed_packet          = 32M
+# sql-mode                    = 'STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION'
+
+# Accept connections from any IP address
+bind-address	            = 0.0.0.0
