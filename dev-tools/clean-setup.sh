@@ -24,24 +24,6 @@ while docker images | grep -qE "\<none\>"; do
   docker image rm "$IMAGE_ID" -f
 done
 
-# if docker images | grep -qE "^embeddedanalyzer/emba"; then
-#   echo -e "\n$GREEN""$BOLD""Found EMBA docker environment - removing it""$NC"
-#   CONTAINER_ID=$(docker images | grep -E "embeddedanalyzer/emba" | awk '{print $3}')
-#   echo -e "$GREEN""$BOLD""Remove EMBA docker image""$NC"
-#   docker image rm "$CONTAINER_ID" -f
-# fi
-
-# if docker images | grep -qE "^embark[[:space:]]*latest"; then
-#   echo -e "\n$GREEN""$BOLD""Found EMBArk docker environment - removing it""$NC"
-#   CONTAINER_ID=$(docker container ls -a | grep -E "embark_embark_1" | awk '{print $1}')
-#   echo -e "$GREEN""$BOLD""Stop EMBArk docker container""$NC"
-#   docker container stop "$CONTAINER_ID"
-#   echo -e "$GREEN""$BOLD""Remove EMBArk docker container""$NC"
-#   docker container rm "$CONTAINER_ID" -f
-#   echo -e "$GREEN""$BOLD""Remove EMBArk docker image""$NC"
-#   docker image rm embark:latest -f
-# fi
-
 if docker images | grep -qE "^mysql[[:space:]]*latest"; then
   echo -e "\n$GREEN""$BOLD""Found mysql docker environment - removing it""$NC"
   CONTAINER_ID=$(docker container ls -a | grep -E "embark_db" | awk '{print $1}')

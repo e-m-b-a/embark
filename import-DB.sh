@@ -40,6 +40,11 @@ import_helper()
 
 SQL_FILE="${1:-}"
 
+if ! [[ -f "$SQL_FILE" ]]; then
+  echo -e "\\n$RED""No SQL-FILE supplied!""$NC\\n"
+  exit 1
+fi
+
 cd "$(dirname "$0")" || exit 1
 
 if ! [[ $EUID -eq 0 ]] ; then

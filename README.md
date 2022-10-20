@@ -13,6 +13,10 @@
   <a href="https://twitter.com/intent/tweet?text=Check%20out%20EMBArk%20-%20The%20Firmware%20security%20scanning%20environment!%20https://github.com/e-m-b-a/embark"><img src="https://img.shields.io/twitter/url.svg?style=social&url=https%3A%2F%2Fgithub.com%2Fe-m-b-a%2Fembark"></a>
 </p>
 
+# Important 
+* The new Tracking application currently doesn't work offline.
+* Device, Vendor and version tracking aren't fully integrated into all dashboards yet.
+
 ## Quick-Start
 `git clone https://github.com/e-m-b-a/embark.git; cd embark; sudo ./installer.sh -d`
 ## About
@@ -38,7 +42,6 @@ To start the EMBArk-Server simply run `$ sudo ./run-server.sh`.
 This starts the http-Server on 0.0.0.0:80
 
 ## Developer
-(Supports WSL) \
 For developers we recommend simply using: `sudo ./installer.sh -F ` and the `./dev-tools/debug-server-start.sh` script.
 
 ## Get involved

@@ -1,15 +1,10 @@
 # Security Policy
-<!---
-## Supported Versions
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
--->
+EMBArk is used as a platform for centralized research and testing in the field of IoT, OT and general embedded analysis. Because of this, code maturity may vary. We do not recommend setting up EMBArk as a in an unprotected environment! If you are using EMBArk you should know what you are doing and who has access to the host.
 
 ## Reporting a Vulnerability
 
-If there is a problem within the code or the dependencies feel free to open a issue or contact the maintainer directly.
+If there is a security problem within EMBArk please open an issue or contact us via one of the following ways:
+* [Issue](https://github.com/e-m-b-a/embark/issues)
+* [Discussions](https://github.com/e-m-b-a/embark/discussions)
+* [PM via Twitter](https://twitter.com/securefirmware)
