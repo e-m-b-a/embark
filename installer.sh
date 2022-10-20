@@ -503,7 +503,7 @@ if [ "$#" -ne 1 ]; then
   exit 1
 fi
 
-while getopts esFUrdDh OPT ; do
+while getopts esFUrdDSh OPT ; do
   case $OPT in
     e)
       export EMBA_ONLY=1
@@ -530,6 +530,10 @@ while getopts esFUrdDh OPT ; do
       export DEFAULT=1
       echo -e "$GREEN""$BOLD""Default installation of EMBArk""$NC"
       ;;
+    S)
+      export STRICT_MODE=1
+      echo -e "$GREEN""$BOLD""Strict-mode enabled""$NC"
+      ;;
     h)
       print_help
       exit 0
@@ -541,6 +545,8 @@ while getopts esFUrdDh OPT ; do
       ;;
   esac
 done
+
+enable_strict_mode $STRICT_MODE
 
 # WSL/OS version check
 # WSL support - currently experimental!
