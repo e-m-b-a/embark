@@ -558,7 +558,7 @@ if grep -q -i wsl /proc/version; then
   WSL=1
 fi
 
-if ! [[ $EUID -eq 0 ]] && [[ $LIST_DEP -eq 0 ]] ; then
+if [[ $EUID -ne 0 ]]; then
   echo -e "\\n$RED""Run EMBArk installation script with root permissions!""$NC\\n"
   print_help
   exit 1
