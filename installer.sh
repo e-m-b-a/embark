@@ -120,7 +120,7 @@ install_emba(){
 create_ca (){
   # TODO could use some work 
   echo -e "\n$GREEN""$BOLD""Creating SSL Cert""$NC"
-  if ! [[ -d cert]]; then
+  if ! [[ -d cert ]]; then
     sudo -u "${SUDO_USER:-${USER}}" git checkout -- cert
   fi
   cd cert || exit 1
