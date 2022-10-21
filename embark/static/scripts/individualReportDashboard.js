@@ -166,11 +166,11 @@ get_individual_report().then(function (returnData) {
 
     let data_to_display = {
         "Firmware name": returnData.name.replace(/\d\//,""),
-        "Firmware ID": returnData.name.replace(/\/.*$/,""),
+        "Firmware ID": returnData.id,
         "Start date": returnData.start_date.replace('T', ' - '),
         "End date": returnData.end_date.replace('T', ' - '),
         "Scan Duration": returnData.duration,
-        "Vendor": returnData.vendor,
+        "Device(s)": returnData.device_list,
         "Version": returnData.version,
         "Notes": returnData.notes,
         "Operating sytem detected": returnData.os_verified,

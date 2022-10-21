@@ -130,6 +130,9 @@ def get_individual_report(request, analysis_id):
         return_dict = dict(model_to_dict(result), **model_to_dict(analysis_object))
 
         return_dict['name'] = analysis_object.firmware_name
+        return_dict['id'] = analysis_object.firmware.id
+        return_dict['device_list'] = [ _device for _device in analysis_object.device.all() ]
+        return_dict['version'] = analysis_object.version
         return_dict['strcpy_bin'] = json.loads(return_dict['strcpy_bin'])
 
         return JsonResponse(data=return_dict, status=HTTPStatus.OK)
