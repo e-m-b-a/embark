@@ -203,7 +203,7 @@ install_debs(){
   fi
   # docker-compose
   if ! command -v docker-compose > /dev/null ; then
-      pip3 install docker-compose --upgrade
+      pip3 install docker-compose --upgrade || true
       if ! [[ -d /usr/bin/docker-compose ]]; then
       ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
       fi
