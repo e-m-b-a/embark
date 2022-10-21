@@ -165,7 +165,7 @@ get_individual_report().then(function (returnData) {
         '#009999', '#005050', returnData.bins_checked, returnData.stripped, 'Stripped');
 
     let data_to_display = {
-        "Firmware name": returnData.name.replace(/\d\//,""),
+        "Firmware name": returnData.firmware_name,
         "Firmware ID": returnData.id,
         "Start date": returnData.start_date.replace('T', ' - '),
         "End date": returnData.end_date.replace('T', ' - '),
