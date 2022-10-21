@@ -32,7 +32,7 @@ $(window).bind("load", function() {
         document.querySelector("#file-input").onchange = function(){
             var fileNames = "";
             for (var i = 0; i < this.files.length; i++) {
-                fileNames = fileNames + this.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + "<br>";
+                fileNames = fileNames + this.value[0].name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + "<br>";
             }
             var target = document.querySelector("#file-name");
             target.innerHTML = fileNames;
