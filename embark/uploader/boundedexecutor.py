@@ -230,6 +230,7 @@ class BoundedExecutor:
 
     @classmethod
     def csv_read(cls, analysis_id, path, cmd):
+        # TODO moved to importer link!
         """
         This job reads the F50_aggregator file and stores its content into the Result model
         """

@@ -53,7 +53,7 @@ $(window).bind("load", function() {
     //formData.append('file', fileData);
     $.ajax({
       type: 'POST',
-      url: '/uploader/save/',
+      url: './save/',
       data: formData,
       headers: {
         'X-CSRFToken': getCookie('csrftoken')

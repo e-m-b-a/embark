@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load static %}
+{% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/analysisImport.css' %}"/>{% endblock style %}
+{% block title %}EMBArk analysis importer{% endblock title %}
+{% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
+{% block maincontent %}
+<!-- success_message, message, analyze_form, -->
+{% if success_message %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <medium>{{ message }}</medium>
+    </div>
+{% endif %}
+    include analysisImport.html
+{% endblock maincontent %}
