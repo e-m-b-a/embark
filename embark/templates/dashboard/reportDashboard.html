@@ -24,7 +24,7 @@
                         <th data-priority="2" scope="col">ID</th>
                         <th scope="col">Name</th>
                         <th scope="col">Notes</th>
-                        <th scope="col">Device</th>
+                        <th scope="col">Device(Vendor)</th>
                         <th scope="col">Version</th>
                         <th scope="col">Start Date</th>
                         <th scope="col">End Date</th>
@@ -39,8 +39,8 @@
                             <td>{{ firmware.firmware_name }}</td>
                             <td>{{ firmware.notes }}</td>
                             <td>
-                                {% for _device in firmware.device.all %}
-                                    {{  _device }}
+                                {% for device in firmware.device.all %}
+                                    {{  device }}
                                 {% endfor %}
                             </td>
                             <td>{{ firmware.version }}</td>
