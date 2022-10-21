@@ -127,7 +127,7 @@ def get_individual_report(request, analysis_id):
 
         logger.debug("getting individual report for %s", result)
 
-        return_dict = dict(model_to_dict(result), **model_to_dict(analysis_object))
+        return_dict = dict(model_to_dict(result))
 
         return_dict['name'] = analysis_object.firmware_name
         return_dict['id'] = analysis_object.firmware.id
