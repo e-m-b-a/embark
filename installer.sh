@@ -203,9 +203,9 @@ install_debs(){
   fi
   # docker-compose
   if ! command -v docker-compose > /dev/null ; then
-      pip3 install --upgrade docker-compose || true
+      pip3 install docker-compose --upgrade
       if ! [[ -d /usr/bin/docker-compose ]]; then
-        ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
+      ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
       fi
   else
       DOCKER_COMP_VER=$(docker-compose -v | grep version | awk '{print $3}' | tr -d ',')
