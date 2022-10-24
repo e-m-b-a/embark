@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load django_bootstrap5 %}
 {% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/individualReportDashboard.css' %}"/>{% endblock style %}
 {% block title %}EMBArk individual dashboard{% endblock title %}
 {% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
@@ -50,6 +51,14 @@
               <form action={% url 'embark-MainDashboard' %} method='get'>
                 <button type="submit" class="btn buttonRowElem" >Main dashboard</button>
               </form>
+              <form action="{% url 'embark-tracker-ass' %}" method="post" id="form">
+                {% csrf_token %}
+                <div class="innerBlock">
+                    {% load filters %}
+                    {% bootstrap_form ass_form %}
+                    {% bootstrap_button "Create" button_type="submit" button_class="btn-primary" %}
+                </div>
+            </form>
               </div>
               <br/>
               <tbody id="detail_body"></tbody>

@@ -15,7 +15,7 @@ from dashboard.models import Result
 from embark.helper import rnd_rgb_color, rnd_rgb_full
 from uploader.models import FirmwareAnalysis, Device, Vendor
 from tracker.tables import SimpleDeviceTable
-from tracker.forms import TimeForm
+from tracker.forms import AssociateForm, TimeForm
 
 logger = logging.getLogger(__name__)
 
@@ -134,3 +134,15 @@ def tracker_time(request, time):
         device_table = SimpleDeviceTable(data=Device.objects.all(), template_name="django_tables2/bootstrap-responsive.html")
         return render(request=request, template_name='tracker/index.html', context={'username': request.user.username, 'table': device_table, 'labels': label_list, 'data': data})
     return HttpResponseBadRequest
+
+
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def set_associate_device_to(request, analysis_id):
+    if request.method == 'POST':
+        form = AssociateForm(request.POST)
+        if form.is_valid():
+            logger.debug("Posted Form is valid")
+            device = form.cleaned_data['device']
+            analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+            analysis.device.add(device)   # TODO check idk if this works yet

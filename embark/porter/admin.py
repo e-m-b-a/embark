@@ -1,3 +1,4 @@
 from django.contrib import admin
+from porter.models import LogZipFile
 
-# Register your models here.
+admin.site.register(LogZipFile)
