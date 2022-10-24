@@ -1,9 +1,10 @@
+{% load static %}
 {% block js %}<script type="text/javascript" src="{% static 'scripts/fileUpload.js' %}"></script>{% endblock js %}
 
 <div class="col-sm">
     <div class="box">
         <p class="mainText">Upload EMBA-Logs</p>
-        <p class="subText">Supports only zip-files </p>
+        <p class="subText">Supports only zip files without parent node</p>
         <div class="innerBlock">
             <!--TODO !!! everything else -->
             Selected file:
@@ -12,9 +13,6 @@
         <div class="buttonRow">
             <button type="submit" id="uploadFirmware-btn" class="btn buttonRowElem" onclick="saveFiles()" disabled>
                 Upload
-            </button>
-            <button type="button" class="btn buttonRowElem" >
-                <label for="file-input">Select file</label>
             </button>
             <input id="file-input" type="file" multiple/>
         </div>
