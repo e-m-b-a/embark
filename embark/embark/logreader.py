@@ -24,7 +24,18 @@ logger = logging.getLogger(__name__)
 PROCESS_MAP = {}
 
 # EMBAs module count
-EMBA_MODULE_CNT = 53
+EMBA_S_MOD_CNT = 39
+EMBA_P_MOD_CNT = 20
+EMBA_F_MOD_CNT = 4
+EMBA_L_MOD_CNT = 7
+EMBA_MODULE_CNT = EMBA_S_MOD_CNT + EMBA_P_MOD_CNT + EMBA_F_MOD_CNT + EMBA_L_MOD_CNT
+
+EMBA_PHASE_CNT = 4  # P, S, L, F modules
+# EMBA states
+EMBA_P_PHASE = 1
+EMBA_S_PHASE = 2
+EMBA_L_PHASE = 3
+EMBA_F_PHASE = 4
 
 
 class LogReader:
@@ -33,7 +44,7 @@ class LogReader:
     def __init__(self, firmware_id):
 
         # global module count and status_msg directory
-        self.module_count = 0
+        self.module_cnt = 0
         self.firmware_id = firmware_id
         self.firmware_id_str = str(self.firmware_id)
         try:
@@ -68,13 +79,60 @@ class LogReader:
         else:
             self.cleanup()
 
-    # update our dict whenever a new module is being processed
-    def update_status(self, stream_item_list):
-        # progress percentage TODO: improve percentage calculation
-        self.module_count += 1
+    @staticmethod
+    def phase_identify(status_message):
+        # phase patterns to match
+        pre_checker_phase_pattern = "Pre-checking phase"
+        testing_phase_pattern = "Testing phase"
+        simulation_phase_pattern = "System emulation phase"
+        reporting_phase_pattern = "Reporting phase"
+        done_pattern = "Test ended on"
+        failed_pattern = "EMBA failed in docker mode!"
 
         # calculate percentage
-        percentage = self.module_count / EMBA_MODULE_CNT
+        max_module = -1
+        phase_nmbr = -1
+        if re.search(pattern=re.escape(pre_checker_phase_pattern), string=status_message["phase"]):
+            max_module = EMBA_P_MOD_CNT
+            phase_nmbr = EMBA_P_PHASE
+        elif re.search(pattern=re.escape(testing_phase_pattern), string=status_message["phase"]):
+            max_module = EMBA_S_MOD_CNT
+            phase_nmbr = EMBA_S_PHASE
+        elif re.search(pattern=re.escape(simulation_phase_pattern), string=status_message["phase"]):
+            max_module = EMBA_L_MOD_CNT
+            phase_nmbr = EMBA_L_PHASE
+        elif re.search(pattern=re.escape(reporting_phase_pattern), string=status_message["phase"]):
+            max_module = EMBA_F_MOD_CNT
+            phase_nmbr = EMBA_F_PHASE
+        elif re.search(pattern=re.escape(done_pattern), string=status_message["phase"]):
+            max_module = 0
+            phase_nmbr = EMBA_PHASE_CNT
+        elif re.search(pattern=re.escape(failed_pattern), string=status_message["phase"]):
+            max_module = -2
+            phase_nmbr = 0
+        return max_module, phase_nmbr
+
+    # update our dict whenever a new module is being processed
+    def update_status(self, stream_item_list):
+        percentage = 0
+        max_module, phase_nmbr = self.phase_identify(self.status_msg)
+        if max_module > 0:
+            self.module_cnt += 1
+            self.module_cnt = self.module_cnt % max_module  # make sure it's in range
+            percentage = phase_nmbr * (100 / EMBA_PHASE_CNT) + ((100 / EMBA_PHASE_CNT) / max_module) * self.module_cnt   # increments: F=6.25, S=0.65, L=3.57, P=1.25
+        elif max_module == 0:
+            percentage = 100
+        else:
+            logger.error("EMBA failed")
+            self.finish = True
+            analysis = FirmwareAnalysis.objects.get(id=self.firmware_id)
+            analysis.failed = True
+            analysis.finished = True
+            analysis.save()
+            logger.debug("Undefined state in logreader %s ", self.status_msg)
+
+        # smarty conversion
+        percentage = percentage / 100
 
         # set attributes of current message
         self.status_msg["module"] = stream_item_list[0]
@@ -106,6 +164,7 @@ class LogReader:
 
     # update dictionary with phase changes
     def update_phase(self, stream_item_list):
+        self.module_cnt = 0
         self.status_msg["phase"] = stream_item_list[1]
 
         # get copy of the current status message
@@ -285,7 +344,19 @@ class LogReader:
         self.input_processing(inp)
         return self.test_list1, self.test_list2
 
-    @classmethod
-    def listen(cls):
-        # TODO listen for resend req
-        pass
+
+if __name__ == "__main__":
+    PHASE = "\\[\\!\\]*"
+    test_dir = pathlib.Path(__file__).resolve().parent.parent.parent
+    status_msg = {
+        "firmwarename": "LogTestFirmware",
+        "percentage": 0.0,
+        "module": "",
+        "phase": "",
+    }
+
+    with open(f"{test_dir}/test/logreader/test-run-good.log", 'r', encoding='UTF-8') as test_file:
+        for line in test_file:
+            if re.match(PHASE, line) is not None:
+                status_msg["phase"] = line
+            LogReader.phase_identify(status_msg)

@@ -15,7 +15,7 @@
 # Description: Installer for EMBArk
 
 # it the installer fails you can try to change it to 0
-STRICT_MODE=1
+STRICT_MODE=0
 
 export DEBIAN_FRONTEND=noninteractive
 

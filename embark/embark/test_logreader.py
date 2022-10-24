@@ -1,38 +1,81 @@
+import filecmp
 import logging
-from django.test import TestCase
-from uploader.models import FirmwareAnalysis, FirmwareFile
+import os
+import time
+import re
 
-from embark import logreader
+from django.conf import settings
+from django.test import TestCase
+from uploader.models import FirmwareAnalysis
+
+from embark.logreader import EMBA_F_PHASE, EMBA_L_PHASE, EMBA_P_PHASE, EMBA_S_PHASE, LogReader
 
 logger = logging.getLogger(__name__)
+
+STATUS_PATTERN = "\\[\\*\\]*"
+PHASE_PATTERN = "\\[\\!\\]*"
 
 
 class TestLogreader(TestCase):
 
     def __init__(self):
-        super().__init__(self)
-        self.log_string1 = "[\x1b[0;33m*\x1b[0m] Tue Jun 15 12:12:26 UTC 2021 - P02_firmware_bin_file_check starting\n"
-        self.log_string2 = "[\x1b[0;33m*\x1b[0m] Tue Jun 15 12:12:27 UTC 2021 - P02_firmware_bin_file_check finished\n"
-        self.log_string3 = "[\x1b[0;35m!\x1b[0m]\x1b[0;35m Test ended on Sat Jul  3 00:07:10 UTC 2021 and took about 00:34:24\x1b[0m\n"
-        self.log_string4 = "[*] Wed Apr 21 15:32:46 UTC 2021 - P05_firmware_bin_extractor starting"
-        self.log_list = []
-        self.log_list.append(self.log_string1)
-        self.log_list.append(self.log_string2)
-        self.log_list.append(self.log_string3)
-        self.log_list.append(self.log_string4)
+        super().__init__()
+        analysis = FirmwareAnalysis.objects.create()
+        analysis.failed = False
+        analysis.save()   # args??
 
-        # creat DB entry
-        test_file = FirmwareFile.objects.create()
-        firmware = FirmwareAnalysis(firmware=test_file)
-        firmware.pk = -1
-        firmware.save()
+        self.analysis_id = analysis.id
+        self.test_file_good = os.path.join(settings.BASE_DIR.parent, "test/logreader/test-run-good.log")
+        self.test_file_bad = os.path.join(settings.BASE_DIR.parent, "test/logreader/test-run-bad.log")
+        # check test_log file
+        if not self.test_file_good.isfile() or not self.test_file_bad.isfile():
+            logger.error("test_files not accessable")
+            print("Files for testing not found")
 
-    def test_in_pro(self):
-        logr = logreader.LogReader(-1)
-        res1 = []
-        res2 = []
-        for line in self.log_list:
-            res1, res2 = logr.produce_test_output(line)
-        self.assertEqual("P02_firmware_bin_file_check", res1[0][0])
-        self.assertEqual("Test ended on Sat Jul  3 00:07:10 UTC 2021 and took about 00:34:24",
-                         res2[0][1])
+    def file_test(self, file):
+        logr = LogReader(self.analysis_id)
+        # global PROCESS_MAP
+        with open(file, 'r', encoding='UTF-8') as test_file:
+            for line in test_file:
+                self.write_to_log(line)   # simulates EMBA
+                time.sleep(0.1)
+                # message check
+                # print("PROCESSMAP with index %s looks like this:%s", str(self.analysis_id), PROCESS_MAP[str(self.analysis_id)])
+                self.assertTrue(filecmp.cmp(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/logreader.log", f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/emba_logs/emba.log"), "Files not equal?!")   # check correctness of regexes
+                if re.match(STATUS_PATTERN, line):
+                    self.assertEqual(logr.status_msg['status'], line)
+                elif re.match(PHASE_PATTERN, line):
+                    self.assertEqual(logr.status_msg['phase'], line)
+                else:
+                    print("weird line in logreader: %s", line)
+                _, phase_identifier = logr.phase_identify(logr.status_msg)
+                if phase_identifier == EMBA_P_PHASE:
+                    self.assertGreaterEqual(logr.status_msg['percentage'], 0.0)
+                elif phase_identifier == EMBA_S_PHASE:
+                    self.assertGreaterEqual(logr.status_msg['percentage'], 0.25)
+                elif phase_identifier == EMBA_L_PHASE:
+                    self.assertGreaterEqual(logr.status_msg['percentage'], 0.50)
+                elif phase_identifier == EMBA_F_PHASE:
+                    self.assertGreaterEqual(logr.status_msg['percentage'], 0.75)
+                elif phase_identifier in (0, 4):
+                    self.assertEqual(logr.status_msg['percentage'], 1.0)
+                elif phase_identifier < 0:
+                    self.assertEqual(logr.status_msg['percentage'], 0.0)
+                else:
+                    print("weird phase in logreader line: %s - phase: %s ", line, phase_identifier)
+                    raise Exception
+            # logreader file should be identical to emba.log
+            self.assertEqual(logr.finish, True)
+
+    def write_to_log(self, line):
+        """
+        writes log line by line into log file
+        """
+        with open(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/emba_logs/emba.log", 'w', encoding='UTF-8') as file:
+            file.write(line)
+
+    def test_logreader_with_files(self):
+        self.file_test(self.test_file_bad)
+        os.remove(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/logreader.log")
+        os.remove(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/emba_logs/emba.log")
+        self.file_test(self.test_file_good)
