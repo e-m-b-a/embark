@@ -1,6 +1,7 @@
 import logging
 import csv
 import json
+import os
 
 from pathlib import Path
 import re
@@ -31,19 +32,28 @@ def import_log_dir(log_path, analysis_id):
 
 
 def result_read_in(analysis_id):
+    """
+    calls read for all files inside csv_logs
+
+    :return: success->result_obj fail->None 
+    """
     dir = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/csv_logs/"
     csv_list = [os.path.join(dir, _file) for _file in os.listdir(dir)]
     for _file in csv_list:
-        if _file.isfile():
-            read_csv(analysis_id=analysis_id, path=_file, cmd=f"")  # TODO return value??
+        if _file.isfile():      # TODO change check. > if valid EMBA csv file
+            logger.debug("File %s found and attempting to read", _file)
+            res = read_csv(analysis_id=analysis_id, path=_file)
+            logger.debug("Result for %s created or updated", analysis_id)
         logger.error("Cant find file for %s", analysis_id)
-        logger.debug("File not found %s", csv_log_location)
-    return None
+        res = None    
+    return res
 
 
-def read_csv(analysis_id, path, cmd):
+def read_csv(analysis_id, path):
     """
     This job reads the csv file and stores its contents into the Result model
+
+    :return: result_obj
     """
     res_dict = {}
     with open(path, newline='\n', encoding='utf-8') as csv_file:
@@ -74,9 +84,9 @@ def read_csv(analysis_id, path, cmd):
         entropy_value = re.findall(r'(\d+\.?\d*)', entropy_value)[0]
         entropy_value = entropy_value.strip('.')
 
-    res = Result(
+    res = Result.objects.update_or_create(
         firmware_analysis=FirmwareAnalysis.objects.get(id=analysis_id),
-        emba_command=cmd.replace(f"cd {settings.EMBA_ROOT} && ", ""),
+        emba_command=res_dict.get("emba_command", ''),
         architecture_verified=res_dict.get("architecture_verified", ''),
         # os_unverified=res_dict.get("os_unverified", ''),
         os_verified=res_dict.get("os_verified", ''),
@@ -111,5 +121,4 @@ def read_csv(analysis_id, path, cmd):
         certificates=int(res_dict.get("certificates", 0)),
         certificates_outdated=int(res_dict.get("certificates_outdated", 0)),
     )
-    res.save()
     return res

@@ -46,20 +46,27 @@ def import_read(request):
     form = FirmwareAnalysisImportForm(request.POST)
     if form.is_valid():
         logger.debug("Posted Form is valid")
-        # store file into settings.TEMP_DIR
-        # create new analysis
-        # assoziate device(s)
-
-        new_analysis = FirmwareAnalysis.objects.create()
-        new_analysis.user = request.user
-        if form.cleaned_data['firmware'] is not None:
-            new_analysis.firmware = form.cleaned_data['firmware']
-            new_analysis.firmware_name = new_analysis.firmware.file.name
         zip_file_obj = form.cleaned_data['zip_log_file']
         if zip_file_obj.user != request.user:
             logger.error("Permission denied - %s", request)
             return redirect('..')
-        # unzip, move and remove file
+        # create new analysis
+        new_analysis = FirmwareAnalysis.objects.create(user = request.user)
+        # set device(s), firmware, version, notes
+        if form.cleaned_data['firmware'] is not None:
+            logger.debug("trying to set firmware for new analysis")
+            new_analysis.firmware = form.cleaned_data['firmware']
+            new_analysis.firmware_name = new_analysis.firmware.file.name
+        if form.cleaned_data['device'] is not None:
+            logger.debug("trying to set device(s) for new analysis")
+            new_analysis.device = form.cleaned_data['device']
+        if form.cleaned_data['version'] is not None:
+            logger.debug("trying to set version for new analysis")
+            new_analysis.device = form.cleaned_data['version']
+        if form.cleaned_data['notes'] is not None:
+            logger.debug("trying to set notes for new analysis")
+            new_analysis.device = form.cleaned_data['notes']
+        new_analysis.save()
         logger.info("Importing analysis with %s", new_analysis.id)
         if import_log_dir(form.cleaned_data['zip_log_file'].get_abs_path(), new_analysis.id):
             zip_file_obj.delete()
@@ -67,7 +74,7 @@ def import_read(request):
             if result_obj is not None:
                 # success
                 logger.info("Successfully imported log as %s", str(result_obj.pk))
-                messages.info(request, 'import successful' + str(result_obj.pk))
+                messages.info(request, 'import successful for ' + str(result_obj.pk))
                 return redirect('..')
         messages.error(request, 'import failed')
         return redirect('..')

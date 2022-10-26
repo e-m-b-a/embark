@@ -4,11 +4,14 @@ from uploader.models import FirmwareAnalysis
 
 
 class Result(models.Model):
+    """
+    1-to-1 Result object for related FirmwareAnalysis
+    """
     # meta
-    firmware_analysis = models.ForeignKey(FirmwareAnalysis, on_delete=models.CASCADE, help_text='')
+    firmware_analysis = models.OneToOneField(FirmwareAnalysis, on_delete=models.CASCADE, primary_key=True)
     emba_command = models.CharField(blank=True, null=True, max_length=(FirmwareAnalysis.MAX_LENGTH * 6), help_text='')
     restricted = models.BooleanField(default=False, help_text='')
-    
+
 
     # base identifier
     os_verified = models.CharField(blank=True, null=True, max_length=256, help_text='')
