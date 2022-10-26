@@ -216,6 +216,7 @@ sleep 5
 
 echo -e "\n""$ORANGE$BOLD""=============================================================""$NC"
 echo -e "\n""$ORANGE$BOLD""Server started on http://embark.local""$NC"
+echo -e "\n""$ORANGE$BOLD""EMBA logs are under /var/www/emba_logs/<id> ""$NC"
 # echo -e "\n""$ORANGE$BOLD""For SSL you may use https://embark.local (Not recommended for local use)""$NC"
 # echo -e "\n\n""$GREEN$BOLD""the trusted rootCA.key for the ssl encryption is in ./cert""$NC"
 wait
