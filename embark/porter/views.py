@@ -36,11 +36,11 @@ def import_menu(request):
 @require_http_methods(["POST"])
 def import_read(request):
     """
-    View for importing EMBA analysis
+    View for importing EMBA analysis(POST only)
     Args:
-        TODO
+        req
     returns:
-        -
+        messages, status
     """
     req_logger.info("%s requested with: %s", __name__, request)
     form = FirmwareAnalysisImportForm(request.POST)
@@ -51,7 +51,7 @@ def import_read(request):
             logger.error("Permission denied - %s", request)
             return redirect('..')
         # create new analysis
-        new_analysis = FirmwareAnalysis.objects.create(user = request.user)
+        new_analysis = FirmwareAnalysis.objects.create(user=request.user)
         # set device(s), firmware, version, notes
         if form.cleaned_data['firmware'] is not None:
             logger.debug("trying to set firmware for new analysis")
@@ -66,6 +66,8 @@ def import_read(request):
         if form.cleaned_data['notes'] is not None:
             logger.debug("trying to set notes for new analysis")
             new_analysis.device = form.cleaned_data['notes']
+        new_analysis.failed = False
+        new_analysis.finished = True
         new_analysis.save()
         logger.info("Importing analysis with %s", new_analysis.id)
         if import_log_dir(form.cleaned_data['zip_log_file'].get_abs_path(), new_analysis.id):
@@ -86,8 +88,8 @@ def import_read(request):
 @require_http_methods(["POST"])
 def import_save(request):
     """
-    File upload
-    type: archive
+    File upload(POST)
+    type: archive(zip), gets checked by file-extension
     """
     req_logger.info("File upload req by user: %s", request.user)
     logger.info("User %s tryied to upload %s", request.user.username, request.FILES.getlist('file'))
@@ -106,7 +108,7 @@ def import_save(request):
 @require_http_methods(["GET"])
 def export_menu(request):
     """
-    views export.html
+    view for export menu(GET)
     """
     export_form = FirmwareAnalysisExportForm()
     return render(request, 'porter/export.html', {'export_form': export_form})  
@@ -116,7 +118,7 @@ def export_menu(request):
 @require_http_methods(["POST"])
 def export_analysis(request):
     """
-    View for exporting EMBA analysis
+    View for exporting EMBA analysis(POST)
     Args:
         form(obj)
     returns:
