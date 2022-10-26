@@ -35,16 +35,18 @@ def import_log_dir(log_path, analysis_id):
     return False
 
 def result_read_in(analysis_id):
-    csv_log_location = Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/csv_logs/f50_base_aggregator.csv")
-    if csv_log_location.isfile():
-        return read_csv(analysis_id=analysis_id, path=csv_log_location, cmd=f"")
-    logger.error("Cant find file for %s", analysis_id)
-    logger.debug("File not found %s", csv_log_location)
+    dir = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/csv_logs/"
+    csv_list = [os.path.join(dir, _file) for _file in os.listdir(dir)]
+    for _file in csv_list:
+        if _file.isfile():
+            read_csv(analysis_id=analysis_id, path=_file, cmd=f"")  # TODO return value??
+        logger.error("Cant find file for %s", analysis_id)
+        logger.debug("File not found %s", csv_log_location)
     return None
 
 def read_csv(analysis_id, path, cmd):
     """
-    This job reads the F50_aggregator file and stores its content into the Result model
+    This job reads the csv file and stores its contents into the Result model
     """
     res_dict = {}
     with open(path, newline='\n', encoding='utf-8') as csv_file:
