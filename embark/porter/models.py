@@ -13,6 +13,7 @@ from users.models import User as Userclass
 
 logger = logging.getLogger(__name__)
 
+
 class LogZipFile(models.Model):
     """
     class LogZipFile
@@ -30,7 +31,7 @@ class LogZipFile(models.Model):
     file = models.FileField(upload_to=get_storage_path)
 
     def get_abs_path(self):
-        return f"{settings.MEDIA_ROOT}/importer/{self.pk}/{self.file.name}"
+        return f"{settings.MEDIA_ROOT}/{self.file.name}"
 
     def get_abs_folder_path(self):
         return f"{settings.MEDIA_ROOT}/importer/{self.pk}"
@@ -40,7 +41,7 @@ class LogZipFile(models.Model):
 
 
 @receiver(pre_delete, sender=LogZipFile)
-def delete_fw_pre_delete_post(sender, instance, **kwargs):
+def delete_zip_pre_delete_post(sender, instance, **kwargs):
     """
     callback function
     delete the zip file and folder structure in storage on recieve

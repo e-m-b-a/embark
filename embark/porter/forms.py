@@ -1,20 +1,21 @@
 import logging
 
 from django import forms
-from embark.porter.models import LogZipFile
 
-from uploader.models import FirmwareAnalysis, FirmwareFile
+from porter.models import LogZipFile
+from uploader.models import FirmwareAnalysis, FirmwareFile, Device
 
 logger = logging.getLogger(__name__)
 
 
 class FirmwareAnalysisImportForm(forms.Form):
-    zip_log_file = forms.ModelChoiceField(queryset=LogZipFile.objects.all(), empty_label='Select the zip-file for the import')
-    firmware = forms.ModelChoiceField(queryset=FirmwareFile.objects.all(), empty_label='Select Firmware file the analysis is for')
-    version = forms.CharField(max_length=127, empty_label='Version', help_text="Firmware version")
-    device = forms.ModelMultipleChoiceField(queryset=Device.objects.all(), empty_label='Select device the analysis is for')
-    notes = forms.CharField(max_length=127, empty_label='Notes', help_text="Firmware version notes")
+    zip_log_file = forms.ModelChoiceField(queryset=LogZipFile.objects.all(), empty_label='Select the zip-file for the import', required=True)
+    firmware = forms.ModelChoiceField(queryset=FirmwareFile.objects.all(), empty_label='Select Firmware file the analysis is for', required=False)
+    device = forms.ModelMultipleChoiceField(queryset=Device.objects.all(), required=False)
 
-class ExportForm(forms.Form):
-    analysis = forms.ModelMultipleChoiceField(queryset=FirmwareAnalysis.objects.filter(failed=False, finished=True), empty_label='Select Analysis to export')
-    
+    version = forms.CharField(max_length=127, help_text="Firmware version", required=False)
+    notes = forms.CharField(max_length=127, help_text="Firmware version notes", required=False)
+
+
+class FirmwareAnalysisExportForm(forms.Form):
+    analysis = forms.ModelChoiceField(queryset=FirmwareAnalysis.objects.filter(finished=True, failed=False))

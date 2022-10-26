@@ -17,6 +17,6 @@ urlpatterns = [
     path('uploader/vendor/', views.vendor, name='embark-uploader-vendor'),
     path('uploader/label/', views.label, name='embark-uploader-label'),
 
-    path('uploader/import/', views.import_analysis, name='embark-uploader-import'),
+    # path('uploader/import/', views.import_analysis, name='embark-uploader-import'),
     # path('uploader/read/', views.read_analysis, name='embark-uploader-read'),
 ]

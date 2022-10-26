@@ -192,4 +192,3 @@ def delete_fw_file(request):
     logger.error("Form error: %s", form.errors)
     messages.error(request, 'error in form')
     return redirect('..')
-

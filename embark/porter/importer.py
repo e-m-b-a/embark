@@ -1,38 +1,34 @@
-import csv
-from genericpath import isdir, isfile
-import json
 import logging
-import os
+import csv
+import json
+
 from pathlib import Path
 import re
-import shutil
 
 from django.conf import settings
-from django.core import serializers
 
 from dashboard.models import Result
-from embark.uploader.archiver import Archiver
-from embark.uploader.models import FirmwareAnalysis
+from uploader.archiver import Archiver
+from uploader.models import FirmwareAnalysis
 
 logger = logging.getLogger(__name__)
+
 
 def import_log_dir(log_path, analysis_id):
     """
     1. copy into settings.EMBA_LOG_ROOT with id
     2. read csv into result result_model
-    Args: 
+    Args:
         current location
         object with needed pk
-    return: result_obj
+    return: 0/1
     """
     logger.info("Importing log for %s", analysis_id)
-    # TODO unzip
-    path = Archiver.copy(src=log_path, dst=Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/"))
-    if path.isdir():
-        shutil.rmtree(log_path)
-        return True 
+    if Archiver.unpack(file_location=log_path, extract_dir=Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/")):
+        return True
     logger.error("Error in import function, could not copy directory: %s", log_path)
     return False
+
 
 def result_read_in(analysis_id):
     dir = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/csv_logs/"
@@ -43,6 +39,7 @@ def result_read_in(analysis_id):
         logger.error("Cant find file for %s", analysis_id)
         logger.debug("File not found %s", csv_log_location)
     return None
+
 
 def read_csv(analysis_id, path, cmd):
     """
