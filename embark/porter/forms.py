@@ -17,5 +17,5 @@ class FirmwareAnalysisImportForm(forms.Form):
     notes = forms.CharField(max_length=127, help_text="Firmware version notes", required=False)
 
 
-class ExportForm(forms.Form):
-    analysis = forms.ModelMultipleChoiceField(queryset=FirmwareAnalysis.objects.filter(failed=False, finished=True))
+class FirmwareAnalysisExportForm(forms.Form):
+    analysis = forms.ModelChoiceField(queryset=FirmwareAnalysis.objects.filter(finished=True, failed=False))

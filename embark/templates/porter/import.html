@@ -1,15 +1,13 @@
 {% extends "base.html" %}
 {% load static %}
+{% load django_bootstrap5 %}
 {% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/porter.css' %}"/>{% endblock style %}
 {% block title %}EMBArk analysis importer{% endblock title %}
 {% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
 {% block maincontent %}
-<!-- success_message, message, analyze_form, -->
-{% if success_message %}
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <medium>{{ message }}</medium>
-    </div>
-{% endif %}
+
+{% bootstrap_messages %}
+
 {% block upload %}{% include "porter/upload.html" %}{% endblock upload %}
 {% block read %}{% include "porter/read.html" %}{% endblock read %}
 <!-- TODO make device config show/unshow-able -->

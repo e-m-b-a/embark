@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 def result_json(analysis_id):
     """
-    returns file_name as str
+    returns json file of result as Posix Path
     """
     if os.path.isdir(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/"):
         try:

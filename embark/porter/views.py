@@ -15,7 +15,7 @@ from uploader.models import FirmwareAnalysis
 from porter.exporter import result_json
 from porter.importer import import_log_dir, result_read_in
 from porter.models import LogZipFile
-from porter.forms import FirmwareAnalysisImportForm, ExportForm
+from porter.forms import FirmwareAnalysisImportForm, FirmwareAnalysisExportForm
 
 
 logger = logging.getLogger(__name__)
@@ -85,40 +85,46 @@ def import_save(request):
     req_logger.info("File upload req by user: %s", request.user)
     logger.info("User %s tryied to upload %s", request.user.username, request.FILES.getlist('file'))
     for file in request.FILES.getlist('file'):
-        zip_file = LogZipFile.objects.create(file=file)
-        zip_file.user = request.user
-        zip_file.save()
+        # check filetype by extension
+        if str(file.name).endswith('.zip'):
+            zip_file = LogZipFile.objects.create(file=file)
+            zip_file.user = request.user
+            zip_file.save()
+        messages.error(request, 'not a zip file')
+        return redirect('..')
     return HttpResponse("successful upload")
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
-@require_http_methods(["GET", "POST"])
+@require_http_methods(["GET"])
+def export_menu(request):
+    """
+    views export.html
+    """
+    export_form = FirmwareAnalysisExportForm()
+    return render(request, 'porter/export.html', {'export_form': export_form})  
+
+
+@login_required(login_url='/' + settings.LOGIN_URL)
+@require_http_methods(["POST"])
 def export_analysis(request):
     """
     View for exporting EMBA analysis
     Args:
         form(obj)
     returns:
-        zipped emba_log dir
+        json of result(s)
     """
     req_logger.info("Export Req by user: %s", request.user)
     # TODO analysis id to str or path
-    if request.method == 'POST':
-        form = ExportForm(request.POST)
-        if form.is_valid():
-            logger.debug("Posted Form is valid")
-            analysis_list = form.cleaned_data['analysis']
-            zip_file_name = f"EMBArk-export-{datetime.time.now()}.zip"
-            for _analysis in analysis_list:
-                file_list = []
-                file_list.append(result_json(_analysis.id))
-                # append zips to response
-                with ZipFile(f"{settings.TEMP_DIR}/EMBArk-export-{datetime.time.now()}.zip", 'a') as response_zip:
-                    for _file in file_list:
-                        response_zip.write(_file)
-            with open(f"{settings.TEMP_DIR}/{zip_file_name}", 'rb') as response_zip:
-                response = HttpResponse(content=response_zip.read(), content_type="application/zip")
-                response['Content-Disposition'] = 'inline; filename=' + zip_file_name
-            return response
-    export_form = ExportForm()
-    return render(request, 'porter/export.html', {'export_form': export_form})
+    form = FirmwareAnalysisExportForm(request.POST)
+    if form.is_valid():
+        logger.debug("Posted Form is valid")
+        analysis_obj = form.cleaned_data['analysis']
+        file_name = str(result_json(analysis_obj.id))
+        with open(file_name, 'rb') as response_file:
+            response = HttpResponse(content=response_file.read(), content_type="application/json")
+            response['Content-Disposition'] = 'inline; filename=' + file_name
+        return response
+    messages.error(request=request, message='form invalid')
+    return redirect('..')
