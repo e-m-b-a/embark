@@ -9,9 +9,9 @@ from textwrap import indent
 
 from django.conf import settings
 
-from dashboard.models import Result
-from uploader.archiver import Archiver
-from uploader.models import FirmwareAnalysis
+# from dashboard.models import Result
+# from uploader.archiver import Archiver
+# from uploader.models import FirmwareAnalysis
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +52,9 @@ def result_read_in(analysis_id):
                 # entropy_value = re.findall(r'(\d+\.?\d*)', ' 7.55 bits per byte.')[0]
                 entropy_value = re.findall(r'(\d+\.?\d*)', entropy_value)[0]
                 entropy_value = entropy_value.strip('.')
+
+            # Vulnerabilities TODO
+            # for _vuln in res_dict.get()
 
             res = Result.objects.update_or_create(
                 firmware_analysis=FirmwareAnalysis.objects.get(id=analysis_id),
@@ -113,13 +116,15 @@ def read_csv(path):
             csv_list.append(row)
             for ele in csv_list:
                 if len(ele) == 2:
-                    res_dict[ele[0]] = ele[1]
-                elif len(ele) == 3:
+                    if not ele[0] in res_dict.keys():
+                        res_dict[ele[0]] = ele[1]
+                elif len(ele) > 2:
                     if not ele[0] in res_dict.keys():
                         res_dict[ele[0]] = {}
-                    res_dict[ele[0]][ele[1]] = ele[2]
-                else:
-                    pass
+                    if len(ele[2:]) > 1:
+                        res_dict[ele[0]][ele[1]]= {ele[_info]: ele[_info + 1] for _info in range(1, len(ele[1:]), 2)}
+                    else:
+                        res_dict[ele[0]][ele[1]] = ele[2]
 
     logger.info("result dict: %s", res_dict)
     return res_dict

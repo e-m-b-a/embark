@@ -1,6 +1,6 @@
 {
     "FW_path": "/DIR300B5_FW214WWB01.bin",
-    "emba_command": "./emba.sh -p ./scan-profiles/default-scan-emulation.emba -f /DIR300B5_FW214WWB01.bin -l /emba_logs/",
+    "emba_command": "./emba.sh -p ./scan-profiles/default-scan-emulation.emba -f /DIR300B5_FW214WWB01.bin -l /emba_logs3/",
     "architecture_verified": "MIPS",
     "os_verified": "Linux / v2.6.33.2",
     "files": "1099",
@@ -9,6 +9,12 @@
     "shell_script_vulns": "241",
     "yara_rules_match": "55",
     "user_emulation_state": "18",
+    "system_emulation_state": {
+        "booted": {
+            "booted": "IP_DET",
+            "ICMP": "NMAP"
+        }
+    },
     "auth_issues": "2",
     "password_hashes_stacs": "1",
     "kernel_modules": "3",
@@ -61,5 +67,55 @@
     "local_exploits": "68",
     "dos_exploits": "67",
     "github_exploits": "569",
-    "known_exploited": "7"
+    "known_exploited": "7",
+    "version_details": {
+        "busybox": {
+            "busybox": "1.14.1",
+            "CVEs": "14",
+            "Exploits": "4",
+            "Source": "STAT/UEMU"
+        },
+        "d-link": {
+            "d-link": "dir-300",
+            "CVEs": "1",
+            "Exploits": "0",
+            "Source": "SEMU"
+        },
+        "dnsmasq": {
+            "dnsmasq": "2.45",
+            "CVEs": "23",
+            "Exploits": "17",
+            "Source": "STAT/UEMU/SEMU"
+        },
+        "hostapd": {
+            "hostapd": "0.5.11",
+            "CVEs": "10",
+            "Exploits": "10",
+            "Source": "STAT"
+        },
+        "trigger": {
+            "trigger": "1",
+            "CVEs": "6",
+            "Exploits": "1",
+            "Source": "UEMU"
+        },
+        "wireless_tools": {
+            "wireless_tools": "26",
+            "CVEs": "2",
+            "Exploits": "2",
+            "Source": "UEMU"
+        },
+        "openssl": {
+            "openssl": "0.9.8a",
+            "CVEs": "86",
+            "Exploits": "34",
+            "Source": "STAT"
+        },
+        "kernel": {
+            "kernel": "2.6.33.2",
+            "CVEs": "1655",
+            "Exploits": "551",
+            "Source": "STAT"
+        }
+    }
 }
