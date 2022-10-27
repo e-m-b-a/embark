@@ -146,7 +146,7 @@ class Vendor (models.Model):
 
     vendor_name = models.CharField(
         help_text='Vendor name', verbose_name="vendor name", max_length=MAX_LENGTH,
-        blank=True)
+        blank=True, unique=True)
 
     class Meta:
         ordering = ['vendor_name']
@@ -165,7 +165,7 @@ class Label (models.Model):
 
     label_name = models.CharField(
         help_text='label name', verbose_name="label name", max_length=MAX_LENGTH,
-        blank=True)
+        blank=True, unique=True)
     label_date = models.DateTimeField(default=datetime.now, blank=True)
 
     class Meta:
@@ -193,6 +193,7 @@ class Device(models.Model):
 
     class Meta:
         ordering = ['device_name']
+        unique_together = ['device_name', 'device_vendor']
 
     def __str__(self):
         return f"{self.device_name}({self.device_vendor})"
@@ -311,8 +312,7 @@ class FirmwareAnalysis(models.Model):
             _device_vendor_list = []
             for _device in devices:
                 _device_name_list.append(_device.device_name)
-                _device_obj = Device.objects.get(device_name=_device.device_name)
-                _device_vendor_list.append(_device_obj.device_vendor.vendor_name)
+                _device_vendor_list.append(_device.device_vendor)
             logger.debug("get_flags - device_name - to name dict %s", _device_name_list)
             logger.debug("get_flags - vendor_name - to name dict %s", _device_vendor_list)
             command = command + r" -Z " + "\"" + re.sub(r"[^a-zA-Z0-9\-\_\ ]+", "", str(_device_name_list)) + "\""

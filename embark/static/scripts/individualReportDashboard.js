@@ -165,12 +165,12 @@ get_individual_report().then(function (returnData) {
         '#009999', '#005050', returnData.bins_checked, returnData.stripped, 'Stripped');
 
     let data_to_display = {
-        "Firmware name": returnData.name.replace(/\d\//,""),
-        "Firmware ID": returnData.name.replace(/\/.*$/,""),
+        "Firmware name": returnData.firmware_name,
+        "Firmware ID": returnData.id,
         "Start date": returnData.start_date.replace('T', ' - '),
         "End date": returnData.end_date.replace('T', ' - '),
         "Scan Duration": returnData.duration,
-        "Vendor": returnData.vendor,
+        "Device(s)": returnData.device_list,
         "Version": returnData.version,
         "Notes": returnData.notes,
         "Operating sytem detected": returnData.os_verified,
