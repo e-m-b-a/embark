@@ -1,7 +1,15 @@
 from django.db import models
+from django.core.validators import MinLengthValidator
 
 from uploader.models import FirmwareAnalysis
 
+
+class Vulnerability(models.Model):
+    """
+    Many-to-Many object for CVEs
+    """
+    cve = models.CharField(max_length=13, validators=[MinLengthValidator(13)], help_text='CVE-XXXX-XXXX')
+    info = models.JSONField(null=True, unique=True)
 
 class Result(models.Model):
     """
@@ -56,3 +64,5 @@ class Result(models.Model):
     
     bins_checked = models.IntegerField(default=0, help_text='')
     strcpy_bin = models.TextField(default='{}')
+
+    vulnerability = models.ManyToManyField(Vulnerability, help_text='CVE/Vulnerability', related_query_name='CVE', editable=True, blank=True)

@@ -25,6 +25,7 @@ class TestLogreader(TestCase):
         analysis.save()   # args??
 
         self.analysis_id = analysis.id
+        # TODO these are missing at the moment?!
         self.test_file_good = os.path.join(settings.BASE_DIR.parent, "test/logreader/test-run-good.log")
         self.test_file_bad = os.path.join(settings.BASE_DIR.parent, "test/logreader/test-run-bad.log")
         # check test_log file

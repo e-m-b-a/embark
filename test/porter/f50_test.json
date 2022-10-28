@@ -11,8 +11,10 @@
     "user_emulation_state": "18",
     "system_emulation_state": {
         "booted": {
-            "booted": "IP_DET",
-            "ICMP": "NMAP"
+            "IP_DET": {
+                "booted": "IP_DET",
+                "ICMP": "NMAP"
+            }
         }
     },
     "auth_issues": "2",
@@ -70,52 +72,68 @@
     "known_exploited": "7",
     "version_details": {
         "busybox": {
-            "busybox": "1.14.1",
-            "CVEs": "14",
-            "Exploits": "4",
-            "Source": "STAT/UEMU"
+            "1.14.1": {
+                "busybox": "1.14.1",
+                "CVEs": "14",
+                "Exploits": "4",
+                "Source": "STAT/UEMU"
+            }
         },
         "d-link": {
-            "d-link": "dir-300",
-            "CVEs": "1",
-            "Exploits": "0",
-            "Source": "SEMU"
+            "dir-300": {
+                "d-link": "dir-300",
+                "CVEs": "1",
+                "Exploits": "0",
+                "Source": "SEMU"
+            }
         },
         "dnsmasq": {
-            "dnsmasq": "2.45",
-            "CVEs": "23",
-            "Exploits": "17",
-            "Source": "STAT/UEMU/SEMU"
+            "2.45": {
+                "dnsmasq": "2.45",
+                "CVEs": "23",
+                "Exploits": "17",
+                "Source": "STAT/UEMU/SEMU"
+            }
         },
         "hostapd": {
-            "hostapd": "0.5.11",
-            "CVEs": "10",
-            "Exploits": "10",
-            "Source": "STAT"
+            "0.5.11": {
+                "hostapd": "0.5.11",
+                "CVEs": "10",
+                "Exploits": "10",
+                "Source": "STAT"
+            }
         },
         "trigger": {
-            "trigger": "1",
-            "CVEs": "6",
-            "Exploits": "1",
-            "Source": "UEMU"
+            "1": {
+                "trigger": "1",
+                "CVEs": "6",
+                "Exploits": "1",
+                "Source": "UEMU"
+            }
         },
         "wireless_tools": {
-            "wireless_tools": "26",
-            "CVEs": "2",
-            "Exploits": "2",
-            "Source": "UEMU"
+            "26": {
+                "wireless_tools": "26",
+                "CVEs": "2",
+                "Exploits": "2",
+                "Source": "UEMU"
+            }
         },
         "openssl": {
-            "openssl": "0.9.8a",
-            "CVEs": "86",
-            "Exploits": "34",
-            "Source": "STAT"
+            "0.9.8a": {
+                "openssl": "0.9.8a",
+                "CVEs": "86",
+                "Exploits": "34",
+                "Source": "STAT"
+            }
         },
         "kernel": {
-            "kernel": "2.6.33.2",
-            "CVEs": "1655",
-            "Exploits": "551",
-            "Source": "STAT"
+            "2.6.33.2": {
+                "kernel": "2.6.33.2",
+                "CVEs": "1655",
+                "Exploits": "551",
+                "Source": "STAT"
+            }
         }
     }
 }
