@@ -127,12 +127,17 @@ def get_individual_report(request, analysis_id):
 
         logger.debug("getting individual report for %s", result)
 
-        return_dict = dict(model_to_dict(result), **model_to_dict(analysis_object))
+        return_dict = dict(model_to_dict(result))
 
-        return_dict['name'] = analysis_object.firmware_name
+        return_dict['firmware_name'] = analysis_object.firmware_name
         return_dict['id'] = analysis_object.firmware.id
-        return_dict['device_list'] = list(analysis_object.device.all())
+        return_dict['device_list'] = [str(_device) for _device in analysis_object.device.all()]
+        return_dict['start_date'] = analysis_object.start_date
+        return_dict['end_date'] = analysis_object.end_date
+        return_dict['duration'] = analysis_object.duration
+        return_dict['notes'] = analysis_object.notes
         return_dict['version'] = analysis_object.version
+
         return_dict['strcpy_bin'] = json.loads(return_dict['strcpy_bin'])
 
         return JsonResponse(data=return_dict, status=HTTPStatus.OK)

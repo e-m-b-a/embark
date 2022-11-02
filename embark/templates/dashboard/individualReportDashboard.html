@@ -42,10 +42,10 @@
                 <button class="btn buttonRowElem" type="submit">Download Report</button>
               </form>
               <!-- TODO add another uploader/start pattern for firmware_id-->
-              <form action={% url 'embark-uploader-start-analysis' %} method='get'>
+              <form action={% url 'embark-uploader-home' %} method='get'>
                 <button type="submit" class="btn buttonRowElem" >Rescan</button>
               </form>
-              <form action={% url 'embark-uploader-delete' %} method='get'>
+              <form action={% url 'embark-uploader-manage-file' %} method='get'>
                 <button type="submit" class="btn buttonRowElem" >Delete Firmware</button>
               </form>
               <form action={% url 'embark-MainDashboard' %} method='get'>
