@@ -130,7 +130,10 @@ def get_individual_report(request, analysis_id):
         return_dict = dict(model_to_dict(result))
 
         return_dict['firmware_name'] = analysis_object.firmware_name
-        return_dict['id'] = analysis_object.firmware.id
+        if analysis_object.firmware:
+            return_dict['id'] = analysis_object.firmware.id
+        else:
+            return_dict['id'] = "Firmware was deleted"
         return_dict['device_list'] = [str(_device) for _device in analysis_object.device.all()]
         return_dict['start_date'] = analysis_object.start_date
         return_dict['end_date'] = analysis_object.end_date
