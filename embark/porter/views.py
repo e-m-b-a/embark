@@ -125,7 +125,6 @@ def export_analysis(request):
         json of result(s)
     """
     req_logger.info("Export Req by user: %s", request.user)
-    # TODO analysis id to str or path
     form = FirmwareAnalysisExportForm(request.POST)
     if form.is_valid():
         logger.debug("Posted Form is valid")
