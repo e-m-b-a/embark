@@ -1,3 +1,4 @@
+---
 version: "3"
 # https://docs.docker.com/compose/compose-file/compose-file-v3/#deploy
 services:
@@ -55,4 +56,3 @@ networks:
     ipam:
       config:
         - subnet: "172.22.0.0/16"
-
