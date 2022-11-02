@@ -336,9 +336,9 @@ install_embark_default(){
 install_embark_dev(){
   echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
   # apt packages
-  apt-get install -y npm pycodestyle python3-pylint-django default-libmysqlclient-dev build-essential bandit
+  apt-get install -y npm pycodestyle python3-pylint-django default-libmysqlclient-dev build-essential bandit yamllint
   # npm packages
-  npm install -g jshint 
+  npm install -g jshint
   # npm install -g dockerlinter
   
   # install pipenv
