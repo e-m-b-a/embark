@@ -29,7 +29,7 @@
 
 {% block maincontent %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mx-auto border-bottom">
-  {% for label in device_info %}
+  {% for label in device.label.all %}
     <h3>{{ label|safe }}</h3>
   {% endfor %}
 
