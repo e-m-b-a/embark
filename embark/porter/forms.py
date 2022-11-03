@@ -14,7 +14,7 @@ class FirmwareAnalysisImportForm(forms.Form):
     device = forms.ModelMultipleChoiceField(queryset=Device.objects.all(), required=False)
 
     version = forms.CharField(max_length=127, help_text="Firmware version", required=False)
-    notes = forms.CharField(max_length=127, help_text="Firmware version notes", required=False)
+    notes = forms.CharField(max_length=127, help_text="Firmware version notes", required=False, widget=forms.CheckboxSelectMultiple)
 
 
 class FirmwareAnalysisExportForm(forms.Form):
