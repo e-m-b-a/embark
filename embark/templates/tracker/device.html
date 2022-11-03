@@ -29,8 +29,8 @@
 
 {% block maincontent %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mx-auto border-bottom">
-  {% for label in device.device_label %}
-    <h3>{{ label }}</h3>
+  {% for label in device_info %}
+    <h3>{{ label|safe }}</h3>
   {% endfor %}
 
 </div>

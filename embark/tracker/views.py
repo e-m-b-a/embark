@@ -74,7 +74,6 @@ def tracker(request):
 def get_report_for_device(request, device_id):
     if Device.objects.filter(id=device_id).exists():
         device = Device.objects.get(id=device_id)
-        # TODO set device_info
         analysis_queryset = FirmwareAnalysis.objects.filter(device=device)  # TODO uhm Q working? and add user check
         label_list = [
             'strcpy',
@@ -86,7 +85,7 @@ def get_report_for_device(request, device_id):
         data = []
         if not analysis_queryset:
             logger.debug("No firmware analysis available for this device")
-            return render(request=request, template_name='tracker/device.html', context={'username': request.user.username, 'device_id': device_id, 'device_info': device, 'labels': ['No Data'], 'data': [{'label': 'NoData', 'data': [0]}]})
+            return render(request=request, template_name='tracker/device.html', context={'username': request.user.username, 'device_id': device_id, 'device_info': device.device_label, 'labels': ['No Data'], 'data': [{'label': 'NoData', 'data': [0]}]})
         for _analysis in analysis_queryset:
             dataset = {}
             dataset['label'] = str(_analysis.version)
