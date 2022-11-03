@@ -156,8 +156,8 @@ def toggle_device_visible(request, device_id):
     if request.user != device.device_user:
         logger.error("User %s - access denied", request.user.username)
         messages.error(request, 'Access denied not the owner')
-        return redirect('..')
+        return redirect('.')
     device.visible = not device.visible
     device.save()
     messages.info(request, 'Success')
-    return redirect('..')
+    return redirect('.')
