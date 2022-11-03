@@ -190,6 +190,15 @@ def f20_csv(file_path, analysis_id=None):
     return res
 
 
+def f10_csv(file_path, analysis_id):
+    """
+    return: result object/ None
+    """
+    logger.debug("starting f10 csv import")
+    # TODO
+    pass
+    return None
+
 if __name__ == "__main__":
     BASE_DIR = Path(__file__).resolve().parent.parent.parent
     TEST_DIR = os.path.join(BASE_DIR, 'test/porter')
