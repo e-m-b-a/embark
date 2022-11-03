@@ -86,7 +86,7 @@ def get_report_for_device(request, device_id):
         data = []
         if not analysis_queryset:
             logger.debug("No firmware analysis available for this device")
-            return render(request=request, template_name='tracker/device.html', context={'username': request.user.username, 'device_info': device, 'labels': ['No Data'], 'data': [{'label': 'NoData', 'data': [0]}]})
+            return render(request=request, template_name='tracker/device.html', context={'username': request.user.username, 'device_id': device_id, 'device_info': device, 'labels': ['No Data'], 'data': [{'label': 'NoData', 'data': [0]}]})
         for _analysis in analysis_queryset:
             dataset = {}
             dataset['label'] = str(_analysis.version)
@@ -116,7 +116,7 @@ def get_report_for_device(request, device_id):
             dataset['pointHoverBorderColor'] = rnd_rgb_color()
             data.append(dataset)
         logger.debug("tracker/device data: %s", str(data))
-        return render(request=request, template_name='tracker/device.html', context={'username': request.user.username, 'device_info': device, 'labels': label_list, 'data': data})
+        return render(request=request, template_name='tracker/device.html', context={'username': request.user.username, 'device_id': device_id, 'device_info': device, 'labels': label_list, 'data': data})
     logger.error("device id nonexistent: %s", device_id)
     logger.error("could  not get template - %s", request)
     return HttpResponseBadRequest

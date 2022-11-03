@@ -39,7 +39,7 @@
     <h1 class="h2">Device tracker</h1>
     <div class="btn-toolbar mx-auto">
         <div class="btn-group me-3 mx-auto">
-            <form action="{% url 'embark-tracker-device-visible' device.id %}" method="post">
+            <form action="{% url 'embark-tracker-device-visible' device_id %}" method="post">
                 {% csrf_token %}
                 <div class="innerBlock">
                     {% bootstrap_button "Toggle visible" button_type="submit" button_class="btn btn-primary" %}
