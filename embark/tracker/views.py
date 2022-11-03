@@ -153,7 +153,7 @@ def set_associate_device_to(request, analysis_id):
 @login_required(login_url='/' + settings.LOGIN_URL)
 def toggle_device_visible(request, device_id):
     device = Device.objects.get(id=device_id)
-    if request.user.username != device.device_user:
+    if request.user != device.device_user:
         logger.error("User %s - access denied", request.user.username)
         messages.error(request, 'Access denied not the owner')
         return redirect('..')
