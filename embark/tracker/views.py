@@ -74,6 +74,7 @@ def tracker(request):
 def get_report_for_device(request, device_id):
     if Device.objects.filter(id=device_id).exists():
         device = Device.objects.get(id=device_id)
+        # TODO set device_info
         analysis_queryset = FirmwareAnalysis.objects.filter(device=device)  # TODO uhm Q working? and add user check
         label_list = [
             'strcpy',
@@ -146,3 +147,17 @@ def set_associate_device_to(request, analysis_id):
             device = form.cleaned_data['device']
             analysis = FirmwareAnalysis.objects.get(id=analysis_id)
             analysis.device.add(device)   # TODO check idk if this works yet
+
+
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def toggle_device_visible(request, device_id):
+    device = Device.objects.get(id=device_id)
+    if request.user.username != device.device_user:
+        logger.error("User %s - access denied", request.user.username)
+        messages.error("Access denied not the owner")
+        return redirect('..')
+    device.visible = not device.visible
+    device.save()
+    messages.info("Success")
+    return redirect('..')

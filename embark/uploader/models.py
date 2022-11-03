@@ -182,6 +182,7 @@ class Device(models.Model):
     (m Devices <---> n FirmwareFiles)
     (m Device <----> p Analyses )
     * assumes device revisions as different devices etc.
+    * case sensitive
     """
     MAX_LENGTH = 127
 
@@ -189,7 +190,7 @@ class Device(models.Model):
     device_vendor = models.ForeignKey(Vendor, on_delete=models.SET_NULL, null=True)
     device_label = models.ForeignKey(Label, on_delete=models.SET_NULL, null=True, help_text='label/tag', related_query_name='label', editable=True, blank=True)   # TODO make many to many field
     device_date = models.DateTimeField(default=datetime.now, blank=True)
-    device_user = models.ForeignKey(Userclass, on_delete=models.SET_NULL, related_name='Device_User', null=True)
+    device_user = models.ForeignKey(Userclass, on_delete=models.SET_NULL, related_name='Device_User', null=True)    # TODO change acces control to usergroup??
 
     visible = models.BooleanField(editable=True, default=True)
 

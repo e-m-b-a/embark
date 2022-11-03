@@ -58,7 +58,7 @@ def save_file(request):
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def device_setup(request):
-
+    # TODO redirect is static ? change to 200
     form = DeviceForm(request.POST)
     if form.is_valid():
         logger.info("User %s tryied to create device", request.user.username)

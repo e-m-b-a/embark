@@ -29,11 +29,26 @@
 
 {% block maincontent %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mx-auto border-bottom">
-  {% for _info in device %}
-    <h3>{{ info }}</h3>
+  {% for label in device.device_label %}
+    <h3>{{ label }}</h3>
   {% endfor %}
 
 </div>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mx-auto border-bottom">
+    <h1 class="h2">Device tracker</h1>
+    <div class="btn-toolbar mx-auto">
+        <div class="btn-group me-3 mx-auto">
+            <form action="{% url 'embark-tracker-device-visible' device.id %}" method="post">
+                {% csrf_token %}
+                <div class="innerBlock">
+                    {% bootstrap_button "Toggle visible" button_type="submit" button_class="btn btn-primary" %}
+                </div>
+            </form>
+        </div>  
+    </div>
+</div>
+
 <div class="mx-auto border-bottom">
   <canvas id="trackerChart" width="900" height="380"></canvas>
   <script>
