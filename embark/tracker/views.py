@@ -115,7 +115,7 @@ def get_report_for_device(request, device_id):
             dataset['pointHoverBorderColor'] = rnd_rgb_color()
             data.append(dataset)
         logger.debug("tracker/device data: %s", str(data))
-        return render(request=request, template_name='tracker/device.html', context={'username': request.user.username, 'device_id': device_id, 'device_info': device, 'labels': label_list, 'data': data})
+        return render(request=request, template_name='tracker/device.html', context={'username': request.user.username, 'device_id': device_id, 'device_info': device.device_label, 'labels': label_list, 'data': data})
     logger.error("device id nonexistent: %s", device_id)
     logger.error("could  not get template - %s", request)
     return HttpResponseBadRequest
