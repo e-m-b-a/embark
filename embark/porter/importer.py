@@ -69,8 +69,10 @@ def read_csv(path):
         csv_reader = csv.reader(csv_file, delimiter=';')
         csv_list = []
         for row in csv_reader:
-            # remove NAs from csv
-            if row[-1] == "NA":
+            # remove NAs and other unwanted chars from csv
+            if row[-1] == '':
+                row.pop(-1)
+            if row[-1] == 'NA':
                 row.pop(-1)
             csv_list.append(row)
             for ele in csv_list:
