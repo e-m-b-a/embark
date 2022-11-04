@@ -15,7 +15,7 @@ from uploader.models import FirmwareAnalysis
 from porter.exporter import result_json
 from porter.importer import import_log_dir, result_read_in
 from porter.models import LogZipFile
-from porter.forms import FirmwareAnalysisImportForm, FirmwareAnalysisExportForm
+from porter.forms import FirmwareAnalysisImportForm, FirmwareAnalysisExportForm, DeleteForm
 
 
 logger = logging.getLogger(__name__)
@@ -29,7 +29,8 @@ def import_menu(request):
     device_form = DeviceForm()
     vendor_form = VendorForm()
     label_form = LabelForm()
-    return render(request, 'porter/import.html', {'import_read_form': import_read_form, 'device_form': device_form, 'vendor_form': vendor_form, 'label_form': label_form})
+    delete_form = DeleteForm(initial={'zip-file': LogZipFile.objects.latest('upload_date')})
+    return render(request, 'porter/import.html', {'import_read_form': import_read_form, 'device_form': device_form, 'vendor_form': vendor_form, 'label_form': label_form, 'delete_form': delete_form})
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -59,13 +60,13 @@ def import_read(request):
             new_analysis.firmware_name = new_analysis.firmware.file.name
         if form.cleaned_data['device'] is not None:
             logger.debug("trying to set device(s) for new analysis")
-            new_analysis.device = form.cleaned_data['device']
+            new_analysis.device.set(form.cleaned_data['device'])
         if form.cleaned_data['version'] is not None:
             logger.debug("trying to set version for new analysis")
-            new_analysis.device = form.cleaned_data['version']
+            new_analysis.version = form.cleaned_data['version']
         if form.cleaned_data['notes'] is not None:
             logger.debug("trying to set notes for new analysis")
-            new_analysis.device = form.cleaned_data['notes']
+            new_analysis.notes = form.cleaned_data['notes']
         new_analysis.failed = False
         new_analysis.finished = True
         new_analysis.save()
@@ -101,7 +102,31 @@ def import_save(request):
             zip_file.save()
         messages.error(request, 'not a zip file')
         return redirect('..')
-    return HttpResponse("successful upload")
+    messages.info(request, "Successful upload")
+    return redirect('..')
+
+
+@login_required(login_url='/' + settings.LOGIN_URL)
+@require_http_methods(["POST"])
+def import_delete(request):
+    """
+    delete form for LogZipFile objects
+    zip
+    """
+    req_logger.info("Zip file delete req by user: %s", request.user)
+    form = DeleteForm(request.POST)
+    if form.is_valid():
+        logger.debug("Posted Form is valid")
+        file =  form.cleaned_data['zip-file']
+        logger.info("User %s tryied to delete %s", request.user.username, file)
+        file.delete()
+        messages.info(request, 'delete successful.')
+        return redirect('..')
+
+    logger.error("Form %s is invalid", form)
+    logger.error("Form error: %s", form.errors)
+    messages.error(request, 'error in form')
+    return redirect('..')
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
