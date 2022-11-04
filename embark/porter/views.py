@@ -15,7 +15,7 @@ from uploader.models import FirmwareAnalysis
 from porter.exporter import result_json
 from porter.importer import import_log_dir, result_read_in
 from porter.models import LogZipFile
-from porter.forms import FirmwareAnalysisImportForm, FirmwareAnalysisExportForm, DeleteForm
+from porter.forms import FirmwareAnalysisImportForm, FirmwareAnalysisExportForm, DeleteZipForm
 
 
 logger = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ def import_menu(request):
     device_form = DeviceForm()
     vendor_form = VendorForm()
     label_form = LabelForm()
-    delete_form = DeleteForm(initial={'zip-file': LogZipFile.objects.latest('upload_date')})
+    delete_form = DeleteZipForm(initial={'zip-file': LogZipFile.objects.latest('upload_date')})
     return render(request, 'porter/import.html', {'import_read_form': import_read_form, 'device_form': device_form, 'vendor_form': vendor_form, 'label_form': label_form, 'delete_form': delete_form})
 
 
@@ -114,12 +114,12 @@ def import_delete(request):
     zip
     """
     req_logger.info("Zip file delete req by user: %s", request.user)
-    form = DeleteForm(request.POST)
+    form = DeleteZipForm(request.POST)
     if form.is_valid():
         logger.debug("Posted Form is valid")
-        file =  form.cleaned_data['zip-file']
-        logger.info("User %s tryied to delete %s", request.user.username, file)
-        file.delete()
+        zip_file =  form.cleaned_data['zip_file']
+        logger.info("User %s tryied to delete %s", request.user.username, zip_file)
+        zip_file.delete()
         messages.info(request, 'delete successful.')
         return redirect('..')
 

@@ -21,8 +21,5 @@ class FirmwareAnalysisExportForm(forms.Form):
     analysis = forms.ModelChoiceField(queryset=FirmwareAnalysis.objects.filter(finished=True, failed=False))
 
 
-class DeleteForm(forms.ModelForm):
-    class Meta:
-        model = LogZipFile
-
-        fields = ['zip-file']
+class DeleteZipForm(forms.Form):
+    zip_file = forms.ModelChoiceField(queryset=LogZipFile.objects, empty_label='Select zip-file to delete')
