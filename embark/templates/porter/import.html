@@ -7,10 +7,19 @@
 {% block maincontent %}
 
 {% bootstrap_messages %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm">
+            {% block upload %}{% include "porter/upload.html" %}{% endblock upload %}
+            {% block delete %}{% include "porter/delete.html" %}{% endblock delete %}
+        </div>
+        <div class="col-sm">
+            {% block read %}{% include "porter/read.html" %}{% endblock read %}
+        </div>
+        <div class="col-sm"></div>
+            {% block device %}{% include "uploader/device.html" %}{% endblock device %}
+        </div>
+    </div>
+</div>
 
-{% block upload %}{% include "porter/upload.html" %}{% endblock upload %}
-{% block read %}{% include "porter/read.html" %}{% endblock read %}
-{% block delete %}{% include "porter/delete.html" %}{% endblock delete %}
-<!-- TODO make device config show/unshow-able -->
-{% block device %}{% include "uploader/device.html" %}{% endblock device %}
 {% endblock maincontent %}
