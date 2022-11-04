@@ -52,6 +52,8 @@
             {% block sidebar %}{% endblock sidebar %}
             <!--Main container-->
             <div class="main">
+                {% bootstrap_messages %}
+                <!--TODO complete move to bootstrap messages-->
                 {% if messages %}
                 <ul class="messages">
                     {% for message in messages %}
