@@ -1,5 +1,10 @@
 {% load django_bootstrap5 %}
-
+    <p>
+        <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseDevice" aria-expanded="false" aria-controls="collapseDevice">
+            Device Config
+        </button>
+    </p>
+    <div class="collapse show" id="collapseDevice"></div>
         <div class="col-sm">
             {% block vendor %}{% include "uploader/vendor.html" %}{% endblock vendor %}
             {% block label %}{% include "uploader/label.html" %}{% endblock label %}
@@ -18,3 +23,4 @@
 
             </div>
         </div>
+    </div>
