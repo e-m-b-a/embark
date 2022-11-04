@@ -42,7 +42,7 @@ def result_read_in(analysis_id):
     csv_list = [os.path.join(dir, _file) for _file in os.listdir(dir)]
     for _file in csv_list:
         try:
-            if os.path.normpath(_file).isfile():      # TODO change check. > if valid EMBA csv file
+            if os.path.isfile(_file):      # TODO change check. > if valid EMBA csv file
                 logger.debug("File %s found and attempting to read", _file)
                 if _file.endswith('f50_base_aggregator.csv'):
                     res = f50_csv(_file, analysis_id)
