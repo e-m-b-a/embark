@@ -312,3 +312,32 @@ class BoundedExecutor:
         )
         res.save()
         return res
+
+
+    @classmethod
+    def zip_log(cls, analysis_id):
+        """
+        run zip on analysis_id and evaluates returncode
+
+        :param analysis_id: primary key for firmware-analysis entry
+        :param active_analyzer_dir: active analyzer dir for deletion afterwards
+
+        :return:
+        """
+        logger.debug("Zipping ID: %s", analysis_id)
+        try:
+          # TODO
+            with open(f"{settings.EMBA_LOG_ROOT}/{analysis_id}_kill.log", "w+", encoding="utf-8") as file:
+                proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
+                # wait for completion
+                proc.communicate()
+            # success
+            logger.info("Kill Successful: %s", cmd)
+        except BaseException as exce:
+            logger.error("kill_emba_cmd error: %s", exce)
+
+
+    def submit_zip(cls, uuid):
+        # submit zip req to executor threadpool
+        emba_fut = BoundedExecutor.submit(cls.zip_log, uuid)
+        return emba_fut
