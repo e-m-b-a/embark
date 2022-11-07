@@ -77,6 +77,8 @@ def import_read(request):
             if result_obj is not None:
                 # success
                 logger.info("Successfully imported log as %s", str(result_obj.pk))
+                # TODO get static data from logs
+                # TODO get L10-web-screenshot into media-directory
                 messages.info(request, 'import successful for ' + str(result_obj.pk))
                 return redirect('..')
         messages.error(request, 'import failed')
