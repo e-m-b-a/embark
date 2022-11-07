@@ -42,7 +42,7 @@ def result_read_in(analysis_id):
     csv_list = [os.path.join(dir, _file) for _file in os.listdir(dir)]
     for _file in csv_list:
         try:
-            if _file.isfile():      # TODO change check. > if valid EMBA csv file
+            if os.path.isfile(_file):      # TODO change check. > if valid EMBA csv file
                 logger.debug("File %s found and attempting to read", _file)
                 if _file.endswith('f50_base_aggregator.csv'):
                     res = f50_csv(_file, analysis_id)
@@ -69,8 +69,10 @@ def read_csv(path):
         csv_reader = csv.reader(csv_file, delimiter=';')
         csv_list = []
         for row in csv_reader:
-            # remove NAs from csv
-            if row[-1] == "NA":
+            # remove NAs and other unwanted chars from csv
+            if row[-1] == '':
+                row.pop(-1)
+            if row[-1] == 'NA':
                 row.pop(-1)
             csv_list.append(row)
             for ele in csv_list:

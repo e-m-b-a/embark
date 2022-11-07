@@ -7,9 +7,27 @@
 {% block maincontent %}
 
 {% bootstrap_messages %}
+<div class="container">
+    <p>
+        <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseDevice" aria-expanded="false" aria-controls="collapseDevice">
+            Toggle Device Config
+        </button>
+    </p>
 
-{% block upload %}{% include "porter/upload.html" %}{% endblock upload %}
-{% block read %}{% include "porter/read.html" %}{% endblock read %}
-<!-- TODO make device config show/unshow-able -->
-{% block device %}{% include "uploader/device.html" %}{% endblock device %}
+    <div class="row">
+        <div class="col-sm">
+            {% block upload %}{% include "porter/upload.html" %}{% endblock upload %}
+            {% block delete %}{% include "porter/delete.html" %}{% endblock delete %}
+        </div>
+        <div class="col-sm">
+            {% block read %}{% include "porter/read.html" %}{% endblock read %}
+        </div>
+        <div class="col-sm"></div>
+            <div class="collapse show" id="collapseDevice">
+                {% block device %}{% include "uploader/device.html" %}{% endblock device %}
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock maincontent %}
