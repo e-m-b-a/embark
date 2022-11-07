@@ -13,13 +13,17 @@
         <div class="col-sm">
             {% block upload %}{% include "porter/upload.html" %}{% endblock upload %}
             {% block delete %}{% include "porter/delete.html" %}{% endblock delete %}
+            <p>
+              <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDevice" aria-expanded="false" aria-controls="collapseDevice">
+                Toggle Device Config
+              </button>
+            </p>
+            {% block device %}{% include "uploader/device.html" %}{% endblock device %}
         </div>
         <div class="col-sm">
             {% block read %}{% include "porter/read.html" %}{% endblock read %}
         </div>
-        <div class="col-sm"></div>
-            {% block device %}{% include "uploader/device.html" %}{% endblock device %}
-        </div>
+
     </div>
 </div>
 
