@@ -1,48 +1,29 @@
 {% extends "base.html" %}
 {% load static %}
-{% load django_bootstrap5 %}
 {% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/uploader.css' %}"/>{% endblock style %}
 {% block js %}<script type="text/javascript" src="{% static 'scripts/fileUpload.js' %}"></script>{% endblock js %}
 {% block title %}EMBArk analyzer{% endblock title %}
 
 {% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
 
+{% block sidebar %}{% include "uploader/sidebar.html" %}{% endblock sidebar %}
 {% block maincontent %}
-
     <div class="row uploadRow">
+      
+      <p>
+        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUpload" aria-expanded="false" aria-controls="collapseUpload">
+          1. Upload
+        </button>
+        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDevice" aria-expanded="false" aria-controls="collapseDevice">
+          2. Toggle Device Config
+        </button>
+        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseStart" aria-expanded="false" aria-controls="collapseStart">
+          3. Analyze
+        </button>
+      </p>
         {% block upload %}{% include "uploader/upload.html" %}{% endblock upload %}
         {% block device %}{% include "uploader/device.html" %}{% endblock device %}
-        <div class="col-sm">
-            <div class="box">
-                <p class="mainText">Analyze a firmware image/archive</p>
-                <form action="{% url 'embark-uploader-start-analysis' %}" method="post" id="analyze-form">
-                    {% csrf_token %}
-                    <div class="innerBlock">
-                        <label for="expertMode">Expert mode</label>
-                        <label class="switch">
-                            <input id="expertModeSwitch" type="checkbox" onclick="expertModeOn()"/>
-                            <span class="slider round"></span>
-                        </label>
-                        {% load filters %}
-                        <!-- Iterate over all fields and set expmode on fields in expert mode -->
-                        {% for field in analysis_form %}
-                            {% if field.field.expert_mode %}
-                            <div class="row expertModeOptions" value="expmode_off">
-                                    {% bootstrap_field field %}
-                            </div>
-                            {% else %}
-                                    {% bootstrap_field field %}
-                            {% endif %}
-                        {% endfor %}
-                    </div>
-                    <div class="buttonRow">
-                        <button type="submit" class="btn buttonRowElem">Analyze</button>
-                        <button type="reset" class="btn buttonRowElem">Cancel</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-        
+        {% block start %}{% include "uploader/start.html" %}{% endblock start %}
     </div>
 {% endblock maincontent %}
 

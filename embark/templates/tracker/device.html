@@ -30,7 +30,7 @@
 {% block maincontent %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mx-auto border-bottom">
   {% for label in device.label.all %}
-    <h3>{{ label|safe }}</h3>
+    <span class="badge rounded-pill bg-primary">{{ label|safe }}</span>
   {% endfor %}
 
 </div>

@@ -14,7 +14,15 @@
             <medium>{{ message }}</medium>
         </div>
         {% endif %}
-        <div id="embarkLogo"><img src="{% static 'content/images/embark_logo.svg' %}" alt="EMBArk logo graphic" height="auto" width="auto"/></div>
+        <div id="embarkLogo">
+          <img src="{% static 'content/images/embark_logo.svg' %}" alt="EMBArk logo graphic" height="auto" width="auto"/>
+        </div>
+        <div class="d-flex justify-content-center">
+          <h3><span class="badge bg-secondary">New</span>Device-based Tracking</h3>
+        </div>
+        <div class="d-flex justify-content-center">
+          <h3><span class="badge bg-secondary">New</span>Import functionality</h3>
+        </div>
         <div class="login">
             <form action="{% url 'embark-login' %}" class="login-form" method="post">
                 {% csrf_token %}
