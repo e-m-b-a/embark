@@ -177,7 +177,7 @@ LOGGING = {
         },
         'reporter': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
-            'level': 'INFO',
+            'level': 'DEBUG',
         },
         'tracker': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
