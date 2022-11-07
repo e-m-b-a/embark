@@ -197,6 +197,7 @@ def f10_csv(file_path, analysis_id):
     logger.debug("starting f10 csv import")
     # TODO
     pass
+    logger.debug("read f10 csv done")
     return None
 
 if __name__ == "__main__":
