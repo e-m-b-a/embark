@@ -20,6 +20,7 @@ from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.urls import reverse
+from embark.uploader.boundedexecutor import BoundedExecutor
 
 from uploader.archiver import Archiver
 
@@ -229,12 +230,11 @@ def download_zipped(request, analysis_id):
     :return: HttpResponse with zipped log directory on success or HttpResponse including error message
     """
     logger.debug("entry download_zipped")
+    response = []
     try:
         firmware = FirmwareAnalysis.objects.get(id=analysis_id)
-
-        if os.path.exists(firmware.path_to_logs):
-            archive_path = Archiver.pack(str(analysis_id), 'zip', firmware.path_to_logs,)
-            logger.debug("Archive %s created", archive_path)
+        archive_path = f"{settings.}"   # TODO
+        if os.path.isfile(archive_path):
             with open(archive_path, 'rb') as requested_log_dir:
                 response = HttpResponse(requested_log_dir.read(), content_type="application/zip")
                 response['Content-Disposition'] = 'inline; filename=' + archive_path
@@ -247,6 +247,22 @@ def download_zipped(request, analysis_id):
         logger.error("Firmware with ID: %s does not exist in DB", analysis_id)
         return HttpResponse("Firmware ID does not exist in DB! How did you get here?")
 
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def make_zip(request, analysis_id):
+    """
+    submit analysis for zipping log directory
+    """
+    try:
+        firmware = FirmwareAnalysis.objects.get(id=analysis_id)
+
+        if os.path.exists(firmware.path_to_logs):
+            archive_path = BoundedExecutor.submit_zip(uuid=analysis_id)
+
+    except FirmwareAnalysis.DoesNotExist as excpt:
+        logger.error("Firmware with ID: %s does not exist in DB", analysis_id)
+        return HttpResponse("Firmware ID does not exist in DB! How did you get here?")
 
 @require_http_methods(["GET"])
 # @login_required(login_url='/' + settings.LOGIN_URL)
