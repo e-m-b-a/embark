@@ -1,5 +1,6 @@
 # pylint: disable=W0613,C0206
 
+from email import message
 from pathlib import Path
 
 import json
@@ -13,6 +14,7 @@ from uuid import UUID
 from django.conf import settings
 from django.forms import model_to_dict
 from django.http.response import Http404
+from django.shortcuts import redirect
 from django.template.loader import get_template
 from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.contrib.auth.decorators import login_required
@@ -130,7 +132,10 @@ def get_individual_report(request, analysis_id):
         return_dict = dict(model_to_dict(result))
 
         return_dict['firmware_name'] = analysis_object.firmware_name
-        return_dict['id'] = analysis_object.firmware.id
+        if analysis_object.firmware:
+            return_dict['id'] = analysis_object.firmware.id
+        else:
+            return_dict['id'] = "Firmware was deleted"
         return_dict['device_list'] = [str(_device) for _device in analysis_object.device.all()]
         return_dict['start_date'] = analysis_object.start_date
         return_dict['end_date'] = analysis_object.end_date
@@ -212,6 +217,7 @@ def get_accumulated_reports(request):
     return JsonResponse(data=data, status=HTTPStatus.OK)
 
 
+@require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def download_zipped(request, analysis_id):
     """
@@ -222,29 +228,24 @@ def download_zipped(request, analysis_id):
 
     :return: HttpResponse with zipped log directory on success or HttpResponse including error message
     """
-
+    logger.debug("entry download_zipped")
     try:
         firmware = FirmwareAnalysis.objects.get(id=analysis_id)
 
         if os.path.exists(firmware.path_to_logs):
-            archive_path = Archiver.pack(firmware.path_to_logs, 'zip', firmware.path_to_logs, '.')
+            archive_path = Archiver.pack(str(analysis_id), 'zip', firmware.path_to_logs,)
             logger.debug("Archive %s created", archive_path)
             with open(archive_path, 'rb') as requested_log_dir:
                 response = HttpResponse(requested_log_dir.read(), content_type="application/zip")
                 response['Content-Disposition'] = 'inline; filename=' + archive_path
                 return response
-
-        logger.warning("Firmware with ID: %s does not exist", analysis_id)
-        return HttpResponse("Firmware with ID: %s does not exist", analysis_id)
+        logger.error("FirmwareAnalysis with ID: %s does exist, but doesn't have a valid log-directory", analysis_id)
+        message.error(request, "Logs couldn't be downloaded")
+        return redirect('..')
 
     except FirmwareAnalysis.DoesNotExist as excpt:
-        logger.warning("Firmware with ID: %s does not exist in DB", analysis_id)
-        logger.warning("Exception: %s", excpt)
-        return HttpResponse("Firmware ID does not exist in DB")
-    except Exception as error:
-        logger.error("Error occured while querying for Firmware object: %s", analysis_id)
-        logger.error("Exception: %s", error)
-        return HttpResponse("Error occured while querying for Firmware object")
+        logger.error("Firmware with ID: %s does not exist in DB", analysis_id)
+        return HttpResponse("Firmware ID does not exist in DB! How did you get here?")
 
 
 @require_http_methods(["GET"])

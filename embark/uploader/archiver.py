@@ -42,7 +42,7 @@ class Archiver:
                 shutil.copyfileobj(f_in, f_out)
 
     @staticmethod
-    def pack(base_name, archive_format, root_dir, base_dir):
+    def pack(base_name, archive_format, root_dir, base_dir=None):
         """
             pack function
 
