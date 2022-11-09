@@ -84,8 +84,8 @@ def report_dashboard(request):
 
     :return: rendered ReportDashboard
     """
-    finished_firmwares = FirmwareAnalysis.objects.filter(failed=False, finished=True)
-    return render(request, 'dashboard/reportDashboard.html', {'finished_firmwares': finished_firmwares, 'username': request.user.username})
+    firmwares = FirmwareAnalysis.objects.filter(failed=False)
+    return render(request, 'dashboard/reportDashboard.html', {'firmwares': firmwares, 'username': request.user.username})
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
