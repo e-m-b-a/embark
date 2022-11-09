@@ -29,7 +29,10 @@ def import_menu(request):
     device_form = DeviceForm()
     vendor_form = VendorForm()
     label_form = LabelForm()
-    delete_form = DeleteZipForm(initial={'zip-file': LogZipFile.objects.latest('upload_date')})
+    if LogZipFile.objects.all().count() > 0:
+        delete_form = DeleteZipForm(initial={'zip-file': LogZipFile.objects.latest('upload_date')})
+    else:
+        delete_form = DeleteZipForm()
     return render(request, 'porter/import.html', {'import_read_form': import_read_form, 'device_form': device_form, 'vendor_form': vendor_form, 'label_form': label_form, 'delete_form': delete_form})
 
 

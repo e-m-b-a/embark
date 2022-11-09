@@ -6,7 +6,6 @@
 {% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
 {% block maincontent %}
 
-{% bootstrap_messages %}
 <div class="container">
     <p>
         <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseDevice" aria-expanded="false" aria-controls="collapseDevice">
@@ -22,7 +21,7 @@
         <div class="col-sm">
             {% block read %}{% include "porter/read.html" %}{% endblock read %}
         </div>
-        <div class="col-sm"></div>
+        <div class="col-sm">
             <div class="collapse show" id="collapseDevice">
                 {% block device %}{% include "uploader/device.html" %}{% endblock device %}
             </div>
