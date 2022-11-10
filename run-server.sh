@@ -26,6 +26,8 @@ export HTTP_PORT=80
 export HTTPS_PORT=443
 export BIND_IP='0.0.0.0'
 export FILE_SIZE=2000000000
+export ALIAS_INPUT=()
+export SERVER_ALIAS=()
 
 STRICT_MODE=0
 
@@ -67,6 +69,40 @@ cleaner() {
 
 
 # main
+echo -e "\\n$ORANGE""$BOLD""EMBArk Startup""$NC\\n""$BOLD=================================================================$NC"
+
+while getopts "ha:" OPT ; do
+  case $OPT in
+    h)
+      echo -e "\\n""$CYAN""USAGE""$NC"
+      echo -e "$CYAN-h$NC           Print this help message"
+      echo -e "$CYAN-a <IP/Name>$NC Add a server Domain-name alias"
+      echo -e "---------------------------------------------------------------------------"
+      IP = $(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
+      echo -e "$GREEN Suggestion:$NC  sudo ./run-server.sh -a $(hostname) -a $IP"
+      echo -e "$GREEN nslookup:$NC"
+      nslookup "$IP"
+      exit 0
+      ;;
+    a)
+      ALIAS_INPUT+=("$OPTARG")
+      SERVER_ALIAS+=("--server-alias ""$OPTARG")
+      ;;
+    *)
+      echo -e "\\n$ORANGE""$BOLD""No Alias set""$NC\\n"
+      ;;
+  esac
+done
+
+# Input check
+echo -e "$GREEN Server-alias:$NC"
+for VAR in ${ALIAS_INPUT[@]}; do
+  echo "[*] $VAR"
+done
+# echo "${SERVER_ALIAS[*]}"
+exit 0
+
+
 cd "$(dirname "$0")" || exit 1
 import_helper
 enable_strict_mode "$STRICT_MODE"
@@ -203,7 +239,8 @@ pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --include-file /var/www/conf/embark.conf \
 --processes 4 --threads 4 \
 --graceful-timeout 5 \
---server-name embark.local &
+--server-name embark.local \
+"${SERVER_ALIAS[*]}" &
 # --ssl-certificate /var/www/conf/cert/embark.local --ssl-certificate-key-file /var/www/conf/cert/embark.local.key \
 # --https-port "$HTTPS_PORT" &
 #  --https-only --enable-debugger \
@@ -215,7 +252,7 @@ sleep 5
 
 
 echo -e "\n""$ORANGE$BOLD""=============================================================""$NC"
-echo -e "\n""$ORANGE$BOLD""Server started on http://embark.local""$NC"
+echo -e "\n""$ORANGE$BOLD""Server started on http://embark.local""${ALIAS_INPUT[*]}""$NC"
 echo -e "\n""$ORANGE$BOLD""EMBA logs are under /var/www/emba_logs/<id> ""$NC"
 # echo -e "\n""$ORANGE$BOLD""For SSL you may use https://embark.local (Not recommended for local use)""$NC"
 # echo -e "\n\n""$GREEN$BOLD""the trusted rootCA.key for the ssl encryption is in ./cert""$NC"
