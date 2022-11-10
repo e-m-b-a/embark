@@ -100,8 +100,6 @@ for VAR in ${ALIAS_INPUT[@]}; do
   echo "[*] $VAR"
 done
 # echo "${SERVER_ALIAS[*]}"
-exit 0
-
 
 cd "$(dirname "$0")" || exit 1
 import_helper
