@@ -77,7 +77,7 @@ while getopts "ha:" OPT ; do
       echo -e "$CYAN-h$NC           Print this help message"
       echo -e "$CYAN-a <IP/Name>$NC Add a server Domain-name alias"
       echo -e "---------------------------------------------------------------------------"
-      if ip addr show eth1 &>/dev/null ; then
+      if ip addr show eth0 &>/dev/null ; then
         IP=$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
         echo -e "$GREEN Suggestion:$NC  sudo ./run-server.sh -a $IP"
         echo -e "$GREEN nslookup helper:$NC"
