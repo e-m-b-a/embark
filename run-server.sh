@@ -26,7 +26,6 @@ export HTTP_PORT=80
 export HTTPS_PORT=443
 export BIND_IP='0.0.0.0'
 export FILE_SIZE=2000000000
-export ALIAS_INPUT=()
 export SERVER_ALIAS=()
 
 STRICT_MODE=0
@@ -85,8 +84,7 @@ while getopts "ha:" OPT ; do
       exit 0
       ;;
     a)
-      ALIAS_INPUT+=("$OPTARG")
-      SERVER_ALIAS+=("--server-alias \"""$OPTARG""\"")
+      SERVER_ALIAS+=("$OPTARG")
       ;;
     *)
       echo -e "\\n$ORANGE""$BOLD""No Alias set""$NC\\n"
@@ -96,10 +94,9 @@ done
 
 # Input check
 echo -e "$GREEN Server-alias:$NC"
-for VAR in ${ALIAS_INPUT[@]}; do
+for VAR in ${SERVER_ALIAS[@]}; do
   echo "[*] $VAR"
 done
-echo "${SERVER_ALIAS[*]}"
 
 cd "$(dirname "$0")" || exit 1
 import_helper
@@ -238,7 +235,7 @@ pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --processes 4 --threads 4 \
 --graceful-timeout 5 \
 --server-name embark.local \
-"${SERVER_ALIAS[*]}" &
+"$( for ALIAS in ${SERVER_ALIAS[@]}; do printf "--server-alias $ALIAS "; done )" &
 # --ssl-certificate /var/www/conf/cert/embark.local --ssl-certificate-key-file /var/www/conf/cert/embark.local.key \
 # --https-port "$HTTPS_PORT" &
 #  --https-only --enable-debugger \
