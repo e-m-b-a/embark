@@ -98,7 +98,7 @@ if [[ -n $SERVER_ALIAS ]]; then
   echo -e "$GREEN Server-alias:$NC"
   for VAR in ${SERVER_ALIAS[@]}; do
     echo "[*] $VAR"
-    printf -v ALIAS_STRING "$ALIAS_STRING --server-alias $ALIAS"
+    printf -v ALIAS_STRING "$ALIAS_STRING --server-alias $VAR"
   done
   echo "$ALIAS_STRING"
 fi
