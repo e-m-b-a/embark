@@ -86,7 +86,7 @@ while getopts "ha:" OPT ; do
       ;;
     a)
       ALIAS_INPUT+=("$OPTARG")
-      SERVER_ALIAS+=("--server-alias ""$OPTARG")
+      SERVER_ALIAS+=("--server-alias \"""$OPTARG""\"")
       ;;
     *)
       echo -e "\\n$ORANGE""$BOLD""No Alias set""$NC\\n"
@@ -99,7 +99,7 @@ echo -e "$GREEN Server-alias:$NC"
 for VAR in ${ALIAS_INPUT[@]}; do
   echo "[*] $VAR"
 done
-# echo "${SERVER_ALIAS[*]}"
+echo "${SERVER_ALIAS[*]}"
 
 cd "$(dirname "$0")" || exit 1
 import_helper
