@@ -94,7 +94,7 @@ while getopts "ha:" OPT ; do
 done
 
 # Alias
-if [[ -n $SERVER_ALIAS ]]
+if [[ -n $SERVER_ALIAS ]]; then
   echo -e "$GREEN Server-alias:$NC"
   for VAR in ${SERVER_ALIAS[@]}; do
     echo "[*] $VAR"
