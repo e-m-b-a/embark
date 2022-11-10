@@ -77,7 +77,7 @@ while getopts "ha:" OPT ; do
       echo -e "$CYAN-h$NC           Print this help message"
       echo -e "$CYAN-a <IP/Name>$NC Add a server Domain-name alias"
       echo -e "---------------------------------------------------------------------------"
-      IP = $(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
+      IP=$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
       echo -e "$GREEN Suggestion:$NC  sudo ./run-server.sh -a $(hostname) -a $IP"
       echo -e "$GREEN nslookup:$NC"
       nslookup "$IP"
@@ -87,7 +87,7 @@ while getopts "ha:" OPT ; do
       SERVER_ALIAS+=("$OPTARG")
       ;;
     :)
-      echo -e "$CYAN Usage: $NC[-a <IP/HOSTNAME>]"
+      echo -e "$CYAN Usage: [-a <IP/HOSTNAME>] $NC"
       exit 1
       ;;
     *)
@@ -97,9 +97,9 @@ while getopts "ha:" OPT ; do
 done
 
 # Alias
-if [[ -n $SERVER_ALIAS ]]; then
+if [[ ${#SERVER_ALIAS[@]} -ne 0 ]]; then
   echo -e "$GREEN Server-alias:$NC"
-  for VAR in ${SERVER_ALIAS[@]}; do
+  for VAR in "${SERVER_ALIAS[@]}"; do
     echo "[*] $VAR"
   done
 fi
@@ -233,7 +233,7 @@ sleep 5
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting Apache"
 WSGI_CMD="pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
---host "$BIND_IP" --port="$HTTP_PORT" --limit-request-body "$FILE_SIZE" \
+--host $BIND_IP --port=$HTTP_PORT --limit-request-body $FILE_SIZE \
 --url-alias /static/ /var/www/static/ \
 --url-alias /media/ /var/www/media/ \
 --allow-localhost --working-directory /var/www/embark/ --server-root /var/www/httpd80/ \
@@ -244,6 +244,7 @@ WSGI_CMD="pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 for ALIAS in "${SERVER_ALIAS[@]}"; do
   WSGI_CMD="${WSGI_CMD} --server-alias $ALIAS"
 done
+WSGI_CMD="${WSGI_CMD} &"
 echo "$WSGI_CMD"
 eval "$WSGI_CMD"
 # --ssl-certificate /var/www/conf/cert/embark.local --ssl-certificate-key-file /var/www/conf/cert/embark.local.key \
@@ -257,7 +258,7 @@ sleep 5
 
 
 echo -e "\n""$ORANGE$BOLD""=============================================================""$NC"
-echo -e "\n""$ORANGE$BOLD""Server started on http://embark.local""${ALIAS_INPUT[*]}""$NC"
+echo -e "\n""$ORANGE$BOLD""Server started on http://embark.local with alias:""${ALIAS_INPUT[*]}""$NC"
 echo -e "\n""$ORANGE$BOLD""EMBA logs are under /var/www/emba_logs/<id> ""$NC"
 # echo -e "\n""$ORANGE$BOLD""For SSL you may use https://embark.local (Not recommended for local use)""$NC"
 # echo -e "\n\n""$GREEN$BOLD""the trusted rootCA.key for the ssl encryption is in ./cert""$NC"
