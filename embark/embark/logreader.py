@@ -32,10 +32,10 @@ EMBA_MODULE_CNT = EMBA_S_MOD_CNT + EMBA_P_MOD_CNT + EMBA_F_MOD_CNT + EMBA_L_MOD_
 
 EMBA_PHASE_CNT = 4  # P, S, L, F modules
 # EMBA states
-EMBA_P_PHASE = 1
-EMBA_S_PHASE = 2
-EMBA_L_PHASE = 3
-EMBA_F_PHASE = 4
+EMBA_P_PHASE = 0
+EMBA_S_PHASE = 1
+EMBA_L_PHASE = 2
+EMBA_F_PHASE = 3
 
 
 class LogReader:
@@ -116,12 +116,12 @@ class LogReader:
     def update_status(self, stream_item_list):
         percentage = 0
         max_module, phase_nmbr = self.phase_identify(self.status_msg)
-        if max_module > 0:
+        if max_module == 0:
+            percentage = 100
+        elif max_module > 0:
             self.module_cnt += 1
             self.module_cnt = self.module_cnt % max_module  # make sure it's in range
             percentage = phase_nmbr * (100 / EMBA_PHASE_CNT) + ((100 / EMBA_PHASE_CNT) / max_module) * self.module_cnt   # increments: F=6.25, S=0.65, L=3.57, P=1.25
-        elif max_module == 0:
-            percentage = 100
         else:
             logger.error("EMBA failed")
             self.finish = True
@@ -355,8 +355,18 @@ if __name__ == "__main__":
         "phase": "",
     }
 
-    with open(f"{test_dir}/test/logreader/test-run-good.log", 'r', encoding='UTF-8') as test_file:
+    with open(f"{test_dir}/test/logreader/test-run", 'r', encoding='UTF-8') as test_file:
+        percentage = 0
+        module_cnt = 0
         for line in test_file:
             if re.match(PHASE, line) is not None:
                 status_msg["phase"] = line
-            LogReader.phase_identify(status_msg)
+            max_module, phase_nmbr = LogReader.phase_identify(status_msg)
+            if max_module == 0:
+                percentage = 100
+            elif max_module > 0:
+                module_cnt += 1
+                module_cnt = module_cnt % max_module  # make sure it's in range
+                # Missing reset for max_module on phase_change
+                # increments: F=6.25, S=0.65, L=3.57, P=1.25
+                percentage = phase_nmbr * (100 / EMBA_PHASE_CNT) + ((100 / EMBA_PHASE_CNT) / max_module) * module_cnt

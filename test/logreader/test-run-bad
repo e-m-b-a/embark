@@ -1,5 +1,4 @@
-[!] Pre-checking phase started on Mon Sep 26 06:50:33 EDT 2022
-    Firmware binary path: /firmware                                                                                                                                                                                                         
+[!] Pre-checking phase started on Mon Sep 26 06:50:33 EDT 2022                                                                                                                                                                                                    
 [*] Mon Sep 26 06:50:33 EDT 2022 - P02_firmware_bin_file_check starting
 [*] Mon Sep 26 06:50:39 EDT 2022 - P02_firmware_bin_file_check finished
 [*] Mon Sep 26 06:50:39 EDT 2022 - P05_patools_init starting
@@ -12,8 +11,7 @@
 [*] Mon Sep 26 06:50:59 EDT 2022 - P99_prepare_analyzer finished
 [!] Pre-checking phase ended on Mon Sep 26 06:50:59 EDT 2022 and took about 00:00:31 
                                                                                                                                                                                                                                             
-[!] Testing phase started on Mon Sep 26 06:50:59 EDT 2022
-    Firmware path: /log/firmware                                                                                                                                                                                                            
+[!] Testing phase started on Mon Sep 26 06:50:59 EDT 2022                                                                                                                                                                                                       
 [*] Mon Sep 26 06:51:00 EDT 2022 - S115_usermode_emulator starting
 [*] Mon Sep 26 06:51:00 EDT 2022 - S106_deep_key_search starting
 [*] Mon Sep 26 06:51:00 EDT 2022 - S12_binary_protection starting
