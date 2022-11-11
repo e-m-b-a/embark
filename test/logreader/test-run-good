@@ -1,0 +1,109 @@
+[!] Pre-checking phase started on Mon Sep 26 06:50:33 EDT 2022                                                                                                                                                                                                      
+[*] Mon Sep 26 06:50:33 EDT 2022 - P02_firmware_bin_file_check starting
+[*] Mon Sep 26 06:50:39 EDT 2022 - P02_firmware_bin_file_check finished
+[*] Mon Sep 26 06:50:39 EDT 2022 - P05_patools_init starting
+[*] Mon Sep 26 06:50:41 EDT 2022 - P05_patools_init finished
+[*] Mon Sep 26 06:50:41 EDT 2022 - P60_firmware_bin_extractor starting
+[*] Mon Sep 26 06:50:49 EDT 2022 - P60_firmware_bin_extractor finished
+[*] Mon Sep 26 06:50:49 EDT 2022 - P65_package_extractor starting
+[*] Mon Sep 26 06:50:54 EDT 2022 - P65_package_extractor finished
+[*] Mon Sep 26 06:50:54 EDT 2022 - P99_prepare_analyzer starting
+[*] Mon Sep 26 06:50:59 EDT 2022 - P99_prepare_analyzer finished
+[!] Pre-checking phase ended on Mon Sep 26 06:50:59 EDT 2022 and took about 00:00:31 
+                                                                                                                                                                                                                                            
+[!] Testing phase started on Mon Sep 26 06:50:59 EDT 2022                                                                                                                                                                                                       
+[*] Mon Sep 26 06:51:00 EDT 2022 - S115_usermode_emulator starting
+[*] Mon Sep 26 06:51:00 EDT 2022 - S106_deep_key_search starting
+[*] Mon Sep 26 06:51:00 EDT 2022 - S12_binary_protection starting
+[*] Mon Sep 26 06:51:00 EDT 2022 - S09_firmware_base_version_check starting
+[*] Mon Sep 26 06:51:00 EDT 2022 - S02_uefi_fwhunt starting
+[*] Mon Sep 26 06:51:00 EDT 2022 - S03_firmware_bin_base_analyzer starting
+[*] Mon Sep 26 06:51:01 EDT 2022 - S02_UEFI_FwHunt finished
+[*] Mon Sep 26 06:51:02 EDT 2022 - S05_firmware_details starting
+[*] Mon Sep 26 06:51:02 EDT 2022 - S106_deep_key_search finished
+[*] Mon Sep 26 06:51:02 EDT 2022 - S06_distribution_identification starting
+[*] Mon Sep 26 06:51:06 EDT 2022 - S06_distribution_identification finished
+[*] Mon Sep 26 06:51:07 EDT 2022 - S08_package_mgmt_extractor starting
+[*] Mon Sep 26 06:51:08 EDT 2022 - S05_firmware_details finished
+[*] Mon Sep 26 06:51:09 EDT 2022 - S10_binaries_basic_check starting
+[*] Mon Sep 26 06:51:10 EDT 2022 - S08_package_mgmt_extractor finished
+[*] Mon Sep 26 06:51:11 EDT 2022 - S13_weak_func_check starting
+[*] Mon Sep 26 06:51:15 EDT 2022 - S03_firmware_bin_base_analyzer finished
+[*] Mon Sep 26 06:51:16 EDT 2022 - S14_weak_func_radare_check starting
+[*] Mon Sep 26 06:52:30 EDT 2022 - S10_binaries_basic_check finished
+[*] Mon Sep 26 06:52:31 EDT 2022 - S15_bootloader_check starting
+[*] Mon Sep 26 06:52:44 EDT 2022 - S15_bootloader_check finished
+[*] Mon Sep 26 06:52:45 EDT 2022 - S20_shell_check starting
+[*] Mon Sep 26 06:52:53 EDT 2022 - S20_shell_check finished
+[*] Mon Sep 26 06:52:54 EDT 2022 - S21_python_check starting
+[*] Mon Sep 26 06:52:56 EDT 2022 - S21_python_check finished
+[*] Mon Sep 26 06:52:57 EDT 2022 - S22_php_check starting
+[*] Mon Sep 26 06:53:00 EDT 2022 - S22_php_check finished
+[*] Mon Sep 26 06:53:01 EDT 2022 - S24_kernel_bin_identifier starting
+[*] Mon Sep 26 06:53:35 EDT 2022 - S12_binary_protection finished
+[*] Mon Sep 26 06:53:36 EDT 2022 - S25_kernel_check starting
+[*] Mon Sep 26 06:53:36 EDT 2022 - S115_usermode_emulator finished
+[*] Mon Sep 26 06:53:37 EDT 2022 - S35_http_file_check starting
+[*] Mon Sep 26 06:53:46 EDT 2022 - S24_kernel_bin_identifier finished
+[*] Mon Sep 26 06:53:47 EDT 2022 - S40_weak_perm_check starting
+[*] Mon Sep 26 06:53:55 EDT 2022 - S40_weak_perm_check finished
+[*] Mon Sep 26 06:53:57 EDT 2022 - S45_pass_file_check starting
+[*] Mon Sep 26 06:54:09 EDT 2022 - S45_pass_file_check finished
+[*] Mon Sep 26 06:54:11 EDT 2022 - S50_authentication_check starting
+[*] Mon Sep 26 06:54:46 EDT 2022 - S50_authentication_check finished
+[*] Mon Sep 26 06:54:48 EDT 2022 - S55_history_file_check starting
+[*] Mon Sep 26 06:54:54 EDT 2022 - S55_history_file_check finished
+[*] Mon Sep 26 06:54:56 EDT 2022 - S60_cert_file_check starting
+[*] Mon Sep 26 06:54:58 EDT 2022 - S60_cert_file_check finished
+[*] Mon Sep 26 06:54:59 EDT 2022 - S65_config_file_check starting
+[*] Mon Sep 26 06:55:07 EDT 2022 - S25_kernel_check finished
+[*] Mon Sep 26 06:55:08 EDT 2022 - S65_config_file_check finished
+[*] Mon Sep 26 06:55:08 EDT 2022 - S70_hidden_file_check starting
+[*] Mon Sep 26 06:55:09 EDT 2022 - S75_network_check starting
+[*] Mon Sep 26 06:55:13 EDT 2022 - S75_network_check finished
+[*] Mon Sep 26 06:55:14 EDT 2022 - S80_cronjob_check starting
+[*] Mon Sep 26 06:55:16 EDT 2022 - S80_cronjob_check finished
+[*] Mon Sep 26 06:55:17 EDT 2022 - S70_hidden_file_check finished
+[*] Mon Sep 26 06:55:18 EDT 2022 - S85_ssh_check starting
+[*] Mon Sep 26 06:55:18 EDT 2022 - S90_mail_check starting
+[*] Mon Sep 26 06:55:20 EDT 2022 - S90_mail_check finished
+[*] Mon Sep 26 06:55:21 EDT 2022 - S95_interesting_binaries_check starting
+[*] Mon Sep 26 06:55:21 EDT 2022 - S85_ssh_check finished
+[*] Mon Sep 26 06:55:22 EDT 2022 - S99_grepit starting
+[*] Mon Sep 26 06:55:25 EDT 2022 - S35_http_file_check finished
+[*] Mon Sep 26 06:55:26 EDT 2022 - S100_command_inj_check starting
+[*] Mon Sep 26 06:55:32 EDT 2022 - S95_interesting_binaries_check finished
+[*] Mon Sep 26 06:55:34 EDT 2022 - S107_deep_password_search starting
+[*] Mon Sep 26 06:55:47 EDT 2022 - S107_deep_password_search finished
+[*] Mon Sep 26 06:55:48 EDT 2022 - S108_stacs_password_search starting
+[*] Mon Sep 26 06:56:06 EDT 2022 - S108_stacs_password_search finished
+[*] Mon Sep 26 06:56:08 EDT 2022 - S109_jtr_local_pw_cracking starting
+[*] Mon Sep 26 06:56:21 EDT 2022 - S100_command_inj_check finished
+[*] Mon Sep 26 06:56:23 EDT 2022 - S110_yara_check starting
+[*] Mon Sep 26 06:56:23 EDT 2022 - S109_jtr_local_pw_cracking finished
+[*] Mon Sep 26 06:56:24 EDT 2022 - S116_qemu_version_detection starting
+[*] Mon Sep 26 06:57:58 EDT 2022 - S13_weak_func_check finished
+[*] Mon Sep 26 06:58:50 EDT 2022 - S116_qemu_version_detection finished
+[*] Mon Sep 26 07:00:48 EDT 2022 - S110_yara_check finished
+[*] Mon Sep 26 07:01:23 EDT 2022 - S14_weak_func_radare_check finished
+[*] Mon Sep 26 07:04:40 EDT 2022 - S99_grepit finished
+[*] Mon Sep 26 07:06:24 EDT 2022 - S09_firmware_base_version_check finished
+[!] Testing phase ended on Mon Sep 26 07:06:25 EDT 2022 and took about 00:15:57 
+                                                                                                                                                                                                                                            
+[!] System emulation phase started on Mon Sep 26 07:06:25 EDT 2022                                                                                                                                                                                                           
+[*] Mon Sep 26 07:06:25 EDT 2022 - L10_system_emulation starting
+[*] Mon Sep 26 07:29:31 EDT 2022 - L10_system_emulation finished
+[!] System emulation phase ended on Mon Sep 26 07:29:31 EDT 2022 and took about 00:39:03 
+                                                                                                                                                                                                                                            
+[!] Reporting phase started on Mon Sep 26 07:29:31 EDT 2022
+                                                                                                                                                                                                                                            
+[*] Mon Sep 26 07:29:32 EDT 2022 - F10_license_summary starting
+[*] Mon Sep 26 07:29:35 EDT 2022 - F10_license_summary finished
+[*] Mon Sep 26 07:29:35 EDT 2022 - F20_vul_aggregator starting
+[*] Mon Sep 26 07:29:45 EDT 2022 - F20_vul_aggregator finished
+[*] Mon Sep 26 07:29:45 EDT 2022 - F21_cyclonedx_sbom starting
+[*] Mon Sep 26 07:29:45 EDT 2022 - F50_base_aggregator starting
+[*] Mon Sep 26 07:29:58 EDT 2022 - F50_base_aggregator finished
+[!] Test ended on Mon Sep 26 07:30:00 EDT 2022 and took about 00:39:32 
+                                                                                                                                                                                                                                            
+[*] Open the web-report with firefox /home/cylox/emba_logs/zyxel-nbg416/html-report/index.html
