@@ -63,15 +63,17 @@
                                             <form action={% url 'embark-make-zip' firmware.id %} method='get'>
                                                 <button type="submit" class="btn buttonRowElem" >Make Zip Logs</button>
                                             </form>
-                                      <form action={% url 'embark-html-report' firmware.id 'index.html' %} method='get'>
-                                          <button type="submit" class="btn buttonRowElem" >Open Report</button>
-                                      </form>
-                                      <form action={% url 'embark-IndividualReportDashboard' firmware.id %} method='get'>
-                                          <button type="submit" class="btn buttonRowElem" >Detail View</button>
-                                      </form>
-                                      <form action={% url 'embark-uploader-home' %} method='get'>
-                                          <button type="submit" class="btn buttonRowElem" >Rescan/delete</button>
-                                      </form>
+                                        {% endif %}
+                                        <form action={% url 'embark-html-report' firmware.id 'index.html' %} method='get'>
+                                            <button type="submit" class="btn buttonRowElem" >Open Report</button>
+                                        </form>
+                                        <form action={% url 'embark-IndividualReportDashboard' firmware.id %} method='get'>
+                                            <button type="submit" class="btn buttonRowElem" >Detail View</button>
+                                        </form>
+                                        <form action={% url 'embark-uploader-home' %} method='get'>
+                                            <button type="submit" class="btn buttonRowElem" >Rescan/delete</button>
+                                        </form>
+                                    {% endif %}
                                 </div>
                             </td>
                         </tr>
