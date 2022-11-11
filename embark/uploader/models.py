@@ -11,6 +11,7 @@ from django import forms
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 from django.utils.datetime_safe import datetime
+from porter.models import LogZipFile
 
 # from hashid_field import HashidAutoField
 
@@ -272,14 +273,17 @@ class FirmwareAnalysis(models.Model):
         help_text='Remove extracted firmware file/directory after testint, -r will be added', default=True,
         expert_mode=True, blank=True)
     """
+    # Zip file for porting and download
+    zip_file = models.ForeignKey(LogZipFile, on_delete=models.SET_NULL, help_text='', null=True, editable=True)
 
     # embark meta data
     path_to_logs = models.FilePathField(default="/", blank=True)
+    log_size = models.PositiveBigIntegerField(default=0, blank=True)
     start_date = models.DateTimeField(default=datetime.now, blank=True)
     end_date = models.DateTimeField(default=datetime.min, blank=True)
     scan_time = models.DurationField(default=timedelta(), blank=True)
     duration = models.CharField(blank=True, null=True, max_length=100, help_text='')
-    finished = models.BooleanField(default=False, blank=False)
+    finished = models.BooleanField(default=False, blank=False)      # this also serves as a running indicator
     failed = models.BooleanField(default=True, blank=False)
 
     class Meta:

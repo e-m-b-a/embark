@@ -15,12 +15,14 @@ from django.conf import settings
 from django.forms import model_to_dict
 from django.http.response import Http404
 from django.shortcuts import redirect
+from django.contrib import messages
 from django.template.loader import get_template
 from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.urls import reverse
-from embark.uploader.boundedexecutor import BoundedExecutor
+from porter.models import LogZipFile
+from uploader.boundedexecutor import BoundedExecutor
 
 from uploader.archiver import Archiver
 
@@ -230,16 +232,15 @@ def download_zipped(request, analysis_id):
     :return: HttpResponse with zipped log directory on success or HttpResponse including error message
     """
     logger.debug("entry download_zipped")
-    response = []
     try:
         firmware = FirmwareAnalysis.objects.get(id=analysis_id)
-        archive_path = f"{settings.}"   # TODO
-        if os.path.isfile(archive_path):
-            with open(archive_path, 'rb') as requested_log_dir:
+        # look for LogZipFile
+        if firmware.zip_file:
+            with open(firmware.zip_file.file.path, 'rb') as requested_log_dir:
                 response = HttpResponse(requested_log_dir.read(), content_type="application/zip")
-                response['Content-Disposition'] = 'inline; filename=' + archive_path
+                response['Content-Disposition'] = 'inline; filename=' + firmware.zip_file.file.path
                 return response
-        logger.error("FirmwareAnalysis with ID: %s does exist, but doesn't have a valid log-directory", analysis_id)
+        logger.error("FirmwareAnalysis with ID: %s does exist, but doesn't have a valid zip in its directory", analysis_id)
         message.error(request, "Logs couldn't be downloaded")
         return redirect('..')
 
@@ -255,12 +256,16 @@ def make_zip(request, analysis_id):
     submit analysis for zipping log directory
     """
     try:
-        firmware = FirmwareAnalysis.objects.get(id=analysis_id)
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        # look for LogZipFile
+        if analysis.zip_file is None and analysis.finished is True:
+            BoundedExecutor.submit_zip(uuid=analysis_id)
+            messages.info(request, "Logs are being zipped")
+            return redirect('..')
 
-        if os.path.exists(firmware.path_to_logs):
-            archive_path = BoundedExecutor.submit_zip(uuid=analysis_id)
-
-    except FirmwareAnalysis.DoesNotExist as excpt:
+        messages.error(request, "The Logs are already zipped and ready for downloading")
+        return redirect('..')
+    except FirmwareAnalysis.DoesNotExist:
         logger.error("Firmware with ID: %s does not exist in DB", analysis_id)
         return HttpResponse("Firmware ID does not exist in DB! How did you get here?")
 

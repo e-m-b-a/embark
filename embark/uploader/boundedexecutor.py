@@ -13,11 +13,14 @@ from threading import BoundedSemaphore
 
 from django.utils.datetime_safe import datetime
 from django.conf import settings
+from embark.helper import get_size
+from porter.models import LogZipFile
 
 from uploader.archiver import Archiver
 from uploader.models import FirmwareAnalysis
 from dashboard.models import Result
 from embark.logreader import LogReader
+from porter.importer import result_read_in
 
 
 logger = logging.getLogger(__name__)
@@ -114,6 +117,7 @@ class BoundedExecutor:
                 analysis.duration = str(analysis.scan_time)
                 analysis.finished = True
                 analysis.failed = exit_fail
+                analysis.log_size = get_size(analysis.path_to_logs)
                 analysis.save()
 
             logger.info("Successful cleaned up: %s", cmd)
@@ -318,27 +322,66 @@ class BoundedExecutor:
     @classmethod
     def zip_log(cls, analysis_id):
         """
-        run zip on analysis_id and evaluates returncode
-
+        Zipps the logs produced by emba
         :param analysis_id: primary key for firmware-analysis entry
-        :param active_analyzer_dir: active analyzer dir for deletion afterwards
-
-        :return:
         """
         logger.debug("Zipping ID: %s", analysis_id)
         try:
-          # TODO
-            with open(f"{settings.EMBA_LOG_ROOT}/{analysis_id}_kill.log", "w+", encoding="utf-8") as file:
-                proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
-                # wait for completion
-                proc.communicate()
-            # success
-            logger.info("Kill Successful: %s", cmd)
-        except BaseException as exce:
-            logger.error("kill_emba_cmd error: %s", exce)
+            analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+            analysis.finished = False
+            analysis.save()
+
+            archive = Archiver.pack(f"{settings.MEDIA_ROOT}/log_zip/{analysis_id}", 'zip', analysis.path_to_logs, './*')   # TODO check if recursive
+
+            # create a LogZipFile obj
+            analysis.zip_file = LogZipFile.objects.create(file=archive, user=analysis.user)
+            analysis.finished = True
+            analysis.save()
+        
+        except Exception as exce:
+            logger.error("Zipping failed: %s", exce)
+            
+            
+    @classmethod
+    def unzip_log(cls, analysis_id, file_loc):
+        """
+        unzipps the logs
+        1. copy into settings.EMBA_LOG_ROOT with id
+        2. read csv into result result_model
+        Args:
+            current location
+            object with needed pk
+        """
+        logger.debug("Zipping ID: %s", analysis_id)
+        try:
+            analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+            analysis.finished = False
+            analysis.save()
+
+            if not Archiver.unpack(file_location=file_loc, extract_dir=Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/")):
+                raise Exception("Can't unpack %s into %s. Because ?", str(file_loc), f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/")
+
+            result_obj = result_read_in(analysis_id)
+            if result_obj is None:
+                raise Exception("Didn't get a result from read_in")
+            analysis.finished = True
+            analysis.log_size = get_size(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/")
+            analysis.save()
+            logger.debug("Got %s from zip", result_obj)
+
+        except Exception as exce:
+            logger.error("Unzipping failed: %s", exce)
 
 
+    @classmethod
     def submit_zip(cls, uuid):
         # submit zip req to executor threadpool
         emba_fut = BoundedExecutor.submit(cls.zip_log, uuid)
+        return emba_fut
+
+
+    @classmethod
+    def submit_unzip(cls, uuid, file_loc):
+        # submit zip req to executor threadpool
+        emba_fut = BoundedExecutor.submit(cls.unzip_log, uuid, file_loc)
         return emba_fut

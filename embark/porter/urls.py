@@ -11,6 +11,8 @@ urlpatterns = [
     path('import/read/', views.import_read, name='embark-import-read'),
 
     path('export/', views.export_menu, name='embark-export-menu'),
-    path('export/download/', views.export_analysis, name='embark-export-analysis')
+    path('export/download/', views.export_analysis, name='embark-export-analysis'),
+    path('export/zip/<uuid:analysis_id>/', views.make_zip, name='embark-make-zip')
+
 
 ]

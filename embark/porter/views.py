@@ -10,10 +10,10 @@ from django.conf import settings
 from django.shortcuts import render, redirect
 from django.contrib import messages
 
+from uploader.boundedexecutor import BoundedExecutor
 from uploader.forms import DeviceForm, LabelForm, VendorForm
 from uploader.models import FirmwareAnalysis
 from porter.exporter import result_json
-from porter.importer import import_log_dir, result_read_in
 from porter.models import LogZipFile
 from porter.forms import FirmwareAnalysisImportForm, FirmwareAnalysisExportForm, DeleteZipForm
 
@@ -41,6 +41,7 @@ def import_menu(request):
 def import_read(request):
     """
     View for importing EMBA analysis(POST only)
+    submits file for unpacking via boundedexecutor
     Args:
         req
     returns:
@@ -71,17 +72,15 @@ def import_read(request):
             logger.debug("trying to set notes for new analysis")
             new_analysis.notes = form.cleaned_data['notes']
         new_analysis.failed = False
-        new_analysis.finished = True
+        new_analysis.zip_file = form.cleaned_data['zip_log_file']
+        new_analysis.finished = False
         new_analysis.save()
         logger.info("Importing analysis with %s", new_analysis.id)
-        if import_log_dir(form.cleaned_data['zip_log_file'].get_abs_path(), new_analysis.id):
-            zip_file_obj.delete()
-            result_obj = result_read_in(new_analysis.id)
-            if result_obj is not None:
-                # success
-                logger.info("Successfully imported log as %s", str(result_obj.pk))
-                messages.info(request, 'import successful for ' + str(result_obj.pk))
-                return redirect('..')
+        if BoundedExecutor.submit_unzip(uuid=new_analysis.id, file_loc=form.cleaned_data['zip_log_file'].get_abs_path()) is not None:
+            # success
+            logger.info("Successfully submitted zip for import %s")
+            messages.info(request, 'import submitted for ' + str(new_analysis.id))
+            return redirect('..')
         messages.error(request, 'import failed')
         return redirect('..')
     messages.error(request, 'form invalid')
@@ -164,3 +163,24 @@ def export_analysis(request):
         return response
     messages.error(request=request, message='form invalid')
     return redirect('..')
+
+
+@login_required(login_url='/' + settings.LOGIN_URL)
+@require_http_methods(["GET"])
+def make_zip(request, analysis_id):
+    """
+    submits analysis for archiving
+    """
+    req_logger.info("Zipping Req by user: %s for analysis", request.user, analysis_id)
+    try:
+        _ = FirmwareAnalysis.objects.get(id=analysis_id)
+        if BoundedExecutor.submit_zip(uuid=analysis_id) is not None:
+            # success
+            logger.info("Successfully submitted zip request %s", str(analysis_id))
+            messages.info(request, 'Zipping ' + str(analysis_id))
+            return redirect('..')
+        messages.error(request, 'zipping failed, queue full?')
+        return redirect('..')
+    except FirmwareAnalysis.DoesNotExist as excp:
+        messages.error(request, 'No analysis with that id found')
+        return redirect('..')

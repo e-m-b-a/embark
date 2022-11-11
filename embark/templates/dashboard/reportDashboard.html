@@ -55,9 +55,14 @@
                                         Loading...
                                       </button>
                                     {% else %}
-                                      <form action={% url 'embark-download' firmware.id %} method='get'>
-                                          <button type="submit" class="btn buttonRowElem" >Download Logs</button>
-                                      </form>
+                                        {% if firmware.zip_file is not None %}
+                                            <form action={% url 'embark-download' firmware.id %} method='get'>
+                                                <button type="submit" class="btn buttonRowElem" >Download Logs</button>
+                                            </form>
+                                        {% else %}
+                                            <form action={% url 'embark-make-zip' firmware.id %} method='get'>
+                                                <button type="submit" class="btn buttonRowElem" >Make Zip Logs</button>
+                                            </form>
                                       <form action={% url 'embark-html-report' firmware.id 'index.html' %} method='get'>
                                           <button type="submit" class="btn buttonRowElem" >Open Report</button>
                                       </form>

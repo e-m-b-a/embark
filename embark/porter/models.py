@@ -26,7 +26,7 @@ class LogZipFile(models.Model):
 
     def get_storage_path(self, filename):
         # file will be uploaded to MEDIA_ROOT/<id>/<filename>
-        return os.path.join(f"importer/{self.pk}", filename)
+        return os.path.join(f"log_zip/{self.pk}", filename)
 
     file = models.FileField(upload_to=get_storage_path)
 
@@ -34,7 +34,7 @@ class LogZipFile(models.Model):
         return f"{settings.MEDIA_ROOT}/{self.file.name}"
 
     def get_abs_folder_path(self):
-        return f"{settings.MEDIA_ROOT}/importer/{self.pk}"
+        return f"{settings.MEDIA_ROOT}/log_zip/{self.pk}"
 
     def __str__(self):
         return f"{self.file.name.replace('/', ' - ')}"

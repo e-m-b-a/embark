@@ -15,22 +15,6 @@ from uploader.models import FirmwareAnalysis
 logger = logging.getLogger(__name__)
 
 
-def import_log_dir(log_path, analysis_id):
-    """
-    1. copy into settings.EMBA_LOG_ROOT with id
-    2. read csv into result result_model
-    Args:
-        current location
-        object with needed pk
-    return: 0/1
-    """
-    logger.info("Importing log for %s", analysis_id)
-    if Archiver.unpack(file_location=log_path, extract_dir=Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/")):
-        return True
-    logger.error("Error in import function, could not copy directory: %s", log_path)
-    return False
-
-
 def result_read_in(analysis_id):
     """
     calls read for all files inside csv_logs and stores its contents into the Result model
