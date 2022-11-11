@@ -27,6 +27,7 @@ export HTTPS_PORT=443
 export BIND_IP='0.0.0.0'
 export FILE_SIZE=2000000000
 export SERVER_ALIAS=()
+export WSGI_FLAGS=()
 
 STRICT_MODE=0
 
@@ -87,6 +88,7 @@ while getopts "ha:" OPT ; do
       ;;
     a)
       SERVER_ALIAS+=("$OPTARG")
+      WSGI_FLAGS+=(--server-alias "${OPTARG}")
       ;;
     :)
       echo -e "$CYAN Usage: [-a <IP/HOSTNAME>] $NC"
@@ -234,24 +236,19 @@ pipenv run ./manage.py runapscheduler | tee -a /var/www/logs/scheduler.log &
 sleep 5
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting Apache"
-WSGI_CMD="pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
---host $BIND_IP --port=$HTTP_PORT --limit-request-body $FILE_SIZE \
+pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
+--host "$BIND_IP" --port="$HTTP_PORT" --limit-request-body "$FILE_SIZE" \
 --url-alias /static/ /var/www/static/ \
 --url-alias /media/ /var/www/media/ \
 --allow-localhost --working-directory /var/www/embark/ --server-root /var/www/httpd80/ \
 --include-file /var/www/conf/embark.conf \
 --processes 4 --threads 4 \
 --graceful-timeout 5 \
---server-name embark.local"
-for ALIAS in "${SERVER_ALIAS[@]}"; do
-  WSGI_CMD="${WSGI_CMD} --server-alias $ALIAS"
-done
-WSGI_CMD="${WSGI_CMD} &"
-echo "$WSGI_CMD"
-eval "$WSGI_CMD"
+--server-name embark.local \
 # --ssl-certificate /var/www/conf/cert/embark.local --ssl-certificate-key-file /var/www/conf/cert/embark.local.key \
 # --https-port "$HTTPS_PORT" &
 #  --https-only --enable-debugger \
+${WSGI_FLAGS[@]} &
 sleep 5
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
