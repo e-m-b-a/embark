@@ -80,7 +80,7 @@ fi
 
 # check emba
 echo -e "$BLUE""$BOLD""checking EMBA""$NC"
-if (cd "$PWD"/emba && ./emba.sh -d); then
+if ! (cd "$PWD"/emba && ./emba.sh -d); then
   echo -e "$BLUE""Trying auto-maintain""$NC"
   # automaintain
   if ! [[ -d ./emba ]]; then
