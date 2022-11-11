@@ -39,8 +39,6 @@ EMBA_F_PHASE = 3
 
 
 class LogReader:
-    # TODO fix!!!!
-    # TODO send update on refresh!!!
     def __init__(self, firmware_id):
 
         # global module count and status_msg directory
@@ -356,17 +354,18 @@ if __name__ == "__main__":
     }
 
     with open(f"{test_dir}/test/logreader/test-run", 'r', encoding='UTF-8') as test_file:
-        percentage = 0
-        module_cnt = 0
+        # percentage = 0
+        # module_cnt = 0
         for line in test_file:
             if re.match(PHASE, line) is not None:
                 status_msg["phase"] = line
-            max_module, phase_nmbr = LogReader.phase_identify(status_msg)
-            if max_module == 0:
-                percentage = 100
-            elif max_module > 0:
-                module_cnt += 1
-                module_cnt = module_cnt % max_module  # make sure it's in range
-                # Missing reset for max_module on phase_change
-                # increments: F=6.25, S=0.65, L=3.57, P=1.25
-                percentage = phase_nmbr * (100 / EMBA_PHASE_CNT) + ((100 / EMBA_PHASE_CNT) / max_module) * module_cnt
+                LogReader.phase_identify(status_msg)
+            # max_module, phase_nmbr = LogReader.phase_identify(status_msg)
+            # if max_module == 0:
+            #     percentage = 100
+            # elif max_module > 0:
+            #     module_cnt += 1
+            #     module_cnt = module_cnt % max_module  # make sure it's in range
+            #     # Missing reset for max_module on phase_change
+            #     # increments: F=6.25, S=0.65, L=3.57, P=1.25
+            #     percentage = phase_nmbr * (100 / EMBA_PHASE_CNT) + ((100 / EMBA_PHASE_CNT) / max_module) * module_cnt
