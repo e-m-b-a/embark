@@ -84,7 +84,7 @@ def report_dashboard(request):
 
     :return: rendered ReportDashboard
     """
-    firmwares = FirmwareAnalysis.objects.filter(failed=False)
+    firmwares = FirmwareAnalysis.objects.all()
     return render(request, 'dashboard/reportDashboard.html', {'firmwares': firmwares, 'username': request.user.username})
 
 

@@ -1,6 +1,7 @@
 from random import randrange
 import os
 
+
 def rnd_rgb_color():
     """
     Used for html colors ONLY
