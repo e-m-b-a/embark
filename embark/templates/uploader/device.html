@@ -1,6 +1,6 @@
 {% load django_bootstrap5 %}
 
-<div class="col-sm">
+<div class="collapse" id="collapseDevice">
     {% block vendor %}{% include "uploader/vendor.html" %}{% endblock vendor %}
     {% block label %}{% include "uploader/label.html" %}{% endblock label %}
     <div class="box">
@@ -12,10 +12,9 @@
             <div class="innerBlock">
                 {% load filters %}
                 {% bootstrap_form device_form %}
-                {% bootstrap_button "Create" button_type="submit" button_class="btn-primary" %}
+                <button type="submit" class="btn btn-primary" data-bs-toggle="collapse.show" data-bs-target="collapseStart">Create</button>
             </div>
         </form>
 
     </div>
-
 </div>

@@ -1,0 +1,35 @@
+{% load static %}
+{% load django_bootstrap5 %}
+
+<div class="collapse" id="collapseStart">
+  <div class="col-sm">
+    <div class="box">
+        <p class="mainText">Analyze a firmware image/archive</p>
+        <form action="{% url 'embark-uploader-start-analysis' %}" method="post" id="analyze-form">
+            {% csrf_token %}
+            <div class="innerBlock">
+                <label for="expertMode">Expert mode</label>
+                <label class="switch">
+                    <input id="expertModeSwitch" type="checkbox" onclick="expertModeOn()"/>
+                    <span class="slider round"></span>
+                </label>
+                {% load filters %}
+                <!-- Iterate over all fields and set expmode on fields in expert mode -->
+                {% for field in analysis_form %}
+                    {% if field.field.expert_mode %}
+                    <div class="row expertModeOptions" value="expmode_off">
+                            {% bootstrap_field field %}
+                    </div>
+                    {% else %}
+                            {% bootstrap_field field %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <div class="buttonRow">
+                <button type="submit" class="btn buttonRowElem">Analyze</button>
+                <button type="reset" class="btn buttonRowElem">Cancel</button>
+            </div>
+        </form>
+    </div>
+  </div>
+</div>
