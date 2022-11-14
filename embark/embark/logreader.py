@@ -32,15 +32,13 @@ EMBA_MODULE_CNT = EMBA_S_MOD_CNT + EMBA_P_MOD_CNT + EMBA_F_MOD_CNT + EMBA_L_MOD_
 
 EMBA_PHASE_CNT = 4  # P, S, L, F modules
 # EMBA states
-EMBA_P_PHASE = 1
-EMBA_S_PHASE = 2
-EMBA_L_PHASE = 3
-EMBA_F_PHASE = 4
+EMBA_P_PHASE = 0
+EMBA_S_PHASE = 1
+EMBA_L_PHASE = 2
+EMBA_F_PHASE = 3
 
 
 class LogReader:
-    # TODO fix!!!!
-    # TODO send update on refresh!!!
     def __init__(self, firmware_id):
 
         # global module count and status_msg directory
@@ -109,19 +107,19 @@ class LogReader:
             phase_nmbr = EMBA_PHASE_CNT
         elif re.search(pattern=re.escape(failed_pattern), string=status_message["phase"]):
             max_module = -2
-            phase_nmbr = 0
+            phase_nmbr = EMBA_PHASE_CNT
         return max_module, phase_nmbr
 
     # update our dict whenever a new module is being processed
     def update_status(self, stream_item_list):
         percentage = 0
         max_module, phase_nmbr = self.phase_identify(self.status_msg)
-        if max_module > 0:
+        if max_module == 0:
+            percentage = 100
+        elif max_module > 0:
             self.module_cnt += 1
             self.module_cnt = self.module_cnt % max_module  # make sure it's in range
             percentage = phase_nmbr * (100 / EMBA_PHASE_CNT) + ((100 / EMBA_PHASE_CNT) / max_module) * self.module_cnt   # increments: F=6.25, S=0.65, L=3.57, P=1.25
-        elif max_module == 0:
-            percentage = 100
         else:
             logger.error("EMBA failed")
             self.finish = True
