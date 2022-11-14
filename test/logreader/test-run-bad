@@ -1,0 +1,27 @@
+[!] Pre-checking phase started on Mon Sep 26 06:50:33 EDT 2022                                                                                                                                                                                                    
+[*] Mon Sep 26 06:50:33 EDT 2022 - P02_firmware_bin_file_check starting
+[*] Mon Sep 26 06:50:39 EDT 2022 - P02_firmware_bin_file_check finished
+[*] Mon Sep 26 06:50:39 EDT 2022 - P05_patools_init starting
+[*] Mon Sep 26 06:50:41 EDT 2022 - P05_patools_init finished
+[*] Mon Sep 26 06:50:41 EDT 2022 - P60_firmware_bin_extractor starting
+[*] Mon Sep 26 06:50:49 EDT 2022 - P60_firmware_bin_extractor finished
+[*] Mon Sep 26 06:50:49 EDT 2022 - P65_package_extractor starting
+[*] Mon Sep 26 06:50:54 EDT 2022 - P65_package_extractor finished
+[*] Mon Sep 26 06:50:54 EDT 2022 - P99_prepare_analyzer starting
+[*] Mon Sep 26 06:50:59 EDT 2022 - P99_prepare_analyzer finished
+[!] Pre-checking phase ended on Mon Sep 26 06:50:59 EDT 2022 and took about 00:00:31 
+                                                                                                                                                                                                                                            
+[!] Testing phase started on Mon Sep 26 06:50:59 EDT 2022                                                                                                                                                                                                       
+[*] Mon Sep 26 06:51:00 EDT 2022 - S115_usermode_emulator starting
+[*] Mon Sep 26 06:51:00 EDT 2022 - S106_deep_key_search starting
+[*] Mon Sep 26 06:51:00 EDT 2022 - S12_binary_protection starting
+[*] Mon Sep 26 06:51:00 EDT 2022 - S09_firmware_base_version_check starting
+[*] Mon Sep 26 06:51:00 EDT 2022 - S02_uefi_fwhunt starting
+[*] Mon Sep 26 06:51:00 EDT 2022 - S03_firmware_bin_base_analyzer starting
+[*] Mon Sep 26 06:51:01 EDT 2022 - S02_UEFI_FwHunt finished
+[*] Mon Sep 26 06:51:02 EDT 2022 - S05_firmware_details starting
+[*] Mon Sep 26 06:51:02 EDT 2022 - S106_deep_key_search finished
+[*] Mon Sep 26 06:51:02 EDT 2022 - S06_distribution_identification starting
+[*] Mon Sep 26 06:51:06 EDT 2022 - S06_distribution_identification finished
+[*] Mon Sep 26 06:51:07 EDT 2022 - S08_package_mgmt_extractor starting
+[-] EMBA failed in docker mode!
