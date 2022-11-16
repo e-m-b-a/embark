@@ -47,7 +47,7 @@ class Result(models.Model):
     pie_per = models.IntegerField(default=0, help_text='')
     stripped = models.IntegerField(default=0, help_text='')
     stripped_per = models.IntegerField(default=0, help_text='')
-    
+
     # idk where to get
     certificates = models.IntegerField(default=0, help_text='')
     certificates_outdated = models.IntegerField(default=0, help_text='')
@@ -58,10 +58,10 @@ class Result(models.Model):
     kernel_modules_lic = models.IntegerField(default=0, help_text='')
     interesting_files = models.IntegerField(default=0, help_text='')
     post_files = models.IntegerField(default=0, help_text='')
-    
+
     strcpy = models.IntegerField(default=0, help_text='')
     versions_identified = models.IntegerField(default=0, help_text='')
-    
+
     bins_checked = models.IntegerField(default=0, help_text='')
     strcpy_bin = models.TextField(default='{}')
 

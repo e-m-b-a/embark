@@ -1,8 +1,7 @@
-from datetime import datetime
+from http import HTTPStatus
 import logging
-from zipfile import ZipFile
 
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 
@@ -119,7 +118,7 @@ def import_delete(request):
     form = DeleteZipForm(request.POST)
     if form.is_valid():
         logger.debug("Posted Form is valid")
-        zip_file =  form.cleaned_data['zip_file']
+        zip_file = form.cleaned_data['zip_file']
         logger.info("User %s tryied to delete %s", request.user.username, zip_file)
         zip_file.delete()
         messages.info(request, 'delete successful.')
@@ -138,7 +137,7 @@ def export_menu(request):
     view for export menu(GET)
     """
     export_form = FirmwareAnalysisExportForm()
-    return render(request, 'porter/export.html', {'export_form': export_form})  
+    return render(request, 'porter/export.html', {'export_form': export_form})
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -157,10 +156,9 @@ def export_analysis(request):
         logger.debug("Posted Form is valid")
         analysis_obj = form.cleaned_data['analysis']
         file_name = str(result_json(analysis_obj.id))
-        with open(file_name, 'rb') as response_file:
-            response = HttpResponse(content=response_file.read(), content_type="application/json")
-            response['Content-Disposition'] = 'inline; filename=' + file_name
-        return response
+        response = {}
+        response['Content-Disposition'] = 'inline; filename=' + file_name
+        return JsonResponse(data=response, status=HTTPStatus.OK)  # TODO check
     messages.error(request=request, message='form invalid')
     return redirect('..')
 
@@ -171,7 +169,7 @@ def make_zip(request, analysis_id):
     """
     submits analysis for archiving
     """
-    req_logger.info("Zipping Req by user: %s for analysis", request.user, analysis_id)
+    req_logger.info("Zipping Req by user: %s for analysis %s", request.user, analysis_id)
     try:
         _ = FirmwareAnalysis.objects.get(id=analysis_id)
         if BoundedExecutor.submit_zip(uuid=analysis_id) is not None:
@@ -181,6 +179,6 @@ def make_zip(request, analysis_id):
             return redirect('..')
         messages.error(request, 'zipping failed, queue full?')
         return redirect('..')
-    except FirmwareAnalysis.DoesNotExist as excp:
+    except FirmwareAnalysis.DoesNotExist:
         messages.error(request, 'No analysis with that id found')
         return redirect('..')

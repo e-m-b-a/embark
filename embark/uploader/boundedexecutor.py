@@ -13,13 +13,13 @@ from threading import BoundedSemaphore
 
 from django.utils.datetime_safe import datetime
 from django.conf import settings
-from embark.helper import get_size
-from porter.models import LogZipFile
 
 from uploader.archiver import Archiver
 from uploader.models import FirmwareAnalysis
 from dashboard.models import Result
 from embark.logreader import LogReader
+from embark.helper import get_size
+from porter.models import LogZipFile
 from porter.importer import result_read_in
 
 
@@ -318,7 +318,6 @@ class BoundedExecutor:
         res.save()
         return res
 
-
     @classmethod
     def zip_log(cls, analysis_id):
         """
@@ -337,11 +336,9 @@ class BoundedExecutor:
             analysis.zip_file = LogZipFile.objects.create(file=archive, user=analysis.user)
             analysis.finished = True
             analysis.save()
-        
         except Exception as exce:
             logger.error("Zipping failed: %s", exce)
-            
-            
+
     @classmethod
     def unzip_log(cls, analysis_id, file_loc):
         """
@@ -359,7 +356,7 @@ class BoundedExecutor:
             analysis.save()
 
             if not Archiver.unpack(file_location=file_loc, extract_dir=Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/")):
-                raise Exception("Can't unpack %s into %s. Because ?", str(file_loc), f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/")
+                raise Exception("Can't unpack " + str(file_loc) + f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/")
 
             result_obj = result_read_in(analysis_id)
             if result_obj is None:
@@ -378,7 +375,6 @@ class BoundedExecutor:
         # submit zip req to executor threadpool
         emba_fut = BoundedExecutor.submit(cls.zip_log, uuid)
         return emba_fut
-
 
     @classmethod
     def submit_unzip(cls, uuid, file_loc):

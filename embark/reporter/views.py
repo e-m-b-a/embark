@@ -1,6 +1,4 @@
 # pylint: disable=W0613,C0206
-
-from email import message
 from pathlib import Path
 
 import json
@@ -21,10 +19,7 @@ from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.urls import reverse
-from porter.models import LogZipFile
 from uploader.boundedexecutor import BoundedExecutor
-
-from uploader.archiver import Archiver
 
 from uploader.models import FirmwareAnalysis, ResourceTimestamp
 from dashboard.models import Result
@@ -241,10 +236,10 @@ def download_zipped(request, analysis_id):
                 response['Content-Disposition'] = 'inline; filename=' + firmware.zip_file.file.path
                 return response
         logger.error("FirmwareAnalysis with ID: %s does exist, but doesn't have a valid zip in its directory", analysis_id)
-        message.error(request, "Logs couldn't be downloaded")
+        messages.error(request, "Logs couldn't be downloaded")
         return redirect('..')
 
-    except FirmwareAnalysis.DoesNotExist as excpt:
+    except FirmwareAnalysis.DoesNotExist:
         logger.error("Firmware with ID: %s does not exist in DB", analysis_id)
         return HttpResponse("Firmware ID does not exist in DB! How did you get here?")
 
@@ -268,6 +263,7 @@ def make_zip(request, analysis_id):
     except FirmwareAnalysis.DoesNotExist:
         logger.error("Firmware with ID: %s does not exist in DB", analysis_id)
         return HttpResponse("Firmware ID does not exist in DB! How did you get here?")
+
 
 @require_http_methods(["GET"])
 # @login_required(login_url='/' + settings.LOGIN_URL)

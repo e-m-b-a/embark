@@ -9,7 +9,6 @@ import re
 from django.conf import settings
 
 from dashboard.models import Vulnerability, Result
-from uploader.archiver import Archiver
 from uploader.models import FirmwareAnalysis
 
 logger = logging.getLogger(__name__)
@@ -18,21 +17,20 @@ logger = logging.getLogger(__name__)
 def result_read_in(analysis_id):
     """
     calls read for all files inside csv_logs and stores its contents into the Result model
-
-    :return: success->result_obj fail->None 
+    :return: success->result_obj fail->None
     """
     res = None
-    dir = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/csv_logs/"
-    csv_list = [os.path.join(dir, _file) for _file in os.listdir(dir)]
-    for _file in csv_list:
+    directory = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/csv_logs/"
+    csv_list = [os.path.join(dir, file_) for file_ in os.listdir(directory)]
+    for file_ in csv_list:
         try:
-            if os.path.isfile(_file):      # TODO change check. > if valid EMBA csv file
-                logger.debug("File %s found and attempting to read", _file)
-                if _file.endswith('f50_base_aggregator.csv'):
-                    res = f50_csv(_file, analysis_id)
+            if os.path.isfile(file_):      # TODO change check. > if valid EMBA csv file
+                logger.debug("File %s found and attempting to read", file_)
+                if file_.endswith('f50_base_aggregator.csv'):
+                    res = f50_csv(file_, analysis_id)
                     logger.debug("Result for %s created or updated", analysis_id)
-                elif _file.endswith('f20_vul_aggregator.csv'):
-                    res = f20_csv(_file, analysis_id)
+                elif file_.endswith('f20_vul_aggregator.csv'):
+                    res = f20_csv(file_, analysis_id)
                     logger.debug("Result for %s created or updated", analysis_id)
                 # TODO license info etc
         except Exception as _error:
@@ -44,8 +42,7 @@ def result_read_in(analysis_id):
 
 def read_csv(path):
     """
-    This job reads the csv file 
-
+    This job reads the csv file
     :return: result_dict
     """
     res_dict = {}
@@ -176,15 +173,13 @@ def f20_csv(file_path, analysis_id=None):
     return res
 
 
-def f10_csv(file_path, analysis_id):
+def f10_csv(_file_path, _analysis_id):
     """
     return: result object/ None
     """
     logger.debug("starting f10 csv import")
-    # TODO
-    pass
+    # FIXME needs implementation
     logger.debug("read f10 csv done")
-    return None
 
 if __name__ == "__main__":
     BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -193,7 +188,7 @@ if __name__ == "__main__":
     # test print f50
     with open(os.path.join(TEST_DIR, 'f50_test.json'), 'w', encoding='utf-8') as json_file:
         json_file.write(json.dumps(read_csv(os.path.join(TEST_DIR, 'f50_test.csv')), indent=4))
-    
+
     # test print f20
     with open(os.path.join(TEST_DIR, 'f20_test.json'), 'w', encoding='utf-8') as json_file:
         json_file.write(json.dumps(

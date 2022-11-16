@@ -25,12 +25,12 @@ def get_size(start_path='.'):
     https://stackoverflow.com/questions/1392413/calculating-a-directorys-size-using-python
     """
     total_size = 0
-    for dirpath, dirnames, filenames in os.walk(start_path):
-        for f in filenames:
-            fp = os.path.join(dirpath, f)
+    for dirpath, _dirnames, filenames in os.walk(start_path):
+        for file in filenames:
+            file_path = os.path.join(dirpath, file)
             # skip if it is symbolic link
-            if not os.path.islink(fp):
-                total_size += os.path.getsize(fp)
+            if not os.path.islink(file_path):
+                total_size += os.path.getsize(file_path)
 
     return total_size
 
