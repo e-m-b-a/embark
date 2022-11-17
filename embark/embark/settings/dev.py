@@ -244,3 +244,6 @@ CHANNEL_LAYERS = {
         },
     },
 }
+# global map for storing WS messages from all processes
+# moved from logreader
+PROCESS_MAP = {}

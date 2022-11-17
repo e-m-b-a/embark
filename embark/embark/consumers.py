@@ -11,9 +11,8 @@ from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 from channels.layers import get_channel_layer
 
-from embark.logreader import PROCESS_MAP
 # from inotify_simple import flags
-# from django.conf import settings
+from django.conf import settings
 # from uploader.models import Firmware
 
 logger = logging.getLogger(__name__)
@@ -46,7 +45,7 @@ class WSConsumer(WebsocketConsumer):
         async_to_sync(self.channel_layer.group_send)(
             self.room_group_name, {
                 'type': 'send.message',
-                'message': PROCESS_MAP
+                'message': settings.PROCESS_MAP
             }
         )
 

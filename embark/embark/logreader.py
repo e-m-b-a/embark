@@ -20,9 +20,6 @@ from uploader.models import FirmwareAnalysis
 
 logger = logging.getLogger(__name__)
 
-# global map for storing messages from all processes
-PROCESS_MAP = {}
-
 # EMBAs module count
 EMBA_S_MOD_CNT = 39
 EMBA_P_MOD_CNT = 20
@@ -136,21 +133,20 @@ class LogReader:
         tmp_mes = copy.deepcopy(self.status_msg)
 
         # append it to the data structure
-        global PROCESS_MAP
         if FirmwareAnalysis.objects.filter(id=self.firmware_id).exists():
             found = False
-            for mes in PROCESS_MAP[self.firmware_id_str]:
+            for mes in settings.PROCESS_MAP[self.firmware_id_str]:
                 if mes["phase"] == tmp_mes["phase"] and mes["module"] == tmp_mes["module"]:
                     found = True
 
             if not found:
-                PROCESS_MAP[self.firmware_id_str].append(tmp_mes)
+                settings.PROCESS_MAP[self.firmware_id_str].append(tmp_mes)
 
                 # send it to room group
                 async_to_sync(self.channel_layer.group_send)(
                     self.room_group_name, {
                         "type": 'send.message',
-                        "message": PROCESS_MAP
+                        "message": settings.PROCESS_MAP
                     }
                 )
         else:
@@ -165,21 +161,20 @@ class LogReader:
         tmp_mes = copy.deepcopy(self.status_msg)
 
         # append it to the data structure
-        global PROCESS_MAP
         if FirmwareAnalysis.objects.filter(id=self.firmware_id).exists():
             found = False
-            for mes in PROCESS_MAP[self.firmware_id_str]:
+            for mes in settings.PROCESS_MAP[self.firmware_id_str]:
                 if mes["phase"] == tmp_mes["phase"] and mes["module"] == tmp_mes["module"]:
                     found = True
 
             if not found:
-                PROCESS_MAP[self.firmware_id_str].append(tmp_mes)
+                settings.PROCESS_MAP[self.firmware_id_str].append(tmp_mes)
 
                 # send it to room group
                 async_to_sync(self.channel_layer.group_send)(
                     self.room_group_name, {
                         'type': 'send.message',
-                        'message': PROCESS_MAP
+                        'message': settings.PROCESS_MAP
                     }
                 )
         else:
@@ -208,9 +203,8 @@ class LogReader:
                     pass
 
             # create an entry for the id in the process map
-            global PROCESS_MAP
-            if self.firmware_id_str not in PROCESS_MAP:
-                PROCESS_MAP[self.firmware_id_str] = []
+            if self.firmware_id_str not in settings.PROCESS_MAP:
+                settings.PROCESS_MAP[self.firmware_id_str] = []
 
             # look for new events in log
             logger.debug("looking for events in %s", f"{firmware.path_to_logs}/emba.log")
