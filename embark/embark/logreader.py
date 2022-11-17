@@ -156,6 +156,9 @@ class LogReader:
     def update_phase(self, stream_item_list):
         self.module_cnt = 0
         self.status_msg["phase"] = stream_item_list[1]
+        if "Test ended" in stream_item_list[1]:
+            self.finish = True
+            self.status_msg["percentage"] = 1
 
         # get copy of the current status message
         tmp_mes = copy.deepcopy(self.status_msg)
@@ -179,8 +182,6 @@ class LogReader:
                 )
         else:
             logger.error("Error in update_phase, object with id=%s not found", self.firmware_id)
-        if "Test ended" in stream_item_list[1]:
-            self.finish = True
 
     def read_loop(self):
         """
@@ -317,7 +318,6 @@ class LogReader:
 
     @classmethod
     def inotify_events(cls, path):
-        # def inotify_events(self, path):
         inotify = INotify()
         watch_flags = flags.CREATE | flags.DELETE | flags.MODIFY | flags.DELETE_SELF | flags.CLOSE_NOWRITE | flags.CLOSE_WRITE
         try:
