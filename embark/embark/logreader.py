@@ -116,21 +116,17 @@ class LogReader:
         max_module, phase_nmbr = self.phase_identify(self.status_msg)
         if max_module == 0:
             percentage = 100
+            self.finish = True
         elif max_module > 0:
             self.module_cnt += 1
             self.module_cnt = self.module_cnt % max_module  # make sure it's in range
             percentage = phase_nmbr * (100 / EMBA_PHASE_CNT) + ((100 / EMBA_PHASE_CNT) / max_module) * self.module_cnt   # increments: F=6.25, S=0.65, L=3.57, P=1.25
         else:
-            logger.error("EMBA failed")
-            self.finish = True
-            analysis = FirmwareAnalysis.objects.get(id=self.firmware_id)
-            analysis.failed = True
-            analysis.finished = True
-            analysis.save()
             logger.debug("Undefined state in logreader %s ", self.status_msg)
 
         # smarty conversion
         percentage = percentage / 100
+        logger.debug("Status is %d, in phase %d, with modules %d", percentage, phase_nmbr, max_module)
 
         # set attributes of current message
         self.status_msg["module"] = stream_item_list[0]
