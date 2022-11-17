@@ -39,19 +39,12 @@ class WSConsumer(WebsocketConsumer):
         self.accept()
         logger.info("WS - connect - accept")
 
-        # called when received data from frontend
-        # implement this for processing client input at backend
-        # send current state
-        async_to_sync(self.channel_layer.group_send)(
-            self.room_group_name, {
-                'type': 'send.message',
-                'message': settings.PROCESS_MAP
-            }
-        )
-
+    # called when received data from frontend
+    # implement this for processing client input at backend
+    # TODO send current state
     def receive(self, text_data=None, bytes_data=None):
         logger.info("WS - receive")
-        # pass
+        self.send_message(event={'message': settings.PROCESS_MAP})
 
     # called when websocket connection is closed
     def disconnect(self, code):
