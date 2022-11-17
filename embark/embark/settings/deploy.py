@@ -287,4 +287,5 @@ SECURE_SSL_REDIRECT = False
 
 # global map for storing WS messages from all processes
 # moved from logreader
+# FIXME this should be in the DB or a file
 PROCESS_MAP = {}

@@ -1,19 +1,10 @@
-# import difflib
 import json
-# import re
-
 import logging
 
-# import rx
-# import rx.operators as ops
 from asgiref.sync import async_to_sync
-
 from channels.generic.websocket import WebsocketConsumer
 from channels.layers import get_channel_layer
-
-# from inotify_simple import flags
 from django.conf import settings
-# from uploader.models import Firmware
 
 logger = logging.getLogger(__name__)
 
@@ -41,16 +32,14 @@ class WSConsumer(WebsocketConsumer):
 
     # called when received data from frontend
     # implement this for processing client input at backend
-    # TODO send current state
     def receive(self, text_data=None, bytes_data=None):
         logger.info("WS - receive")
-        async_to_sync(self.channel_layer.group_send)(
-            self.room_group_name, {
-                'type': 'send.message',
-                'message': settings.PROCESS_MAP
-            }
-        )
-
+        if text_data == "Reload":
+            async_to_sync(self.channel_layer.group_send)(
+                self.room_group_name, {
+                    "type": 'send.message',
+                    "message": settings.PROCESS_MAP}
+            )
 
     # called when websocket connection is closed
     def disconnect(self, code):
