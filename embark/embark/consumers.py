@@ -32,6 +32,7 @@ class WSConsumer(WebsocketConsumer):
 
     # called when received data from frontend
     # implement this for processing client input at backend
+    # FIXME
     def receive(self, text_data=None, bytes_data=None):
         logger.info("WS - receive")
         if text_data == "Reload":
