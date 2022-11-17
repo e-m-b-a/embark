@@ -111,7 +111,7 @@ var cur_len = 0;
 socket.onopen = function () { 
     "use strict";
     console.log("[open] Connection established");
-    socket.send("")
+    socket.send("Reload")
 };
 
 /**
