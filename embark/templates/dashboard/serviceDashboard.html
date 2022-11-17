@@ -28,3 +28,10 @@
             </div>
     </div>
 {% endblock maincontent %}
+{% block script %}
+  <script>
+    if (socket.readyState == WebSocket.OPEN) {
+      socket.onopen();
+    } 
+  </script>
+{% endblock script %}
