@@ -11,6 +11,7 @@ from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 from channels.layers import get_channel_layer
 
+from embark.logreader import PROCESS_MAP
 # from inotify_simple import flags
 # from django.conf import settings
 # from uploader.models import Firmware
@@ -40,7 +41,14 @@ class WSConsumer(WebsocketConsumer):
         logger.info("WS - connect - accept")
 
         # called when received data from frontend
-        # TODO: implement this for processing client input at backend -> page refresh should be here
+        # implement this for processing client input at backend
+        # send current state
+        async_to_sync(self.channel_layer.group_send)(
+            self.room_group_name, {
+                'type': 'send.message',
+                'message': PROCESS_MAP
+            }
+        )
 
     def receive(self, text_data=None, bytes_data=None):
         logger.info("WS - receive")
