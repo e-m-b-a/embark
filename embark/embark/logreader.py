@@ -48,7 +48,8 @@ class LogReader:
             logger.error("Firmware file exception: %s", error)
 
         # set variables for channels communication
-        self.room_group_name = 'updatesgroup'
+        self.user = self.analysis.user
+        self.room_group_name = "services_%s" % self.user
         self.channel_layer = get_channel_layer()
 
         # variables for cleanup
