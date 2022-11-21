@@ -63,13 +63,24 @@ class CharFieldExpertModeForm(forms.CharField):
 
 class TypedChoiceFieldExpertModeForm(forms.TypedChoiceField):
     """
-    class BooleanFieldExpertModeForm
+    class TypedChoiceFieldExpertModeForm
     Extension of forms.TypedChoiceField to support expert_mode and readonly for TypedChoiceField option for Forms
     """
     def __init__(self, *args, **kwargs):
         self.expert_mode = kwargs.pop('expert_mode', True)
         self.readonly = kwargs.pop('readonly', False)
         # super(TypedChoiceFieldExpertModeForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+
+
+class TypedMultipleChoiceFieldExpertMode(forms.TypedMultipleChoiceField): # TODO idk if this is the right field
+    """
+    class TypedMultipleChoiceFieldExpertMode
+    extends for expertmode usage
+    """
+    def __init__(self, *args, **kwargs):
+        self.expert_mode = kwargs.pop('expert_mode', True)
+        self.readonly = kwargs.pop('readonly', False)
         super().__init__(*args, **kwargs)
 
 
@@ -231,15 +242,61 @@ class FirmwareAnalysis(models.Model):
 
     # emba expert flags
     firmware_Architecture = CharFieldExpertMode(
-        choices=[(None, 'Select architecture'), ('MIPS', 'MIPS'), ('ARM', 'ARM'), ('x86', 'x86'), ('x64', 'x64'), ('PPC', 'PPC')],  # TODO add NIOS2
+        choices=[
+            (None, 'Select architecture'), ('MIPS', 'MIPS'), ('MIPS64R2', 'MIPS64R2'), ('MIPS64_III', 'MIPS64_III'), ('MIPS64_N32', 'MIPS64_N32'),
+            ('ARM', 'ARM'), ('ARM64', 'ARM64'),
+            ('x86', 'x86'), ('x64', 'x64'),
+            ('PPC', 'PPC'), ('PPC64', 'PPC64'),
+            ('NIOS2', 'NIOS2'), ('RISCV', 'RISCV'), ('QCOM_DSP6', 'QCOM_DSP6')
+        ],
         verbose_name="Select architecture of the linux firmware",
-        help_text='Architecture of the linux firmware [MIPS, ARM, x86, x64, PPC] -a will be added',
-        max_length=MAX_LENGTH, blank=True, expert_mode=True)
+        help_text='Architecture of the linux firmware [MIPS, ARM, x86, x64, PPC, NIOS2] -a will be added (note: other options are not in use yet)',
+        max_length=MAX_LENGTH, blank=True, expert_mode=True
+    )
+
+    # expertmode options
     user_emulation_test = BooleanFieldExpertMode(help_text='Enables automated qemu emulation tests', default=False, expert_mode=True, blank=True)
     system_emulation_test = BooleanFieldExpertMode(help_text='Enables automated qemu system emulation tests', default=False, expert_mode=True, blank=True)
-    deep_extraction = BooleanFieldExpertMode(help_text='Enable deep extraction - try to extract every file two times with binwalk', default=False, expert_mode=True, blank=True)
-    cwe_checker = BooleanFieldExpertMode(help_text='Enables cwe-checker', default=False, expert_mode=True, blank=True)
-    online_checks = BooleanFieldExpertMode(help_text='Activate online checks (e.g. upload and test with VirusTotal)', default=False, expert_mode=True, blank=True)
+
+    # S-modules
+    scan_modules = TypedMultipleChoiceFieldExpertMode(
+        choices=[
+            (None, 'Select Scan-Modules to enable'),
+            ('S02_UEFI_FwHunt', 's02'),
+            ('S03_firmware_bin_base_analyzer', 's03'),
+            ('S05_firmware_details', 's05'),
+            ('S06_distribution_identification', 's06'),
+            ('S08_package_mgmt_extractor', 's08'),
+            ('S09_firmware_base_version_check', 's09'),
+            ('S10_binaries_basic_check', 's10'),
+            ('S12_binary_protection', 's12'),
+            ('S13_weak_func_check', 's13'),
+            ('S14_weak_func_radare_check', 's14'),
+            ('S15_bootloader_check', 's15'),
+            ('S20_shell_check', 's20'),
+            ('S21_python_check', 's21'),
+            ('S22_php_check', 's22'),
+            ('S24_kernel_bin_identifier', 's24'),
+            ('S25_kernel_check', 's25'),
+            ('S35_http_file_check', 's35'),
+            ('S40_weak_perm_check', 's40'),
+            ('S45_pass_file_check', 's45'),
+            ('S50_authentication_check', 's50'),
+            ('S55_history_file_check', 's55'),
+            ('S60_cert_file_check', 's60'),
+            ('S65_config_file_check', 's65'),
+            ('S70_hidden_file_check', 's70'),
+            ('S75_network_check', 's75'),
+            ('S80_cronjob_check', 's80'),
+            ('S85_ssh_check', 's85'),
+            ('S90_mail_check', 's90'),
+            ('S95_interesting_binaries_check', 's95'),
+            ('S99_grepit', 's99')
+        ]
+        verbose_name="Select Scan-Modules",
+        help_text='Enable/disable specific scan-modules for your analysis',
+        blank=True, expert_mode=True
+    )
 
     # TODO add -C and -k option
 
@@ -321,14 +378,13 @@ class FirmwareAnalysis(models.Model):
             command = command + r" -N " + "\"" + re.sub(r"[^a-zA-Z0-9\.\-\_\ ]+", "", str(self.notes)) + f" (uuid:{self.id})" + "\""
         if self.firmware_Architecture:
             command = command + r" -a " + str(self.firmware_Architecture)
-        if self.cwe_checker:
-            command = command + r" -c"
-        if self.deep_extraction:
-            command = command + r" -x"
         if self.user_emulation_test:
             command = command + r" -E"
         if self.system_emulation_test:
             command = command + r" -Q"
+        if self.scan_modules:
+            for module_ in self.scan_modules:
+                command = command + r" -m " + str(module_)
         # running emba
         logger.info("final emba parameters %s", command)
         return command
