@@ -28,7 +28,7 @@ def jsonfield_default_value():
         "percentage": 0,
         'analysis': "",
         'firmware_name': "",
-        'last_update': str(datetime.now),
+        'last_update': "",
         'last_module': "",
         'module_list': [],
         'last_phase': "",
@@ -295,7 +295,7 @@ class FirmwareAnalysis(models.Model):
     failed = models.BooleanField(default=True, blank=False)
 
     # status/logreader-stuff
-    status = models.JSONField(null=True, default=jsonfield_default_value)
+    status = models.JSONField(null=False, default=jsonfield_default_value)
 
 
     class Meta:
