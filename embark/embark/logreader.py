@@ -1,6 +1,7 @@
 # pylint: disable=W0602
 # ignores no-assignment error since there is one!
 import copy
+import datetime
 import difflib
 import pathlib
 import re
@@ -83,7 +84,7 @@ class LogReader:
         logger.debug("Appending status with message: %s", self.status_msg)
         # append message to the json-field structure of the analysis
         try:
-            self.analysis.status[self.status_msg["percentage"]] = self.status_msg
+            self.analysis.status[str(datetime.datetime.now())] = self.status_msg
             self.analysis.save()
             logger.debug("++Checking status: %s", self.analysis.status)
             # send it to group
