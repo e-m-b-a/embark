@@ -16,11 +16,12 @@ class WSConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_message(self):
         logger.info("Getting status for user %s", self.user)
-        message = []
         analysis_list = FirmwareAnalysis.objects.filter(user=self.user, failed=False, finished=False)
-        for analysis_ in analysis_list:
-            message.append(analysis_.status)
-        return message
+        logger.debug("User has %d analysis running", analysis_list.count())
+        if analysis_list.count() > 0:
+            message = { (analysis_, analysis_.status) for analysis_ in analysis_list }
+            return message
+        return "Please Wait"
 
     # this method is executed when the connection to the frontend is established
     async def connect(self):

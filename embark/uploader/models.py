@@ -20,8 +20,20 @@ from users.models import User as Userclass
 logger = logging.getLogger(__name__)
 
 
-def jsonfield_default_value():
-    return dict()
+def jsonfield_default_value(analysis, firmware_name):
+    """
+    keys: percentage, analysis, firmwarename, last_update, last_module, module_list, last_phase, phase_list
+    """
+    return {
+        "percentage": 0,
+        'analysis': analysis,
+        'firmware_name': firmware_name,
+        'last_update': str(datetime.now),
+        'last_module': "",
+        'module_list': [],
+        'last_phase': "",
+        'phase_list': [],
+    }
 
 class BooleanFieldExpertModeForm(forms.BooleanField):
     """

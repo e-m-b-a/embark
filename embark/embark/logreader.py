@@ -46,11 +46,8 @@ class LogReader:
         self.firmware_id_str = str(self.firmware_id)
         try:
             self.analysis = FirmwareAnalysis.objects.get(id=self.firmware_id)
-            self.firmwarefile = self.analysis.firmware.__str__()
         except FirmwareAnalysis.DoesNotExist:
             logger.error("No Analysis wit this id (%s)", self.firmware_id_str)
-        except Exception as error:
-            logger.error("Firmware file exception: %s", error)
 
         # set variables for channels communication
         self.user = self.analysis.user
@@ -65,10 +62,9 @@ class LogReader:
         self.test_list1 = []
         self.test_list2 = []
 
-        # status update dict (appended to processmap)
+        # status update dict (appended to db)
         self.status_msg = {
-            "firmwarename": self.firmwarefile,
-            "percentage": 0.0,
+            "percentage": 0,
             "module": "",
             "phase": "",
         }
@@ -84,7 +80,15 @@ class LogReader:
         logger.debug("Appending status with message: %s", self.status_msg)
         # append message to the json-field structure of the analysis
         try:
-            self.analysis.status[str(datetime.datetime.now())] = self.status_msg
+            self.analysis.status["percentage"] = self.status_msg["percentage"]
+            self.analysis.status["last_update"] = str(datetime.datetime.now())
+            # append modules and phase list
+            if self.status_msg["module"] != self.analysis.status["last_module"] :
+                self.analysis.status["last_module"] = self.status_msg["module"]
+                self.analysis.status["module_list"].append(self.status_msg["module"])
+            if self.status_msg["phase"] != self.analysis.status["last_phase"]:
+                self.analysis.status["last_phase"] = self.status_msg["phase"]
+                self.analysis.status["phase_list"].append(self.status_msg["phase"])
             self.analysis.save()
             logger.debug("Checking status: %s", self.analysis.status)
             # send it to group
@@ -145,8 +149,6 @@ class LogReader:
         else:
             logger.debug("Undefined state in logreader %s ", self.status_msg)
 
-        # smarty conversion
-        percentage = percentage / 100
         logger.debug("Status is %d, in phase %d, with modules %d", percentage, phase_nmbr, max_module)
 
         # set attributes of current message
@@ -314,7 +316,7 @@ if __name__ == "__main__":
     test_dir = pathlib.Path(__file__).resolve().parent.parent.parent
     status_msg = {
         "firmwarename": "LogTestFirmware",
-        "percentage": 0.0,
+        "percentage": 0,
         "module": "",
         "phase": "",
     }
