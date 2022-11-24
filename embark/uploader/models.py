@@ -295,19 +295,7 @@ class FirmwareAnalysis(models.Model):
     failed = models.BooleanField(default=True, blank=False)
 
     # status/logreader-stuff
-    """
-    dict/json, holds n messages
-    id:
-    |
-    message n
-    |    |
-    |    - module:
-    |    - phase:
-    |    - percentage:
-    |
-    message n-1
-    """
-    status = models.JSONField(null=True, default=jsonfield_default_value)
+    status = models.JSONField(null=True, default=jsonfield_default_value(analysis=id, firmware_name=firmware_name))
 
 
     class Meta:
