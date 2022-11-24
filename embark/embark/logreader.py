@@ -85,7 +85,7 @@ class LogReader:
         try:
             for message_ in self.analysis.status:
                 if message_["phase"] != tmp_mes["phase"] and message_["module"] != tmp_mes["module"]:
-                    self.analysis.status[self.firmware_id].append(tmp_mes)
+                    self.analysis.status.append(tmp_mes)
                     self.analysis.save()
                     # send it to group
                     async_to_sync(self.channel_layer.group_send)(

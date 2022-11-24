@@ -21,7 +21,8 @@ logger = logging.getLogger(__name__)
 
 
 def jsonfield_default_value():
-    return dict(id = [])
+    return dict()
+
 class BooleanFieldExpertModeForm(forms.BooleanField):
     """
     class BooleanFieldExpertModeForm
