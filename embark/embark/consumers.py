@@ -13,6 +13,14 @@ logger = logging.getLogger(__name__)
 # consumer class for synchronous/asynchronous websocket communication
 class WSConsumer(AsyncWebsocketConsumer):
 
+    @database_sync_to_async
+    def get_message(self):
+        message = []
+        analysis_list = FirmwareAnalysis.objects.filter(user=self.user, failed=False, finished=False)
+        for analysis_ in analysis_list:
+            message.append(analysis_.status)
+        return message
+
     # this method is executed when the connection to the frontend is established
     async def connect(self):
         logger.info("WS - connect")
@@ -32,11 +40,7 @@ class WSConsumer(AsyncWebsocketConsumer):
         logger.info("WS - receive")
         if text_data == "Reload":
             # Send message to room group
-            message = []
-            analysis_list = FirmwareAnalysis.objects.filter(user=self.user, failed=False, finished=False)
-            for analysis_ in analysis_list:
-                message.append(analysis_.status)
-            await self.channel_layer.group_send(self.room_group_name, {"type": 'send.message', "message": message})
+            await self.channel_layer.group_send(self.room_group_name, {"type": 'send.message', "message": await self.get_message()})
 
     # called when websocket connection is closed
     async def disconnect(self, code):
