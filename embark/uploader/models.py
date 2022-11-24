@@ -20,14 +20,14 @@ from users.models import User as Userclass
 logger = logging.getLogger(__name__)
 
 
-def jsonfield_default_value(analysis, firmware_name):
+def jsonfield_default_value():
     """
     keys: percentage, analysis, firmwarename, last_update, last_module, module_list, last_phase, phase_list
     """
     return {
         "percentage": 0,
-        'analysis': analysis,
-        'firmware_name': firmware_name,
+        'analysis': "",
+        'firmware_name': "",
         'last_update': str(datetime.now),
         'last_module': "",
         'module_list': [],
@@ -295,7 +295,7 @@ class FirmwareAnalysis(models.Model):
     failed = models.BooleanField(default=True, blank=False)
 
     # status/logreader-stuff
-    status = models.JSONField(null=True, default=jsonfield_default_value(analysis=id, firmware_name=firmware_name))
+    status = models.JSONField(null=True, default=jsonfield_default_value)
 
 
     class Meta:
