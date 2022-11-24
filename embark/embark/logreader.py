@@ -82,17 +82,21 @@ class LogReader:
     def append_status(self,tmp_mes):
         logger.debug("Appending status with message: %s", tmp_mes)
         # append message to the json-field structure of the analysis
-        for message_ in self.analysis.status:
-            if message_["phase"] != tmp_mes["phase"] and message_["module"] != tmp_mes["module"]:
-                self.analysis.status[self.firmware_id].append(tmp_mes)
-                self.analysis.save()
-                # send it to group
-                async_to_sync(self.channel_layer.group_send)(
-                    self.room_group_name, {
-                        "type": 'send.message',
-                        "message": self.analysis.status
-                    }
-                )
+        try:
+            for message_ in self.analysis.status:
+                if message_["phase"] != tmp_mes["phase"] and message_["module"] != tmp_mes["module"]:
+                    self.analysis.status[self.firmware_id].append(tmp_mes)
+                    self.analysis.save()
+                    # send it to group
+                    async_to_sync(self.channel_layer.group_send)(
+                        self.room_group_name, {
+                            "type": 'send.message',
+                            "message": self.analysis.status
+                        }
+                    )
+        except Exception as error:
+            logger.error("Cought exception: %s", error)
+            self.finish = True
 
     @staticmethod
     def phase_identify(status_message):
