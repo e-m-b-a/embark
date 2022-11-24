@@ -42,7 +42,6 @@ class LogReader:
         # global module count and status_msg directory
         self.module_cnt = 0
         self.firmware_id = firmware_id
-        
         self.firmware_id_str = str(self.firmware_id)
         try:
             self.analysis = FirmwareAnalysis.objects.get(id=self.firmware_id)
@@ -54,6 +53,11 @@ class LogReader:
         self.room_group_name = "services_%s" % self.user
         self.channel_layer = get_channel_layer()
 
+        # set status
+        self.analysis.status["analysis"] = firmware_id
+        self.analysis.status["firmware_name"] = self.analysis.firmware_name
+        self.analysis.save()
+        
         # variables for cleanup
         self.finish = False
         # self.wd = None
@@ -95,7 +99,7 @@ class LogReader:
             async_to_sync(self.channel_layer.group_send)(
                 self.room_group_name, {
                     "type": 'send.message',
-                    "message": (self.analysis , self.analysis.status)
+                    "message": (self.analysis.id , self.analysis.status)
                 }
             )
         except Exception as error:
