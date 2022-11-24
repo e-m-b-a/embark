@@ -173,10 +173,6 @@ class LogReader:
         logger.info("read loop started for %s", self.firmware_id)
 
         while not self.finish:
-
-            # get firmware for id which the BoundedExecutor gave the log_reader
-            firmware = FirmwareAnalysis.objects.get(id=self.firmware_id)
-
             # if file does not exist create it otherwise delete its content
             pat = f"{settings.EMBA_LOG_ROOT}/{self.firmware_id}/logreader.log"
             if not pathlib.Path(pat).exists():
@@ -189,8 +185,8 @@ class LogReader:
             self.analysis.status[self.firmware_id_str] = []
 
             # look for new events in log
-            logger.debug("looking for events in %s", f"{firmware.path_to_logs}/emba.log")
-            got_event = self.inotify_events(f"{firmware.path_to_logs}/emba.log")
+            logger.debug("looking for events in %s", f"{self.analysis.path_to_logs}/emba.log")
+            got_event = self.inotify_events(f"{self.analysis.path_to_logs}/emba.log")
 
             for eve in got_event:
                 for flag in flags.from_mask(eve.mask):
@@ -200,7 +196,7 @@ class LogReader:
                     # Act on file change
                     elif flag is flags.MODIFY:
                         # get the actual difference
-                        tmp = self.get_diff(f"{firmware.path_to_logs}/emba.log")
+                        tmp = self.get_diff(f"{self.analysis.path_to_logs}/emba.log")
                         # send changes to frontend
                         self.input_processing(tmp)
                         # copy diff to tmp file

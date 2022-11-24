@@ -185,7 +185,7 @@ LOGGING = {
         },
         'embark': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
-            'level': 'INFO',
+            'level': 'DEBUG',
         },
         'requests': {
             'handlers': ['info_handler'],
