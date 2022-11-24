@@ -87,6 +87,7 @@ class LogReader:
                 if message_["phase"] != tmp_mes["phase"] and message_["module"] != tmp_mes["module"]:
                     self.analysis.status.append(tmp_mes)
                     self.analysis.save()
+                    logger.debug("!Checking status: %s", self.analysis.status)
                     # send it to group
                     async_to_sync(self.channel_layer.group_send)(
                         self.room_group_name, {
