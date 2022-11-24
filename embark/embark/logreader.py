@@ -41,10 +41,13 @@ class LogReader:
         # global module count and status_msg directory
         self.module_cnt = 0
         self.firmware_id = firmware_id
-        self.analysis = FirmwareAnalysis.objects.get(id=self.firmware_id)
+        
         self.firmware_id_str = str(self.firmware_id)
         try:
-            self.firmwarefile = FirmwareAnalysis.objects.get(id=firmware_id).firmware.__str__()
+            self.analysis = FirmwareAnalysis.objects.get(id=self.firmware_id)
+            self.firmwarefile = self.analysis.firmware.__str__()
+        except FirmwareAnalysis.DoesNotExist:
+            logger.error("No Analysis wit this id (%s)", self.firmware_id_str)
         except Exception as error:
             logger.error("Firmware file exception: %s", error)
 
@@ -70,11 +73,26 @@ class LogReader:
         }
 
         # start processing
-        time.sleep(1)
-        if FirmwareAnalysis.objects.filter(id=self.firmware_id).exists():
+        time.sleep(5)   # embas dep-check takes some time
+        if self.analysis:
             self.read_loop()
         else:
             self.cleanup()
+
+    def append_status(self,tmp_mes):
+        # append message to the json-field structure of the analysis
+        for message_ in self.analysis.status:
+            if not (message_["phase"] == tmp_mes["phase"] and  message_["module"] == tmp_mes["module"]):
+                logger.debug("Appending status with message: %s", tmp_mes)
+                self.analysis.status[self.firmware_id_str].append(tmp_mes)
+                self.analysis.save()
+                # send it to group
+                async_to_sync(self.channel_layer.group_send)(
+                    self.room_group_name, {
+                        "type": 'send.message',
+                        "message": self.analysis.status
+                    }
+                )
 
     @staticmethod
     def phase_identify(status_message):
@@ -132,28 +150,7 @@ class LogReader:
         self.status_msg["percentage"] = percentage
 
         # get copy of the current status message
-        tmp_mes = copy.deepcopy(self.status_msg)
-
-        # append it to the data structure
-        # TODO change to update self.analysis.status
-        if FirmwareAnalysis.objects.filter(id=self.firmware_id).exists():
-            found = False
-            for mes in settings.PROCESS_MAP[self.firmware_id_str]:
-                if mes["phase"] == tmp_mes["phase"] and mes["module"] == tmp_mes["module"]:
-                    found = True
-
-            if not found:
-                settings.PROCESS_MAP[self.firmware_id_str].append(tmp_mes)
-
-                # send it to room group
-                async_to_sync(self.channel_layer.group_send)(
-                    self.room_group_name, {
-                        "type": 'send.message',
-                        "message": settings.PROCESS_MAP
-                    }
-                )
-        else:
-            logger.error("Error in update_status, object with id=%s not found", self.firmware_id)
+        self.append_status(copy.deepcopy(self.status_msg))
 
     # update dictionary with phase changes
     def update_phase(self, stream_item_list):
@@ -164,28 +161,7 @@ class LogReader:
             self.status_msg["percentage"] = 1
 
         # get copy of the current status message
-        tmp_mes = copy.deepcopy(self.status_msg)
-
-        # append it to the data structure
-        # TODO change to update self.analysis.status
-        if FirmwareAnalysis.objects.filter(id=self.firmware_id).exists():
-            found = False
-            for mes in settings.PROCESS_MAP[self.firmware_id_str]:
-                if mes["phase"] == tmp_mes["phase"] and mes["module"] == tmp_mes["module"]:
-                    found = True
-
-            if not found:
-                settings.PROCESS_MAP[self.firmware_id_str].append(tmp_mes)
-
-                # send it to room group
-                async_to_sync(self.channel_layer.group_send)(
-                    self.room_group_name, {
-                        'type': 'send.message',
-                        'message': settings.PROCESS_MAP
-                    }
-                )
-        else:
-            logger.error("Error in update_phase, object with id=%s not found", self.firmware_id)
+        self.append_status(copy.deepcopy(self.status_msg))
 
     def read_loop(self):
         """
@@ -207,14 +183,10 @@ class LogReader:
                 with open(pat, 'w+', encoding='utf-8'):
                     pass
 
-            # create an entry for the id in the process map
-            # if self.firmware_id_str not in settings.PROCESS_MAP:
-            #     settings.PROCESS_MAP[self.firmware_id_str] = []
-            
             # set status in firmware-analysis
             if self.analysis.status is not None:
                 logger.error("Error in logreader, analysis.status isn't empty")
-
+            self.analysis.status[self.firmware_id_str] = []
 
             # look for new events in log
             logger.debug("looking for events in %s", f"{firmware.path_to_logs}/emba.log")

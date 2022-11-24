@@ -28,14 +28,10 @@ class WSConsumer(AsyncWebsocketConsumer):
 
     # called when received data from frontend
     # implement this for processing client input at backend
-<<<<<<< HEAD
     # FIXME send user/group id to answer with 
     # all analysis-status messages for that group
-    def receive(self, text_data=None, bytes_data=None):
-=======
-    # FIXME
+    # switch to analysis.all.status
     async def receive(self, text_data=None, bytes_data=None):
->>>>>>> 77cf71cb471469ffefe8e50ddda310e256bcfc57
         logger.info("WS - receive")
         if text_data == "Reload":
             # Send message to room group
