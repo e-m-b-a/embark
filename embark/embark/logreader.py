@@ -79,11 +79,11 @@ class LogReader:
         else:
             self.cleanup()
 
-    def append_status(self,tmp_mes):
-        logger.debug("Appending status with message: %s", tmp_mes)
+    def update_status(self):
+        logger.debug("Appending status with message: %s", self.status_msg)
         # append message to the json-field structure of the analysis
         try:
-            self.analysis.status.append(tmp_mes)
+            self.analysis.status[self.status_msg["percentage"]] = self.status_msg
             self.analysis.save()
             logger.debug("++Checking status: %s", self.analysis.status)
             # send it to group
@@ -153,7 +153,7 @@ class LogReader:
         self.status_msg["percentage"] = percentage
 
         # get copy of the current status message
-        self.append_status(copy.deepcopy(self.status_msg))
+        self.update_status()
 
     # update dictionary with phase changes
     def update_phase(self, stream_item_list):
@@ -164,7 +164,7 @@ class LogReader:
             self.status_msg["percentage"] = 1
 
         # get copy of the current status message
-        self.append_status(copy.deepcopy(self.status_msg))
+        self.update_status()
 
     def read_loop(self):
         """
