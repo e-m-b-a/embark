@@ -41,6 +41,7 @@ class LogReader:
         # global module count and status_msg directory
         self.module_cnt = 0
         self.firmware_id = firmware_id
+        self.analysis = FirmwareAnalysis.objects.get(id=self.firmware_id)
         self.firmware_id_str = str(self.firmware_id)
         try:
             self.firmwarefile = FirmwareAnalysis.objects.get(id=firmware_id).firmware.__str__()
@@ -133,6 +134,7 @@ class LogReader:
         tmp_mes = copy.deepcopy(self.status_msg)
 
         # append it to the data structure
+        # TODO change to update self.analysis.status
         if FirmwareAnalysis.objects.filter(id=self.firmware_id).exists():
             found = False
             for mes in settings.PROCESS_MAP[self.firmware_id_str]:
@@ -164,6 +166,7 @@ class LogReader:
         tmp_mes = copy.deepcopy(self.status_msg)
 
         # append it to the data structure
+        # TODO change to update self.analysis.status
         if FirmwareAnalysis.objects.filter(id=self.firmware_id).exists():
             found = False
             for mes in settings.PROCESS_MAP[self.firmware_id_str]:
@@ -204,8 +207,13 @@ class LogReader:
                     pass
 
             # create an entry for the id in the process map
-            if self.firmware_id_str not in settings.PROCESS_MAP:
-                settings.PROCESS_MAP[self.firmware_id_str] = []
+            # if self.firmware_id_str not in settings.PROCESS_MAP:
+            #     settings.PROCESS_MAP[self.firmware_id_str] = []
+            
+            # set status in firmware-analysis
+            if self.analysis.status is not None:
+                logger.error("Error in logreader, analysis.status isn't empty")
+
 
             # look for new events in log
             logger.debug("looking for events in %s", f"{firmware.path_to_logs}/emba.log")

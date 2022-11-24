@@ -279,6 +279,10 @@ class FirmwareAnalysis(models.Model):
     finished = models.BooleanField(default=False, blank=False)
     failed = models.BooleanField(default=True, blank=False)
 
+    # status/logreader-stuff
+    status = models.JSONField(null=True)
+
+
     class Meta:
         app_label = 'uploader'
 
