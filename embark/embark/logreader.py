@@ -82,9 +82,9 @@ class LogReader:
     def append_status(self,tmp_mes):
         # append message to the json-field structure of the analysis
         for message_ in self.analysis.status:
-            if not (message_["phase"] == tmp_mes["phase"] and  message_["module"] == tmp_mes["module"]):
+            if message_["phase"] != tmp_mes["phase"] and message_["module"] != tmp_mes["module"]:
                 logger.debug("Appending status with message: %s", tmp_mes)
-                self.analysis.status[self.firmware_id_str].append(tmp_mes)
+                self.analysis.status[self.firmware_id].append(tmp_mes)
                 self.analysis.save()
                 # send it to group
                 async_to_sync(self.channel_layer.group_send)(
@@ -178,11 +178,6 @@ class LogReader:
             if not pathlib.Path(pat).exists():
                 with open(pat, 'w+', encoding='utf-8'):
                     pass
-
-            # set status in firmware-analysis
-            if self.analysis.status is not None:
-                logger.error("Error in logreader, analysis.status isn't empty")
-            self.analysis.status[self.firmware_id_str] = []
 
             # look for new events in log
             logger.debug("looking for events in %s", f"{self.analysis.path_to_logs}/emba.log")

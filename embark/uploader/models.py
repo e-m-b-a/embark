@@ -20,6 +20,8 @@ from users.models import User as Userclass
 logger = logging.getLogger(__name__)
 
 
+def jsonfield_default_value():
+    return dict(id = [])
 class BooleanFieldExpertModeForm(forms.BooleanField):
     """
     class BooleanFieldExpertModeForm
@@ -292,7 +294,7 @@ class FirmwareAnalysis(models.Model):
     |
     message n-1
     """
-    status = models.JSONField(null=True)
+    status = models.JSONField(null=True, default=jsonfield_default_value)
 
 
     class Meta:
