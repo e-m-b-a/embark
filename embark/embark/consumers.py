@@ -1,61 +1,60 @@
 import json
 import logging
 
-from asgiref.sync import async_to_sync
-from channels.generic.websocket import WebsocketConsumer
+from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.layers import get_channel_layer
-from django.conf import settings
+
+from uploader.models import FirmwareAnalysis
 
 logger = logging.getLogger(__name__)
 
 
 # consumer class for synchronous/asynchronous websocket communication
-class WSConsumer(WebsocketConsumer):
-
-    # constructor
-    def __init__(self):
-        super().__init__()
-        self.channel_layer = get_channel_layer()
-        self.room_group_name = 'updatesgroup'
+class WSConsumer(AsyncWebsocketConsumer):
 
     # this method is executed when the connection to the frontend is established
-    def connect(self):
+    async def connect(self):
         logger.info("WS - connect")
+        self.user = self.scope["user"]
+        self.room_group_name = "services_%s" % self.user
         # create room group for channels communication
-        async_to_sync(self.channel_layer.group_add)(
+        await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
         )
         # accept socket connection
-        self.accept()
+        await self.accept()
         logger.info("WS - connect - accept")
 
     # called when received data from frontend
     # implement this for processing client input at backend
+<<<<<<< HEAD
     # FIXME send user/group id to answer with 
     # all analysis-status messages for that group
     def receive(self, text_data=None, bytes_data=None):
+=======
+    # FIXME
+    async def receive(self, text_data=None, bytes_data=None):
+>>>>>>> 77cf71cb471469ffefe8e50ddda310e256bcfc57
         logger.info("WS - receive")
         if text_data == "Reload":
-            async_to_sync(self.channel_layer.group_send)(
-                self.room_group_name, {
-                    "type": 'send.message',
-                    "message": settings.PROCESS_MAP}
-            )
+            # Send message to room group
+            message = []
+            analysis_list = FirmwareAnalysis.objects.filter(user=self.user, failed=False, finished=False)
+            for analysis_ in analysis_list:
+                message.append(analysis_.status)
+            await self.channel_layer.group_send(self.room_group_name, {"type": 'send.message', "message": message})
 
     # called when websocket connection is closed
-    def disconnect(self, code):
+    async def disconnect(self, code):
         logger.info("WS - disconnected: %s", code)
-        async_to_sync(self.channel_layer.group_discard)(
-            self.room_group_name,
-            self.channel_name
-        )
+        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
     # send data to frontend
-    def send_message(self, event):
+    async def send_message(self, event):
         # Receive message and extract data from room group
         message = event['message']
         # logger.info(f"WS - send message: " + str(message))
         logger.info("WS - send message")
         # Send message to WebSocket
-        self.send(json.dumps(message, sort_keys=False))
+        await self.send(json.dumps(message, sort_keys=False))
