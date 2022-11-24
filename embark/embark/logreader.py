@@ -172,13 +172,13 @@ class LogReader:
        """
         logger.info("read loop started for %s", self.firmware_id)
 
+        # if file does not exist create it otherwise delete its content
+        pat = f"{settings.EMBA_LOG_ROOT}/{self.firmware_id}/logreader.log"
+        if not pathlib.Path(pat).exists():
+            with open(pat, 'x', encoding='utf-8'):
+                pass
+        
         while not self.finish:
-            # if file does not exist create it otherwise delete its content
-            pat = f"{settings.EMBA_LOG_ROOT}/{self.firmware_id}/logreader.log"
-            if not pathlib.Path(pat).exists():
-                with open(pat, 'w+', encoding='utf-8'):
-                    pass
-
             # look for new events in log
             logger.debug("looking for events in %s", f"{self.analysis.path_to_logs}/emba.log")
             got_event = self.inotify_events(f"{self.analysis.path_to_logs}/emba.log")
@@ -233,6 +233,7 @@ class LogReader:
         """
         with open(f"{settings.EMBA_LOG_ROOT}/{self.firmware_id}/logreader.log", 'a+', encoding='utf-8') as diff_file:
             diff_file.write(diff)
+        logger.debug("wrote file-diff")
 
     def get_diff(self, log_file):
         """
@@ -253,7 +254,8 @@ class LogReader:
             :param tmp_inp: file diff = new line in emba log
             :return: None
         """
-        logger.debug("starting observers for log file %s", )
+        logger.debug("starting observers for log file %s", self.analysis.path_to_logs)
+
         status_pattern = "\\[\\*\\]*"
         phase_pattern = "\\[\\!\\]*"
 
