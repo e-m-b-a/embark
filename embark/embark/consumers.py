@@ -28,7 +28,6 @@ class WSConsumer(AsyncWebsocketConsumer):
         logger.info("WS - connect - accept")
 
     # called when received data from frontend
-    @database_sync_to_async
     async def receive(self, text_data=None, bytes_data=None):
         logger.info("WS - receive")
         if text_data == "Reload":
