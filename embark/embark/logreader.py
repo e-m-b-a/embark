@@ -80,10 +80,10 @@ class LogReader:
             self.cleanup()
 
     def append_status(self,tmp_mes):
+        logger.debug("Appending status with message: %s", tmp_mes)
         # append message to the json-field structure of the analysis
         for message_ in self.analysis.status:
             if message_["phase"] != tmp_mes["phase"] and message_["module"] != tmp_mes["module"]:
-                logger.debug("Appending status with message: %s", tmp_mes)
                 self.analysis.status[self.firmware_id].append(tmp_mes)
                 self.analysis.save()
                 # send it to group
@@ -192,6 +192,7 @@ class LogReader:
                     elif flag is flags.MODIFY:
                         # get the actual difference
                         tmp = self.get_diff(f"{self.analysis.path_to_logs}/emba.log")
+                        logger.debug("Got diff-output: %s", tmp)
                         # send changes to frontend
                         self.input_processing(tmp)
                         # copy diff to tmp file
@@ -219,7 +220,6 @@ class LogReader:
             :param pat: Regex pattern
             :return: True if regex matches otherwise False
         """
-
         if re.match(pat, inp):
             return True
         # else:
@@ -231,7 +231,6 @@ class LogReader:
             :param diff: new line in emba log
             :return: None
         """
-
         with open(f"{settings.EMBA_LOG_ROOT}/{self.firmware_id}/logreader.log", 'a+', encoding='utf-8') as diff_file:
             diff_file.write(diff)
 
@@ -242,7 +241,6 @@ class LogReader:
             :param: None
             :return: result of difflib call without preceding symbols
         """
-
         # open the two files to get diff from
         logger.debug("getting diff from %s", log_file)
         with open(log_file, encoding='utf-8') as old_file, open(f"{settings.EMBA_LOG_ROOT}/{self.firmware_id}/logreader.log", encoding='utf-8') as new_file:
@@ -255,7 +253,7 @@ class LogReader:
             :param tmp_inp: file diff = new line in emba log
             :return: None
         """
-
+        logger.debug("starting observers for log file %s", )
         status_pattern = "\\[\\*\\]*"
         phase_pattern = "\\[\\!\\]*"
 
