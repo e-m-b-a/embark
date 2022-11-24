@@ -5,6 +5,5 @@ from embark.consumers import WSConsumer
 
 # url patterns for websocket communication -> equivalent to urls.py
 ws_urlpatterns = [
-    path('ws/progress/connect/', WSConsumer.connect()),
-    path('ws/progress/disconnect/', WSConsumer.disconnect()),
+    path('ws/progress/', WSConsumer.as_asgi())
 ]
