@@ -60,8 +60,8 @@ cleaner() {
 
   docker container stop embark_db
   docker container stop embark_redis
-  docker network rm embark_backend
-  docker container prune -f --filter "label=flag"
+  # docker network rm embark_backend
+  # docker container prune -f --filter "label=flag"
 
   systemctl stop embark.service
   exit 1
@@ -221,7 +221,7 @@ fi
 
 # db_init
 echo -e "\n[""$BLUE JOB""$NC""] Starting migrations - log to embark/logs/migration.log"
-pipenv run ./manage.py makemigrations | tee -a /var/www/logs/migration.log
+# pipenv run ./manage.py makemigrations | tee -a /var/www/logs/migration.log
 pipenv run ./manage.py migrate | tee -a /var/www/logs/migration.log
 
 # collect staticfiles and make accesable for server

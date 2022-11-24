@@ -1,6 +1,7 @@
 import json
 import logging
 
+from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.layers import get_channel_layer
 
@@ -27,10 +28,7 @@ class WSConsumer(AsyncWebsocketConsumer):
         logger.info("WS - connect - accept")
 
     # called when received data from frontend
-    # implement this for processing client input at backend
-    # FIXME send user/group id to answer with 
-    # all analysis-status messages for that group
-    # switch to analysis.all.status
+    @database_sync_to_async
     async def receive(self, text_data=None, bytes_data=None):
         logger.info("WS - receive")
         if text_data == "Reload":
