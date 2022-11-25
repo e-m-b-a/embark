@@ -20,7 +20,7 @@ class WSConsumer(AsyncWebsocketConsumer):
         logger.debug("Found the following list of analysis for user %s : %s", self.user, analysis_list)
         logger.debug("User has %d analysis running", analysis_list.count())
         if analysis_list.count() > 0:
-            message = {{str(analysis_.id): analysis_.status} for analysis_ in analysis_list }
+            message = { str(analysis_.id): analysis_.status for analysis_ in analysis_list }
             return message
         return "Please Wait"
 
