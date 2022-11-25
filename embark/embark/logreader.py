@@ -302,10 +302,6 @@ class LogReader:
             logger.error("inotify_event error in %s:%s", path, error)
             return []
 
-    def produce_test_output(self, inp):
-        self.input_processing(inp)
-        return self.test_list1, self.test_list2
-
 
 if __name__ == "__main__":
     PHASE = "\\[\\!\\]*"

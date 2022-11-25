@@ -327,5 +327,5 @@ class BoundedExecutor:
     @classmethod
     @receiver(finish_execution, sender='system')
     def sigint_handler(cls, sender, **kwargs):
-        logger.info("Received shutdown signal in boundedexec")
+        logger.info("Received shutdown signal  by %s", sender)
         BoundedExecutor.shutdown()

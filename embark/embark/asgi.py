@@ -1,3 +1,4 @@
+# pylint: disable=C0413
 """
 ASGI config for djangoProject project.
 

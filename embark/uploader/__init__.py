@@ -1,4 +1,4 @@
-from signal import signal
+import signal
 import sys
 import logging
 
@@ -16,4 +16,4 @@ def _stop_handler():
     sys.exit(0)
 
 
-signal(signal.SIGINT, _stop_handler)
+signal.signal(signal.SIGINT, _stop_handler)

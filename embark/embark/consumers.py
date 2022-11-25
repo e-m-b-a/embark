@@ -1,4 +1,3 @@
-# pylint: disable=C0413
 import json
 import logging
 
