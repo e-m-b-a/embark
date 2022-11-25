@@ -156,14 +156,14 @@ socket.onmessage = function (event) {
             // append phase and module arrays
             console.log("log_phase_" + data[analysis_].analysis);
             for (var module_ in data[analysis_].module_list){
-                livelog_module(data[analysis_].module_list[module_], Object.keys(data)[analysis_])
+                livelog_module(data[analysis_].module_list[module_], data[analysis_].analysis)
             }
             for (var phase_ in data[analysis_].phase_list){
-                livelog_module(data[analysis_].phase_list[phase_], Object.keys(data)[analysis_])
+                livelog_module(data[analysis_].phase_list[phase_], data[analysis_].analysis)
             }
             // set percentage and other metadata
             // TODO add metasinfo
-            makeProgress(data[analysis_].percentage, Object.keys(data)[analysis_])
+            makeProgress(data[analysis_].percentage, data[analysis_].analysis)
         }
     }
     catch(error){
