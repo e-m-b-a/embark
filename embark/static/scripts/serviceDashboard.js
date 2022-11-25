@@ -126,7 +126,7 @@ socket.onmessage = function (event) {
     var data = JSON.parse(event.data);
     try{
         // for analysis in message create container
-        for (var analysis_ = 0;  analysis_ < data.length; analysis_++) {
+        for (const analysis_ in data){
             //create container if new analysis
             var newContainer = document.getElementById("Container_" + data[analysis_].analysis);
             var htmlToAdd = ``;
