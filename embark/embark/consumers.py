@@ -19,7 +19,7 @@ class WSConsumer(AsyncWebsocketConsumer):
         analysis_list = FirmwareAnalysis.objects.filter(user=self.user, failed=False, finished=False)
         logger.debug("User has %d analysis running", analysis_list.count())
         if analysis_list.count() > 0:
-            message = { (analysis_.id, analysis_.status) for analysis_ in analysis_list }
+            message = { (str(analysis_.id), analysis_.status) for analysis_ in analysis_list }
             return message
         return "Please Wait"
 
