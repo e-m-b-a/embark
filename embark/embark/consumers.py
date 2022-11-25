@@ -16,7 +16,7 @@ class WSConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_message(self):
         logger.info("Getting status for user %s", self.user)
-        analysis_list = FirmwareAnalysis.objects.filter(user=self.user, failed=False, finished=False)
+        analysis_list = FirmwareAnalysis.objects.filter(user=self.user)
         logger.debug("Found the following list of analysis for user %s : %s", self.user, analysis_list)
         logger.debug("User has %d analysis running", analysis_list.count())
         if analysis_list.count() > 0:
