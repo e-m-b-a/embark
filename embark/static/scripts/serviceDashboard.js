@@ -15,28 +15,34 @@
 
 /**
  * Bind the Phase Messages from log file to Container
- * @param {*} phase Phase Message received from Log
+ * @param {*} phase_list Phase Message received from Log
  * @param {*} cur_ID Current Id of the Container
  */
-function livelog_phase(phase, cur_ID) {
+function livelog_phase(phase_list, cur_ID) {
     "use strict";
     var id = "#log_phase_" + cur_ID;
     var $List = $(id);
-    var $entry = $('<li>' + phase + '</li>');
-    $List.append($entry);
+    $List.empty()
+    for (const phase_ in phase_list){
+        var $entry = $('<li>' + phase_ + '</li>');
+        $List.append($entry);
+    }
 }
 
 /**
  * Bind the Module message from log file to container
- * @param {*} module Module Log message received from Log
+ * @param {*} module_list Module Log message received from Log
  * @param {*} cur_ID Current Id of the container
  */
-function livelog_module(module, cur_ID) {
+function livelog_module(module_list, cur_ID) {
     "use strict";
     var id = "#log_module_" + cur_ID;
     var $List = $(id);
-    var $entry = $('<li>' + module + '</li>');
-    $List.append($entry);
+    $List.empty()
+    for (const module_ in module_list){
+        var $entry = $('<li>' + module_ + '</li>');
+        $List.append($entry);
+    }
 }
 
 function getCookie(name) {
@@ -129,7 +135,8 @@ socket.onmessage = function (event) {
                 var htmlToAdd = `
                     <div class="box" id="Container_` + data[analysis_].analysis + `">
                         <div class="mainText">
-                            <span>`+ data[analysis_].firmware_name.split(".")[0]+`</span>
+                            <small>`+ data[analysis_].analysis + `</small>
+                            <span>`+ data[analysis_].firmware_name.split(".")[0] + `</span>
                         </div>
                         <div class="row">
                             <div class="col-sm log tile moduleLog">
@@ -159,11 +166,14 @@ socket.onmessage = function (event) {
             }
             // append phase and module arrays
             console.log("log_phase_" + data[analysis_].analysis);
-            livelog_module(data[analysis_].last_module, data[analysis_].analysis)
-            livelog_phase(data[analysis_].last_phase, data[analysis_].analysis)
+            livelog_module(data[analysis_].module_list, data[analysis_].analysis)
+            livelog_phase(data[analysis_].phase_list, data[analysis_].analysis)
             // set percentage and other metadata
-            // TODO add metasinfo
             makeProgress(data[analysis_].percentage, data[analysis_].analysis)
+            // finished analysis
+            if (data[analysis_].finished == true){
+                // TODO set container collapsed, green and at the end
+            }
         }
     }
     catch(error){

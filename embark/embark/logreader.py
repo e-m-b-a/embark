@@ -213,6 +213,8 @@ class LogReader:
         """
         # inotify = INotify()
         # inotify.rm_watch(self.wd)
+        self.analysis.status["finished"] = True
+        self.analysis.save()
         logger.debug("Log reader cleaned up for %s", self.firmware_id)
         # TODO do cleanup of emba_new_<self.firmware_id>.log
 

@@ -33,6 +33,7 @@ def jsonfield_default_value():
         'module_list': [],
         'last_phase': "",
         'phase_list': [],
+        'finished': False
     }
 
 class BooleanFieldExpertModeForm(forms.BooleanField):
@@ -292,7 +293,7 @@ class FirmwareAnalysis(models.Model):
     scan_time = models.DurationField(default=timedelta(), blank=True)
     duration = models.CharField(blank=True, null=True, max_length=100, help_text='')
     finished = models.BooleanField(default=False, blank=False)
-    failed = models.BooleanField(default=True, blank=False)
+    failed = models.BooleanField(default=False, blank=False)
 
     # status/logreader-stuff
     status = models.JSONField(null=False, default=jsonfield_default_value)
