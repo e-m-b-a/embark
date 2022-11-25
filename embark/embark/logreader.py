@@ -53,11 +53,6 @@ class LogReader:
         self.room_group_name = "services_%s" % self.user
         self.channel_layer = get_channel_layer()
 
-        # set status
-        self.analysis.status["analysis"] = firmware_id
-        self.analysis.status["firmware_name"] = self.analysis.firmware_name
-        self.analysis.save()
-        
         # variables for cleanup
         self.finish = False
         # self.wd = None

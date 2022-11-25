@@ -183,6 +183,8 @@ class BoundedExecutor:
         log_path.mkdir(parents=True, exist_ok=True)
 
         firmware_flags.path_to_logs = emba_log_location
+        firmware_flags.status["analysis"] = str(firmware_flags.id)
+        firmware_flags.status["firmware_name"] = firmware_flags.analysis.firmware_name
         firmware_flags.save()
 
         # build command
