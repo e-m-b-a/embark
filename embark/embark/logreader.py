@@ -94,7 +94,7 @@ class LogReader:
             async_to_sync(self.channel_layer.group_send)(
                 self.room_group_name, {
                     "type": 'send.message',
-                    "message": (str(self.analysis.id), self.analysis.status)
+                    "message": {str(self.analysis.id): self.analysis.status}
                 }
             )
         except Exception as error:
