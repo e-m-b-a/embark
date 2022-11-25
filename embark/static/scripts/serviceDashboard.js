@@ -123,43 +123,47 @@ socket.onmessage = function (event) {
     try{
         // for analysis in message create container
         for (const analysis_ in data){
-            var htmlToAdd = `
-            <div class="box" id="Container_` + data[analysis_].analysis + `">
-                <div class="mainText">
-                    <span>`+ data[analysis_].firmware_name.split(".")[0]+`</span>
-                </div>
-                <div class="row">
-                    <div class="col-sm log tile moduleLog">
-                        <ul class="log_phase logUL" id="log_phase_` + data[analysis_].analysis + `"></ul>
+            //create container if new analysis
+            var newContainer = document.getElementById("Container_" + data[analysis_].analysis);
+            if (newContainer == null) {
+                var htmlToAdd = `
+                    <div class="box" id="Container_` + data[analysis_].analysis + `">
+                        <div class="mainText">
+                            <span>`+ data[analysis_].firmware_name.split(".")[0]+`</span>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm log tile moduleLog">
+                                <ul class="log_phase logUL" id="log_phase_` + data[analysis_].analysis + `"></ul>
+                            </div>
+                            <div class="col-sm log tile phaseLog">
+                                <ul class="log_phase logUL" id="log_module_` + data[analysis_].analysis + `"></ul>
+                            </div>
+                        </div>
+                        <div id="progress-wrapper">
+                            <div id="pBar_` + data[analysis_].analysis + `" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                    0 % 
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-sm log tile phaseLog">
-                        <ul class="log_phase logUL" id="log_module_` + data[analysis_].analysis + `"></ul>
-                    </div>
-                </div>
-                <div id="progress-wrapper">
-                    <div id="pBar_` + data[analysis_].analysis + `" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-                            0 % 
-                    </div>
-                </div>
-            </div>
-            <div class="buttonRow">
-                <!--
-                <button type="view-log" class="btn buttonRowElem" id="` + data[analysis_].analysis + `" onclick="viewLog(this.id)" >
-                    EMBA-log
-                </button>
-                <button type="reset" class="btn buttonRowElem" id="` + data[analysis_].analysis + `" onclick="cancelLog(this.id)" >
-                    Cancel
-                </button>
-                -->
-            </div>`;
+                    <div class="buttonRow">
+                        <!--
+                        <button type="view-log" class="btn buttonRowElem" id="` + data[analysis_].analysis + `" onclick="viewLog(this.id)" >
+                            EMBA-log
+                        </button>
+                        <button type="reset" class="btn buttonRowElem" id="` + data[analysis_].analysis + `" onclick="cancelLog(this.id)" >
+                            Cancel
+                        </button>
+                        -->
+                    </div>`;
             document.getElementsByClassName("main")[0].insertAdjacentHTML('beforeend', htmlToAdd);
+            }
             // append phase and module arrays
             console.log("log_phase_" + data[analysis_].analysis);
             for (var module_ in data[analysis_].module_list){
                 livelog_module(data[analysis_].module_list[module_], data[analysis_].analysis)
             }
             for (var phase_ in data[analysis_].phase_list){
-                livelog_module(data[analysis_].phase_list[phase_], data[analysis_].analysis)
+                livelog_phase(data[analysis_].phase_list[phase_], data[analysis_].analysis)
             }
             // set percentage and other metadata
             // TODO add metasinfo
