@@ -126,10 +126,7 @@ socket.onmessage = function (event) {
     var data = JSON.parse(event.data);
     try{
         // for analysis in message create container
-        for (const analysis_ in data){
-            if (data.hasOwnProperty(analysis_)) {
-                console.log("Problem in" + data[analysis_]);
-              }
+        for (const analysis_ in data){  // jshint ignore:line
             //create container if new analysis
             var newContainer = document.getElementById("Container_" + data[analysis_].analysis);
             var htmlToAdd = ``;
