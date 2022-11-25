@@ -1,3 +1,4 @@
+# pylint: disable=W0201
 import json
 import logging
 
@@ -12,16 +13,11 @@ logger = logging.getLogger(__name__)
 # consumer class for synchronous/asynchronous websocket communication
 class WSConsumer(AsyncWebsocketConsumer):
 
-    async def __init__(self, *args, **kwargs):
-        await super().__init__(*args, **kwargs)
-        self.user = self.scope["user"]
-        self.room_group_name = f"services_{self.user}"
-
     @database_sync_to_async
     def get_message(self):
-        logger.info("Getting status for user %s", self.user)
-        analysis_list = FirmwareAnalysis.objects.filter(user=self.user).exclude(failed=True)
-        logger.debug("Found the following list of analysis for user %s : %s", self.user, analysis_list)
+        logger.info("Getting status for user %s", self.scope['user'])
+        analysis_list = FirmwareAnalysis.objects.filter(user=self.scope['user']).exclude(failed=True)
+        logger.debug("Found the following list of analysis for user %s : %s", self.scope['user'], analysis_list)
         logger.debug("User has %d analysis running", analysis_list.count())
         if analysis_list.count() > 0:
             message = {str(analysis_.id): analysis_.status for analysis_ in analysis_list}
@@ -32,6 +28,7 @@ class WSConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         logger.info("WS - connect")
         # create room group for channels communication
+        self.room_group_name = f"services_{self.scope['user']}"
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name

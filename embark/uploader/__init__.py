@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 finish_execution = Signal()
 
 
-def _stop_handler():
+def _stop_handler(_signal, _frame):
     print('Shutting down all operations!')
     logger.info("sending shutdown signal to boundedexec")
     finish_execution.send(sender='system')
