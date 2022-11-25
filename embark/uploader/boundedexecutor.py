@@ -324,8 +324,8 @@ class BoundedExecutor:
         res.save()
         return res
 
-    @classmethod
+    @staticmethod
     @receiver(finish_execution, sender='system')
-    def sigint_handler(cls, sender, **kwargs):
+    def sigint_handler(sender, **kwargs):
         logger.info("Received shutdown signal  by %s", sender)
         BoundedExecutor.shutdown()
