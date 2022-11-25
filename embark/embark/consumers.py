@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 # consumer class for synchronous/asynchronous websocket communication
 class WSConsumer(AsyncWebsocketConsumer):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    async def __init__(self, *args, **kwargs):
+        await super().__init__(*args, **kwargs)
         self.user = self.scope["user"]
         self.room_group_name = f"services_{self.user}"
 
