@@ -1,6 +1,5 @@
 # pylint: disable=W0602
 # ignores no-assignment error since there is one!
-import copy
 import datetime
 import difflib
 import pathlib
@@ -50,16 +49,12 @@ class LogReader:
 
         # set variables for channels communication
         self.user = self.analysis.user
-        self.room_group_name = "services_%s" % self.user
+        self.room_group_name = f"services_{self.user}"
         self.channel_layer = get_channel_layer()
 
         # variables for cleanup
         self.finish = False
         # self.wd = None
-
-        # for testing
-        self.test_list1 = []
-        self.test_list2 = []
 
         # status update dict (appended to db)
         self.status_msg = {
@@ -82,7 +77,7 @@ class LogReader:
             self.analysis.status["percentage"] = self.status_msg["percentage"]
             self.analysis.status["last_update"] = str(datetime.datetime.now())
             # append modules and phase list
-            if self.status_msg["module"] != self.analysis.status["last_module"] :
+            if self.status_msg["module"] != self.analysis.status["last_module"]:
                 self.analysis.status["last_module"] = self.status_msg["module"]
                 self.analysis.status["module_list"].append(self.status_msg["module"])
             if self.status_msg["phase"] != self.analysis.status["last_phase"]:
@@ -182,7 +177,7 @@ class LogReader:
         if not pathlib.Path(pat).exists():
             with open(pat, 'x', encoding='utf-8'):
                 pass
-        
+
         while not self.finish:
             # look for new events in log
             logger.debug("looking for events in %s", f"{self.analysis.path_to_logs}/emba.log")

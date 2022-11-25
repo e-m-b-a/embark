@@ -22,9 +22,9 @@ function livelog_phase(phase_list, cur_ID) {
     "use strict";
     var id = "#log_phase_" + cur_ID;
     var $List = $(id);
-    $List.empty()
-    for (const phase_ in phase_list){
-        var $entry = $('<li>' + phase_list[phase_] + '</li>');
+    $List.empty();
+    for (var i = 0; i < phase_list.length; i++){
+        var $entry = $('<li>' + phase_list[i] + '</li>');
         $List.append($entry);
     }
 }
@@ -38,9 +38,9 @@ function livelog_module(module_list, cur_ID) {
     "use strict";
     var id = "#log_module_" + cur_ID;
     var $List = $(id);
-    $List.empty()
-    for (const module_ in module_list){
-        var $entry = $('<li>' + module_list[module_] + '</li>');
+    $List.empty();
+    for (var i = 0; i < module_list.length; i++){
+        var $entry = $('<li>' + module_list[i] + '</li>');
         $List.append($entry);
     }
 }
@@ -126,14 +126,15 @@ socket.onmessage = function (event) {
     var data = JSON.parse(event.data);
     try{
         // for analysis in message create container
-        for (const analysis_ in data){
+        for (var analysis_ = 0;  analysis_ < data.length; analysis_++) {
             //create container if new analysis
             var newContainer = document.getElementById("Container_" + data[analysis_].analysis);
+            var htmlToAdd = ``;
             if (newContainer == null) {
                 // finished analysis or not
                 if (data[analysis_].finished == true){
-                    newContainer.remove()
-                    var htmlToAdd = `
+                    newContainer.remove();
+                    htmlToAdd = `
                     <div class="box" id="Container_` + data[analysis_].analysis + `">
                         <div class="mainText">
                             <small>`+ data[analysis_].analysis + `</small>
@@ -156,7 +157,7 @@ socket.onmessage = function (event) {
                     document.getElementsByClassName("FinishedRow")[0].insertAdjacentHTML('beforeend', htmlToAdd);
                 }
                 else{
-                    var htmlToAdd = `
+                    htmlToAdd = `
                     <div class="box" id="Container_` + data[analysis_].analysis + `">
                         <div class="mainText">
                             <small>`+ data[analysis_].analysis + `</small>
@@ -182,11 +183,10 @@ socket.onmessage = function (event) {
             }
             // append phase and module arrays
             console.log("log_phase_" + data[analysis_].analysis);
-            livelog_module(data[analysis_].module_list, data[analysis_].analysis)
-            livelog_phase(data[analysis_].phase_list, data[analysis_].analysis)
+            livelog_module(data[analysis_].module_list, data[analysis_].analysis);
+            livelog_phase(data[analysis_].phase_list, data[analysis_].analysis);
             // set percentage and other metadata
-            makeProgress(data[analysis_].percentage, data[analysis_].analysis)
-            
+            makeProgress(data[analysis_].percentage, data[analysis_].analysis);
         }
     }
     catch(error){

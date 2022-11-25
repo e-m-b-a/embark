@@ -36,6 +36,7 @@ def jsonfield_default_value():
         'finished': False
     }
 
+
 class BooleanFieldExpertModeForm(forms.BooleanField):
     """
     class BooleanFieldExpertModeForm
@@ -297,7 +298,6 @@ class FirmwareAnalysis(models.Model):
 
     # status/logreader-stuff
     status = models.JSONField(null=False, default=jsonfield_default_value)
-
 
     class Meta:
         app_label = 'uploader'

@@ -243,7 +243,6 @@ class BoundedExecutor:
             analysis_.finished = True
             analysis_.save()
         logger.info("Shutdown successful")
-            
 
     @classmethod
     def csv_read(cls, analysis_id, path, cmd):
@@ -327,6 +326,6 @@ class BoundedExecutor:
 
     @classmethod
     @receiver(finish_execution, sender='system')
-    def sigint_handler(sender, **kwargs):
+    def sigint_handler(cls, sender, **kwargs):
         logger.info("Received shutdown signal in boundedexec")
         BoundedExecutor.shutdown()
