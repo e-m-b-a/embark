@@ -15,34 +15,28 @@
 
 /**
  * Bind the Phase Messages from log file to Container
- * @param {*} phase_list list of Phase Messages received from Log
+ * @param {*} phase Phase Message received from Log
  * @param {*} cur_ID Current Id of the Container
  */
-function livelog_phase(phase_list, cur_ID) {
+function livelog_phase(phase, cur_ID) {
     "use strict";
     var id = "#log_phase_" + cur_ID;
     var $List = $(id);
-    $List.empty()
-    for (const phase_ in phase_list){
-        var $entry = $('<li>' + phase_ + '</li>');
-        $List.append($entry);
-    }
+    var $entry = $('<li>' + phase + '</li>');
+    $List.append($entry);
 }
 
 /**
- * Bind the Module message_list from log file to container
- * @param {*} module_list list Module Log message received from Log
+ * Bind the Module message from log file to container
+ * @param {*} module Module Log message received from Log
  * @param {*} cur_ID Current Id of the container
  */
-function livelog_module(module_list, cur_ID) {
+function livelog_module(module, cur_ID) {
     "use strict";
     var id = "#log_module_" + cur_ID;
     var $List = $(id);
-    $List.empty()
-    for (const module_ in module_list){
-        var $entry = $('<li>' + module_ + '</li>');
-        $List.append($entry);
-    }
+    var $entry = $('<li>' + module + '</li>');
+    $List.append($entry);
 }
 
 function getCookie(name) {
@@ -165,8 +159,8 @@ socket.onmessage = function (event) {
             }
             // append phase and module arrays
             console.log("log_phase_" + data[analysis_].analysis);
-            livelog_module(data[analysis_].module_list, data[analysis_].analysis)
-            livelog_phase(data[analysis_].phase_list, data[analysis_].analysis)
+            livelog_module(data[analysis_].last_module, data[analysis_].analysis)
+            livelog_phase(data[analysis_].last_phase, data[analysis_].analysis)
             // set percentage and other metadata
             // TODO add metasinfo
             makeProgress(data[analysis_].percentage, data[analysis_].analysis)
