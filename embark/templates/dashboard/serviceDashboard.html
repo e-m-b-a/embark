@@ -11,20 +11,26 @@
     </div>
 {% endif %}
     <div class="row StopRow">
-            <div class="box">
-                <p class="mainText">Select and stop Analysis</p>
-                <form action="{% url 'embark-stop-analysis' %}" method="post" id="stop-form">
-                    <!--  onsubmit="window.confirmDelete(event)" -->
-                    {% csrf_token %}
-                    <div class="innerBlock">
-                        <div id="analysisToStop" class="form-group stopAnalysis" >
-                            {{ form }}
-                        </div>
+        <div class="box">
+            <p class="mainText">Select and stop Analysis</p>
+            <form action="{% url 'embark-stop-analysis' %}" method="post" id="stop-form">
+                <!--  onsubmit="window.confirmDelete(event)" -->
+                {% csrf_token %}
+                <div class="innerBlock">
+                    <div id="analysisToStop" class="form-group stopAnalysis" >
+                        {{ form }}
                     </div>
-                    <div class="buttonRow">
-                        <button type="stop" class="btn buttonRowElem">Stop</button>
-                    </div>
-                </form>
-            </div>
+                </div>
+                <div class="buttonRow">
+                    <button type="stop" class="btn buttonRowElem">Stop</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="row RunningRow">
+        <!--running analysis get shown here-->
+    </div>
+    <div class="row FinishedRow">
+        <!--finished analysis get shown here-->
     </div>
 {% endblock maincontent %}

@@ -24,7 +24,7 @@ function livelog_phase(phase_list, cur_ID) {
     var $List = $(id);
     $List.empty()
     for (const phase_ in phase_list){
-        var $entry = $('<li>' + phase_ + '</li>');
+        var $entry = $('<li>' + phase_list[phase_] + '</li>');
         $List.append($entry);
     }
 }
@@ -40,7 +40,7 @@ function livelog_module(module_list, cur_ID) {
     var $List = $(id);
     $List.empty()
     for (const module_ in module_list){
-        var $entry = $('<li>' + module_ + '</li>');
+        var $entry = $('<li>' + module_list[module_] + '</li>');
         $List.append($entry);
     }
 }
@@ -84,10 +84,8 @@ function cancelLog(currentID) {
  function viewLog(currentID) {
     "use strict";
     try {
-        // TODO get hashid of div-id
-        window.location("/log/" + currentID);
+        window.location("/dashboard/individualReport/" + currentID);
     } catch (error) {
-        //console.log(error.message);
         console.log(error);
     }
 }
@@ -132,7 +130,31 @@ socket.onmessage = function (event) {
             //create container if new analysis
             var newContainer = document.getElementById("Container_" + data[analysis_].analysis);
             if (newContainer == null) {
-                var htmlToAdd = `
+                // finished analysis or not
+                if (data[analysis_].finished == true){
+                    newContainer.remove()
+                    var htmlToAdd = `
+                    <div class="box" id="Container_` + data[analysis_].analysis + `">
+                        <div class="mainText">
+                            <small>`+ data[analysis_].analysis + `</small>
+                            <span>`+ data[analysis_].firmware_name.split(".")[0] + `</span>
+                            <h1>Successful</h1>
+                        </div>
+                        <div id="progress-wrapper">
+                            <div id="pBar_` + data[analysis_].analysis + `" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                    100 % 
+                            </div>
+                        </div>
+                    </div>
+                    <div class="buttonRow">
+                        <button type="view-log" class="btn buttonRowElem" id="` + data[analysis_].analysis + `" onclick="viewLog(this.id)" >
+                            EMBA-log
+                        </button>
+                    </div>`;
+                    document.getElementsByClassName("FinishedRow")[0].insertAdjacentHTML('beforeend', htmlToAdd);
+                }
+                else{
+                    var htmlToAdd = `
                     <div class="box" id="Container_` + data[analysis_].analysis + `">
                         <div class="mainText">
                             <small>`+ data[analysis_].analysis + `</small>
@@ -151,18 +173,9 @@ socket.onmessage = function (event) {
                                     0 % 
                             </div>
                         </div>
-                    </div>
-                    <div class="buttonRow">
-                        <!--
-                        <button type="view-log" class="btn buttonRowElem" id="` + data[analysis_].analysis + `" onclick="viewLog(this.id)" >
-                            EMBA-log
-                        </button>
-                        <button type="reset" class="btn buttonRowElem" id="` + data[analysis_].analysis + `" onclick="cancelLog(this.id)" >
-                            Cancel
-                        </button>
-                        -->
                     </div>`;
-            document.getElementsByClassName("main")[0].insertAdjacentHTML('beforeend', htmlToAdd);
+                    document.getElementsByClassName("RunningRow")[0].insertAdjacentHTML('beforeend', htmlToAdd);
+                }
             }
             // append phase and module arrays
             console.log("log_phase_" + data[analysis_].analysis);
@@ -170,10 +183,7 @@ socket.onmessage = function (event) {
             livelog_phase(data[analysis_].phase_list, data[analysis_].analysis)
             // set percentage and other metadata
             makeProgress(data[analysis_].percentage, data[analysis_].analysis)
-            // finished analysis
-            if (data[analysis_].finished == true){
-                // TODO set container collapsed, green and at the end
-            }
+            
         }
     }
     catch(error){
