@@ -122,39 +122,39 @@ socket.onmessage = function (event) {
     var data = JSON.parse(event.data);
     try{
         // for analysis in message create container
-        for (var analysis_ in data){
+        for (const analysis_ in data){
             var htmlToAdd = `
-            <div class="box" id="Container_` + Object.keys(data)[analysis_] + `">
+            <div class="box" id="Container_` + data[analysis_].analysis + `">
                 <div class="mainText">
-                    <span>`+data[Object.keys(data)[analysis_]].firmware_name.split(".")[0]+`</span>
+                    <span>`+ data[analysis_].firmware_name.split(".")[0]+`</span>
                 </div>
                 <div class="row">
                     <div class="col-sm log tile moduleLog">
-                        <ul class="log_phase logUL" id="log_phase_` + Object.keys(data)[analysis_] + `"></ul>
+                        <ul class="log_phase logUL" id="log_phase_` + data[analysis_].analysis + `"></ul>
                     </div>
                     <div class="col-sm log tile phaseLog">
-                        <ul class="log_phase logUL" id="log_module_` + Object.keys(data)[analysis_] + `"></ul>
+                        <ul class="log_phase logUL" id="log_module_` + data[analysis_].analysis + `"></ul>
                     </div>
                 </div>
                 <div id="progress-wrapper">
-                    <div id="pBar_` + Object.keys(data)[analysis_] + `" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                    <div id="pBar_` + data[analysis_].analysis + `" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
                             0 % 
                     </div>
                 </div>
             </div>
             <div class="buttonRow">
                 <!--
-                <button type="view-log" class="btn buttonRowElem" id="` + Object.keys(data)[analysis_] + `" onclick="viewLog(this.id)" >
+                <button type="view-log" class="btn buttonRowElem" id="` + data[analysis_].analysis + `" onclick="viewLog(this.id)" >
                     EMBA-log
                 </button>
-                <button type="reset" class="btn buttonRowElem" id="` + Object.keys(data)[analysis_] + `" onclick="cancelLog(this.id)" >
+                <button type="reset" class="btn buttonRowElem" id="` + data[analysis_].analysis + `" onclick="cancelLog(this.id)" >
                     Cancel
                 </button>
                 -->
             </div>`;
             document.getElementsByClassName("main")[0].insertAdjacentHTML('beforeend', htmlToAdd);
             // append phase and module arrays
-            console.log("log_phase_" + Object.keys(data)[analysis_]);
+            console.log("log_phase_" + data[analysis_].analysis);
             for (var module_ in data[analysis_].module_list){
                 livelog_module(data[analysis_].module_list[module_], Object.keys(data)[analysis_])
             }
