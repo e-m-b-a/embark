@@ -137,8 +137,10 @@ socket.onmessage = function (event) {
                     <div class="box" id="Container_` + data[analysis_].analysis + `">
                         <div class="mainText">
                             <small>`+ data[analysis_].analysis + `</small>
+                            <br>
                             <span>`+ data[analysis_].firmware_name.split(".")[0] + `</span>
-                            <h1>Successful</h1>
+                            <br>
+                            <h1> Successful </h1>
                         </div>
                         <div id="progress-wrapper">
                             <div id="pBar_` + data[analysis_].analysis + `" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
@@ -158,6 +160,7 @@ socket.onmessage = function (event) {
                     <div class="box" id="Container_` + data[analysis_].analysis + `">
                         <div class="mainText">
                             <small>`+ data[analysis_].analysis + `</small>
+                            <br>
                             <span>`+ data[analysis_].firmware_name.split(".")[0] + `</span>
                         </div>
                         <div class="row">
