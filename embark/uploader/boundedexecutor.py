@@ -11,9 +11,11 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from threading import BoundedSemaphore
 
+from django.dispatch import receiver
 from django.utils.datetime_safe import datetime
 from django.conf import settings
 
+from uploader import finish_execution
 from uploader.archiver import Archiver
 from uploader.models import FirmwareAnalysis
 from dashboard.models import Result
@@ -232,6 +234,7 @@ class BoundedExecutor:
     @classmethod
     def shutdown(cls, wait=True):
         """See concurrent.futures.Executor#shutdown"""
+        logger.info("shutting down Boundedexecutor")
 
         executor.shutdown(wait)
 
@@ -314,3 +317,9 @@ class BoundedExecutor:
         )
         res.save()
         return res
+
+    @classmethod
+    @receiver(finish_execution, sender='system')
+    def sigint_handler(sender, **kwargs):
+        logger.info("Received shutdown signal in boundedexec")
+        pass
