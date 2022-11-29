@@ -108,17 +108,17 @@ class BoundedExecutor:
             logger.error("EMBA run was probably not successful!")
             logger.error("run_emba_cmd error: %s", execpt)
             exit_fail = True
-        finally:
-            # finalize db entry
-            if analysis_id:
-                analysis.end_date = datetime.now()
-                analysis.scan_time = datetime.now() - analysis.start_date
-                analysis.duration = str(analysis.scan_time)
-                analysis.finished = True
-                analysis.failed = exit_fail
-                analysis.save()
+        
+        # finalize db entry
+        if analysis:
+            analysis.end_date = datetime.now()
+            analysis.scan_time = datetime.now() - analysis.start_date
+            analysis.duration = str(analysis.scan_time)
+            analysis.finished = True
+            analysis.failed = exit_fail
+            analysis.save()
 
-            logger.info("Successful cleaned up: %s", cmd)
+        logger.info("Successful cleaned up: %s", cmd)
 
     @classmethod
     def kill_emba_cmd(cls, analysis_id):
@@ -189,9 +189,6 @@ class BoundedExecutor:
         firmware_flags.status["firmware_name"] = firmware_flags.firmware_name
         firmware_flags.save()
 
-        # build command
-        # FIXME remove all flags
-        # TODO add note with uuid
         emba_cmd = f"{EMBA_SCRIPT_LOCATION} -p ./scan-profiles/default-scan-no-notify.emba -f {image_file_location} -l {emba_log_location} {emba_flags}"
 
         # submit command to executor threadpool
