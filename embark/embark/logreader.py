@@ -73,30 +73,28 @@ class LogReader:
     def save_status(self):
         logger.debug("Appending status with message: %s", self.status_msg)
         # append message to the json-field structure of the analysis
-        try:
-            self.analysis.status["percentage"] = self.status_msg["percentage"]
-            if self.status_msg["percentage"] == 100:
-                self.analysis.status["finished"] = True
-            self.analysis.status["last_update"] = str(datetime.datetime.now())
-            # append modules and phase list
-            if self.status_msg["module"] != self.analysis.status["last_module"]:
-                self.analysis.status["last_module"] = self.status_msg["module"]
-                self.analysis.status["module_list"].append(self.status_msg["module"])
-            if self.status_msg["phase"] != self.analysis.status["last_phase"]:
-                self.analysis.status["last_phase"] = self.status_msg["phase"]
-                self.analysis.status["phase_list"].append(self.status_msg["phase"])
-            self.analysis.save()
-            logger.debug("Checking status: %s", self.analysis.status)
-            # send it to group
-            async_to_sync(self.channel_layer.group_send)(
-                self.room_group_name, {
-                    "type": 'send.message',
-                    "message": {str(self.analysis.id): self.analysis.status}
-                }
-            )
-        except Exception as error:
-            logger.error("Cought exception: %s", error)
-            self.finish = True
+        self.analysis.status["percentage"] = self.status_msg["percentage"]
+        self.analysis.status["last_update"] = str(datetime.datetime.now())
+        # append modules and phase list
+        if self.status_msg["module"] != self.analysis.status["last_module"]:
+            self.analysis.status["last_module"] = self.status_msg["module"]
+            self.analysis.status["module_list"].append(self.status_msg["module"])
+        if self.status_msg["phase"] != self.analysis.status["last_phase"]:
+            self.analysis.status["last_phase"] = self.status_msg["phase"]
+            self.analysis.status["phase_list"].append(self.status_msg["phase"])
+        if self.status_msg["percentage"] == 100:
+            self.analysis.status["finished"] = True
+            self.analysis.save(update_fields=["status"], force_update=True)
+        else:
+            self.analysis.save(update_fields=["status"])
+        logger.debug("Checking status: %s", self.analysis.status)
+        # send it to group
+        async_to_sync(self.channel_layer.group_send)(
+            self.room_group_name, {
+                "type": 'send.message',
+                "message": {str(self.analysis.id): self.analysis.status}
+            }
+        )
 
     @staticmethod
     def phase_identify(status_message):

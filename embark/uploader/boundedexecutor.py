@@ -73,7 +73,7 @@ class BoundedExecutor:
                 proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
                 # Add proc to FirmwareAnalysis-Object
                 analysis.pid = proc.pid
-                analysis.save()
+                analysis.save(update_fields=["pid"])
                 logger.debug("subprocess got pid %s", proc.pid)
                 # wait for completion
                 proc.communicate()
@@ -116,7 +116,7 @@ class BoundedExecutor:
             analysis.duration = str(analysis.scan_time)
             analysis.finished = True
             analysis.failed = exit_fail
-            analysis.save()
+            analysis.save(update_fields=["end_date", "scan_time", "duration", "finished", "failed"])
 
         logger.info("Successful cleaned up: %s", cmd)
 
@@ -187,7 +187,7 @@ class BoundedExecutor:
         firmware_flags.path_to_logs = emba_log_location
         firmware_flags.status["analysis"] = str(firmware_flags.id)
         firmware_flags.status["firmware_name"] = firmware_flags.firmware_name
-        firmware_flags.save()
+        firmware_flags.save(update_fields=["status", "path_to_logs"])
 
         emba_cmd = f"{EMBA_SCRIPT_LOCATION} -p ./scan-profiles/default-scan-no-notify.emba -f {image_file_location} -l {emba_log_location} {emba_flags}"
 
@@ -238,7 +238,7 @@ class BoundedExecutor:
         for analysis_ in running_analysis_list:
             analysis_.failed = True
             analysis_.finished = True
-            analysis_.save()
+            analysis_.save(update_fields=["finished", "failed"])
         logger.info("Shutdown successful")
 
     @classmethod
