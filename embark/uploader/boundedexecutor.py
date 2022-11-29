@@ -116,7 +116,6 @@ class BoundedExecutor:
                 analysis.duration = str(analysis.scan_time)
                 analysis.finished = True
                 analysis.failed = exit_fail
-                analysis.status['finished'] = True
                 analysis.save()
 
             logger.info("Successful cleaned up: %s", cmd)

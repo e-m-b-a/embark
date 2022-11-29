@@ -75,6 +75,8 @@ class LogReader:
         # append message to the json-field structure of the analysis
         try:
             self.analysis.status["percentage"] = self.status_msg["percentage"]
+            if self.status_msg["percentage"] == 100:
+                self.analysis.status["finished"] = True
             self.analysis.status["last_update"] = str(datetime.datetime.now())
             # append modules and phase list
             if self.status_msg["module"] != self.analysis.status["last_module"]:
@@ -158,7 +160,7 @@ class LogReader:
         self.status_msg["phase"] = stream_item_list[1]
         if "Test ended" in stream_item_list[1]:
             self.finish = True
-            self.status_msg["percentage"] = 1
+            self.status_msg["percentage"] = 100
 
         # get copy of the current status message
         self.save_status()
