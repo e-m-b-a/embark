@@ -117,6 +117,60 @@ socket.onopen = function () {
     socket.send("Reload");
 };
 
+
+function add_container_to_running(status_dict) {
+  "use strict";
+  var htmlToAdd = `
+  <div class="box" id="Container_` + status_dict.analysis + `">
+      <div class="mainText">
+          <small>`+ status_dict.analysis + `</small>
+          <br>
+          <span>`+ status_dict.firmware_name.split(".")[0] + `</span>
+      </div>
+      <div class="row">
+          <div class="col-sm log tile moduleLog">
+              <ul class="log_phase logUL" id="log_phase_` + status_dict.analysis + `"></ul>
+          </div>
+          <div class="col-sm log tile phaseLog">
+              <ul class="log_phase logUL" id="log_module_` + status_dict.analysis + `"></ul>
+          </div>
+      </div>
+      <div id="progress-wrapper">
+          <div id="pBar_` + status_dict.analysis + `" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                  0 % 
+          </div>
+      </div>
+  </div>`;
+  document.getElementsByClassName("RunningRow")[0].insertAdjacentHTML('beforeend', htmlToAdd);
+}
+
+
+function add_container_to_finished(status_dict) {
+  "use strict";
+  var htmlToAdd = `
+  <div class="box" id="Container_` + status_dict.analysis + `">
+      <div class="mainText">
+          <small>`+ status_dict.analysis + `</small>
+          <br>
+          <span>`+ status_dict.firmware_name.split(".")[0] + `</span>
+          <br>
+          <h1> Successful </h1>
+      </div>
+      <div id="progress-wrapper">
+          <div id="pBar_` + status_dict.analysis + `" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                  100 % 
+          </div>
+      </div>
+  </div>
+  <div class="buttonRow">
+      <button type="view-log" class="btn buttonRowElem" id="` + status_dict.analysis + `" onclick="viewLog(this.id)" >
+          EMBA-log
+      </button>
+  </div>`;
+  document.getElementsByClassName("FinishedRow")[0].insertAdjacentHTML('beforeend', htmlToAdd);
+}
+
+
 /**
  * This method is called whenever a message from the backend arrives
  * */
@@ -129,64 +183,27 @@ socket.onmessage = function (event) {
         for (const analysis_ in data){  // jshint ignore:line
             //create container if new analysis
             var newContainer = document.getElementById("Container_" + data[analysis_].analysis);
-            var htmlToAdd = ``;
             if (newContainer == null) {
-                // finished analysis or not
                 if (data[analysis_].finished == true){
-                    newContainer.remove();
-                    htmlToAdd = `
-                    <div class="box" id="Container_` + data[analysis_].analysis + `">
-                        <div class="mainText">
-                            <small>`+ data[analysis_].analysis + `</small>
-                            <br>
-                            <span>`+ data[analysis_].firmware_name.split(".")[0] + `</span>
-                            <br>
-                            <h1> Successful </h1>
-                        </div>
-                        <div id="progress-wrapper">
-                            <div id="pBar_` + data[analysis_].analysis + `" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-                                    100 % 
-                            </div>
-                        </div>
-                    </div>
-                    <div class="buttonRow">
-                        <button type="view-log" class="btn buttonRowElem" id="` + data[analysis_].analysis + `" onclick="viewLog(this.id)" >
-                            EMBA-log
-                        </button>
-                    </div>`;
-                    document.getElementsByClassName("FinishedRow")[0].insertAdjacentHTML('beforeend', htmlToAdd);
+                    add_container_to_finished(data[analysis_]);
+                } else {
+                    add_container_to_running(data[analysis_]);
+                    // append phase and module arrays
+                    livelog_module(data[analysis_].module_list, data[analysis_].analysis);
+                    livelog_phase(data[analysis_].phase_list, data[analysis_].analysis);
+                    // set percentage and other metadata
+                    makeProgress(data[analysis_].percentage, data[analysis_].analysis);
                 }
-                else{
-                    htmlToAdd = `
-                    <div class="box" id="Container_` + data[analysis_].analysis + `">
-                        <div class="mainText">
-                            <small>`+ data[analysis_].analysis + `</small>
-                            <br>
-                            <span>`+ data[analysis_].firmware_name.split(".")[0] + `</span>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm log tile moduleLog">
-                                <ul class="log_phase logUL" id="log_phase_` + data[analysis_].analysis + `"></ul>
-                            </div>
-                            <div class="col-sm log tile phaseLog">
-                                <ul class="log_phase logUL" id="log_module_` + data[analysis_].analysis + `"></ul>
-                            </div>
-                        </div>
-                        <div id="progress-wrapper">
-                            <div id="pBar_` + data[analysis_].analysis + `" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-                                    0 % 
-                            </div>
-                        </div>
-                    </div>`;
-                    document.getElementsByClassName("RunningRow")[0].insertAdjacentHTML('beforeend', htmlToAdd);
-                }
+            } else if (data[analysis_].finished == true){
+                newContainer.remove();
+                add_container_to_finished(data[analysis_]);
+            } else {
+                // append phase and module arrays
+                livelog_module(data[analysis_].module_list, data[analysis_].analysis);
+                livelog_phase(data[analysis_].phase_list, data[analysis_].analysis);
+                // set percentage and other metadata
+                makeProgress(data[analysis_].percentage, data[analysis_].analysis);
             }
-            // append phase and module arrays
-            console.log("log_phase_" + data[analysis_].analysis);
-            livelog_module(data[analysis_].module_list, data[analysis_].analysis);
-            livelog_phase(data[analysis_].phase_list, data[analysis_].analysis);
-            // set percentage and other metadata
-            makeProgress(data[analysis_].percentage, data[analysis_].analysis);
         }
     }
     catch(error){
@@ -212,6 +229,7 @@ socket.onerror = function (err) {
     console.error('Socket encountered error: ', err);
     socket.close();
 };
+
 
 /* /**
  * Connection Established
