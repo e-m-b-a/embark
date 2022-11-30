@@ -30,7 +30,10 @@
     <div class="row RunningRow">
         <!--running analysis get shown here-->
     </div>
-    <div class="row FinishedRow">
+    <p>
+      <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFinished" aria-expanded="false" aria-controls="collapseFinished">
+    </p>
+    <div class="collapse show row FinishedRow" id="collapseFinished">  
         <!--finished analysis get shown here-->
     </div>
 {% endblock maincontent %}

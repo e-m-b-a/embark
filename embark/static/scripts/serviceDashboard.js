@@ -119,55 +119,46 @@ socket.onopen = function () {
 
 
 function add_container_to_running(status_dict) {
-  "use strict";
-  var htmlToAdd = `
-  <div class="box" id="Container_` + status_dict.analysis + `">
-      <div class="mainText">
-          <small>`+ status_dict.analysis + `</small>
-          <br>
-          <span>`+ status_dict.firmware_name.split(".")[0] + `</span>
-      </div>
-      <div class="row">
-          <div class="col-sm log tile moduleLog">
-              <ul class="log_phase logUL" id="log_phase_` + status_dict.analysis + `"></ul>
-          </div>
-          <div class="col-sm log tile phaseLog">
-              <ul class="log_phase logUL" id="log_module_` + status_dict.analysis + `"></ul>
-          </div>
-      </div>
-      <div id="progress-wrapper">
-          <div id="pBar_` + status_dict.analysis + `" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-                  0 % 
-          </div>
-      </div>
-  </div>`;
-  document.getElementsByClassName("RunningRow")[0].insertAdjacentHTML('beforeend', htmlToAdd);
+    "use strict";
+    var htmlToAdd = `
+    <div class="box" id="Container_` + status_dict.analysis + `">
+        <div class="mainText">
+            <small>`+ status_dict.analysis + `</small>
+            <br>
+            <span>`+ status_dict.firmware_name.split(".")[0] + `</span>
+        </div>
+        <div class="row">
+            <div class="col-sm log tile moduleLog">
+                <ul class="log_phase logUL" id="log_phase_` + status_dict.analysis + `"></ul>
+            </div>
+            <div class="col-sm log tile phaseLog">
+                <ul class="log_phase logUL" id="log_module_` + status_dict.analysis + `"></ul>
+            </div>
+        </div>
+        <div id="progress-wrapper">
+            <div id="pBar_` + status_dict.analysis + `" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                    0 % 
+            </div>
+        </div>
+    </div>`;
+    document.getElementsByClassName("RunningRow")[0].insertAdjacentHTML('beforeend', htmlToAdd);
 }
 
 
 function add_container_to_finished(status_dict) {
-  "use strict";
-  var htmlToAdd = `
-  <div class="box" id="Container_` + status_dict.analysis + `">
-      <div class="mainText">
-          <small>`+ status_dict.analysis + `</small>
-          <br>
-          <span>`+ status_dict.firmware_name.split(".")[0] + `</span>
-          <br>
-          <h1> Successful </h1>
-      </div>
-      <div id="progress-wrapper">
-          <div id="pBar_` + status_dict.analysis + `" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-                  100 % 
-          </div>
-      </div>
-  </div>
-  <div class="buttonRow">
-      <button type="view-log" class="btn buttonRowElem" id="` + status_dict.analysis + `" onclick="viewLog(this.id)" >
-          EMBA-log
-      </button>
-  </div>`;
-  document.getElementsByClassName("FinishedRow")[0].insertAdjacentHTML('beforeend', htmlToAdd);
+    "use strict";
+    var htmlToAdd = `
+    <div class="box" id="Container_` + status_dict.analysis + `">
+        <div class="mainText">
+            <small>`+ status_dict.analysis + `</small>
+            <br>
+            <span>`+ status_dict.firmware_name.split(".")[0] + `</span>
+            <br>
+            <h1> Successful </h1>
+        </div>
+    </div>
+    `
+    document.getElementsByClassName("FinishedRow")[0].insertAdjacentHTML('beforeend', htmlToAdd);
 }
 
 
