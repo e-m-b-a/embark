@@ -156,8 +156,7 @@ function add_container_to_finished(status_dict) {
             <br>
             <h1> Successful </h1>
         </div>
-    </div>
-    `
+    </div>`;
     document.getElementsByClassName("FinishedRow")[0].insertAdjacentHTML('beforeend', htmlToAdd);
 }
 
