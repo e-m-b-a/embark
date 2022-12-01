@@ -147,6 +147,11 @@ class BoundedExecutor:
     def submit_kill(cls, uuid):
         # submit command to executor threadpool
         emba_fut = BoundedExecutor.submit(cls.kill_emba_cmd, uuid)
+        analysis = FirmwareAnalysis.objects.get(id=uuid)
+        analysis.status['finished'] = True
+        analysis.failed = True
+        analysis.finished = True
+        analysis.save(update_fields=["status", "finished", "failed"])
         return emba_fut
 
     @classmethod
