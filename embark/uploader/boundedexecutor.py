@@ -11,9 +11,11 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from threading import BoundedSemaphore
 
+from django.dispatch import receiver
 from django.utils.datetime_safe import datetime
 from django.conf import settings
 
+from uploader import finish_execution
 from uploader.archiver import Archiver
 from uploader.models import FirmwareAnalysis
 from dashboard.models import Result
@@ -71,7 +73,7 @@ class BoundedExecutor:
                 proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
                 # Add proc to FirmwareAnalysis-Object
                 analysis.pid = proc.pid
-                analysis.save()
+                analysis.save(update_fields=["pid"])
                 logger.debug("subprocess got pid %s", proc.pid)
                 # wait for completion
                 proc.communicate()
@@ -80,8 +82,8 @@ class BoundedExecutor:
             # success
             logger.info("Success: %s", cmd)
             logger.info("EMBA returned: %d", return_code)
-            # if return_code != 0:
-            #     raise Exception
+            if return_code != 0:
+                raise Exception
 
             # get csv log location
             csv_log_location = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/csv_logs/f50_base_aggregator.csv"
@@ -106,17 +108,17 @@ class BoundedExecutor:
             logger.error("EMBA run was probably not successful!")
             logger.error("run_emba_cmd error: %s", execpt)
             exit_fail = True
-        finally:
-            # finalize db entry
-            if analysis_id:
-                analysis.end_date = datetime.now()
-                analysis.scan_time = datetime.now() - analysis.start_date
-                analysis.duration = str(analysis.scan_time)
-                analysis.finished = True
-                analysis.failed = exit_fail
-                analysis.save()
 
-            logger.info("Successful cleaned up: %s", cmd)
+        # finalize db entry
+        if analysis:
+            analysis.end_date = datetime.now()
+            analysis.scan_time = datetime.now() - analysis.start_date
+            analysis.duration = str(analysis.scan_time)
+            analysis.finished = True
+            analysis.failed = exit_fail
+            analysis.save(update_fields=["end_date", "scan_time", "duration", "finished", "failed"])
+
+        logger.info("Successful cleaned up: %s", cmd)
 
     @classmethod
     def kill_emba_cmd(cls, analysis_id):
@@ -183,11 +185,10 @@ class BoundedExecutor:
         log_path.mkdir(parents=True, exist_ok=True)
 
         firmware_flags.path_to_logs = emba_log_location
-        firmware_flags.save()
+        firmware_flags.status["analysis"] = str(firmware_flags.id)
+        firmware_flags.status["firmware_name"] = firmware_flags.firmware_name
+        firmware_flags.save(update_fields=["status", "path_to_logs"])
 
-        # build command
-        # FIXME remove all flags
-        # TODO add note with uuid
         emba_cmd = f"{EMBA_SCRIPT_LOCATION} -p ./scan-profiles/default-scan-no-notify.emba -f {image_file_location} -l {emba_log_location} {emba_flags}"
 
         # submit command to executor threadpool
@@ -230,8 +231,15 @@ class BoundedExecutor:
     @classmethod
     def shutdown(cls, wait=True):
         """See concurrent.futures.Executor#shutdown"""
-
+        logger.info("shutting down Boundedexecutor")
         executor.shutdown(wait)
+        # set all running analysis to failed
+        running_analysis_list = FirmwareAnalysis.objects.filter(finished=False).exclude(failed=True)
+        for analysis_ in running_analysis_list:
+            analysis_.failed = True
+            analysis_.finished = True
+            analysis_.save(update_fields=["finished", "failed"])
+        logger.info("Shutdown successful")
 
     @classmethod
     def csv_read(cls, analysis_id, path, cmd):
@@ -312,3 +320,9 @@ class BoundedExecutor:
         )
         res.save()
         return res
+
+    @staticmethod
+    @receiver(finish_execution, sender='system')
+    def sigint_handler(sender, **kwargs):
+        logger.info("Received shutdown signal  by %s", sender)
+        BoundedExecutor.shutdown()

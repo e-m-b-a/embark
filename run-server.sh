@@ -60,8 +60,8 @@ cleaner() {
 
   docker container stop embark_db
   docker container stop embark_redis
-  docker network rm embark_backend
-  docker container prune -f --filter "label=flag"
+  # docker network rm embark_backend
+  # docker container prune -f --filter "label=flag"
 
   systemctl stop embark.service
   exit 1
@@ -221,7 +221,7 @@ fi
 
 # db_init
 echo -e "\n[""$BLUE JOB""$NC""] Starting migrations - log to embark/logs/migration.log"
-pipenv run ./manage.py makemigrations users uploader dashboard reporter | tee -a /var/www/logs/migration.log
+pipenv run ./manage.py makemigrations | tee -a /var/www/logs/migration.log
 pipenv run ./manage.py migrate | tee -a /var/www/logs/migration.log
 
 # collect staticfiles and make accesable for server
@@ -256,7 +256,7 @@ sleep 5
 
 
 echo -e "\n""$ORANGE$BOLD""=============================================================""$NC"
-echo -e "\n""$ORANGE$BOLD""Server started on http://embark.local with alias:""${ALIAS_INPUT[*]}""$NC"
+echo -e "\n""$ORANGE$BOLD""Server started on http://embark.local with alias:""${SERVER_ALIAS[*]}""$NC"
 echo -e "\n""$ORANGE$BOLD""EMBA logs are under /var/www/emba_logs/<id> ""$NC"
 # echo -e "\n""$ORANGE$BOLD""For SSL you may use https://embark.local (Not recommended for local use)""$NC"
 # echo -e "\n\n""$GREEN$BOLD""the trusted rootCA.key for the ssl encryption is in ./cert""$NC"
