@@ -36,7 +36,6 @@ Furthermore, *EMBArk* improves the data provision by aggregating the various sca
 2. Change directory to root of the repository i.e `cd embark`
 3. Run `sudo ./installer.sh -d ` to run the default installation.
 4. Further details are available in the wiki (See [installation](https://github.com/e-m-b-a/embark/wiki/Installation))
-5. If you are running into issues or need to install *EMBArk* manually please take a look at the wiki (See [build instructions](https://github.com/e-m-b-a/embark/wiki/Build-EMBArk))
 
 *EMBArk* is using the firmware security scanner *EMBA* as backend. You can take a look at the [*EMBA*](https://github.com/e-m-b-a/emba) repository and get more [information about usage of *EMBA* in the wiki](https://github.com/e-m-b-a/emba/wiki/Usage). Additionally you should check the [*EMBArk* wiki](https://github.com/e-m-b-a/embark/wiki).
 
@@ -47,6 +46,10 @@ This starts the http-Server on 0.0.0.0:80
 Note: The default server name is "embark.local" and has to be resolved via host files or a DNS-server.\
 If you want to query the server using an IP or other hostname please use the `-a` option. (multiple inputs supported)
 
+## Upgrading
+- Use the `export-DB.sh` to back up your database
+- Just pull and restart
+- Usually, upgrading does NOT require a reinstallation (reinstalling will delete all files and the database completely)
 ## Developer
 For developers, we recommend simply using: `sudo ./installer.sh -F ` and the `./dev-tools/debug-server-start.sh` script.
 
