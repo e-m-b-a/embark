@@ -1,3 +1,4 @@
+# pylint: disable=C0201
 import logging
 import csv
 import json
@@ -66,7 +67,7 @@ def read_csv(path):
                     if len(ele[2:]) > 1:
                         if not ele[1] in res_dict[ele[0]].keys():
                             res_dict[ele[0]][ele[1]] = {}
-                        res_dict[ele[0]][ele[1]][ele[2]]= {ele[_info]: ele[_info + 1] for _info in range(1, len(ele[1:]), 2)}
+                        res_dict[ele[0]][ele[1]][ele[2]] = {ele[_info]: ele[_info + 1] for _info in range(1, len(ele[1:]), 2)}
                     else:
                         res_dict[ele[0]][ele[1]] = ele[2]
 
@@ -153,23 +154,23 @@ def f20_csv(file_path, analysis_id=None):
                     'CVSS': ele[3],
                     'exploit db exploit available': ele[4],
                     'metasploit module': ele[5],
-                    'trickest PoC':ele[6],
-                    'Routersploit':ele[7],
-                    'local exploit':ele[8],
-                    'remote exploit':ele[9],
-                    'DoS exploit':ele[10],
-                    'known exploited vuln':ele[11]
+                    'trickest PoC': ele[6],
+                    'Routersploit': ele[7],
+                    'local exploit': ele[8],
+                    'remote exploit': ele[9],
+                    'DoS exploit': ele[10],
+                    'known exploited vuln': ele[11]
                 }
     res = Result.objects.update_or_create(
-            firmware_analysis=FirmwareAnalysis.objects.get(id=analysis_id)
-            )
+        firmware_analysis=FirmwareAnalysis.objects.get(id=analysis_id)
+    )
     for _key, _value in res_dict.items():
         new_vulnerability = Vulnerability.objects.update_or_create(
             cve=_key,
             info=_value
         )
         res.vulnerability.add(new_vulnerability)
-    logger.debug("read f20 csv done")                 
+    logger.debug("read f20 csv done")
     return res
 
 
@@ -180,6 +181,7 @@ def f10_csv(_file_path, _analysis_id):
     logger.debug("starting f10 csv import")
     # FIXME needs implementation
     logger.debug("read f10 csv done")
+
 
 if __name__ == "__main__":
     BASE_DIR = Path(__file__).resolve().parent.parent.parent

@@ -11,6 +11,7 @@ class Vulnerability(models.Model):
     cve = models.CharField(max_length=13, validators=[MinLengthValidator(13)], help_text='CVE-XXXX-XXXX')
     info = models.JSONField(null=True)
 
+
 class Result(models.Model):
     """
     1-to-1 Result object for related FirmwareAnalysis
@@ -19,7 +20,6 @@ class Result(models.Model):
     firmware_analysis = models.OneToOneField(FirmwareAnalysis, on_delete=models.CASCADE, primary_key=True)
     emba_command = models.CharField(blank=True, null=True, max_length=(FirmwareAnalysis.MAX_LENGTH * 6), help_text='')
     restricted = models.BooleanField(default=False, help_text='')
-
 
     # base identifier
     os_verified = models.CharField(blank=True, null=True, max_length=256, help_text='')

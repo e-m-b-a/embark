@@ -26,12 +26,12 @@ class TestImport(TestCase):
         analysis = FirmwareAnalysis.objects.create(
             failed=False,
             finished=False,
-            firmware_name = "TestFirmwarePorterModule",
+            firmware_name="TestFirmwarePorterModule",
             user=User.objects.create(
                 username='test-porter'
             )
         )
-        analysis.path_to_logs=f"{settings.EMBA_LOG_ROOT}/{analysis.id}/emba_logs"
+        analysis.path_to_logs = f"{settings.EMBA_LOG_ROOT}/{analysis.id}/emba_logs"
 
         analysis.save()
         self.assertTrue(result_read_in(analysis_id=analysis.id))

@@ -1,8 +1,12 @@
 {% load django_bootstrap5 %}
 
-<div class="collapse" id="collapseDevice">
+<div class="collapse" id="collapseDevice1">
     {% block vendor %}{% include "uploader/vendor.html" %}{% endblock vendor %}
+</div>
+<div class="collapse" id="collapseDevice2">
     {% block label %}{% include "uploader/label.html" %}{% endblock label %}
+</div>
+<div class="collapse" id="collapseDevice3">
     <div class="box">
         <p class="mainText">Device Configuration</p>
         <p class="subText">Define firmware parameters for tracking</p>

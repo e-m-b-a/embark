@@ -128,6 +128,7 @@ socket.onmessage = function (event) {
                     <div class="mainText">
                         <span>`+data[Object.keys(data)[cur_len]][0].firmwarename.split(".")[0]+`</span>
                     </div>
+                    <!--make collapseable-->
                     <div class="row">
                         <div class="col-sm log tile moduleLog">
                             <ul class="log_phase logUL" id="log_phase_` + Object.keys(data)[cur_len] + `"></ul>
@@ -136,6 +137,7 @@ socket.onmessage = function (event) {
                             <ul class="log_phase logUL" id="log_module_` + Object.keys(data)[cur_len] + `"></ul>
                         </div>
                     </div>
+                    
                     <div id="progress-wrapper">
                         <div id="pBar_` + Object.keys(data)[cur_len] + `" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
                                 0 % 

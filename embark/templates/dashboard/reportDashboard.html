@@ -56,7 +56,9 @@
                                       </button>
                                     {% else %}
                                         {% if firmware.failed is True %}
-                                            <span class="badge badge-danger">Analysis Failed</span>
+                                            <button class="btn btn-primary" type="button" disabled>
+                                                <span class="badge badge-danger">Analysis Failed</span>
+                                            </button>
                                         {% else %}
                                             {% if firmware.zip_file is not None %}
                                                 <form action={% url 'embark-download' firmware.id %} method='get'>

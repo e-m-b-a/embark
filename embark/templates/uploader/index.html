@@ -11,14 +11,20 @@
     <div class="row uploadRow">
       
       <p>
-        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUpload" aria-expanded="false" aria-controls="collapseUpload">
+        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUpload" aria-expanded="false" aria-controls="collapseUpload" title="Upload">
           1. Upload
         </button>
-        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDevice" aria-expanded="false" aria-controls="collapseDevice">
-          2. Toggle Device Config
+        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDevice1" aria-expanded="false" aria-controls="collapseDevice" title="Add new Vendor">
+          2. Add new Vendor (optional)
         </button>
-        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseStart" aria-expanded="false" aria-controls="collapseStart">
-          3. Analyze
+        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDevice2" aria-expanded="false" aria-controls="collapseDevice" title="Add new Label">
+          3. Add new Label (optional)
+        </button>
+        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDevice3" aria-expanded="false" aria-controls="collapseDevice" title="Define the device-under-test">
+          4. Define the device-under-test (optional)
+        </button>
+        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseStart" aria-expanded="false" aria-controls="collapseStart" title="Configure Analysis">
+          5. Analyze
         </button>
       </p>
         {% block upload %}{% include "uploader/upload.html" %}{% endblock upload %}
