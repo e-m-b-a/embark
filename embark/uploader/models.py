@@ -21,6 +21,23 @@ from users.models import User as Userclass
 logger = logging.getLogger(__name__)
 
 
+def jsonfield_default_value():
+    """
+    keys: percentage, analysis, firmwarename, last_update, last_module, module_list, last_phase, phase_list
+    """
+    return {
+        "percentage": 0,
+        'analysis': "",
+        'firmware_name': "",
+        'last_update': "",
+        'last_module': "",
+        'module_list': [],
+        'last_phase': "",
+        'phase_list': [],
+        'finished': False
+    }
+
+
 class BooleanFieldExpertModeForm(forms.BooleanField):
     """
     class BooleanFieldExpertModeForm
@@ -283,8 +300,11 @@ class FirmwareAnalysis(models.Model):
     end_date = models.DateTimeField(default=datetime.min, blank=True)
     scan_time = models.DurationField(default=timedelta(), blank=True)
     duration = models.CharField(blank=True, null=True, max_length=100, help_text='')
-    finished = models.BooleanField(default=False, blank=False)      # this also serves as a running indicator
-    failed = models.BooleanField(default=True, blank=False)
+    finished = models.BooleanField(default=False, blank=False)
+    failed = models.BooleanField(default=False, blank=False)
+
+    # status/logreader-stuff
+    status = models.JSONField(null=False, default=jsonfield_default_value)
 
     class Meta:
         app_label = 'uploader'

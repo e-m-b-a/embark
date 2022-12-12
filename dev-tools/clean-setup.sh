@@ -69,6 +69,10 @@ if docker network ls | grep -E "embark_backend"; then
   docker network rm "$NET_ID" 
 fi
 
+echo -e "\n$GREEN""$BOLD""Clearing Migrations""$NC"
+find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
+find . -path "*/migrations/*.pyc"  -delete
+
 fuser -k 8001/tcp
 fuser -k 80/tcp
 fuser -k 8080/tcp

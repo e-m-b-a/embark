@@ -25,9 +25,8 @@ class TestLogreader(TestCase):
         analysis.save()   # args??
 
         self.analysis_id = analysis.id
-        # TODO these are missing at the moment?!
-        self.test_file_good = os.path.join(settings.BASE_DIR.parent, "test/logreader/test-run-good.log")
-        self.test_file_bad = os.path.join(settings.BASE_DIR.parent, "test/logreader/test-run-bad.log")
+        self.test_file_good = os.path.join(settings.BASE_DIR.parent, "test/logreader/good-log")
+        self.test_file_bad = os.path.join(settings.BASE_DIR.parent, "test/logreader/fail-log")
         # check test_log file
         if not self.test_file_good.isfile() or not self.test_file_bad.isfile():
             logger.error("test_files not accessable")

@@ -5,7 +5,6 @@ __pycache__/
 cert/
 .env
 emba_logs/
-migrations/
 logs/
 embark/static/external/
 documentation/

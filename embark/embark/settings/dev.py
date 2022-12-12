@@ -156,6 +156,10 @@ LOGGING = {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
             'level': 'DEBUG',
         },
+        'embark': {
+            'handlers': ['debug_handler', 'info_handler', 'console_handler'],
+            'level': 'DEBUG',
+        },
         'requests': {
             'handlers': ['info_handler'],
             'level': 'INFO',

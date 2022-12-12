@@ -13,22 +13,25 @@
   <a href="https://twitter.com/intent/tweet?text=Check%20out%20EMBArk%20-%20The%20Firmware%20security%20scanning%20environment!%20https://github.com/e-m-b-a/embark"><img src="https://img.shields.io/twitter/url.svg?style=social&url=https%3A%2F%2Fgithub.com%2Fe-m-b-a%2Fembark"></a>
 </p>
 
-# Important 
+# Important
+
 * The new Tracking application currently doesn't work offline.
-* Device, Vendor and version tracking aren't fully integrated into all dashboards yet.
+* The device, Vendor and version tracking aren't fully integrated into all dashboards yet.
 
 ## Quick-Start
 `git clone https://github.com/e-m-b-a/embark.git; cd embark; sudo ./installer.sh -d`
+
+`sudo ./run-server.sh [-a <IP/HOSTNAME>] [-h]`
 ## About
 
-*EMBArk* is the web based enterprise interface for the firmware security scanner *EMBA*. It is developed to provide the firmware security analyzer *[EMBA](https://github.com/e-m-b-a/emba)* as a containerized service and to ease accessibility to the firmware scanning backend *EMBA* regardless of system and operating system.
-
-Furthermore *EMBArk* improves the data provision by aggregating the various scanning results in an [aggregated management dashboard](https://github.com/e-m-b-a/embark/wiki/Web-interface#main-dashboard).
+*EMBArk* is the web-based enterprise interface for the firmware security scanner *EMBA*. It is developed to provide the firmware security analyzer *[EMBA](https://github.com/e-m-b-a/emba)* as a containerized service and to ease accessibility to the firmware scanning backend *EMBA* regardless of the system and operating system.
+Furthermore, *EMBArk* improves the data provision by aggregating the various scanning results in an [aggregated management dashboard](https://github.com/e-m-b-a/embark/wiki/Web-interface#main-dashboard).
 
 [![Watch EMBArk](https://raw.githubusercontent.com/wiki/e-m-b-a/embark/static/images/EMBArk-YouTube.png)](https://youtu.be/qSHuPWbfhmI "Watch EMBArk")
 
 
 ## Automated setup on Ubuntu 22.04 LTS
+
 1. Checkout the repository (e.g. `git clone https://github.com/e-m-b-a/embark.git`)
 2. Change directory to root of the repository i.e `cd embark`
 3. Run `sudo ./installer.sh -d ` to run the default installation.
@@ -41,8 +44,11 @@ Furthermore *EMBArk* improves the data provision by aggregating the various scan
 To start the EMBArk-Server simply run `$ sudo ./run-server.sh`.
 This starts the http-Server on 0.0.0.0:80
 
+Note: The default server name is "embark.local" and has to be resolved via host files or a DNS-server.\
+If you want to query the server using an IP or other hostname please use the `-a` option. (multiple inputs supported)
+
 ## Developer
-For developers we recommend simply using: `sudo ./installer.sh -F ` and the `./dev-tools/debug-server-start.sh` script.
+For developers, we recommend simply using: `sudo ./installer.sh -F ` and the `./dev-tools/debug-server-start.sh` script.
 
 ## Get involved
 The IoT is growing, the development is ongoing, and there are many new features that we want to add.

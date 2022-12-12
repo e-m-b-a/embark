@@ -26,6 +26,8 @@ export HTTP_PORT=80
 export HTTPS_PORT=443
 export BIND_IP='0.0.0.0'
 export FILE_SIZE=2000000000
+export SERVER_ALIAS=()
+export WSGI_FLAGS=()
 
 STRICT_MODE=0
 
@@ -58,8 +60,8 @@ cleaner() {
 
   docker container stop embark_db
   docker container stop embark_redis
-  docker network rm embark_backend
-  docker container prune -f --filter "label=flag"
+  # docker network rm embark_backend
+  # docker container prune -f --filter "label=flag"
 
   systemctl stop embark.service
   exit 1
@@ -67,6 +69,45 @@ cleaner() {
 
 
 # main
+echo -e "\\n$ORANGE""$BOLD""EMBArk Startup""$NC\\n""$BOLD=================================================================$NC"
+
+while getopts "ha:" OPT ; do
+  case $OPT in
+    h)
+      echo -e "\\n""$CYAN""USAGE""$NC"
+      echo -e "$CYAN-h$NC           Print this help message"
+      echo -e "$CYAN-a <IP/Name>$NC Add a server Domain-name alias"
+      echo -e "---------------------------------------------------------------------------"
+      if ip addr show eth0 &>/dev/null ; then
+        IP=$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
+        echo -e "$GREEN Suggestion:$NC  sudo ./run-server.sh -a $IP"
+        echo -e "$GREEN nslookup helper:$NC"
+        nslookup "$IP"
+      fi
+      exit 0
+      ;;
+    a)
+      SERVER_ALIAS+=("$OPTARG")
+      WSGI_FLAGS+=(--server-alias "${OPTARG}")
+      ;;
+    :)
+      echo -e "$CYAN Usage: [-a <IP/HOSTNAME>] $NC"
+      exit 1
+      ;;
+    *)
+      echo -e "\\n$ORANGE""$BOLD""No Alias set""$NC\\n"
+      ;;
+  esac
+done
+
+# Alias
+if [[ ${#SERVER_ALIAS[@]} -ne 0 ]]; then
+  echo -e "$GREEN Server-alias:$NC"
+  for VAR in "${SERVER_ALIAS[@]}"; do
+    echo "[*] $VAR"
+  done
+fi
+
 cd "$(dirname "$0")" || exit 1
 import_helper
 enable_strict_mode "$STRICT_MODE"
@@ -179,7 +220,7 @@ fi
 
 # db_init
 echo -e "\n[""$BLUE JOB""$NC""] Starting migrations - log to embark/logs/migration.log"
-pipenv run ./manage.py makemigrations users uploader dashboard reporter porter | tee -a /var/www/logs/migration.log
+pipenv run ./manage.py makemigrations | tee -a /var/www/logs/migration.log
 pipenv run ./manage.py migrate | tee -a /var/www/logs/migration.log
 
 # collect staticfiles and make accesable for server
@@ -202,7 +243,7 @@ pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --include-file /var/www/conf/embark.conf \
 --processes 4 --threads 4 \
 --graceful-timeout 5 \
---server-name embark.local &
+--server-name embark.local "${WSGI_FLAGS[@]}" &
 # --ssl-certificate /var/www/conf/cert/embark.local --ssl-certificate-key-file /var/www/conf/cert/embark.local.key \
 # --https-port "$HTTPS_PORT" &
 #  --https-only --enable-debugger \
@@ -214,7 +255,7 @@ sleep 5
 
 
 echo -e "\n""$ORANGE$BOLD""=============================================================""$NC"
-echo -e "\n""$ORANGE$BOLD""Server started on http://embark.local""$NC"
+echo -e "\n""$ORANGE$BOLD""Server started on http://embark.local with alias:""${SERVER_ALIAS[*]}""$NC"
 echo -e "\n""$ORANGE$BOLD""EMBA logs are under /var/www/emba_logs/<id> ""$NC"
 # echo -e "\n""$ORANGE$BOLD""For SSL you may use https://embark.local (Not recommended for local use)""$NC"
 # echo -e "\n\n""$GREEN$BOLD""the trusted rootCA.key for the ssl encryption is in ./cert""$NC"

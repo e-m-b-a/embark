@@ -1,64 +1,59 @@
-# import difflib
+# pylint: disable=W0201
 import json
-# import re
-
 import logging
 
-# import rx
-# import rx.operators as ops
-from asgiref.sync import async_to_sync
+from channels.db import database_sync_to_async
+from channels.generic.websocket import AsyncWebsocketConsumer
 
-from channels.generic.websocket import WebsocketConsumer
-from channels.layers import get_channel_layer
-
-# from inotify_simple import flags
-# from django.conf import settings
-# from uploader.models import Firmware
+from uploader.models import FirmwareAnalysis
 
 logger = logging.getLogger(__name__)
 
 
 # consumer class for synchronous/asynchronous websocket communication
-class WSConsumer(WebsocketConsumer):
+class WSConsumer(AsyncWebsocketConsumer):
 
-    # constructor
-    def __init__(self):
-        super().__init__()
-        self.channel_layer = get_channel_layer()
-        self.room_group_name = 'updatesgroup'
+    @database_sync_to_async
+    def get_message(self):
+        logger.info("Getting status for user %s", self.scope['user'])
+        analysis_list = FirmwareAnalysis.objects.filter(user=self.scope['user']).exclude(failed=True)
+        logger.debug("Found the following list of analysis for user %s : %s", self.scope['user'], analysis_list)
+        logger.debug("User has %d analysis running", analysis_list.count())
+        if analysis_list.count() > 0:
+            message = {str(analysis_.id): analysis_.status for analysis_ in analysis_list}
+            return message
+        return "Please Wait"
 
     # this method is executed when the connection to the frontend is established
-    def connect(self):
+    async def connect(self):
         logger.info("WS - connect")
         # create room group for channels communication
-        async_to_sync(self.channel_layer.group_add)(
+        self.room_group_name = f"services_{self.scope['user']}"
+        await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
         )
         # accept socket connection
-        self.accept()
+        await self.accept()
         logger.info("WS - connect - accept")
 
-        # called when received data from frontend
-        # TODO: implement this for processing client input at backend -> page refresh should be here
-
-    def receive(self, text_data=None, bytes_data=None):
+    # called when received data from frontend
+    async def receive(self, text_data=None, bytes_data=None):
         logger.info("WS - receive")
-        # pass
+        if text_data == "Reload":
+            # Send message to room group
+            await self.channel_layer.group_send(self.room_group_name, {"type": 'send.message', "message": await self.get_message()})
 
     # called when websocket connection is closed
-    def disconnect(self, code):
+    async def disconnect(self, code):
         logger.info("WS - disconnected: %s", code)
-        async_to_sync(self.channel_layer.group_discard)(
-            self.room_group_name,
-            self.channel_name
-        )
+        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
     # send data to frontend
-    def send_message(self, event):
+    async def send_message(self, event):
         # Receive message and extract data from room group
         message = event['message']
         # logger.info(f"WS - send message: " + str(message))
         logger.info("WS - send message")
         # Send message to WebSocket
-        self.send(json.dumps(message, sort_keys=False))
+        await self.send(json.dumps(message, sort_keys=False))
