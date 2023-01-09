@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import zipfile
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +60,19 @@ class Archiver:
         return shutil.make_archive(base_name, archive_format, root_dir, base_dir)
         # alternative if single files be zipped:
         # with tarfile
+
+    @staticmethod
+    def make_zipfile(output_filename, source_dir):
+        relroot = os.path.abspath(os.path.join(source_dir, os.pardir))
+        with zipfile.ZipFile(output_filename, "w", zipfile.ZIP_DEFLATED) as zip:
+            for root, _dirs, files in os.walk(source_dir):
+                # add directory (needed for empty dirs)
+                zip.write(root, os.path.relpath(root, relroot))
+                for file in files:
+                    filename = os.path.join(root, file)
+                    if os.path.isfile(filename): # regular files only
+                        arcname = os.path.join(os.path.relpath(root, relroot), file)
+                        zip.write(filename, arcname)
 
     @staticmethod
     def unpack(file_location, extract_dir=None):
