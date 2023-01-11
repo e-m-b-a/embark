@@ -231,6 +231,7 @@ def download_zipped(request, analysis_id):
         firmware = FirmwareAnalysis.objects.get(id=analysis_id)
         # look for LogZipFile
         if firmware.zip_file:
+            logger.debug("searching for file here: %s", firmware.zip_file.file)
             with open(firmware.zip_file.file.path, 'rb') as requested_log_dir:
                 response = HttpResponse(requested_log_dir.read(), content_type="application/zip")
                 response['Content-Disposition'] = 'inline; filename=' + firmware.zip_file.file.path

@@ -338,7 +338,7 @@ class BoundedExecutor:
             analysis.save()
 
             # archive = Archiver.pack(f"{settings.MEDIA_ROOT}/log_zip/{analysis_id}", 'zip', analysis.path_to_logs, './*')
-            archive = Archiver.make_zipfile(f"{settings.MEDIA_ROOT}/log_zip/{analysis_id}", analysis.path_to_logs)
+            archive = Archiver.make_zipfile(f"{settings.MEDIA_ROOT}/log_zip/{analysis_id}.zip", analysis.path_to_logs)
 
             # create a LogZipFile obj
             analysis.zip_file = LogZipFile.objects.create(file=archive, user=analysis.user)
