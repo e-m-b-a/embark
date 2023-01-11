@@ -73,6 +73,7 @@ class Archiver:
                     if os.path.isfile(filename): # regular files only
                         arcname = os.path.join(os.path.relpath(root, relroot), file)
                         zip.write(filename, arcname)
+        return output_filename
 
     @staticmethod
     def unpack(file_location, extract_dir=None):

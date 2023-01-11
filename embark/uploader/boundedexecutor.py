@@ -363,8 +363,8 @@ class BoundedExecutor:
             analysis.finished = False
             analysis.save()
 
-            if not Archiver.unpack(file_location=file_loc, extract_dir=Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/")):
-                raise Exception("Can't unpack " + str(file_loc) + f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/")
+            if not Archiver.unpack(file_location=file_loc, extract_dir=Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/")):
+                raise Exception("Can't unpack " + str(file_loc) + f"{settings.EMBA_LOG_ROOT}/{analysis_id}/")
 
             result_obj = result_read_in(analysis_id)
             if result_obj is None:

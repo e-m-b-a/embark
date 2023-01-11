@@ -176,7 +176,7 @@ def make_zip(request, analysis_id):
             # success
             logger.info("Successfully submitted zip request %s", str(analysis_id))
             messages.info(request, 'Zipping ' + str(analysis_id))
-            return redirect('..')
+            return redirect('embark-ReportDashboard')
         messages.error(request, 'zipping failed, queue full?')
     except FirmwareAnalysis.DoesNotExist:
         messages.error(request, 'No analysis with that id found')
