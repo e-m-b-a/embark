@@ -362,6 +362,9 @@ class BoundedExecutor:
             analysis = FirmwareAnalysis.objects.get(id=analysis_id)
             analysis.finished = False
             analysis.save()
+            log_location = f"{settings.EMBA_LOG_ROOT}/{analysis_id}"
+            log_path = Path(log_location).parent
+            log_path.mkdir(parents=True, exist_ok=True)
 
             if not Archiver.unpack(file_location=file_loc, extract_dir=Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/")):
                 raise Exception("Can't unpack " + str(file_loc) + f"{settings.EMBA_LOG_ROOT}/{analysis_id}/")
