@@ -58,7 +58,7 @@ def import_read(request):
         # create new analysis
         new_analysis = FirmwareAnalysis.objects.create(user=request.user)
         log_location = f"{settings.EMBA_LOG_ROOT}/{new_analysis.id}"
-        log_path = Path(log_location).parent
+        log_path = Path(log_location)
         log_path.mkdir(parents=True, exist_ok=True)
         # set device(s), firmware, version, notes
         if form.cleaned_data['firmware'] is not None:
