@@ -1,5 +1,6 @@
 from http import HTTPStatus
 import logging
+from pathlib import Path
 
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.contrib.auth.decorators import login_required
@@ -56,6 +57,9 @@ def import_read(request):
             return redirect('..')
         # create new analysis
         new_analysis = FirmwareAnalysis.objects.create(user=request.user)
+        log_location = f"{settings.EMBA_LOG_ROOT}/{new_analysis.id}"
+        log_path = Path(log_location).parent
+        log_path.mkdir(parents=True, exist_ok=True)
         # set device(s), firmware, version, notes
         if form.cleaned_data['firmware'] is not None:
             logger.debug("trying to set firmware for new analysis")
