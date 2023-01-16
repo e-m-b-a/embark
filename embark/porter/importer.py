@@ -34,9 +34,9 @@ def result_read_in(analysis_id):
                     res = f20_csv(file_, analysis_id)
                     logger.debug("Result for %s created or updated", analysis_id)
                 # TODO license info etc
-        except Exception as _error:
+        except Exception as error_:
             logger.error("Error in import read_infor analysis %s", analysis_id)
-            logger.error("Exception: %s", _error)
+            logger.error("Exception: %s", error_)
             res = None
     return res
 

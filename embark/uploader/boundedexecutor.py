@@ -379,13 +379,10 @@ class BoundedExecutor:
         except Exception as exce:
             logger.error("Unzipping failed: %s", exce)
 
-        try:
-            result_obj = result_read_in(analysis_id)
-            if result_obj is None:
-                raise Exception("Didn't get a result from read_in")
-            logger.debug("Got %s from zip", result_obj)
-        except Exception as exce:
-            logger.error("Readin failed: %s", exce)
+        result_obj = result_read_in(analysis_id)
+        if result_obj is None:
+            raise Exception("Didn't get a result from result_read_in")
+        logger.debug("Got %s from zip", result_obj)
 
         analysis.finished = True
         analysis.log_size = get_size(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/")
