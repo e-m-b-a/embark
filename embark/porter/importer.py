@@ -142,25 +142,24 @@ def f20_csv(file_path, analysis_id=None):
     res_dict = {}
     with open(file_path, newline='\n', encoding='utf-8') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=';')
-        next(csv_reader, None)  # skip first line
+        next(csv_reader)  # skip first line
         for row in csv_reader:        
             # remove NAs from csv
-            if row[-1] == "NA":
+            if row[-1] == 'NA':
                 row.pop(-1)
-            for ele in row:
-                res_dict[ele[2]] = {
-                    'Binary': ele[0],
-                    'Version': ele[1],
-                    'CVSS': ele[3],
-                    'exploit db exploit available': ele[4],
-                    'metasploit module': ele[5],
-                    'trickest PoC': ele[6],
-                    'Routersploit': ele[7],
-                    'local exploit': ele[8],
-                    'remote exploit': ele[9],
-                    'DoS exploit': ele[10],
-                    'known exploited vuln': ele[11]
-                }
+            res_dict[row[2]] = {
+                'Binary': row[0],
+                'Version': row[1],
+                'CVSS': row[3],
+                'exploit db exploit available': row[4],
+                'metasploit module': row[5],
+                'trickest PoC': row[6],
+                'Routersploit': row[7],
+                'local exploit': row[8],
+                'remote exploit': row[9],
+                'DoS exploit': row[10],
+                'known exploited vuln': row[11]
+            }
     
     res = Result.objects.update_or_create(
         firmware_analysis=FirmwareAnalysis.objects.get(id=analysis_id)
