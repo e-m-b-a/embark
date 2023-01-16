@@ -44,7 +44,7 @@ def zip_check(content_list):
         "emba_logs/html-report/index.html",
         "emba_logs/emba.log",
         "emba_logs/csv_logs/f50_base_aggregator.csv"]
-    return all(value_ in check_list for value_ in content_list)
+    return all(value_ in content_list for value_ in check_list)
 
 
 if __name__ == '__main__':
