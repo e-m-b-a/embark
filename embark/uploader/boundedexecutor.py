@@ -368,16 +368,24 @@ class BoundedExecutor:
                 zip_contents = zip_.namelist()
                 if zip_check(zip_contents):
                     # 2.extract
+                    logger.debug("extracting....")
                     zip_.extractall(path=Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/"))
+                    logger.debug("finished unzipping....")
+                else:
+                    logger.error("Wont extract since there are inconsistencies with the zip file")
               
                 # 3. sanity check (conformity)
                 # TODO check the files
+        except Exception as exce:
+            logger.error("Unzipping failed: %s", exce)
+
+        try:
             result_obj = result_read_in(analysis_id)
             if result_obj is None:
                 raise Exception("Didn't get a result from read_in")
             logger.debug("Got %s from zip", result_obj)
         except Exception as exce:
-            logger.error("Unzipping failed: %s", exce)
+            logger.error("Readin failed: %s", exce)
 
         analysis.finished = True
         analysis.log_size = get_size(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/")
