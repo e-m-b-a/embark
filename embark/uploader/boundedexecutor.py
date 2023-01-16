@@ -6,6 +6,7 @@ import shutil
 from subprocess import Popen, PIPE
 import re
 import json
+import zipfile
 
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
@@ -20,7 +21,7 @@ from uploader.archiver import Archiver
 from uploader.models import FirmwareAnalysis
 from dashboard.models import Result
 from embark.logreader import LogReader
-from embark.helper import get_size
+from embark.helper import get_size, zip_check
 from porter.models import LogZipFile
 from porter.importer import result_read_in
 
@@ -362,9 +363,15 @@ class BoundedExecutor:
         analysis.finished = False
         analysis.save(update_fields=["finished"])
         try:
-            if not Archiver.unpack(file_location=file_loc, extract_dir=Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/")):
-                raise Exception("Can't unpack " + str(file_loc) + f"{settings.EMBA_LOG_ROOT}/{analysis_id}/")
-
+            with zipfile.ZipFile(file_loc, 'r') as zip_:
+                # 1.check archive contents (security)
+                zip_contents = zip_.namelist()
+                if zip_check(zip_contents):
+                    # 2.extract
+                    zip_.extractall(path=Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/"))
+              
+                # 3. sanity check (conformity)
+                # TODO check the files
             result_obj = result_read_in(analysis_id)
             if result_obj is None:
                 raise Exception("Didn't get a result from read_in")

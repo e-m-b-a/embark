@@ -19,7 +19,7 @@ class Archiver:
         # default formats: zip, tar, gztar, bztar, xztar
 
         # register additional formats ( gz )
-        shutil.register_unpack_format('zip', ['.zip', ], self.gunzip_file)
+        shutil.register_unpack_format('gz', ['.gz', ], self.gunzip_file)
         # pass
 
     @staticmethod

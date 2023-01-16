@@ -35,6 +35,18 @@ def get_size(start_path='.'):
     return total_size
 
 
+def zip_check(content_list):
+    """
+    checks the contents against a pre defined list to ensure validity
+    """
+    check_list = [
+        "emba_logs/html-report/emba.html",
+        "emba_logs/html-report/index.html",
+        "emba_logs/emba.log",
+        "emba_logs/csv_logs/f50_base_aggregator.csv"]
+    return all(value_ in check_list for value_ in content_list)
+
+
 if __name__ == '__main__':
     print(rnd_rgb_color())
     print(rnd_rgb_full())
