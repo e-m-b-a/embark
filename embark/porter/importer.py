@@ -141,8 +141,8 @@ def f20_csv(file_path, analysis_id=None):
     logger.debug("starting f20 csv import")
     res_dict = {}
     with open(file_path, newline='\n', encoding='utf-8') as csv_file:
-        next(csv_file, None)
         csv_reader = csv.reader(csv_file, delimiter=';')
+        next(csv_reader, None)  # skip first line
         csv_list = []
         for row in csv_reader:
             # remove NAs from csv
