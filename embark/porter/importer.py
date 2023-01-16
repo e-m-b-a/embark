@@ -143,13 +143,11 @@ def f20_csv(file_path, analysis_id=None):
     with open(file_path, newline='\n', encoding='utf-8') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=';')
         next(csv_reader, None)  # skip first line
-        csv_list = []
-        for row in csv_reader:
+        for row in csv_reader:        
             # remove NAs from csv
             if row[-1] == "NA":
                 row.pop(-1)
-            csv_list.append(row)
-            for ele in csv_list:
+            for ele in row:
                 res_dict[ele[2]] = {
                     'Binary': ele[0],
                     'Version': ele[1],
@@ -163,15 +161,19 @@ def f20_csv(file_path, analysis_id=None):
                     'DoS exploit': ele[10],
                     'known exploited vuln': ele[11]
                 }
+    
     res = Result.objects.update_or_create(
         firmware_analysis=FirmwareAnalysis.objects.get(id=analysis_id)
     )
-    for _key, _value in res_dict.items():
-        new_vulnerability = Vulnerability.objects.update_or_create(
-            cve=_key,
-            info=_value
-        )
-        res.vulnerability.add(new_vulnerability)
+    try:
+        for key_, value_ in res_dict.items():
+            new_vulnerability = Vulnerability.objects.update_or_create(
+                cve=key_,
+                info=value_
+            )
+            res.vulnerability.add(new_vulnerability)
+    except Exception as error_:
+        logger.error("Error in f20 readin: %s", error_)
     logger.debug("read f20 csv done")
     return res
 
