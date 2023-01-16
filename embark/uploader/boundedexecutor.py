@@ -358,24 +358,23 @@ class BoundedExecutor:
             object with needed pk
         """
         logger.debug("Zipping ID: %s", analysis_id)
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        analysis.finished = False
+        analysis.save(update_fields=["finished"])
         try:
-            analysis = FirmwareAnalysis.objects.get(id=analysis_id)
-            analysis.finished = False
-            analysis.save()
-
             if not Archiver.unpack(file_location=file_loc, extract_dir=Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/")):
                 raise Exception("Can't unpack " + str(file_loc) + f"{settings.EMBA_LOG_ROOT}/{analysis_id}/")
 
             result_obj = result_read_in(analysis_id)
             if result_obj is None:
                 raise Exception("Didn't get a result from read_in")
-            analysis.finished = True
-            analysis.log_size = get_size(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/")
-            analysis.save()
             logger.debug("Got %s from zip", result_obj)
-
         except Exception as exce:
             logger.error("Unzipping failed: %s", exce)
+
+        analysis.finished = True
+        analysis.log_size = get_size(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/")
+        analysis.save(update_fields=["finished", "log_size"])
 
     @classmethod
     def submit_zip(cls, uuid):

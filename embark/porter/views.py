@@ -81,7 +81,7 @@ def import_read(request):
         logger.info("Importing analysis with %s", new_analysis.id)
         if BoundedExecutor.submit_unzip(uuid=new_analysis.id, file_loc=form.cleaned_data['zip_log_file'].get_abs_path()) is not None:
             # success
-            logger.info("Successfully submitted zip for import %s")
+            logger.info("Successfully submitted zip for import %s", zip_file_obj)
             messages.info(request, 'import submitted for ' + str(new_analysis.id))
             return redirect('..')
         messages.error(request, 'import failed')
