@@ -166,7 +166,7 @@ LOGGING = {
         },
         'uploader': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
-            'level': 'DEBUG',
+            'level': 'DEBUG',   # TODO change to INFO
         },
         'dashboard': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
