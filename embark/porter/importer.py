@@ -23,7 +23,7 @@ def result_read_in(analysis_id):
     logger.debug("starting read-in of %s", analysis_id)
     res = None
     directory = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/csv_logs/"
-    csv_list = [os.path.join(dir, file_) for file_ in os.listdir(directory)]
+    csv_list = [os.path.join(directory, file_) for file_ in os.listdir(directory)]
     for file_ in csv_list:
         logger.debug("trying to read: %s", file_)
         try:
