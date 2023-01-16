@@ -20,10 +20,12 @@ def result_read_in(analysis_id):
     calls read for all files inside csv_logs and stores its contents into the Result model
     :return: success->result_obj fail->None
     """
+    logger.debug("starting read-in of %s", analysis_id)
     res = None
     directory = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/csv_logs/"
     csv_list = [os.path.join(dir, file_) for file_ in os.listdir(directory)]
     for file_ in csv_list:
+        logger.debug("trying to read: %s", file_)
         try:
             if os.path.isfile(file_):      # TODO change check. > if valid EMBA csv file
                 logger.debug("File %s found and attempting to read", file_)

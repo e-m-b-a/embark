@@ -379,9 +379,13 @@ class BoundedExecutor:
         except Exception as exce:
             logger.error("Unzipping failed: %s", exce)
 
-        result_obj = result_read_in(analysis_id)
-        if result_obj is None:
-            raise Exception("Didn't get a result from result_read_in")
+        try:
+            result_obj = result_read_in(analysis_id)
+            if result_obj is None:
+                raise Exception("Didn't get a result from result_read_in")
+        except Exception as exce:
+            logger.error("Readin failed: %s", exce)
+
         logger.debug("Got %s from zip", result_obj)
 
         analysis.finished = True
