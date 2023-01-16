@@ -70,7 +70,7 @@ class Archiver:
                 zip_.write(root, os.path.relpath(root, relroot))
                 for file in files:
                     filename = os.path.join(root, file)
-                    if os.path.isfile(filename): # regular files only
+                    if os.path.isfile(filename):  # regular files only
                         arcname = os.path.join(os.path.relpath(root, relroot), file)
                         zip_.write(filename, arcname)
         return output_filename
