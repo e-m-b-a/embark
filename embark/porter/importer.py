@@ -143,7 +143,7 @@ def f20_csv(file_path, analysis_id=None):
     with open(file_path, newline='\n', encoding='utf-8') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=';')
         next(csv_reader)  # skip first line
-        for row in csv_reader:        
+        for row in csv_reader:
             # remove NAs from csv
             if row[-1] == 'NA':
                 row.pop(-1)
