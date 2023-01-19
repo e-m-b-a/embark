@@ -99,4 +99,4 @@ def individual_report_dashboard(request, analysis_id):
     """
     logger.info("individual_dashboard - analyze_id: %s", analysis_id)
     form = AssociateForm()
-    return render(request, 'dashboard/individualReportDashboard.html', {'username': request.user.username, 'analysis_id': analysis_id, 'ass_form': form})
+    return render(request, 'dashboard/individualReportDashboard.html', {'username': request.user.username, 'analysis_id': analysis_id, 'form': form})

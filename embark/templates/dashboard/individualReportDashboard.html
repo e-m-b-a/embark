@@ -34,31 +34,31 @@
           <div class="card dataCardIR">
             <table class="table table-striped table-borderless table-individualrep">
               <div class="buttonRow">
-              <!-- Quick and dirty JS solution. Need to fix the report id for using django mechanisms -->
-              <form action={% url 'embark-html-report' analysis_id 'index.html' %} method='get'>
-                <button class="btn buttonRowElem" type="submit">Open Report</button>
-              </form>
-              <form action={% url 'embark-download' analysis_id %} method='get'>
-                <button class="btn buttonRowElem" type="submit">Download Report</button>
-              </form>
-              <!-- TODO add another uploader/start pattern for firmware_id-->
-              <form action={% url 'embark-uploader-home' %} method='get'>
-                <button type="submit" class="btn buttonRowElem" >Rescan</button>
-              </form>
-              <form action={% url 'embark-uploader-manage-file' %} method='get'>
-                <button type="submit" class="btn buttonRowElem" >Delete Firmware</button>
-              </form>
-              <form action={% url 'embark-MainDashboard' %} method='get'>
-                <button type="submit" class="btn buttonRowElem" >Main dashboard</button>
-              </form>
-              <form action={% url 'embark-tracker-ass' analysis_id %} method="post" id="form">
-                {% csrf_token %}
-                <div class="innerBlock">
-                    {% load filters %}
-                    {% bootstrap_form ass_form %}
-                    {% bootstrap_button "Create" button_type="submit" button_class="btn-primary" %}
-                </div>
-              </form>
+                <!-- Quick and dirty JS solution. Need to fix the report id for using django mechanisms -->
+                <form action={% url 'embark-html-report' analysis_id 'index.html' %} method='get'>
+                    <button class="btn buttonRowElem" type="submit">Open Report</button>
+                </form>
+                <form action={% url 'embark-download' analysis_id %} method='get'>
+                    <button class="btn buttonRowElem" type="submit">Download Report</button>
+                </form>
+                <!-- TODO add another uploader/start pattern for firmware_id-->
+                <form action={% url 'embark-uploader-home' %} method='get'>
+                    <button type="submit" class="btn buttonRowElem" >Rescan</button>
+                </form>
+                <form action={% url 'embark-uploader-manage-file' %} method='get'>
+                    <button type="submit" class="btn buttonRowElem" >Delete Firmware</button>
+                </form>
+                <form action={% url 'embark-MainDashboard' %} method='get'>
+                    <button type="submit" class="btn buttonRowElem" >Main dashboard</button>
+                </form>
+                <form action={% url 'embark-tracker-ass' analysis_id %} method="post" id="form">
+                    {% csrf_token %}
+                    <div class="innerBlock">
+                        {% load filters %}
+                        {% bootstrap_form form %}
+                        {% bootstrap_button "Associate" button_type="submit" button_class="btn buttonRowElem" %}
+                    </div>
+                </form>
               </div>
               <br/>
               <tbody id="detail_body"></tbody>
