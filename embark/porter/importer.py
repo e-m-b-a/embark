@@ -161,12 +161,15 @@ def f20_csv(file_path, analysis_id=None):
         firmware_analysis=FirmwareAnalysis.objects.get(id=analysis_id)
     )
     for key_, value_ in res_dict.items():
-        new_vulnerability = Vulnerability.objects.update_or_create(
-            cve=key_,
-            info=value_
-        )
-        logger.debug("Adding Vuln: %s to res %s", new_vulnerability, res)
-        res.vulnerability.add(new_vulnerability)
+        try:
+            new_vulnerability = Vulnerability.objects.update_or_create(
+                cve=key_,
+                info=value_
+            )
+            logger.debug("Adding Vuln: %s to res %s", new_vulnerability, res)
+            res.vulnerability.add(new_vulnerability)
+        except Exception as error_:
+            logger.error("Error in f20 readin: %s", error_)
     logger.debug("read f20 csv done")
     return res
 
