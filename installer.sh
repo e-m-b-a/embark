@@ -2,7 +2,7 @@
 
 # EMBArk - The firmware security scanning environment
 #
-# Copyright 2020-2022 Siemens Energy AG
+# Copyright 2020-2023 Siemens Energy AG
 # Copyright 2020-2022 Siemens AG
 #
 # EMBArk comes with ABSOLUTELY NO WARRANTY.
@@ -357,6 +357,9 @@ install_embark_dev(){
   #Server-Dir
   if ! [[ -d media ]]; then
     mkdir media
+  fi
+  if ! [[ -d media/log_zip ]]; then
+    mkdir media/log_zip
   fi
   if ! [[ -d media ]]; then
     mkdir static
