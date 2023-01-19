@@ -155,7 +155,7 @@ def f20_csv(file_path, analysis_id=None):
                 'DoS exploit': row[10],
                 'known exploited vuln': row[11]
             }
-    
+    logger.debug("Got the following res_dict: %s", res_dict)
     res = Result.objects.update_or_create(
         firmware_analysis=FirmwareAnalysis.objects.get(id=analysis_id)
     )
@@ -164,6 +164,7 @@ def f20_csv(file_path, analysis_id=None):
             cve=key_,
             info=value_
         )
+        logger.debug("Adding Vuln: %s to res %s", new_vulnerability, res)
         try:
             res.vulnerability.add(new_vulnerability)
         except Exception as error_:
