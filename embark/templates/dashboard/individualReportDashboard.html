@@ -51,7 +51,7 @@
               <form action={% url 'embark-MainDashboard' %} method='get'>
                 <button type="submit" class="btn buttonRowElem" >Main dashboard</button>
               </form>
-              <form action={% url 'embark-tracker-ass' %} method="post" id="form">
+              <form action={% url 'embark-tracker-ass' analysis_id %} method="post" id="form">
                 {% csrf_token %}
                 <div class="innerBlock">
                     {% load filters %}
