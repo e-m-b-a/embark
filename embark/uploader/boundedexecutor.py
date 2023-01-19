@@ -373,7 +373,7 @@ class BoundedExecutor:
                     logger.debug("finished unzipping....")
                 else:
                     logger.error("Wont extract since there are inconsistencies with the zip file")
-              
+
                 # 3. sanity check (conformity)
                 # TODO check the files
         except Exception as exce:

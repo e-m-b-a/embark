@@ -156,7 +156,7 @@ def f20_csv(file_path, analysis_id=None):
             except Exception as error_:
                 logger.error("Error in f20 readin: %s", error_)
                 logger.error("row got %i memebers", len(row))
-        logger.debug("Got the following res_dict: %s", res_dict) 
+        logger.debug("Got the following res_dict: %s", res_dict)
     res, _ = Result.objects.update_or_create(
         firmware_analysis=FirmwareAnalysis.objects.get(id=analysis_id)
     )
