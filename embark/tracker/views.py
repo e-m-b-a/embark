@@ -145,7 +145,9 @@ def set_associate_device_to(request, analysis_id):
             logger.debug("Posted Form is valid")
             device = form.cleaned_data['device']
             analysis = FirmwareAnalysis.objects.get(id=analysis_id)
-            analysis.device.add(device)   # TODO check idk if this works yet
+            analysis.device.add(device)
+            messages.info("Send request for association")
+    return redirect('.')
 
 
 @require_http_methods(["POST"])
