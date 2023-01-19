@@ -157,7 +157,7 @@ def f20_csv(file_path, analysis_id=None):
                 logger.error("Error in f20 readin: %s", error_)
                 logger.error("row got %i memebers", len(row))
         logger.debug("Got the following res_dict: %s", res_dict) 
-    res = Result.objects.update_or_create(
+    res, _ = Result.objects.update_or_create(
         firmware_analysis=FirmwareAnalysis.objects.get(id=analysis_id)
     )
     for key_, value_ in res_dict.items():
