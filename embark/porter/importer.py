@@ -26,20 +26,15 @@ def result_read_in(analysis_id):
     csv_list = [os.path.join(directory, file_) for file_ in os.listdir(directory)]
     for file_ in csv_list:
         logger.debug("trying to read: %s", file_)
-        try:
-            if os.path.isfile(file_):      # TODO change check. > if valid EMBA csv file
-                logger.debug("File %s found and attempting to read", file_)
-                if file_.endswith('f50_base_aggregator.csv'):
-                    res = f50_csv(file_, analysis_id)
-                    logger.debug("Result for %s created or updated", analysis_id)
-                elif file_.endswith('f20_vul_aggregator.csv'):
-                    res = f20_csv(file_, analysis_id)
-                    logger.debug("Result for %s created or updated", analysis_id)
-                # TODO license info etc
-        except Exception as error_:
-            logger.error("Error in import read_infor analysis %s", analysis_id)
-            logger.error("Exception: %s", error_)
-            res = None
+        if os.path.isfile(file_):      # TODO change check. > if valid EMBA csv file
+            logger.debug("File %s found and attempting to read", file_)
+            if file_.endswith('f50_base_aggregator.csv'):
+                res = f50_csv(file_, analysis_id)
+                logger.debug("Result for %s created or updated", analysis_id)
+            elif file_.endswith('f20_vul_aggregator.csv'):
+                res = f20_csv(file_, analysis_id)
+                logger.debug("Result for %s created or updated", analysis_id)
+            # TODO license info etc
     return res
 
 
@@ -164,15 +159,15 @@ def f20_csv(file_path, analysis_id=None):
     res = Result.objects.update_or_create(
         firmware_analysis=FirmwareAnalysis.objects.get(id=analysis_id)
     )
-    try:
-        for key_, value_ in res_dict.items():
-            new_vulnerability = Vulnerability.objects.update_or_create(
-                cve=key_,
-                info=value_
-            )
+    for key_, value_ in res_dict.items():
+        new_vulnerability = Vulnerability.objects.update_or_create(
+            cve=key_,
+            info=value_
+        )
+        try:
             res.vulnerability.add(new_vulnerability)
-    except Exception as error_:
-        logger.error("Error in f20 readin: %s", error_)
+        except Exception as error_:
+            logger.error("Error in f20 readin: %s", error_)
     logger.debug("read f20 csv done")
     return res
 
