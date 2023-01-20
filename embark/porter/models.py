@@ -25,13 +25,13 @@ class LogZipFile(models.Model):
     user = models.ForeignKey(Userclass, on_delete=models.SET_NULL, related_name='Import_zip_Upload_User', null=True, blank=True)
 
     def get_storage_path(self, filename):
-        # file will be uploaded to MEDIA_ROOT/<id>/<filename>
-        return os.path.join(f"{settings.MEDIA_ROOT}/log_zip/{self.pk}", filename)
+        # file will be uploaded to MEDIA_ROOT/log_zip/<id>/<filename>
+        return os.path.join(f"log_zip/{self.pk}", filename)
 
     file = models.FileField(upload_to=get_storage_path)
 
     def get_abs_path(self):
-        return self.file.name
+        return f"{settings.MEDIA_ROOT}/{self.pk}/{self.file.name}"
 
     def get_abs_folder_path(self):
         return f"{settings.MEDIA_ROOT}/log_zip/{self.pk}"

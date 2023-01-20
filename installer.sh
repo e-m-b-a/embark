@@ -271,6 +271,9 @@ install_embark_default(){
   if ! [[ -d /var/www/media ]]; then
     mkdir /var/www/media
   fi
+  if ! [[ -d /var/www/media/log_zip ]]; then
+    mkdir /var/www/media/log_zip
+  fi
   if ! [[ -d /var/www/active ]]; then
     mkdir /var/www/active
   fi
