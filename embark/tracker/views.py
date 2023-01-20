@@ -146,7 +146,7 @@ def set_associate_device_to(request, analysis_id):
             device = form.cleaned_data['device']
             analysis = FirmwareAnalysis.objects.get(id=analysis_id)
             analysis.device.add(device)
-            messages.info("Send request for association")
+            messages.info(request, "Send request for association")
     return redirect('.')
 
 

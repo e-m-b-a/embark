@@ -1,4 +1,3 @@
-import os
 import shutil
 import logging
 import uuid
@@ -26,15 +25,15 @@ class LogZipFile(models.Model):
 
     def get_storage_path(self, filename):
         # file will be uploaded to MEDIA_ROOT/log_zip/<id>
-        return f"log_zip/{self.pk}.zip"
+        return f"log_zip/{filename}"
 
     file = models.FileField(upload_to=get_storage_path)
 
     def get_abs_path(self):
-        return f"{settings.MEDIA_ROOT}/log_zip/{self.pk}.zip"
+        return f"{settings.MEDIA_ROOT}/{self.file.name}"
 
     def get_abs_folder_path(self):
-        return f"{settings.MEDIA_ROOT}/log_zip/"
+        return f"{settings.MEDIA_ROOT}/log_zip"
 
     def __str__(self):
         return f"{self.file.name.replace('/', ' - ')}"
@@ -47,6 +46,6 @@ def delete_zip_pre_delete_post(sender, instance, **kwargs):
     delete the zip file and folder structure in storage on recieve
     """
     if sender.file:
-        shutil.rmtree(instance.get_abs_folder_path(), ignore_errors=False, onerror=logger.error("Error when trying to delete %s", instance.get_abs_folder_path()))
+        shutil.rmtree(instance.get_abs_path(), ignore_errors=False, onerror=logger.error("Error when trying to delete %s", instance.get_abs_folder_path()))
     else:
         logger.error("No related file for delete request: %s", str(sender))
