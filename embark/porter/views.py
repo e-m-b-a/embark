@@ -105,8 +105,7 @@ def import_save(request):
             zip_file = LogZipFile.objects.create(file=file)
             zip_file.user = request.user
             zip_file.save()
-        messages.error(request, 'not a zip file')
-        return redirect('..')
+        logger.error("File is not a zip file!")
     messages.info(request, "Successful upload")
     return redirect('..')
 
