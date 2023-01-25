@@ -158,10 +158,8 @@ def export_analysis(request):
     if form.is_valid():
         logger.debug("Posted Form is valid")
         analysis_obj = form.cleaned_data['analysis']
-        file_name = str(result_json(analysis_obj.id))
-        response = {}
-        response['Content-Disposition'] = 'inline; filename=' + file_name
-        return JsonResponse(data=response, status=HTTPStatus.OK)  # TODO check
+        response_data = result_json(analysis_obj.id)
+        return JsonResponse(data=response_data, status=HTTPStatus.OK)
     messages.error(request=request, message='form invalid')
     return redirect('..')
 
