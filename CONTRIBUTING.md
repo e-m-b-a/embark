@@ -28,7 +28,7 @@ It also sketches the typical integration process of patches.
 
 - send reminder if nothing happens after about a week
 
-- the code needs to work on the latest Kali Linux (other distributions are welcome but currently not tested)
+- the code needs to work on the latest Ubuntu (other distributions are welcome but currently not tested)
 
 ## 2) Code Guidelines
 

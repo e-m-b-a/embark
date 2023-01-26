@@ -20,10 +20,10 @@ The EMBA project is very thankful to the individuals who contributed to the proj
 
 These people have contributed to EMBArk:
 
+* [Benedikt Kuehne](https://github.com/BenediktMKuehne) (main dev)
 * Michael Messner (original author)
 * Pascal Eckmann (original author)
 * [Ashutosh Singh](https://github.com/ashutoshsingh0223)
-* [Benedikt Kuehne](https://github.com/BenediktMKuehne)
 * [bitans94](https://github.com/bitans94)
 * [Dirk Riehle](https://github.com/dirkriehle)
 * [diegiesskanne](https://github.com/diegiesskanne)
@@ -38,4 +38,5 @@ These people have contributed to EMBArk:
 
 
 ==========================================================================================
+  
   EMBArk - Embedded Analyzer - https://e-m-b-a.github.io/

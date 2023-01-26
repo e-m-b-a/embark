@@ -154,7 +154,7 @@ function add_container_to_finished(status_dict) {
             <br>
             <span>`+ status_dict.firmware_name.split(".")[0] + `</span>
             <br>
-            <h1> Successful </h1>
+            <h1> Completed </h1>
         </div>
     </div>`;
     document.getElementsByClassName("FinishedRow")[0].insertAdjacentHTML('beforeend', htmlToAdd);
