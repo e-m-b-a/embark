@@ -171,6 +171,7 @@ def get_accumulated_reports(request):
     for result in results:
         result = model_to_dict(result)
         # Pop firmware object_id
+        result.pop('vulnerability', None)   # FIXME this is disabled for now
         result.pop('firmware', None)
         result.pop('emba_command', None)
 
