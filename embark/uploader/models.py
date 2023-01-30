@@ -73,7 +73,7 @@ class TypedChoiceFieldExpertModeForm(forms.TypedChoiceField):
         super().__init__(*args, **kwargs)
 
 
-class TypedMultipleChoiceFieldExpertMode(forms.TypedMultipleChoiceField): # TODO idk if this is the right field
+class TypedMultipleChoiceFieldExpertMode(forms.TypedMultipleChoiceField):   # TODO idk if this is the right field
     """
     class TypedMultipleChoiceFieldExpertMode
     extends for expertmode usage
@@ -292,7 +292,7 @@ class FirmwareAnalysis(models.Model):
             ('S90_mail_check', 's90'),
             ('S95_interesting_binaries_check', 's95'),
             ('S99_grepit', 's99')
-        ]
+        ],
         verbose_name="Select Scan-Modules",
         help_text='Enable/disable specific scan-modules for your analysis',
         blank=True, expert_mode=True
