@@ -146,7 +146,7 @@ def start_analysis(request):
             logger.error("Server Queue full, or other boundenexec error")
             return HttpResponseServerError("Queue full")
         logger.error("Form invalid %s", request.POST)
-        return HttpResponseBadRequest
+        return HttpResponseBadRequest("Bad Request")
     if FirmwareFile.objects.all().count() > 0:
         analysis_form = FirmwareAnalysisForm(initial={'firmware': FirmwareFile.objects.latest('upload_date')})
         return render(request, 'uploader/index.html', {'analysis_form': analysis_form})
