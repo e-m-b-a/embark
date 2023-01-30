@@ -294,7 +294,7 @@ class FirmwareAnalysis(models.Model):
             ('S99_grepit', 's99')
         ],
         help_text='Enable/disable specific scan-modules for your analysis',
-        blank=True, expert_mode=True
+        expert_mode=True
     )
 
     # TODO add -C and -k option
