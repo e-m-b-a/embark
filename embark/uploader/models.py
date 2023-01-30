@@ -293,7 +293,6 @@ class FirmwareAnalysis(models.Model):
             ('S95_interesting_binaries_check', 's95'),
             ('S99_grepit', 's99')
         ],
-        verbose_name="Select Scan-Modules",
         help_text='Enable/disable specific scan-modules for your analysis',
         blank=True, expert_mode=True
     )
