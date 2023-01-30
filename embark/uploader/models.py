@@ -73,17 +73,6 @@ class TypedChoiceFieldExpertModeForm(forms.TypedChoiceField):
         super().__init__(*args, **kwargs)
 
 
-class TypedMultipleChoiceFieldExpertMode(forms.TypedMultipleChoiceField):   # TODO idk if this is the right field
-    """
-    class TypedMultipleChoiceFieldExpertMode
-    extends for expertmode usage
-    """
-    def __init__(self, *args, **kwargs):
-        self.expert_mode = kwargs.pop('expert_mode', True)
-        self.readonly = kwargs.pop('readonly', False)
-        super().__init__(*args, **kwargs)
-
-
 class CharFieldExpertMode(models.CharField):
     """
     class CharFieldExpertMode
@@ -97,6 +86,34 @@ class CharFieldExpertMode(models.CharField):
 
     def formfield(self, **kwargs):
         defaults = {'form_class': CharFieldExpertModeForm, 'choices_form_class': TypedChoiceFieldExpertModeForm, 'expert_mode': self.expert_mode, 'readonly': self.readonly}
+        defaults.update(kwargs)
+        return models.Field.formfield(self, **defaults)
+
+
+class TypedMultipleChoiceFieldExpertMode(forms.TypedMultipleChoiceField):
+    """
+    class TypedMultipleChoiceFieldExpertMode
+    extends for expertmode usage
+    """
+    def __init__(self, *args, **kwargs):
+        self.expert_mode = kwargs.pop('expert_mode', True)
+        self.readonly = kwargs.pop('readonly', False)
+        super().__init__(*args, **kwargs)
+
+
+class MulipleCharFieldExpertMode(models.CharField):
+    """
+    class CharFieldExpertMode
+    Extension of models.BooleanField to support expert_mode and readonly for CharField option for Models
+    """
+    def __init__(self, *args, **kwargs):
+        self.expert_mode = kwargs.pop('expert_mode', True)
+        self.readonly = kwargs.pop('readonly', False)
+        # super(CharFieldExpertMode, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+
+    def formfield(self, **kwargs):
+        defaults = {'form_class': CharFieldExpertModeForm, 'choices_form_class': TypedMultipleChoiceFieldExpertMode, 'expert_mode': self.expert_mode, 'readonly': self.readonly}
         defaults.update(kwargs)
         return models.Field.formfield(self, **defaults)
 
@@ -259,9 +276,8 @@ class FirmwareAnalysis(models.Model):
     system_emulation_test = BooleanFieldExpertMode(help_text='Enables automated qemu system emulation tests', default=False, expert_mode=True, blank=True)
 
     # S-modules
-    scan_modules = TypedMultipleChoiceFieldExpertMode(
+    scan_modules = MulipleCharFieldExpertMode(
         choices=[
-            (None, 'Select Scan-Modules to enable'),
             ('S02_UEFI_FwHunt', 's02'),
             ('S03_firmware_bin_base_analyzer', 's03'),
             ('S05_firmware_details', 's05'),
@@ -294,6 +310,9 @@ class FirmwareAnalysis(models.Model):
             ('S99_grepit', 's99')
         ],
         help_text='Enable/disable specific scan-modules for your analysis',
+        max_length=MAX_LENGTH,
+        verbose_name="Select Scan modules to run",
+        blank=True,
         expert_mode=True
     )
 
@@ -384,6 +403,8 @@ class FirmwareAnalysis(models.Model):
         if self.scan_modules:
             for module_ in self.scan_modules:
                 command = command + r" -m " + str(module_)
+            # TODO add all p modules????
+
         # running emba
         logger.info("final emba parameters %s", command)
         return command
