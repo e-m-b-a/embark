@@ -235,7 +235,7 @@ def download_zipped(request, analysis_id):
             logger.debug("searching for file here: %s", firmware.zip_file.file)
             with open(firmware.zip_file.file.path, 'rb') as requested_log_dir:
                 response = HttpResponse(requested_log_dir.read(), content_type="application/zip")
-                response['Content-Disposition'] = 'inline; filename=' + str(firmware.id)
+                response['Content-Disposition'] = 'inline; filename=' + str(firmware.id) + '.zip'
                 return response
         logger.error("FirmwareAnalysis with ID: %s does exist, but doesn't have a valid zip in its directory", analysis_id)
         messages.error(request, "Logs couldn't be downloaded")
