@@ -1,4 +1,4 @@
-import shutil
+import os
 import logging
 import uuid
 
@@ -46,6 +46,6 @@ def delete_zip_pre_delete_post(sender, instance, **kwargs):
     delete the zip file and folder structure in storage on recieve
     """
     if sender.file:
-        shutil.rmtree(instance.get_abs_path(), ignore_errors=False, onerror=logger.error("Error when trying to delete %s", instance.get_abs_folder_path()))
+        os.remove(instance.get_abs_path())
     else:
         logger.error("No related file for delete request: %s", str(sender))
