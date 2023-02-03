@@ -311,7 +311,8 @@ class FirmwareAnalysis(models.Model):
         ],
         help_text='Enable/disable specific scan-modules for your analysis',
         blank=True,
-        expert_mode=True
+        expert_mode=True,
+        max_length=150
     )
 
     # TODO add -C and -k option
