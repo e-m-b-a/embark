@@ -295,7 +295,8 @@ class FirmwareAnalysis(models.Model):
         ]
         verbose_name="Select Scan-Modules",
         help_text='Enable/disable specific scan-modules for your analysis',
-        blank=True, expert_mode=True
+        blank=True,
+        expert_mode=True
     )
 
     # TODO add -C and -k option

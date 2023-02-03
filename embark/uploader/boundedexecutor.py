@@ -33,7 +33,7 @@ executor = ThreadPoolExecutor(max_workers=MAX_WORKERS)
 semaphore = BoundedSemaphore(MAX_QUEUE)
 
 # emba directories
-EMBA_SCRIPT_LOCATION = f"cd {settings.EMBA_ROOT} && sudo ./emba.sh"
+EMBA_SCRIPT_LOCATION = f"cd {settings.EMBA_ROOT} && sudo ./emba"
 
 
 class BoundedExecutor:
@@ -58,7 +58,7 @@ class BoundedExecutor:
         logger.info("Starting: %s", cmd)
 
         # get return code to evaluate: 0 = success, 1 = failure,
-        # see emba.sh for further information
+        # see emba for further information
         exit_fail = False
         try:
 

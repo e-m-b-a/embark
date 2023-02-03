@@ -28,7 +28,7 @@ export WSL=0
 
 cleaner() {
   pkill -u root daphne
-  pkill -u root "$PWD"/emba/emba.sh
+  pkill -u root "$PWD"/emba/emba
   pkill -u root runapscheduler
 
   docker container stop embark_db
@@ -90,7 +90,7 @@ fi
 
 # check emba
 echo -e "$BLUE""$BOLD""checking EMBA""$NC"
-if ! ./emba/emba.sh -d 1>/dev/null ; then
+if ! ./emba/emba -d 1>/dev/null ; then
   echo -e "$RED""EMBA is not configured correctly""$NC"
   exit 1
 fi

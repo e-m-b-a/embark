@@ -260,7 +260,7 @@ install_embark_default(){
   #Add user for server
   if ! cut -d: -f1 /etc/passwd | grep -E www-embark ; then
     useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /var/www/embark
-    echo 'www-embark ALL=(ALL) NOPASSWD: /var/www/emba/emba.sh' | EDITOR='tee -a' visudo
+    echo 'www-embark ALL=(ALL) NOPASSWD: /var/www/emba/emba' | EDITOR='tee -a' visudo
     echo 'www-embark ALL=(ALL) NOPASSWD: /bin/pkill' | EDITOR='tee -a' visudo
   fi
 
@@ -345,9 +345,9 @@ install_embark_dev(){
   pip3 install pipenv
 
   #Add user nosudo
-  echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD: ""$PWD""/emba/emba.sh" | EDITOR='tee -a' visudo
+  echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD: ""$PWD""/emba/emba" | EDITOR='tee -a' visudo
   echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD: /bin/pkill" | EDITOR='tee -a' visudo
-  echo "root ALL=(ALL) NOPASSWD: ""$PWD""/emba/emba.sh" | EDITOR='tee -a' visudo
+  echo "root ALL=(ALL) NOPASSWD: ""$PWD""/emba/emba" | EDITOR='tee -a' visudo
   echo "root ALL=(ALL) NOPASSWD: /bin/pkill" | EDITOR='tee -a' visudo
   
 
@@ -440,7 +440,7 @@ uninstall (){
 
   # delete user www-embark and reset visudo
   echo -e "$ORANGE""$BOLD""Delete user""$NC"
-  # sed -i 's/www\-embark\ ALL\=\(ALL\)\ NOPASSWD\:\ \/app\/emba\/emba.sh//g' /etc/sudoers #TODO doesnt work yet
+  # sed -i 's/www\-embark\ ALL\=\(ALL\)\ NOPASSWD\:\ \/app\/emba\/emba//g' /etc/sudoers #TODO doesnt work yet
   if id -u www-embark &>/dev/null ; then
     userdel www-embark
   fi
