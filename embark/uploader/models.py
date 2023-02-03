@@ -101,7 +101,7 @@ class TypedMultipleChoiceFieldExpertMode(forms.TypedMultipleChoiceField):
         super().__init__(*args, **kwargs)
 
 
-class MulipleCharFieldExpertMode(models.CharField):
+class MultipleCharFieldExpertMode(models.CharField):
     """
     class CharFieldExpertMode
     Extension of models.BooleanField to support expert_mode and readonly for CharField option for Models
@@ -276,7 +276,7 @@ class FirmwareAnalysis(models.Model):
     system_emulation_test = BooleanFieldExpertMode(help_text='Enables automated qemu system emulation tests', default=False, expert_mode=True, blank=True)
 
     # S-modules
-    scan_modules = CharFieldExpertMode(
+    scan_modules = TypedMultipleChoiceFieldExpertMode(
         choices=[
             ('s02', 'S02_UEFI_FwHunt'),
             ('s03', 'S03_firmware_bin_base_analyzer'),
