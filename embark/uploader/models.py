@@ -73,17 +73,6 @@ class TypedChoiceFieldExpertModeForm(forms.TypedChoiceField):
         super().__init__(*args, **kwargs)
 
 
-class TypedMultipleChoiceFieldExpertMode(forms.TypedMultipleChoiceField): # TODO idk if this is the right field
-    """
-    class TypedMultipleChoiceFieldExpertMode
-    extends for expertmode usage
-    """
-    def __init__(self, *args, **kwargs):
-        self.expert_mode = kwargs.pop('expert_mode', True)
-        self.readonly = kwargs.pop('readonly', False)
-        super().__init__(*args, **kwargs)
-
-
 class CharFieldExpertMode(models.CharField):
     """
     class CharFieldExpertMode
@@ -97,6 +86,34 @@ class CharFieldExpertMode(models.CharField):
 
     def formfield(self, **kwargs):
         defaults = {'form_class': CharFieldExpertModeForm, 'choices_form_class': TypedChoiceFieldExpertModeForm, 'expert_mode': self.expert_mode, 'readonly': self.readonly}
+        defaults.update(kwargs)
+        return models.Field.formfield(self, **defaults)
+
+
+class TypedMultipleChoiceFieldExpertMode(forms.TypedMultipleChoiceField):
+    """
+    class TypedMultipleChoiceFieldExpertMode
+    extends for expertmode usage
+    """
+    def __init__(self, *args, **kwargs):
+        self.expert_mode = kwargs.pop('expert_mode', True)
+        self.readonly = kwargs.pop('readonly', False)
+        super().__init__(*args, **kwargs)
+
+
+class MulipleCharFieldExpertMode(models.CharField):
+    """
+    class CharFieldExpertMode
+    Extension of models.BooleanField to support expert_mode and readonly for CharField option for Models
+    """
+    def __init__(self, *args, **kwargs):
+        self.expert_mode = kwargs.pop('expert_mode', True)
+        self.readonly = kwargs.pop('readonly', False)
+        # super(CharFieldExpertMode, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+
+    def formfield(self, **kwargs):
+        defaults = {'form_class': CharFieldExpertModeForm, 'choices_form_class': TypedMultipleChoiceFieldExpertMode, 'expert_mode': self.expert_mode, 'readonly': self.readonly}
         defaults.update(kwargs)
         return models.Field.formfield(self, **defaults)
 
@@ -259,41 +276,39 @@ class FirmwareAnalysis(models.Model):
     system_emulation_test = BooleanFieldExpertMode(help_text='Enables automated qemu system emulation tests', default=False, expert_mode=True, blank=True)
 
     # S-modules
-    scan_modules = TypedMultipleChoiceFieldExpertMode(
+    scan_modules = MulipleCharFieldExpertMode(
         choices=[
-            (None, 'Select Scan-Modules to enable'),
-            ('S02_UEFI_FwHunt', 's02'),
-            ('S03_firmware_bin_base_analyzer', 's03'),
-            ('S05_firmware_details', 's05'),
-            ('S06_distribution_identification', 's06'),
-            ('S08_package_mgmt_extractor', 's08'),
-            ('S09_firmware_base_version_check', 's09'),
-            ('S10_binaries_basic_check', 's10'),
-            ('S12_binary_protection', 's12'),
-            ('S13_weak_func_check', 's13'),
-            ('S14_weak_func_radare_check', 's14'),
-            ('S15_bootloader_check', 's15'),
-            ('S20_shell_check', 's20'),
-            ('S21_python_check', 's21'),
-            ('S22_php_check', 's22'),
-            ('S24_kernel_bin_identifier', 's24'),
-            ('S25_kernel_check', 's25'),
-            ('S35_http_file_check', 's35'),
-            ('S40_weak_perm_check', 's40'),
-            ('S45_pass_file_check', 's45'),
-            ('S50_authentication_check', 's50'),
-            ('S55_history_file_check', 's55'),
-            ('S60_cert_file_check', 's60'),
-            ('S65_config_file_check', 's65'),
-            ('S70_hidden_file_check', 's70'),
-            ('S75_network_check', 's75'),
-            ('S80_cronjob_check', 's80'),
-            ('S85_ssh_check', 's85'),
-            ('S90_mail_check', 's90'),
-            ('S95_interesting_binaries_check', 's95'),
-            ('S99_grepit', 's99')
-        ]
-        verbose_name="Select Scan-Modules",
+            ('s02', 'S02_UEFI_FwHunt'),
+            ('s03', 'S03_firmware_bin_base_analyzer'),
+            ('s05', 'S05_firmware_details'),
+            ('s06', 'S06_distribution_identification'),
+            ('s08', 'S08_package_mgmt_extractor'),
+            ('s09', 'S09_firmware_base_version_check'),
+            ('s10', 'S10_binaries_basic_check'),
+            ('s12', 'S12_binary_protection'),
+            ('s13', 'S13_weak_func_check'),
+            ('s14', 'S14_weak_func_radare_check'),
+            ('s15', 'S15_bootloader_check'),
+            ('s20', 'S20_shell_check'),
+            ('s21', 'S21_python_check'),
+            ('s22', 'S22_php_check'),
+            ('s24', 'S24_kernel_bin_identifier'),
+            ('s25', 'S25_kernel_check'),
+            ('s35', 'S35_http_file_check'),
+            ('s40', 'S40_weak_perm_check'),
+            ('s45', 'S45_pass_file_check'),
+            ('s50', 'S50_authentication_check'),
+            ('s55', 'S55_history_file_check'),
+            ('s60', 'S60_cert_file_check'),
+            ('s65', 'S65_config_file_check'),
+            ('s70', 'S70_hidden_file_check'),
+            ('s75', 'S75_network_check'),
+            ('s80', 'S80_cronjob_check'),
+            ('s85', 'S85_ssh_check'),
+            ('s90', 'S90_mail_check'),
+            ('s95', 'S95_interesting_binaries_check'),
+            ('s99', 'S99_grepit')
+        ],
         help_text='Enable/disable specific scan-modules for your analysis',
         blank=True,
         expert_mode=True
@@ -386,6 +401,8 @@ class FirmwareAnalysis(models.Model):
         if self.scan_modules:
             for module_ in self.scan_modules:
                 command = command + r" -m " + str(module_)
+            # TODO add all p modules????
+
         # running emba
         logger.info("final emba parameters %s", command)
         return command

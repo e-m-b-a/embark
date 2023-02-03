@@ -36,9 +36,10 @@ class FirmwareAnalysisForm(forms.ModelForm):
     class Meta:
         model = models.FirmwareAnalysis
 
-        fields = ['firmware', 'version', 'device', 'notes', 'firmware_Architecture', 'cwe_checker', 'deep_extraction', 'online_checks', 'user_emulation_test', 'system_emulation_test']
+        fields = ['firmware', 'version', 'device', 'notes', 'firmware_Architecture', 'user_emulation_test', 'system_emulation_test', 'scan_modules']
         widgets = {
-            "device": forms.CheckboxSelectMultiple
+            "device": forms.CheckboxSelectMultiple,
+            "scan_modules": forms.CheckboxSelectMultiple
         }
 
 
