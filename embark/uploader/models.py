@@ -276,7 +276,7 @@ class FirmwareAnalysis(models.Model):
     system_emulation_test = BooleanFieldExpertMode(help_text='Enables automated qemu system emulation tests', default=False, expert_mode=True, blank=True)
 
     # S-modules
-    scan_modules = MulipleCharFieldExpertMode(
+    scan_modules = CharFieldExpertMode(
         choices=[
             ('s02', 'S02_UEFI_FwHunt'),
             ('s03', 'S03_firmware_bin_base_analyzer'),
