@@ -8,7 +8,7 @@ class Vulnerability(models.Model):
     """
     Many-to-Many object for CVEs
     """
-    cve = models.CharField(max_length=15, validators=[MinLengthValidator(15)], help_text='CVE-XXXX-XXXXXX')
+    cve = models.CharField(max_length=15, validators=[MinLengthValidator(16)], help_text='CVE-XXXX-XXXXXXX')
     info = models.JSONField(null=True)
 
 
