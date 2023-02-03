@@ -276,7 +276,7 @@ class FirmwareAnalysis(models.Model):
     system_emulation_test = BooleanFieldExpertMode(help_text='Enables automated qemu system emulation tests', default=False, expert_mode=True, blank=True)
 
     # S-modules
-    scan_modules = TypedMultipleChoiceFieldExpertMode(
+    scan_modules = MultipleCharFieldExpertMode(
         choices=[
             ('s02', 'S02_UEFI_FwHunt'),
             ('s03', 'S03_firmware_bin_base_analyzer'),
@@ -309,10 +309,10 @@ class FirmwareAnalysis(models.Model):
             ('s95', 'S95_interesting_binaries_check'),
             ('s99', 'S99_grepit')
         ],
-        # help_text='Enable/disable specific scan-modules for your analysis',
-        # blank=True,
-        # expert_mode=True,
-        # max_length=150
+        help_text='Enable/disable specific scan-modules for your analysis',
+        blank=True,
+        expert_mode=True,
+        max_length=150
     )
 
     # TODO add -C and -k option
