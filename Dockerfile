@@ -28,7 +28,7 @@ COPY ./emba/ /var/www/emba/
 # * create user and add to sudoers [root]
 USER root
 RUN useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /app/ && \
-    echo 'www-embark ALL=(ALL) NOPASSWD: /app/emba/emba.sh' | EDITOR='tee -a' visudo
+    echo 'www-embark ALL=(ALL) NOPASSWD: /app/emba/emba' | EDITOR='tee -a' visudo
 
 # * mkdir for apache
 USER www-embark

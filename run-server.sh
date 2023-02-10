@@ -50,7 +50,7 @@ import_helper()
 
 cleaner() {
   pkill -u root daphne
-  pkill -u root "$PWD"/emba/emba.sh
+  pkill -u root "$PWD"/emba/emba
   pkill -u root runapscheduler
 
   fuser -k "$HTTP_PORT"/tcp
@@ -121,7 +121,7 @@ fi
 
 # check emba
 echo -e "$BLUE""$BOLD""checking EMBA""$NC"
-if ! (cd "$PWD"/emba && ./emba.sh -d); then
+if ! (cd "$PWD"/emba && ./emba -d); then
   echo -e "$BLUE""Trying auto-maintain""$NC"
   # automaintain
   if ! [[ -d ./emba ]]; then
@@ -130,7 +130,7 @@ if ! (cd "$PWD"/emba && ./emba.sh -d); then
   fi
   cd ./emba || exit 1
   systemctl restart NetworkManager docker
-  ./emba.sh -d 1>/dev/null
+  ./emba -d 1>/dev/null
   if [[ $? -eq 1 ]]; then
     echo -e "$RED""EMBA is not configured correctly""$NC"
     exit 1

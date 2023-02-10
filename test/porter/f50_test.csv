@@ -1,5 +1,5 @@
 FW_path;/DIR300B5_FW214WWB01.bin;NA
-emba_command;./emba.sh -p ./scan-profiles/default-scan-emulation.emba -f /DIR300B5_FW214WWB01.bin -l /emba_logs3/;NA
+emba_command;./emba -p ./scan-profiles/default-scan-emulation.emba -f /DIR300B5_FW214WWB01.bin -l /emba_logs3/;NA
 architecture_verified;MIPS;NA
 os_verified;Linux / v2.6.33.2;NA;
 files;1099;NA;

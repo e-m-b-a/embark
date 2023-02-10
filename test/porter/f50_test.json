@@ -1,6 +1,6 @@
 {
     "FW_path": "/DIR300B5_FW214WWB01.bin",
-    "emba_command": "./emba.sh -p ./scan-profiles/default-scan-emulation.emba -f /DIR300B5_FW214WWB01.bin -l /emba_logs3/",
+    "emba_command": "./emba -p ./scan-profiles/default-scan-emulation.emba -f /DIR300B5_FW214WWB01.bin -l /emba_logs3/",
     "architecture_verified": "MIPS",
     "os_verified": "Linux / v2.6.33.2",
     "files": "1099",

@@ -28,7 +28,7 @@ export WSL=0
 
 cleaner() {
   pkill -u root daphne
-  pkill -u root "$PWD"/emba/emba.sh
+  pkill -u root "$PWD"/emba/emba
   pkill -u root runapscheduler
 
   docker container stop embark_db
@@ -89,11 +89,11 @@ if [[ "$WSL" -eq 1 ]]; then
 fi
 
 # check emba
-# echo -e "$BLUE""$BOLD""checking EMBA""$NC"
-# if ! (cd ./emba && /emba.sh -d) ; then
-#   echo -e "$RED""EMBA is not configured correctly""$NC"
-#   exit 1
-# fi
+echo -e "$BLUE""$BOLD""checking EMBA""$NC"
+if ! (cd ./emba && /emba -d) ; then
+  echo -e "$RED""EMBA is not configured correctly""$NC"
+  exit 1
+fi
 
 echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
 if docker-compose -f ./docker-compose.yml up -d ; then

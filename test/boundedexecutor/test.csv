@@ -3,7 +3,7 @@ Firmware_version;b5;NA;
 Device;dir300;NA;
 FW_notes;asdasdlk a test (uuid:6dfd4b2f-d175-4716-b834-e6d77d168c41);NA;
 FW_path;/var/www/active/6dfd4b2f-d175-4716-b834-e6d77d168c41/DIR300B5_FW214WWB01.bin;NA;
-emba_command;/var/www/emba/emba.sh -p ./scan-profiles/default-scan-no-notify.emba -f /var/www/active/6dfd4b2f-d175-4716-b834-e6d77d168c41/DIR300B5_FW214WWB01.bin -l /var/www/emba_logs/6dfd4b2f-d175-4716-b834-e6d77d168c41/emba_logs -X b5 -Z dir300 -Y dlink -N asdasdlk a test (uuid:6dfd4b2f-d175-4716-b834-e6d77d168c41);NA;
+emba_command;/var/www/emba/emba -p ./scan-profiles/default-scan-no-notify.emba -f /var/www/active/6dfd4b2f-d175-4716-b834-e6d77d168c41/DIR300B5_FW214WWB01.bin -l /var/www/emba_logs/6dfd4b2f-d175-4716-b834-e6d77d168c41/emba_logs -X b5 -Z dir300 -Y dlink -N asdasdlk a test (uuid:6dfd4b2f-d175-4716-b834-e6d77d168c41);NA;
 architecture_verified;MIPS;NA;
 os_verified;Linux / v2.6.33.2;NA;
 files;1099;NA;
