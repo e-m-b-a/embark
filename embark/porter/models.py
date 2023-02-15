@@ -25,7 +25,7 @@ class LogZipFile(models.Model):
 
     def get_storage_path(self, filename):
         # file will be uploaded to MEDIA_ROOT/log_zip/<id>
-        return f"{settings.MEDIA_ROOT}/log_zip/{filename}"
+        return f"log_zip/{filename}"
 
     file = models.FileField(upload_to=get_storage_path)
 
@@ -46,6 +46,6 @@ def delete_zip_pre_delete_post(sender, instance, **kwargs):
     delete the zip file and folder structure in storage on recieve
     """
     if sender.file:
-        os.remove(instance.get_abs_path())
+        os.remove(f"{settings.MEDIA_ROOT}/{instance.get_abs_path()}")
     else:
         logger.error("No related file for delete request: %s", str(sender))
