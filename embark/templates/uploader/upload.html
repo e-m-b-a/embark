@@ -2,27 +2,29 @@
 {% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/uploader.css' %}"/>{% endblock style %}
 {% block js %}<script type="text/javascript" src="{% static 'scripts/fileUpload.js' %}"></script>{% endblock js %}
 
-        <div class="col-sm">
-            <div class="box">
-                <p class="mainText">Upload firmware</p>
-                <p class="subText">Supported archive types : firmware binary and most archive types</p>
-                <div class="innerBlock">
-                    Selected file:
-                    <div id="file-name" class="uploadedFile">None</div>
-                </div>
-                <div class="buttonRow">
-                    <button type="submit" id="uploadFirmware-btn" class="btn buttonRowElem" onclick="saveFiles()" disabled>
-                        Upload
-                    </button>
-                    <button type="button" class="btn buttonRowElem" >
-                        <label for="file-input">Select file</label>
-                    </button>
-                    <input id="file-input" type="file" multiple/>
-                </div>
-                <div class="progress-wrapper" id="progress-wrapper">
-                    <div class="progress-bar" id="progressBar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-                        0%
-                    </div>
+<div class="collapse" id="collapseUpload">
+    <div class="col-sm">
+        <div class="box">
+            <p class="mainText">Upload firmware</p>
+            <p class="subText">Supported archive types : firmware binary and most archive types</p>
+            <div class="innerBlock">
+                Selected file:
+                <div id="file-name" class="uploadedFile">None</div>
+            </div>
+            <div class="buttonRow">
+                <button type="submit" id="uploadFirmware-btn" class="btn buttonRowElem" onclick="saveFiles();" disabled data-bs-toggle="collapse.show" data-bs-target="collapseDevice">
+                    Upload
+                </button>
+                <button type="button" class="btn buttonRowElem" >
+                    <label for="file-input">Select file</label>
+                </button>
+                <input id="file-input" type="file" multiple/>
+            </div>
+            <div class="progress-wrapper" id="progress-wrapper">
+                <div class="progress-bar" id="progressBar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                    0%
                 </div>
             </div>
         </div>
+    </div>
+</div>

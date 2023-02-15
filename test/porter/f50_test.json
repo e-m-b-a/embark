@@ -1,0 +1,139 @@
+{
+    "FW_path": "/DIR300B5_FW214WWB01.bin",
+    "emba_command": "./emba -p ./scan-profiles/default-scan-emulation.emba -f /DIR300B5_FW214WWB01.bin -l /emba_logs3/",
+    "architecture_verified": "MIPS",
+    "os_verified": "Linux / v2.6.33.2",
+    "files": "1099",
+    "directories": "92",
+    "shell_scripts": "78",
+    "shell_script_vulns": "241",
+    "yara_rules_match": "55",
+    "user_emulation_state": "18",
+    "system_emulation_state": {
+        "booted": {
+            "IP_DET": {
+                "booted": "IP_DET",
+                "ICMP": "NMAP"
+            }
+        }
+    },
+    "auth_issues": "2",
+    "password_hashes_stacs": "1",
+    "kernel_modules": "3",
+    "kernel_modules_lic": "0",
+    "interesting_files": "0",
+    "post_files": "1",
+    "canary": "95",
+    "canary_per": "100",
+    "relro": "91",
+    "relro_per": "96",
+    "nx": "95",
+    "nx_per": "100",
+    "pie": "45",
+    "pie_per": "47",
+    "stripped": "51",
+    "stripped_per": "54",
+    "bins_checked": "95",
+    "strcpy": "295",
+    "strcpy_bin": {
+        "igmpproxy": "37",
+        "libuClibc-0.9.30.1.so": "29",
+        "dnsmasq": "28",
+        "updatewifistats": "21",
+        "iwconfig": "21",
+        "cgibin": "16",
+        "httpd": "13",
+        "libip6tc.so.0.0.0": "12",
+        "libip4tc.so.0.0.0": "12",
+        "pppd": "9"
+    },
+    "system_bin": {
+        "igmpproxy": "7",
+        "cgibin": "6",
+        "rdisc6": "4",
+        "pppd": "4",
+        "rgbin": "3",
+        "xmldb": "2",
+        "updatewifistats": "2",
+        "udhcpd": "2",
+        "logd": "2",
+        "gpiod": "2"
+    },
+    "versions_identified": "25",
+    "cve_high": "599",
+    "cve_medium": "1024",
+    "cve_low": "174",
+    "exploits": "609",
+    "metasploit_modules": "21",
+    "remote_exploits": "2",
+    "local_exploits": "68",
+    "dos_exploits": "67",
+    "github_exploits": "569",
+    "known_exploited": "7",
+    "version_details": {
+        "busybox": {
+            "1.14.1": {
+                "busybox": "1.14.1",
+                "CVEs": "14",
+                "Exploits": "4",
+                "Source": "STAT/UEMU"
+            }
+        },
+        "d-link": {
+            "dir-300": {
+                "d-link": "dir-300",
+                "CVEs": "1",
+                "Exploits": "0",
+                "Source": "SEMU"
+            }
+        },
+        "dnsmasq": {
+            "2.45": {
+                "dnsmasq": "2.45",
+                "CVEs": "23",
+                "Exploits": "17",
+                "Source": "STAT/UEMU/SEMU"
+            }
+        },
+        "hostapd": {
+            "0.5.11": {
+                "hostapd": "0.5.11",
+                "CVEs": "10",
+                "Exploits": "10",
+                "Source": "STAT"
+            }
+        },
+        "trigger": {
+            "1": {
+                "trigger": "1",
+                "CVEs": "6",
+                "Exploits": "1",
+                "Source": "UEMU"
+            }
+        },
+        "wireless_tools": {
+            "26": {
+                "wireless_tools": "26",
+                "CVEs": "2",
+                "Exploits": "2",
+                "Source": "UEMU"
+            }
+        },
+        "openssl": {
+            "0.9.8a": {
+                "openssl": "0.9.8a",
+                "CVEs": "86",
+                "Exploits": "34",
+                "Source": "STAT"
+            }
+        },
+        "kernel": {
+            "2.6.33.2": {
+                "kernel": "2.6.33.2",
+                "CVEs": "1655",
+                "Exploits": "551",
+                "Source": "STAT"
+            }
+        }
+    }
+}

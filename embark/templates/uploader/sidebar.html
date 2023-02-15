@@ -1,0 +1,50 @@
+{% load static %}
+{% block sidebar %}
+<nav class="navbar-inner navbar-expand-lg navbar-light bg-light d-flex flex-nowrap mx-auto">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Uploader</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse mx-3 " id="navbarSupportedContent">
+      <ul class="navbar-nav mx-auto my-auto">
+        <li class="nav-item dropdown mx-3">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Submenu
+          </a>
+          <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <a class="dropdown-item" href="{% url 'embark-uploader-manage-file' %}">File Management</a>
+            <a class="dropdown-item" href="#">Another action(TODO)</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="#">Something else here(TODO)</a>
+          </div>
+        </li>
+        <li class="nav-item mx-3">
+          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#infoModal">
+            Help
+          </button>
+            <div class="modal fade bg-transparent" id="infoModal" tabindex="-1" aria-labelledby="ModalInfo" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title  text-primary">Info</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">X</button>
+                  </div>
+                  <div class="modal-body">
+                    <p class="text-info">1. Upload Firmware</p>
+                    <p class="text-info">2. Add Device Configuration by providing Name + Vendor (Labels are optional)</p>
+                    <p class="text-info">3. Select the Firmware and the device(s) and the firmware is for.</p>
+                    <p class="text-info">4. Add Version, Notes and configure EMBA, then press Analyze</p>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </li>
+      </ul>
+    </div>   
+  </div>
+</nav>
+{% endblock sidebar %}

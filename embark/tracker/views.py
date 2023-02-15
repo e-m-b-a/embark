@@ -15,7 +15,7 @@ from dashboard.models import Result
 from embark.helper import rnd_rgb_color, rnd_rgb_full
 from uploader.models import FirmwareAnalysis, Device, Vendor
 from tracker.tables import SimpleDeviceTable
-from tracker.forms import TimeForm
+from tracker.forms import AssociateForm, TimeForm
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ def get_report_for_device(request, device_id):
         data = []
         if not analysis_queryset:
             logger.debug("No firmware analysis available for this device")
-            return render(request=request, template_name='tracker/device.html', context={'username': request.user.username, 'device_info': device, 'labels': ['No Data'], 'data': [{'label': 'NoData', 'data': [0]}]})
+            return render(request=request, template_name='tracker/device.html', context={'username': request.user.username, 'device_id': device_id, 'device': device, 'labels': ['No Data'], 'data': [{'label': 'NoData', 'data': [0]}]})
         for _analysis in analysis_queryset:
             dataset = {}
             dataset['label'] = str(_analysis.version)
@@ -115,7 +115,7 @@ def get_report_for_device(request, device_id):
             dataset['pointHoverBorderColor'] = rnd_rgb_color()
             data.append(dataset)
         logger.debug("tracker/device data: %s", str(data))
-        return render(request=request, template_name='tracker/device.html', context={'username': request.user.username, 'device_info': device, 'labels': label_list, 'data': data})
+        return render(request=request, template_name='tracker/device.html', context={'username': request.user.username, 'device_id': device_id, 'device': device, 'labels': label_list, 'data': data})
     logger.error("device id nonexistent: %s", device_id)
     logger.error("could  not get template - %s", request)
     return HttpResponseBadRequest
@@ -134,3 +134,31 @@ def tracker_time(request, time):
         device_table = SimpleDeviceTable(data=Device.objects.all(), template_name="django_tables2/bootstrap-responsive.html")
         return render(request=request, template_name='tracker/index.html', context={'username': request.user.username, 'table': device_table, 'labels': label_list, 'data': data})
     return HttpResponseBadRequest
+
+
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def set_associate_device_to(request, analysis_id):
+    if request.method == 'POST':
+        form = AssociateForm(request.POST)
+        if form.is_valid():
+            logger.debug("Posted Form is valid")
+            device = form.cleaned_data['device']
+            analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+            analysis.device.add(device)
+            messages.info(request, "Send request for association")
+    return redirect('.')
+
+
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def toggle_device_visible(request, device_id):
+    device = Device.objects.get(id=device_id)
+    if request.user != device.device_user:
+        logger.error("User %s - access denied", request.user.username)
+        messages.error(request, 'Access denied not the owner')
+        return redirect('.')
+    device.visible = not device.visible
+    device.save()
+    messages.info(request, 'Success')
+    return redirect('.')

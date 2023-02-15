@@ -9,6 +9,8 @@
 # Source: https://github.com/tests-always-included/wick/blob/b492cc27c49cd416f04c18c5a2dcfafa403b8a37/lib/wick-strict-mode-fail
 # License: https://github.com/tests-always-included/wick/blob/master/LICENSE.md
 
+# shellcheck disable=SC2004
+
 wickStrictModeFail() (
   echo -e "------------------------------------------------------------------------------------------------"
   set +x

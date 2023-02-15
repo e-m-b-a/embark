@@ -6,6 +6,7 @@ import shutil
 from subprocess import Popen, PIPE
 import re
 import json
+import zipfile
 
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
@@ -20,6 +21,9 @@ from uploader.archiver import Archiver
 from uploader.models import FirmwareAnalysis
 from dashboard.models import Result
 from embark.logreader import LogReader
+from embark.helper import get_size, zip_check
+from porter.models import LogZipFile
+from porter.importer import result_read_in
 
 
 logger = logging.getLogger(__name__)
@@ -35,7 +39,7 @@ executor = ThreadPoolExecutor(max_workers=MAX_WORKERS)
 semaphore = BoundedSemaphore(MAX_QUEUE)
 
 # emba directories
-EMBA_SCRIPT_LOCATION = f"cd {settings.EMBA_ROOT} && sudo ./emba.sh"
+EMBA_SCRIPT_LOCATION = f"cd {settings.EMBA_ROOT} && sudo ./emba"
 
 
 class BoundedExecutor:
@@ -60,7 +64,7 @@ class BoundedExecutor:
         logger.info("Starting: %s", cmd)
 
         # get return code to evaluate: 0 = success, 1 = failure,
-        # see emba.sh for further information
+        # see emba for further information
         exit_fail = False
         try:
 
@@ -248,6 +252,7 @@ class BoundedExecutor:
 
     @classmethod
     def csv_read(cls, analysis_id, path, cmd):
+        # TODO moved to importer link!
         """
         This job reads the F50_aggregator file and stores its content into the Result model
         """
@@ -325,6 +330,82 @@ class BoundedExecutor:
         )
         res.save()
         return res
+
+    @classmethod
+    def zip_log(cls, analysis_id):
+        """
+        Zipps the logs produced by emba
+        :param analysis_id: primary key for firmware-analysis entry
+        """
+        logger.debug("Zipping ID: %s", analysis_id)
+        try:
+            analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+            analysis.finished = False
+            analysis.save()
+
+            # archive = Archiver.pack(f"{settings.MEDIA_ROOT}/log_zip/{analysis_id}", 'zip', analysis.path_to_logs, './*')
+            archive = Archiver.make_zipfile(f"{settings.MEDIA_ROOT}/log_zip/{analysis_id}.zip", analysis.path_to_logs)
+
+            # create a LogZipFile obj
+            analysis.zip_file = LogZipFile.objects.create(file=archive, user=analysis.user)
+        except Exception as exce:
+            logger.error("Zipping failed: %s", exce)
+        analysis.finished = True
+        analysis.save()
+
+    @classmethod
+    def unzip_log(cls, analysis_id, file_loc):
+        """
+        unzipps the logs
+        1. copy into settings.EMBA_LOG_ROOT with id
+        2. read csv into result result_model
+        Args:
+            current location
+            object with needed pk
+        """
+        logger.debug("Zipping ID: %s", analysis_id)
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        analysis.finished = False
+        analysis.save(update_fields=["finished"])
+        try:
+            with zipfile.ZipFile(file_loc, 'r') as zip_:
+                # 1.check archive contents (security)
+                zip_contents = zip_.namelist()
+                if zip_check(zip_contents):
+                    # 2.extract
+                    logger.debug("extracting....")
+                    zip_.extractall(path=Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/"))
+                    logger.debug("finished unzipping....")
+                else:
+                    logger.error("Wont extract since there are inconsistencies with the zip file")
+
+                # 3. sanity check (conformity)
+                # TODO check the files
+        except Exception as exce:
+            logger.error("Unzipping failed: %s", exce)
+
+        result_obj = result_read_in(analysis_id)
+        if result_obj is None:
+            logger.error("Readin failed: %s", exce)
+            return
+
+        logger.debug("Got %s from zip", result_obj)
+
+        analysis.finished = True
+        analysis.log_size = get_size(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/")
+        analysis.save(update_fields=["finished", "log_size"])
+
+    @classmethod
+    def submit_zip(cls, uuid):
+        # submit zip req to executor threadpool
+        emba_fut = BoundedExecutor.submit(cls.zip_log, uuid)
+        return emba_fut
+
+    @classmethod
+    def submit_unzip(cls, uuid, file_loc):
+        # submit zip req to executor threadpool
+        emba_fut = BoundedExecutor.submit(cls.unzip_log, uuid, file_loc)
+        return emba_fut
 
     @staticmethod
     @receiver(finish_execution, sender='system')

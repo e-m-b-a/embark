@@ -2,7 +2,7 @@
 
 # EMBArk - The firmware security scanning environment
 #
-# Copyright 2020-2022 Siemens Energy AG
+# Copyright 2020-2023 Siemens Energy AG
 # Copyright 2020-2022 Siemens AG
 #
 # EMBArk comes with ABSOLUTELY NO WARRANTY.
@@ -260,7 +260,7 @@ install_embark_default(){
   #Add user for server
   if ! cut -d: -f1 /etc/passwd | grep -E www-embark ; then
     useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /var/www/embark
-    echo 'www-embark ALL=(ALL) NOPASSWD: /var/www/emba/emba.sh' | EDITOR='tee -a' visudo
+    echo 'www-embark ALL=(ALL) NOPASSWD: /var/www/emba/emba' | EDITOR='tee -a' visudo
     echo 'www-embark ALL=(ALL) NOPASSWD: /bin/pkill' | EDITOR='tee -a' visudo
   fi
 
@@ -270,6 +270,9 @@ install_embark_default(){
   fi
   if ! [[ -d /var/www/media ]]; then
     mkdir /var/www/media
+  fi
+  if ! [[ -d /var/www/media/log_zip ]]; then
+    mkdir /var/www/media/log_zip
   fi
   if ! [[ -d /var/www/active ]]; then
     mkdir /var/www/active
@@ -336,18 +339,18 @@ install_embark_default(){
 install_embark_dev(){
   echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
   # apt packages
-  apt-get install -y npm pycodestyle python3-pylint-django default-libmysqlclient-dev build-essential bandit
+  apt-get install -y npm pycodestyle python3-pylint-django default-libmysqlclient-dev build-essential bandit yamllint
   # npm packages
-  npm install -g jshint 
+  npm install -g jshint
   # npm install -g dockerlinter
   
   # install pipenv
   pip3 install pipenv
 
   #Add user nosudo
-  echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD: ""$PWD""/emba/emba.sh" | EDITOR='tee -a' visudo
+  echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD: ""$PWD""/emba/emba" | EDITOR='tee -a' visudo
   echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD: /bin/pkill" | EDITOR='tee -a' visudo
-  echo "root ALL=(ALL) NOPASSWD: ""$PWD""/emba/emba.sh" | EDITOR='tee -a' visudo
+  echo "root ALL=(ALL) NOPASSWD: ""$PWD""/emba/emba" | EDITOR='tee -a' visudo
   echo "root ALL=(ALL) NOPASSWD: /bin/pkill" | EDITOR='tee -a' visudo
   
 
@@ -357,6 +360,9 @@ install_embark_dev(){
   #Server-Dir
   if ! [[ -d media ]]; then
     mkdir media
+  fi
+  if ! [[ -d media/log_zip ]]; then
+    mkdir media/log_zip
   fi
   if ! [[ -d media ]]; then
     mkdir static
@@ -440,7 +446,7 @@ uninstall (){
 
   # delete user www-embark and reset visudo
   echo -e "$ORANGE""$BOLD""Delete user""$NC"
-  # sed -i 's/www\-embark\ ALL\=\(ALL\)\ NOPASSWD\:\ \/app\/emba\/emba.sh//g' /etc/sudoers #TODO doesnt work yet
+  # sed -i 's/www\-embark\ ALL\=\(ALL\)\ NOPASSWD\:\ \/app\/emba\/emba//g' /etc/sudoers #TODO doesnt work yet
   if id -u www-embark &>/dev/null ; then
     userdel www-embark
   fi

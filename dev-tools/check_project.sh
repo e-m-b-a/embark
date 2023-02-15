@@ -34,7 +34,7 @@ fi
 
 # check that all tools are installed
 check_tools(){
-  TOOLS=("jshint" "shellcheck" "pylint")
+  TOOLS=("jshint" "shellcheck" "pylint" "yamllint")
   for TOOL in "${TOOLS[@]}";do
     if ! command -v "$TOOL" > /dev/null ; then 
       echo -e "\\n""$RED""$TOOL is not installed correctly""$NC""\\n"
@@ -256,6 +256,21 @@ dockerchecker(){
   fi
 }
 
+yamlchecker(){
+  echo -e "\\n""$ORANGE""$BOLD""EMBArk yaml-files check""$NC""\\n""$BOLD""=================================================================""$NC"
+  mapfile -t YAML_COMPS < <(find . -maxdepth 1 -type d -name migrations -prune -false -o -iname "*.yml")
+  for YAML_COMP_ in "${YAML_COMPS[@]}"; do
+    echo -e "\\n""$GREEN""Run docker check on $YAML_COMP_:""$NC""\\n"
+    if yamllint "$YAML_COMP_" ; then
+      echo -e "$GREEN""$BOLD""==> SUCCESS""$NC""\\n"
+    else
+      echo -e "\\n""$ORANGE$BOLD==> FIX ERRORS""$NC""\\n"
+      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+      MODULES_TO_CHECK_ARR+=( "$YAML_COMP_" )    
+    fi
+  done
+}
+
 #main
 check_tools
 MODULES_TO_CHECK=0
@@ -268,6 +283,7 @@ pycodestyle_check
 banditer
 pylinter
 check_django
+yamlchecker
 
 if [[ "${#MODULES_TO_CHECK_ARR[@]}" -gt 0 ]]; then
   echo -e "\\n\\n""$GREEN$BOLD""SUMMARY:$NC\\n"

@@ -82,4 +82,5 @@ docker container prune
 echo -e "$ORANGE""$BOLD""Consider running \$docker system prune""$NC"
 rm -Rf -I ./embark_db
 
+find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
 pipenv run ./embark/manage.py flush

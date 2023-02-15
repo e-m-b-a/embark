@@ -1,0 +1,19 @@
+{% load django_bootstrap5 %}
+
+        <div class="col-sm">
+
+            <div class="box">
+                <p class="mainText">Import Log</p>
+                <p class="subText">Select a uploaded zip file for import</p>
+
+                <form action="{% url 'embark-import-read' %}" method="post" id="form">
+                    {% csrf_token %}
+                    <div class="innerBlock">
+                        {% load filters %}
+                        {% bootstrap_form import_read_form %}
+                        {% bootstrap_button "Create" button_type="submit" button_class="btn-primary" %}
+                    </div>
+                </form>
+
+            </div>
+        </div>

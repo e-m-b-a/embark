@@ -167,7 +167,7 @@ class LogReader:
         """
         Infinite Loop for waiting for emba.log changes
             :param: None
-            :exit condition: Not in this Function, but if emba.sh has terminated this process is also killed
+            :exit condition: Not in this Function, but if emba has terminated this process is also killed
             :return: None
        """
         logger.info("read loop started for %s", self.firmware_id)

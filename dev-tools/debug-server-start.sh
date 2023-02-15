@@ -28,7 +28,7 @@ export WSL=0
 
 cleaner() {
   pkill -u root daphne
-  pkill -u root "$PWD"/emba/emba.sh
+  pkill -u root "$PWD"/emba/emba
   pkill -u root runapscheduler
 
   docker container stop embark_db
@@ -90,7 +90,7 @@ fi
 
 # check emba
 echo -e "$BLUE""$BOLD""checking EMBA""$NC"
-if ! ./emba/emba.sh -d 1>/dev/null ; then
+if ! (cd ./emba && /emba -d) ; then
   echo -e "$RED""EMBA is not configured correctly""$NC"
   exit 1
 fi
@@ -117,7 +117,7 @@ source ./.venv/bin/activate || exit 1
 
 # db_init
 echo -e "[*] Starting migrations - log to embark/logs/migration.log"
-python3 ./embark/manage.py makemigrations users uploader reporter dashboard | tee -a ./logs/migration.log
+python3 ./embark/manage.py makemigrations users uploader reporter dashboard porter | tee -a ./logs/migration.log
 python3 ./embark/manage.py migrate | tee -a ./logs/migration.log
 
 # superuser

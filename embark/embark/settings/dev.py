@@ -31,7 +31,8 @@ INSTALLED_APPS = [
     'users',
     'reporter',
     'dashboard',
-    'tracker'
+    'tracker',
+    'porter'
 ]
 
 AUTH_USER_MODEL = 'users.User'
@@ -141,11 +142,15 @@ LOGGING = {
         },
         'users': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
-            'level': 'INFO',
+            'level': 'DEBUG',
         },
         'reporter': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
-            'level': 'INFO',
+            'level': 'DEBUG',
+        },
+        'porter': {
+            'handlers': ['debug_handler', 'info_handler', 'console_handler'],
+            'level': 'DEBUG',
         },
         'tracker': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
@@ -248,3 +253,4 @@ CHANNEL_LAYERS = {
         },
     },
 }
+TEMP_DIR = Path("/tmp/")

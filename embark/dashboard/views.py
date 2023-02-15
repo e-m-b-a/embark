@@ -7,6 +7,7 @@ from django.shortcuts import render
 from django.http import HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect, HttpResponseServerError
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
+from tracker.forms import AssociateForm
 from uploader.boundedexecutor import BoundedExecutor
 
 from uploader.models import FirmwareAnalysis
@@ -83,8 +84,8 @@ def report_dashboard(request):
 
     :return: rendered ReportDashboard
     """
-    finished_firmwares = FirmwareAnalysis.objects.filter(failed=False, finished=True)
-    return render(request, 'dashboard/reportDashboard.html', {'finished_firmwares': finished_firmwares, 'username': request.user.username})
+    firmwares = FirmwareAnalysis.objects.all()
+    return render(request, 'dashboard/reportDashboard.html', {'firmwares': firmwares, 'username': request.user.username})
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -97,4 +98,5 @@ def individual_report_dashboard(request, analysis_id):
     :return: rendered individualReportDashboard of Results for fw_analysis
     """
     logger.info("individual_dashboard - analyze_id: %s", analysis_id)
-    return render(request, 'dashboard/individualReportDashboard.html', {'username': request.user.username, 'analysis_id': analysis_id})
+    form = AssociateForm()
+    return render(request, 'dashboard/individualReportDashboard.html', {'username': request.user.username, 'analysis_id': analysis_id, 'form': form})
