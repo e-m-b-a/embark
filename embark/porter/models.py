@@ -25,7 +25,7 @@ class LogZipFile(models.Model):
 
     def get_storage_path(self, filename):
         # file will be uploaded to MEDIA_ROOT/log_zip/<id>
-        return f"log_zip/{filename}"
+        return f"{settings.MEDIA_ROOT}/log_zip/{filename}"
 
     file = models.FileField(upload_to=get_storage_path)
 
