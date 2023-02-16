@@ -2,7 +2,7 @@
 
 # EMBArk - The firmware security scanning environment
 #
-# Copyright 2020-2022 Siemens Energy AG
+# Copyright 2020-2023 Siemens Energy AG
 # Copyright 2020-2022 Siemens AG
 #
 # EMBArk comes with ABSOLUTELY NO WARRANTY.
@@ -287,6 +287,9 @@ install_embark_default(){
   if ! [[ -d /var/www/media ]]; then
     mkdir /var/www/media
   fi
+  if ! [[ -d /var/www/media/log_zip ]]; then
+    mkdir /var/www/media/log_zip
+  fi
   if ! [[ -d /var/www/active ]]; then
     mkdir /var/www/active
   fi
@@ -352,9 +355,9 @@ install_embark_default(){
 install_embark_dev(){
   echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
   # apt packages
-  apt-get install -y npm pycodestyle python3-pylint-django default-libmysqlclient-dev build-essential bandit
+  apt-get install -y npm pycodestyle python3-pylint-django default-libmysqlclient-dev build-essential bandit yamllint
   # npm packages
-  npm install -g jshint 
+  npm install -g jshint
   # npm install -g dockerlinter
   
   # install pipenv
@@ -373,6 +376,9 @@ install_embark_dev(){
   #Server-Dir
   if ! [[ -d media ]]; then
     mkdir media
+  fi
+  if ! [[ -d media/log_zip ]]; then
+    mkdir media/log_zip
   fi
   if ! [[ -d media ]]; then
     mkdir static

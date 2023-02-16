@@ -4,7 +4,6 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-Django = "*"
 channels = "*"
 channels-redis = "*"
 daphne = "*"
@@ -20,6 +19,7 @@ django-hashid-field = "*"
 mod-wsgi-standalone = "*"
 django-bootstrap5 = "*"
 django-tables2 = "*"
+requests = "*"
 
 [dev-packages]
 pycodestyle = "*"

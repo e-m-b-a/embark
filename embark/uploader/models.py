@@ -11,6 +11,7 @@ from django import forms
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 from django.utils.datetime_safe import datetime
+from porter.models import LogZipFile
 
 # from hashid_field import HashidAutoField
 
@@ -18,6 +19,23 @@ from users.models import User as Userclass
 
 
 logger = logging.getLogger(__name__)
+
+
+def jsonfield_default_value():
+    """
+    keys: percentage, analysis, firmwarename, last_update, last_module, module_list, last_phase, phase_list
+    """
+    return {
+        "percentage": 0,
+        'analysis': "",
+        'firmware_name': "",
+        'last_update': "",
+        'last_module': "",
+        'module_list': [],
+        'last_phase': "",
+        'phase_list': [],
+        'finished': False
+    }
 
 
 class BooleanFieldExpertModeForm(forms.BooleanField):
@@ -210,14 +228,17 @@ class Device(models.Model):
     (m Devices <---> n FirmwareFiles)
     (m Device <----> p Analyses )
     * assumes device revisions as different devices etc.
+    * case sensitive
     """
     MAX_LENGTH = 127
 
     device_name = models.CharField(help_text='Device name', verbose_name="Device name", max_length=MAX_LENGTH, blank=True)
     device_vendor = models.ForeignKey(Vendor, on_delete=models.SET_NULL, null=True)
-    device_label = models.ForeignKey(Label, on_delete=models.SET_NULL, null=True, help_text='label/tag', related_query_name='label', editable=True, blank=True)
+    device_label = models.ForeignKey(Label, on_delete=models.SET_NULL, null=True, help_text='label/tag', related_query_name='label', editable=True, blank=True)   # TODO make many to many field
     device_date = models.DateTimeField(default=datetime.now, blank=True)
-    device_user = models.ForeignKey(Userclass, on_delete=models.SET_NULL, related_name='Device_User', null=True)
+    device_user = models.ForeignKey(Userclass, on_delete=models.SET_NULL, related_name='Device_User', null=True)    # TODO change acces control to usergroup??
+
+    visible = models.BooleanField(editable=True, default=True)
 
     class Meta:
         ordering = ['device_name']
@@ -343,15 +364,21 @@ class FirmwareAnalysis(models.Model):
         help_text='Remove extracted firmware file/directory after testint, -r will be added', default=True,
         expert_mode=True, blank=True)
     """
+    # Zip file for porting and download
+    zip_file = models.ForeignKey(LogZipFile, on_delete=models.SET_NULL, help_text='', null=True, editable=True)
 
     # embark meta data
     path_to_logs = models.FilePathField(default="/", blank=True)
+    log_size = models.PositiveBigIntegerField(default=0, blank=True)
     start_date = models.DateTimeField(default=datetime.now, blank=True)
     end_date = models.DateTimeField(default=datetime.min, blank=True)
     scan_time = models.DurationField(default=timedelta(), blank=True)
     duration = models.CharField(blank=True, null=True, max_length=100, help_text='')
     finished = models.BooleanField(default=False, blank=False)
-    failed = models.BooleanField(default=True, blank=False)
+    failed = models.BooleanField(default=False, blank=False)
+
+    # status/logreader-stuff
+    status = models.JSONField(null=False, default=jsonfield_default_value)
 
     class Meta:
         app_label = 'uploader'

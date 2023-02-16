@@ -51,6 +51,7 @@ import_helper()
 cleaner() {
   pkill -u root daphne
   pkill -u root "$PWD"/emba/emba
+  pkill -u root "$PWD"/emba/emba
   pkill -u root runapscheduler
 
   fuser -k "$HTTP_PORT"/tcp
@@ -60,8 +61,8 @@ cleaner() {
 
   docker container stop embark_db
   docker container stop embark_redis
-  docker network rm embark_backend
-  docker container prune -f --filter "label=flag"
+  # docker network rm embark_backend
+  # docker container prune -f --filter "label=flag"
 
   systemctl stop embark.service
   exit 1
@@ -121,7 +122,7 @@ fi
 
 # check emba
 echo -e "$BLUE""$BOLD""checking EMBA""$NC"
-"$PWD"/emba/emba -d
+"$PWD"/emba/emba.sh -d
 if [[ $? -eq 1 ]]; then
   echo -e "$BLUE""Trying auto-maintain""$NC"
   # automaintain
@@ -221,7 +222,7 @@ fi
 
 # db_init
 echo -e "\n[""$BLUE JOB""$NC""] Starting migrations - log to embark/logs/migration.log"
-pipenv run ./manage.py makemigrations users uploader dashboard reporter | tee -a /var/www/logs/migration.log
+pipenv run ./manage.py makemigrations | tee -a /var/www/logs/migration.log
 pipenv run ./manage.py migrate | tee -a /var/www/logs/migration.log
 
 # collect staticfiles and make accesable for server
@@ -256,8 +257,12 @@ sleep 5
 
 
 echo -e "\n""$ORANGE$BOLD""=============================================================""$NC"
-echo -e "\n""$ORANGE$BOLD""Server started on http://embark.local with alias:""${ALIAS_INPUT[*]}""$NC"
 echo -e "\n""$ORANGE$BOLD""EMBA logs are under /var/www/emba_logs/<id> ""$NC"
-# echo -e "\n""$ORANGE$BOLD""For SSL you may use https://embark.local (Not recommended for local use)""$NC"
 # echo -e "\n\n""$GREEN$BOLD""the trusted rootCA.key for the ssl encryption is in ./cert""$NC"
+if [[ ${#SERVER_ALIAS[@]} -ne 0 ]]; then
+  echo -e "\n""$ORANGE$BOLD""Server started on http://embark.local with alias:""${SERVER_ALIAS[*]}""$NC"
+else
+  echo -e "\n""$ORANGE$BOLD""Server started on http://embark.local""$NC"
+fi
+# echo -e "\n""$ORANGE$BOLD""For SSL you may use https://embark.local (Not recommended for local use)""$NC"
 wait

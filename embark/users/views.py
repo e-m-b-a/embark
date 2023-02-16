@@ -150,6 +150,7 @@ def password_change(request):
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["GET"])
 def menu(request):
+    # TODO
     return render(request, 'user/menu.html')
 
 

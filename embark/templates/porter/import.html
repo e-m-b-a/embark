@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load static %}
+{% load django_bootstrap5 %}
+{% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/porter.css' %}"/>{% endblock style %}
+{% block title %}EMBArk analysis importer{% endblock title %}
+{% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
+{% block maincontent %}
+
+<div class="container">
+
+    <div class="row">
+        <div class="col-sm">
+            {% block upload %}{% include "porter/upload.html" %}{% endblock upload %}
+            {% block delete %}{% include "porter/delete.html" %}{% endblock delete %}
+            <p>
+              <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDevice" aria-expanded="false" aria-controls="collapseDevice">
+                Toggle Device Config
+              </button>
+            </p>
+            {% block device %}{% include "uploader/device.html" %}{% endblock device %}
+        </div>
+        <div class="col-sm">
+            {% block read %}{% include "porter/read.html" %}{% endblock read %}
+        </div>
+
+    </div>
+</div>
+
+{% endblock maincontent %}

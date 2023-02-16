@@ -58,7 +58,7 @@ def save_file(request):
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def device_setup(request):
-
+    # TODO redirect is static ? change to 200
     form = DeviceForm(request.POST)
     if form.is_valid():
         logger.info("User %s tryied to create device", request.user.username)
@@ -193,12 +193,3 @@ def delete_fw_file(request):
     logger.error("Form error: %s", form.errors)
     messages.error(request, 'error in form')
     return redirect('..')
-
-
-@require_http_methods(["GET"])
-@login_required(login_url='/' + settings.LOGIN_URL)
-def import_analysis(request):
-    req_logger.info("%s requested with: %s", __name__, request)
-    return render(request, 'uploader/analysisImport.html', {'success_message': True, 'message': "This Functionality is coming soon(ish)"})
-
-# TODO add store & read func

@@ -6,18 +6,24 @@ import shutil
 from subprocess import Popen, PIPE
 import re
 import json
+import zipfile
 
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from threading import BoundedSemaphore
 
+from django.dispatch import receiver
 from django.utils.datetime_safe import datetime
 from django.conf import settings
 
+from uploader import finish_execution
 from uploader.archiver import Archiver
 from uploader.models import FirmwareAnalysis
 from dashboard.models import Result
 from embark.logreader import LogReader
+from embark.helper import get_size, zip_check
+from porter.models import LogZipFile
+from porter.importer import result_read_in
 
 
 logger = logging.getLogger(__name__)
@@ -71,7 +77,7 @@ class BoundedExecutor:
                 proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
                 # Add proc to FirmwareAnalysis-Object
                 analysis.pid = proc.pid
-                analysis.save()
+                analysis.save(update_fields=["pid"])
                 logger.debug("subprocess got pid %s", proc.pid)
                 # wait for completion
                 proc.communicate()
@@ -80,8 +86,8 @@ class BoundedExecutor:
             # success
             logger.info("Success: %s", cmd)
             logger.info("EMBA returned: %d", return_code)
-            # if return_code != 0:
-            #     raise Exception
+            if return_code != 0:
+                raise Exception
 
             # get csv log location
             csv_log_location = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/csv_logs/f50_base_aggregator.csv"
@@ -106,17 +112,17 @@ class BoundedExecutor:
             logger.error("EMBA run was probably not successful!")
             logger.error("run_emba_cmd error: %s", execpt)
             exit_fail = True
-        finally:
-            # finalize db entry
-            if analysis_id:
-                analysis.end_date = datetime.now()
-                analysis.scan_time = datetime.now() - analysis.start_date
-                analysis.duration = str(analysis.scan_time)
-                analysis.finished = True
-                analysis.failed = exit_fail
-                analysis.save()
 
-            logger.info("Successful cleaned up: %s", cmd)
+        # finalize db entry
+        if analysis:
+            analysis.end_date = datetime.now()
+            analysis.scan_time = datetime.now() - analysis.start_date
+            analysis.duration = str(analysis.scan_time)
+            analysis.finished = True
+            analysis.failed = exit_fail
+            analysis.save(update_fields=["end_date", "scan_time", "duration", "finished", "failed"])
+
+        logger.info("Successful cleaned up: %s", cmd)
 
     @classmethod
     def kill_emba_cmd(cls, analysis_id):
@@ -145,6 +151,11 @@ class BoundedExecutor:
     def submit_kill(cls, uuid):
         # submit command to executor threadpool
         emba_fut = BoundedExecutor.submit(cls.kill_emba_cmd, uuid)
+        analysis = FirmwareAnalysis.objects.get(id=uuid)
+        analysis.status['finished'] = True
+        analysis.failed = True
+        analysis.finished = True
+        analysis.save(update_fields=["status", "finished", "failed"])
         return emba_fut
 
     @classmethod
@@ -183,11 +194,10 @@ class BoundedExecutor:
         log_path.mkdir(parents=True, exist_ok=True)
 
         firmware_flags.path_to_logs = emba_log_location
-        firmware_flags.save()
+        firmware_flags.status["analysis"] = str(firmware_flags.id)
+        firmware_flags.status["firmware_name"] = firmware_flags.firmware_name
+        firmware_flags.save(update_fields=["status", "path_to_logs"])
 
-        # build command
-        # FIXME remove all flags
-        # TODO add note with uuid
         emba_cmd = f"{EMBA_SCRIPT_LOCATION} -p ./scan-profiles/default-scan-no-notify.emba -f {image_file_location} -l {emba_log_location} {emba_flags}"
 
         # submit command to executor threadpool
@@ -230,11 +240,19 @@ class BoundedExecutor:
     @classmethod
     def shutdown(cls, wait=True):
         """See concurrent.futures.Executor#shutdown"""
-
+        logger.info("shutting down Boundedexecutor")
         executor.shutdown(wait)
+        # set all running analysis to failed
+        running_analysis_list = FirmwareAnalysis.objects.filter(finished=False).exclude(failed=True)
+        for analysis_ in running_analysis_list:
+            analysis_.failed = True
+            analysis_.finished = True
+            analysis_.save(update_fields=["finished", "failed"])
+        logger.info("Shutdown successful")
 
     @classmethod
     def csv_read(cls, analysis_id, path, cmd):
+        # TODO moved to importer link!
         """
         This job reads the F50_aggregator file and stores its content into the Result model
         """
@@ -312,3 +330,85 @@ class BoundedExecutor:
         )
         res.save()
         return res
+
+    @classmethod
+    def zip_log(cls, analysis_id):
+        """
+        Zipps the logs produced by emba
+        :param analysis_id: primary key for firmware-analysis entry
+        """
+        logger.debug("Zipping ID: %s", analysis_id)
+        try:
+            analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+            analysis.finished = False
+            analysis.save()
+
+            # archive = Archiver.pack(f"{settings.MEDIA_ROOT}/log_zip/{analysis_id}", 'zip', analysis.path_to_logs, './*')
+            archive = Archiver.make_zipfile(f"{settings.MEDIA_ROOT}/log_zip/{analysis_id}.zip", analysis.path_to_logs)
+
+            # create a LogZipFile obj
+            analysis.zip_file = LogZipFile.objects.create(file=archive, user=analysis.user)
+        except Exception as exce:
+            logger.error("Zipping failed: %s", exce)
+        analysis.finished = True
+        analysis.save()
+
+    @classmethod
+    def unzip_log(cls, analysis_id, file_loc):
+        """
+        unzipps the logs
+        1. copy into settings.EMBA_LOG_ROOT with id
+        2. read csv into result result_model
+        Args:
+            current location
+            object with needed pk
+        """
+        logger.debug("Zipping ID: %s", analysis_id)
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        analysis.finished = False
+        analysis.save(update_fields=["finished"])
+        try:
+            with zipfile.ZipFile(file_loc, 'r') as zip_:
+                # 1.check archive contents (security)
+                zip_contents = zip_.namelist()
+                if zip_check(zip_contents):
+                    # 2.extract
+                    logger.debug("extracting....")
+                    zip_.extractall(path=Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/"))
+                    logger.debug("finished unzipping....")
+                else:
+                    logger.error("Wont extract since there are inconsistencies with the zip file")
+
+                # 3. sanity check (conformity)
+                # TODO check the files
+        except Exception as exce:
+            logger.error("Unzipping failed: %s", exce)
+
+        result_obj = result_read_in(analysis_id)
+        if result_obj is None:
+            logger.error("Readin failed: %s", exce)
+            return
+
+        logger.debug("Got %s from zip", result_obj)
+
+        analysis.finished = True
+        analysis.log_size = get_size(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/")
+        analysis.save(update_fields=["finished", "log_size"])
+
+    @classmethod
+    def submit_zip(cls, uuid):
+        # submit zip req to executor threadpool
+        emba_fut = BoundedExecutor.submit(cls.zip_log, uuid)
+        return emba_fut
+
+    @classmethod
+    def submit_unzip(cls, uuid, file_loc):
+        # submit zip req to executor threadpool
+        emba_fut = BoundedExecutor.submit(cls.unzip_log, uuid, file_loc)
+        return emba_fut
+
+    @staticmethod
+    @receiver(finish_execution, sender='system')
+    def sigint_handler(sender, **kwargs):
+        logger.info("Received shutdown signal  by %s", sender)
+        BoundedExecutor.shutdown()

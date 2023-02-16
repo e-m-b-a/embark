@@ -1,5 +1,4 @@
 # pylint: disable=W0613,C0206
-
 from pathlib import Path
 
 import json
@@ -13,13 +12,14 @@ from uuid import UUID
 from django.conf import settings
 from django.forms import model_to_dict
 from django.http.response import Http404
+from django.shortcuts import redirect
+from django.contrib import messages
 from django.template.loader import get_template
 from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.urls import reverse
-
-from uploader.archiver import Archiver
+from uploader.boundedexecutor import BoundedExecutor
 
 from uploader.models import FirmwareAnalysis, ResourceTimestamp
 from dashboard.models import Result
@@ -171,6 +171,7 @@ def get_accumulated_reports(request):
     for result in results:
         result = model_to_dict(result)
         # Pop firmware object_id
+        result.pop('vulnerability', None)   # FIXME this is disabled for now
         result.pop('firmware', None)
         result.pop('emba_command', None)
 
@@ -215,6 +216,7 @@ def get_accumulated_reports(request):
     return JsonResponse(data=data, status=HTTPStatus.OK)
 
 
+@require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def download_zipped(request, analysis_id):
     """
@@ -225,29 +227,44 @@ def download_zipped(request, analysis_id):
 
     :return: HttpResponse with zipped log directory on success or HttpResponse including error message
     """
-
+    logger.debug("entry download_zipped")
     try:
         firmware = FirmwareAnalysis.objects.get(id=analysis_id)
-
-        if os.path.exists(firmware.path_to_logs):
-            archive_path = Archiver.pack(firmware.path_to_logs, 'zip', firmware.path_to_logs, '.')
-            logger.debug("Archive %s created", archive_path)
-            with open(archive_path, 'rb') as requested_log_dir:
+        # look for LogZipFile
+        if firmware.zip_file:
+            logger.debug("searching for file here: %s", firmware.zip_file.file)
+            with open(firmware.zip_file.file.path, 'rb') as requested_log_dir:
                 response = HttpResponse(requested_log_dir.read(), content_type="application/zip")
-                response['Content-Disposition'] = 'inline; filename=' + archive_path
+                response['Content-Disposition'] = 'inline; filename=' + str(firmware.id) + '.zip'
                 return response
+        logger.error("FirmwareAnalysis with ID: %s does exist, but doesn't have a valid zip in its directory", analysis_id)
+        messages.error(request, "Logs couldn't be downloaded")
+        return redirect('..')
 
-        logger.warning("Firmware with ID: %s does not exist", analysis_id)
-        return HttpResponse("Firmware with ID: %s does not exist", analysis_id)
+    except FirmwareAnalysis.DoesNotExist:
+        logger.error("Firmware with ID: %s does not exist in DB", analysis_id)
+        return HttpResponse("Firmware ID does not exist in DB! How did you get here?")
 
-    except FirmwareAnalysis.DoesNotExist as excpt:
-        logger.warning("Firmware with ID: %s does not exist in DB", analysis_id)
-        logger.warning("Exception: %s", excpt)
-        return HttpResponse("Firmware ID does not exist in DB")
-    except Exception as error:
-        logger.error("Error occured while querying for Firmware object: %s", analysis_id)
-        logger.error("Exception: %s", error)
-        return HttpResponse("Error occured while querying for Firmware object")
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def make_zip(request, analysis_id):
+    """
+    submit analysis for zipping log directory
+    """
+    try:
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        # look for LogZipFile
+        if analysis.zip_file is None and analysis.finished is True:
+            BoundedExecutor.submit_zip(uuid=analysis_id)
+            messages.info(request, "Logs are being zipped")
+            return redirect('..')
+
+        messages.error(request, "The Logs are already zipped and ready for downloading")
+        return redirect('..')
+    except FirmwareAnalysis.DoesNotExist:
+        logger.error("Firmware with ID: %s does not exist in DB", analysis_id)
+        return HttpResponse("Firmware ID does not exist in DB! How did you get here?")
 
 
 @require_http_methods(["GET"])

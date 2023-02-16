@@ -1,6 +1,6 @@
 # pylint: disable=W0602
 # ignores no-assignment error since there is one!
-import copy
+import datetime
 import difflib
 import pathlib
 import re
@@ -20,9 +20,6 @@ from uploader.models import FirmwareAnalysis
 
 logger = logging.getLogger(__name__)
 
-# global map for storing messages from all processes
-PROCESS_MAP = {}
-
 # EMBAs module count
 EMBA_S_MOD_CNT = 39
 EMBA_P_MOD_CNT = 20
@@ -32,15 +29,13 @@ EMBA_MODULE_CNT = EMBA_S_MOD_CNT + EMBA_P_MOD_CNT + EMBA_F_MOD_CNT + EMBA_L_MOD_
 
 EMBA_PHASE_CNT = 4  # P, S, L, F modules
 # EMBA states
-EMBA_P_PHASE = 1
-EMBA_S_PHASE = 2
-EMBA_L_PHASE = 3
-EMBA_F_PHASE = 4
+EMBA_P_PHASE = 0
+EMBA_S_PHASE = 1
+EMBA_L_PHASE = 2
+EMBA_F_PHASE = 3
 
 
 class LogReader:
-    # TODO fix!!!!
-    # TODO send update on refresh!!!
     def __init__(self, firmware_id):
 
         # global module count and status_msg directory
@@ -48,36 +43,58 @@ class LogReader:
         self.firmware_id = firmware_id
         self.firmware_id_str = str(self.firmware_id)
         try:
-            self.firmwarefile = FirmwareAnalysis.objects.get(id=firmware_id).firmware.__str__()
-        except Exception as error:
-            logger.error("Firmware file exception: %s", error)
+            self.analysis = FirmwareAnalysis.objects.get(id=self.firmware_id)
+        except FirmwareAnalysis.DoesNotExist:
+            logger.error("No Analysis wit this id (%s)", self.firmware_id_str)
 
         # set variables for channels communication
-        self.room_group_name = 'updatesgroup'
+        self.user = self.analysis.user
+        self.room_group_name = f"services_{self.user}"
         self.channel_layer = get_channel_layer()
 
         # variables for cleanup
         self.finish = False
         # self.wd = None
 
-        # for testing
-        self.test_list1 = []
-        self.test_list2 = []
-
-        # status update dict (appended to processmap)
+        # status update dict (appended to db)
         self.status_msg = {
-            "firmwarename": self.firmwarefile,
-            "percentage": 0.0,
+            "percentage": 0,
             "module": "",
             "phase": "",
         }
 
         # start processing
-        time.sleep(1)
-        if FirmwareAnalysis.objects.filter(id=self.firmware_id).exists():
+        time.sleep(5)   # embas dep-check takes some time
+        if self.analysis:
             self.read_loop()
         else:
             self.cleanup()
+
+    def save_status(self):
+        logger.debug("Appending status with message: %s", self.status_msg)
+        # append message to the json-field structure of the analysis
+        self.analysis.status["percentage"] = self.status_msg["percentage"]
+        self.analysis.status["last_update"] = str(datetime.datetime.now())
+        # append modules and phase list
+        if self.status_msg["module"] != self.analysis.status["last_module"]:
+            self.analysis.status["last_module"] = self.status_msg["module"]
+            self.analysis.status["module_list"].append(self.status_msg["module"])
+        if self.status_msg["phase"] != self.analysis.status["last_phase"]:
+            self.analysis.status["last_phase"] = self.status_msg["phase"]
+            self.analysis.status["phase_list"].append(self.status_msg["phase"])
+        if self.status_msg["percentage"] == 100:
+            self.analysis.status["finished"] = True
+            self.analysis.save(update_fields=["status"], force_update=True)
+        else:
+            self.analysis.save(update_fields=["status"])
+        logger.debug("Checking status: %s", self.analysis.status)
+        # send it to group
+        async_to_sync(self.channel_layer.group_send)(
+            self.room_group_name, {
+                "type": 'send.message',
+                "message": {str(self.analysis.id): self.analysis.status}
+            }
+        )
 
     @staticmethod
     def phase_identify(status_message):
@@ -109,89 +126,42 @@ class LogReader:
             phase_nmbr = EMBA_PHASE_CNT
         elif re.search(pattern=re.escape(failed_pattern), string=status_message["phase"]):
             max_module = -2
-            phase_nmbr = 0
+            phase_nmbr = EMBA_PHASE_CNT
         return max_module, phase_nmbr
 
     # update our dict whenever a new module is being processed
     def update_status(self, stream_item_list):
         percentage = 0
         max_module, phase_nmbr = self.phase_identify(self.status_msg)
-        if max_module > 0:
+        if max_module == 0:
+            percentage = 100
+            self.finish = True
+        elif max_module > 0:
             self.module_cnt += 1
             self.module_cnt = self.module_cnt % max_module  # make sure it's in range
             percentage = phase_nmbr * (100 / EMBA_PHASE_CNT) + ((100 / EMBA_PHASE_CNT) / max_module) * self.module_cnt   # increments: F=6.25, S=0.65, L=3.57, P=1.25
-        elif max_module == 0:
-            percentage = 100
         else:
-            logger.error("EMBA failed")
-            self.finish = True
-            analysis = FirmwareAnalysis.objects.get(id=self.firmware_id)
-            analysis.failed = True
-            analysis.finished = True
-            analysis.save()
             logger.debug("Undefined state in logreader %s ", self.status_msg)
 
-        # smarty conversion
-        percentage = percentage / 100
+        logger.debug("Status is %d, in phase %d, with modules %d", percentage, phase_nmbr, max_module)
 
         # set attributes of current message
         self.status_msg["module"] = stream_item_list[0]
         self.status_msg["percentage"] = percentage
 
         # get copy of the current status message
-        tmp_mes = copy.deepcopy(self.status_msg)
-
-        # append it to the data structure
-        global PROCESS_MAP
-        if FirmwareAnalysis.objects.filter(id=self.firmware_id).exists():
-            found = False
-            for mes in PROCESS_MAP[self.firmware_id_str]:
-                if mes["phase"] == tmp_mes["phase"] and mes["module"] == tmp_mes["module"]:
-                    found = True
-
-            if not found:
-                PROCESS_MAP[self.firmware_id_str].append(tmp_mes)
-
-                # send it to room group
-                async_to_sync(self.channel_layer.group_send)(
-                    self.room_group_name, {
-                        "type": 'send.message',
-                        "message": PROCESS_MAP
-                    }
-                )
-        else:
-            logger.error("Error in update_status, object with id=%s not found", self.firmware_id)
+        self.save_status()
 
     # update dictionary with phase changes
     def update_phase(self, stream_item_list):
         self.module_cnt = 0
         self.status_msg["phase"] = stream_item_list[1]
-
-        # get copy of the current status message
-        tmp_mes = copy.deepcopy(self.status_msg)
-
-        # append it to the data structure
-        global PROCESS_MAP
-        if FirmwareAnalysis.objects.filter(id=self.firmware_id).exists():
-            found = False
-            for mes in PROCESS_MAP[self.firmware_id_str]:
-                if mes["phase"] == tmp_mes["phase"] and mes["module"] == tmp_mes["module"]:
-                    found = True
-
-            if not found:
-                PROCESS_MAP[self.firmware_id_str].append(tmp_mes)
-
-                # send it to room group
-                async_to_sync(self.channel_layer.group_send)(
-                    self.room_group_name, {
-                        'type': 'send.message',
-                        'message': PROCESS_MAP
-                    }
-                )
-        else:
-            logger.error("Error in update_phase, object with id=%s not found", self.firmware_id)
         if "Test ended" in stream_item_list[1]:
             self.finish = True
+            self.status_msg["percentage"] = 100
+
+        # get copy of the current status message
+        self.save_status()
 
     def read_loop(self):
         """
@@ -202,25 +172,16 @@ class LogReader:
        """
         logger.info("read loop started for %s", self.firmware_id)
 
+        # if file does not exist create it otherwise delete its content
+        pat = f"{settings.EMBA_LOG_ROOT}/{self.firmware_id}/logreader.log"
+        if not pathlib.Path(pat).exists():
+            with open(pat, 'x', encoding='utf-8'):
+                pass
+
         while not self.finish:
-
-            # get firmware for id which the BoundedExecutor gave the log_reader
-            firmware = FirmwareAnalysis.objects.get(id=self.firmware_id)
-
-            # if file does not exist create it otherwise delete its content
-            pat = f"{settings.EMBA_LOG_ROOT}/{self.firmware_id}/logreader.log"
-            if not pathlib.Path(pat).exists():
-                with open(pat, 'w+', encoding='utf-8'):
-                    pass
-
-            # create an entry for the id in the process map
-            global PROCESS_MAP
-            if self.firmware_id_str not in PROCESS_MAP:
-                PROCESS_MAP[self.firmware_id_str] = []
-
             # look for new events in log
-            logger.debug("looking for events in %s", f"{firmware.path_to_logs}/emba.log")
-            got_event = self.inotify_events(f"{firmware.path_to_logs}/emba.log")
+            logger.debug("looking for events in %s", f"{self.analysis.path_to_logs}/emba.log")
+            got_event = self.inotify_events(f"{self.analysis.path_to_logs}/emba.log")
 
             for eve in got_event:
                 for flag in flags.from_mask(eve.mask):
@@ -230,7 +191,8 @@ class LogReader:
                     # Act on file change
                     elif flag is flags.MODIFY:
                         # get the actual difference
-                        tmp = self.get_diff(f"{firmware.path_to_logs}/emba.log")
+                        tmp = self.get_diff(f"{self.analysis.path_to_logs}/emba.log")
+                        logger.debug("Got diff-output: %s", tmp)
                         # send changes to frontend
                         self.input_processing(tmp)
                         # copy diff to tmp file
@@ -258,7 +220,6 @@ class LogReader:
             :param pat: Regex pattern
             :return: True if regex matches otherwise False
         """
-
         if re.match(pat, inp):
             return True
         # else:
@@ -270,9 +231,9 @@ class LogReader:
             :param diff: new line in emba log
             :return: None
         """
-
         with open(f"{settings.EMBA_LOG_ROOT}/{self.firmware_id}/logreader.log", 'a+', encoding='utf-8') as diff_file:
             diff_file.write(diff)
+        logger.debug("wrote file-diff")
 
     def get_diff(self, log_file):
         """
@@ -281,7 +242,6 @@ class LogReader:
             :param: None
             :return: result of difflib call without preceding symbols
         """
-
         # open the two files to get diff from
         logger.debug("getting diff from %s", log_file)
         with open(log_file, encoding='utf-8') as old_file, open(f"{settings.EMBA_LOG_ROOT}/{self.firmware_id}/logreader.log", encoding='utf-8') as new_file:
@@ -294,6 +254,7 @@ class LogReader:
             :param tmp_inp: file diff = new line in emba log
             :return: None
         """
+        logger.debug("starting observers for log file %s", self.analysis.path_to_logs)
 
         status_pattern = "\\[\\*\\]*"
         phase_pattern = "\\[\\!\\]*"
@@ -329,7 +290,6 @@ class LogReader:
 
     @classmethod
     def inotify_events(cls, path):
-        # def inotify_events(self, path):
         inotify = INotify()
         watch_flags = flags.CREATE | flags.DELETE | flags.MODIFY | flags.DELETE_SELF | flags.CLOSE_NOWRITE | flags.CLOSE_WRITE
         try:
@@ -340,17 +300,13 @@ class LogReader:
             logger.error("inotify_event error in %s:%s", path, error)
             return []
 
-    def produce_test_output(self, inp):
-        self.input_processing(inp)
-        return self.test_list1, self.test_list2
-
 
 if __name__ == "__main__":
     PHASE = "\\[\\!\\]*"
     test_dir = pathlib.Path(__file__).resolve().parent.parent.parent
     status_msg = {
         "firmwarename": "LogTestFirmware",
-        "percentage": 0.0,
+        "percentage": 0,
         "module": "",
         "phase": "",
     }

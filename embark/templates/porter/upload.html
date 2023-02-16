@@ -1,0 +1,25 @@
+{% load static %}
+{% block js %}<script type="text/javascript" src="{% static 'scripts/fileUpload.js' %}"></script>{% endblock js %}
+
+<div class="col-sm">
+    <div class="box">
+        <p class="mainText">Upload EMBA-Logs</p>
+        <p class="subText">Supports only zip files without parent node</p>
+        <div class="innerBlock">
+            <!--TODO !!! everything else -->
+            Selected file:
+            <div id="file-name" class="uploadedFile">None</div>
+        </div>
+        <div class="buttonRow">
+            <button type="submit" id="uploadFirmware-btn" class="btn buttonRowElem" onclick="saveFiles()" disabled>
+                Upload
+            </button>
+            <input id="file-input" type="file" multiple/>
+        </div>
+        <div class="progress-wrapper" id="progress-wrapper">
+            <div class="progress-bar" id="progressBar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                0%
+            </div>
+        </div>
+    </div>
+</div>

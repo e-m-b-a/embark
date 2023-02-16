@@ -26,9 +26,9 @@
             <li>
                 <a href="{% url 'embark-tracker' %}" onclick="">
                     <span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="48px" height="48px" fill="currentColor" class="bi bi-activity" viewBox="0 0 21 21">
-                            <path fill-rule="evenodd" d="M6 2a.5.5 0 0 1 .47.33L10 12.036l1.53-4.208A.5.5 0 0 1 12 7.5h3.5a.5.5 0 0 1 0 1h-3.15l-1.88 5.17a.5.5 0 0 1-.94 0L6 3.964 4.47 8.171A.5.5 0 0 1 4 8.5H.5a.5.5 0 0 1 0-1h3.15l1.88-5.17A.5.5 0 0 1 6 2Z"/>
-                        </svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="48px" height="48px" fill="currentColor" class="bi bi-activity" viewBox="0 0 21 21">
+                        <path d="M11 2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v12h.5a.5.5 0 0 1 0 1H.5a.5.5 0 0 1 0-1H1v-3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3h1V7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7h1V2zm1 12h2V2h-2v12zm-3 0V7H7v7h2zm-5 0v-3H2v3h2z"/>
+                      </svg>
                     </span>
                     <span class="nav-link">Tracker</span>
                 </a>
@@ -38,7 +38,10 @@
                 <div class="dropdown">
                     <a data-toggle="collapse" aria-expanded="true">
                         <span class="icon" onclick="navToggle()">
-                            <svg height="48px" viewBox="0 0 21 21" width="48px" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" transform="translate(4 3)"><path d="m2.5 4.753 4-4.232 4 4.191"/><path d="m6.5.5v11"/><path d="m.5 14.5h12"/></g></svg>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="48px" height="48px" fill="currentColor" class="bi bi-activity" viewBox="0 0 21 21">
+                              <g fill="none" fill-rule="evenodd" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" transform="translate(4 3)">
+                              <path d="m2.5 4.753 4-4.232 4 4.191"/><path d="m6.5.5v11"/><path d="m.5 14.5h12"/></g>
+                          </svg>
                         </span>
                         <span class="nav-link" >Uploader</span>
                     </a>
@@ -46,15 +49,33 @@
                             <a href="{% url 'embark-uploader-home' %}" data-link>
                                 <span class="nav-link">Upload and Start</span>
                             </a>
-                            <a href="{% url 'embark-uploader-import' %}" data-link>
-                              <span class="nav-link">Import</span>
-                            </a>
                             <a href="{% url 'embark-uploader-manage-file' %}" data-link>
                                 <span class="nav-link">Manage Firmware</span>
                             </a>
                     </ul>
                  </div>
              </li>
+
+             <li class="submenu">
+              <div class="dropdown">
+                  <a data-toggle="collapse" aria-expanded="true">
+                      <span class="icon" onclick="navToggle()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48px" height="48px" fill="currentColor" class="bi bi-activity" viewBox="0 0 21 21">
+                          <path fill-rule="evenodd" d="M6 2a.5.5 0 0 1 .47.33L10 12.036l1.53-4.208A.5.5 0 0 1 12 7.5h3.5a.5.5 0 0 1 0 1h-3.15l-1.88 5.17a.5.5 0 0 1-.94 0L6 3.964 4.47 8.171A.5.5 0 0 1 4 8.5H.5a.5.5 0 0 1 0-1h3.15l1.88-5.17A.5.5 0 0 1 6 2Z"/>
+                        </svg>
+                      </span>
+                      <span class="nav-link" >Im-/Exporter</span>
+                  </a>
+                  <ul class="dropdown-content">
+                          <a href="{% url 'embark-import-menu' %}" data-link>
+                              <span class="nav-link">Import Menu</span>
+                          </a>
+                          <a href="{% url 'embark-export-menu' %}" data-link>
+                              <span class="nav-link">Export Menu</span>
+                          </a>
+                  </ul>
+               </div>
+           </li>
 
             <li>
                 <a href="{% url 'embark-dashboard-service' %}">

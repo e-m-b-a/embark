@@ -50,7 +50,8 @@ INSTALLED_APPS = [
     'users',
     'reporter',
     'dashboard',
-    'tracker'
+    'tracker',
+    'porter'
 ]
 
 AUTH_USER_MODEL = 'users.User'
@@ -165,7 +166,7 @@ LOGGING = {
         },
         'uploader': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
-            'level': 'DEBUG',
+            'level': 'DEBUG',   # TODO change to INFO
         },
         'dashboard': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
@@ -177,18 +178,25 @@ LOGGING = {
         },
         'reporter': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
-            'level': 'INFO',
+            'level': 'DEBUG',
         },
         'tracker': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
             'level': 'INFO',
         },
-        # TODO add specific logger for requests
+        'porter': {
+            'handlers': ['debug_handler', 'info_handler', 'console_handler'],
+            'level': 'DEBUG',   # TODO change to INFO
+        },
+        'embark': {
+            'handlers': ['debug_handler', 'info_handler', 'console_handler'],
+            'level': 'INFO',
+        },
         'requests': {
             'handlers': ['info_handler'],
             'level': 'INFO',
             'propagate': False,
-        },
+        }
     }
 }
 
