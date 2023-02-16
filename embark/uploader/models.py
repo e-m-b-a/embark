@@ -121,7 +121,7 @@ class TypedMultipleChoiceFieldExpertMode(forms.TypedMultipleChoiceField):
 
 class MultipleCharFieldExpertMode(models.CharField):
     """
-    class CharFieldExpertMode
+    class MultipleCharFieldExpertMode
     Extension of models.BooleanField to support expert_mode and readonly for CharField option for Models
     """
     def __init__(self, *args, **kwargs):
@@ -131,7 +131,7 @@ class MultipleCharFieldExpertMode(models.CharField):
         super().__init__(*args, **kwargs)
 
     def formfield(self, **kwargs):
-        defaults = {'form_class': CharFieldExpertModeForm, 'choices_form_class': TypedMultipleChoiceFieldExpertMode, 'expert_mode': self.expert_mode, 'readonly': self.readonly}
+        defaults = {'form_class': MultipleCharFieldExpertMode, 'choices_form_class': TypedMultipleChoiceFieldExpertMode, 'expert_mode': self.expert_mode, 'readonly': self.readonly}
         defaults.update(kwargs)
         return models.Field.formfield(self, **defaults)
 
