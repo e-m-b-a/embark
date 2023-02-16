@@ -71,6 +71,15 @@ import_helper(){
 # Source: https://stackoverflow.com/questions/4023830/how-to-compare-two-strings-in-dot-separated-version-format-in-bash
 version(){ echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; }
 
+save_old_env(){
+  if ! [[ -d ./safe ]]; then
+    mkdir safe
+  fi
+  if [[ -f ./.env ]]; then
+    cp ./.env ./safe/"$(date +'%m-%d-%Y').env"
+  fi
+}
+
 write_env(){
   local SUPER_PW="embark"
   local SUPER_EMAIL="idk@lol.com"
@@ -79,8 +88,15 @@ write_env(){
   local RANDOM_PW=""
   local DJANGO_SECRET_KEY=""
   
-  DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
-  RANDOM_PW=$(openssl rand -base64 12)
+  if [[ $REFORCE -eq 0 ]]; then
+    # install old pws
+    # from newest file
+    DJANGO_SECRET_KEY="$(grep "SECRET_KEY=" "$(find ./safe -name "*.env" | head -1)" | sed -e "s/^SECRET_KEY=//" )"
+    RANDOM_PW="$(grep "DATABASE_PASSWORD=" "$(find ./safe -name "*.env" | head -1)" | sed -e "s/^DATABASE_PASSWORD=//" )"
+  else
+    DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+    RANDOM_PW=$(openssl rand -base64 12)
+  fi
   
   echo -e "$ORANGE""$BOLD""Creating a EMBArk configuration file .env""$NC"
   {
@@ -569,6 +585,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 if [[ $REFORCE -eq 1 ]] && [[ $UNINSTALL -eq 1 ]]; then
+  save_old_env
   uninstall
 elif [[ $UNINSTALL -eq 1 ]]; then
   uninstall
