@@ -126,7 +126,7 @@ def start_analysis(request):
     """
     if request.method == 'POST':
         form = FirmwareAnalysisForm(request.POST)
-        logging.debug('form=%s', form)
+        logging.info('form=%s', form)
         if form.is_valid():
             logger.debug("Posted Form is valid")
             logger.info("Starting analysis with %s", form.Meta.model.id)
