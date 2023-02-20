@@ -348,7 +348,7 @@ class FirmwareAnalysis(models.Model):
             ('s99', 'S99_grepit')
         ],
         help_text='Enable/disable specific scan-modules for your analysis',
-        blank=True,
+        blank=True, null=True,
         expert_mode=True,
         max_length=150
     )
