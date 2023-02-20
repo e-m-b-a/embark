@@ -41,6 +41,10 @@ class FirmwareAnalysisForm(forms.ModelForm):
             "device": forms.CheckboxSelectMultiple,
             "scan_modules": forms.CheckboxSelectMultiple
         }
+    
+    def clean_scan_modules(self):
+        scan_modules = self.cleaned_data['scan_modules']
+        return scan_modules
 
 
 class DeleteFirmwareForm(forms.Form):
