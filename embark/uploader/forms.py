@@ -42,12 +42,11 @@ class FirmwareAnalysisForm(forms.ModelForm):
             "scan_modules": forms.CheckboxSelectMultiple
         }
     
-    def clean(self):
+    def clean_scan_modules(self):
         logger.debug("starting the cleaning")
-        cleaned_data = super().clean()
-        _scan_modules = cleaned_data.get('scan_modules')
+        _scan_modules = self.cleaned_data.get('scan_modules') or None
         logger.debug("got modules : %s", _scan_modules)
-        return cleaned_data
+        return _scan_modules
 
 
 class DeleteFirmwareForm(forms.Form):
