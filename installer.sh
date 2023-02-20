@@ -422,7 +422,8 @@ uninstall (){
   # check for changes
   if [[ $(git status --porcelain --untracked-files=no) ]]; then
     # Changes
-    echo -e "[!!]$RED""$BOLD""Changes detected - please stash or commit them""$NC"
+    echo -e "[!!]$RED""$BOLD""Changes detected - please stash or commit them $ORANGE( \$git stash )""$NC"
+    git status
     exit 1
   fi
 
