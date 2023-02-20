@@ -43,8 +43,8 @@ class FirmwareAnalysisForm(forms.ModelForm):
         }
     def clean(self):
         try:
-            super().clean
-        except forms.ValidationError as error:
+            super().clean()
+        except Exception as error:
           logger.error("Validation error in clean: %s", error)
 
     def clean_scan_modules(self):

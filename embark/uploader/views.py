@@ -152,7 +152,9 @@ def start_analysis(request):
         return render(request, 'uploader/index.html', {'analysis_form': analysis_form})
     analysis_form = FirmwareAnalysisForm()
     device_form = DeviceForm()
-    return render(request, 'uploader/index.html', {'analysis_form': analysis_form, 'device_form': device_form})
+    label_form = LabelForm()
+    vendor_form = VendorForm()
+    return render(request, 'uploader/index.html', {'analysis_form': analysis_form, 'device_form': device_form, 'vendor_form': vendor_form, 'label_form': label_form})
 
 
 @require_http_methods(["GET"])
