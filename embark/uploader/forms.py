@@ -39,7 +39,6 @@ class FirmwareAnalysisForm(forms.ModelForm):
         fields = ['firmware', 'version', 'device', 'notes', 'firmware_Architecture', 'user_emulation_test', 'system_emulation_test', 'scan_modules']
         widgets = {
             "device": forms.CheckboxSelectMultiple,
-            "scan_modules": forms.CheckboxSelectMultiple
         }
     
     def clean_scan_modules(self):
