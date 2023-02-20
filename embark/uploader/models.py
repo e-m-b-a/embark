@@ -108,7 +108,7 @@ class CharFieldExpertMode(models.CharField):
         return models.Field.formfield(self, **defaults)
 
 
-class MultipleCharFieldExpertModeForm(forms.CharField):
+class MultipleCharFieldExpertModeForm(forms.JSONField):
     """
     class BooleanFieldExpertModeForm
     Extension of forms.CharField to support expert_mode and readonly for CharField option for Forms
@@ -119,15 +119,11 @@ class MultipleCharFieldExpertModeForm(forms.CharField):
         # super(CharFieldExpertModeForm, self).__init__(*args, **kwargs)
         super().__init__(*args, **kwargs)
 
-    def to_python(self, _value):
-        logger.debug("started formatting")
-        pass
-
-    def validate(self, _value):
+    def validate(self, value):
         """Check if value consists only of valid modules."""
         # Use the parent's handling of required fields, etc.
         logger.debug("started validating")
-        # super().validate(value)
+        super().validate(value)
 
 class MultipleChoiceFieldExpertMode(forms.TypedMultipleChoiceField):
     """

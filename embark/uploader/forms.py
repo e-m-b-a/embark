@@ -41,11 +41,6 @@ class FirmwareAnalysisForm(forms.ModelForm):
             "device": forms.CheckboxSelectMultiple,
             "scan_modules": forms.CheckboxSelectMultiple
         }
-    def clean(self):
-        try:
-            super().clean()
-        except Exception as error:
-          logger.error("Validation error in clean: %s", error)
 
     def clean_scan_modules(self):
         logger.debug("starting the cleaning")
