@@ -119,6 +119,10 @@ class MultipleCharFieldExpertModeForm(forms.CharField):
         # super(CharFieldExpertModeForm, self).__init__(*args, **kwargs)
         super().__init__(*args, **kwargs)
 
+    def to_python(self, _value):
+        logger.debug("started formatting")
+        pass
+
     def validate(self, _value):
         """Check if value consists only of valid modules."""
         # Use the parent's handling of required fields, etc.
