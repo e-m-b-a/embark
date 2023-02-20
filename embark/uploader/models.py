@@ -108,7 +108,7 @@ class CharFieldExpertMode(models.CharField):
         return models.Field.formfield(self, **defaults)
 
 
-class MultipleChoiceFieldExpertMode(forms.MultipleChoiceField):
+class MultipleChoiceFieldExpertMode(forms.TypedMultipleChoiceField):
     """
     class TypedMultipleChoiceFieldExpertMode
     extends for expertmode usage
