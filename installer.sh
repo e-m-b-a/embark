@@ -122,7 +122,7 @@ write_env(){
 install_emba(){
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner EMBA on host""$NC"
   sudo -u "${SUDO_USER:-${USER}}" git submodule init
-  sudo -u "${SUDO_USER:-${USER}}" git submodule update --remote
+  sudo -u "${SUDO_USER:-${USER}}" git submodule update
   sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "$PWD"/emba
   ( cd emba && ./installer.sh -d ) || ( echo "Could not install EMBA" && exit 1 )
   # TODO costom crom updater for only cve stuff
@@ -418,13 +418,12 @@ install_embark_dev(){
 
 uninstall (){
   echo -e "[+]$CYAN""$BOLD""Uninstalling EMBArk""$NC"
-
-  # delete symlink (legacy)
-  echo -e "$ORANGE""$BOLD""Delete Symlink?""$NC"
-  if ! [[ -f /app ]]; then
-    if [[ $( readlink /app ) == "$PWD" ]]; then
-      rm /app
-    fi
+    
+  # check for changes
+  if [[ $(git status --porcelain --untracked-files=no) ]]; then
+    # Changes
+    echo -e "[!!]$RED""$BOLD""Changes detected - please stash or commit them""$NC"
+    exit 1
   fi
 
   # delete directories
@@ -483,6 +482,10 @@ uninstall (){
   echo -e "$ORANGE""$BOLD""Consider running " "$CYAN""\$docker system prune""$NC"
 
   # delete/uninstall EMBA
+  if [[ $(sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git status --porcelain --untracked-files=no) ]]; then
+    echo -e "[!!]$RED""$BOLD""EMBA changes detected - please commit them...otherwise they will be lost""$NC"
+    read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
+  fi
   sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git reset --hard
   sudo -u "${SUDO_USER:-${USER}}" git submodule deinit --all -f
 
