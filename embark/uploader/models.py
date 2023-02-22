@@ -136,7 +136,7 @@ class MultipleChoiceFieldExpertMode(forms.TypedMultipleChoiceField):
         super().__init__(*args, **kwargs)
 
 
-class MultipleCharFieldExpertMode(models.CharField):
+class MultipleCharFieldExpertMode(models.JSONField):
     """
     class MultipleCharFieldExpertMode
     Extension of models.BooleanField to support expert_mode and readonly for CharField option for Models
