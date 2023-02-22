@@ -12,6 +12,7 @@ embark_db/
 .vscode/
 www/
 .venv/
+safe/
 
 # other stuff
 *.zip
