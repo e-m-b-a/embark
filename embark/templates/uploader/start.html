@@ -20,6 +20,10 @@
                     <div class="row expertModeOptions" value="expmode_off">
                             {% bootstrap_field field %}
                     </div>
+                    {% elif field.name == "scan_modules" %}
+                    <div class="row expertModeOptions" value="expmode_off">
+                            {% bootstrap_field field %}
+                    </div>
                     {% else %}
                             {% bootstrap_field field %}
                     {% endif %}
