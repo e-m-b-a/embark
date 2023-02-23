@@ -32,7 +32,7 @@ class DeviceForm(forms.ModelForm):
 
 
 class FirmwareAnalysisForm(forms.ModelForm):
-    MODULE_CHOICES=[
+    MODULE_CHOICES = [
         ('s02', 'S02_UEFI_FwHunt'),
         ('s03', 'S03_firmware_bin_base_analyzer'),
         ('s05', 'S05_firmware_details'),
