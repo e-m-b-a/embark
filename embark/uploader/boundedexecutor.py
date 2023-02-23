@@ -234,9 +234,8 @@ class BoundedExecutor:
             logger.error("Executor task could not be submitted")
             semaphore.release()
             raise error
-        else:
-            future.add_done_callback(lambda x: semaphore.release())
-            return future
+        future.add_done_callback(lambda x: semaphore.release())
+        return future
 
     @classmethod
     def shutdown(cls, wait=True):
