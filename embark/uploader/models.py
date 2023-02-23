@@ -269,7 +269,7 @@ class FirmwareAnalysis(models.Model):
     system_emulation_test = BooleanFieldExpertMode(help_text='Enables automated qemu system emulation tests', default=False, expert_mode=True, blank=True)
 
     # S-modules
-    scan_modules = models.JSONField(null=True, default={}, choices=[
+    scan_modules = models.JSONField(default={}, choices=[
             ('s02', 'S02_UEFI_FwHunt'),
             ('s03', 'S03_firmware_bin_base_analyzer'),
             ('s05', 'S05_firmware_details'),
@@ -302,7 +302,7 @@ class FirmwareAnalysis(models.Model):
             ('s99', 'S99_grepit')
         ],
         help_text='Enable/disable specific scan-modules for your analysis',
-        blank=True, null=True,
+        blank=True, null=False,
         expert_mode=True,
         max_length=150
     )
