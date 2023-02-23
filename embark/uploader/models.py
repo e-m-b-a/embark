@@ -108,51 +108,6 @@ class CharFieldExpertMode(models.CharField):
         return models.Field.formfield(self, **defaults)
 
 
-class MultipleCharFieldExpertModeForm(forms.JSONField):
-    """
-    class BooleanFieldExpertModeForm
-    Extension of forms.CharField to support expert_mode and readonly for CharField option for Forms
-    """
-    def __init__(self, *args, **kwargs):
-        self.expert_mode = kwargs.pop('expert_mode', True)
-        self.readonly = kwargs.pop('readonly', False)
-        # super(CharFieldExpertModeForm, self).__init__(*args, **kwargs)
-        super().__init__(*args, **kwargs)
-
-    def validate(self, value):
-        """Check if value consists only of valid modules."""
-        # Use the parent's handling of required fields, etc.
-        logger.debug("started validating")
-        super().validate(value)
-
-class MultipleChoiceFieldExpertMode(forms.TypedMultipleChoiceField):
-    """
-    class TypedMultipleChoiceFieldExpertMode
-    extends for expertmode usage
-    """
-    def __init__(self, *args, **kwargs):
-        self.expert_mode = kwargs.pop('expert_mode', True)
-        self.readonly = kwargs.pop('readonly', False)
-        super().__init__(*args, **kwargs)
-
-
-class MultipleCharFieldExpertMode(models.JSONField):
-    """
-    class MultipleCharFieldExpertMode
-    Extension of models.BooleanField to support expert_mode and readonly for CharField option for Models
-    """
-    def __init__(self, *args, **kwargs):
-        self.expert_mode = kwargs.pop('expert_mode', True)
-        self.readonly = kwargs.pop('readonly', False)
-        # super(CharFieldExpertMode, self).__init__(*args, **kwargs)
-        super().__init__(*args, **kwargs)
-
-    def formfield(self, **kwargs):
-        defaults = {'form_class': MultipleCharFieldExpertModeForm, 'choices_form_class': MultipleChoiceFieldExpertMode, 'expert_mode': self.expert_mode, 'readonly': self.readonly}
-        defaults.update(kwargs)
-        return models.Field.formfield(self, **defaults)
-
-
 class FirmwareFile(models.Model):
     """
     class FirmwareFile
@@ -314,8 +269,7 @@ class FirmwareAnalysis(models.Model):
     system_emulation_test = BooleanFieldExpertMode(help_text='Enables automated qemu system emulation tests', default=False, expert_mode=True, blank=True)
 
     # S-modules
-    scan_modules = MultipleCharFieldExpertMode(
-        choices=[
+    scan_modules = models.JSONField(null=True, default={}, choices=[
             ('s02', 'S02_UEFI_FwHunt'),
             ('s03', 'S03_firmware_bin_base_analyzer'),
             ('s05', 'S05_firmware_details'),
