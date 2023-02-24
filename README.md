@@ -13,6 +13,16 @@
   <a href="https://twitter.com/intent/tweet?text=Check%20out%20EMBArk%20-%20The%20Firmware%20security%20scanning%20environment!%20https://github.com/e-m-b-a/embark"><img src="https://img.shields.io/twitter/url.svg?style=social&url=https%3A%2F%2Fgithub.com%2Fe-m-b-a%2Fembark"></a>
 </p>
 
+# About
+
+*EMBArk* is a tool for centralized firmware analyzing.
+Scan, Identify, Track, Report.
+Built to be simple but powerful.
+It's the web-based enterprise interface for the firmware security scanner *EMBA*. It is developed to provide the firmware security analyzer *[EMBA](https://github.com/e-m-b-a/emba)* as a service with feature-packed UI and to imporove accessibility to the firmware scanning backend *EMBA* regardless of the system and operating system.
+Furthermore, *EMBArk* improves the data provision by aggregating the various scanning results in an [aggregated management dashboard](https://github.com/e-m-b-a/embark/wiki/Web-interface#main-dashboard).
+
+[![Watch EMBArk](https://raw.githubusercontent.com/wiki/e-m-b-a/embark/static/images/EMBArk-YouTube.png)](https://youtu.be/qSHuPWbfhmI "Watch EMBArk")
+
 # Important
 
 * The new Tracking application currently doesn't work offline.
@@ -22,12 +32,6 @@
 `git clone https://github.com/e-m-b-a/embark.git; cd embark; sudo ./installer.sh -d`
 
 `sudo ./run-server.sh [-a <IP/HOSTNAME>] [-h]`
-## About
-
-*EMBArk* is the web-based enterprise interface for the firmware security scanner *EMBA*. It is developed to provide the firmware security analyzer *[EMBA](https://github.com/e-m-b-a/emba)* as a containerized service and to ease accessibility to the firmware scanning backend *EMBA* regardless of the system and operating system.
-Furthermore, *EMBArk* improves the data provision by aggregating the various scanning results in an [aggregated management dashboard](https://github.com/e-m-b-a/embark/wiki/Web-interface#main-dashboard).
-
-[![Watch EMBArk](https://raw.githubusercontent.com/wiki/e-m-b-a/embark/static/images/EMBArk-YouTube.png)](https://youtu.be/qSHuPWbfhmI "Watch EMBArk")
 
 
 ## Automated setup on Ubuntu 22.04 LTS
