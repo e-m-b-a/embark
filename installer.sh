@@ -106,7 +106,7 @@ write_env(){
 install_emba(){
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner EMBA on host""$NC"
   sudo -u "${SUDO_USER:-${USER}}" git submodule init
-  sudo -u "${SUDO_USER:-${USER}}" git submodule update --remote
+  sudo -u "${SUDO_USER:-${USER}}" git submodule update
   sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "$PWD"/emba
   ( cd emba && ./installer.sh -d ) || ( echo "Could not install EMBA" && exit 1 )
   # TODO costom crom updater for only cve stuff
