@@ -73,7 +73,7 @@ class FirmwareAnalysisForm(forms.ModelForm):
         ('s116', 'S116_qemu_version_detection'),
         ('s120', 'S120_cwe_checker')
     ]
-    scan_modules = forms.MultipleChoiceField(choices=MODULE_CHOICES, help_text='Enable/disable specific scan-modules for your analysis', widget=forms.CheckboxSelectMultiple)
+    scan_modules = forms.MultipleChoiceField(choices=MODULE_CHOICES, help_text='Enable/disable specific scan-modules for your analysis', widget=forms.CheckboxSelectMultiple, required=False)
 
     class Meta:
         model = models.FirmwareAnalysis
