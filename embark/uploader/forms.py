@@ -62,9 +62,18 @@ class FirmwareAnalysisForm(forms.ModelForm):
         ('s85', 'S85_ssh_check'),
         ('s90', 'S90_mail_check'),
         ('s95', 'S95_interesting_binaries_check'),
-        ('s99', 'S99_grepit')
+        ('s99', 'S99_grepit'),
+        ('s100', 'S100_command_inj_check'),
+        ('s106', 'S106_deep_key_search'),
+        ('s107', 'S107_deep_password_search'),
+        ('s108', 'S108_stacs_password_search'),
+        ('s109', 'S109_jtr_local_pw_cracking'),
+        ('s110', 'S110_yara_check'),
+        ('s115', 'S115_usermode_emulator'),
+        ('s116', 'S116_qemu_version_detection'),
+        ('s120', 'S120_cwe_checker')
     ]
-    scan_modules = forms.MultipleChoiceField(choices=MODULE_CHOICES, help_text='Enable/disable specific scan-modules for your analysis', widget=forms.CheckboxSelectMultiple)
+    scan_modules = forms.MultipleChoiceField(choices=MODULE_CHOICES, help_text='Enable/disable specific scan-modules for your analysis', widget=forms.CheckboxSelectMultiple, required=False)
 
     class Meta:
         model = models.FirmwareAnalysis
