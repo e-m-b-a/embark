@@ -42,6 +42,9 @@ semaphore = BoundedSemaphore(MAX_QUEUE)
 # emba directories
 EMBA_SCRIPT_LOCATION = f"cd {settings.EMBA_ROOT} && sudo ./emba"
 
+class BoundedException(Exception):
+    pass
+
 
 class BoundedExecutor:
     """
@@ -88,7 +91,7 @@ class BoundedExecutor:
             logger.info("Success: %s", cmd)
             logger.info("EMBA returned: %d", return_code)
             if return_code != 0:
-                raise Exception
+                raise BoundedException("EMBA has non zero exit-code")
 
             # get csv log location
             csv_log_location = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/csv_logs/f50_base_aggregator.csv"
