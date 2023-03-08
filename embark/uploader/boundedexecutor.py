@@ -1,4 +1,5 @@
 # pylint: disable=R1732, C0201, E1129, W1509
+import builtins
 import csv
 import logging
 import os
@@ -107,7 +108,7 @@ class BoundedExecutor:
             if active_analyzer_dir:
                 shutil.rmtree(active_analyzer_dir)
 
-        except Exception as execpt:
+        except builtins.Exception as execpt:
             # fail
             logger.error("EMBA run was probably not successful!")
             logger.error("run_emba_cmd error: %s", execpt)
@@ -229,7 +230,7 @@ class BoundedExecutor:
             return None
         try:
             future = executor.submit(function_cmd, *args, **kwargs)
-        except Exception as error:
+        except builtins.Exception as error:
             logger.error("Executor task could not be submitted")
             semaphore.release()
             raise error
@@ -348,7 +349,7 @@ class BoundedExecutor:
 
             # create a LogZipFile obj
             analysis.zip_file = LogZipFile.objects.create(file=archive, user=analysis.user)
-        except Exception as exce:
+        except builtins.Exception as exce:
             logger.error("Zipping failed: %s", exce)
         analysis.finished = True
         analysis.save()
@@ -381,7 +382,7 @@ class BoundedExecutor:
 
                 # 3. sanity check (conformity)
                 # TODO check the files
-        except Exception as exce:
+        except builtins.Exception as exce:
             logger.error("Unzipping failed: %s", exce)
 
         result_obj = result_read_in(analysis_id)
