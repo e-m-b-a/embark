@@ -88,12 +88,13 @@ write_env(){
   local RANDOM_PW=""
   local DJANGO_SECRET_KEY=""
   
-  if [[ $REFORCE -eq 1 ]]; then
+  if [[ $REFORCE -eq 1 ]] && [[ -d safe ]]; then
     # install old pws
     # from newest file
     DJANGO_SECRET_KEY="$(grep "SECRET_KEY=" "$(find ./safe -name "*.env" | head -1)" | sed -e "s/^SECRET_KEY=//" )"
     RANDOM_PW="$(grep "DATABASE_PASSWORD=" "$(find ./safe -name "*.env" | head -1)" | sed -e "s/^DATABASE_PASSWORD=//" )"
   else
+    echo -e "$ORANGE""$BOLD""Couldn't find safed passwords""$NC"
     DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
     RANDOM_PW=$(openssl rand -base64 12)
   fi
