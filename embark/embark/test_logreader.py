@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 STATUS_PATTERN = "\\[\\*\\]*"
 PHASE_PATTERN = "\\[\\!\\]*"
 
+
 class LogreaderException(Exception):
     pass
 
