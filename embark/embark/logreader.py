@@ -244,7 +244,7 @@ class LogReader:
         """
         # open the two files to get diff from
         logger.debug("getting diff from %s", log_file)
-        with open(log_file, encoding='utf-8') as old_file, open(f"{settings.EMBA_LOG_ROOT}/{self.firmware_id}/logreader.log", encoding='utf-8') as new_file:
+        with open(log_file, mode='r', encoding='utf-8') as old_file, open(f"{settings.EMBA_LOG_ROOT}/{self.firmware_id}/logreader.log", encoding='utf-8') as new_file:
             diff = difflib.ndiff(old_file.readlines(), new_file.readlines())
             return ''.join(x[2:] for x in diff if x.startswith('- '))
 

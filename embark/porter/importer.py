@@ -44,7 +44,7 @@ def read_csv(path):
     :return: result_dict
     """
     res_dict = {}
-    with open(path, newline='\n', encoding='utf-8') as csv_file:
+    with open(path, mode='r', newline='\n', encoding='utf-8') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=';')
         csv_list = []
         for row in csv_reader:
@@ -135,7 +135,7 @@ def f20_csv(file_path, analysis_id=None):
     """
     logger.debug("starting f20 csv import")
     res_dict = {}
-    with open(file_path, newline='\n', encoding='utf-8') as csv_file:
+    with open(file_path, mode='r', newline='\n', encoding='utf-8') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=';')
         next(csv_reader)  # skip first line
         for row in csv_reader:
