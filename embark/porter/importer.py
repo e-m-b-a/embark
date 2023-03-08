@@ -1,4 +1,5 @@
 # pylint: disable=C0201
+import builtins
 import logging
 import csv
 import json
@@ -153,7 +154,7 @@ def f20_csv(file_path, analysis_id=None):
                     'DoS exploit': row[10],
                     'known exploited vuln': row[11]
                 }
-            except Exception as error_:
+            except builtins.Exception as error_:
                 logger.error("Error in f20 readin: %s", error_)
                 logger.error("row got %i memebers", len(row))
         logger.debug("Got the following res_dict: %s", res_dict)
@@ -169,7 +170,7 @@ def f20_csv(file_path, analysis_id=None):
             logger.debug("Adding Vuln: %s to res %s", new_vulnerability, res)
             if add_:
                 res.vulnerability.add(new_vulnerability)
-        except Exception as error_:
+        except builtins.Exception as error_:
             logger.error("Error in f20 readin: %s", error_)
             logger.error("Key is %s ; Was new? %s; Info is %s", key_, add_, value_)
     logger.debug("read f20 csv done")

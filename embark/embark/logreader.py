@@ -1,5 +1,6 @@
 # pylint: disable=W0602
 # ignores no-assignment error since there is one!
+import builtins
 import datetime
 import difflib
 import pathlib
@@ -296,7 +297,7 @@ class LogReader:
             # add watch on file
             inotify.add_watch(path, watch_flags)
             return inotify.read()
-        except Exception as error:
+        except builtins.Exception as error:
             logger.error("inotify_event error in %s:%s", path, error)
             return []
 

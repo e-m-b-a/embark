@@ -126,6 +126,8 @@ def start_analysis(request):
     """
     if request.method == 'POST':
         form = FirmwareAnalysisForm(request.POST)
+        logger.debug("Form: %s", form.is_valid())
+        logger.debug("Form: %s", form.errors)
         if form.is_valid():
             logger.debug("Posted Form is valid")
             logger.info("Starting analysis with %s", form.Meta.model.id)
@@ -146,13 +148,15 @@ def start_analysis(request):
             logger.error("Server Queue full, or other boundenexec error")
             return HttpResponseServerError("Queue full")
         logger.error("Form invalid %s", request.POST)
-        return HttpResponseBadRequest
+        return HttpResponseBadRequest("Bad Request")
     if FirmwareFile.objects.all().count() > 0:
         analysis_form = FirmwareAnalysisForm(initial={'firmware': FirmwareFile.objects.latest('upload_date')})
         return render(request, 'uploader/index.html', {'analysis_form': analysis_form})
     analysis_form = FirmwareAnalysisForm()
     device_form = DeviceForm()
-    return render(request, 'uploader/index.html', {'analysis_form': analysis_form, 'device_form': device_form})
+    label_form = LabelForm()
+    vendor_form = VendorForm()
+    return render(request, 'uploader/index.html', {'analysis_form': analysis_form, 'device_form': device_form, 'vendor_form': vendor_form, 'label_form': label_form})
 
 
 @require_http_methods(["GET"])

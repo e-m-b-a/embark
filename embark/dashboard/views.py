@@ -1,3 +1,4 @@
+import builtins
 import logging
 import os
 import signal
@@ -52,7 +53,7 @@ def stop_analysis(request):
             form = StopAnalysisForm()
             form.fields['analysis'].queryset = FirmwareAnalysis.objects.filter(finished=False)
             return render(request, 'dashboard/serviceDashboard.html', {'username': request.user.username, 'form': form, 'success_message': True, 'message': "Stopped successfully"})
-        except Exception as error:
+        except builtins.Exception as error:
             logger.error("Error %s", error)
             return HttpResponseServerError("Failed to stop process, please handle manually: PID=" + str(pid))
     return HttpResponseBadRequest("invalid form")

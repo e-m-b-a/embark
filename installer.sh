@@ -71,6 +71,15 @@ import_helper(){
 # Source: https://stackoverflow.com/questions/4023830/how-to-compare-two-strings-in-dot-separated-version-format-in-bash
 version(){ echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; }
 
+save_old_env(){
+  if ! [[ -d ./safe ]]; then
+    mkdir safe
+  fi
+  if [[ -f ./.env ]]; then
+    cp ./.env ./safe/"$(date +'%m-%d-%Y').env"
+  fi
+}
+
 write_env(){
   local SUPER_PW="embark"
   local SUPER_EMAIL="idk@lol.com"
@@ -79,8 +88,16 @@ write_env(){
   local RANDOM_PW=""
   local DJANGO_SECRET_KEY=""
   
-  DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
-  RANDOM_PW=$(openssl rand -base64 12)
+  if [[ $REFORCE -eq 1 ]] && [[ -d safe ]]; then
+    # install old pws
+    # from newest file
+    DJANGO_SECRET_KEY="$(grep "SECRET_KEY=" "$(find ./safe -name "*.env" | head -1)" | sed -e "s/^SECRET_KEY=//" )"
+    RANDOM_PW="$(grep "DATABASE_PASSWORD=" "$(find ./safe -name "*.env" | head -1)" | sed -e "s/^DATABASE_PASSWORD=//" )"
+  else
+    echo -e "$ORANGE""$BOLD""Couldn't find safed passwords""$NC"
+    DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+    RANDOM_PW=$(openssl rand -base64 12)
+  fi
   
   echo -e "$ORANGE""$BOLD""Creating a EMBArk configuration file .env""$NC"
   {
@@ -402,13 +419,13 @@ install_embark_dev(){
 
 uninstall (){
   echo -e "[+]$CYAN""$BOLD""Uninstalling EMBArk""$NC"
-
-  # delete symlink (legacy)
-  echo -e "$ORANGE""$BOLD""Delete Symlink?""$NC"
-  if ! [[ -f /app ]]; then
-    if [[ $( readlink /app ) == "$PWD" ]]; then
-      rm /app
-    fi
+    
+  # check for changes
+  if [[ $(git status --porcelain --untracked-files=no) ]]; then
+    # Changes
+    echo -e "[!!]$RED""$BOLD""Changes detected - please stash or commit them $ORANGE( \$git stash )""$NC"
+    git status
+    exit 1
   fi
 
   # delete directories
@@ -467,6 +484,11 @@ uninstall (){
   echo -e "$ORANGE""$BOLD""Consider running " "$CYAN""\$docker system prune""$NC"
 
   # delete/uninstall EMBA
+  if [[ $(sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git status --porcelain --untracked-files=no) ]]; then
+    echo -e "[!!]$RED""$BOLD""EMBA changes detected - please commit them...otherwise they will be lost""$NC"
+    read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
+  fi
+  rm -r ./emba/external/
   sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git reset --hard
   sudo -u "${SUDO_USER:-${USER}}" git submodule deinit --all -f
 
@@ -575,6 +597,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 if [[ $REFORCE -eq 1 ]] && [[ $UNINSTALL -eq 1 ]]; then
+  save_old_env
   uninstall
 elif [[ $UNINSTALL -eq 1 ]]; then
   uninstall
