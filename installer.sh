@@ -88,7 +88,7 @@ write_env(){
   local RANDOM_PW=""
   local DJANGO_SECRET_KEY=""
   
-  if [[ $REFORCE -eq 0 ]]; then
+  if [[ $REFORCE -eq 1 ]]; then
     # install old pws
     # from newest file
     DJANGO_SECRET_KEY="$(grep "SECRET_KEY=" "$(find ./safe -name "*.env" | head -1)" | sed -e "s/^SECRET_KEY=//" )"
