@@ -262,7 +262,7 @@ class BoundedExecutor:
         """
 
         res_dict = {}
-        with open(path, newline='\n', encoding='utf-8') as csv_file:
+        with open(path, mode='r', encoding='utf-8') as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=';')
             csv_list = []
             for _row in csv_reader:
