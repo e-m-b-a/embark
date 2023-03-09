@@ -1,3 +1,4 @@
+import builtins
 import gzip
 import logging
 import os
@@ -98,7 +99,7 @@ class Archiver:
             # logging.error(f"Format {file_location.split('.', 1)[1]} is not supported")
             logging.error("Format %s is not supported", file_location.split('.', 1)[1])
             raise ValueError from rerr
-        except Exception as error:
+        except builtins.Exception as error:
             logging.error("Undefined Error during unpacking file: %s", file_location)
             logging.error(error)
             raise error
@@ -158,6 +159,6 @@ class Archiver:
             path = Path(dst)
             path.mkdir(parents=True, exist_ok=False)
             return shutil.copy(src, dst)
-        except Exception as error:
+        except builtins.Exception as error:
             logger.error("Error copping firmware to active dir: %s", error)
         return None

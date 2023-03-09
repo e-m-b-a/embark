@@ -1,4 +1,5 @@
 # pylint: disable=R1705
+import builtins
 import logging
 from datetime import datetime
 
@@ -54,7 +55,7 @@ def register(request):
             except KeyError:
                 logger.exception('Missing keys from data- Username, password, password_confirm')
                 return render(request, 'user/register.html', {'error_message': True, 'message': 'User data is invalid.'})
-        except Exception as error:
+        except builtins.Exception as error:
             logger.exception('Wide exception in Signup: %s', error)
             return render(
                 request,
@@ -90,7 +91,7 @@ def embark_login(request):
             logger.debug('User could not be authenticated')
             messages.info(request, "Invalid user data")
             return render(request, 'user/login.html', {'error_message': True, 'message': 'Invalid user data.'})
-        except Exception as error:
+        except builtins.Exception as error:
             logger.exception('Wide exception in Signup: %s', error)
             messages.info(request, "Invalid user data")
             return render(request, 'user/login.html', {'error_message': True, 'message': 'Something went wrong when logging in the user.'})
@@ -141,7 +142,7 @@ def password_change(request):
             except KeyError:
                 logger.exception('Missing keys from data-passwords')
                 return render(request, 'user/passwordChange.html', {'error_message': True, 'message': 'Some fields are empty!'})
-        except Exception as error:
+        except builtins.Exception as error:
             logger.exception('Wide exception in Password Change: %s', error)
             return render(request, 'user/passwordChange.html', {'error_message': True, 'message': 'Something went wrong when changing the password for the user.'})
     return render(request, 'user/passwordChange.html')
@@ -206,7 +207,7 @@ def get_log(request, log_type, lines):      # FIXME update or remove
                     block_counter -= 1
 
                 result = lines_found[-(lines + 1):]
-            except Exception as error:
+            except builtins.Exception as error:
                 logger.exception('Wide exception in logstreamer: %s', error)
 
         return render(request, 'user/log.html', {'header': log_file + '.log', 'log': ''.join(result), 'username': request.user.username})

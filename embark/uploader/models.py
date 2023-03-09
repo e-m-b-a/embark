@@ -21,6 +21,15 @@ from users.models import User as Userclass
 logger = logging.getLogger(__name__)
 
 
+def scan_modules_default_value():
+    """
+    emba modules to be executed
+    """
+    return {
+        'scan_modules': []
+    }
+
+
 def jsonfield_default_value():
     """
     keys: percentage, analysis, firmwarename, last_update, last_module, module_list, last_phase, phase_list
@@ -81,7 +90,7 @@ class CharFieldExpertModeForm(forms.CharField):
 
 class TypedChoiceFieldExpertModeForm(forms.TypedChoiceField):
     """
-    class BooleanFieldExpertModeForm
+    class TypedChoiceFieldExpertModeForm
     Extension of forms.TypedChoiceField to support expert_mode and readonly for TypedChoiceField option for Forms
     """
     def __init__(self, *args, **kwargs):
@@ -252,15 +261,24 @@ class FirmwareAnalysis(models.Model):
 
     # emba expert flags
     firmware_Architecture = CharFieldExpertMode(
-        choices=[(None, 'Select architecture'), ('MIPS', 'MIPS'), ('ARM', 'ARM'), ('x86', 'x86'), ('x64', 'x64'), ('PPC', 'PPC')],  # TODO add NIOS2
+        choices=[
+            (None, 'Select architecture'), ('MIPS', 'MIPS'), ('MIPS64R2', 'MIPS64R2'), ('MIPS64_III', 'MIPS64_III'), ('MIPS64_N32', 'MIPS64_N32'),
+            ('ARM', 'ARM'), ('ARM64', 'ARM64'),
+            ('x86', 'x86'), ('x64', 'x64'),
+            ('PPC', 'PPC'), ('PPC64', 'PPC64'),
+            ('NIOS2', 'NIOS2'), ('RISCV', 'RISCV'), ('QCOM_DSP6', 'QCOM_DSP6')
+        ],
         verbose_name="Select architecture of the linux firmware",
-        help_text='Architecture of the linux firmware [MIPS, ARM, x86, x64, PPC] -a will be added',
-        max_length=MAX_LENGTH, blank=True, expert_mode=True)
+        help_text='Architecture of the linux firmware [MIPS, ARM, x86, x64, PPC, NIOS2] -a will be added (note: other options are not in use yet)',
+        max_length=MAX_LENGTH, blank=True, expert_mode=True
+    )
+
+    # expertmode options
     user_emulation_test = BooleanFieldExpertMode(help_text='Enables automated qemu emulation tests', default=False, expert_mode=True, blank=True)
     system_emulation_test = BooleanFieldExpertMode(help_text='Enables automated qemu system emulation tests', default=False, expert_mode=True, blank=True)
-    deep_extraction = BooleanFieldExpertMode(help_text='Enable deep extraction - try to extract every file two times with binwalk', default=False, expert_mode=True, blank=True)
-    cwe_checker = BooleanFieldExpertMode(help_text='Enables cwe-checker', default=False, expert_mode=True, blank=True)
-    online_checks = BooleanFieldExpertMode(help_text='Activate online checks (e.g. upload and test with VirusTotal)', default=False, expert_mode=True, blank=True)
+
+    # S-modules
+    scan_modules = models.JSONField(blank=True, null=True, default=scan_modules_default_value)
 
     # TODO add -C and -k option
 
@@ -348,14 +366,15 @@ class FirmwareAnalysis(models.Model):
             command = command + r" -N " + "\"" + re.sub(r"[^a-zA-Z0-9\.\-\_\ ]+", "", str(self.notes)) + f" (uuid:{self.id})" + "\""
         if self.firmware_Architecture:
             command = command + r" -a " + str(self.firmware_Architecture)
-        if self.cwe_checker:
-            command = command + r" -c"
-        if self.deep_extraction:
-            command = command + r" -x"
         if self.user_emulation_test:
             command = command + r" -E"
         if self.system_emulation_test:
             command = command + r" -Q"
+        if self.scan_modules:
+            for module_ in self.scan_modules:
+                command = command + r" -m " + str(module_)
+            # TODO add all p modules????
+
         # running emba
         logger.info("final emba parameters %s", command)
         return command

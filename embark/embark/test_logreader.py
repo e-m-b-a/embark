@@ -16,6 +16,10 @@ STATUS_PATTERN = "\\[\\*\\]*"
 PHASE_PATTERN = "\\[\\!\\]*"
 
 
+class LogreaderException(Exception):
+    pass
+
+
 class TestLogreader(TestCase):
 
     def __init__(self):
@@ -63,7 +67,7 @@ class TestLogreader(TestCase):
                     self.assertEqual(logr.status_msg['percentage'], 0.0)
                 else:
                     print("weird phase in logreader line: %s - phase: %s ", line, phase_identifier)
-                    raise Exception
+                    raise LogreaderException("Weird state in logreader")
             # logreader file should be identical to emba.log
             self.assertEqual(logr.finish, True)
 

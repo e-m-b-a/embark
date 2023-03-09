@@ -1,4 +1,5 @@
 # pylint: disable=R1732, C0201, E1129, W1509
+import builtins
 import csv
 import logging
 import os
@@ -40,6 +41,10 @@ semaphore = BoundedSemaphore(MAX_QUEUE)
 
 # emba directories
 EMBA_SCRIPT_LOCATION = f"cd {settings.EMBA_ROOT} && sudo ./emba"
+
+
+class BoundedException(Exception):
+    pass
 
 
 class BoundedExecutor:
@@ -87,7 +92,7 @@ class BoundedExecutor:
             logger.info("Success: %s", cmd)
             logger.info("EMBA returned: %d", return_code)
             if return_code != 0:
-                raise Exception
+                raise BoundedException("EMBA has non zero exit-code")
 
             # get csv log location
             csv_log_location = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/csv_logs/f50_base_aggregator.csv"
@@ -107,7 +112,7 @@ class BoundedExecutor:
             if active_analyzer_dir:
                 shutil.rmtree(active_analyzer_dir)
 
-        except Exception as execpt:
+        except builtins.Exception as execpt:
             # fail
             logger.error("EMBA run was probably not successful!")
             logger.error("run_emba_cmd error: %s", execpt)
@@ -229,13 +234,12 @@ class BoundedExecutor:
             return None
         try:
             future = executor.submit(function_cmd, *args, **kwargs)
-        except Exception as error:
+        except builtins.Exception as error:
             logger.error("Executor task could not be submitted")
             semaphore.release()
             raise error
-        else:
-            future.add_done_callback(lambda x: semaphore.release())
-            return future
+        future.add_done_callback(lambda x: semaphore.release())
+        return future
 
     @classmethod
     def shutdown(cls, wait=True):
@@ -348,7 +352,7 @@ class BoundedExecutor:
 
             # create a LogZipFile obj
             analysis.zip_file = LogZipFile.objects.create(file=archive, user=analysis.user)
-        except Exception as exce:
+        except builtins.Exception as exce:
             logger.error("Zipping failed: %s", exce)
         analysis.finished = True
         analysis.save()
@@ -381,7 +385,7 @@ class BoundedExecutor:
 
                 # 3. sanity check (conformity)
                 # TODO check the files
-        except Exception as exce:
+        except builtins.Exception as exce:
             logger.error("Unzipping failed: %s", exce)
 
         result_obj = result_read_in(analysis_id)
