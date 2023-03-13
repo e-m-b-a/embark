@@ -124,7 +124,9 @@ install_emba(){
   sudo -u "${SUDO_USER:-${USER}}" git submodule init
   sudo -u "${SUDO_USER:-${USER}}" git submodule update
   sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "$PWD"/emba
-  ( cd emba && ./installer.sh -d | tee install.log ) || ( echo "Could not install EMBA" && exit 1 )
+  cd emba
+  ./installer.sh -d | tee install.log || ( echo "Could not install EMBA" && exit 1 )
+  cd ..
   # TODO costom crom updater for only cve stuff
   # if ! [[ -f /etc/cron.daily/emba_updater ]]; then
   #   cp ./config/emba_updater /etc/cron.daily/
