@@ -495,7 +495,9 @@ uninstall (){
     echo -e "[!!]$RED""$BOLD""EMBA changes detected - please commit them...otherwise they will be lost""$NC"
     read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
   fi
-  rm -r ./emba/external/
+  if [[ -d ./emba/external ]]; then
+    rm -r ./emba/external/
+  fi
   sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git reset --hard
   sudo -u "${SUDO_USER:-${USER}}" git submodule deinit --all -f
 
