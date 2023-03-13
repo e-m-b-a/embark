@@ -43,8 +43,7 @@ print_help(){
   echo -e "$CYAN-d$NC         EMBArk default installation"
   echo -e "$CYAN-F$NC         Installation of EMBArk for developers"
   echo -e "$CYAN-e$NC         Install EMBA only"
-  echo -e "$CYAN-s$NC         Installation without EMBA"
-  echo -e "$CYAN-D$NC         Install for Docker deployment"
+  echo -e "$CYAN-s$NC         Installation without EMBA (use in combination with d/F)"
   echo -e "---------------------------------------------------------------------------"
   echo -e "$CYAN-U$NC         Uninstall EMBArk"
   echo -e "$CYAN-rd$NC        Reinstallation of EMBArk with all dependencies"
@@ -612,7 +611,9 @@ sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "$PWD"
 if [[ "$NO_EMBA" -eq 0 ]]; then
   install_emba
 fi
-
+if [[ "$EMBA_ONLY" -eq 1 ]]; then
+  exit 0
+fi
 if [[ $DEFAULT -eq 1 ]]; then
   install_embark_default
 elif [[ $DEV -eq 1 ]]; then
