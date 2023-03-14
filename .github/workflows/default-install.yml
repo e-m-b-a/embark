@@ -32,7 +32,7 @@ jobs:
       - name: EMBArk default install
         uses: Wandalen/wretry.action@master
         with:
-          command: sudo ./installer.sh -d
+          command: sudo ./installer.sh -sd
           attempt_limit: 3
       - name: EMBArk quick test
         run: |

@@ -25,7 +25,7 @@ jobs:
       - name: EMBArk dev install
         uses: Wandalen/wretry.action@master
         with:
-          command: sudo ./installer.sh -F
+          command: sudo ./installer.sh -sF
           attempt_limit: 3
       # - name: Start Debug-server-conf
       #   run: |
