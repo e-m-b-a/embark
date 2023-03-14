@@ -8,7 +8,7 @@ jobs:
   Build-embark:
     if: github.repository_owner != 'e-m-b-a'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     steps:
       - name: Free Disk Space (Ubuntu)
@@ -20,10 +20,6 @@ jobs:
           haskell: true
           large-packages: true
           swap-storage: true
-      - name: Install Python, pipenv and Pipfile packages
-        uses: palewire/install-python-pipenv-pipfile@v2
-        with:
-          python-version: 3.10
       - name: EMBArk dev install
         uses: Wandalen/wretry.action@master
         with:
