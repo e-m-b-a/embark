@@ -11,6 +11,8 @@ jobs:
     timeout-minutes: 60
 
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
         with:
