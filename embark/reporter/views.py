@@ -7,6 +7,7 @@ import logging
 
 from operator import itemgetter
 from http import HTTPStatus
+import re
 from uuid import UUID
 
 from django.conf import settings
@@ -187,6 +188,12 @@ def get_accumulated_reports(request):
                 data[charfield] = {}
 
             value = result.pop(charfield)
+
+            # clean-up for linux extensive os-descriptions
+            if value.startswith("Linux"):
+                value = value.split("/", 2)[:2]
+                value = (value[:16] + '..') if len(value) > 18 else value
+
             if value not in data[charfield]:
                 data[charfield][value] = 0
 
