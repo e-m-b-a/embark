@@ -1,5 +1,6 @@
 from http import HTTPStatus
 import logging
+import os
 from pathlib import Path
 
 from django.http import HttpResponseBadRequest, JsonResponse
@@ -64,7 +65,7 @@ def import_read(request):
         if form.cleaned_data['firmware'] is not None:
             logger.debug("trying to set firmware for new analysis")
             new_analysis.firmware = form.cleaned_data['firmware']
-            new_analysis.firmware_name = new_analysis.firmware.file.name
+            new_analysis.firmware_name = os.path.basename(new_analysis.firmware.file.name)
         if form.cleaned_data['device'] is not None:
             logger.debug("trying to set device(s) for new analysis")
             new_analysis.device.set(form.cleaned_data['device'])

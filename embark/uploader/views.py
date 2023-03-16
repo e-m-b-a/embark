@@ -1,5 +1,6 @@
 # pylint: disable=W0613,C0206
 import logging
+import os
 
 from django.conf import settings
 from django.shortcuts import render
@@ -145,7 +146,7 @@ def start_analysis(request):
             new_analysis = form.save(commit=False)
             new_analysis.user = request.user
             logger.debug(" FILE_NAME is %s", new_analysis.firmware.file.name)
-            new_analysis.firmware_name = new_analysis.firmware.file.name
+            new_analysis.firmware_name = os.path.basename(new_analysis.firmware.file.name)
             new_analysis = form.save()
 
             # get the id of the firmware-file to submit
