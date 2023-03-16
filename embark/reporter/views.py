@@ -7,7 +7,6 @@ import logging
 
 from operator import itemgetter
 from http import HTTPStatus
-import re
 from uuid import UUID
 
 from django.conf import settings
