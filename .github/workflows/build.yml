@@ -6,36 +6,30 @@ on: [push]
 
 jobs:
   Build-embark:
+    if: github.repository_owner != 'e-m-b-a'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     steps:
-    - name: Checkout the Code
-      uses: actions/checkout@v2 
-    - name: Install Python, pipenv and Pipfile packages
-      uses: palewire/install-python-pipenv-pipfile@v2
-      with:
-        python-version: 3.9
-    - name: Install-deps
-      run: |
-        sudo apt update
-        sudo apt install -y python3-django python3-dev  
-        sudo apt install -y build-essential default-libmysqlclient-dev
-    - name: Get externals
-      run: |
-          mkdir -p ./embark/static/external/{scripts,css} || exit 1
-          wget -O ./embark/static/external/scripts/jquery.js https://code.jquery.com/jquery-3.6.0.min.js || exit 1
-          wget -O ./embark/static/external/scripts/confirm.js https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js || exit 1
-          wget -O ./embark/static/external/scripts/bootstrap.js https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js || exit 1
-          wget -O ./embark/static/external/scripts/datatable.js https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.js || exit 1
-          wget -O ./embark/static/external/scripts/charts.js https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js || exit 1
-          wget -O ./embark/static/external/css/confirm.css https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css || exit 1
-          wget -O ./embark/static/external/css/bootstrap.css https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css || exit 1
-          wget -O ./embark/static/external/css/datatable.css https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.css || exit 1
-          find ./embark/static/external/ -type f -exec sed -i '/sourceMappingURL/d' {} \;
-      shell: bash
-    - name: Get EMBA
-      run: git clone https://github.com/e-m-b-a/emba.git
-    - name: Start Debug-server-conf
-      run: echo "TODO" # ./dev-tools/debug-server-start.sh  
-      timeout-minutes: 5
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+      - name: EMBArk dev install
+        uses: Wandalen/wretry.action@master
+        with:
+          command: sudo ./installer.sh -sF
+          attempt_limit: 3
+      # - name: Start Debug-server-conf
+      #   run: |
+      #      sudo ./dev-tools/debug-server-start.sh &
+      #      sleep 5m
+      #      echo "Let the user test"
+      #   timeout-minutes: 10

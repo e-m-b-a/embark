@@ -1,5 +1,6 @@
 # pylint: disable=W0613,C0206
 import logging
+import os
 
 from django.conf import settings
 from django.shortcuts import render
@@ -12,7 +13,7 @@ from django.views.decorators.csrf import csrf_protect
 
 from uploader.boundedexecutor import BoundedExecutor
 from uploader.forms import DeviceForm, FirmwareAnalysisForm, DeleteFirmwareForm, LabelForm, VendorForm
-from uploader.models import FirmwareFile
+from uploader.models import Device, FirmwareFile, Label, Vendor
 
 logger = logging.getLogger(__name__)
 
@@ -65,8 +66,10 @@ def device_setup(request):
 
         new_device = form.save(commit=False)
         new_device.device_user = request.user
+        if Device.objects.filter(device_name=request.device_name, device_vendor=request.device_vendor).exists():
+            messages.error(request, 'Device already exists')
+            return redirect('..')
         new_device = form.save()
-
         messages.info(request, 'creation successful of ' + str(new_device))
         return redirect('..')
     logger.error("device form invalid %s ", request.POST)
@@ -82,7 +85,11 @@ def vendor(request):
     if form.is_valid():
         logger.info("User %s tryied to create vendor %s", request.user.username, request.POST['vendor_name'])
 
-        new_vendor = form.save(commit=True)
+        new_vendor = form.save(commit=False)
+        if Vendor.objects.filter(vendor_name=request.vendor_name).exists():
+            messages.error(request, 'Vendor already exists')
+            return redirect('..')
+        new_vendor = form.save()
 
         messages.info(request, 'creation successful of ' + str(new_vendor))
         return redirect('..')
@@ -99,7 +106,11 @@ def label(request):
     if form.is_valid():
         logger.info("User %s tryied to create label %s", request.user.username, request.POST['label_name'])
 
-        new_label = form.save(commit=True)
+        new_label = form.save(commit=False)
+        if Label.objects.filter(label_name=request.label_name).exists():
+            messages.error(request, 'Label already exists')
+            return redirect('..')
+        new_label = form.save()
 
         messages.info(request, 'creation successful of' + str(new_label))
         return redirect('..')
@@ -135,7 +146,7 @@ def start_analysis(request):
             new_analysis = form.save(commit=False)
             new_analysis.user = request.user
             logger.debug(" FILE_NAME is %s", new_analysis.firmware.file.name)
-            new_analysis.firmware_name = new_analysis.firmware.file.name
+            new_analysis.firmware_name = os.path.basename(new_analysis.firmware.file.name)
             new_analysis = form.save()
 
             # get the id of the firmware-file to submit
