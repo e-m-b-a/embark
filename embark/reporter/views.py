@@ -183,16 +183,16 @@ def get_accumulated_reports(request):
             strcpy_bins[key] += int(strcpy_bin[key])
 
         for charfield in charfields:
+            # clean-up for linux extensive os-descriptions
+            if charfield.startswith("Linux"):
+                charfield = charfield.split("/", 2)[:2]
+                charfield = (charfield[:16] + '..') if len(charfield) > 18 else charfield
+
             if charfield not in data:
                 data[charfield] = {}
 
             value = result.pop(charfield)
-
-            # clean-up for linux extensive os-descriptions
-            if value.startswith("Linux"):
-                value = value.split("/", 2)[:2]
-                # value = (value[:16] + '..') if len(value) > 18 else value
-                value = value[:16]
+           
 
             if value not in data[charfield]:
                 data[charfield][value] = 0
