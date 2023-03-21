@@ -43,8 +43,7 @@ print_help(){
   echo -e "$CYAN-d$NC         EMBArk default installation"
   echo -e "$CYAN-F$NC         Installation of EMBArk for developers"
   echo -e "$CYAN-e$NC         Install EMBA only"
-  echo -e "$CYAN-s$NC         Installation without EMBA"
-  echo -e "$CYAN-D$NC         Install for Docker deployment"
+  echo -e "$CYAN-s$NC         Installation without EMBA (use in combination with d/F)"
   echo -e "---------------------------------------------------------------------------"
   echo -e "$CYAN-U$NC         Uninstall EMBArk"
   echo -e "$CYAN-rd$NC        Reinstallation of EMBArk with all dependencies"
@@ -125,11 +124,19 @@ install_emba(){
   sudo -u "${SUDO_USER:-${USER}}" git submodule init
   sudo -u "${SUDO_USER:-${USER}}" git submodule update
   sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "$PWD"/emba
-  ( cd emba && ./installer.sh -d ) || ( echo "Could not install EMBA" && exit 1 )
+  cd emba
+  ./installer.sh -d | tee install.log || ( echo "Could not install EMBA" && exit 1 )
+  cd ..
   # TODO costom crom updater for only cve stuff
   # if ! [[ -f /etc/cron.daily/emba_updater ]]; then
   #   cp ./config/emba_updater /etc/cron.daily/
   # fi
+  # check emba
+  if ! (cd emba && ./emba -d 1); then
+    echo -e "\n$RED""$BOLD""EMBA installation failed""$NC"
+    tail emba/install.log
+    exit 1
+  fi
   chown -R "${SUDO_USER:-${USER}}" emba
   echo -e "\n""--------------------------------------------------------------------""$NC"
 }
@@ -421,7 +428,7 @@ uninstall (){
   echo -e "[+]$CYAN""$BOLD""Uninstalling EMBArk""$NC"
     
   # check for changes
-  if [[ $(git status --porcelain --untracked-files=no) ]]; then
+  if [[ $(git status --porcelain --untracked-files=no --ignore-submodules=all) ]]; then
     # Changes
     echo -e "[!!]$RED""$BOLD""Changes detected - please stash or commit them $ORANGE( \$git stash )""$NC"
     git status
@@ -488,7 +495,9 @@ uninstall (){
     echo -e "[!!]$RED""$BOLD""EMBA changes detected - please commit them...otherwise they will be lost""$NC"
     read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
   fi
-  rm -r ./emba/external/
+  if [[ -d ./emba/external ]]; then
+    rm -r ./emba/external/
+  fi
   sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git reset --hard
   sudo -u "${SUDO_USER:-${USER}}" git submodule deinit --all -f
 
@@ -612,7 +621,9 @@ sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "$PWD"
 if [[ "$NO_EMBA" -eq 0 ]]; then
   install_emba
 fi
-
+if [[ "$EMBA_ONLY" -eq 1 ]]; then
+  exit 0
+fi
 if [[ $DEFAULT -eq 1 ]]; then
   install_embark_default
 elif [[ $DEV -eq 1 ]]; then
