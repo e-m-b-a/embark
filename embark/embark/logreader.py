@@ -65,7 +65,7 @@ class LogReader:
         }
 
         # start processing
-        time.sleep(5)   # embas dep-check takes some time
+        time.sleep(10)   # embas dep-check takes some time
         if self.analysis:
             self.read_loop()
         else:
