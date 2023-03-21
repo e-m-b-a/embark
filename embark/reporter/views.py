@@ -192,7 +192,6 @@ def get_accumulated_reports(request):
                 data[charfield] = {}
 
             value = result.pop(charfield)
-           
 
             if value not in data[charfield]:
                 data[charfield][value] = 0
