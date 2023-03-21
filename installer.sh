@@ -428,7 +428,7 @@ uninstall (){
   echo -e "[+]$CYAN""$BOLD""Uninstalling EMBArk""$NC"
     
   # check for changes
-  if [[ $(git status --porcelain --untracked-files=no) ]]; then
+  if [[ $(git status --porcelain --untracked-files=no --ignore-submodules=all) ]]; then
     # Changes
     echo -e "[!!]$RED""$BOLD""Changes detected - please stash or commit them $ORANGE( \$git stash )""$NC"
     git status

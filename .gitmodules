@@ -1,4 +1,4 @@
 [submodule "emba"]
 	path = emba
 	url = https://github.com/e-m-b-a/emba.git
-  ignore = dirty
+  ignore = all
