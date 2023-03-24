@@ -31,7 +31,7 @@ class DeviceForm(forms.ModelForm):
         fields = ['device_name', 'device_label', 'device_vendor']
 
     def clean(self):
-        cleaned_data = super(DeviceForm, self.clean)
+        cleaned_data = super().clean()
         name = cleaned_data.get('device_name')
         vendor = cleaned_data.get('device_vendor')
         if name and vendor:
