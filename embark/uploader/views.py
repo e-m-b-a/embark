@@ -103,6 +103,7 @@ def vendor(request):
 @login_required(login_url='/' + settings.LOGIN_URL)
 def label(request):
     form = LabelForm(request.POST)
+    form.clean()
     logger.debug("got: %s", form.cleaned_data['label_name'])
     if Label.objects.filter(label_name=form.cleaned_data['label_name']).exists():
         messages.error(request, 'Label already exists')
