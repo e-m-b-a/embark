@@ -193,11 +193,6 @@ def get_accumulated_reports(request):
 
             value = result.pop(charfield)
 
-            # clean-up for linux extensive os-descriptions
-            if value.startswith("Linux"):
-                value = value.split("/", 2)[:2]
-                value = (value[:16] + '..') if len(value) > 18 else value
-
             if value not in data[charfield]:
                 data[charfield][value] = 0
 
