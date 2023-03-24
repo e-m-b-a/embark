@@ -66,7 +66,7 @@ def device_setup(request):
 
         new_device = form.save(commit=False)
         new_device.device_user = request.user
-        if Device.objects.filter(device_name=new_device.device_name, device_vendor=new_device.device_vendor).exists():
+        if Device.objects.filter(device_name=form.cleaned_data['device_name'], device_vendor=form.cleaned_data['device_vendor']).exists():
             messages.error(request, 'Device already exists')
             return redirect('..')
         new_device = form.save()
@@ -86,7 +86,7 @@ def vendor(request):
         logger.info("User %s tryied to create vendor %s", request.user.username, request.POST['vendor_name'])
 
         new_vendor = form.save(commit=False)
-        if Vendor.objects.filter(vendor_name=new_vendor.vendor_name).exists():
+        if Vendor.objects.filter(vendor_name=form.cleaned_data['vendor_name']).exists():
             messages.error(request, 'Vendor already exists')
             return redirect('..')
         new_vendor = form.save()
@@ -107,7 +107,7 @@ def label(request):
         logger.info("User %s tryied to create label %s", request.user.username, request.POST['label_name'])
 
         new_label = form.save(commit=False)
-        if Label.objects.filter(label_name=new_label.label_name).exists():
+        if Label.objects.filter(label_name=form.cleaned_data['label_name']).exists():
             messages.error(request, 'Label already exists')
             return redirect('..')
         new_label = form.save()
