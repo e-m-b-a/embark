@@ -21,6 +21,12 @@ class LabelForm(forms.ModelForm):
         model = models.Label
 
         fields = ['label_name']
+    
+    def clean_label_name(self):
+        name = self.cleaned_data['label_name']
+        if models.Label.objects.filter(label_name=name).exists():
+            raise forms.ValidationError('The label_name [%s] already exists' % name)    
+        return name
 
 
 class DeviceForm(forms.ModelForm):

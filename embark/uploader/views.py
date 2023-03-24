@@ -103,11 +103,6 @@ def vendor(request):
 @login_required(login_url='/' + settings.LOGIN_URL)
 def label(request):
     form = LabelForm(request.POST)
-    form.clean()
-    logger.debug("got: %s", form.cleaned_data['label_name'])
-    if Label.objects.filter(label_name=form.cleaned_data['label_name']).exists():
-        messages.error(request, 'Label already exists')
-        return redirect('..')
     if form.is_valid():
         logger.info("User %s tryied to create label %s", request.user.username, request.POST['label_name'])
         new_label = form.save(commit=False)
@@ -115,7 +110,10 @@ def label(request):
         messages.info(request, 'creation successful of' + str(new_label))
         return redirect('..')
     logger.error("label form invalid %s ", request.POST)
-    messages.error(request, 'creation failed.')
+    if 'label_name' in form.errors:
+        messages.error(request, 'Label already exists')
+    else:
+        messages.error(request, 'creation failed.')
     return redirect('..')
 
 
