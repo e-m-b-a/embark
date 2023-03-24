@@ -178,7 +178,7 @@ LOGGING = {
         },
         'reporter': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
-            'level': 'DEBUG',
+            'level': 'INFO',
         },
         'tracker': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
@@ -186,7 +186,7 @@ LOGGING = {
         },
         'porter': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
-            'level': 'DEBUG',   # TODO change to INFO
+            'level': 'INFO',
         },
         'embark': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],

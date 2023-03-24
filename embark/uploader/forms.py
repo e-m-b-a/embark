@@ -21,12 +21,6 @@ class LabelForm(forms.ModelForm):
         model = models.Label
 
         fields = ['label_name']
-    
-    def clean_label_name(self):
-        name = self.cleaned_data['label_name']
-        if models.Label.objects.filter(label_name=name).exists():
-            raise forms.ValidationError('The label_name [%s] already exists' % name)    
-        return name
 
 
 class DeviceForm(forms.ModelForm):
@@ -35,7 +29,15 @@ class DeviceForm(forms.ModelForm):
         model = models.Device
 
         fields = ['device_name', 'device_label', 'device_vendor']
-        unique_together = ('device_name', 'device_vendor',)
+
+    def clean(self):
+        cleaned_data = super(DeviceForm, self.clean)
+        name = cleaned_data.get('device_name')
+        vendor = cleaned_data.get('device_vendor')
+        if name and vendor:
+            if models.Device.objects.filter(device_name=name, device_vendor=vendor).exists():
+                self.add_error('device_name', 'device already created')
+        return cleaned_data
 
 
 class FirmwareAnalysisForm(forms.ModelForm):

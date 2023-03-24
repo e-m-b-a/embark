@@ -13,7 +13,7 @@ from django.views.decorators.csrf import csrf_protect
 
 from uploader.boundedexecutor import BoundedExecutor
 from uploader.forms import DeviceForm, FirmwareAnalysisForm, DeleteFirmwareForm, LabelForm, VendorForm
-from uploader.models import Device, FirmwareFile, Label, Vendor
+from uploader.models import FirmwareFile
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +69,7 @@ def device_setup(request):
         messages.info(request, 'creation successful of ' + str(new_device))
         return redirect('..')
     logger.error("device form invalid %s ", request.POST)
-    if 'device_name' in form.errors or 'device_vendor' in form.errors:
+    if 'device_name' in form.errors:
         messages.error(request, 'Device already exists')
     else:
         messages.error(request, 'creation failed.')
