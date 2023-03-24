@@ -107,6 +107,7 @@ def label(request):
         logger.info("User %s tryied to create label %s", request.user.username, request.POST['label_name'])
 
         new_label = form.save(commit=False)
+        logger.debug("got: %s", form.cleaned_data['label_name'])
         if Label.objects.filter(label_name=form.cleaned_data['label_name']).exists():
             messages.error(request, 'Label already exists')
             return redirect('..')
