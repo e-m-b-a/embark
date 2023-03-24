@@ -102,7 +102,7 @@ def label(request):
     if form.is_valid():
         logger.info("User %s tryied to create label %s", request.user.username, request.POST['label_name'])
         new_label = form.save()
-        messages.info(request, 'creation successful of' + str(new_label))
+        messages.info(request, 'creation successful of ' + str(new_label))
         return redirect('..')
     logger.error("label form invalid %s ", request.POST)
     if 'label_name' in form.errors:

@@ -35,6 +35,7 @@ class DeviceForm(forms.ModelForm):
         model = models.Device
 
         fields = ['device_name', 'device_label', 'device_vendor']
+        unique_together = ('device_name', 'device_vendor',)
 
 
 class FirmwareAnalysisForm(forms.ModelForm):
