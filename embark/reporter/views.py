@@ -186,6 +186,7 @@ def get_accumulated_reports(request):
             # clean-up for linux extensive os-descriptions
             if charfield.startswith("Linux"):
                 charfield = charfield.split("/", 2)[:2]
+                charfield = f"{charfield[0]}{charfield[1]}"
                 charfield = (charfield[:16] + '..') if len(charfield) > 18 else charfield
 
             if charfield not in data:
