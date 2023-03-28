@@ -86,7 +86,6 @@ def f50_csv(file_path, analysis_id):
     if isinstance(entropy_value, str):
         # entropy_value = re.findall(r'(\d+\.?\d*)', ' 7.55 bits per byte.')[0]
         entropy_value = re.findall(r'(\d+\.?\d*)', entropy_value)[0]
-        entropy_value = entropy_value.strip('.')
 
     res = Result.objects.update_or_create(
         firmware_analysis=FirmwareAnalysis.objects.get(id=analysis_id),
