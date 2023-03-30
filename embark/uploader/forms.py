@@ -30,6 +30,15 @@ class DeviceForm(forms.ModelForm):
 
         fields = ['device_name', 'device_label', 'device_vendor']
 
+    def clean(self):
+        cleaned_data = super().clean()
+        name = cleaned_data.get('device_name')
+        vendor = cleaned_data.get('device_vendor')
+        if name and vendor:
+            if models.Device.objects.filter(device_name=name, device_vendor=vendor).exists():
+                self.add_error('device_name', 'device already created')
+        return cleaned_data
+
 
 class FirmwareAnalysisForm(forms.ModelForm):
     MODULE_CHOICES = [
