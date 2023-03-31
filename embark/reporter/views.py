@@ -164,7 +164,7 @@ def get_accumulated_reports(request):
         }
     """
     results = Result.objects.all()
-    top_5_entropies = results.order_by('-entropy_value')[:5]
+    # top_5_entropies = results.order_by('-entropy_value')[:5]
     charfields = ['architecture_verified', 'os_verified']
     data = {}
     strcpy_bins = {}
