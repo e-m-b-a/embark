@@ -140,7 +140,7 @@ def get_individual_report(request, analysis_id):
         return_dict['duration'] = analysis_object.duration
         return_dict['notes'] = analysis_object.notes
         return_dict['version'] = analysis_object.version
-
+        return_dict['path_to_logs'] = analysis_object.path_to_logs
         return_dict['strcpy_bin'] = json.loads(return_dict['strcpy_bin'])
 
         return JsonResponse(data=return_dict, status=HTTPStatus.OK)
@@ -164,7 +164,7 @@ def get_accumulated_reports(request):
         }
     """
     results = Result.objects.all()
-    top_5_entropies = results.order_by('-entropy_value')[:5]
+    # top_5_entropies = results.order_by('-entropy_value')[:5]
     charfields = ['architecture_verified', 'os_verified']
     data = {}
     strcpy_bins = {}
@@ -213,8 +213,8 @@ def get_accumulated_reports(request):
         if field not in charfields:
             data[field]['mean'] = data[field]['sum'] / data[field]['count']
     data['total_firmwares'] = len(results)
-    data['top_entropies'] = [{'name': r.firmware_analysis.firmware_name, 'entropy_value': r.entropy_value} for r in
-                             top_5_entropies]
+    # data['top_entropies'] = [{'name': r.firmware_analysis.firmware_name, 'entropy_value': r.entropy_value} for r in
+    #                          top_5_entropies]
 
     # Taking top 10 most commonly occurring strcpy_bin values
     strcpy_bins = dict(sorted(strcpy_bins.items(), key=itemgetter(1), reverse=True)[:10])

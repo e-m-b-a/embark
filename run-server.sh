@@ -121,6 +121,7 @@ fi
 
 # check emba
 echo -e "$BLUE""$BOLD""checking EMBA""$NC"
+git submodule update
 if ! (cd "$PWD"/emba && ./emba -d 1); then
   echo -e "$BLUE""Trying auto-maintain""$NC"
   # automaintain
