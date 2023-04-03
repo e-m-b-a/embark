@@ -28,5 +28,7 @@ jobs:
           command: sudo ./installer.sh -sF
           attempt_limit: 3
       - name: tests
-        run: |
-        ./dev-tools/test.sh
+        uses: Wandalen/wretry.action@master
+        with:
+          command: sudo ./dev-tools/tests.sh
+          attempt_limit: 3
