@@ -20,6 +20,7 @@ mod-wsgi-standalone = "*"
 django-bootstrap5 = "*"
 django-tables2 = "*"
 requests = "*"
+djangorestframework = "*"
 
 [dev-packages]
 pycodestyle = "*"

@@ -555,66 +555,66 @@ function makeCharts(returnData) {
     });
 
 
-    var topEntropyLabels = [];
-    var topEntropyValues = [];
-
-    for (var i = 0; i < returnData.top_entropies.length; i++) {
-        topEntropyLabels.push(returnData.top_entropies[i].name);
-        topEntropyValues.push(returnData.top_entropies[i].entropy_value);
-    }
-
-    let topEntropyBar = new Chart(topEntropies, {
-            type: 'doughnut',
-            data: {
-                labels: topEntropyLabels,
-                datasets: [{
-                    label: 'Firmware entropie values',
-                    labels: topEntropyLabels,
-                    data: topEntropyValues,
-                    borderWidth: 1,
-                    backgroundColor: getRandomColors(topEntropyLabels.length)
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Firmware entropie values',
-                        position: 'top',
-                        color: 666,
-                        padding: {
-                            top: 15,
-                            bottom: 10
-                        },
-                        font: {
-                            size: 24
-                        }
-                    },
-                    legend: {
-                        display: true,
-                        position: 'bottom',
-                        labels: {
-                            fontColor: '#000'
-                        }
-                    },
-                    layout: {
-                        padding: {
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            top: 0
-                        }
-                    },
-                    tooltips: {
-                        enabled: true
-                    },
-                },
-            }
-        }
-
-    );
+    //var topEntropyLabels = [];
+    //var topEntropyValues = [];
+//
+    //for (var i = 0; i < returnData.top_entropies.length; i++) {
+    //    topEntropyLabels.push(returnData.top_entropies[i].name);
+    //    topEntropyValues.push(returnData.top_entropies[i].entropy_value);
+    //}
+//
+    //let topEntropyBar = new Chart(topEntropies, {
+    //        type: 'doughnut',
+    //        data: {
+    //            labels: topEntropyLabels,
+    //            datasets: [{
+    //                label: 'Firmware entropie values',
+    //                labels: topEntropyLabels,
+    //                data: topEntropyValues,
+    //                borderWidth: 1,
+    //                backgroundColor: getRandomColors(topEntropyLabels.length)
+    //            }]
+    //        },
+    //        options: {
+    //            responsive: true,
+    //            maintainAspectRatio: false,
+    //            plugins: {
+    //                title: {
+    //                    display: true,
+    //                    text: 'Firmware entropie values',
+    //                    position: 'top',
+    //                    color: 666,
+    //                    padding: {
+    //                        top: 15,
+    //                        bottom: 10
+    //                    },
+    //                    font: {
+    //                        size: 24
+    //                    }
+    //                },
+    //                legend: {
+    //                    display: true,
+    //                    position: 'bottom',
+    //                    labels: {
+    //                        fontColor: '#000'
+    //                    }
+    //                },
+    //                layout: {
+    //                    padding: {
+    //                        left: 0,
+    //                        right: 0,
+    //                        bottom: 0,
+    //                        top: 0
+    //                    }
+    //                },
+    //                tooltips: {
+    //                    enabled: true
+    //                },
+    //            },
+    //        }
+    //    }
+//
+    //);
 
 }
 

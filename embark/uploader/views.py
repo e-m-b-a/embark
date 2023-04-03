@@ -13,7 +13,7 @@ from django.views.decorators.csrf import csrf_protect
 
 from uploader.boundedexecutor import BoundedExecutor
 from uploader.forms import DeviceForm, FirmwareAnalysisForm, DeleteFirmwareForm, LabelForm, VendorForm
-from uploader.models import Device, FirmwareFile, Label, Vendor
+from uploader.models import FirmwareFile
 
 logger = logging.getLogger(__name__)
 
@@ -63,17 +63,16 @@ def device_setup(request):
     form = DeviceForm(request.POST)
     if form.is_valid():
         logger.info("User %s tryied to create device", request.user.username)
-
         new_device = form.save(commit=False)
         new_device.device_user = request.user
-        if Device.objects.filter(device_name=request.device_name, device_vendor=request.device_vendor).exists():
-            messages.error(request, 'Device already exists')
-            return redirect('..')
         new_device = form.save()
         messages.info(request, 'creation successful of ' + str(new_device))
         return redirect('..')
     logger.error("device form invalid %s ", request.POST)
-    messages.error(request, 'creation failed.')
+    if 'device_name' in form.errors:
+        messages.error(request, 'Device already exists')
+    else:
+        messages.error(request, 'creation failed.')
     return redirect('..')
 
 
@@ -84,17 +83,14 @@ def vendor(request):
     form = VendorForm(request.POST)
     if form.is_valid():
         logger.info("User %s tryied to create vendor %s", request.user.username, request.POST['vendor_name'])
-
-        new_vendor = form.save(commit=False)
-        if Vendor.objects.filter(vendor_name=request.vendor_name).exists():
-            messages.error(request, 'Vendor already exists')
-            return redirect('..')
         new_vendor = form.save()
-
         messages.info(request, 'creation successful of ' + str(new_vendor))
         return redirect('..')
     logger.error("vendor form invalid %s ", request.POST)
-    messages.error(request, 'creation failed.')
+    if 'vendor_name' in form.errors:
+        messages.error(request, 'Vendor already exists')
+    else:
+        messages.error(request, 'creation failed.')
     return redirect('..')
 
 
@@ -105,17 +101,14 @@ def label(request):
     form = LabelForm(request.POST)
     if form.is_valid():
         logger.info("User %s tryied to create label %s", request.user.username, request.POST['label_name'])
-
-        new_label = form.save(commit=False)
-        if Label.objects.filter(label_name=request.label_name).exists():
-            messages.error(request, 'Label already exists')
-            return redirect('..')
         new_label = form.save()
-
-        messages.info(request, 'creation successful of' + str(new_label))
+        messages.info(request, 'creation successful of ' + str(new_label))
         return redirect('..')
     logger.error("label form invalid %s ", request.POST)
-    messages.error(request, 'creation failed.')
+    if 'label_name' in form.errors:
+        messages.error(request, 'Label already exists')
+    else:
+        messages.error(request, 'creation failed.')
     return redirect('..')
 
 
