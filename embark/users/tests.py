@@ -25,7 +25,7 @@ class SeleniumTests(StaticLiveServerTestCase):
         super().tearDownClass()
 
     def test_register(self):
-        self.selenium.get('%s%s' % (self.live_server_url, '/register/'))
+        self.selenium.get(f'{self.live_server_url}/register')
         username_input = self.selenium.find_element(By.NAME, "username")
         username_input.send_keys('tester')
         password_input = self.selenium.find_element(By.NAME, "password")
@@ -35,7 +35,7 @@ class SeleniumTests(StaticLiveServerTestCase):
         self.selenium.find_element(By.XPATH, '//input[@value="Register"]').click()
 
     def test_login(self):
-        self.selenium.get('%s%s' % (self.live_server_url, '/'))
+        self.selenium.get(f'{self.live_server_url}/')
         username_input = self.selenium.find_element(By.NAME, "username")
         username_input.send_keys('tester')
         password_input = self.selenium.find_element(By.NAME, "password")
