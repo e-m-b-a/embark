@@ -1,0 +1,32 @@
+name: EMBArk default tests on Ubuntu
+
+on:
+  pull_request:
+    branches:    
+      - main
+
+jobs:
+  default-install:
+    if: github.repository_owner == 'e-m-b-a'
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+      - name: EMBArk default install
+        uses: Wandalen/wretry.action@master
+        with:
+          command: sudo ./installer.sh -sF
+          attempt_limit: 3
+      - name: tests
+        run: |
+        ./dev-tools/test.sh

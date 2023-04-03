@@ -49,7 +49,7 @@ echo -e "\n$GREEN""$BOLD""Configuring Embark""$NC"
 source ./.venv/bin/activate || exit 1
 
 echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
-docker-compose -f ./docker-compose-dev.yml up -d
+docker-compose -f ./docker-compose.yml up -d
 DU_RETURN=$?
 if [[ $DU_RETURN -eq 0 ]] ; then
   echo -e "$GREEN""$BOLD""Finished setup mysql and redis docker images""$NC"
@@ -63,21 +63,21 @@ fi
 
 # db_init
 echo -e "[*] Starting migrations - log to embark/logs/migration.log"
-pipenv run ./embark/manage.py makemigrations users uploader reporter dashboard | tee -a ./logs/migration.log
+pipenv run ./embark/manage.py makemigrations | tee -a ./logs/migration.log
 pipenv run ./embark/manage.py migrate | tee -a ./logs/migration.log
 
 # superuser
 pipenv run ./embark/manage.py createsuperuser --noinput
 
-echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./embark/logs/redis_dev.log""$NC" 
-docker container logs embark_redis_dev -f > ./logs/redis_dev.log &
-echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql_dev.log""$NC"
-docker container logs embark_db_dev -f > ./logs/mysql_dev.log & 
+echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./embark/logs/redis.log""$NC"
+docker container logs embark_redis -f > ./logs/redis.log &
+echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql.log""$NC"
+docker container logs embark_db -f > ./logs/mysql.log &
 
 ##
 echo -e "\n[""$BLUE JOB""$NC""] Testing""$NC"
 pipenv run ./embark/manage.py test embark.test_logreader
-pipenv run ./embark/manage.py test myapp.tests.MySeleniumTests.test_login
-wait
+pipenv run ./embark/manage.py test myapp.tests.SeleniumTests.test_register
+pipenv run ./embark/manage.py test myapp.tests.SeleniumTests.test_login
 
 echo -e "\n$ORANGE""$BOLD""Done. To clean-up use the clean-setup script""$NC"
