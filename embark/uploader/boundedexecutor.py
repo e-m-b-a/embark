@@ -1,12 +1,9 @@
 # pylint: disable=R1732, C0201, E1129, W1509
 import builtins
-import csv
 import logging
 import os
 import shutil
 from subprocess import Popen, PIPE
-import re
-import json
 import zipfile
 
 from pathlib import Path
@@ -20,7 +17,6 @@ from django.conf import settings
 from uploader import finish_execution
 from uploader.archiver import Archiver
 from uploader.models import FirmwareAnalysis
-from dashboard.models import Result
 from embark.logreader import LogReader
 from embark.helper import get_size, zip_check
 from porter.models import LogZipFile
@@ -102,7 +98,7 @@ class BoundedExecutor:
             logger.debug("contents of that dir are %r", Path(csv_log_location).exists())
             # if Path(csv_log_location).exists:
             if Path(csv_log_location).is_file():
-                cls.csv_read(analysis_id=analysis_id, path=csv_log_location, cmd=cmd)
+                cls.csv_read(analysis_id=analysis_id, _path=csv_log_location, _cmd=cmd)
             else:
                 logger.error("CSV file %s for report: %s not generated", csv_log_location, analysis_id)
                 logger.error("EMBA run was probably not successful!")
@@ -255,12 +251,11 @@ class BoundedExecutor:
         logger.info("Shutdown successful")
 
     @classmethod
-    def csv_read(cls, analysis_id, path, cmd):
-        # TODO moved to importer link! 
+    def csv_read(cls, analysis_id, _path, _cmd):
         """
         This job reads the F50_aggregator file and stores its content into the Result model
         """
-        result_read_in(analysis_id=analysis_id)
+        return result_read_in(analysis_id=analysis_id)
     #    res_dict = {}
     #    with open(path, mode='r', encoding='utf-8') as csv_file:
     #        csv_reader = csv.reader(csv_file, delimiter=';')

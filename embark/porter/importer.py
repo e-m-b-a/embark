@@ -195,8 +195,8 @@ if __name__ == "__main__":
         json_file.write(json.dumps(read_csv(os.path.join(TEST_DIR, 'f50_test.csv')), indent=4))
 
     # test print f20
-    #with open(os.path.join(TEST_DIR, 'f20_test.json'), 'w', encoding='utf-8') as json_file:
-    #    json_file.write(json.dumps(
-    #        f20_csv(os.path.join(TEST_DIR, 'f20_test.csv')),
-    #        indent=4
-    #    ))
+    # with open(os.path.join(TEST_DIR, 'f20_test.json'), 'w', encoding='utf-8') as json_file:
+    #     json_file.write(json.dumps(
+    #         f20_csv(os.path.join(TEST_DIR, 'f20_test.csv')),
+    #         indent=4
+    #     ))
