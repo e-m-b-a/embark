@@ -27,7 +27,7 @@ Furthermore, *EMBArk* improves the data provision by aggregating the various sca
 
 * The new Tracking application currently doesn't work offline.
 * The device, Vendor and version tracking aren't fully integrated into all dashboards yet.
-* the only supported OS at this time is Ubuntu LTS
+* the only supported OS at this time is Ubuntu LTS (22.04)
 
 ## Quick-Start
 `git clone https://github.com/e-m-b-a/embark.git; cd embark; sudo ./installer.sh -d`
