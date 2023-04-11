@@ -1,12 +1,9 @@
 # pylint: disable=R1732, C0201, E1129, W1509
 import builtins
-import csv
 import logging
 import os
 import shutil
 from subprocess import Popen, PIPE
-import re
-import json
 import zipfile
 
 from pathlib import Path
@@ -20,7 +17,6 @@ from django.conf import settings
 from uploader import finish_execution
 from uploader.archiver import Archiver
 from uploader.models import FirmwareAnalysis
-from dashboard.models import Result
 from embark.logreader import LogReader
 from embark.helper import get_size, zip_check
 from porter.models import LogZipFile
@@ -102,7 +98,7 @@ class BoundedExecutor:
             logger.debug("contents of that dir are %r", Path(csv_log_location).exists())
             # if Path(csv_log_location).exists:
             if Path(csv_log_location).is_file():
-                cls.csv_read(analysis_id=analysis_id, path=csv_log_location, cmd=cmd)
+                cls.csv_read(analysis_id=analysis_id, _path=csv_log_location, _cmd=cmd)
             else:
                 logger.error("CSV file %s for report: %s not generated", csv_log_location, analysis_id)
                 logger.error("EMBA run was probably not successful!")
@@ -255,85 +251,84 @@ class BoundedExecutor:
         logger.info("Shutdown successful")
 
     @classmethod
-    def csv_read(cls, analysis_id, path, cmd):
-        # TODO moved to importer link!
+    def csv_read(cls, analysis_id, _path, _cmd):
         """
         This job reads the F50_aggregator file and stores its content into the Result model
         """
-
-        res_dict = {}
-        with open(path, mode='r', encoding='utf-8') as csv_file:
-            csv_reader = csv.reader(csv_file, delimiter=';')
-            csv_list = []
-            for _row in csv_reader:
-                # remove NA
-                if "NA" in _row:
-                    _row.remove("NA")
-                # remove empty
-                if "" in _row:
-                    _row.remove("")
-                csv_list.append(_row)
-                for _element in csv_list:
-                    if _element[0] == "version_details":
-                        res_dict[_element[1]] = _element[2:]
-                    elif len(_element) == 2:
-                        res_dict[_element[0]] = _element[1]
-                    elif len(_element) == 3:
-                        if not _element[0] in res_dict.keys():
-                            res_dict[_element[0]] = {}
-                        res_dict[_element[0]][_element[1]] = _element[2]
-                    else:
-                        pass
-
-        logger.info("result dict: %s", res_dict)
-        res_dict.pop('FW_path', None)
-
-        entropy_value = res_dict.get("entropy_value", 0)
-        # if type(entropy_value) is str:
-        if isinstance(entropy_value, str):
-            # entropy_value = re.findall(r'(\d+\.?\d*)', ' 7.55 bits per byte.')[0]
-            entropy_value = re.findall(r'(\d+\.?\d*)', entropy_value)[0]
-            entropy_value = entropy_value.strip('.')
-
-        res = Result(
-            firmware_analysis=FirmwareAnalysis.objects.get(id=analysis_id),
-            emba_command=cmd.replace(f"cd {settings.EMBA_ROOT} && ", ""),
-            architecture_verified=res_dict.get("architecture_verified", ''),
-            # os_unverified=res_dict.get("os_unverified", ''),
-            os_verified=res_dict.get("os_verified", ''),
-            files=int(res_dict.get("files", 0)),
-            directories=int(res_dict.get("directories", 0)),
-            entropy_value=float(entropy_value),
-            shell_scripts=int(res_dict.get("shell_scripts", 0)),
-            shell_script_vulns=int(res_dict.get("shell_script_vulns", 0)),
-            kernel_modules=int(res_dict.get("kernel_modules", 0)),
-            kernel_modules_lic=int(res_dict.get("kernel_modules_lic", 0)),
-            interesting_files=int(res_dict.get("interesting_files", 0)),
-            post_files=int(res_dict.get("post_files", 0)),
-            canary=int(res_dict.get("canary", 0)),
-            canary_per=int(res_dict.get("canary_per", 0)),
-            relro=int(res_dict.get("relro", 0)),
-            relro_per=int(res_dict.get("relro_per", 0)),
-            no_exec=int(res_dict.get("no_exec", 0)),
-            no_exec_per=int(res_dict.get("no_exec_per", 0)),
-            pie=int(res_dict.get("pie", 0)),
-            pie_per=int(res_dict.get("pie_per", 0)),
-            stripped=int(res_dict.get("stripped", 0)),
-            stripped_per=int(res_dict.get("stripped_per", 0)),
-            bins_checked=int(res_dict.get("bins_checked", 0)),
-            strcpy=int(res_dict.get("strcpy", 0)),
-            strcpy_bin=json.dumps(res_dict.get("strcpy_bin", {})),
-            versions_identified=int(res_dict.get("versions_identified", 0)),
-            cve_high=int(res_dict.get("cve_high", 0)),
-            cve_medium=int(res_dict.get("cve_medium", 0)),
-            cve_low=int(res_dict.get("cve_low", 0)),
-            exploits=int(res_dict.get("exploits", 0)),
-            metasploit_modules=int(res_dict.get("metasploit_modules", 0)),
-            certificates=int(res_dict.get("certificates", 0)),
-            certificates_outdated=int(res_dict.get("certificates_outdated", 0)),
-        )
-        res.save()
-        return res
+        return result_read_in(analysis_id=analysis_id)
+    #    res_dict = {}
+    #    with open(path, mode='r', encoding='utf-8') as csv_file:
+    #        csv_reader = csv.reader(csv_file, delimiter=';')
+    #        csv_list = []
+    #        for _row in csv_reader:
+    #            # remove NA
+    #            while "NA" in _row:
+    #                _row.remove("NA")
+    #            # remove empty
+    #            while "" in _row:
+    #                _row.remove("")
+    #            csv_list.append(_row)
+    #            for _element in csv_list:
+    #                if _element[0] == "version_details":
+    #                    res_dict[_element[1]] = _element[2:]
+    #                elif len(_element) == 2:
+    #                    res_dict[_element[0]] = _element[1]
+    #                elif len(_element) == 3:
+    #                    if not _element[0] in res_dict.keys():
+    #                        res_dict[_element[0]] = {}
+    #                    res_dict[_element[0]][_element[1]] = _element[2]
+    #                else:
+    #                    pass
+#
+    #    logger.info("result dict: %s", res_dict)
+    #    res_dict.pop('FW_path', None)
+#
+    #    entropy_value = res_dict.get("entropy_value", 0)
+    #    # if type(entropy_value) is str:
+    #    if isinstance(entropy_value, str):
+    #        # entropy_value = re.findall(r'(\d+\.?\d*)', ' 7.55 bits per byte.')[0]
+    #        entropy_value = re.findall(r'(\d+\.?\d*)', entropy_value)[0]
+    #        entropy_value = entropy_value.strip('.')
+#
+    #    res = Result(
+    #        firmware_analysis=FirmwareAnalysis.objects.get(id=analysis_id),
+    #        emba_command=cmd.replace(f"cd {settings.EMBA_ROOT} && ", ""),
+    #        architecture_verified=res_dict.get("architecture_verified", ''),
+    #        # os_unverified=res_dict.get("os_unverified", ''),
+    #        os_verified=res_dict.get("os_verified", ''),
+    #        files=int(res_dict.get("files", 0)),
+    #        directories=int(res_dict.get("directories", 0)),
+    #        entropy_value=float(entropy_value),
+    #        shell_scripts=int(res_dict.get("shell_scripts", 0)),
+    #        shell_script_vulns=int(res_dict.get("shell_script_vulns", 0)),
+    #        kernel_modules=int(res_dict.get("kernel_modules", 0)),
+    #        kernel_modules_lic=int(res_dict.get("kernel_modules_lic", 0)),
+    #        interesting_files=int(res_dict.get("interesting_files", 0)),
+    #        post_files=int(res_dict.get("post_files", 0)),
+    #        canary=int(res_dict.get("canary", 0)),
+    #        canary_per=int(res_dict.get("canary_per", 0)),
+    #        relro=int(res_dict.get("relro", 0)),
+    #        relro_per=int(res_dict.get("relro_per", 0)),
+    #        no_exec=int(res_dict.get("no_exec", 0)),
+    #        no_exec_per=int(res_dict.get("no_exec_per", 0)),
+    #        pie=int(res_dict.get("pie", 0)),
+    #        pie_per=int(res_dict.get("pie_per", 0)),
+    #        stripped=int(res_dict.get("stripped", 0)),
+    #        stripped_per=int(res_dict.get("stripped_per", 0)),
+    #        bins_checked=int(res_dict.get("bins_checked", 0)),
+    #        strcpy=int(res_dict.get("strcpy", 0)),
+    #        strcpy_bin=json.dumps(res_dict.get("strcpy_bin", {})),
+    #        versions_identified=int(res_dict.get("versions_identified", 0)),
+    #        cve_high=int(res_dict.get("cve_high", 0)),
+    #        cve_medium=int(res_dict.get("cve_medium", 0)),
+    #        cve_low=int(res_dict.get("cve_low", 0)),
+    #        exploits=int(res_dict.get("exploits", 0)),
+    #        metasploit_modules=int(res_dict.get("metasploit_modules", 0)),
+    #        certificates=int(res_dict.get("certificates", 0)),
+    #        certificates_outdated=int(res_dict.get("certificates_outdated", 0)),
+    #    )
+    #    res.save()
+    #    return res
 
     @classmethod
     def zip_log(cls, analysis_id):
