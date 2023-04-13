@@ -86,3 +86,28 @@ check_docker_wsl() {
   echo -e "$BLUE""$BOLD""checking docker""$NC\\n"
   service docker status
 }
+
+check_db() {
+  local PW_ENV
+  local USER_ENV
+  local HOST_ENV
+  PW_ENV=$(grep DATABASE_PASSWORD ./.env | sed 's/DATABASE\_PASSWORD\=//')
+  USER_ENV=$(grep DATABASE_USER ./.env | sed 's/DATABASE\_USER\=//')
+  HOST_ENV=$(grep DATABASE_HOST ./.env | sed 's/DATABASE\_HOST\=//')
+  echo -e "\\n$ORANGE""$BOLD""checking database""$NC\\n""$BOLD=================================================================$NC"
+  echo -e "$BLUE""$BOLD""1. checking startup""$NC\\n"
+  if docker-compose -f ./docker-compose.yml up -d ; then
+    echo -e "$GREEN""$BOLD""Finished setup mysql and redis docker images""$NC"
+  else
+    echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
+    exit 1
+  fi
+  echo -e "$BLUE""$BOLD""2. checking password""$NC\\n"
+  if ! mysql -h "$HOST_ENV" -u "$USER_ENV" -p "$PW_ENV" -e"quit"; then  # PW_ENV=$(grep DATABASE_PASSWORD ./.env | sed 's/DATABASE\_PASSWORD\=//')mysql -h 172.22.0.5 -u embark -p $PW_ENV -e "quit"
+    echo -e "$ORANGE""$BOLD""Failed logging into database with password""$NC"
+    echo -e "---------------------------------------------------------------------------"
+    echo -e "$CYAN""Old passwords are stored in the \"safe\" folder when uninstalling EMBArk""$NC\\n"
+    echo -e "$CYAN""You could try recoverying manually by overwriting your\".env\" file""$NC\\n"
+    exit 1
+  fi
+}

@@ -67,7 +67,6 @@ cleaner() {
   exit 1
 }
 
-
 # main
 echo -e "\\n$ORANGE""$BOLD""EMBArk Startup""$NC\\n""$BOLD=================================================================$NC"
 
@@ -147,6 +146,9 @@ fi
 if ! nc -zw1 google.com 443 &>/dev/null ; then
   (cd /var/www && pipenv check && pipenv verify)
 fi
+
+# check db
+check_db
 
 # copy emba
 if [[ -d /var/www/emba ]]; then
