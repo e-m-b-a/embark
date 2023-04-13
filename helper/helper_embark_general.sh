@@ -102,6 +102,7 @@ check_db() {
     echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
     exit 1
   fi
+  sleep 5s
   echo -e "$BLUE""$BOLD""2. checking password""$NC\\n"
   if ! mysql --host="$HOST_ENV" --user="$USER_ENV" --password="$PW_ENV" -e"quit"; then  # PW_ENV=$(grep DATABASE_PASSWORD ./.env | sed 's/DATABASE\_PASSWORD\=//')mysql -h 172.22.0.5 -u embark -p $PW_ENV -e "quit"
     echo -e "$ORANGE""$BOLD""Failed logging into database with password""$NC"
