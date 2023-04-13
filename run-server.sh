@@ -147,7 +147,7 @@ if ! nc -zw1 google.com 443 &>/dev/null ; then
   (cd /var/www && pipenv check && pipenv verify)
 fi
 
-# check db
+# check db and start container
 check_db
 
 # copy emba
@@ -155,14 +155,6 @@ if [[ -d /var/www/emba ]]; then
   rm -Rf /var/www/emba
 fi
 cp -Ru ./emba/ /var/www/emba/
-
-# Start container
-echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
-if docker-compose -f ./docker-compose.yml up -d ; then
-  echo -e "$GREEN""$BOLD""Finished setup mysql and redis docker images""$NC"
-else
-  echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
-fi
 
 # logs
 if ! [[ -d ./docker_logs ]]; then

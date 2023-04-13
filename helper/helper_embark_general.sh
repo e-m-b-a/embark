@@ -103,11 +103,22 @@ check_db() {
     exit 1
   fi
   echo -e "$BLUE""$BOLD""2. checking password""$NC\\n"
-  if ! mysql -h "$HOST_ENV" -u "$USER_ENV" -p "$PW_ENV" -e"quit"; then  # PW_ENV=$(grep DATABASE_PASSWORD ./.env | sed 's/DATABASE\_PASSWORD\=//')mysql -h 172.22.0.5 -u embark -p $PW_ENV -e "quit"
+  if ! mysql --host="$HOST_ENV" --user="$USER_ENV" --password="$PW_ENV" -e"quit"; then  # PW_ENV=$(grep DATABASE_PASSWORD ./.env | sed 's/DATABASE\_PASSWORD\=//')mysql -h 172.22.0.5 -u embark -p $PW_ENV -e "quit"
     echo -e "$ORANGE""$BOLD""Failed logging into database with password""$NC"
     echo -e "---------------------------------------------------------------------------"
     echo -e "$CYAN""Old passwords are stored in the \"safe\" folder when uninstalling EMBArk""$NC\\n"
     echo -e "$CYAN""You could try recoverying manually by overwriting your\".env\" file""$NC\\n"
     exit 1
   fi
+}
+
+check_safe() {
+  local ENV_FILES=()
+  if [[ -d safe ]] ; then
+    mapfile -d '' ENV_FILES < <(find ./safe -iname "*.env" -print0 2> /dev/null)
+    if [ ${#ENV_FILES[@]} -gt 0 ]; then
+      return 1
+    fi
+  fi
+  return 0
 }
