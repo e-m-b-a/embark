@@ -127,7 +127,7 @@ def get_individual_report(request, analysis_id):
 
         logger.debug("getting individual report for %s", result)
 
-        return_dict = dict(model_to_dict(result))
+        return_dict = dict(model_to_dict(instance=result, exclude=['vulnerability']))
 
         return_dict['firmware_name'] = analysis_object.firmware_name
         if analysis_object.firmware:

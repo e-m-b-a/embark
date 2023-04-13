@@ -50,9 +50,9 @@ def read_csv(path):
         csv_list = []
         for row in csv_reader:
             # remove NAs and other unwanted chars from csv
-            if row[-1] == '':
+            while row[-1] == '':
                 row.pop(-1)
-            if row[-1] == 'NA':
+            while row[-1] == 'NA':
                 row.pop(-1)
             csv_list.append(row)
             for ele in csv_list:
@@ -194,8 +194,8 @@ if __name__ == "__main__":
         json_file.write(json.dumps(read_csv(os.path.join(TEST_DIR, 'f50_test.csv')), indent=4))
 
     # test print f20
-    with open(os.path.join(TEST_DIR, 'f20_test.json'), 'w', encoding='utf-8') as json_file:
-        json_file.write(json.dumps(
-            f20_csv(os.path.join(TEST_DIR, 'f20_test.csv')),
-            indent=4
-        ))
+    # with open(os.path.join(TEST_DIR, 'f20_test.json'), 'w', encoding='utf-8') as json_file:
+    #     json_file.write(json.dumps(
+    #         f20_csv(os.path.join(TEST_DIR, 'f20_test.csv')),
+    #         indent=4
+    #     ))
