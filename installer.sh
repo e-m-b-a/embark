@@ -626,5 +626,6 @@ if [[ $DEFAULT -eq 1 ]]; then
 elif [[ $DEV -eq 1 ]]; then
   install_embark_dev
 fi
-
+check_db
+docker-compose stop
 exit 0
