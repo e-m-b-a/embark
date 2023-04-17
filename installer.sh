@@ -487,6 +487,9 @@ uninstall (){
   echo -e "$ORANGE""$BOLD""Consider running " "$CYAN""\$docker system prune""$NC"
 
   # delete/uninstall EMBA
+  if ! [ -f ./emba/install.log ]; then
+    rm ./emba/install.log
+  fi
   if [[ $(sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git status --porcelain --untracked-files=no) ]]; then
     echo -e "[!!]$RED""$BOLD""EMBA changes detected - please commit them...otherwise they will be lost""$NC"
     read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
