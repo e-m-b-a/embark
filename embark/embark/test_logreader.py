@@ -22,8 +22,8 @@ class LogreaderException(Exception):
 
 class TestLogreader(TestCase):
 
-    def __init__(self):
-        super().__init__()
+    def setUp(self):
+        super().setUp()
         analysis = FirmwareAnalysis.objects.create()
         analysis.failed = False
         analysis.save()   # args??
