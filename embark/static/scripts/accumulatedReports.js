@@ -19,7 +19,7 @@ var totalDirectories = document.getElementById('totalDirectories');
 var totalBinaries = document.getElementById('totalBinaries');
 var totalCve = document.getElementById('totalCve');
 var totalIssues = document.getElementById('totalIssues');
-var topEntropies = document.getElementById('topEntropies').getContext('2d');
+// var topEntropies = document.getElementById('topEntropies').getContext('2d');
 var entropyMeterLabel = document.getElementById('entropyMeterLabel');
 
 var topBinaryTypes = document.getElementById('topBinaryTypes').getContext('2d');
@@ -563,58 +563,58 @@ function makeCharts(returnData) {
         topEntropyValues.push(returnData.top_entropies[i].entropy_value);
     }
 
-    let topEntropyBar = new Chart(topEntropies, {
-            type: 'doughnut',
-            data: {
-                labels: topEntropyLabels,
-                datasets: [{
-                    label: 'Firmware entropie values',
-                    labels: topEntropyLabels,
-                    data: topEntropyValues,
-                    borderWidth: 1,
-                    backgroundColor: getRandomColors(topEntropyLabels.length)
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Firmware entropie values',
-                        position: 'top',
-                        color: 666,
-                        padding: {
-                            top: 15,
-                            bottom: 10
-                        },
-                        font: {
-                            size: 24
-                        }
-                    },
-                    legend: {
-                        display: true,
-                        position: 'bottom',
-                        labels: {
-                            fontColor: '#000'
-                        }
-                    },
-                    layout: {
-                        padding: {
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            top: 0
-                        }
-                    },
-                    tooltips: {
-                        enabled: true
-                    },
-                },
-            }
-        }
-
-    );
+    //let topEntropyBar = new Chart(topEntropies, {
+    //        type: 'doughnut',
+    //        data: {
+    //            labels: topEntropyLabels,
+    //            datasets: [{
+    //                label: 'Firmware entropie values',
+    //                labels: topEntropyLabels,
+    //                data: topEntropyValues,
+    //                borderWidth: 1,
+    //                backgroundColor: getRandomColors(topEntropyLabels.length)
+    //            }]
+    //        },
+    //        options: {
+    //            responsive: true,
+    //            maintainAspectRatio: false,
+    //            plugins: {
+    //                title: {
+    //                    display: true,
+    //                    text: 'Firmware entropie values',
+    //                    position: 'top',
+    //                    color: 666,
+    //                    padding: {
+    //                        top: 15,
+    //                        bottom: 10
+    //                    },
+    //                    font: {
+    //                        size: 24
+    //                    }
+    //                },
+    //                legend: {
+    //                    display: true,
+    //                    position: 'bottom',
+    //                    labels: {
+    //                        fontColor: '#000'
+    //                    }
+    //                },
+    //                layout: {
+    //                    padding: {
+    //                        left: 0,
+    //                        right: 0,
+    //                        bottom: 0,
+    //                        top: 0
+    //                    }
+    //                },
+    //                tooltips: {
+    //                    enabled: true
+    //                },
+    //            },
+    //        }
+    //    }
+//
+    //);
 
 }
 
