@@ -555,14 +555,14 @@ function makeCharts(returnData) {
     });
 
 
-    //var topEntropyLabels = [];
-    //var topEntropyValues = [];
-//
-    //for (var i = 0; i < returnData.top_entropies.length; i++) {
-    //    topEntropyLabels.push(returnData.top_entropies[i].name);
-    //    topEntropyValues.push(returnData.top_entropies[i].entropy_value);
-    //}
-//
+    var topEntropyLabels = [];
+    var topEntropyValues = [];
+
+    for (var i = 0; i < returnData.top_entropies.length; i++) {
+        topEntropyLabels.push(returnData.top_entropies[i].name);
+        topEntropyValues.push(returnData.top_entropies[i].entropy_value);
+    }
+
     //let topEntropyBar = new Chart(topEntropies, {
     //        type: 'doughnut',
     //        data: {
