@@ -51,7 +51,7 @@ services:
     depends_on:
       - embark_db
     restart: "no"
-    entrypoint: [ "bash", "-c", "sleep 10 && printf '%s \n' '$(sha256sum $MYSQL_PASSWORD)' >> /var/lib/mysql/state.cnf"]
+    entrypoint: [ "bash", "-c", "sleep 10 && printf '%s \n'", "$(sha256sum $MYSQL_PASSWORD)", " >> /var/lib/mysql/state.cnf"]
 
 
 networks:
