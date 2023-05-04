@@ -127,8 +127,8 @@ check_safe() {
 }
 
 add_to_env_history(){
-  local PASSWORD_="${1:}"
-  local CONTAINER_HASH_="${2:}"
+  local PASSWORD_="${1:-}"
+  local CONTAINER_HASH_="${2:-}"
   if [[ -d safe ]]; then
     printf '%s;%s;\n' "$(echo "$PASSWORD_" | sha256sum)" "$CONTAINER_HASH_" >> ./safe/history.env
   fi
