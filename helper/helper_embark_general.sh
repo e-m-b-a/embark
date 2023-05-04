@@ -109,6 +109,7 @@ check_db() {
     echo -e "---------------------------------------------------------------------------"
     echo -e "$CYAN""Old passwords are stored in the \"safe\" folder when uninstalling EMBArk""$NC\\n"
     echo -e "$CYAN""You could try recoverying manually by overwriting your\".env\" file""$NC\\n"
+    echo -e "$CYAN""The mysql-db was first started if the password(sha256sum): $(head -n1 ./embark_db/state.cnf) ""$NC\\n"
     exit 1
   fi
 }
