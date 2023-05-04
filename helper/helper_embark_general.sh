@@ -98,6 +98,7 @@ check_db() {
   echo -e "$BLUE""$BOLD""1. checking startup""$NC\\n"
   if docker-compose -f ./docker-compose.yml up -d ; then
     echo -e "$GREEN""$BOLD""Finished setup mysql and redis docker images""$NC"
+    add_to_env_history "$PW_ENV" "$(docker-compose ps -q embark_db)"
   else
     echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
     exit 1
@@ -123,4 +124,13 @@ check_safe() {
     fi
   fi
   return 0
+}
+
+add_to_env_history(){
+  local PASSWORD_="${1:}"
+  local CONTAINER_HASH_="${2:}"
+  if [[ -d safe ]]; then
+    printf '%s;%s;\n' "$(echo "$PASSWORD_" | sha256sum)" "$CONTAINER_HASH_" >> ./safe/history.env
+  fi
+
 }
