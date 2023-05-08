@@ -23,6 +23,8 @@ var totalIssues = document.getElementById('totalIssues');
 
 
 var topBinaryTypes = document.getElementById('topBinaryTypes').getContext('2d');
+var topSystemBinsTypes = document.getElementById('topSystemBinsTypes').getContext('2d');
+
 
 
 
