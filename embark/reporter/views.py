@@ -164,10 +164,10 @@ def get_accumulated_reports(request):
         }
     """
     results = Result.objects.all()
-    # top_5_entropies = results.order_by('-entropy_value')[:5]
     charfields = ['architecture_verified', 'os_verified']
     data = {}
     strcpy_bins = {}
+    system_bin_dict = {}
     for result in results:
         result = model_to_dict(result)
         # Pop firmware object_id
@@ -175,12 +175,17 @@ def get_accumulated_reports(request):
         result.pop('firmware', None)
         result.pop('emba_command', None)
 
-        # Get counts for all strcpy_bin values
+        # Get counts for all strcpy_bin ans system_bin values
+        system_bin = json.loads(result.pop('system_bin', '{}'))
         strcpy_bin = json.loads(result.pop('strcpy_bin', '{}'))
         for key in strcpy_bin:
             if key not in strcpy_bins:
                 strcpy_bins[key] = 0
             strcpy_bins[key] += int(strcpy_bin[key])
+        for key in system_bin:
+            if key not in system_bin_dict:
+                system_bin_dict[key] = 0
+            system_bin_dict[key] += int(strcpy_bin[key])
 
         for charfield in charfields:
             # clean-up for linux extensive os-descriptions
@@ -213,12 +218,14 @@ def get_accumulated_reports(request):
         if field not in charfields:
             data[field]['mean'] = data[field]['sum'] / data[field]['count']
     data['total_firmwares'] = len(results)
-    # data['top_entropies'] = [{'name': r.firmware_analysis.firmware_name, 'entropy_value': r.entropy_value} for r in
-    #                          top_5_entropies]
 
     # Taking top 10 most commonly occurring strcpy_bin values
     strcpy_bins = dict(sorted(strcpy_bins.items(), key=itemgetter(1), reverse=True)[:10])
     data['top_strcpy_bins'] = strcpy_bins
+
+    # Taking top 10 occurring system binaries
+    system_bin_dict = dict(sorted(system_bin_dict.items(), key=itemgetter(1), reverse=True)[:10])
+    data['top_system_bins'] = system_bin_dict
 
     return JsonResponse(data=data, status=HTTPStatus.OK)
 

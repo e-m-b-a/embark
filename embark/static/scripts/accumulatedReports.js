@@ -551,6 +551,61 @@ function makeCharts(returnData) {
 
     });
 
+
+    var topSystemBinsLabels = Object.keys(returnData.top_system_bins);
+    var topSystemBinsCounts = Object.values(returnData.top_system_bins);
+    let topSystemBinsBar = new Chart(topSystemBinsTypes, {
+        type: 'bar',
+        data: {
+            labels: topSystemBinsLabels,
+            datasets: [{
+                label: 'Used in X files',
+                labels: topSystemBinsLabels,
+                data: topSystemBinsCounts,
+                borderWidth: 1,
+                backgroundColor: getRandomColors(topSystemBinsLabels.length)
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'System Binaries',
+                    position: 'top',
+                    color: 666,
+                    padding: {
+                        top: 15,
+                        bottom: 10
+                    },
+                    font: {
+                        size: 24
+                    }
+                },
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        fontColor: '#000'
+                    }
+                },
+                layout: {
+                    padding: {
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        top: 0
+                    }
+                },
+                tooltips: {
+                    enabled: true
+                }
+            }
+        },
+
+    });
+
 }
 
 /**
