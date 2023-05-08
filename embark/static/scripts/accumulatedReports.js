@@ -8,10 +8,10 @@ var canarypie = document.getElementById('canarypie').getContext('2d');
 var strippedpie = document.getElementById('strippedpie').getContext('2d');
 
 var accumulatedCvePie = document.getElementById('accumulatedCvePie').getContext('2d');
-var accumulatedEntropy = document.getElementById('accumulatedEntropy');
 
 var accumulatedArchitecture = document.getElementById('accumulatedArchitecture').getContext('2d');
 var accumulatedOs = document.getElementById('accumulatedOs').getContext('2d');
+// TODO put system emulation stuff here
 
 var firmwareAnalysed = document.getElementById('firmwareAnalysed');
 var totalFiles = document.getElementById('totalFiles');
@@ -19,10 +19,11 @@ var totalDirectories = document.getElementById('totalDirectories');
 var totalBinaries = document.getElementById('totalBinaries');
 var totalCve = document.getElementById('totalCve');
 var totalIssues = document.getElementById('totalIssues');
-// var topEntropies = document.getElementById('topEntropies').getContext('2d');
-var entropyMeterLabel = document.getElementById('entropyMeterLabel');
+
+
 
 var topBinaryTypes = document.getElementById('topBinaryTypes').getContext('2d');
+
 
 
 /**
@@ -57,8 +58,6 @@ function makeCharts(returnData) {
     "use strict";
     if (returnData.total_firmwares !== 0) {
       firmwareAnalysed.textContent = returnData.total_firmwares;
-      accumulatedEntropy.setAttribute('value', returnData.entropy_value.mean);
-      entropyMeterLabel.textContent = 'Average Entropy Value: ' + returnData.entropy_value.sum.toFixed(2);
       totalFiles.textContent = returnData.files.sum;
       totalDirectories.textContent = returnData.directories.sum;
       totalBinaries.textContent = returnData.bins_checked.sum;
@@ -66,8 +65,6 @@ function makeCharts(returnData) {
       totalIssues.textContent = returnData.exploits.sum;
     } else {
       firmwareAnalysed.textContent = "no data";
-      accumulatedEntropy.setAttribute('value', 0);
-      entropyMeterLabel.textContent = 'Average Entropy Value: no data';
       totalFiles.textContent = "no data";
       totalDirectories.textContent = "no data";
       totalBinaries.textContent = "no data";
@@ -553,68 +550,6 @@ function makeCharts(returnData) {
         },
 
     });
-
-
-    var topEntropyLabels = [];
-    var topEntropyValues = [];
-
-    for (var i = 0; i < returnData.top_entropies.length; i++) {
-        topEntropyLabels.push(returnData.top_entropies[i].name);
-        topEntropyValues.push(returnData.top_entropies[i].entropy_value);
-    }
-
-    //let topEntropyBar = new Chart(topEntropies, {
-    //        type: 'doughnut',
-    //        data: {
-    //            labels: topEntropyLabels,
-    //            datasets: [{
-    //                label: 'Firmware entropie values',
-    //                labels: topEntropyLabels,
-    //                data: topEntropyValues,
-    //                borderWidth: 1,
-    //                backgroundColor: getRandomColors(topEntropyLabels.length)
-    //            }]
-    //        },
-    //        options: {
-    //            responsive: true,
-    //            maintainAspectRatio: false,
-    //            plugins: {
-    //                title: {
-    //                    display: true,
-    //                    text: 'Firmware entropie values',
-    //                    position: 'top',
-    //                    color: 666,
-    //                    padding: {
-    //                        top: 15,
-    //                        bottom: 10
-    //                    },
-    //                    font: {
-    //                        size: 24
-    //                    }
-    //                },
-    //                legend: {
-    //                    display: true,
-    //                    position: 'bottom',
-    //                    labels: {
-    //                        fontColor: '#000'
-    //                    }
-    //                },
-    //                layout: {
-    //                    padding: {
-    //                        left: 0,
-    //                        right: 0,
-    //                        bottom: 0,
-    //                        top: 0
-    //                    }
-    //                },
-    //                tooltips: {
-    //                    enabled: true
-    //                },
-    //            },
-    //        }
-    //    }
-//
-    //);
 
 }
 
