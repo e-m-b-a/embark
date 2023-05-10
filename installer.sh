@@ -273,7 +273,7 @@ install_embark_default(){
   fi
   
   #debs
-  apt-get install -y -q default-libmysqlclient-dev build-essential
+  apt-get install -y -q default-libmysqlclient-dev build-essential mysql-client-core-8.0
   
   # install pipenv
   pip3.10 install pipenv
