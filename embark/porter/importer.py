@@ -115,6 +115,7 @@ def f50_csv(file_path, analysis_id):
         bins_checked=int(res_dict.get("bins_checked", 0)),
         strcpy=int(res_dict.get("strcpy", 0)),
         strcpy_bin=json.dumps(res_dict.get("strcpy_bin", {})),
+        system_bin=json.dumps(res_dict.get("system_bin", {})),
         versions_identified=int(res_dict.get("versions_identified", 0)),
         cve_high=int(res_dict.get("cve_high", 0)),
         cve_medium=int(res_dict.get("cve_medium", 0)),

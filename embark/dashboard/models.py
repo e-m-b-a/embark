@@ -64,5 +64,6 @@ class Result(models.Model):
 
     bins_checked = models.IntegerField(default=0, help_text='')
     strcpy_bin = models.TextField(default='{}')
+    system_bin = models.TextField(default='{}')
 
     vulnerability = models.ManyToManyField(Vulnerability, help_text='CVE/Vulnerability', related_query_name='CVE', editable=True, blank=True)
