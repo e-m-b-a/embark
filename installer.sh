@@ -354,7 +354,8 @@ install_embark_default(){
 
   # activate daemon
   systemctl start embark.service
-
+  check_db
+  docker-compose stop
   echo -e "$GREEN""$BOLD""Ready to use \$sudo ./run-server.sh ""$NC"
   echo -e "$GREEN""$BOLD""Which starts the server on (0.0.0.0) port 80 ""$NC"
 }
@@ -418,7 +419,8 @@ install_embark_dev(){
 
   # daemon
   # install_daemon
-
+  check_db
+  docker-compose stop
   echo -e "$GREEN""$BOLD""Ready to use \$sudo ./dev-tools/debug-server-start.sh""$NC"
   echo -e "$GREEN""$BOLD""Or use otherwise""$NC"
 }
@@ -631,6 +633,4 @@ if [[ $DEFAULT -eq 1 ]]; then
 elif [[ $DEV -eq 1 ]]; then
   install_embark_dev
 fi
-check_db
-docker-compose stop
 exit 0
