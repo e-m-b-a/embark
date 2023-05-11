@@ -87,6 +87,7 @@ write_env(){
   local DJANGO_SECRET_KEY=""
   
   if check_safe; then
+    echo -e "$ORANGE""$BOLD""Using old env file""$NC"
     DJANGO_SECRET_KEY="$(grep "SECRET_KEY=" "$(find ./safe -name "*.env" | head -1)" | sed -e "s/^SECRET_KEY=//" )"
     RANDOM_PW="$(grep "DATABASE_PASSWORD=" "$(find ./safe -name "*.env" | head -1)" | sed -e "s/^DATABASE_PASSWORD=//" )"
   else

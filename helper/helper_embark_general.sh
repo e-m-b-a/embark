@@ -122,10 +122,10 @@ check_safe() {
   if [[ -d safe ]] ; then
     mapfile -d '' ENV_FILES < <(find ./safe -iname "*.env" -print0 2> /dev/null)
     if [ ${#ENV_FILES[@]} -gt 0 ]; then
-      return 1
+      return 0
     fi
   fi
-  return 0
+  return 1
 }
 
 add_to_env_history(){
