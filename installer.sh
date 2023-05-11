@@ -349,6 +349,7 @@ install_embark_default(){
   docker-compose -f ./docker-compose.yml up &>/dev/null &
   sleep 30
   kill %1
+  docker-compose -f ./docker-compose.yml stop
 
   # activate daemon
   systemctl start embark.service
