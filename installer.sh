@@ -417,8 +417,13 @@ install_embark_dev(){
   write_env
   chmod 644 .env
 
-  # daemon
-  # install_daemon
+  # download images for container
+  docker-compose -f ./docker-compose.yml up --no-start
+  docker-compose -f ./docker-compose.yml up &>/dev/null &
+  sleep 30
+  kill %1
+  docker-compose -f ./docker-compose.yml stop
+
   check_db
   docker-compose stop
   echo -e "$GREEN""$BOLD""Ready to use \$sudo ./dev-tools/debug-server-start.sh""$NC"
@@ -491,7 +496,7 @@ uninstall (){
   echo -e "$ORANGE""$BOLD""Consider running " "$CYAN""\$docker system prune""$NC"
 
   # delete/uninstall EMBA
-  if ! [ -f ./emba/install.log ]; then
+  if [ -f ./emba/install.log ]; then
     rm ./emba/install.log
   fi
   if [[ $(sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git status --porcelain --untracked-files=no) ]]; then
