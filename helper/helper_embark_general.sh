@@ -86,3 +86,53 @@ check_docker_wsl() {
   echo -e "$BLUE""$BOLD""checking docker""$NC\\n"
   service docker status
 }
+
+check_db() {
+  local PW_ENV
+  local USER_ENV
+  local HOST_ENV
+  PW_ENV=$(grep DATABASE_PASSWORD ./.env | sed 's/DATABASE\_PASSWORD\=//')
+  USER_ENV=$(grep DATABASE_USER ./.env | sed 's/DATABASE\_USER\=//')
+  HOST_ENV=$(grep DATABASE_HOST ./.env | sed 's/DATABASE\_HOST\=//')
+  echo -e "\\n$ORANGE""$BOLD""checking database""$NC\\n""$BOLD=================================================================$NC"
+  echo -e "$BLUE""$BOLD""1. checking startup""$NC\\n"
+  if docker-compose -f ./docker-compose.yml up -d ; then
+    echo -e "$GREEN""$BOLD""Finished setup mysql and redis docker images""$NC"
+    add_to_env_history "$PW_ENV" "$(docker-compose ps -q embark_db)"
+  else
+    echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
+    exit 1
+  fi
+  sleep 5s
+  echo -e "$BLUE""$BOLD""2. checking password""$NC\\n"
+  if ! mysql --host="$HOST_ENV" --user="$USER_ENV" --password="$PW_ENV" -e"quit"; then  # PW_ENV=$(grep DATABASE_PASSWORD ./.env | sed 's/DATABASE\_PASSWORD\=//')mysql -h 172.22.0.5 -u embark -p $PW_ENV -e "quit"
+    echo -e "$ORANGE""$BOLD""Failed logging into database with password""$NC"
+    echo -e "---------------------------------------------------------------------------"
+    echo -e "$CYAN""Old passwords are stored in the \"safe\" folder when uninstalling EMBArk""$NC\\n"
+    echo -e "$CYAN""You could try recoverying manually by overwriting your\".env\" file""$NC\\n"
+    if [[ -f safe/history.env ]]; then
+      echo -e "$CYAN""The mysql-db was first started if the password(sha256sum): $(head -n1 ./safe/history.env | cut -d";" -f1) ""$NC\\n"
+    fi
+    exit 1
+  fi
+}
+
+check_safe() {
+  local ENV_FILES=()
+  if [[ -d safe ]] ; then
+    mapfile -d '' ENV_FILES < <(find ./safe -iname "*.env" -print0 2> /dev/null)
+    if [ ${#ENV_FILES[@]} -gt 0 ]; then
+      return 0
+    fi
+  fi
+  return 1
+}
+
+add_to_env_history(){
+  local PASSWORD_="${1:-}"
+  local CONTAINER_HASH_="${2:-}"
+  if [[ -d safe ]]; then
+    printf '%s;%s;\n' "$(echo "$PASSWORD_" | sha256sum)" "$CONTAINER_HASH_" >> ./safe/history.env
+  fi
+
+}
