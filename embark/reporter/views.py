@@ -185,7 +185,7 @@ def get_accumulated_reports(request):
         for key in system_bin:
             if key not in system_bin_dict:
                 system_bin_dict[key] = 0
-            system_bin_dict[key] += int(strcpy_bin[key])
+            system_bin_dict[key] += int(system_bin_dict[key])
 
         for charfield in charfields:
             # clean-up for linux extensive os-descriptions
