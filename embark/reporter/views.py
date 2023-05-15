@@ -175,7 +175,7 @@ def get_accumulated_reports(request):
         result.pop('firmware', None)
         result.pop('emba_command', None)
 
-        # Get counts for all strcpy_bin ans system_bin values
+        # Get counts for all strcpy_bin and system_bin values
         system_bin = json.loads(result.pop('system_bin', '{}'))
         strcpy_bin = json.loads(result.pop('strcpy_bin', '{}'))
         for key in strcpy_bin:
@@ -185,7 +185,7 @@ def get_accumulated_reports(request):
         for key in system_bin:
             if key not in system_bin_dict:
                 system_bin_dict[key] = 0
-            system_bin_dict[key] += int(system_bin_dict[key])
+            system_bin_dict[key] += int(system_bin[key])
 
         for charfield in charfields:
             # clean-up for linux extensive os-descriptions
