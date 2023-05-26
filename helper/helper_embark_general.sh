@@ -100,6 +100,7 @@ run_mysql_cmd() {
   PW_ENV=$(grep DATABASE_PASSWORD ./.env | sed 's/DATABASE\_PASSWORD\=//')
   USER_ENV=$(grep DATABASE_USER ./.env | sed 's/DATABASE\_USER\=//')
   HOST_ENV=$(grep DATABASE_HOST ./.env | sed 's/DATABASE\_HOST\=//')
+  echo -e "\n[""$BLUE JOB""$NC""] Running the following command: $SQL_COMMAND ""$NC"
   mysql --host="$HOST_ENV" --user="$USER_ENV" --password="$PW_ENV" -e"$SQL_COMMAND"
 }
 
