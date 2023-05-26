@@ -83,17 +83,15 @@ write_env(){
   local SUPER_PW="embark"
   local SUPER_EMAIL="idk@lol.com"
   local SUPER_USER="superuser"
-
   local RANDOM_PW=""
   local DJANGO_SECRET_KEY=""
   
-  if [[ $REFORCE -eq 1 ]] && [[ -d safe ]]; then
-    # install old pws
-    # from newest file
+  if check_safe; then
+    echo -e "$ORANGE""$BOLD""Using old env file""$NC"
     DJANGO_SECRET_KEY="$(grep "SECRET_KEY=" "$(find ./safe -name "*.env" | head -1)" | sed -e "s/^SECRET_KEY=//" )"
     RANDOM_PW="$(grep "DATABASE_PASSWORD=" "$(find ./safe -name "*.env" | head -1)" | sed -e "s/^DATABASE_PASSWORD=//" )"
   else
-    echo -e "$ORANGE""$BOLD""Couldn't find safed passwords""$NC"
+    echo -e "$ORANGE""$BOLD""Did not find safed passwords""$NC"
     DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
     RANDOM_PW=$(openssl rand -base64 12)
   fi
@@ -276,7 +274,7 @@ install_embark_default(){
   fi
   
   #debs
-  apt-get install -y -q default-libmysqlclient-dev build-essential
+  apt-get install -y -q default-libmysqlclient-dev build-essential mysql-client-core-8.0
   
   # install pipenv
   pip3.10 install pipenv
@@ -352,10 +350,12 @@ install_embark_default(){
   docker-compose -f ./docker-compose.yml up &>/dev/null &
   sleep 30
   kill %1
+  docker-compose -f ./docker-compose.yml stop
 
   # activate daemon
   systemctl start embark.service
-
+  check_db
+  docker-compose stop
   echo -e "$GREEN""$BOLD""Ready to use \$sudo ./run-server.sh ""$NC"
   echo -e "$GREEN""$BOLD""Which starts the server on (0.0.0.0) port 80 ""$NC"
 }
@@ -363,7 +363,7 @@ install_embark_default(){
 install_embark_dev(){
   echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
   # apt packages
-  apt-get install -y npm pycodestyle python3-pylint-django default-libmysqlclient-dev build-essential bandit yamllint
+  apt-get install -y npm pycodestyle python3-pylint-django default-libmysqlclient-dev build-essential bandit yamllint mysql-client-core-8.0
   # npm packages
   npm install -g jshint
   # npm install -g dockerlinter
@@ -417,16 +417,21 @@ install_embark_dev(){
   write_env
   chmod 644 .env
 
-  # daemon
-  # install_daemon
+  # download images for container
+  docker-compose -f ./docker-compose.yml up --no-start
+  docker-compose -f ./docker-compose.yml up &>/dev/null &
+  sleep 30
+  kill %1
+  docker-compose -f ./docker-compose.yml stop
 
+  check_db
+  docker-compose stop
   echo -e "$GREEN""$BOLD""Ready to use \$sudo ./dev-tools/debug-server-start.sh""$NC"
   echo -e "$GREEN""$BOLD""Or use otherwise""$NC"
 }
 
 uninstall (){
   echo -e "[+]$CYAN""$BOLD""Uninstalling EMBArk""$NC"
-    
   # check for changes
   if [[ $(git status --porcelain --untracked-files=no --ignore-submodules=all) ]]; then
     # Changes
@@ -491,6 +496,9 @@ uninstall (){
   echo -e "$ORANGE""$BOLD""Consider running " "$CYAN""\$docker system prune""$NC"
 
   # delete/uninstall EMBA
+  if [ -f ./emba/install.log ]; then
+    rm ./emba/install.log
+  fi
   if [[ $(sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git status --porcelain --untracked-files=no) ]]; then
     echo -e "[!!]$RED""$BOLD""EMBA changes detected - please commit them...otherwise they will be lost""$NC"
     read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
@@ -609,6 +617,7 @@ if [[ $REFORCE -eq 1 ]] && [[ $UNINSTALL -eq 1 ]]; then
   save_old_env
   uninstall
 elif [[ $UNINSTALL -eq 1 ]]; then
+  save_old_env
   uninstall
   exit 0
 fi
@@ -629,5 +638,4 @@ if [[ $DEFAULT -eq 1 ]]; then
 elif [[ $DEV -eq 1 ]]; then
   install_embark_dev
 fi
-
 exit 0

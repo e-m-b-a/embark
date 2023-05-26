@@ -19,6 +19,7 @@ BOLD='\033[1m'
 NC='\033[0m' # no color
 HELP_DIR=./helper
 
+export HELP_DIR='helper'
 export DJANGO_SETTINGS_MODULE=embark.settings.dev
 export EMBARK_DEBUG=True
 export PIPENV_VENV_IN_PROJECT="True"
@@ -38,7 +39,8 @@ cleaner() {
   exit 1
 }
 
-import_helper(){
+import_helper()
+{
   local HELPERS=()
   local HELPER_COUNT=0
   local HELPER_FILE=""
@@ -60,21 +62,13 @@ trap cleaner INT
 cd "$(dirname "$0")" || exit 1
 cd .. || exit 1
 import_helper
-
 echo -e "\n$GREEN""$BOLD""Configuring Embark""$NC"
 
 # shellcheck disable=SC1091
 source ./.venv/bin/activate || exit 1
 
-echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
-docker-compose -f ./docker-compose.yml up -d
-DU_RETURN=$?
-if [[ $DU_RETURN -eq 0 ]] ; then
-  echo -e "$GREEN""$BOLD""Finished setup mysql and redis docker images""$NC"
-else
-  echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
-  exit 1
-fi
+#start and check db
+check_db
 
 if ! [[ -d ./logs ]]; then
   mkdir ./logs
