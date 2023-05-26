@@ -87,10 +87,6 @@ docker container logs embark_redis -f > ./logs/redis.log &
 echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql.log""$NC"
 docker container logs embark_db -f > ./logs/mysql.log &
 
-# give create rights
-echo -e "[*] Giving creation rights to embark user for test_db"
-run_mysql_cmd "GRANT ALL PRIVILEGES ON test_db.* TO 'embark'@'%';"
-
 ##
 echo -e "\n[""$BLUE JOB""$NC""] Testing""$NC"
 pipenv run ./embark/manage.py test embark.test_logreader
