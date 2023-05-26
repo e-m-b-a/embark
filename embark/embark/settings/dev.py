@@ -82,7 +82,7 @@ DATABASES = {
         'HOST': os.environ.get('DATABASE_HOST'),
         'PORT': os.environ.get('DATABASE_PORT'),
         'CONN_MAX_AGE': 300,
-        'TEST': {'NAME': 'test_db'},
+        #'TEST': {'NAME': 'test_db'},
     },
 }
 
