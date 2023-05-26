@@ -89,8 +89,9 @@ docker container logs embark_db -f > ./logs/mysql.log &
 
 ##
 echo -e "\n[""$BLUE JOB""$NC""] Testing""$NC"
-pipenv run ./embark/manage.py test embark.test_logreader
-pipenv run ./embark/manage.py test users.tests.SeleniumTests.test_register
-pipenv run ./embark/manage.py test users.tests.SeleniumTests.test_login
-pipenv run ./embark/manage.py test porter.tests.TestImport
+pipenv run ./embark/manage.py test
+# pipenv run ./embark/manage.py test embark.test_logreader
+# pipenv run ./embark/manage.py test users.tests.SeleniumTests.test_register
+# pipenv run ./embark/manage.py test users.tests.SeleniumTests.test_login
+# pipenv run ./embark/manage.py test porter.tests.TestImport
 echo -e "\n$ORANGE""$BOLD""Done. To clean-up use the clean-setup script""$NC"
