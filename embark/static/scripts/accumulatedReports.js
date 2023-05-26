@@ -19,7 +19,7 @@ var totalDirectories = document.getElementById('totalDirectories');
 var totalBinaries = document.getElementById('totalBinaries');
 var totalCve = document.getElementById('totalCve');
 var totalIssues = document.getElementById('totalIssues');
-var topEntropies = document.getElementById('topEntropies').getContext('2d');
+// var topEntropies = document.getElementById('topEntropies').getContext('2d');
 var entropyMeterLabel = document.getElementById('entropyMeterLabel');
 
 var topBinaryTypes = document.getElementById('topBinaryTypes').getContext('2d');
@@ -555,14 +555,14 @@ function makeCharts(returnData) {
     });
 
 
-    //var topEntropyLabels = [];
-    //var topEntropyValues = [];
-//
-    //for (var i = 0; i < returnData.top_entropies.length; i++) {
-    //    topEntropyLabels.push(returnData.top_entropies[i].name);
-    //    topEntropyValues.push(returnData.top_entropies[i].entropy_value);
-    //}
-//
+    var topEntropyLabels = [];
+    var topEntropyValues = [];
+
+    for (var i = 0; i < returnData.top_entropies.length; i++) {
+        topEntropyLabels.push(returnData.top_entropies[i].name);
+        topEntropyValues.push(returnData.top_entropies[i].entropy_value);
+    }
+
     //let topEntropyBar = new Chart(topEntropies, {
     //        type: 'doughnut',
     //        data: {
