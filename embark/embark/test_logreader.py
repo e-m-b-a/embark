@@ -26,6 +26,7 @@ class TestLogreader(TestCase):
         super().setUp()
         analysis = FirmwareAnalysis.objects.create()
         analysis.failed = False
+        analysis.path_to_logs = f"{settings.EMBA_LOG_ROOT}/{analysis.id}/emba_logs"
         analysis.save()   # args??
 
         self.analysis_id = analysis.id

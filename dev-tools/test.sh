@@ -30,8 +30,8 @@ cleaner() {
   fi
   
   # killall -9 -q "*daphne*"
-  docker container stop embark_db_dev
-  docker container stop embark_redis_dev
+  docker container stop embark_db
+  docker container stop embark_redis
 
   docker container prune -f --filter "label=flag"
 
