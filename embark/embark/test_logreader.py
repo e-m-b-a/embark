@@ -23,7 +23,6 @@ class LogreaderException(Exception):
 class TestLogreader(TestCase):
 
     def setUp(self):
-        os.mkdir(f"{settings.EMBA_LOG_ROOT}")
         super().setUp()
         analysis = FirmwareAnalysis.objects.create()
         analysis.failed = False
