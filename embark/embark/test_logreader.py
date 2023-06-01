@@ -23,10 +23,12 @@ class LogreaderException(Exception):
 class TestLogreader(TestCase):
 
     def setUp(self):
+        os.mkdir(f"{settings.EMBA_LOG_ROOT}")
         super().setUp()
         analysis = FirmwareAnalysis.objects.create()
         analysis.failed = False
         analysis.save()   # args??
+        os.mkdir(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}")
 
         self.analysis_id = analysis.id
         self.test_file_good = os.path.join(settings.BASE_DIR.parent, "test/logreader/good-log")
