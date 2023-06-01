@@ -28,9 +28,10 @@ class TestLogreader(TestCase):
         analysis = FirmwareAnalysis.objects.create()
         analysis.failed = False
         analysis.save()   # args??
-        os.mkdir(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}")
 
         self.analysis_id = analysis.id
+        os.mkdir(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}")
+
         self.test_file_good = os.path.join(settings.BASE_DIR.parent, "test/logreader/good-log")
         self.test_file_bad = os.path.join(settings.BASE_DIR.parent, "test/logreader/fail-log")
         # check test_log file
