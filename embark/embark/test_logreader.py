@@ -32,7 +32,7 @@ class TestLogreader(TestCase):
         self.test_file_good = os.path.join(settings.BASE_DIR.parent, "test/logreader/good-log")
         self.test_file_bad = os.path.join(settings.BASE_DIR.parent, "test/logreader/fail-log")
         # check test_log file
-        if not self.test_file_good.isfile() or not self.test_file_bad.isfile():
+        if not os.path.isfile(self.test_file_good) or not os.path.isfile(self.test_file_bad):
             logger.error("test_files not accessable")
             print("Files for testing not found")
 

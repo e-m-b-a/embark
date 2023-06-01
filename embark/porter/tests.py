@@ -6,8 +6,7 @@ from urllib.parse import urlencode
 from django.conf import settings
 from django.forms import model_to_dict
 from django.test import TestCase
-from embark.porter.forms import FirmwareAnalysisImportForm
-from embark.porter.models import LogZipFile
+from porter.models import LogZipFile
 
 from uploader.models import FirmwareAnalysis
 from porter.importer import result_read_in
