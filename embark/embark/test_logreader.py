@@ -30,7 +30,8 @@ class TestLogreader(TestCase):
         analysis.save()   # args??
 
         self.analysis_id = analysis.id
-        os.mkdir(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}")
+        os.mkdir(f"{settings.EMBA_LOG_ROOT}", exist_ok=True)
+        os.mkdir(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}", exist_ok=True)
 
         self.test_file_good = os.path.join(settings.BASE_DIR.parent, "test/logreader/good-log")
         self.test_file_bad = os.path.join(settings.BASE_DIR.parent, "test/logreader/fail-log")
