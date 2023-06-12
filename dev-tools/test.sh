@@ -67,6 +67,9 @@ echo -e "\n$GREEN""$BOLD""Configuring Embark""$NC"
 # shellcheck disable=SC1091
 source ./.venv/bin/activate || exit 1
 
+export MYSQL_RANDOM_ROOT_PASSWORD=no
+export MYSQL_ROOT_PASSWORD=Xxxasd12345XX
+
 #start and check db
 check_db
 
@@ -81,6 +84,10 @@ pipenv run ./embark/manage.py migrate | tee -a ./logs/migration.log
 
 # superuser
 pipenv run ./embark/manage.py createsuperuser --noinput
+
+# add privs
+echo -e "$BLUE""$BOLD""[+] Adding permissions for testing""$NC\\n"
+mysql --host="$(grep DATABASE_HOST ./.env | sed 's/DATABASE\_HOST\=//')" --user=root --password="$MYSQL_ROOT_PASSWORD" -e"GRANT ALL PRIVILEGES ON test_db.* TO 'embark'@'%';"
 
 echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./embark/logs/redis.log""$NC"
 docker container logs embark_redis -f > ./logs/redis.log &
