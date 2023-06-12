@@ -94,7 +94,7 @@ docker container logs embark_db -f > ./logs/mysql.log &
 ##
 echo -e "\n[""$BLUE JOB""$NC""] Testing""$NC"
 pipenv run ./embark/manage.py test
-pipenv run ./embark/manage.py test embark.test_logreader
+pipenv run ./embark/manage.py test embark.test_logreader.test_logreader_with_files
 #pipenv run ./embark/manage.py test users.tests.SeleniumTests.test_register
 #pipenv run ./embark/manage.py test users.tests.SeleniumTests.test_login
 pipenv run ./embark/manage.py test porter.tests.TestImport

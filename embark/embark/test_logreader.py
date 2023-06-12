@@ -32,7 +32,9 @@ class TestLogreader(TestCase):
         self.analysis_id = analysis.id
         os.makedirs(f"{settings.EMBA_LOG_ROOT}", exist_ok=True)
         os.mkdir(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}")
+        os.mkdir(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/emba_logs")
 
+        print("Testing on Analysis:%s", self.analysis_id)
         self.test_file_good = os.path.join(settings.BASE_DIR.parent, "test/logreader/good-log")
         self.test_file_bad = os.path.join(settings.BASE_DIR.parent, "test/logreader/fail-log")
         # check test_log file
