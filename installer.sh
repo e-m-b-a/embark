@@ -469,6 +469,7 @@ uninstall (){
     if [[ -d ./embark_db ]]; then
       echo -e "$RED""$BOLD""Do you wish to remove the database(and backups)""$NC"
       rm -RIv ./embark_db
+      mv --force ./safe/history.env ./safe/old_env_history
     fi
   fi
 
