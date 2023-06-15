@@ -85,6 +85,7 @@ class TestLogreader(TestCase):
             file.write(line)
 
     def test_logreader_with_files(self):
+        print("Testing Logreader with 2 files")
         self.file_test(self.test_file_good)
         os.remove(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/logreader.log")
         os.remove(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/emba_logs/emba.log")

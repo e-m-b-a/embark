@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import shutil
 
 from django.conf import settings
 from django.forms import model_to_dict
@@ -34,7 +35,14 @@ class TestImport(TestCase):
             )
         )
         analysis.path_to_logs = f"{settings.EMBA_LOG_ROOT}/{analysis.id}/emba_logs"
-
+        # make dirs
+        os.makedirs(f"{settings.EMBA_LOG_ROOT}", exist_ok=True)
+        os.mkdir(f"{settings.EMBA_LOG_ROOT}/{analysis.id}")
+        os.mkdir(f"{settings.EMBA_LOG_ROOT}/{analysis.id}/emba_logs")
+        os.mkdir(f"{settings.EMBA_LOG_ROOT}/{analysis.id}/emba_logs/csv_logs")
+        # copy test csvs
+        shutil.copy2(os.path.join(settings.BASE_DIR.parent, "test/porter/f50_test.csv"), f"{settings.EMBA_LOG_ROOT}/{analysis.id}/emba_logs/csv_logs/f50_base_aggregator.csv")
+        shutil.copy2(os.path.join(settings.BASE_DIR.parent, "test/porter/f20_test.csv"), f"{settings.EMBA_LOG_ROOT}/{analysis.id}/emba_logs/csv_logs/f20_vul_aggregator.csv")
         analysis.save()
         self.assertTrue(result_read_in(analysis_id=analysis.id))
         result_obj = result_read_in(analysis_id=analysis.id)
