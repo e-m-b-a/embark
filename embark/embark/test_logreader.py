@@ -12,9 +12,9 @@ from embark.logreader import EMBA_F_PHASE, EMBA_L_MOD_CNT, EMBA_L_PHASE, EMBA_P_
 
 logger = logging.getLogger(__name__)
 
-STATUS_PATTERN = "[*]"
-PHASE_PATTERN = "[!]"
-COLOR_PATTERN = '\033\\[([0-9]+)(;[0-9]+)*m'
+STATUS_PATTERN = r"\[\*\]*"
+PHASE_PATTERN = r"\[\!\]*"
+COLOR_PATTERN = r'\033\\[([0-9]+)(;[0-9]+)*m'
 
 
 class LogreaderException(Exception):
