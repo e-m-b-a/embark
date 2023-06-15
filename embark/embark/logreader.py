@@ -22,6 +22,7 @@ from uploader.models import FirmwareAnalysis
 logger = logging.getLogger(__name__)
 
 # EMBAs module count
+# TODO update
 EMBA_S_MOD_CNT = 39
 EMBA_P_MOD_CNT = 20
 EMBA_F_MOD_CNT = 4
