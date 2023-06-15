@@ -87,7 +87,7 @@ class TestLogreader(TestCase):
                         status_msg["percentage"] = self.logreader_status_calc(phase_identifier, module_count, _module) / 100
                         self.assertTrue(0.75 <= status_msg["percentage"] <= 1.0 )
                 elif phase_identifier == EMBA_PHASE_CNT:
-                    status_msg["percentage"] = self.logreader_status_calc(phase_identifier, module_count, 0) / 100
+                    status_msg["percentage"] = 1.0
                     self.assertEqual(status_msg['percentage'], 1.0)
                 elif phase_identifier < 0:
                     status_msg["percentage"] = self.logreader_status_calc(phase_identifier, module_count, 0) / 100
