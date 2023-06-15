@@ -8,7 +8,7 @@ from django.conf import settings
 from django.test import TestCase
 from uploader.models import FirmwareAnalysis
 
-from embark.logreader import EMBA_F_PHASE, EMBA_L_MOD_CNT, EMBA_L_PHASE, EMBA_P_MOD_CNT, EMBA_P_PHASE, EMBA_PHASE_CNT, EMBA_S_MOD_CNT, EMBA_S_PHASE, LogReader
+from embark.logreader import EMBA_F_MOD_CNT, EMBA_F_PHASE, EMBA_L_MOD_CNT, EMBA_L_PHASE, EMBA_P_MOD_CNT, EMBA_P_PHASE, EMBA_PHASE_CNT, EMBA_S_MOD_CNT, EMBA_S_PHASE, LogReader
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +83,7 @@ class TestLogreader(TestCase):
                         status_msg["percentage"] = self.logreader_status_calc(phase_identifier, module_count, _module) / 100
                         self.assertTrue(0.50 <= status_msg["percentage"] <= 0.75 )
                 elif phase_identifier == EMBA_F_PHASE:
-                    for _module in range(0, EMBA_P_MOD_CNT):
+                    for _module in range(0, EMBA_F_MOD_CNT):
                         status_msg["percentage"] = self.logreader_status_calc(phase_identifier, module_count, _module) / 100
                         self.assertTrue(0.75 <= status_msg["percentage"] <= 1.0 )
                 elif phase_identifier < 0:
