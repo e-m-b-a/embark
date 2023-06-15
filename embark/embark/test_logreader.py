@@ -86,6 +86,9 @@ class TestLogreader(TestCase):
                     for _module in range(0, EMBA_F_MOD_CNT):
                         status_msg["percentage"] = self.logreader_status_calc(phase_identifier, module_count, _module) / 100
                         self.assertTrue(0.75 <= status_msg["percentage"] <= 1.0 )
+                elif phase_identifier == EMBA_PHASE_CNT:
+                    status_msg["percentage"] = self.logreader_status_calc(phase_identifier, module_count, 0) / 100
+                    self.assertEqual(status_msg['percentage'], 1.0)
                 elif phase_identifier < 0:
                     status_msg["percentage"] = self.logreader_status_calc(phase_identifier, module_count, 0) / 100
                     self.assertEqual(status_msg['percentage'], 0.0)
@@ -93,7 +96,6 @@ class TestLogreader(TestCase):
                     print("weird phase in logreader line: %s - phase: %s ", line, phase_identifier)
                     raise LogreaderException("Weird state in logreader")
             # logreader file should be identical to emba.log
-            self.assertEqual(status_msg["percentage"], 1.0)
             self.assertTrue(filecmp.cmp(file, f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/emba_logs/emba.log"), "Files not equal?!")
 
     def write_to_log(self, line):
