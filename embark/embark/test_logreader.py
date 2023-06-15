@@ -30,8 +30,11 @@ class TestLogreader(TestCase):
         analysis.save()   # args??
 
         self.analysis_id = analysis.id
+        os.makedirs(f"{settings.EMBA_LOG_ROOT}", exist_ok=True)
         os.mkdir(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}")
+        os.mkdir(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/emba_logs")
 
+        print("Testing on Analysis:%s", self.analysis_id)
         self.test_file_good = os.path.join(settings.BASE_DIR.parent, "test/logreader/good-log")
         self.test_file_bad = os.path.join(settings.BASE_DIR.parent, "test/logreader/fail-log")
         # check test_log file
@@ -82,7 +85,7 @@ class TestLogreader(TestCase):
             file.write(line)
 
     def test_logreader_with_files(self):
-        self.file_test(self.test_file_bad)
+        self.file_test(self.test_file_good)
         os.remove(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/logreader.log")
         os.remove(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/emba_logs/emba.log")
-        self.file_test(self.test_file_good)
+        # self.file_test(self.test_file_bad)

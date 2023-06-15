@@ -82,6 +82,10 @@ pipenv run ./embark/manage.py migrate | tee -a ./logs/migration.log
 # superuser
 pipenv run ./embark/manage.py createsuperuser --noinput
 
+# add privs
+# echo -e "$BLUE""$BOLD""[+] Adding permissions for testing""$NC\\n"
+# mysql --host="$(grep DATABASE_HOST ./.env | sed 's/DATABASE\_HOST\=//')" --user=root --password="$MYSQL_ROOT_PASSWORD" -e"GRANT ALL PRIVILEGES ON test_db.* TO 'embark'@'%';"
+
 echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./embark/logs/redis.log""$NC"
 docker container logs embark_redis -f > ./logs/redis.log &
 echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql.log""$NC"
@@ -90,7 +94,7 @@ docker container logs embark_db -f > ./logs/mysql.log &
 ##
 echo -e "\n[""$BLUE JOB""$NC""] Testing""$NC"
 pipenv run ./embark/manage.py test
-pipenv run ./embark/manage.py test embark.test_logreader
+pipenv run ./embark/manage.py test embark.test_logreader.test_logreader_with_files
 #pipenv run ./embark/manage.py test users.tests.SeleniumTests.test_register
 #pipenv run ./embark/manage.py test users.tests.SeleniumTests.test_login
 pipenv run ./embark/manage.py test porter.tests.TestImport
