@@ -60,7 +60,6 @@ class TestLogreader(TestCase):
                 time.sleep(0.1)
                 # message check
                 # print("PROCESSMAP with index %s looks like this:%s", str(self.analysis_id), PROCESS_MAP[str(self.analysis_id)])
-                self.assertTrue(filecmp.cmp(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/logreader.log", f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/emba_logs/emba.log"), "Files not equal?!")   # check correctness of regexes
                 if re.match(STATUS_PATTERN, line):
                     status_msg["module"] = line
                 elif re.match(PHASE_PATTERN, line):
@@ -94,6 +93,7 @@ class TestLogreader(TestCase):
                     raise LogreaderException("Weird state in logreader")
             # logreader file should be identical to emba.log
             self.assertEqual(status_msg["percentage"], 1.0)
+            self.assertTrue(filecmp.cmp(file, f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/emba_logs/emba.log"), "Files not equal?!")
 
     def write_to_log(self, line):
         """
@@ -105,6 +105,5 @@ class TestLogreader(TestCase):
     def test_logreader_with_files(self):
         print("Testing Logreader with 2 files")
         self.file_test(self.test_file_good)
-        os.remove(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/logreader.log")
         os.remove(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/emba_logs/emba.log")
         # self.file_test(self.test_file_bad)
