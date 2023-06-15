@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 STATUS_PATTERN = "\\[\\*\\]*"
 PHASE_PATTERN = "\\[\\!\\]*"
-COLOR_PATTERN = "\\x1b\\[.{1,5}m"
+COLOR_PATTERN = '\033\\[([0-9]+)(;[0-9]+)*m'
 
 
 class LogreaderException(Exception):
