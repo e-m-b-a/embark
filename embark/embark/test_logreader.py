@@ -95,14 +95,14 @@ class TestLogreader(TestCase):
                 else:
                     print("weird phase in logreader line: %s - phase: %s ", line, phase_identifier)
                     raise LogreaderException("Weird state in logreader")
-            # logreader file should be identical to emba.log
+            # file should be identical to emba.log
             self.assertTrue(filecmp.cmp(file, f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/emba_logs/emba.log"), "Files not equal?!")
 
     def write_to_log(self, line):
         """
         writes log line by line into log file
         """
-        with open(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/emba_logs/emba.log", 'w', encoding='UTF-8') as file:
+        with open(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/emba_logs/emba.log", 'a', encoding='UTF-8') as file:
             file.write(line)
 
     def test_logreader_with_files(self):
