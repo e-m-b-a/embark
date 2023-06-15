@@ -12,8 +12,8 @@ from embark.logreader import EMBA_F_PHASE, EMBA_L_MOD_CNT, EMBA_L_PHASE, EMBA_P_
 
 logger = logging.getLogger(__name__)
 
-STATUS_PATTERN = "\\[\\*\\]*"
-PHASE_PATTERN = "\\[\\!\\]*"
+STATUS_PATTERN = "[*]"
+PHASE_PATTERN = "[!]"
 COLOR_PATTERN = '\033\\[([0-9]+)(;[0-9]+)*m'
 
 
@@ -68,7 +68,6 @@ class TestLogreader(TestCase):
                     status_msg["phase"] = line
                 else:
                     print("weird line in logreader: ", line)
-
 
                 module_count, phase_identifier = LogReader.phase_identify(status_msg)
                 if phase_identifier == EMBA_P_PHASE:
