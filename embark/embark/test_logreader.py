@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 STATUS_PATTERN = "\\[\\*\\]*"
 PHASE_PATTERN = "\\[\\!\\]*"
+COLOR_PATTERN = "\\x1b\\[.{1,5}m"
 
 
 class LogreaderException(Exception):
@@ -60,12 +61,13 @@ class TestLogreader(TestCase):
                 time.sleep(0.1)
                 # message check
                 # print("PROCESSMAP with index %s looks like this:%s", str(self.analysis_id), PROCESS_MAP[str(self.analysis_id)])
+                re.sub(COLOR_PATTERN, '', line)
                 if re.match(STATUS_PATTERN, line):
                     status_msg["module"] = line
                 elif re.match(PHASE_PATTERN, line):
                     status_msg["phase"] = line
                 else:
-                    print("weird line in logreader: %s", line)
+                    print("weird line in logreader: ", line)
 
 
                 module_count, phase_identifier = LogReader.phase_identify(status_msg)
