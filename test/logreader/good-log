@@ -1,119 +1,119 @@
-[[0;35m![0m][0;35m Pre-checking phase started on Wed May 10 11:18:18 CEST 2023
-    [0mFirmware binary path: /firmware[0m
-[[0;33m*[0m] Wed May 10 11:18:18 CEST 2023 - P02_firmware_bin_file_check starting
-[[0;33m*[0m] Wed May 10 11:18:26 CEST 2023 - P02_firmware_bin_file_check finished
-[[0;33m*[0m] Wed May 10 11:18:27 CEST 2023 - P55_unblob_extractor starting
-[[0;33m*[0m] Wed May 10 11:19:15 CEST 2023 - P55_unblob_extractor finished
-[[0;33m*[0m] Wed May 10 11:19:16 CEST 2023 - P59_binwalk_extractor starting
-[[0;33m*[0m] Wed May 10 11:19:16 CEST 2023 - P59_binwalk_extractor finished
-[[0;33m*[0m] Wed May 10 11:19:16 CEST 2023 - P60_deep_extractor starting
-[[0;33m*[0m] Wed May 10 11:19:17 CEST 2023 - P60_deep_extractor finished
-[[0;33m*[0m] Wed May 10 11:19:17 CEST 2023 - P65_package_extractor starting
-[[0;33m*[0m] Wed May 10 11:19:22 CEST 2023 - P65_package_extractor finished
-[[0;33m*[0m] Wed May 10 11:19:22 CEST 2023 - P99_prepare_analyzer starting
-[[0;33m*[0m] Wed May 10 11:20:22 CEST 2023 - P99_prepare_analyzer finished
-[[0;35m![0m][0;35m Pre-checking phase ended on Wed May 10 11:20:22 CEST 2023 and took about 00:02:14 
-[0m
-[[0;35m![0m][0;35m Testing phase started on Wed May 10 11:20:22 CEST 2023
-    [0mFirmware path: /logs/firmware[0m
-[[0;33m*[0m] Wed May 10 11:20:24 CEST 2023 - S115_usermode_emulator starting
-[[0;33m*[0m] Wed May 10 11:20:24 CEST 2023 - S106_deep_key_search starting
-[[0;33m*[0m] Wed May 10 11:20:24 CEST 2023 - S12_binary_protection starting
-[[0;33m*[0m] Wed May 10 11:20:24 CEST 2023 - S09_firmware_base_version_check starting
-[[0;33m*[0m] Wed May 10 11:20:24 CEST 2023 - S02_uefi_fwhunt starting
-[[0;33m*[0m] Wed May 10 11:20:24 CEST 2023 - S03_firmware_bin_base_analyzer starting
-[[0;33m*[0m] Wed May 10 11:20:25 CEST 2023 - S02_UEFI_FwHunt finished
-[[0;33m*[0m] Wed May 10 11:20:26 CEST 2023 - S05_firmware_details starting
-[[0;33m*[0m] Wed May 10 11:20:26 CEST 2023 - S106_deep_key_search finished
-[[0;33m*[0m] Wed May 10 11:20:28 CEST 2023 - S06_distribution_identification starting
-[[0;33m*[0m] Wed May 10 11:20:39 CEST 2023 - S05_firmware_details finished
-[[0;33m*[0m] Wed May 10 11:20:41 CEST 2023 - S07_bootloader_check starting
-[[0;33m*[0m] Wed May 10 11:20:47 CEST 2023 - S06_distribution_identification finished
-[[0;33m*[0m] Wed May 10 11:20:50 CEST 2023 - S08_package_mgmt_extractor starting
-[[0;33m*[0m] Wed May 10 11:20:57 CEST 2023 - S08_package_mgmt_extractor finished
-[[0;33m*[0m] Wed May 10 11:20:59 CEST 2023 - S10_binaries_basic_check starting
-[[0;33m*[0m] Wed May 10 11:21:15 CEST 2023 - S07_bootloader_check finished
-[[0;33m*[0m] Wed May 10 11:21:18 CEST 2023 - S13_weak_func_check starting
-[[0;33m*[0m] Wed May 10 11:21:55 CEST 2023 - S03_firmware_bin_base_analyzer finished
-[[0;33m*[0m] Wed May 10 11:21:57 CEST 2023 - S14_weak_func_radare_check starting
-[[0;33m*[0m] Wed May 10 11:26:26 CEST 2023 - S10_binaries_basic_check finished
-[[0;33m*[0m] Wed May 10 11:26:30 CEST 2023 - S15_radare_decompile_checks starting
-[[0;33m*[0m] Wed May 10 11:31:05 CEST 2023 - S115_usermode_emulator finished
-[[0;33m*[0m] Wed May 10 11:31:06 CEST 2023 - S17_apk_check starting
-[[0;33m*[0m] Wed May 10 11:31:08 CEST 2023 - S17_apk_check finished
-[[0;33m*[0m] Wed May 10 11:31:10 CEST 2023 - S20_shell_check starting
-[[0;33m*[0m] Wed May 10 11:32:54 CEST 2023 - S20_shell_check finished
-[[0;33m*[0m] Wed May 10 11:32:55 CEST 2023 - S21_python_check starting
-[[0;33m*[0m] Wed May 10 11:32:59 CEST 2023 - S21_python_check finished
-[[0;33m*[0m] Wed May 10 11:33:00 CEST 2023 - S22_php_check starting
-[[0;33m*[0m] Wed May 10 11:34:13 CEST 2023 - S12_binary_protection finished
-[[0;33m*[0m] Wed May 10 11:34:15 CEST 2023 - S23_lua_check starting
-[[0;33m*[0m] Wed May 10 11:35:35 CEST 2023 - S23_lua_check finished
-[[0;33m*[0m] Wed May 10 11:35:38 CEST 2023 - S24_kernel_bin_identifier starting
-[[0;33m*[0m] Wed May 10 11:38:00 CEST 2023 - S24_kernel_bin_identifier finished
-[[0;33m*[0m] Wed May 10 11:38:03 CEST 2023 - S25_kernel_check starting
-[[0;33m*[0m] Wed May 10 11:40:10 CEST 2023 - S25_kernel_check finished
-[[0;33m*[0m] Wed May 10 11:40:12 CEST 2023 - S26_kernel_vuln_verifier starting
-[[0;33m*[0m] Wed May 10 11:40:18 CEST 2023 - S22_php_check finished
-[[0;33m*[0m] Wed May 10 11:40:20 CEST 2023 - S35_http_file_check starting
-[[0;33m*[0m] Wed May 10 11:45:00 CEST 2023 - S13_weak_func_check finished
-[[0;33m*[0m] Wed May 10 11:45:01 CEST 2023 - S36_lighttpd starting
-[[0;33m*[0m] Wed May 10 11:45:08 CEST 2023 - S36_lighttpd finished
-[[0;33m*[0m] Wed May 10 11:45:09 CEST 2023 - S40_weak_perm_check starting
-[[0;33m*[0m] Wed May 10 11:45:19 CEST 2023 - S40_weak_perm_check finished
-[[0;33m*[0m] Wed May 10 11:45:22 CEST 2023 - S45_pass_file_check starting
-[[0;33m*[0m] Wed May 10 11:45:42 CEST 2023 - S45_pass_file_check finished
-[[0;33m*[0m] Wed May 10 11:45:45 CEST 2023 - S50_authentication_check starting
-[[0;33m*[0m] Wed May 10 11:46:19 CEST 2023 - S50_authentication_check finished
-[[0;33m*[0m] Wed May 10 11:46:21 CEST 2023 - S55_history_file_check starting
-[[0;33m*[0m] Wed May 10 11:46:28 CEST 2023 - S55_history_file_check finished
-[[0;33m*[0m] Wed May 10 11:46:31 CEST 2023 - S60_cert_file_check starting
-[[0;33m*[0m] Wed May 10 11:46:37 CEST 2023 - S60_cert_file_check finished
-[[0;33m*[0m] Wed May 10 11:46:39 CEST 2023 - S65_config_file_check starting
-[[0;33m*[0m] Wed May 10 11:46:47 CEST 2023 - S65_config_file_check finished
-[[0;33m*[0m] Wed May 10 11:46:49 CEST 2023 - S70_hidden_file_check starting
-[[0;33m*[0m] Wed May 10 11:47:02 CEST 2023 - S70_hidden_file_check finished
-[[0;33m*[0m] Wed May 10 11:47:04 CEST 2023 - S75_network_check starting
-[[0;33m*[0m] Wed May 10 11:47:13 CEST 2023 - S75_network_check finished
-[[0;33m*[0m] Wed May 10 11:47:15 CEST 2023 - S80_cronjob_check starting
-[[0;33m*[0m] Wed May 10 11:47:19 CEST 2023 - S80_cronjob_check finished
-[[0;33m*[0m] Wed May 10 11:47:21 CEST 2023 - S85_ssh_check starting
-[[0;33m*[0m] Wed May 10 11:47:29 CEST 2023 - S85_ssh_check finished
-[[0;33m*[0m] Wed May 10 11:47:31 CEST 2023 - S90_mail_check starting
-[[0;33m*[0m] Wed May 10 11:47:35 CEST 2023 - S90_mail_check finished
-[[0;33m*[0m] Wed May 10 11:47:37 CEST 2023 - S95_interesting_binaries_check starting
-[[0;33m*[0m] Wed May 10 11:47:56 CEST 2023 - S95_interesting_binaries_check finished
-[[0;33m*[0m] Wed May 10 11:47:58 CEST 2023 - S99_grepit starting
-[[0;33m*[0m] Wed May 10 11:55:44 CEST 2023 - S14_weak_func_radare_check finished
-[[0;33m*[0m] Wed May 10 11:55:46 CEST 2023 - S100_command_inj_check starting
-[[0;33m*[0m] Wed May 10 12:06:58 CEST 2023 - S100_command_inj_check finished
-[[0;33m*[0m] Wed May 10 12:07:01 CEST 2023 - S107_deep_password_search starting
-[[0;33m*[0m] Wed May 10 12:09:09 CEST 2023 - S107_deep_password_search finished
-[[0;33m*[0m] Wed May 10 12:09:11 CEST 2023 - S108_stacs_password_search starting
-[[0;33m*[0m] Wed May 10 12:09:26 CEST 2023 - S108_stacs_password_search finished
-[[0;33m*[0m] Wed May 10 12:09:28 CEST 2023 - S109_jtr_local_pw_cracking starting
-[[0;33m*[0m] Wed May 10 12:09:33 CEST 2023 - S109_jtr_local_pw_cracking finished
-[[0;33m*[0m] Wed May 10 12:09:36 CEST 2023 - S110_yara_check starting
-[[0;33m*[0m] Wed May 10 12:09:39 CEST 2023 - S35_http_file_check finished
-[[0;33m*[0m] Wed May 10 12:09:42 CEST 2023 - S116_qemu_version_detection starting
-[[0;33m*[0m] Wed May 10 12:13:15 CEST 2023 - S116_qemu_version_detection finished
-[[0;33m*[0m] Wed May 10 12:15:13 CEST 2023 - S110_yara_check finished
-[[0;33m*[0m] Wed May 10 12:40:31 CEST 2023 - S99_grepit finished
-[[0;33m*[0m] Wed May 10 12:48:12 CEST 2023 - S15_radare_decompile_checks finished
-[[0;33m*[0m] Wed May 10 13:27:17 CEST 2023 - S09_firmware_base_version_check finished
-[[0;33m*[0m] Wed May 10 13:42:32 CEST 2023 - S26_kernel_vuln_verifier finished
-[[0;35m![0m][0;35m Testing phase ended on Wed May 10 13:42:32 CEST 2023 and took about 02:24:24 
-[0m
-[[0;35m![0m][0;35m Reporting phase started on Wed May 10 13:42:33 CEST 2023
-[0m
-[[0;33m*[0m] Wed May 10 13:42:33 CEST 2023 - F10_license_summary starting
-[[0;33m*[0m] Wed May 10 13:42:44 CEST 2023 - F10_license_summary finished
-[[0;33m*[0m] Wed May 10 13:42:45 CEST 2023 - F20_vul_aggregator starting
-[[0;33m*[0m] Wed May 10 14:40:42 CEST 2023 - F20_vul_aggregator finished
-[[0;33m*[0m] Wed May 10 14:40:43 CEST 2023 - F21_cyclonedx_sbom starting
-[[0;33m*[0m] Wed May 10 14:40:48 CEST 2023 - F21_cyclonedx_sbom finished
-[[0;33m*[0m] Wed May 10 14:40:49 CEST 2023 - F50_base_aggregator starting
-[[0;33m*[0m] Wed May 10 14:41:31 CEST 2023 - F50_base_aggregator finished
-[[0;35m![0m][0;35m Test ended on Wed May 10 14:41:32 CEST 2023 and took about 03:23:24 
-[0m
-[[0;33m*[0m] Open the web-report with[0;33m firefox /var/www/emba_logs/42b69aff-bdb4-485e-9f27-9e037bf911df/emba_logs/html-report/index.html[0m
+[!] Pre-checking phase started on Wed May 10 11:18:18 CEST 2023
+    Firmware binary path: /firmware
+[*] Wed May 10 11:18:18 CEST 2023 - P02_firmware_bin_file_check starting
+[*] Wed May 10 11:18:26 CEST 2023 - P02_firmware_bin_file_check finished
+[*] Wed May 10 11:18:27 CEST 2023 - P55_unblob_extractor starting
+[*] Wed May 10 11:19:15 CEST 2023 - P55_unblob_extractor finished
+[*] Wed May 10 11:19:16 CEST 2023 - P59_binwalk_extractor starting
+[*] Wed May 10 11:19:16 CEST 2023 - P59_binwalk_extractor finished
+[*] Wed May 10 11:19:16 CEST 2023 - P60_deep_extractor starting
+[*] Wed May 10 11:19:17 CEST 2023 - P60_deep_extractor finished
+[*] Wed May 10 11:19:17 CEST 2023 - P65_package_extractor starting
+[*] Wed May 10 11:19:22 CEST 2023 - P65_package_extractor finished
+[*] Wed May 10 11:19:22 CEST 2023 - P99_prepare_analyzer starting
+[*] Wed May 10 11:20:22 CEST 2023 - P99_prepare_analyzer finished
+[!] Pre-checking phase ended on Wed May 10 11:20:22 CEST 2023 and took about 00:02:14 
+
+[!] Testing phase started on Wed May 10 11:20:22 CEST 2023
+    Firmware path: /logs/firmware
+[*] Wed May 10 11:20:24 CEST 2023 - S115_usermode_emulator starting
+[*] Wed May 10 11:20:24 CEST 2023 - S106_deep_key_search starting
+[*] Wed May 10 11:20:24 CEST 2023 - S12_binary_protection starting
+[*] Wed May 10 11:20:24 CEST 2023 - S09_firmware_base_version_check starting
+[*] Wed May 10 11:20:24 CEST 2023 - S02_uefi_fwhunt starting
+[*] Wed May 10 11:20:24 CEST 2023 - S03_firmware_bin_base_analyzer starting
+[*] Wed May 10 11:20:25 CEST 2023 - S02_UEFI_FwHunt finished
+[*] Wed May 10 11:20:26 CEST 2023 - S05_firmware_details starting
+[*] Wed May 10 11:20:26 CEST 2023 - S106_deep_key_search finished
+[*] Wed May 10 11:20:28 CEST 2023 - S06_distribution_identification starting
+[*] Wed May 10 11:20:39 CEST 2023 - S05_firmware_details finished
+[*] Wed May 10 11:20:41 CEST 2023 - S07_bootloader_check starting
+[*] Wed May 10 11:20:47 CEST 2023 - S06_distribution_identification finished
+[*] Wed May 10 11:20:50 CEST 2023 - S08_package_mgmt_extractor starting
+[*] Wed May 10 11:20:57 CEST 2023 - S08_package_mgmt_extractor finished
+[*] Wed May 10 11:20:59 CEST 2023 - S10_binaries_basic_check starting
+[*] Wed May 10 11:21:15 CEST 2023 - S07_bootloader_check finished
+[*] Wed May 10 11:21:18 CEST 2023 - S13_weak_func_check starting
+[*] Wed May 10 11:21:55 CEST 2023 - S03_firmware_bin_base_analyzer finished
+[*] Wed May 10 11:21:57 CEST 2023 - S14_weak_func_radare_check starting
+[*] Wed May 10 11:26:26 CEST 2023 - S10_binaries_basic_check finished
+[*] Wed May 10 11:26:30 CEST 2023 - S15_radare_decompile_checks starting
+[*] Wed May 10 11:31:05 CEST 2023 - S115_usermode_emulator finished
+[*] Wed May 10 11:31:06 CEST 2023 - S17_apk_check starting
+[*] Wed May 10 11:31:08 CEST 2023 - S17_apk_check finished
+[*] Wed May 10 11:31:10 CEST 2023 - S20_shell_check starting
+[*] Wed May 10 11:32:54 CEST 2023 - S20_shell_check finished
+[*] Wed May 10 11:32:55 CEST 2023 - S21_python_check starting
+[*] Wed May 10 11:32:59 CEST 2023 - S21_python_check finished
+[*] Wed May 10 11:33:00 CEST 2023 - S22_php_check starting
+[*] Wed May 10 11:34:13 CEST 2023 - S12_binary_protection finished
+[*] Wed May 10 11:34:15 CEST 2023 - S23_lua_check starting
+[*] Wed May 10 11:35:35 CEST 2023 - S23_lua_check finished
+[*] Wed May 10 11:35:38 CEST 2023 - S24_kernel_bin_identifier starting
+[*] Wed May 10 11:38:00 CEST 2023 - S24_kernel_bin_identifier finished
+[*] Wed May 10 11:38:03 CEST 2023 - S25_kernel_check starting
+[*] Wed May 10 11:40:10 CEST 2023 - S25_kernel_check finished
+[*] Wed May 10 11:40:12 CEST 2023 - S26_kernel_vuln_verifier starting
+[*] Wed May 10 11:40:18 CEST 2023 - S22_php_check finished
+[*] Wed May 10 11:40:20 CEST 2023 - S35_http_file_check starting
+[*] Wed May 10 11:45:00 CEST 2023 - S13_weak_func_check finished
+[*] Wed May 10 11:45:01 CEST 2023 - S36_lighttpd starting
+[*] Wed May 10 11:45:08 CEST 2023 - S36_lighttpd finished
+[*] Wed May 10 11:45:09 CEST 2023 - S40_weak_perm_check starting
+[*] Wed May 10 11:45:19 CEST 2023 - S40_weak_perm_check finished
+[*] Wed May 10 11:45:22 CEST 2023 - S45_pass_file_check starting
+[*] Wed May 10 11:45:42 CEST 2023 - S45_pass_file_check finished
+[*] Wed May 10 11:45:45 CEST 2023 - S50_authentication_check starting
+[*] Wed May 10 11:46:19 CEST 2023 - S50_authentication_check finished
+[*] Wed May 10 11:46:21 CEST 2023 - S55_history_file_check starting
+[*] Wed May 10 11:46:28 CEST 2023 - S55_history_file_check finished
+[*] Wed May 10 11:46:31 CEST 2023 - S60_cert_file_check starting
+[*] Wed May 10 11:46:37 CEST 2023 - S60_cert_file_check finished
+[*] Wed May 10 11:46:39 CEST 2023 - S65_config_file_check starting
+[*] Wed May 10 11:46:47 CEST 2023 - S65_config_file_check finished
+[*] Wed May 10 11:46:49 CEST 2023 - S70_hidden_file_check starting
+[*] Wed May 10 11:47:02 CEST 2023 - S70_hidden_file_check finished
+[*] Wed May 10 11:47:04 CEST 2023 - S75_network_check starting
+[*] Wed May 10 11:47:13 CEST 2023 - S75_network_check finished
+[*] Wed May 10 11:47:15 CEST 2023 - S80_cronjob_check starting
+[*] Wed May 10 11:47:19 CEST 2023 - S80_cronjob_check finished
+[*] Wed May 10 11:47:21 CEST 2023 - S85_ssh_check starting
+[*] Wed May 10 11:47:29 CEST 2023 - S85_ssh_check finished
+[*] Wed May 10 11:47:31 CEST 2023 - S90_mail_check starting
+[*] Wed May 10 11:47:35 CEST 2023 - S90_mail_check finished
+[*] Wed May 10 11:47:37 CEST 2023 - S95_interesting_binaries_check starting
+[*] Wed May 10 11:47:56 CEST 2023 - S95_interesting_binaries_check finished
+[*] Wed May 10 11:47:58 CEST 2023 - S99_grepit starting
+[*] Wed May 10 11:55:44 CEST 2023 - S14_weak_func_radare_check finished
+[*] Wed May 10 11:55:46 CEST 2023 - S100_command_inj_check starting
+[*] Wed May 10 12:06:58 CEST 2023 - S100_command_inj_check finished
+[*] Wed May 10 12:07:01 CEST 2023 - S107_deep_password_search starting
+[*] Wed May 10 12:09:09 CEST 2023 - S107_deep_password_search finished
+[*] Wed May 10 12:09:11 CEST 2023 - S108_stacs_password_search starting
+[*] Wed May 10 12:09:26 CEST 2023 - S108_stacs_password_search finished
+[*] Wed May 10 12:09:28 CEST 2023 - S109_jtr_local_pw_cracking starting
+[*] Wed May 10 12:09:33 CEST 2023 - S109_jtr_local_pw_cracking finished
+[*] Wed May 10 12:09:36 CEST 2023 - S110_yara_check starting
+[*] Wed May 10 12:09:39 CEST 2023 - S35_http_file_check finished
+[*] Wed May 10 12:09:42 CEST 2023 - S116_qemu_version_detection starting
+[*] Wed May 10 12:13:15 CEST 2023 - S116_qemu_version_detection finished
+[*] Wed May 10 12:15:13 CEST 2023 - S110_yara_check finished
+[*] Wed May 10 12:40:31 CEST 2023 - S99_grepit finished
+[*] Wed May 10 12:48:12 CEST 2023 - S15_radare_decompile_checks finished
+[*] Wed May 10 13:27:17 CEST 2023 - S09_firmware_base_version_check finished
+[*] Wed May 10 13:42:32 CEST 2023 - S26_kernel_vuln_verifier finished
+[!] Testing phase ended on Wed May 10 13:42:32 CEST 2023 and took about 02:24:24 
+
+[!] Reporting phase started on Wed May 10 13:42:33 CEST 2023
+
+[*] Wed May 10 13:42:33 CEST 2023 - F10_license_summary starting
+[*] Wed May 10 13:42:44 CEST 2023 - F10_license_summary finished
+[*] Wed May 10 13:42:45 CEST 2023 - F20_vul_aggregator starting
+[*] Wed May 10 14:40:42 CEST 2023 - F20_vul_aggregator finished
+[*] Wed May 10 14:40:43 CEST 2023 - F21_cyclonedx_sbom starting
+[*] Wed May 10 14:40:48 CEST 2023 - F21_cyclonedx_sbom finished
+[*] Wed May 10 14:40:49 CEST 2023 - F50_base_aggregator starting
+[*] Wed May 10 14:41:31 CEST 2023 - F50_base_aggregator finished
+[!] Test ended on Wed May 10 14:41:32 CEST 2023 and took about 03:23:24 
+
+[*] Open the web-report with firefox /var/www/emba_logs/42b69aff-bdb4-485e-9f27-9e037bf911df/emba_logs/html-report/index.html
