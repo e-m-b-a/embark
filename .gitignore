@@ -21,3 +21,6 @@ safe/
 *.report
 *.service
 *.sql
+
+# migrations
+**/migrations/*_initial.py
