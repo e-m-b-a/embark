@@ -53,7 +53,7 @@ class TestImport(TestCase):
     def test_zip_import(self):
         # first upload
         with open(file=self.test_log_zip_file, mode='rb') as data_file:
-            response = self.client.post(path='/import/save', data=data_file, content_type='application/zip',follow=True)
+            response = self.client.post(path='/import/save', data=data_file, content_type='application/zip', follow=True)
             self.assertRedirects(response, '/import/')
         # then read
         zip_log_file = LogZipFile.objects.all().first()

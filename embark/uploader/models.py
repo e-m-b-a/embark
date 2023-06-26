@@ -374,7 +374,7 @@ class FirmwareAnalysis(models.Model):
             for module_ in self.scan_modules:
                 command = command + r" -m " + str(module_)
                 if module_ == "s120":
-                     command = command + r" -c "
+                    command = command + r" -c "
 
         # running emba
         logger.info("final emba parameters %s", command)

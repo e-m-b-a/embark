@@ -151,8 +151,8 @@ class LogReader:
         self.status_msg["module"] = stream_item_list[0]
         # ignore all Q-modules for percentage calc
         if not re.match(".*Q[0-9][0-9]", stream_item_list[0]):
-          self.status_msg["percentage"] = percentage
-  
+            self.status_msg["percentage"] = percentage
+
         # get copy of the current status message
         self.save_status()
 

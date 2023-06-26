@@ -42,7 +42,7 @@ class TestLogreader(TestCase):
         if not os.path.isfile(self.test_file_good) or not os.path.isfile(self.test_file_bad):
             logger.error("test_files not accessible")
             raise Exception("Files for testing not found")
-        
+
     @staticmethod
     def logreader_status_calc(phase_nmbr, max_module, module_cnt):
         return phase_nmbr * (100 / EMBA_PHASE_CNT) + ((100 / EMBA_PHASE_CNT) / max_module) * module_cnt
@@ -73,19 +73,19 @@ class TestLogreader(TestCase):
                 if phase_identifier == EMBA_P_PHASE:
                     for _module in range(0, EMBA_P_MOD_CNT):
                         status_msg["percentage"] = self.logreader_status_calc(phase_identifier, module_count, _module) / 100
-                        self.assertTrue(0 <= status_msg["percentage"] <= 25 )
+                        self.assertTrue(0 <= status_msg["percentage"] <= 25)
                 elif phase_identifier == EMBA_S_PHASE:
                     for _module in range(0, EMBA_S_MOD_CNT):
                         status_msg["percentage"] = self.logreader_status_calc(phase_identifier, module_count, _module) / 100
-                        self.assertTrue(0.25 <= status_msg["percentage"] <= 0.50 )
+                        self.assertTrue(0.25 <= status_msg["percentage"] <= 0.50)
                 elif phase_identifier == EMBA_L_PHASE:
                     for _module in range(0, EMBA_L_MOD_CNT):
                         status_msg["percentage"] = self.logreader_status_calc(phase_identifier, module_count, _module) / 100
-                        self.assertTrue(0.50 <= status_msg["percentage"] <= 0.75 )
+                        self.assertTrue(0.50 <= status_msg["percentage"] <= 0.75)
                 elif phase_identifier == EMBA_F_PHASE:
                     for _module in range(0, EMBA_F_MOD_CNT):
                         status_msg["percentage"] = self.logreader_status_calc(phase_identifier, module_count, _module) / 100
-                        self.assertTrue(0.75 <= status_msg["percentage"] <= 1.0 )
+                        self.assertTrue(0.75 <= status_msg["percentage"] <= 1.0)
                 elif phase_identifier == EMBA_PHASE_CNT:
                     status_msg["percentage"] = 1.0
                     self.assertEqual(status_msg['percentage'], 1.0)
