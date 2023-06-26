@@ -3,6 +3,7 @@ import logging
 import os
 import time
 import re
+import uuid
 
 from django.conf import settings
 from django.test import TestCase
@@ -23,30 +24,33 @@ class LogreaderException(Exception):
 
 class TestLogreader(TestCase):
 
+    def __init__(self, methodName: str = "runTest") -> None:
+        super().__init__(methodName)
+        self.test_file_good = os.path.join(settings.BASE_DIR.parent, "test/logreader/good-log")
+        self.test_file_bad = os.path.join(settings.BASE_DIR.parent, "test/logreader/fail-log")
+        self.analysis_id = uuid.uuid4
+
     def setUp(self):
         super().setUp()
-        analysis = FirmwareAnalysis.objects.create()
+        analysis = FirmwareAnalysis.objects.create(id=self.analysis_id)
         analysis.failed = False
         analysis.path_to_logs = f"{settings.EMBA_LOG_ROOT}/{analysis.id}/emba_logs"
         analysis.save()   # args??
 
-        self.analysis_id = analysis.id
         os.makedirs(f"{settings.EMBA_LOG_ROOT}", exist_ok=True)
         os.mkdir(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}")
         os.mkdir(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/emba_logs")
 
         print("Testing on Analysis:%s", self.analysis_id)
-        self.test_file_good = os.path.join(settings.BASE_DIR.parent, "test/logreader/good-log")
-        self.test_file_bad = os.path.join(settings.BASE_DIR.parent, "test/logreader/fail-log")
         # check test_log file
         if not os.path.isfile(self.test_file_good) or not os.path.isfile(self.test_file_bad):
             logger.error("test_files not accessible")
-            raise Exception("Files for testing not found")
+            raise FileNotFoundError("Files for testing not found")
 
     @staticmethod
     def logreader_status_calc(phase_nmbr, max_module, module_cnt):
         return phase_nmbr * (100 / EMBA_PHASE_CNT) + ((100 / EMBA_PHASE_CNT) / max_module) * module_cnt
-    
+
     def file_test(self, file):
         status_msg = {
             "firmwarename": "LogTestFirmware",
