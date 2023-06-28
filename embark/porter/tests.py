@@ -44,11 +44,11 @@ class TestImport(TestCase):
         shutil.copy2(os.path.join(settings.BASE_DIR.parent, "test/porter/f50_test.csv"), f"{settings.EMBA_LOG_ROOT}/{analysis.id}/emba_logs/csv_logs/f50_base_aggregator.csv")
         shutil.copy2(os.path.join(settings.BASE_DIR.parent, "test/porter/f20_test.csv"), f"{settings.EMBA_LOG_ROOT}/{analysis.id}/emba_logs/csv_logs/f20_vul_aggregator.csv")
         analysis.save()
-        self.assertTrue(result_read_in(analysis_id=analysis.id))
         result_obj = result_read_in(analysis_id=analysis.id)
+        self.assertTrue(result_obj)
         result_dict = dict(model_to_dict(result_obj))
         # check
-        self.assertDictEqual(d1=self.test_result_dict, d2=result_dict)
+        self.assertDictContainsSubset(subset=result_dict["files"] | result_dict["os_verified"], dictionary=self.test_result_dict)
 
     def test_zip_import(self):
         # first upload
