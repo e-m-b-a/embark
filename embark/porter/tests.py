@@ -48,7 +48,7 @@ class TestImport(TestCase):
         self.assertTrue(result_obj)
         result_dict = dict(model_to_dict(result_obj))
         # check
-        self.assertTrue(result_dict["files"] == self.test_result_dict["files"], msg="File count of result is:" + str(result_dict["files"]) + " vs " + str(self.test_result_dict["files"]))
+        self.assertTrue(int(result_dict["files"]) == int(self.test_result_dict["files"]), msg="File count of result is:" + str(result_dict["files"]) + " vs " + str(self.test_result_dict["files"]))
 
     def test_zip_import(self):
         # first upload
