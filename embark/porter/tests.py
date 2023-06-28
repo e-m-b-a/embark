@@ -21,7 +21,6 @@ class TestImport(TestCase):
     @classmethod
     def setUpTestData(cls) -> None:
         cls.test_log_zip_file = os.path.join(settings.BASE_DIR.parent, "test/porter/test-log.zip")
-        cls.maxDiff=None
         with open(os.path.join(settings.BASE_DIR.parent, "test/porter/f50_test.json"), 'r', encoding='utf-8') as json_file:
             cls.test_result_dict = json.load(json_file)
 
