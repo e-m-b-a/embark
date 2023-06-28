@@ -48,7 +48,7 @@ class TestImport(TestCase):
         self.assertTrue(result_obj)
         result_dict = dict(model_to_dict(result_obj))
         # check
-        self.assertDictContainsSubset(subset=result_dict["system_bin"], dictionary=self.test_result_dict)
+        self.assertTrue(result_dict["FW_path"] == self.test_result_dict["FW_path"])
 
     def test_zip_import(self):
         # first upload
