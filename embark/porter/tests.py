@@ -63,5 +63,5 @@ class TestImport(TestCase):
             self.assertEqual(len(messages), 1)
             self.assertNotEqual(str(messages[0]), 'import failed')
             self.assertNotEqual(str(messages[0]), 'form invalid')
-        except FileNotFoundError as Except:
-            print(f"Test file is not in folder, skipping...{Except}")
+        except FileNotFoundError as exce:
+            print(f"Test file is not in folder, skipping...{exce}")
