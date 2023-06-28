@@ -28,7 +28,7 @@ class TestLogreader(TestCase):
         super().__init__(methodName)
         self.test_file_good = os.path.join(settings.BASE_DIR.parent, "test/logreader/good-log")
         self.test_file_bad = os.path.join(settings.BASE_DIR.parent, "test/logreader/fail-log")
-        self.analysis_id = uuid.uuid4
+        self.analysis_id = uuid.uuid4()
 
     def setUp(self):
         super().setUp()
