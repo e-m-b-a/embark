@@ -87,7 +87,7 @@ def f50_csv(file_path, analysis_id):
         # entropy_value = re.findall(r'(\d+\.?\d*)', ' 7.55 bits per byte.')[0]
         entropy_value = re.findall(r'(\d+\.?\d*)', entropy_value)[0]
 
-    res = Result.objects.update_or_create(
+    res, _ = Result.objects.update_or_create(
         firmware_analysis=FirmwareAnalysis.objects.get(id=analysis_id),
         emba_command=res_dict.get("emba_command", ''),
         architecture_verified=res_dict.get("architecture_verified", ''),
@@ -158,7 +158,7 @@ def f20_csv(file_path, analysis_id=None):
                 logger.error("Error in f20 readin: %s", error_)
                 logger.error("row got %i memebers", len(row))
         logger.debug("Got the following res_dict: %s", res_dict)
-    res, _ = Result.objects.update_or_create(
+    res, _ = Result.objects.get_or_create(
         firmware_analysis=FirmwareAnalysis.objects.get(id=analysis_id)
     )
     for key_, value_ in res_dict.items():
