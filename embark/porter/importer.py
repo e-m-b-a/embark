@@ -9,6 +9,7 @@ from pathlib import Path
 import re
 
 from django.conf import settings
+from django.db import transaction
 
 from dashboard.models import Vulnerability, Result
 from uploader.models import FirmwareAnalysis
@@ -72,7 +73,7 @@ def read_csv(path):
     logger.info("result dict: %s", res_dict)
     return res_dict
 
-
+@transaction.atomic
 def f50_csv(file_path, analysis_id):
     """
     return: result object/ None
@@ -86,8 +87,7 @@ def f50_csv(file_path, analysis_id):
     if isinstance(entropy_value, str):
         # entropy_value = re.findall(r'(\d+\.?\d*)', ' 7.55 bits per byte.')[0]
         entropy_value = re.findall(r'(\d+\.?\d*)', entropy_value)[0]
-
-    res, _ = Result.objects.update_or_create(
+    res, _ = Result.objects.select_for_update().update_or_create(
         firmware_analysis=FirmwareAnalysis.objects.get(id=analysis_id),
         emba_command=res_dict.get("emba_command", ''),
         architecture_verified=res_dict.get("architecture_verified", ''),
@@ -128,6 +128,7 @@ def f50_csv(file_path, analysis_id):
     return res
 
 
+@transaction.atomic
 def f20_csv(file_path, analysis_id=None):
     """
     csv read for f20 (where every line is a CVE)
