@@ -15,8 +15,13 @@
         <title>{% block title %}{% endblock title %}</title>
 
         {# Load CSS and JavaScript #}
-        {% bootstrap_css %}
-        {% bootstrap_javascript %}
+        <!--offline/online stuff
+            {% bootstrap_css %}
+        {% bootstrap_javascript %}-->
+
+        <!--bootstrap-->
+        <link rel="stylesheet" href="{% static 'external/css/bootstrap.cs' %}"/>
+        <script type="text/javascript" src="{% static 'external/scripts/bootstrap.js' %}"></script>
 
         <!-- jQuery-confirm style sheet -->
         <link rel="stylesheet" href="{% static 'external/css/confirm.css' %}"/>
@@ -43,6 +48,7 @@
         <!-- local Javascript files-->
         <script type="text/javascript" src="{% static 'scripts/main.js' %}"></script>
         <script type="text/javascript" src="{% static 'scripts/alertBox.js' %}"></script>
+        
         {% block js %}{% endblock js %}
 
     </head>
