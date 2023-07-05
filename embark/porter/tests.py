@@ -6,7 +6,7 @@ import shutil
 from django.conf import settings
 from django.forms import model_to_dict
 from django.test import TestCase
-
+from django.db import transaction
 
 from uploader.models import FirmwareAnalysis
 from porter.models import LogZipFile
@@ -24,6 +24,7 @@ class TestImport(TestCase):
         with open(os.path.join(settings.BASE_DIR.parent, "test/porter/f50_test.json"), 'r', encoding='utf-8') as json_file:
             cls.test_result_dict = json.load(json_file)
 
+    @transaction.atomic
     def test_importer(self):
         analysis = FirmwareAnalysis.objects.create(
             failed=False,
@@ -49,6 +50,7 @@ class TestImport(TestCase):
         # check
         self.assertTrue(int(result_dict["files"]) == int(self.test_result_dict["files"]), msg="File count of result is:" + str(result_dict["files"]) + " vs " + str(self.test_result_dict["files"]))
 
+    @transaction.atomic
     def test_zip_import(self):
         # first upload
         try:

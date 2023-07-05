@@ -16,7 +16,7 @@ from uploader.models import FirmwareAnalysis
 
 logger = logging.getLogger(__name__)
 
-
+@transaction.atomic
 def result_read_in(analysis_id):
     """
     calls read for all files inside csv_logs and stores its contents into the Result model
@@ -73,7 +73,7 @@ def read_csv(path):
     logger.info("result dict: %s", res_dict)
     return res_dict
 
-@transaction.atomic
+
 def f50_csv(file_path, analysis_id):
     """
     return: result object/ None
@@ -128,7 +128,6 @@ def f50_csv(file_path, analysis_id):
     return res
 
 
-@transaction.atomic
 def f20_csv(file_path, analysis_id=None):
     """
     csv read for f20 (where every line is a CVE)
