@@ -525,6 +525,7 @@ uninstall (){
   # final
   if [[ "$REFORCE" -eq 0 ]]; then
     sudo -u "${SUDO_USER:-${USER}}" git reset
+    rm -r ./safe/*
   fi
   echo -e "$ORANGE""$BOLD""Consider""$CYAN""\$git pull""$NC"
 }
