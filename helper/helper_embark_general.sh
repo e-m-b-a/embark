@@ -87,6 +87,23 @@ check_docker_wsl() {
   service docker status
 }
 
+run_mysql_cmd() {
+  # executes command in mysql db
+  local SQL_COMMAND="${1:-}"
+  local PW_ENV=""
+  local USER_ENV=""
+  local HOST_ENV=""
+  if ! [ -f ./.env ]; then
+    echo -e "ERROR - NO .env file in directory - ERROR"
+    exit 1
+  fi
+  PW_ENV=$(grep DATABASE_PASSWORD ./.env | sed 's/DATABASE\_PASSWORD\=//')
+  USER_ENV=$(grep DATABASE_USER ./.env | sed 's/DATABASE\_USER\=//')
+  HOST_ENV=$(grep DATABASE_HOST ./.env | sed 's/DATABASE\_HOST\=//')
+  echo -e "\n[""$BLUE JOB""$NC""] Running the following command: $SQL_COMMAND ""$NC"
+  mysql --host="$HOST_ENV" --user="$USER_ENV" --password="$PW_ENV" -e"$SQL_COMMAND"
+}
+
 check_db() {
   local PW_ENV
   local USER_ENV

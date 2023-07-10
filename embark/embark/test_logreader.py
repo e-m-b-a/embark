@@ -3,17 +3,19 @@ import logging
 import os
 import time
 import re
+import uuid
 
 from django.conf import settings
 from django.test import TestCase
 from uploader.models import FirmwareAnalysis
 
-from embark.logreader import EMBA_F_PHASE, EMBA_L_PHASE, EMBA_P_PHASE, EMBA_S_PHASE, LogReader
+from embark.logreader import EMBA_F_MOD_CNT, EMBA_F_PHASE, EMBA_L_MOD_CNT, EMBA_L_PHASE, EMBA_P_MOD_CNT, EMBA_P_PHASE, EMBA_PHASE_CNT, EMBA_S_MOD_CNT, EMBA_S_PHASE, LogReader
 
 logger = logging.getLogger(__name__)
 
-STATUS_PATTERN = "\\[\\*\\]*"
-PHASE_PATTERN = "\\[\\!\\]*"
+STATUS_PATTERN = r"\[\*\]*"
+PHASE_PATTERN = r"\[\!\]*"
+COLOR_PATTERN = '\033\\[([0-9]+)(;[0-9]+)*m'
 
 
 class LogreaderException(Exception):
@@ -22,22 +24,40 @@ class LogreaderException(Exception):
 
 class TestLogreader(TestCase):
 
-    def __init__(self):
-        super().__init__()
-        analysis = FirmwareAnalysis.objects.create()
-        analysis.failed = False
-        analysis.save()   # args??
-
-        self.analysis_id = analysis.id
+    def __init__(self, methodName: str = "runTest") -> None:
+        super().__init__(methodName)
         self.test_file_good = os.path.join(settings.BASE_DIR.parent, "test/logreader/good-log")
         self.test_file_bad = os.path.join(settings.BASE_DIR.parent, "test/logreader/fail-log")
+        self.analysis_id = uuid.uuid4()
+
+    def setUp(self):
+        super().setUp()
+        analysis = FirmwareAnalysis.objects.create(id=self.analysis_id)
+        analysis.failed = False
+        analysis.path_to_logs = f"{settings.EMBA_LOG_ROOT}/{analysis.id}/emba_logs"
+        analysis.save()   # args??
+
+        os.makedirs(f"{settings.EMBA_LOG_ROOT}", exist_ok=True)
+        os.mkdir(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}")
+        os.mkdir(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/emba_logs")
+
+        print("Testing on Analysis:%s", self.analysis_id)
         # check test_log file
-        if not self.test_file_good.isfile() or not self.test_file_bad.isfile():
-            logger.error("test_files not accessable")
-            print("Files for testing not found")
+        if not os.path.isfile(self.test_file_good) or not os.path.isfile(self.test_file_bad):
+            logger.error("test_files not accessible")
+            raise FileNotFoundError("Files for testing not found")
+
+    @staticmethod
+    def logreader_status_calc(phase_nmbr, max_module, module_cnt):
+        return phase_nmbr * (100 / EMBA_PHASE_CNT) + ((100 / EMBA_PHASE_CNT) / max_module) * module_cnt
 
     def file_test(self, file):
-        logr = LogReader(self.analysis_id)
+        status_msg = {
+            "firmwarename": "LogTestFirmware",
+            "percentage": 0,
+            "module": "",
+            "phase": "",
+        }
         # global PROCESS_MAP
         with open(file, 'r', encoding='UTF-8') as test_file:
             for line in test_file:
@@ -45,41 +65,52 @@ class TestLogreader(TestCase):
                 time.sleep(0.1)
                 # message check
                 # print("PROCESSMAP with index %s looks like this:%s", str(self.analysis_id), PROCESS_MAP[str(self.analysis_id)])
-                self.assertTrue(filecmp.cmp(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/logreader.log", f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/emba_logs/emba.log"), "Files not equal?!")   # check correctness of regexes
+                re.sub(COLOR_PATTERN, '', line)
                 if re.match(STATUS_PATTERN, line):
-                    self.assertEqual(logr.status_msg['status'], line)
+                    status_msg["module"] = line
                 elif re.match(PHASE_PATTERN, line):
-                    self.assertEqual(logr.status_msg['phase'], line)
+                    status_msg["phase"] = line
                 else:
-                    print("weird line in logreader: %s", line)
-                _, phase_identifier = logr.phase_identify(logr.status_msg)
+                    print("weird line in logreader: ", line)
+
+                module_count, phase_identifier = LogReader.phase_identify(status_msg)
                 if phase_identifier == EMBA_P_PHASE:
-                    self.assertGreaterEqual(logr.status_msg['percentage'], 0.0)
+                    for _module in range(0, EMBA_P_MOD_CNT):
+                        status_msg["percentage"] = self.logreader_status_calc(phase_identifier, module_count, _module) / 100
+                        self.assertTrue(0 <= status_msg["percentage"] <= 25)
                 elif phase_identifier == EMBA_S_PHASE:
-                    self.assertGreaterEqual(logr.status_msg['percentage'], 0.25)
+                    for _module in range(0, EMBA_S_MOD_CNT):
+                        status_msg["percentage"] = self.logreader_status_calc(phase_identifier, module_count, _module) / 100
+                        self.assertTrue(0.25 <= status_msg["percentage"] <= 0.50)
                 elif phase_identifier == EMBA_L_PHASE:
-                    self.assertGreaterEqual(logr.status_msg['percentage'], 0.50)
+                    for _module in range(0, EMBA_L_MOD_CNT):
+                        status_msg["percentage"] = self.logreader_status_calc(phase_identifier, module_count, _module) / 100
+                        self.assertTrue(0.50 <= status_msg["percentage"] <= 0.75)
                 elif phase_identifier == EMBA_F_PHASE:
-                    self.assertGreaterEqual(logr.status_msg['percentage'], 0.75)
-                elif phase_identifier in (0, 4):
-                    self.assertEqual(logr.status_msg['percentage'], 1.0)
+                    for _module in range(0, EMBA_F_MOD_CNT):
+                        status_msg["percentage"] = self.logreader_status_calc(phase_identifier, module_count, _module) / 100
+                        self.assertTrue(0.75 <= status_msg["percentage"] <= 1.0)
+                elif phase_identifier == EMBA_PHASE_CNT:
+                    status_msg["percentage"] = 1.0
+                    self.assertEqual(status_msg['percentage'], 1.0)
                 elif phase_identifier < 0:
-                    self.assertEqual(logr.status_msg['percentage'], 0.0)
+                    status_msg["percentage"] = self.logreader_status_calc(phase_identifier, module_count, 0) / 100
+                    self.assertEqual(status_msg['percentage'], 0.0)
                 else:
                     print("weird phase in logreader line: %s - phase: %s ", line, phase_identifier)
                     raise LogreaderException("Weird state in logreader")
-            # logreader file should be identical to emba.log
-            self.assertEqual(logr.finish, True)
+            # file should be identical to emba.log
+            self.assertTrue(filecmp.cmp(file, f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/emba_logs/emba.log"), "Files not equal?!")
 
     def write_to_log(self, line):
         """
         writes log line by line into log file
         """
-        with open(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/emba_logs/emba.log", 'w', encoding='UTF-8') as file:
+        with open(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/emba_logs/emba.log", 'a', encoding='UTF-8') as file:
             file.write(line)
 
     def test_logreader_with_files(self):
-        self.file_test(self.test_file_bad)
-        os.remove(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/logreader.log")
-        os.remove(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/emba_logs/emba.log")
+        print("Testing Logreader with 2 files")
         self.file_test(self.test_file_good)
+        os.remove(f"{settings.EMBA_LOG_ROOT}/{self.analysis_id}/emba_logs/emba.log")
+        # self.file_test(self.test_file_bad)

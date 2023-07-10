@@ -364,6 +364,11 @@ install_embark_dev(){
   echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
   # apt packages
   apt-get install -y npm pycodestyle python3-pylint-django default-libmysqlclient-dev build-essential bandit yamllint mysql-client-core-8.0
+  # get geckodriver
+  wget https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz
+  tar -xvf geckodriver-v0.33.0-linux64.tar.gz
+  mv geckodriver  /usr/local/bin
+  chmod +x /usr/local/bin/geckodriver
   # npm packages
   npm install -g jshint
   # npm install -g dockerlinter
@@ -469,6 +474,10 @@ uninstall (){
     if [[ -d ./embark_db ]]; then
       echo -e "$RED""$BOLD""Do you wish to remove the database(and backups)""$NC"
       rm -RIv ./embark_db
+      if [[ -f ./safe/history.env ]]; then
+        echo -e "$RED""$BOLD""Moved old history file""$NC"
+        mv --force ./safe/history.env ./safe/old_env_history
+      fi
     fi
   fi
 

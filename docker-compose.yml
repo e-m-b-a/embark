@@ -17,6 +17,7 @@ services:
     restart: always
     volumes:
       - ./mysql.cnf:/etc/my.cnf
+      - ./mysql-init:/docker-entrypoint-initdb.d
       - ./embark_db:/var/lib/mysql
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
