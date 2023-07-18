@@ -10,5 +10,6 @@ urlpatterns = [
     path('dashboard/service/', views.service_dashboard, name='embark-dashboard-service'),
     path('dashboard/report/', views.report_dashboard, name='embark-ReportDashboard'),
     path('dashboard/individualReport/<uuid:analysis_id>', views.individual_report_dashboard, name='embark-IndividualReportDashboard'),
-    path('dashboard/stop/', views.stop_analysis, name='embark-stop-analysis')
+    path('dashboard/stop/', views.stop_analysis, name='embark-stop-analysis'),
+    path('dashboard/log/<uuid:analysis_id>', views.show_log, name='embark-show-log')
 ]

@@ -59,10 +59,6 @@
                                             <button class="btn btn-primary" type="button" disabled>
                                                 <span class="badge badge-danger">Analysis Failed</span>
                                             </button>
-                                            <!-- TODO Render the emba_run.log from of the analysis and add delete link/button -->
-                                            <form action={% url 'embark-download' firmware.id %} method='get'>
-                                                <button type="submit" class="btn buttonRowElem" >Show </button>
-                                            </form>
                                         {% else %}
                                             {% if firmware.zip_file is not None %}
                                                 <form action={% url 'embark-download' firmware.id %} method='get'>
@@ -83,6 +79,9 @@
                                                 <button type="submit" class="btn buttonRowElem" >Rescan/delete</button>
                                             </form>
                                         {% endif %}
+                                        <form action={% url 'embark-show-log' firmware.id %} method='get'>
+                                            <button type="submit" class="btn buttonRowElem" >View Log</button>
+                                        </form>
                                     {% endif %}
                                 </div>
                             </td>
