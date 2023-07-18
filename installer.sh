@@ -346,11 +346,7 @@ install_embark_default(){
   fi
 
   # download images for container
-  docker-compose -f ./docker-compose.yml up --no-start
-  docker-compose -f ./docker-compose.yml up &>/dev/null &
-  sleep 30
-  kill %1
-  docker-compose -f ./docker-compose.yml stop
+  docker-compose -f ./docker-compose.yml pull
 
   # activate daemon
   systemctl start embark.service
@@ -418,11 +414,7 @@ install_embark_dev(){
   chmod 644 .env
 
   # download images for container
-  docker-compose -f ./docker-compose.yml up --no-start
-  docker-compose -f ./docker-compose.yml up &>/dev/null &
-  sleep 30
-  kill %1
-  docker-compose -f ./docker-compose.yml stop
+  docker-compose -f ./docker-compose.yml pull
 
   check_db
   docker-compose stop
