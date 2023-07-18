@@ -412,9 +412,13 @@ install_embark_dev(){
   # write env-vars into ./.env
   write_env
   chmod 644 .env
+  if [[ "$WSL" -eq 1 ]]; then
+    check_docker_wsl
+  fi
+
 
   # download images for container
-  docker-compose -f ./docker-compose.yml pull
+  docker-compose pull
 
   check_db
   docker-compose stop
