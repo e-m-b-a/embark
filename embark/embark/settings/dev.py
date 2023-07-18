@@ -12,6 +12,27 @@ ALLOWED_HOSTS = ['*']
 EMBA_ROOT = os.path.join(BASE_DIR.parent, 'emba')
 EMBA_LOG_ROOT = os.path.join(BASE_DIR.parent, 'emba_logs')
 EMBA_LOG_URL = 'emba_logs/'
+s_module_cnt = 0
+p_module_cnt = 0
+f_module_cnt = 0
+l_module_cnt = 0
+q_module_cnt = 0
+for mod_file_ in os.listdir(f"{EMBA_ROOT}/modules"):
+    if mod_file_.startswith('S'):
+        s_module_cnt+=1
+    elif mod_file_.startswith('P'):
+        p_module_cnt+=1
+    elif mod_file_.startswith('F'):
+        f_module_cnt+=1
+    elif mod_file_.startswith('L'):
+        l_module_cnt+=1
+    elif mod_file_.startswith('Q'):
+        q_module_cnt+=1
+EMBA_S_MOD_CNT = s_module_cnt
+EMBA_P_MOD_CNT = p_module_cnt
+EMBA_F_MOD_CNT = f_module_cnt
+EMBA_L_MOD_CNT = l_module_cnt
+EMBA_Q_MOD_CNT = q_module_cnt
 
 DEBUG = True
 
