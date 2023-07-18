@@ -69,8 +69,6 @@ def service_dashboard(request):
     :params request: req
     :return httpresp: html servicedashboard
     """
-    # TODO send logreader update on refresh!!!
-    # if FirmwareAnalysis.objects.all().count() > 0:
     form = StopAnalysisForm()
     form.fields['analysis'].queryset = FirmwareAnalysis.objects.filter(finished=False)
     return render(request, 'dashboard/serviceDashboard.html', {'username': request.user.username, 'form': form, 'success_message': False})

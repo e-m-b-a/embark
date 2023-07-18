@@ -206,8 +206,6 @@ cd /var/www/embark/ || exit 1
 # shellcheck disable=SC1091
 source /var/www/.venv/bin/activate || exit 1
 export PIPENV_VERBOSITY=-1
-
-# TODO move to parent
 # logs
 if ! [[ -d /var/www/logs ]]; then
   mkdir /var/www/logs
@@ -223,7 +221,6 @@ echo -e "\n[""$BLUE JOB""$NC""] Collecting static files"
 pipenv run ./manage.py collectstatic --no-input
 chown www-embark /var/www/ -R
 chmod 760 /var/www/media/ -R
-# TODO other fileperms
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
 pipenv run ./manage.py runapscheduler | tee -a /var/www/logs/scheduler.log &

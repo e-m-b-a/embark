@@ -125,11 +125,6 @@ install_emba(){
   cd emba
   ./installer.sh -d | tee install.log || ( echo "Could not install EMBA" && exit 1 )
   cd ..
-  # TODO costom crom updater for only cve stuff
-  # if ! [[ -f /etc/cron.daily/emba_updater ]]; then
-  #   cp ./config/emba_updater /etc/cron.daily/
-  # fi
-  # check emba
   if ! (cd emba && ./emba -d 1); then
     echo -e "\n$RED""$BOLD""EMBA installation failed""$NC"
     tail emba/install.log
@@ -140,7 +135,7 @@ install_emba(){
 }
 
 create_ca (){
-  # TODO could use some work 
+  # FIXME could use some work 
   echo -e "\n$GREEN""$BOLD""Creating SSL Cert""$NC"
   if ! [[ -d cert ]]; then
     sudo -u "${SUDO_USER:-${USER}}" git checkout -- cert
@@ -518,7 +513,6 @@ uninstall (){
   sudo -u "${SUDO_USER:-${USER}}" git checkout HEAD -- embark.service
   
   # reset ownership etc
-  # TODO delete the dns resolve
 
   # reset server-certs
   sudo -u "${SUDO_USER:-${USER}}" git checkout HEAD -- cert
