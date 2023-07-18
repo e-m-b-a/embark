@@ -86,45 +86,46 @@ def f50_csv(file_path, analysis_id):
     if isinstance(entropy_value, str):
         # entropy_value = re.findall(r'(\d+\.?\d*)', ' 7.55 bits per byte.')[0]
         entropy_value = re.findall(r'(\d+\.?\d*)', entropy_value)[0]
-
-    res = Result.objects.update_or_create(
-        firmware_analysis=FirmwareAnalysis.objects.get(id=analysis_id),
-        emba_command=res_dict.get("emba_command", ''),
-        architecture_verified=res_dict.get("architecture_verified", ''),
-        # os_unverified=res_dict.get("os_unverified", ''),
-        os_verified=res_dict.get("os_verified", ''),
-        files=int(res_dict.get("files", 0)),
-        directories=int(res_dict.get("directories", 0)),
-        entropy_value=float(entropy_value),
-        shell_scripts=int(res_dict.get("shell_scripts", 0)),
-        shell_script_vulns=int(res_dict.get("shell_script_vulns", 0)),
-        kernel_modules=int(res_dict.get("kernel_modules", 0)),
-        kernel_modules_lic=int(res_dict.get("kernel_modules_lic", 0)),
-        interesting_files=int(res_dict.get("interesting_files", 0)),
-        post_files=int(res_dict.get("post_files", 0)),
-        canary=int(res_dict.get("canary", 0)),
-        canary_per=int(res_dict.get("canary_per", 0)),
-        relro=int(res_dict.get("relro", 0)),
-        relro_per=int(res_dict.get("relro_per", 0)),
-        no_exec=int(res_dict.get("no_exec", 0)),
-        no_exec_per=int(res_dict.get("no_exec_per", 0)),
-        pie=int(res_dict.get("pie", 0)),
-        pie_per=int(res_dict.get("pie_per", 0)),
-        stripped=int(res_dict.get("stripped", 0)),
-        stripped_per=int(res_dict.get("stripped_per", 0)),
-        bins_checked=int(res_dict.get("bins_checked", 0)),
-        strcpy=int(res_dict.get("strcpy", 0)),
-        strcpy_bin=json.dumps(res_dict.get("strcpy_bin", {})),
-        system_bin=json.dumps(res_dict.get("system_bin", {})),
-        versions_identified=int(res_dict.get("versions_identified", 0)),
-        cve_high=int(res_dict.get("cve_high", 0)),
-        cve_medium=int(res_dict.get("cve_medium", 0)),
-        cve_low=int(res_dict.get("cve_low", 0)),
-        exploits=int(res_dict.get("exploits", 0)),
-        metasploit_modules=int(res_dict.get("metasploit_modules", 0)),
-        certificates=int(res_dict.get("certificates", 0)),
-        certificates_outdated=int(res_dict.get("certificates_outdated", 0)),
+    res, _ = Result.objects.get_or_create(
+        firmware_analysis=FirmwareAnalysis.objects.get(id=analysis_id)
     )
+    if res:
+        res.emba_command = res_dict.get("emba_command", '')
+        res.architecture_verified = res_dict.get("architecture_verified", '')
+        # res.os_unverified=res_dict.get("os_unverified", '')
+        res.os_verified = res_dict.get("os_verified", '')
+        res.files = int(res_dict.get("files", 0))
+        res.directories = int(res_dict.get("directories", 0))
+        res.entropy_value = float(entropy_value)
+        res.shell_scripts = int(res_dict.get("shell_scripts", 0))
+        res.shell_script_vulns = int(res_dict.get("shell_script_vulns", 0))
+        res.kernel_modules = int(res_dict.get("kernel_modules", 0))
+        res.kernel_modules_lic = int(res_dict.get("kernel_modules_lic", 0))
+        res.interesting_files = int(res_dict.get("interesting_files", 0))
+        res.post_files = int(res_dict.get("post_files", 0))
+        res.canary = int(res_dict.get("canary", 0))
+        res.canary_per = int(res_dict.get("canary_per", 0))
+        res.relro = int(res_dict.get("relro", 0))
+        res.relro_per = int(res_dict.get("relro_per", 0))
+        res.no_exec = int(res_dict.get("no_exec", 0))
+        res.no_exec_per = int(res_dict.get("no_exec_per", 0))
+        res.pie = int(res_dict.get("pie", 0))
+        res.pie_per = int(res_dict.get("pie_per", 0))
+        res.stripped = int(res_dict.get("stripped", 0))
+        res.stripped_per = int(res_dict.get("stripped_per", 0))
+        res.bins_checked = int(res_dict.get("bins_checked", 0))
+        res.strcpy = int(res_dict.get("strcpy", 0))
+        res.strcpy_bin = json.dumps(res_dict.get("strcpy_bin", {}))
+        res.system_bin = json.dumps(res_dict.get("system_bin", {}))
+        res.versions_identified = int(res_dict.get("versions_identified", 0))
+        res.cve_high = int(res_dict.get("cve_high", 0))
+        res.cve_medium = int(res_dict.get("cve_medium", 0))
+        res.cve_low = int(res_dict.get("cve_low", 0))
+        res.exploits = int(res_dict.get("exploits", 0))
+        res.metasploit_modules = int(res_dict.get("metasploit_modules", 0))
+        res.certificates = int(res_dict.get("certificates", 0))
+        res.certificates_outdated = int(res_dict.get("certificates_outdated", 0))
+        res.save()
     return res
 
 
@@ -158,7 +159,7 @@ def f20_csv(file_path, analysis_id=None):
                 logger.error("Error in f20 readin: %s", error_)
                 logger.error("row got %i memebers", len(row))
         logger.debug("Got the following res_dict: %s", res_dict)
-    res, _ = Result.objects.update_or_create(
+    res, _ = Result.objects.get_or_create(
         firmware_analysis=FirmwareAnalysis.objects.get(id=analysis_id)
     )
     for key_, value_ in res_dict.items():

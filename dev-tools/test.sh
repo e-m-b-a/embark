@@ -17,6 +17,7 @@ ORANGE='\033[0;33m'
 # BLUE='\033[0;34m'
 BOLD='\033[1m'
 NC='\033[0m' # no color
+HELP_DIR=./helper
 
 export HELP_DIR='helper'
 export DJANGO_SETTINGS_MODULE=embark.settings.dev
@@ -29,8 +30,8 @@ cleaner() {
   fi
   
   # killall -9 -q "*daphne*"
-  docker container stop embark_db_dev
-  docker container stop embark_redis_dev
+  docker container stop embark_db
+  docker container stop embark_redis
 
   docker container prune -f --filter "label=flag"
 
@@ -81,6 +82,10 @@ pipenv run ./embark/manage.py migrate | tee -a ./logs/migration.log
 # superuser
 pipenv run ./embark/manage.py createsuperuser --noinput
 
+# add privs
+# echo -e "$BLUE""$BOLD""[+] Adding permissions for testing""$NC\\n"
+# mysql --host="$(grep DATABASE_HOST ./.env | sed 's/DATABASE\_HOST\=//')" --user=root --password="$MYSQL_ROOT_PASSWORD" -e"GRANT ALL PRIVILEGES ON test_db.* TO 'embark'@'%';"
+
 echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./embark/logs/redis.log""$NC"
 docker container logs embark_redis -f > ./logs/redis.log &
 echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql.log""$NC"
@@ -88,8 +93,9 @@ docker container logs embark_db -f > ./logs/mysql.log &
 
 ##
 echo -e "\n[""$BLUE JOB""$NC""] Testing""$NC"
+pipenv run ./embark/manage.py test
 pipenv run ./embark/manage.py test embark.test_logreader
-pipenv run ./embark/manage.py test users.tests.SeleniumTests.test_register
-pipenv run ./embark/manage.py test users.tests.SeleniumTests.test_login
-
+# pipenv run ./embark/manage.py test users.tests.SeleniumTests.test_register
+# pipenv run ./embark/manage.py test users.tests.SeleniumTests.test_login
+pipenv run ./embark/manage.py test porter.tests.TestImport
 echo -e "\n$ORANGE""$BOLD""Done. To clean-up use the clean-setup script""$NC"
