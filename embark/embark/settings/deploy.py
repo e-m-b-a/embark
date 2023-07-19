@@ -295,7 +295,7 @@ SECURE_SSL_REDIRECT = False
 
 
 def count_emba_modules(emba_dir_path):
-    s_module_cnt, p_module_cnt, q_module_cnt, l_module_cnt, f_module_cnt= 0, 0, 0, 0, 0
+    s_module_cnt, p_module_cnt, q_module_cnt, l_module_cnt, f_module_cnt = 0, 0, 0, 0, 0
     for mod_file_ in os.listdir(f"{emba_dir_path}/modules"):
         if mod_file_.startswith('S'):
             s_module_cnt += 1
