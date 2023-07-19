@@ -3,7 +3,6 @@
 import builtins
 import datetime
 import difflib
-import os
 import pathlib
 import re
 import time
@@ -23,27 +22,10 @@ from uploader.models import FirmwareAnalysis
 logger = logging.getLogger(__name__)
 
 # EMBAs module count
-s_module_cnt = 0
-p_module_cnt = 0
-f_module_cnt = 0
-l_module_cnt = 0
-q_module_cnt = 0
-for mod_file_ in os.listdir(f"{settings.EMBA_ROOT}/modules"):
-    if mod_file_.startswith('S'):
-        s_module_cnt += 1
-    elif mod_file_.startswith('P'):
-        p_module_cnt += 1
-    elif mod_file_.startswith('F'):
-        f_module_cnt += 1
-    elif mod_file_.startswith('L'):
-        l_module_cnt += 1
-    elif mod_file_.startswith('Q'):
-        q_module_cnt += 1
-EMBA_S_MOD_CNT = s_module_cnt
-EMBA_P_MOD_CNT = p_module_cnt
-EMBA_F_MOD_CNT = f_module_cnt
-EMBA_L_MOD_CNT = l_module_cnt
-EMBA_Q_MOD_CNT = q_module_cnt
+EMBA_S_MOD_CNT = settings.EMBA_S_MOD_CNT
+EMBA_P_MOD_CNT = settings.EMBA_P_MOD_CNT
+EMBA_F_MOD_CNT = settings.EMBA_F_MOD_CNT
+EMBA_L_MOD_CNT = settings.EMBA_L_MOD_CNT
 EMBA_MODULE_CNT = EMBA_S_MOD_CNT + EMBA_P_MOD_CNT + EMBA_F_MOD_CNT + EMBA_L_MOD_CNT
 
 EMBA_PHASE_CNT = 4  # P, S, L, F modules
