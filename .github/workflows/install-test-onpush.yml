@@ -1,6 +1,6 @@
 # This workflow will run build EMBArk in dev-mode
 
-name: Build-EMBArk-DEV 
+name: Build-EMBArk-DEV-test
 
 on: [push]
 
@@ -20,7 +20,7 @@ jobs:
           android: true
           dotnet: true
           haskell: true
-          large-packages: true
+          large-packages: false
           swap-storage: true
       - name: EMBArk dev install
         uses: Wandalen/wretry.action@master
