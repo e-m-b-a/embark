@@ -273,4 +273,7 @@ def count_emba_modules(emba_dir_path):
     return s_module_cnt, p_module_cnt, f_module_cnt, l_module_cnt, q_module_cnt
 
 
-EMBA_S_MOD_CNT, EMBA_P_MOD_CNT, EMBA_F_MOD_CNT, EMBA_L_MOD_CNT, EMBA_Q_MOD_CNT = count_emba_modules(EMBA_ROOT)
+try:
+    EMBA_S_MOD_CNT, EMBA_P_MOD_CNT, EMBA_F_MOD_CNT, EMBA_L_MOD_CNT, EMBA_Q_MOD_CNT = count_emba_modules(EMBA_ROOT)
+except FileNotFoundError as file_error:
+    print("[Warning] Installation is missing the EMBA submodule")
