@@ -314,3 +314,7 @@ try:
     EMBA_S_MOD_CNT, EMBA_P_MOD_CNT, EMBA_F_MOD_CNT, EMBA_L_MOD_CNT, EMBA_Q_MOD_CNT = count_emba_modules(EMBA_ROOT)
 except FileNotFoundError as file_error:
     print("[Warning] Installation is missing the EMBA submodule")
+    EMBA_S_MOD_CNT = 44
+    EMBA_P_MOD_CNT = 18
+    EMBA_F_MOD_CNT = 4
+    EMBA_L_MOD_CNT = 8
