@@ -79,10 +79,10 @@
                                                 <button type="submit" class="btn buttonRowElem" >Rescan/delete</button>
                                             </form>
                                         {% endif %}
-                                        <form action={% url 'embark-show-log' firmware.id %} method='get'>
-                                            <button type="submit" class="btn buttonRowElem" >View Log</button>
-                                        </form>
                                     {% endif %}
+                                    <form action={% url 'embark-show-log' firmware.id %} method='get'>
+                                        <button type="submit" class="btn buttonRowElem" >View Log</button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
