@@ -120,5 +120,5 @@ def show_log(request, analysis_id):
     try:
         with open(log_file_path_, 'r', encoding='utf-8') as log_file_:
             return HttpResponse(content=log_file_, content_type="text/plain")
-    except FileNotFoundError as file_error:
+    except FileNotFoundError:
         return HttpResponseServerError(content="File is not yet available")
