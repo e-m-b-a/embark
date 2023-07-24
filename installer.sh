@@ -119,8 +119,10 @@ write_env(){
 
 install_emba(){
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner EMBA on host""$NC"
-  sudo -u "${SUDO_USER:-${USER}}" git submodule init
-  sudo -u "${SUDO_USER:-${USER}}" git submodule update
+  if git submodule status emba | grep --quiet '^-'; then
+    sudo -u "${SUDO_USER:-${USER}}" git submodule init emba 
+  fi
+  sudo -u "${SUDO_USER:-${USER}}" git submodule update emba
   sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "$PWD"/emba
   cd emba
   ./installer.sh -d | tee install.log || ( echo "Could not install EMBA" && exit 1 )
@@ -495,24 +497,27 @@ uninstall (){
   reset_docker
   echo -e "$ORANGE""$BOLD""Consider running " "$CYAN""\$docker system prune""$NC"
 
-  # delete/uninstall EMBA
+  # delete/uninstall submodules
+  # emba
+  if [ -f ./emba/install.log ]; then
+    rm ./emba/install.log
+  fi
+  if [[ -d ./emba/external ]]; then
+    rm -r ./emba/external/
+  fi
   if [[ $REFORCE -eq 1 ]]; then
-    sudo -u "${SUDO_USER:-${USER}}" git submodule update
+    sudo -u "${SUDO_USER:-${USER}}" git submodule status emba
   else
-    if [ -f ./emba/install.log ]; then
-      rm ./emba/install.log
-    fi
+  # all submodules
     if [[ $(sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git status --porcelain --untracked-files=no) ]]; then
-      echo -e "[!!]$RED""$BOLD""EMBA changes detected - please commit them...otherwise they will be lost""$NC"
+      echo -e "[!!]$RED""$BOLD""Submodule changes detected - please commit them...otherwise they will be lost""$NC"
       read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
     fi
-    if [[ -d ./emba/external ]]; then
-      rm -r ./emba/external/
-    fi
     sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git reset --hard
+    sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git clean -f -x
     sudo -u "${SUDO_USER:-${USER}}" git submodule deinit --all -f
   fi
-  
+
   # stop&reset daemon
   if [[ "$WSL" -ne 1 ]]; then
     uninstall_daemon
