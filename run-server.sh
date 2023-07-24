@@ -120,6 +120,9 @@ fi
 
 # check emba
 echo -e "$BLUE""$BOLD""checking EMBA""$NC"
+if [[ -d ./emba ]]; then
+  echo -e "$RED""$BOLD""You are using the wrong installation and missing the EMBA subdirectory""$NC"
+fi
 git submodule update
 if ! (cd "$PWD"/emba && ./emba -d 1); then
   echo -e "$BLUE""Trying auto-maintain""$NC"
