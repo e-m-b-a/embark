@@ -456,7 +456,7 @@ uninstall (){
     # user-files
     if [[ -d ./emba_logs ]]; then
       echo -e "$RED""$BOLD""Do you wish to remove the EMBA-Logs (and backups)""$NC"
-      rm -Riv ./emba_logs
+      rm -RIv ./emba_logs
     fi
     if [[ -d ./embark_db ]]; then
       echo -e "$RED""$BOLD""Do you wish to remove the database(and backups)""$NC"
