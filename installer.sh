@@ -522,7 +522,7 @@ uninstall (){
     sudo -u "${SUDO_USER:-${USER}}" git reset
     rm -r ./safe
   fi
-  echo -e "$ORANGE""$BOLD""Consider""$CYAN""\$git pull""$NC"" and ""$CYAN""\$git clean""$NC"
+  echo -e "$ORANGE""$BOLD""Consider ""$CYAN""\$git pull""$ORANGE""$BOLD"" and ""$CYAN""\$git clean""$NC"
 }
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
