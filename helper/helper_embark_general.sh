@@ -111,6 +111,9 @@ check_db() {
   PW_ENV=$(grep DATABASE_PASSWORD ./.env | sed 's/DATABASE\_PASSWORD\=//')
   USER_ENV=$(grep DATABASE_USER ./.env | sed 's/DATABASE\_USER\=//')
   HOST_ENV=$(grep DATABASE_HOST ./.env | sed 's/DATABASE\_HOST\=//')
+  if ! [[ -d ./embark_db ]]; then
+    mkdir ./embark_db
+  fi
   echo -e "\\n$ORANGE""$BOLD""checking database""$NC\\n""$BOLD=================================================================$NC"
   echo -e "$BLUE""$BOLD""1. checking startup""$NC\\n"
   if docker-compose -f ./docker-compose.yml up -d ; then
