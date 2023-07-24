@@ -123,7 +123,8 @@ check_db() {
   sleep 5s
   echo -e "$BLUE""$BOLD""2. checking password""$NC\\n"
   if ! mysql --host="$HOST_ENV" --user="$USER_ENV" --password="$PW_ENV" -e"quit" &>/dev/null; then
-    sleep 5
+    echo -e "$ORANGE""$BOLD""   Testing again""$NC"
+    sleep 5s
     if ! mysql --host="$HOST_ENV" --user="$USER_ENV" --password="$PW_ENV" -e"quit" &>/dev/null; then
         echo -e "$ORANGE""$BOLD""Failed logging into database with password""$NC"
         echo -e "---------------------------------------------------------------------------"
