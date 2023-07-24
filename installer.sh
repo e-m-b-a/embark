@@ -173,16 +173,16 @@ dns_resolve(){
 reset_docker(){
   echo -e "\\n$GREEN""$BOLD""Reset EMBArk docker images""$NC\\n"
 
-  # images
+  # EMBArk
   docker_image_rm "mysql" "latest"
   docker_image_rm "redis" "5"
-  docker_image_rm "embeddedanalyzer/emba" "latest"
-  
-  #networks
-  docker_network_rm "embark_dev"
-  # docker_network_rm "embark_frontend"
   docker_network_rm "embark_backend"
-  docker_network_rm "emba_runs"
+
+  # EMBA
+  if [[ "${REFORCE}" -eq 0 ]]; then
+    docker_image_rm "embeddedanalyzer/emba" "latest"
+    docker_network_rm "emba_runs"
+  fi
 
   docker container prune -f --filter "label=flag" || true
 
@@ -505,10 +505,10 @@ uninstall (){
   if [[ -d ./emba/external ]]; then
     rm -r ./emba/external/
   fi
-  if [[ $REFORCE -eq 1 ]]; then
-    sudo -u "${SUDO_USER:-${USER}}" git submodule status emba
-  else
   # all submodules
+  if [[ $REFORCE -eq 1 ]]; then
+    sudo -u "${SUDO_USER:-${USER}}" git submodule status
+  else
     if [[ $(sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git status --porcelain --untracked-files=no) ]]; then
       echo -e "[!!]$RED""$BOLD""Submodule changes detected - please commit them...otherwise they will be lost""$NC"
       read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
