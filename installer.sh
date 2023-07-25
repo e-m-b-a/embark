@@ -343,9 +343,10 @@ install_embark_default(){
   fi
 
   # download images for container
-  docker-compose -f ./docker-compose.yml pull
+  docker-compose pull
   docker-compose up -d
-  sleep 10s
+  sleep 25s
+  docker-compose stop
 
   # activate daemon
   systemctl start embark.service
@@ -420,7 +421,8 @@ install_embark_dev(){
   # download images for container
   docker-compose pull
   docker-compose up -d
-  sleep 10s
+  sleep 25s
+  docker-compose stop
 
   check_db
   docker-compose stop
