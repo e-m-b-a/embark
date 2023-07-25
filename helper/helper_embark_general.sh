@@ -121,9 +121,9 @@ check_db() {
     exit 1
   fi
   echo -e "$BLUE""$BOLD""2. checking password""$NC\\n"
-  if ! mysql --host="$HOST_ENV" --user="$USER_ENV" --password="$PW_ENV" -e"quit" &>/dev/null; then
+  if ! mysql --host="$HOST_ENV" --user="$USER_ENV" --password="$PW_ENV" -e"quit" | grep -v "Warning: Using a password"; then
     echo -e "$ORANGE""$BOLD""[*] Testing again with user=$USER_ENV host=$HOST_ENV pw=$PW_ENV""$NC"
-    sleep 40s
+    sleep 35s
     if ! mysql --host="${HOST_ENV}" --user="${USER_ENV}" --password="${PW_ENV}" -e"quit" | grep -v "Warning: Using a password"; then
         echo -e "$ORANGE""$BOLD""Failed logging into database with password""$NC"
         echo -e "---------------------------------------------------------------------------"
