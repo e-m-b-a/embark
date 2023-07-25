@@ -22,11 +22,10 @@ from uploader.models import FirmwareAnalysis
 logger = logging.getLogger(__name__)
 
 # EMBAs module count
-# TODO make this a settings var that gets set by counting on startup!
-EMBA_S_MOD_CNT = 44
-EMBA_P_MOD_CNT = 18
-EMBA_F_MOD_CNT = 4
-EMBA_L_MOD_CNT = 8
+EMBA_S_MOD_CNT = settings.EMBA_S_MOD_CNT
+EMBA_P_MOD_CNT = settings.EMBA_P_MOD_CNT
+EMBA_F_MOD_CNT = settings.EMBA_F_MOD_CNT
+EMBA_L_MOD_CNT = settings.EMBA_L_MOD_CNT
 EMBA_MODULE_CNT = EMBA_S_MOD_CNT + EMBA_P_MOD_CNT + EMBA_F_MOD_CNT + EMBA_L_MOD_CNT
 
 EMBA_PHASE_CNT = 4  # P, S, L, F modules

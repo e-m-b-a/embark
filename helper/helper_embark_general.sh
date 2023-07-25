@@ -120,18 +120,22 @@ check_db() {
     echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
     exit 1
   fi
-  sleep 5s
   echo -e "$BLUE""$BOLD""2. checking password""$NC\\n"
-  if ! mysql --host="$HOST_ENV" --user="$USER_ENV" --password="$PW_ENV" -e"quit" &>/dev/null; then
-    echo -e "$ORANGE""$BOLD""Failed logging into database with password""$NC"
-    echo -e "---------------------------------------------------------------------------"
-    echo -e "$CYAN""Old passwords are stored in the \"safe\" folder when uninstalling EMBArk""$NC\\n"
-    echo -e "$CYAN""You could try recoverying manually by overwriting your\".env\" file""$NC\\n"
-    if [[ -f safe/history.env ]]; then
-      echo -e "$CYAN""The mysql-db was first started with the password(sha256sum): $(head -n1 ./safe/history.env | cut -d";" -f1) ""$NC\\n"
+  if ! mysql --host="$HOST_ENV" --user="$USER_ENV" --password="$PW_ENV" -e"quit"; then
+    echo -e "$ORANGE""$BOLD""[*] Retesting the mysql connection""$NC"
+    sleep 35s
+    if ! mysql --host="${HOST_ENV}" --user="${USER_ENV}" --password="${PW_ENV}" -e"quit"; then
+        echo -e "$ORANGE""$BOLD""Failed logging into database with password""$NC"
+        echo -e "---------------------------------------------------------------------------"
+        echo -e "$CYAN""Old passwords are stored in the \"safe\" folder when uninstalling EMBArk""$NC\\n"
+        echo -e "$CYAN""You could try recoverying manually by overwriting your\".env\" file""$NC\\n"
+        if [[ -f safe/history.env ]]; then
+          echo -e "$CYAN""The mysql-db was first started with the password(sha256sum): $(head -n1 ./safe/history.env | cut -d";" -f1) ""$NC\\n"
+        fi
+        exit 1
     fi
-    exit 1
   fi
+  echo -e "$GREEN""$BOLD""[+] Everything checks out""$NC\\n"
 }
 
 check_safe() {
@@ -148,8 +152,10 @@ check_safe() {
 add_to_env_history(){
   local PASSWORD_="${1:-}"
   local CONTAINER_HASH_="${2:-}"
-  if [[ -d safe ]]; then
-    printf '%s;%s;\n' "$(echo "$PASSWORD_" | sha256sum)" "$CONTAINER_HASH_" >> ./safe/history.env
+
+  if ! [[ -d safe ]]; then
+    mkdir safe
   fi
+  printf '%s;%s;\n' "$(echo "$PASSWORD_" | sha256sum)" "$CONTAINER_HASH_" >> ./safe/history.env
 
 }

@@ -120,6 +120,9 @@ fi
 
 # check emba
 echo -e "$BLUE""$BOLD""checking EMBA""$NC"
+if [[ -d ./emba ]]; then
+  echo -e "$RED""$BOLD""You are using the wrong installation and missing the EMBA subdirectory""$NC"
+fi
 git submodule update
 if ! (cd "$PWD"/emba && ./emba -d 1); then
   echo -e "$BLUE""Trying auto-maintain""$NC"
@@ -206,8 +209,6 @@ cd /var/www/embark/ || exit 1
 # shellcheck disable=SC1091
 source /var/www/.venv/bin/activate || exit 1
 export PIPENV_VERBOSITY=-1
-
-# TODO move to parent
 # logs
 if ! [[ -d /var/www/logs ]]; then
   mkdir /var/www/logs
@@ -223,7 +224,6 @@ echo -e "\n[""$BLUE JOB""$NC""] Collecting static files"
 pipenv run ./manage.py collectstatic --no-input
 chown www-embark /var/www/ -R
 chmod 760 /var/www/media/ -R
-# TODO other fileperms
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
 pipenv run ./manage.py runapscheduler | tee -a /var/www/logs/scheduler.log &

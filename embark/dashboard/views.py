@@ -1,11 +1,12 @@
 import builtins
 import logging
 import os
+from pathlib import Path
 import signal
 
 from django.conf import settings
 from django.shortcuts import render
-from django.http import HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect, HttpResponseServerError
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect, HttpResponseServerError
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from tracker.forms import AssociateForm
@@ -68,8 +69,6 @@ def service_dashboard(request):
     :params request: req
     :return httpresp: html servicedashboard
     """
-    # TODO send logreader update on refresh!!!
-    # if FirmwareAnalysis.objects.all().count() > 0:
     form = StopAnalysisForm()
     form.fields['analysis'].queryset = FirmwareAnalysis.objects.filter(finished=False)
     return render(request, 'dashboard/serviceDashboard.html', {'username': request.user.username, 'form': form, 'success_message': False})
@@ -101,3 +100,25 @@ def individual_report_dashboard(request, analysis_id):
     logger.info("individual_dashboard - analyze_id: %s", analysis_id)
     form = AssociateForm()
     return render(request, 'dashboard/individualReportDashboard.html', {'username': request.user.username, 'analysis_id': analysis_id, 'form': form})
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def show_log(request, analysis_id):
+    """
+    renders emba_run.log
+
+    :params request: HTTP request
+
+    :return: rendered emba_run.log
+    """
+    logger.info("showing log for analyze_id: %s", analysis_id)
+    firmware = FirmwareAnalysis.objects.get(id=analysis_id)
+    # get the file path
+    log_file_path_ = f"{Path(firmware.path_to_logs).parent}/emba_run.log"
+    logger.debug("Taking file at %s and render it", log_file_path_)
+    try:
+        with open(log_file_path_, 'r', encoding='utf-8') as log_file_:
+            return HttpResponse(content=log_file_, content_type="text/plain")
+    except FileNotFoundError:
+        return HttpResponseServerError(content="File is not yet available")

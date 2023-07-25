@@ -119,17 +119,14 @@ write_env(){
 
 install_emba(){
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner EMBA on host""$NC"
-  sudo -u "${SUDO_USER:-${USER}}" git submodule init
-  sudo -u "${SUDO_USER:-${USER}}" git submodule update
+  if git submodule status emba | grep --quiet '^-'; then
+    sudo -u "${SUDO_USER:-${USER}}" git submodule init emba 
+  fi
+  sudo -u "${SUDO_USER:-${USER}}" git submodule update emba
   sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "$PWD"/emba
   cd emba
   ./installer.sh -d | tee install.log || ( echo "Could not install EMBA" && exit 1 )
   cd ..
-  # TODO costom crom updater for only cve stuff
-  # if ! [[ -f /etc/cron.daily/emba_updater ]]; then
-  #   cp ./config/emba_updater /etc/cron.daily/
-  # fi
-  # check emba
   if ! (cd emba && ./emba -d 1); then
     echo -e "\n$RED""$BOLD""EMBA installation failed""$NC"
     tail emba/install.log
@@ -140,7 +137,7 @@ install_emba(){
 }
 
 create_ca (){
-  # TODO could use some work 
+  # FIXME could use some work 
   echo -e "\n$GREEN""$BOLD""Creating SSL Cert""$NC"
   if ! [[ -d cert ]]; then
     sudo -u "${SUDO_USER:-${USER}}" git checkout -- cert
@@ -176,16 +173,16 @@ dns_resolve(){
 reset_docker(){
   echo -e "\\n$GREEN""$BOLD""Reset EMBArk docker images""$NC\\n"
 
-  # images
+  # EMBArk
   docker_image_rm "mysql" "latest"
   docker_image_rm "redis" "5"
-  docker_image_rm "embeddedanalyzer/emba" "latest"
-  
-  #networks
-  docker_network_rm "embark_dev"
-  # docker_network_rm "embark_frontend"
   docker_network_rm "embark_backend"
-  docker_network_rm "emba_runs"
+
+  # EMBA
+  if [[ "${REFORCE}" -eq 0 ]]; then
+    docker_image_rm "embeddedanalyzer/emba" "latest"
+    docker_network_rm "emba_runs"
+  fi
 
   docker container prune -f --filter "label=flag" || true
 
@@ -346,11 +343,8 @@ install_embark_default(){
   fi
 
   # download images for container
-  docker-compose -f ./docker-compose.yml up --no-start
-  docker-compose -f ./docker-compose.yml up &>/dev/null &
-  sleep 30
-  kill %1
-  docker-compose -f ./docker-compose.yml stop
+  docker-compose pull
+  docker-compose up -d
 
   # activate daemon
   systemctl start embark.service
@@ -423,11 +417,8 @@ install_embark_dev(){
   chmod 644 .env
 
   # download images for container
-  docker-compose -f ./docker-compose.yml up --no-start
-  docker-compose -f ./docker-compose.yml up &>/dev/null &
-  sleep 30
-  kill %1
-  docker-compose -f ./docker-compose.yml stop
+  docker-compose pull
+  docker-compose up -d
 
   check_db
   docker-compose stop
@@ -469,7 +460,7 @@ uninstall (){
     # user-files
     if [[ -d ./emba_logs ]]; then
       echo -e "$RED""$BOLD""Do you wish to remove the EMBA-Logs (and backups)""$NC"
-      rm -Riv ./emba_logs
+      rm -RIv ./emba_logs
     fi
     if [[ -d ./embark_db ]]; then
       echo -e "$RED""$BOLD""Do you wish to remove the database(and backups)""$NC"
@@ -504,19 +495,26 @@ uninstall (){
   reset_docker
   echo -e "$ORANGE""$BOLD""Consider running " "$CYAN""\$docker system prune""$NC"
 
-  # delete/uninstall EMBA
+  # delete/uninstall submodules
+  # emba
   if [ -f ./emba/install.log ]; then
     rm ./emba/install.log
-  fi
-  if [[ $(sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git status --porcelain --untracked-files=no) ]]; then
-    echo -e "[!!]$RED""$BOLD""EMBA changes detected - please commit them...otherwise they will be lost""$NC"
-    read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
   fi
   if [[ -d ./emba/external ]]; then
     rm -r ./emba/external/
   fi
-  sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git reset --hard
-  sudo -u "${SUDO_USER:-${USER}}" git submodule deinit --all -f
+  # all submodules
+  if [[ $REFORCE -eq 1 ]]; then
+    sudo -u "${SUDO_USER:-${USER}}" git submodule status
+  else
+    if [[ $(sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git status --porcelain --untracked-files=no) ]]; then
+      echo -e "[!!]$RED""$BOLD""Submodule changes detected - please commit them...otherwise they will be lost""$NC"
+      read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
+    fi
+    sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git reset --hard
+    sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git clean -f -x
+    sudo -u "${SUDO_USER:-${USER}}" git submodule deinit --all -f
+  fi
 
   # stop&reset daemon
   if [[ "$WSL" -ne 1 ]]; then
@@ -526,7 +524,6 @@ uninstall (){
   sudo -u "${SUDO_USER:-${USER}}" git checkout HEAD -- embark.service
   
   # reset ownership etc
-  # TODO delete the dns resolve
 
   # reset server-certs
   sudo -u "${SUDO_USER:-${USER}}" git checkout HEAD -- cert
@@ -534,9 +531,9 @@ uninstall (){
   # final
   if [[ "$REFORCE" -eq 0 ]]; then
     sudo -u "${SUDO_USER:-${USER}}" git reset
-    rm -r ./safe/*
+    rm -r ./safe
   fi
-  echo -e "$ORANGE""$BOLD""Consider""$CYAN""\$git pull""$NC"
+  echo -e "$ORANGE""$BOLD""Consider ""$CYAN""\$git pull""$ORANGE""$BOLD"" and ""$CYAN""\$git clean""$NC"
 }
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
