@@ -122,7 +122,7 @@ install_emba(){
   if git submodule status emba | grep --quiet '^-'; then
     sudo -u "${SUDO_USER:-${USER}}" git submodule init emba 
   fi
-  sudo -u "${SUDO_USER:-${USER}}" git submodule update emba
+  sudo -u "${SUDO_USER:-${USER}}" git submodule update emba --remote
   sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "$PWD"/emba
   cd emba
   ./installer.sh -d | tee install.log || ( echo "Could not install EMBA" && exit 1 )
