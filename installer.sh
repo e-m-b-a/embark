@@ -83,17 +83,15 @@ write_env(){
   local SUPER_PW="embark"
   local SUPER_EMAIL="idk@lol.com"
   local SUPER_USER="superuser"
-
   local RANDOM_PW=""
   local DJANGO_SECRET_KEY=""
   
-  if [[ $REFORCE -eq 1 ]] && [[ -d safe ]]; then
-    # install old pws
-    # from newest file
+  if check_safe; then
+    echo -e "$ORANGE""$BOLD""Using old env file""$NC"
     DJANGO_SECRET_KEY="$(grep "SECRET_KEY=" "$(find ./safe -name "*.env" | head -1)" | sed -e "s/^SECRET_KEY=//" )"
     RANDOM_PW="$(grep "DATABASE_PASSWORD=" "$(find ./safe -name "*.env" | head -1)" | sed -e "s/^DATABASE_PASSWORD=//" )"
   else
-    echo -e "$ORANGE""$BOLD""Couldn't find safed passwords""$NC"
+    echo -e "$ORANGE""$BOLD""Did not find safed passwords""$NC"
     DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
     RANDOM_PW=$(openssl rand -base64 12)
   fi
@@ -121,17 +119,14 @@ write_env(){
 
 install_emba(){
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner EMBA on host""$NC"
-  sudo -u "${SUDO_USER:-${USER}}" git submodule init
-  sudo -u "${SUDO_USER:-${USER}}" git submodule update --remote
+  if git submodule status emba | grep --quiet '^-'; then
+    sudo -u "${SUDO_USER:-${USER}}" git submodule init emba 
+  fi
+  sudo -u "${SUDO_USER:-${USER}}" git submodule update emba --remote
   sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "$PWD"/emba
   cd emba
   ./installer.sh -d | tee install.log || ( echo "Could not install EMBA" && exit 1 )
   cd ..
-  # TODO costom crom updater for only cve stuff
-  # if ! [[ -f /etc/cron.daily/emba_updater ]]; then
-  #   cp ./config/emba_updater /etc/cron.daily/
-  # fi
-  # check emba
   if ! (cd emba && ./emba -d 1); then
     echo -e "\n$RED""$BOLD""EMBA installation failed""$NC"
     tail emba/install.log
@@ -142,7 +137,7 @@ install_emba(){
 }
 
 create_ca (){
-  # TODO could use some work 
+  # FIXME could use some work 
   echo -e "\n$GREEN""$BOLD""Creating SSL Cert""$NC"
   if ! [[ -d cert ]]; then
     sudo -u "${SUDO_USER:-${USER}}" git checkout -- cert
@@ -178,16 +173,16 @@ dns_resolve(){
 reset_docker(){
   echo -e "\\n$GREEN""$BOLD""Reset EMBArk docker images""$NC\\n"
 
-  # images
+  # EMBArk
   docker_image_rm "mysql" "latest"
   docker_image_rm "redis" "5"
-  docker_image_rm "embeddedanalyzer/emba" "latest"
-  
-  #networks
-  docker_network_rm "embark_dev"
-  # docker_network_rm "embark_frontend"
   docker_network_rm "embark_backend"
-  docker_network_rm "emba_runs"
+
+  # EMBA
+  if [[ "${REFORCE}" -eq 0 ]]; then
+    docker_image_rm "embeddedanalyzer/emba" "latest"
+    docker_network_rm "emba_runs"
+  fi
 
   docker container prune -f --filter "label=flag" || true
 
@@ -276,7 +271,7 @@ install_embark_default(){
   fi
   
   #debs
-  apt-get install -y -q default-libmysqlclient-dev build-essential
+  apt-get install -y -q default-libmysqlclient-dev build-essential mysql-client-core-8.0
   
   # install pipenv
   pip3.10 install pipenv
@@ -331,11 +326,11 @@ install_embark_default(){
     mkdir -p ./embark/static/external/{scripts,css}
     wget -O ./embark/static/external/scripts/jquery.js https://code.jquery.com/jquery-3.6.0.min.js
     wget -O ./embark/static/external/scripts/confirm.js https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js
-    wget -O ./embark/static/external/scripts/bootstrap.js https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js
+    wget -O ./embark/static/external/scripts/bootstrap.js https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js
     wget -O ./embark/static/external/scripts/datatable.js https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.js
     wget -O ./embark/static/external/scripts/charts.js https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js
     wget -O ./embark/static/external/css/confirm.css https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css
-    wget -O ./embark/static/external/css/bootstrap.css https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css
+    wget -O ./embark/static/external/css/bootstrap.css https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css
     wget -O ./embark/static/external/css/datatable.css https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.css
     find ./embark/static/external/ -type f -exec sed -i '/sourceMappingURL/d' {} \;
   fi
@@ -348,14 +343,13 @@ install_embark_default(){
   fi
 
   # download images for container
-  docker-compose -f ./docker-compose.yml up --no-start
-  docker-compose -f ./docker-compose.yml up &>/dev/null &
-  sleep 30
-  kill %1
+  docker-compose pull
+  docker-compose up -d
 
   # activate daemon
   systemctl start embark.service
-
+  check_db
+  docker-compose stop
   echo -e "$GREEN""$BOLD""Ready to use \$sudo ./run-server.sh ""$NC"
   echo -e "$GREEN""$BOLD""Which starts the server on (0.0.0.0) port 80 ""$NC"
 }
@@ -363,7 +357,12 @@ install_embark_default(){
 install_embark_dev(){
   echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
   # apt packages
-  apt-get install -y npm pycodestyle python3-pylint-django default-libmysqlclient-dev build-essential bandit yamllint
+  apt-get install -y npm pycodestyle python3-pylint-django default-libmysqlclient-dev build-essential bandit yamllint mysql-client-core-8.0
+  # get geckodriver
+  wget https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz
+  tar -xvf geckodriver-v0.33.0-linux64.tar.gz
+  mv geckodriver  /usr/local/bin
+  chmod +x /usr/local/bin/geckodriver
   # npm packages
   npm install -g jshint
   # npm install -g dockerlinter
@@ -404,11 +403,11 @@ install_embark_dev(){
     mkdir -p ./embark/static/external/{scripts,css}
     wget -O ./embark/static/external/scripts/jquery.js https://code.jquery.com/jquery-3.6.0.min.js
     wget -O ./embark/static/external/scripts/confirm.js https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js
-    wget -O ./embark/static/external/scripts/bootstrap.js https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js
+    wget -O ./embark/static/external/scripts/bootstrap.js https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js
     wget -O ./embark/static/external/scripts/datatable.js https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.js
     wget -O ./embark/static/external/scripts/charts.js https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js
     wget -O ./embark/static/external/css/confirm.css https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css
-    wget -O ./embark/static/external/css/bootstrap.css https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css
+    wget -O ./embark/static/external/css/bootstrap.css https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css
     wget -O ./embark/static/external/css/datatable.css https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.css
     find ./embark/static/external/ -type f -exec sed -i '/sourceMappingURL/d' {} \;
   fi
@@ -417,16 +416,18 @@ install_embark_dev(){
   write_env
   chmod 644 .env
 
-  # daemon
-  # install_daemon
+  # download images for container
+  docker-compose pull
+  docker-compose up -d
 
+  check_db
+  docker-compose stop
   echo -e "$GREEN""$BOLD""Ready to use \$sudo ./dev-tools/debug-server-start.sh""$NC"
   echo -e "$GREEN""$BOLD""Or use otherwise""$NC"
 }
 
 uninstall (){
   echo -e "[+]$CYAN""$BOLD""Uninstalling EMBArk""$NC"
-    
   # check for changes
   if [[ $(git status --porcelain --untracked-files=no --ignore-submodules=all) ]]; then
     # Changes
@@ -459,11 +460,15 @@ uninstall (){
     # user-files
     if [[ -d ./emba_logs ]]; then
       echo -e "$RED""$BOLD""Do you wish to remove the EMBA-Logs (and backups)""$NC"
-      rm -Riv ./emba_logs
+      rm -RIv ./emba_logs
     fi
     if [[ -d ./embark_db ]]; then
       echo -e "$RED""$BOLD""Do you wish to remove the database(and backups)""$NC"
       rm -RIv ./embark_db
+      if [[ -f ./safe/history.env ]]; then
+        echo -e "$RED""$BOLD""Moved old history file""$NC"
+        mv --force ./safe/history.env ./safe/old_env_history
+      fi
     fi
   fi
 
@@ -490,16 +495,26 @@ uninstall (){
   reset_docker
   echo -e "$ORANGE""$BOLD""Consider running " "$CYAN""\$docker system prune""$NC"
 
-  # delete/uninstall EMBA
-  if [[ $(sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git status --porcelain --untracked-files=no) ]]; then
-    echo -e "[!!]$RED""$BOLD""EMBA changes detected - please commit them...otherwise they will be lost""$NC"
-    read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
+  # delete/uninstall submodules
+  # emba
+  if [ -f ./emba/install.log ]; then
+    rm ./emba/install.log
   fi
   if [[ -d ./emba/external ]]; then
     rm -r ./emba/external/
   fi
-  sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git reset --hard
-  sudo -u "${SUDO_USER:-${USER}}" git submodule deinit --all -f
+  # all submodules
+  if [[ $REFORCE -eq 1 ]]; then
+    sudo -u "${SUDO_USER:-${USER}}" git submodule status
+  else
+    if [[ $(sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git status --porcelain --untracked-files=no) ]]; then
+      echo -e "[!!]$RED""$BOLD""Submodule changes detected - please commit them...otherwise they will be lost""$NC"
+      read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
+    fi
+    sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git reset --hard
+    sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git clean -f -x
+    sudo -u "${SUDO_USER:-${USER}}" git submodule deinit --all -f
+  fi
 
   # stop&reset daemon
   if [[ "$WSL" -ne 1 ]]; then
@@ -509,7 +524,6 @@ uninstall (){
   sudo -u "${SUDO_USER:-${USER}}" git checkout HEAD -- embark.service
   
   # reset ownership etc
-  # TODO delete the dns resolve
 
   # reset server-certs
   sudo -u "${SUDO_USER:-${USER}}" git checkout HEAD -- cert
@@ -517,8 +531,9 @@ uninstall (){
   # final
   if [[ "$REFORCE" -eq 0 ]]; then
     sudo -u "${SUDO_USER:-${USER}}" git reset
+    rm -r ./safe
   fi
-  echo -e "$ORANGE""$BOLD""Consider""$CYAN""\$git pull""$NC"
+  echo -e "$ORANGE""$BOLD""Consider ""$CYAN""\$git pull""$ORANGE""$BOLD"" and ""$CYAN""\$git clean""$NC"
 }
 
 echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
@@ -609,6 +624,7 @@ if [[ $REFORCE -eq 1 ]] && [[ $UNINSTALL -eq 1 ]]; then
   save_old_env
   uninstall
 elif [[ $UNINSTALL -eq 1 ]]; then
+  save_old_env
   uninstall
   exit 0
 fi
@@ -629,5 +645,4 @@ if [[ $DEFAULT -eq 1 ]]; then
 elif [[ $DEV -eq 1 ]]; then
   install_embark_dev
 fi
-
 exit 0

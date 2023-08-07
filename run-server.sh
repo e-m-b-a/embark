@@ -67,7 +67,6 @@ cleaner() {
   exit 1
 }
 
-
 # main
 echo -e "\\n$ORANGE""$BOLD""EMBArk Startup""$NC\\n""$BOLD=================================================================$NC"
 
@@ -121,6 +120,9 @@ fi
 
 # check emba
 echo -e "$BLUE""$BOLD""checking EMBA""$NC"
+if ! [[ -d ./emba ]]; then
+  echo -e "$RED""$BOLD""You are using the wrong installation and missing the EMBA subdirectory""$NC"
+fi
 git submodule update
 if ! (cd "$PWD"/emba && ./emba -d 1); then
   echo -e "$BLUE""Trying auto-maintain""$NC"
@@ -148,19 +150,14 @@ if ! nc -zw1 google.com 443 &>/dev/null ; then
   (cd /var/www && pipenv check && pipenv verify)
 fi
 
+# check db and start container
+check_db
+
 # copy emba
 if [[ -d /var/www/emba ]]; then
   rm -Rf /var/www/emba
 fi
 cp -Ru ./emba/ /var/www/emba/
-
-# Start container
-echo -e "\n$GREEN""$BOLD""Setup mysql and redis docker images""$NC"
-if docker-compose -f ./docker-compose.yml up -d ; then
-  echo -e "$GREEN""$BOLD""Finished setup mysql and redis docker images""$NC"
-else
-  echo -e "$ORANGE""$BOLD""Failed setup mysql and redis docker images""$NC"
-fi
 
 # logs
 if ! [[ -d ./docker_logs ]]; then
@@ -212,8 +209,6 @@ cd /var/www/embark/ || exit 1
 # shellcheck disable=SC1091
 source /var/www/.venv/bin/activate || exit 1
 export PIPENV_VERBOSITY=-1
-
-# TODO move to parent
 # logs
 if ! [[ -d /var/www/logs ]]; then
   mkdir /var/www/logs
@@ -229,7 +224,6 @@ echo -e "\n[""$BLUE JOB""$NC""] Collecting static files"
 pipenv run ./manage.py collectstatic --no-input
 chown www-embark /var/www/ -R
 chmod 760 /var/www/media/ -R
-# TODO other fileperms
 
 echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
 pipenv run ./manage.py runapscheduler | tee -a /var/www/logs/scheduler.log &

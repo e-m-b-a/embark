@@ -22,10 +22,10 @@ from uploader.models import FirmwareAnalysis
 logger = logging.getLogger(__name__)
 
 # EMBAs module count
-EMBA_S_MOD_CNT = 39
-EMBA_P_MOD_CNT = 20
-EMBA_F_MOD_CNT = 4
-EMBA_L_MOD_CNT = 7
+EMBA_S_MOD_CNT = settings.EMBA_S_MOD_CNT
+EMBA_P_MOD_CNT = settings.EMBA_P_MOD_CNT
+EMBA_F_MOD_CNT = settings.EMBA_F_MOD_CNT
+EMBA_L_MOD_CNT = settings.EMBA_L_MOD_CNT
 EMBA_MODULE_CNT = EMBA_S_MOD_CNT + EMBA_P_MOD_CNT + EMBA_F_MOD_CNT + EMBA_L_MOD_CNT
 
 EMBA_PHASE_CNT = 4  # P, S, L, F modules
@@ -148,7 +148,9 @@ class LogReader:
 
         # set attributes of current message
         self.status_msg["module"] = stream_item_list[0]
-        self.status_msg["percentage"] = percentage
+        # ignore all Q-modules for percentage calc
+        if not re.match(".*Q[0-9][0-9]", stream_item_list[0]):
+            self.status_msg["percentage"] = percentage
 
         # get copy of the current status message
         self.save_status()

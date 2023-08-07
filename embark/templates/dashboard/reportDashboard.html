@@ -80,6 +80,9 @@
                                             </form>
                                         {% endif %}
                                     {% endif %}
+                                    <form action={% url 'embark-show-log' firmware.id %} method='get'>
+                                        <button type="submit" class="btn buttonRowElem" >View Log</button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>

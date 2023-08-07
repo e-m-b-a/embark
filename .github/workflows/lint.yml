@@ -18,7 +18,7 @@ jobs:
 
     steps:
     - name: Checkout Branch
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Install dependencies for linting
       run: |
         sudo apt-get install -y python3-dev npm pycodestyle python3-pylint-django bandit
