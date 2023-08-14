@@ -185,9 +185,9 @@ class LogReader:
         while not pathlib.Path(f"{self.analysis.path_to_logs}/emba.log").exists() or not self.finish:
             time.sleep(1)
 
+        logger.debug("looking for events in %s", f"{self.analysis.path_to_logs}/emba.log")
         while not self.finish:
             # look for new events in log
-            logger.debug("looking for events in %s", f"{self.analysis.path_to_logs}/emba.log")
             got_event = self.inotify_events(f"{self.analysis.path_to_logs}/emba.log")
 
             for eve in got_event:
