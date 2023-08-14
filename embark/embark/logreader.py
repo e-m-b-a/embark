@@ -19,7 +19,7 @@ from django.conf import settings
 from uploader.models import FirmwareAnalysis
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("logreader")
 
 # EMBAs module count
 EMBA_S_MOD_CNT = settings.EMBA_S_MOD_CNT
@@ -180,6 +180,10 @@ class LogReader:
         if not pathlib.Path(pat).exists():
             with open(pat, 'x', encoding='utf-8'):
                 pass
+
+        logger.info("Waiting for the main emba log file for %s", self.firmware_id)
+        while not pathlib.Path(f"{self.analysis.path_to_logs}/emba.log").exists() or not self.finish:
+            time.sleep(1)
 
         while not self.finish:
             # look for new events in log
