@@ -236,6 +236,7 @@ pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --allow-localhost --working-directory /var/www/embark/ --server-root /var/www/httpd80/ \
 --include-file /var/www/conf/embark.conf \
 --processes 4 --threads 4 \
+--socket-timeout 120 \
 --graceful-timeout 5 \
 --request-timeout 0 \
 --log-level info \
