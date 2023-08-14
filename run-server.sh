@@ -25,7 +25,7 @@ export DJANGO_SETTINGS_MODULE=embark.settings.deploy
 export HTTP_PORT=80
 export HTTPS_PORT=443
 export BIND_IP='0.0.0.0'
-export FILE_SIZE=2000000000
+export FILE_SIZE=2000000000 # = 2GB
 export SERVER_ALIAS=()
 export WSGI_FLAGS=()
 
@@ -237,6 +237,8 @@ pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --include-file /var/www/conf/embark.conf \
 --processes 4 --threads 4 \
 --graceful-timeout 5 \
+--request-timeout 0 \
+--log-level info \
 --server-name embark.local "${WSGI_FLAGS[@]}" &
 # --ssl-certificate /var/www/conf/cert/embark.local --ssl-certificate-key-file /var/www/conf/cert/embark.local.key \
 # --https-port "$HTTPS_PORT" &
