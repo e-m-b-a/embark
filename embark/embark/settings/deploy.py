@@ -160,41 +160,42 @@ LOGGING = {
         },
     },
     'loggers': {
+        # FIXME change back!!
         '': {
-            'level': 'WARNING',
             'handlers': ['info_handler', 'console_handler'],
+            'level': 'WARNING',
         },
         'uploader': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
-            'level': 'INFO',
+            'level': 'DEBUG',
         },
         'dashboard': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
-            'level': 'INFO',
+            'level': 'DEBUG',
         },
         'users': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
-            'level': 'INFO',
+            'level': 'DEBUG',
         },
         'reporter': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
-            'level': 'INFO',
+            'level': 'DEBUG',
         },
         'tracker': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
-            'level': 'INFO',
+            'level': 'DEBUG',
         },
         'porter': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
-            'level': 'INFO',
+            'level': 'DEBUG',
         },
         'embark': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
-            'level': 'INFO',
+            'level': 'DEBUG',
         },
         'requests': {
             'handlers': ['info_handler'],
-            'level': 'INFO',
+            'level': 'DEBUG',
             'propagate': False,
         }
     }
