@@ -200,6 +200,7 @@ class LogReader:
                             # Act on file change
                             elif flag is flags.MODIFY:
                                 # get the actual difference
+                                logger.debug("Found new changes in %s, trying to read them", f"{self.analysis.path_to_logs}/emba.log")
                                 tmp = self.get_diff(f"{self.analysis.path_to_logs}/emba.log")
                                 logger.debug("Got diff-output: %s", tmp)
                                 # send changes to frontend
@@ -257,8 +258,9 @@ class LogReader:
         """
         # open the two files to get diff from
         logger.debug("getting diff from %s", log_file)
-        with open(log_file, mode='r', encoding='utf-8') as old_file, open(f"{settings.EMBA_LOG_ROOT}/{self.firmware_id}/logreader.log", encoding='utf-8') as new_file:
+        with open(log_file, mode='r', encoding='utf-8') as old_file, open(f"{settings.EMBA_LOG_ROOT}/{self.firmware_id}/logreader.log", mode='r', encoding='utf-8') as new_file:
             diff = difflib.ndiff(old_file.readlines(), new_file.readlines())
+            logger.debug("diff: %s", diff)
             return ''.join(x[2:] for x in diff if x.startswith('- '))
 
     def input_processing(self, tmp_inp):
