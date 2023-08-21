@@ -50,7 +50,7 @@ import_helper()
 
 cleaner() {
   pkill -u root daphne
-  pkill -u root "$PWD"/emba/emba
+  pkill -u root /var/www/emba/emba
   pkill -u root runapscheduler
 
   fuser -k "$HTTP_PORT"/tcp
