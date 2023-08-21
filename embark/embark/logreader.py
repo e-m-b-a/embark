@@ -182,7 +182,7 @@ class LogReader:
                 pass
 
         logger.info("Waiting for the main emba log file for %s", self.firmware_id)
-        while not pathlib.Path(f"{self.analysis.path_to_logs}/emba.log").exists() or not self.finish:
+        while not pathlib.Path(f"{self.analysis.path_to_logs}/emba.log").exists() and not self.finish:
             time.sleep(1)
 
         logger.debug("looking for events in %s", f"{self.analysis.path_to_logs}/emba.log")
