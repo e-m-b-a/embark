@@ -189,21 +189,24 @@ class LogReader:
         while not self.finish:
             # look for new events in log
             got_event = self.inotify_events(f"{self.analysis.path_to_logs}/emba.log")
-
-            for eve in got_event:
-                for flag in flags.from_mask(eve.mask):
-                    # Ignore irrelevant flags TODO: add other possible flags
-                    if flag is flags.CLOSE_NOWRITE or flag is flags.CLOSE_WRITE:
-                        pass
-                    # Act on file change
-                    elif flag is flags.MODIFY:
-                        # get the actual difference
-                        tmp = self.get_diff(f"{self.analysis.path_to_logs}/emba.log")
-                        logger.debug("Got diff-output: %s", tmp)
-                        # send changes to frontend
-                        self.input_processing(tmp)
-                        # copy diff to tmp file
-                        self.copy_file_content(tmp)
+            if got_event:
+                logger.debug("Found changes in %s", f"{self.analysis.path_to_logs}/emba.log")
+                for eve in got_event:
+                    for flag in flags.from_mask(eve.mask):
+                        # Ignore irrelevant flags TODO: add other possible flags
+                        if flag is flags.CLOSE_NOWRITE or flag is flags.CLOSE_WRITE:
+                            pass
+                        # Act on file change
+                        elif flag is flags.MODIFY:
+                            # get the actual difference
+                            tmp = self.get_diff(f"{self.analysis.path_to_logs}/emba.log")
+                            logger.debug("Got diff-output: %s", tmp)
+                            # send changes to frontend
+                            self.input_processing(tmp)
+                            # copy diff to tmp file
+                            self.copy_file_content(tmp)
+                        else:
+                            logger.error("Couldn't process changes in %s", f"{self.analysis.path_to_logs}/emba.log")
 
         self.cleanup()
         logger.info("read loop done for %s", self.firmware_id)

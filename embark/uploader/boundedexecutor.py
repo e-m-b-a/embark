@@ -335,6 +335,6 @@ class BoundedExecutor:
 
     @staticmethod
     @receiver(finish_execution, sender='system')
-    def sigint_handler(sender, **kwargs):
+    def sigint_handler(sender, **kwargs):       # FIXME mod_wsgi prohibits signal_handlers
         logger.info("Received shutdown signal  by %s", sender)
         BoundedExecutor.shutdown()
