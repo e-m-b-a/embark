@@ -93,7 +93,7 @@ def individual_report_dashboard(request, analysis_id):
     """
     delivering individualReportDashboard
 
-    :params request id: HTTP request, hashid of the firmware_analysis
+    :params request id: HTTP request, id of the firmware_analysis
 
     :return: rendered individualReportDashboard of Results for fw_analysis
     """

@@ -1,5 +1,5 @@
 [[source]]
-url = "https://pypi.python.org/simple"
+url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
@@ -7,26 +7,22 @@ name = "pypi"
 channels = "*"
 channels-redis = "*"
 daphne = "*"
-mysqlclient = "*"
-django-apscheduler = "*"
-python-dotenv = "*"
-Rx = "*"
-inotify-simple = "*"
-psutil = "*"
-msgpack = "*"
 django = "*"
-django-hashid-field = "*"
+python-dotenv = "*"
+rx = "*"
 mod-wsgi-standalone = "*"
-django-bootstrap5 = "*"
+django-apscheduler = "*"
 django-tables2 = "*"
-requests = "*"
-djangorestframework = "*"
+inotify-simple = "*"
+django-bootstrap5 = "*"
+psutil = "*"
 
 [dev-packages]
 pycodestyle = "*"
 djlint = "*"
 pylint-django = "*"
 selenium = "*"
+djangorestframework = "*"
 
 [requires]
 python_version = "3.10"

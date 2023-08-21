@@ -13,8 +13,6 @@ from django.dispatch import receiver
 from django.utils.datetime_safe import datetime
 from porter.models import LogZipFile
 
-# from hashid_field import HashidAutoField
-
 from users.models import User as Userclass
 
 
@@ -124,7 +122,6 @@ class FirmwareFile(models.Model):
     """
     MAX_LENGTH = 127
 
-    # id = HashidAutoField(primary_key=True, prefix='fw_')
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
 
     is_archive = models.BooleanField(default=False, blank=True)
@@ -238,7 +235,6 @@ class FirmwareAnalysis(models.Model):
     MAX_LENGTH = 127
 
     # pk
-    # id = HashidAutoField(primary_key=True, prefix='fwA_')
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
     # user
     user = models.ForeignKey(Userclass, on_delete=models.SET_NULL, related_name='Fw_Analysis_User', null=True)

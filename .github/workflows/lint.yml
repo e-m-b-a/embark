@@ -50,7 +50,6 @@ jobs:
         REDIS_HOST: "127.0.0.1"
         REDIS_PORT: "7777"
         SECRET_KEY: "$DJANGO_SECRET_KEY"
-        HASHID_SALT: "EMBArk1234§$S@lt"
         DJANGO_SUPERUSER_PASSWORD:  "embark"
         DJANGO_SUPERUSER_USERNAME:  "superuser"
         DJANGO_SUPERUSER_EMAIL:  "idk@lol.com"
