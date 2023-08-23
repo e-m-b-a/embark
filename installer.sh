@@ -210,7 +210,11 @@ install_debs(){
   fi
   # Gcc
   if ! command -v gcc > /dev/null ; then
-    apt-get install build-essential
+    apt-get install -y build-essential
+  fi
+  # pkg-config
+  if ! command -v pkg-config > /dev/null ; then
+    apt-get install -y pkg-config
   fi
   # Docker
   if [[ "$WSL" -eq 1 ]]; then

@@ -16,6 +16,7 @@ django-tables2 = "*"
 inotify-simple = "*"
 django-bootstrap5 = "*"
 psutil = "*"
+mysqlclient = "*"
 
 [dev-packages]
 pycodestyle = "*"
@@ -26,3 +27,6 @@ djangorestframework = "*"
 
 [requires]
 python_version = "3.10"
+
+[pipenv]
+allow_prereleases = true
