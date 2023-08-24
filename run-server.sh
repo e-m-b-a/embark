@@ -236,11 +236,7 @@ pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --allow-localhost --working-directory /var/www/embark/ --server-root /var/www/httpd80/ \
 --include-file /var/www/conf/embark.conf \
 --processes 1 --threads 1 \
---socket-timeout 120 \
---startup-timeout 45 \
 --graceful-timeout 5 \
---request-timeout 0 \
---inactivity-timeout 600 \
 --log-level debug \
 --server-name embark.local "${WSGI_FLAGS[@]}" &
 # --ssl-certificate /var/www/conf/cert/embark.local --ssl-certificate-key-file /var/www/conf/cert/embark.local.key \
