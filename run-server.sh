@@ -237,6 +237,8 @@ pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --include-file /var/www/conf/embark.conf \
 --processes 4 --threads 4 \
 --graceful-timeout 5 \
+--log-level debug \
+--debug-mode \
 --server-name embark.local "${WSGI_FLAGS[@]}" &
 # --ssl-certificate /var/www/conf/cert/embark.local --ssl-certificate-key-file /var/www/conf/cert/embark.local.key \
 # --https-port "$HTTPS_PORT" &
