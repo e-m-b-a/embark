@@ -26,7 +26,7 @@ from porter.importer import result_read_in
 logger = logging.getLogger(__name__)
 
 # maximum concurrent running workers
-MAX_WORKERS = 4
+MAX_WORKERS = 8
 # maximum queue bound
 MAX_QUEUE = MAX_WORKERS
 
@@ -230,7 +230,7 @@ class BoundedExecutor:
             return None
         try:
             future = executor.submit(function_cmd, *args, **kwargs)
-        except builtins.Exception as error:
+        except Exception as error:
             logger.error("Executor task could not be submitted")
             semaphore.release()
             raise error
