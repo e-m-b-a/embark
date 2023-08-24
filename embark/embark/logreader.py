@@ -174,6 +174,8 @@ class LogReader:
             :return: None
        """
         logger.info("read loop started for %s", self.firmware_id)
+        inotify = INotify()
+        watch_flags = flags.CREATE | flags.DELETE | flags.MODIFY | flags.DELETE_SELF | flags.CLOSE_NOWRITE | flags.CLOSE_WRITE
 
         # if file does not exist create it otherwise delete its content
         pat = f"{settings.EMBA_LOG_ROOT}/{self.firmware_id}/logreader.log"
@@ -183,16 +185,20 @@ class LogReader:
 
         logger.info("Waiting for the main emba log file for %s", self.firmware_id)
         while not pathlib.Path(f"{self.analysis.path_to_logs}/emba.log").exists() and not self.finish:
-            time.sleep(1)
+            time.sleep(0.5)
+        
+        logger.info("Starting to watch changes in %s", f"{self.analysis.path_to_logs}/emba.log")
+        inotify.add_watch(f"{self.analysis.path_to_logs}/emba.log", watch_flags)
 
         logger.debug("looking for events in %s", f"{self.analysis.path_to_logs}/emba.log")
         while not self.finish:
-            # look for new events in log
-            got_event = self.inotify_events(f"{self.analysis.path_to_logs}/emba.log")
-            if got_event:
-                logger.debug("Found changes in %s", f"{self.analysis.path_to_logs}/emba.log")
-                for eve in got_event:
-                    try:
+            try:
+                # look for new events in log
+                got_event = inotify.read(timeout=0, read_delay=10)
+                if got_event:
+                    logger.debug("Found changes in %s", f"{self.analysis.path_to_logs}/emba.log")
+                    for eve in got_event:
+                        logger.debug("Looking at event: %s", eve)
                         for flag in flags.from_mask(eve.mask):
                             # Ignore irrelevant flags TODO: add other possible flags
                             if flag is flags.CLOSE_NOWRITE or flag is flags.CLOSE_WRITE:
@@ -209,8 +215,8 @@ class LogReader:
                                 self.copy_file_content(tmp)
                             else:
                                 logger.error("Couldn't process changes in %s", f"{self.analysis.path_to_logs}/emba.log")
-                    except Exception as err:
-                        logger.error("Got error: %s", err)
+            except Exception as err:
+                logger.error("Got error while reading events: %s", err)       
 
         self.cleanup()
         logger.info("read loop done for %s", self.firmware_id)
@@ -302,18 +308,6 @@ class LogReader:
         ).subscribe(
             lambda x: [self.update_phase(x)]     # , self.test_list2.append(x)
         )
-
-    @classmethod
-    def inotify_events(cls, path):
-        inotify = INotify()
-        watch_flags = flags.CREATE | flags.DELETE | flags.MODIFY | flags.DELETE_SELF | flags.CLOSE_NOWRITE | flags.CLOSE_WRITE
-        try:
-            # add watch on file
-            inotify.add_watch(path, watch_flags)
-            return inotify.read()
-        except builtins.Exception as error:
-            logger.error("inotify_event error in %s:%s", path, error)
-            return []
 
 
 if __name__ == "__main__":
