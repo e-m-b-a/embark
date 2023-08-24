@@ -201,7 +201,7 @@ class LogReader:
                         logger.debug("Looking at event: %s", eve)
                         for flag in flags.from_mask(eve.mask):
                             # Ignore irrelevant flags TODO: add other possible flags
-                            if flag is flags.CLOSE_NOWRITE or flag is flags.CLOSE_WRITE:
+                            if flag is flags.CLOSE_NOWRITE:
                                 pass
                             # Act on file change
                             elif flag is flags.MODIFY:
@@ -215,6 +215,8 @@ class LogReader:
                                 self.copy_file_content(tmp)
                             else:
                                 logger.error("Couldn't process changes in %s", f"{self.analysis.path_to_logs}/emba.log")
+                logger.debug("no event")
+                time.sleep(1)
             except Exception as err:
                 logger.error("Got error while reading events: %s", err)       
 
