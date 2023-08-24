@@ -206,8 +206,7 @@ class BoundedExecutor:
 
         # start log_reader TODO: cancel future and return future
         # log_read_fut = BoundedExecutor.submit(LogReader, firmware_flags.pk)
-        # FIXME 
-        # BoundedExecutor.submit(LogReader, firmware_flags.id)
+        BoundedExecutor.submit(LogReader, firmware_flags.id)
 
         return emba_fut
 
