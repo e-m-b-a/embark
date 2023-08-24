@@ -235,7 +235,7 @@ pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --url-alias /media/ /var/www/media/ \
 --allow-localhost --working-directory /var/www/embark/ --server-root /var/www/httpd80/ \
 --include-file /var/www/conf/embark.conf \
---cpu-priority -10 \
+--cpu-priority 10 \
 --processes 1 --threads 1 \
 --socket-timeout 120 \
 --startup-timeout 45 \
