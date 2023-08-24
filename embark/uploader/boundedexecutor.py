@@ -26,7 +26,7 @@ from porter.importer import result_read_in
 logger = logging.getLogger(__name__)
 
 # maximum concurrent running workers
-MAX_WORKERS = 8
+MAX_WORKERS = 4
 # maximum queue bound
 MAX_QUEUE = MAX_WORKERS
 

@@ -99,6 +99,7 @@ class LogReader:
 
     @staticmethod
     def phase_identify(status_message):
+        logger.debug("trying to identify the phase")
         # phase patterns to match
         pre_checker_phase_pattern = "Pre-checking phase"
         testing_phase_pattern = "Testing phase"
