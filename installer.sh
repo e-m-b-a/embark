@@ -129,7 +129,9 @@ install_emba(){
   cd ..
   if ! (cd emba && ./emba -d 1); then
     echo -e "\n$RED""$BOLD""EMBA installation failed""$NC"
+    echo -e "\n$ORANGE""$BOLD""ERROR-LOG""$CYAN""emba/install.log: ""$NC"
     tail emba/install.log
+    echo -e "\n""--------------------------------------------------------------------""$NC"
     exit 1
   fi
   chown -R "${SUDO_USER:-${USER}}" emba
@@ -191,7 +193,7 @@ reset_docker(){
 install_debs(){
   local DOCKER_COMP_VER=""
   echo -e "\n$GREEN""$BOLD""Install debian packages for EMBArk installation""$NC"
-  apt-get update -y
+  apt-get update -y -q
   # Git
   if ! command -v git > /dev/null ; then
     apt-get install -y git
@@ -275,7 +277,7 @@ install_embark_default(){
   fi
   
   #debs
-  apt-get install -y -q default-libmysqlclient-dev build-essential mysql-client-core-8.0
+  apt-get install -y default-libmysqlclient-dev build-essential mysql-client-core-8.0
   
   # install pipenv
   pip3.10 install pipenv
