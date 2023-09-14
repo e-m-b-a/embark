@@ -125,11 +125,10 @@ install_emba(){
   sudo -u "${SUDO_USER:-${USER}}" git submodule update --remote
   sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "$PWD"/emba
   cd emba
-  ./installer.sh -d | tee install.log || ( echo "Could not install EMBA" && exit 1 )
+  ./installer.sh -d || ( echo "Could not install EMBA" && exit 1 )
   cd ..
   if ! (cd emba && ./emba -d 1); then
     echo -e "\n$RED""$BOLD""EMBA installation failed""$NC"
-    tail emba/install.log
     exit 1
   fi
   chown -R "${SUDO_USER:-${USER}}" emba
@@ -497,9 +496,6 @@ uninstall (){
 
   # delete/uninstall submodules
   # emba
-  if [ -f ./emba/install.log ]; then
-    rm ./emba/install.log
-  fi
   if [[ -d ./emba/external ]]; then
     rm -r ./emba/external/
   fi
