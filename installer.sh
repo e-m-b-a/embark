@@ -97,7 +97,7 @@ write_env(){
       LAST_PW_HASH="$(grep -v "$(echo "" | sha256sum)" safe/history.env | tail -n 1 | cut -d";" -f1)"
       for FILE_ in "${ENV_FILES[@]}"; do
         CHECK_PW="$(grep "DATABASE_PASSWORD=" "${FILE_}" | sed -e "s/^DATABASE_PASSWORD=//" )"
-        if [[ "${LAST_PW_HASH}" -eq "$(echo "${CHECK_PW}" | sha256sum)" ]]; then
+        if [[ "${LAST_PW_HASH}" == "$(echo "${CHECK_PW}" | sha256sum)" ]]; then
           RANDOM_PW="${CHECK_PW}"
           DJANGO_SECRET_KEY="$(grep "SECRET_KEY=" "${FILE_}" | sed -e "s/^SECRET_KEY=//" )"
           break
@@ -496,10 +496,14 @@ uninstall (){
   fi
 
   # remove all emba/embark NOPASSWD entries into sudoer file
-  while 1;do
-    echo #TODO
-    # sed -i 's/www\-embark\ ALL\=\(ALL\)\ NOPASSWD\:\ \/app\/emba\/emba//g' /etc/sudoers #TODO doesnt work yet
-  done < "$(grep "NOPASSWD" /etc/sudoers)"
+  if grep -qE "NOPASSWD\:.*\/emba\/emba" /etc/sudoers ; then
+    echo -e "$ORANGE""$BOLD""Deleting EMBA NOPASSWD entries""$NC"
+    sed -i '/NOPASSWD\:.*\/emba\/emba/d' /etc/sudoers
+  fi
+  if grep -qE "NOPASSWD\:.*\/bin\/pkill" /etc/sudoers ; then
+    echo -e "$ORANGE""$BOLD""Deleting pkill NOPASSWD entries""$NC"
+    sed -i '/NOPASSWD\:.*\/bin\/pkill/d' /etc/sudoers
+  fi
 
   # delete .env
   echo -e "$ORANGE""$BOLD""Delete env""$NC"
