@@ -138,17 +138,6 @@ check_db() {
   echo -e "$GREEN""$BOLD""[+] Everything checks out""$NC\\n"
 }
 
-check_safe() {
-  local ENV_FILES=()
-  if [[ -d safe ]] ; then
-    mapfile -d '' ENV_FILES < <(find ./safe -iname "*.env" -print0 2> /dev/null)
-    if [ ${#ENV_FILES[@]} -gt 0 ]; then
-      return 0
-    fi
-  fi
-  return 1
-}
-
 add_to_env_history(){
   local PASSWORD_="${1:-}"
   local CONTAINER_HASH_="${2:-}"

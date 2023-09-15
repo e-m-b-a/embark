@@ -85,12 +85,28 @@ write_env(){
   local SUPER_USER="superuser"
   local RANDOM_PW=""
   local DJANGO_SECRET_KEY=""
+  local ENV_FILES=()
+  local LAST_PW_HASH=""
+  local CHECK_PW=""
   
-  if check_safe; then
-    echo -e "$ORANGE""$BOLD""Using old env file""$NC"
-    DJANGO_SECRET_KEY="$(grep "SECRET_KEY=" "$(find ./safe -name "*.env" | head -1)" | sed -e "s/^SECRET_KEY=//" )"
-    RANDOM_PW="$(grep "DATABASE_PASSWORD=" "$(find ./safe -name "*.env" | head -1)" | sed -e "s/^DATABASE_PASSWORD=//" )"
-  else
+  if [[ -d safe ]]; then
+    mapfile -d '' ENV_FILES < <(find ./safe -iname "*.env" -print0 2> /dev/null)
+    if [[ ${#ENV_FILES[@]} -gt 0 ]] && [[ -f safe/history.env ]]; then
+      echo -e "$ORANGE""$BOLD""Using old env file""$NC"
+      # check which env file was the last one where $(echo "$PASSWORD_" | sha256sum) matches the first line and entry
+      LAST_PW_HASH="$(grep -v "$(echo "" | sha256sum)" safe/history.env | tail -n 1 | cut -d";" -f1)"
+      for FILE_ in "${ENV_FILES[@]}"; do
+        CHECK_PW="$(grep "DATABASE_PASSWORD=" "${FILE_}" | sed -e "s/^DATABASE_PASSWORD=//" )"
+        if [[ "${LAST_PW_HASH}" -eq "$(echo "${CHECK_PW}" | sha256sum)" ]]; then
+          RANDOM_PW="${CHECK_PW}"
+          DJANGO_SECRET_KEY="$(grep "SECRET_KEY=" "${FILE_}" | sed -e "s/^SECRET_KEY=//" )"
+          break
+        fi
+      done
+    fi
+  fi
+
+  if [[ -z ${DJANGO_SECRET_KEY} ]] || [[ -z ${DJANGO_SECRET_KEY} ]]; then
     echo -e "$ORANGE""$BOLD""Did not find safed passwords""$NC"
     DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
     RANDOM_PW=$(openssl rand -base64 12)
