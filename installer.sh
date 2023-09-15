@@ -490,10 +490,16 @@ uninstall (){
 
   # delete user www-embark and reset visudo
   echo -e "$ORANGE""$BOLD""Delete user""$NC"
-  # sed -i 's/www\-embark\ ALL\=\(ALL\)\ NOPASSWD\:\ \/app\/emba\/emba//g' /etc/sudoers #TODO doesnt work yet
+  
   if id -u www-embark &>/dev/null ; then
     userdel www-embark
   fi
+
+  # remove all emba/embark NOPASSWD entries into sudoer file
+  while 1;do
+    echo #TODO
+    # sed -i 's/www\-embark\ ALL\=\(ALL\)\ NOPASSWD\:\ \/app\/emba\/emba//g' /etc/sudoers #TODO doesnt work yet
+  done < "$(grep "NOPASSWD" /etc/sudoers)"
 
   # delete .env
   echo -e "$ORANGE""$BOLD""Delete env""$NC"
