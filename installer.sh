@@ -471,6 +471,9 @@ uninstall (){
   if [[ -d ./.venv ]]; then
     rm -Rvf ./.venv
   fi
+  if [[ -d ./logs ]]; then
+    rm -Rvf ./logs
+  fi
   if [[ "$REFORCE" -eq 0 ]]; then
     # user-files
     if [[ -d ./emba_logs ]]; then
