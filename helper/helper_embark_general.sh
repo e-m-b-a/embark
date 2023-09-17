@@ -131,22 +131,12 @@ check_db() {
         echo -e "$CYAN""You could try recoverying manually by overwriting your\".env\" file""$NC\\n"
         if [[ -f safe/history.env ]]; then
           echo -e "$CYAN""The mysql-db was first started with the password(sha256sum): $(head -n1 ./safe/history.env | cut -d";" -f1) ""$NC\\n"
+          echo -e "$CYAN""And the password used was (sha256sum): $(echo "${PW_ENV}" | sha256sum)""$NC\\n"
         fi
         exit 1
     fi
   fi
   echo -e "$GREEN""$BOLD""[+] Everything checks out""$NC\\n"
-}
-
-check_safe() {
-  local ENV_FILES=()
-  if [[ -d safe ]] ; then
-    mapfile -d '' ENV_FILES < <(find ./safe -iname "*.env" -print0 2> /dev/null)
-    if [ ${#ENV_FILES[@]} -gt 0 ]; then
-      return 0
-    fi
-  fi
-  return 1
 }
 
 add_to_env_history(){
