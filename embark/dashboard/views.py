@@ -118,7 +118,7 @@ def show_log(request, analysis_id):
     log_file_path_ = f"{Path(firmware.path_to_logs).parent}/emba_run.log"
     logger.debug("Taking file at %s and render it", log_file_path_)
     try:
-        with open(log_file_path_, 'r', encoding='utf-8') as log_file_:
+        with open(log_file_path_, 'rb') as log_file_:
             return HttpResponse(content=log_file_, content_type="text/plain")
     except FileNotFoundError:
         return HttpResponseServerError(content="File is not yet available")
