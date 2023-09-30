@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}EMBArk Logs{% endblock title %}
+{% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
+{% block maincontent %}
+<div class="col-sm">
+    <div class="box">
+        <p class="mainText">Logs</p>
+        <pre id="logArea" style="font-family: monospace;">
+        </pre>
+        <div class="buttonRow">
+            <form action={% url 'embark-show-log' analysis_id %} method='get'>
+                <button type="submit" class="btn buttonRowElem">Download Logs</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="col-sm">
+    <div class="box">
+        <p class="mainText">Controls</p>
+        <div>
+            <div>
+                <button title="Shortcut: &uarr;" type="submit" id="uarr" class="btn" onclick="LogControls.move_offset(1); return false;">
+                    &uarr;
+                </button>
+                <button title="Shortcut: PgUp" type="submit" id="uarr" class="btn" onclick="LogControls.move_offset(5); return false;">
+                    &uarr;&times;<span class="scroll-multiplicator">5</span>
+                </button>
+                <button title="Shortcut: Shift+&uarr; or Shift+PgUp (x5)" type="submit" id="uarr" class="btn" onclick="LogControls.increase_view_size(1); return false;">
+                    increase view size
+                </button>
+            </div>
+            <div>
+                <button title="Shortcut: &darr;" type="submit" id="uarr" class="btn" onclick="LogControls.move_offset(-1); return false;">
+                    &darr;
+                </button>
+                <button title="Shortcut: PgDn" type="submit" id="darr" class="btn" onclick="LogControls.move_offset(-5); return false;">
+                    &darr;&times;<span class="scroll-multiplicator">5</span>
+                </button>
+                <button title="Shortcut: Shift+&darr; or Shift+PgDn (x5)" type="submit" id="uarr" class="btn" onclick="LogControls.increase_view_size(-1); return false;">
+                    decrease view size
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock maincontent %}
+{% block inlinejs %}
+<script>var analysis_id = "{{analysis_id}}";</script>
+<script type="text/javascript" src="{% static 'scripts/logViewer.js' %}"></script>
+{% endblock inlinejs %}

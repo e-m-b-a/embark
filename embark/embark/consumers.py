@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 # consumer class for synchronous/asynchronous websocket communication
-class WSConsumer(AsyncWebsocketConsumer):
+class ProgressConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_message(self):
