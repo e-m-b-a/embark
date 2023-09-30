@@ -2,12 +2,13 @@ import unittest
 
 from embark.logviewer import LineCache
 
+
 class TestLineCache(unittest.TestCase):
 
     def test_default(self):
         line_cache = LineCache('./test/logviewer/line_cache_test1.log')
 
-        for i in range(0,2):
+        for _ in range(0, 2):
             self.assertEqual(12, line_cache.num_lines(), 'Incorrect number of lines.')
             self.assertEqual(len(line_cache.line_endings), len(line_cache.line_beginnings), 'The number of line beginnings and line endings do not match.')
             self.assertEqual([0, 7, 11, 23, 31, 41, 50, 54, 58, 72, 86, 104], line_cache.line_beginnings, 'The line beginning cache is not valid.')
@@ -19,7 +20,7 @@ class TestLineCache(unittest.TestCase):
     def test_no_newline_end(self):
         line_cache = LineCache('./test/logviewer/line_cache_test_no_newline.log')
 
-        for i in range(0,2):
+        for _ in range(0, 2):
             self.assertEqual(11, line_cache.num_lines(), 'Incorrect number of lines.')
             self.assertEqual(len(line_cache.line_endings), len(line_cache.line_beginnings), 'The number of line beginnings and line endings do not match.')
             self.assertEqual([0, 7, 11, 23, 31, 41, 50, 54, 58, 72, 86], line_cache.line_beginnings, 'The line beginning cache is not valid.')
@@ -31,7 +32,7 @@ class TestLineCache(unittest.TestCase):
     def test_empty(self):
         line_cache = LineCache('./test/logviewer/line_cache_test_empty.log')
 
-        for i in range(0,2):
+        for _ in range(0, 2):
             self.assertEqual(1, line_cache.num_lines(), 'Incorrect number of lines.')
             self.assertEqual(len(line_cache.line_endings), len(line_cache.line_beginnings), 'The number of line beginnings and line endings do not match.')
             self.assertEqual([0], line_cache.line_beginnings, 'The line beginning cache is not valid.')

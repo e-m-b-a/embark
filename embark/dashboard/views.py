@@ -123,6 +123,7 @@ def show_log(request, analysis_id):
     except FileNotFoundError:
         return HttpResponseServerError(content="File is not yet available")
 
+
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def show_logviewer(request, analysis_id):
@@ -141,6 +142,6 @@ def show_logviewer(request, analysis_id):
     logger.debug("Taking file at %s and render it", log_file_path_)
     try:
         return render(request, 'dashboard/logViewer.html', {'analysis_id': analysis_id, 'username': request.user.username})
-    
+
     except FileNotFoundError:
         return HttpResponseServerError(content="File is not yet available")
