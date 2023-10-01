@@ -168,6 +168,9 @@ class LineCache:
             if len(line) > 0 and line[-1:] == b'\n':
                 line_ending = line_ending - 1
 
+            if len(line) > 1 and line[-2:] == b'\r\n':
+                line_ending = line_ending - 1
+
             self.line_beginnings.append(line_beginning)
             self.line_endings.append(line_ending)
 
