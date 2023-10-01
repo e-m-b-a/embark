@@ -15,10 +15,6 @@ window.addEventListener(
       wsPort = ":8000";
     }
 
-    var socket = new WebSocket(
-      wsStart + location.hostname + wsPort + "/ws/logs/" + analysis_id
-    );
-
     window.file_view = {
       offset: 0,
       limit: 50,
