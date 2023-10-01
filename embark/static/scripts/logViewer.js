@@ -27,30 +27,39 @@ window.addEventListener(
 
     var logArea = document.getElementById("logArea");
 
-    function onMessage(evt) {
-      // There are two types of messages:
-      // 1. a chat participant message itself
-      // 2. a message with a number of connected chat participants
-      var message = JSON.parse(evt.data);
-
-      if (message.file_view) {
-        var fileContent = atob(message.file_view.content) + "\u00a0"; // The nbsp is required in order to preserve trailing newlines
-        logArea.textContent = fileContent;
-        file_view = message.file_view;
-      }
-    }
-
     function onError(evt) {
       console.log("error", evt);
     }
 
-    socket.onmessage = function (evt) {
-      onMessage(evt);
-    };
+    var socket = undefined;
 
-    socket.onerror = function (evt) {
-      onError(evt);
-    };
+    import('/static/external/scripts/ansi_up.js').then(({ AnsiUp }) => {
+      socket = new WebSocket(
+        wsStart + location.hostname + wsPort + "/ws/logs/" + analysis_id
+      );
+
+      function onMessage(evt) {
+        var message = JSON.parse(evt.data);
+
+        if (message.file_view) {
+          var fileContent = Base64.decode(message.file_view.content) // We cannot use atob because of unicode (see https://stackoverflow.com/questions/30106476/using-javascripts-atob-to-decode-base64-doesnt-properly-decode-utf-8-strings)
+          fileContent = fileContent + "\u00a0"; // The nbsp is required in order to preserve trailing newlines
+
+          var ansi_up = new AnsiUp();
+          var coloredFileContent = ansi_up.ansi_to_html(fileContent);
+          logArea.innerHTML = coloredFileContent;
+          file_view = message.file_view;
+        }
+      }
+
+      socket.onmessage = function (evt) {
+        onMessage(evt);
+      };
+
+      socket.onerror = function (evt) {
+        onError(evt);
+      };
+    });
 
     function requestUpdate() {
       var requestView = Object.assign({}, file_view);

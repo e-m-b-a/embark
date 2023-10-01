@@ -1,0 +1,8 @@
+#logArea,
+#logArea * {
+    font-family: monospace;
+}
+
+#logArea {
+    line-height: 1.19;
+}
