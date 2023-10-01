@@ -3,6 +3,9 @@
 
 /* global analysis_id */
 
+import { AnsiUp } from '/static/external/scripts/ansi_up.js';
+import { Base64 } from '/static/external/scripts/base64.js';
+
 window.addEventListener(
   "load",
   function () {
@@ -27,38 +30,35 @@ window.addEventListener(
       console.log("error", evt);
     }
 
-    var socket = undefined;
 
-    import('/static/external/scripts/ansi_up.js').then(({ AnsiUp }) => {
-      socket = new WebSocket(
-        wsStart + location.hostname + wsPort + "/ws/logs/" + analysis_id
-      );
+    var socket = new WebSocket(
+      wsStart + location.hostname + wsPort + "/ws/logs/" + analysis_id
+    );
 
-      function onMessage(evt) {
-        var message = JSON.parse(evt.data);
+    function onMessage(evt) {
+      var message = JSON.parse(evt.data);
 
-        if (message.file_view) {
-          var fileContent = Base64.decode(message.file_view.content) // We cannot use atob because of unicode (see https://stackoverflow.com/questions/30106476/using-javascripts-atob-to-decode-base64-doesnt-properly-decode-utf-8-strings)
-          fileContent = fileContent + "\u00a0"; // The nbsp is required in order to preserve trailing newlines
+      if (message.file_view) {
+        var fileContent = Base64.decode(message.file_view.content); // We cannot use atob because of unicode (see https://stackoverflow.com/questions/30106476/using-javascripts-atob-to-decode-base64-doesnt-properly-decode-utf-8-strings)
+        fileContent = fileContent + "\u00a0"; // The nbsp is required in order to preserve trailing newlines
 
-          var ansi_up = new AnsiUp();
-          var coloredFileContent = ansi_up.ansi_to_html(fileContent);
-          logArea.innerHTML = coloredFileContent;
-          file_view = message.file_view;
-        }
+        var ansi_up = new AnsiUp();
+        var coloredFileContent = ansi_up.ansi_to_html(fileContent);
+        logArea.innerHTML = coloredFileContent;
+        window.file_view = message.file_view;
       }
+    }
 
-      socket.onmessage = function (evt) {
-        onMessage(evt);
-      };
+    socket.onmessage = function (evt) {
+      onMessage(evt);
+    };
 
-      socket.onerror = function (evt) {
-        onError(evt);
-      };
-    });
+    socket.onerror = function (evt) {
+      onError(evt);
+    };
 
     function requestUpdate() {
-      var requestView = Object.assign({}, file_view);
+      var requestView = Object.assign({}, window.file_view);
       requestView.content = "";
       socket.send(
         JSON.stringify({ action: "change_view", file_view: requestView })
@@ -67,20 +67,20 @@ window.addEventListener(
 
     window.LogControls = {
       move_offset: function (lines) {
-        file_view.offset += lines;
+        window.file_view.offset += lines;
         requestUpdate();
       },
       set_offset: function (offset) {
-        file_view.offset = offset;
+        window.file_view.offset = offset;
         requestUpdate();
       },
       increase_view_size: function (lines) {
-        file_view.limit += lines;
-        if (file_view.limit < 5) {
-          file_view.limit = 5;
+        window.file_view.limit += lines;
+        if (window.file_view.limit < 5) {
+          window.file_view.limit = 5;
         }
-        if (file_view.num_lines != 0 && file_view.limit > file_view.num_lines) {
-          file_view.limit = file_view.num_lines;
+        if (window.file_view.num_lines != 0 && window.file_view.limit > window.file_view.num_lines) {
+          window.file_view.limit = window.file_view.num_lines;
         }
         requestUpdate();
       },
