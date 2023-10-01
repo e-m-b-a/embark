@@ -19,7 +19,7 @@ window.addEventListener(
       wsStart + location.hostname + wsPort + "/ws/logs/" + analysis_id
     );
 
-    var file_view = {
+    window.file_view = {
       offset: 0,
       limit: 50,
       content: "",
@@ -63,6 +63,10 @@ window.addEventListener(
     window.LogControls = {
       move_offset: function (lines) {
         file_view.offset += lines;
+        requestUpdate();
+      },
+      set_offset: function (offset) {
+        file_view.offset = offset;
         requestUpdate();
       },
       increase_view_size: function (lines) {

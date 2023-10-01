@@ -27,6 +27,9 @@
                 <button title="Shortcut: PgUp" type="submit" id="uarr" class="btn" onclick="LogControls.move_offset(5); return false;">
                     ↑×<span class="scroll-multiplicator">5</span>
                 </button>
+                <button type="submit" id="uarr-top" class="btn" onclick="LogControls.set_offset(file_view.num_lines); return false;">
+                    ⤒
+                </button>
                 <button title="Shortcut: Shift+↑ or Shift+PgUp (x5)" type="submit" id="uarr" class="btn" onclick="LogControls.increase_view_size(1); return false;">
                     increase view size
                 </button>
@@ -37,6 +40,9 @@
                 </button>
                 <button title="Shortcut: PgDn" type="submit" id="darr" class="btn" onclick="LogControls.move_offset(-5); return false;">
                     ↓×<span class="scroll-multiplicator">5</span>
+                </button>
+                <button type="submit" id="darr-bot" class="btn" onclick="LogControls.set_offset(0); return false;">
+                    ⤓
                 </button>
                 <button title="Shortcut: Shift+↓ or Shift+PgDn (x5)" type="submit" id="uarr" class="btn" onclick="LogControls.increase_view_size(-1); return false;">
                     decrease view size
