@@ -465,6 +465,9 @@ uninstall (){
   if [[ -d ./static ]]; then
     rm -Rv ./static
   fi
+  if [[ -d ./embark/static/external ]]; then
+    rm -Rv ./embark/static/external
+  fi
   if [[ -d ./cert ]]; then
     rm -Rv ./cert
   fi
