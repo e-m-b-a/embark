@@ -514,7 +514,7 @@ uninstall (){
   # delete .env
   echo -e "$ORANGE""$BOLD""Delete env""$NC"
   if [[ -f ./.env ]]; then
-    rm ./.env
+    rm -Rvf ./.env
   fi
 
   # delete shared volumes and migrations
