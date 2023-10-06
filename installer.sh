@@ -35,7 +35,7 @@ export GREEN='\033[0;32m'
 export ORANGE='\033[0;33m'
 export CYAN='\033[0;36m'
 export BOLD='\033[1m'
-export NC='\033[0m' # no 
+export NC='\033[0m' # no
 
 print_help(){
   echo -e "\\n""$CYAN""USAGE""$NC"
@@ -88,7 +88,7 @@ write_env(){
   local ENV_FILES=()
   local LAST_PW_HASH=""
   local CHECK_PW=""
-  
+
   if [[ -d safe ]]; then
     mapfile -d '' ENV_FILES < <(find ./safe -iname "*.env" -print0 2> /dev/null)
     if [[ ${#ENV_FILES[@]} -gt 0 ]] && [[ -f safe/history.env ]]; then
@@ -111,11 +111,11 @@ write_env(){
     DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
     RANDOM_PW=$(openssl rand -base64 12)
   fi
-  
+
   echo -e "$ORANGE""$BOLD""Creating a EMBArk configuration file .env""$NC"
   {
     echo "DATABASE_NAME=embark"
-    echo "DATABASE_USER=embark" 
+    echo "DATABASE_USER=embark"
     echo "DATABASE_PASSWORD=$RANDOM_PW"
     echo "DATABASE_HOST=172.22.0.5"
     echo "DATABASE_PORT=3306"
@@ -136,7 +136,7 @@ write_env(){
 install_emba(){
   echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner EMBA on host""$NC"
   if git submodule status emba | grep --quiet '^-'; then
-    sudo -u "${SUDO_USER:-${USER}}" git submodule init emba 
+    sudo -u "${SUDO_USER:-${USER}}" git submodule init emba
   fi
   sudo -u "${SUDO_USER:-${USER}}" git submodule update --remote
   sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "$PWD"/emba
@@ -152,13 +152,13 @@ install_emba(){
 }
 
 create_ca (){
-  # FIXME could use some work 
+  # FIXME could use some work
   echo -e "\n$GREEN""$BOLD""Creating SSL Cert""$NC"
   if ! [[ -d cert ]]; then
     sudo -u "${SUDO_USER:-${USER}}" git checkout -- cert
   fi
   cd cert || exit 1
-  if [[ -f embark.local.csr ]] || [[ -f embark-ws.local.csr ]] || [[ -f embark.local.crt ]] || [[ -f embark-ws.local.crt ]]; then 
+  if [[ -f embark.local.csr ]] || [[ -f embark-ws.local.csr ]] || [[ -f embark.local.crt ]] || [[ -f embark-ws.local.crt ]]; then
     echo -e "\n$GREEN""$BOLD""Certs already generated, skipping""$NC"
   else
     # create CA
@@ -284,10 +284,10 @@ install_embark_default(){
   if [[ "$WSL" -eq 1 ]]; then
     echo -e "$RED""$BOLD""EMBArk currently does not support WSL in default mode. (only in Dev-mode)""$NC"
   fi
-  
+
   #debs
   apt-get install -y -q default-libmysqlclient-dev build-essential mysql-client-core-8.0
-  
+
   # install pipenv
   pip3.10 install pipenv
 
@@ -323,7 +323,7 @@ install_embark_default(){
 
   # daemon
   install_daemon
-  
+
   #add ssl cert
   create_ca
 
@@ -333,7 +333,7 @@ install_embark_default(){
   #install packages
   cp ./Pipfile* /var/www/
   (cd /var/www && PIPENV_VENV_IN_PROJECT=1 pipenv install)
-  
+
 
   # download externals
   if ! [[ -d ./embark/static/external ]]; then
@@ -344,6 +344,8 @@ install_embark_default(){
     wget -O ./embark/static/external/scripts/bootstrap.js https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js
     wget -O ./embark/static/external/scripts/datatable.js https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.js
     wget -O ./embark/static/external/scripts/charts.js https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js
+    wget -O ./embark/static/external/scripts/base64.js https://cdn.jsdelivr.net/npm/js-base64@3.7.5/+esm
+    wget -O ./embark/static/external/scripts/ansi_up.js https://cdn.jsdelivr.net/npm/ansi_up@6.0.2/ansi_up.min.js
     wget -O ./embark/static/external/css/confirm.css https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css
     wget -O ./embark/static/external/css/bootstrap.css https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css
     wget -O ./embark/static/external/css/datatable.css https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.css
@@ -381,7 +383,7 @@ install_embark_dev(){
   # npm packages
   npm install -g jshint
   # npm install -g dockerlinter
-  
+
   # install pipenv
   pip3 install pipenv
 
@@ -390,7 +392,7 @@ install_embark_dev(){
   echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD: /bin/pkill" | EDITOR='tee -a' visudo
   echo "root ALL=(ALL) NOPASSWD: ""$PWD""/emba/emba" | EDITOR='tee -a' visudo
   echo "root ALL=(ALL) NOPASSWD: /bin/pkill" | EDITOR='tee -a' visudo
-  
+
 
   #pipenv
   PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
@@ -421,6 +423,8 @@ install_embark_dev(){
     wget -O ./embark/static/external/scripts/bootstrap.js https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js
     wget -O ./embark/static/external/scripts/datatable.js https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.js
     wget -O ./embark/static/external/scripts/charts.js https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js
+    wget -O ./embark/static/external/scripts/base64.js https://cdn.jsdelivr.net/npm/js-base64@3.7.5/+esm
+    wget -O ./embark/static/external/scripts/ansi_up.js https://cdn.jsdelivr.net/npm/ansi_up@6.0.2/ansi_up.min.js
     wget -O ./embark/static/external/css/confirm.css https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css
     wget -O ./embark/static/external/css/bootstrap.css https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css
     wget -O ./embark/static/external/css/datatable.css https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.css
@@ -493,7 +497,7 @@ uninstall (){
 
   # delete user www-embark and reset visudo
   echo -e "$ORANGE""$BOLD""Delete user""$NC"
-  
+
   if id -u www-embark &>/dev/null ; then
     userdel www-embark
   fi
@@ -547,7 +551,7 @@ uninstall (){
     systemctl daemon-reload
   fi
   sudo -u "${SUDO_USER:-${USER}}" git checkout HEAD -- embark.service
-  
+
   # reset ownership etc
 
   # reset server-certs
