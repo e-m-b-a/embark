@@ -47,6 +47,9 @@ services:
     logging:
       driver: "local"
 
+  #embark_nfs:
+    # TODO
+
 
 networks:
   embark_backend:
@@ -57,3 +60,4 @@ networks:
     ipam:
       config:
         - subnet: "172.22.0.0/16"
+
