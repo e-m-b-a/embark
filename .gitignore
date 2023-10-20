@@ -13,6 +13,7 @@ embark_db/
 www/
 .venv/
 safe/
+.embark_db_backup
 
 # other stuff
 *.zip

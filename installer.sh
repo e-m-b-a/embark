@@ -469,6 +469,9 @@ uninstall (){
   if [[ -d ./static ]]; then
     rm -Rv ./static
   fi
+  if [[ -d ./embark/static/external ]]; then
+    rm -Rv ./embark/static/external
+  fi
   if [[ -d ./cert ]]; then
     rm -Rv ./cert
   fi
@@ -515,7 +518,7 @@ uninstall (){
   # delete .env
   echo -e "$ORANGE""$BOLD""Delete env""$NC"
   if [[ -f ./.env ]]; then
-    rm ./.env
+    rm -Rvf ./.env
   fi
 
   # delete shared volumes and migrations
