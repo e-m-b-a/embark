@@ -49,20 +49,5 @@ fi
 echo "USER is ${SUDO_USER:-${USER}}"
 
 import_helper
-
-# WSL/OS version check
-# WSL support - currently experimental!
-if grep -q -i wsl /proc/version; then
-  echo -e "\n${ORANGE}INFO: System running in WSL environment!$NC"
-  echo -e "\n${ORANGE}INFO: WSL is currently experimental!$NC"
-  WSL=1
-fi
-
-if [[ "$WSL" -eq 1 ]]; then
-  check_docker_wsl
-fi
-
-# read .env file
-export "$(grep -v '^#' .env | xargs)"
-
-docker-compose exec -T --privileged --user root embark_db mysqldump --user="$DATABASE_USER" --password="$DATABASE_PASSWORD" "$DATABASE_NAME" --no-tablespaces > full-backup-"$(date +%F)".sql
+cp -urvi ./embark_db ./.embark_db_backup
+tar -cf full-backup-"$(date +%F)".tar ./.embark_db_backup

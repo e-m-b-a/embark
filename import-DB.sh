@@ -38,11 +38,16 @@ import_helper()
   echo -e "\\n""==> ""$GREEN""Imported ""$HELPER_COUNT"" necessary files""$NC\\n"
 }
 
-SQL_FILE="${1:-}"
-
-if ! [[ -f "$SQL_FILE" ]]; then
-  echo -e "\\n$RED""No SQL-FILE supplied!""$NC\\n"
-  exit 1
+ALT_BACKUP_FILE="${1:-}"
+export BACKUP_FILE=""
+if [[ -n "${ALT_BACKUP_FILE}" ]]; then
+  if ! [[ -f "${ALT_BACKUP_FILE}" ]]; then
+    echo -e "\\n$RED""Error with input for BACKUP FILE!""$NC\\n"
+    exit 1
+  fi
+  BACKUP_FILE="${ALT_BACKUP_FILE}"
+else
+  BACKUP_FILE="$(find . -type f -iname "full-backup-*.tar" | sort -n | tail -n 1)"
 fi
 
 cd "$(dirname "$0")" || exit 1
@@ -56,25 +61,10 @@ echo "USER is ${SUDO_USER:-${USER}}"
 
 import_helper
 
-# WSL/OS version check
-# WSL support - currently experimental!
-if grep -q -i wsl /proc/version; then
-  echo -e "\n${ORANGE}INFO: System running in WSL environment!$NC"
-  echo -e "\n${ORANGE}INFO: WSL is currently experimental!$NC"
-  WSL=1
-fi
+tar -xf "${BACKUP_FILE}"
 
-if [[ "$WSL" -eq 1 ]]; then
-  check_docker_wsl
-fi
+rsync -a --progress ./.embark_db_backup/ ./embark_db/
 
-# read .env file
-export "$(grep -v '^#' .env | xargs)"
-
-docker-compose -f ./docker-compose.yml up -d
-
-echo "$SQL_FILE"
-
-docker-compose exec -T --privileged --user root embark_db mysql --user="$DATABASE_USER" --password="$DATABASE_PASSWORD" "$DATABASE_NAME" < "$SQL_FILE"
+rm -rf ./.embark_db_backup/
 
 echo -e "\\n""==> ""$GREEN""Import successful""$NC"
