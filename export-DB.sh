@@ -26,23 +26,23 @@ import_helper()
   local HELPER_COUNT=0
   local HELPER_FILE=""
   local HELP_DIR='helper'
-  mapfile -d '' HELPERS < <(find "$HELP_DIR" -iname "helper_embark_*.sh" -print0 2> /dev/null)
+  mapfile -d '' HELPERS < <(find "${HELP_DIR}" -iname "helper_embark_*.sh" -print0 2> /dev/null)
   for HELPER_FILE in "${HELPERS[@]}" ; do
-    if ( file "$HELPER_FILE" | grep -q "shell script" ) && ! [[ "$HELPER_FILE" =~ \ |\' ]] ; then
+    if ( file "${HELPER_FILE}" | grep -q "shell script" ) && ! [[ "${HELPER_FILE}" =~ \ |\' ]] ; then
       # https://github.com/koalaman/shellcheck/wiki/SC1090
       # shellcheck source=/dev/null
-      source "$HELPER_FILE"
+      source "${HELPER_FILE}"
       (( HELPER_COUNT+=1 ))
     fi
   done
-  echo -e "\\n""==> ""$GREEN""Imported ""$HELPER_COUNT"" necessary files""$NC\\n"
+  echo -e "\\n""==> ""${GREEN}""Imported ""${HELPER_COUNT}"" necessary files""${NC}\\n"
 }
 
 
-cd "$(dirname "$0")" || exit 1
+cd "$(dirname "${0}")" || exit 1
 
-if ! [[ $EUID -eq 0 ]] ; then
-  echo -e "\\n$RED""Run script with root permissions!""$NC\\n"
+if ! [[ ${EUID} -eq 0 ]] ; then
+  echo -e "\\n${RED}""Run script with root permissions!""${NC}\\n"
   exit 1
 fi
 

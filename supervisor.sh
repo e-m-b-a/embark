@@ -16,7 +16,7 @@ LOG_FILE='/var/log/embark-supervisor.log'
 # Close standard output file descriptors and reroute to log
 exec 1<&-
 exec 2<&-
-exec 1<>$LOG_FILE
+exec 1<>${LOG_FILE}
 exec 2>&1
 
 while :; do
