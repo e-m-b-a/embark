@@ -44,9 +44,20 @@
                                 {% endfor %}
                             </td>
                             <td>{{ firmware.version }}</td>
+                            <!-- # TODO Convert times to Client time?-->
                             <td>{{ firmware.start_date }}</td>
-                            <td>{{ firmware.end_date }}</td>
+                            <!--End date-->
                             <td>
+                                {% if firmware.end_date is not None %}
+                                    {{ firmware.end_date }}
+                                {% else %}
+                                    <button type="button" class="btn btn-secondary" data-container="body" data-toggle="popover" data-placement="top" data-content="The Analysis for this firmware is currently being worked on. There is no End-date yet.">
+                                        Results are on their way
+                                    </button>
+                                {% endif %}   
+                            </td>
+                            <td>
+                                <!--ButtonRow with menue-->
                                 <div class="buttonRow">
                                     <!-- If firmware is being worked on-->
                                     {% if firmware.finished is False %}
@@ -60,29 +71,67 @@
                                                 <span class="badge badge-danger">Analysis Failed</span>
                                             </button>
                                         {% else %}
-                                            {% if firmware.zip_file is not None %}
-                                                <form action={% url 'embark-download' firmware.id %} method='get'>
-                                                    <button type="submit" class="btn buttonRowElem" >Download Logs</button>
-                                                </form>
-                                            {% else %}
-                                                <form action={% url 'embark-make-zip' firmware.id %} method='get'>
-                                                    <button type="submit" class="btn buttonRowElem" >Make Zip Logs</button>
-                                                </form>
-                                            {% endif %}
-                                            <form action={% url 'embark-html-report' firmware.id 'index.html' %} method='get'>
-                                                <button type="submit" class="btn buttonRowElem" >Open Report</button>
-                                            </form>
-                                            <form action={% url 'embark-IndividualReportDashboard' firmware.id %} method='get'>
-                                                <button type="submit" class="btn buttonRowElem" >Detail View</button>
-                                            </form>
-                                            <form action={% url 'embark-uploader-home' %} method='get'>
-                                                <button type="submit" class="btn buttonRowElem" >Rescan/delete</button>
-                                            </form>
+                                            <div class="btn-group dropup">
+                                                <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                Options
+                                                </button>
+                                                <div class="dropdown-menu">
+                                                    {% if firmware.zip_file is not None %}
+                                                        <form action={% url 'embark-download' firmware.id %} method='get'>
+                                                            <button type="submit" class="btn buttonRowElem" >Download Logs</button>
+                                                        </form>
+                                                    {% else %}
+                                                        <form action={% url 'embark-make-zip' firmware.id %} method='get'>
+                                                            <button type="submit" class="btn buttonRowElem" >Make Zip Logs</button>
+                                                        </form>
+                                                    {% endif %}
+                                                    <form action={% url 'embark-html-report' firmware.id 'index.html' %} method='get'>
+                                                        <button type="submit" class="btn buttonRowElem" >Open Report</button>
+                                                    </form>
+                                                    <form action={% url 'embark-IndividualReportDashboard' firmware.id %} method='get'>
+                                                        <button type="submit" class="btn buttonRowElem" >Detail View</button>
+                                                    </form>
+                                                    <form action={% url 'embark-uploader-home' %} method='get'>
+                                                        <button type="submit" class="btn buttonRowElem" >Rescan/delete</button>
+                                                    </form>
+                                                </div>
+                                             </div>
                                         {% endif %}
                                     {% endif %}
+                                </div>
+                                <!--ButtonRow with log-->
+                                <div class="buttonRow">
                                     <form action={% url 'embark-show-log' firmware.id %} method='get'>
                                         <button type="submit" class="btn buttonRowElem" >View Log</button>
                                     </form>
+                                    <button type="button" class="btn buttonRowElem btn-danger" data-bs-toggle="modal" data-bs-target="#DeleteModal-{{ firmware.id }}">
+                                        Delete Analysis
+                                    </button>
+
+                                    <!-- Modal -->
+                                    <div class="modal fade" id="DeleteModal-{{ firmware.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="exampleModalLabel">Delete Analysis {{ firmware.id }}</h5>
+                                                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    Are you sure you want to delete this analysis of {{ firmware.firmware_name }}
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">NO</button>
+
+                                                    <form action="{% url 'embark-delete-analysis' firmware.id %}" method="get" id="delete-form-{{ firmware.id }}">
+                                                        <button type="submit" class="btn btn-primary">YES</button>
+                                                    </form>
+  
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
