@@ -1,3 +1,4 @@
+import builtins
 from datetime import timedelta
 import logging
 import os
@@ -321,6 +322,10 @@ class FirmwareAnalysis(models.Model):
     finished = models.BooleanField(default=False, blank=False)
     failed = models.BooleanField(default=False, blank=False)
 
+    # view option fields
+    archived = models.BooleanField(default=False, blank=False)
+    hidden = models.BooleanField(default=False, blank=False)
+
     # status/logreader-stuff
     status = models.JSONField(null=False, default=jsonfield_default_value)
 
@@ -379,6 +384,26 @@ class FirmwareAnalysis(models.Model):
         # running emba
         logger.info("final emba parameters %s", command)
         return command
+    
+@receiver(pre_delete, sender=FirmwareAnalysis)
+def delete_analysis_pre_delete(sender, instance, **kwargs):
+    """
+    callback function
+    delete the analysis and folder structure in storage on recieve
+    """
+    # delete logs
+    try:
+        if sender.archived == False:
+            if sender.path_to_logs != "/" and settings.EMBA_LOG_ROOT in sender.path_to_logs:
+                shutil.rmtree(instance.path_to_logs, ignore_errors=False, onerror=logger.error("Error when trying to delete %s", instance.path_to_logs))
+            logger.error("Can't delete log directory of: %s since it's %s", str(sender), instance.path_to_logs)
+        elif sender.archived == True:
+            # delete zip file
+            sender.zip_file.delete()
+        else:
+            pass
+    except builtins.Exception as error:
+        logger.error("Error durring delete of: %s", str(sender))
 
 
 class ResourceTimestamp(models.Model):

@@ -17,6 +17,8 @@ from uploader.boundedexecutor import BoundedExecutor
 from uploader.models import FirmwareAnalysis
 from dashboard.models import Result
 from dashboard.forms import StopAnalysisForm
+from porter.views import make_zip
+
 
 logger = logging.getLogger(__name__)
 
@@ -139,13 +141,43 @@ def delete_analysis(request, analysis_id):
     analysis = FirmwareAnalysis.objects.get(id=analysis_id)
     # check that the user is authorized
     if  request.user == analysis.user or request.user.is_superuser:
-        # delete
-        try:
-            analysis.delete(keep_parents=True)
-            messages.success(request, 'Analysis: ' + str(analysis_id) + ' successfully deleted')
-        except builtins.Exception as error:
-            logger.error("Error %s", error)
-            messages.error(request, 'Error when deleting Analysis')
+        
+        if analysis.finished == False:
+            try:
+                BoundedExecutor.submit_kill(analysis.id)
+                os.killpg(os.getpgid(analysis.pid), signal.SIGTERM)  # kill proc group too
+            except builtins.Exception as error:
+                logger.error("Error %s when stopping", error)
+                messages.error(request, 'Error when stopping Analysis')
+        # check if finished
+        if analysis.finished == True:
+            # delete
+            try:
+                analysis.delete(keep_parents=True)
+                messages.success(request, 'Analysis: ' + str(analysis_id) + ' successfully deleted')
+            except builtins.Exception as error:
+                logger.error("Error %s", error)
+                messages.error(request, 'Error when deleting Analysis')
+        messages.error(request, 'Analysis is still running')
         return redirect('..')
     messages.error(request, "You are not authorized to delete another users Analysis")
+    return redirect('..')
+
+
+@login_required(login_url='/' + settings.LOGIN_URL)
+@require_http_methods(["GET"])
+def archive_analysis(request, analysis_id):
+    """
+    archives analysis, safes zip instead of normal log directory
+    and sets analysis into archived state
+    """
+    logger.info("Archiving Analysis with id: %s", analysis_id)
+    analysis = FirmwareAnalysis.get(id=analysis_id)
+    if analysis.zip_file is not None:
+        # make archive for uuid
+        _ = make_zip(request,analysis_id)
+    # TODO  keep certain subdirectories
+    analysis.do_archive()
+    analysis.archived = True
+    analysis.save(update_fields=["archived"])
     return redirect('..')
