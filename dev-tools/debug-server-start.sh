@@ -13,7 +13,7 @@
 
 # http-server options
 PORT="8000"
-IP="127.0.0.1"
+IP="0.0.0.0"
 
 export RED='\033[0;31m'
 export GREEN='\033[0;32m'
