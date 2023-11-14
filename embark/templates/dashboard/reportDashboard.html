@@ -49,8 +49,8 @@
                                 {% if firmware.end_date is not None %}
                                     {{ firmware.end_date }}
                                 {% else %}
-                                    <button type="button" class="btn btn-secondary" data-container="body" data-toggle="popover" data-placement="top" data-content="The Analysis for this firmware is currently being worked on. There is no End-date yet.">
-                                        Results are on their way
+                                    <button class="btn btn-primary" type="button" disabled>
+                                        <span class="badge badge-danger">Results are on their way</span>
                                     </button>
                                 {% endif %}   
                             </td>
@@ -115,9 +115,9 @@
                                         <div class="modal-dialog" role="document">
                                             <div class="modal-content">
                                                 <div class="modal-header">
-                                                    <h5 class="modal-title" id="exampleModalLabel">Delete Analysis {{ firmware.id }}</h5>
+                                                    <h5 class="modal-title" id="DeleteModal-{{ firmware.id }}-Label">Delete Analysis {{ firmware.id }}</h5>
                                                     <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                                                        <span aria-hidden="true">&times;</span>
+                                                        <span aria-hidden="true">Close</span>
                                                     </button>
                                                 </div>
                                                 <div class="modal-body">

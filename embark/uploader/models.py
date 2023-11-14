@@ -1,5 +1,4 @@
 import builtins
-from datetime import timedelta
 import logging
 import os
 import shutil
@@ -384,7 +383,8 @@ class FirmwareAnalysis(models.Model):
         # running emba
         logger.info("final emba parameters %s", command)
         return command
-    
+
+
 @receiver(pre_delete, sender=FirmwareAnalysis)
 def delete_analysis_pre_delete(sender, instance, **kwargs):
     """
@@ -393,17 +393,17 @@ def delete_analysis_pre_delete(sender, instance, **kwargs):
     """
     # delete logs
     try:
-        if sender.archived == False:
+        if sender.archived is False:
             if sender.path_to_logs != "/" and settings.EMBA_LOG_ROOT in sender.path_to_logs:
                 shutil.rmtree(instance.path_to_logs, ignore_errors=False, onerror=logger.error("Error when trying to delete %s", instance.path_to_logs))
             logger.error("Can't delete log directory of: %s since it's %s", str(sender), instance.path_to_logs)
-        elif sender.archived == True:
+        elif sender.archived is True:
             # delete zip file
             sender.zip_file.delete()
         else:
             pass
-    except builtins.Exception as error:
-        logger.error("Error durring delete of: %s", str(sender))
+    except builtins.Exception as _error:
+        logger.error("Error durring delete of: %s - %s", str(sender),_error)
 
 
 class ResourceTimestamp(models.Model):

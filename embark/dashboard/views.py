@@ -140,9 +140,8 @@ def delete_analysis(request, analysis_id):
     logger.info("Deleting analyze_id: %s", analysis_id)
     analysis = FirmwareAnalysis.objects.get(id=analysis_id)
     # check that the user is authorized
-    if  request.user == analysis.user or request.user.is_superuser:
-        
-        if analysis.finished == False:
+    if request.user == analysis.user or request.user.is_superuser:
+        if analysis.finished is False:
             try:
                 BoundedExecutor.submit_kill(analysis.id)
                 os.killpg(os.getpgid(analysis.pid), signal.SIGTERM)  # kill proc group too
@@ -150,7 +149,7 @@ def delete_analysis(request, analysis_id):
                 logger.error("Error %s when stopping", error)
                 messages.error(request, 'Error when stopping Analysis')
         # check if finished
-        if analysis.finished == True:
+        if analysis.finished is True:
             # delete
             try:
                 analysis.delete(keep_parents=True)
@@ -158,7 +157,8 @@ def delete_analysis(request, analysis_id):
             except builtins.Exception as error:
                 logger.error("Error %s", error)
                 messages.error(request, 'Error when deleting Analysis')
-        messages.error(request, 'Analysis is still running')
+        else:
+            messages.error(request, 'Analysis is still running')
         return redirect('..')
     messages.error(request, "You are not authorized to delete another users Analysis")
     return redirect('..')
@@ -175,7 +175,7 @@ def archive_analysis(request, analysis_id):
     analysis = FirmwareAnalysis.get(id=analysis_id)
     if analysis.zip_file is not None:
         # make archive for uuid
-        _ = make_zip(request,analysis_id)
+        _ = make_zip(request, analysis_id)
     # TODO  keep certain subdirectories
     analysis.do_archive()
     analysis.archived = True
