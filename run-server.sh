@@ -36,25 +36,25 @@ import_helper()
   local HELPERS=()
   local HELPER_COUNT=0
   local HELPER_FILE=""
-  mapfile -d '' HELPERS < <(find "$HELP_DIR" -iname "helper_embark_*.sh" -print0 2> /dev/null)
+  mapfile -d '' HELPERS < <(find "${HELP_DIR}" -iname "helper_embark_*.sh" -print0 2> /dev/null)
   for HELPER_FILE in "${HELPERS[@]}" ; do
-    if ( file "$HELPER_FILE" | grep -q "shell script" ) && ! [[ "$HELPER_FILE" =~ \ |\' ]] ; then
+    if ( file "${HELPER_FILE}" | grep -q "shell script" ) && ! [[ "${HELPER_FILE}" =~ \ |\' ]] ; then
       # https://github.com/koalaman/shellcheck/wiki/SC1090
       # shellcheck source=/dev/null
-      source "$HELPER_FILE"
+      source "${HELPER_FILE}"
       (( HELPER_COUNT+=1 ))
     fi
   done
-  echo -e "\\n""==> ""$GREEN""Imported ""$HELPER_COUNT"" necessary files""$NC\\n"
+  echo -e "\\n""==> ""${GREEN}""Imported ""${HELPER_COUNT}"" necessary files""${NC}\\n"
 }
 
 cleaner() {
   pkill -u root daphne
-  pkill -u root "$PWD"/emba/emba
+  pkill -u root "${PWD}"/emba/emba
   pkill -u root runapscheduler
 
-  fuser -k "$HTTP_PORT"/tcp
-  fuser -k "$HTTPS_PORT"/tcp
+  fuser -k "${HTTP_PORT}"/tcp
+  fuser -k "${HTTPS_PORT}"/tcp
   fuser -k 8000/tcp
   fuser -k 8001/tcp
 
@@ -68,73 +68,73 @@ cleaner() {
 }
 
 # main
-echo -e "\\n$ORANGE""$BOLD""EMBArk Startup""$NC\\n""$BOLD=================================================================$NC"
+echo -e "\\n${ORANGE}""${BOLD}""EMBArk Startup""${NC}\\n""${BOLD}=================================================================${NC}"
 
 while getopts "ha:" OPT ; do
-  case $OPT in
+  case ${OPT} in
     h)
-      echo -e "\\n""$CYAN""USAGE""$NC"
-      echo -e "$CYAN-h$NC           Print this help message"
-      echo -e "$CYAN-a <IP/Name>$NC Add a server Domain-name alias"
+      echo -e "\\n""${CYAN}""USAGE""${NC}"
+      echo -e "${CYAN}-h${NC}           Print this help message"
+      echo -e "${CYAN}-a <IP/Name>${NC} Add a server Domain-name alias"
       echo -e "---------------------------------------------------------------------------"
       if ip addr show eth0 &>/dev/null ; then
         IP=$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
-        echo -e "$GREEN Suggestion:$NC  sudo ./run-server.sh -a $IP"
-        echo -e "$GREEN nslookup helper:$NC"
-        nslookup "$IP"
+        echo -e "${GREEN} Suggestion:${NC}  sudo ./run-server.sh -a ${IP}"
+        echo -e "${GREEN} nslookup helper:${NC}"
+        nslookup "${IP}"
       fi
       exit 0
       ;;
     a)
-      SERVER_ALIAS+=("$OPTARG")
+      SERVER_ALIAS+=("${OPTARG}")
       WSGI_FLAGS+=(--server-alias "${OPTARG}")
       ;;
     :)
-      echo -e "$CYAN Usage: [-a <IP/HOSTNAME>] $NC"
+      echo -e "${CYAN} Usage: [-a <IP/HOSTNAME>] ${NC}"
       exit 1
       ;;
     *)
-      echo -e "\\n$ORANGE""$BOLD""No Alias set""$NC\\n"
+      echo -e "\\n${ORANGE}""${BOLD}""No Alias set""${NC}\\n"
       ;;
   esac
 done
 
 # Alias
 if [[ ${#SERVER_ALIAS[@]} -ne 0 ]]; then
-  echo -e "$GREEN Server-alias:$NC"
+  echo -e "${GREEN} Server-alias:${NC}"
   for VAR in "${SERVER_ALIAS[@]}"; do
-    echo "[*] $VAR"
+    echo "[*] ${VAR}"
   done
 fi
 
-cd "$(dirname "$0")" || exit 1
+cd "$(dirname "${0}")" || exit 1
 import_helper
-enable_strict_mode "$STRICT_MODE"
+enable_strict_mode "${STRICT_MODE}"
 set -a
 trap cleaner INT
 
-if ! [[ $EUID -eq 0 ]] ; then
-  echo -e "\\n$RED""Run Server script with root permissions!""$NC\\n"
+if ! [[ ${EUID} -eq 0 ]] ; then
+  echo -e "\\n${RED}""Run Server script with root permissions!""${NC}\\n"
   exit 1
 fi
 
 # check emba
-echo -e "$BLUE""$BOLD""checking EMBA""$NC"
+echo -e "${BLUE}""${BOLD}""checking EMBA""${NC}"
 if ! [[ -d ./emba ]]; then
-  echo -e "$RED""$BOLD""You are using the wrong installation and missing the EMBA subdirectory""$NC"
+  echo -e "${RED}""${BOLD}""You are using the wrong installation and missing the EMBA subdirectory""${NC}"
 fi
-if ! (cd "$PWD"/emba && ./emba -d 1); then
-  echo -e "$BLUE""Trying auto-maintain""$NC"
+if ! (cd "${PWD}"/emba && ./emba -d 1); then
+  echo -e "${BLUE}""Trying auto-maintain""${NC}"
   # automaintain
   if ! [[ -d ./emba ]]; then
-    echo -e "$RED""EMBA not installed""$NC"
+    echo -e "${RED}""EMBA not installed""${NC}"
     exit 1
   fi
   cd ./emba || exit 1
   systemctl restart NetworkManager docker
   ./emba -d 1 1>/dev/null
   if [[ $? -eq 1 ]]; then
-    echo -e "$RED""EMBA is not configured correctly""$NC"
+    echo -e "${RED}""EMBA is not configured correctly""${NC}"
     exit 1
   fi
   cd .. || exit 1
@@ -142,7 +142,7 @@ fi
 
 # check venv 
 if ! [[ -d /var/www/.venv ]]; then
-  echo -e "$RED""$BOLD""Pip-enviroment not found!""$NC"
+  echo -e "${RED}""${BOLD}""Pip-enviroment not found!""${NC}"
   exit 1
 fi
 if ! nc -zw1 google.com 443 &>/dev/null ; then
@@ -164,9 +164,9 @@ if ! [[ -d ./docker_logs ]]; then
 fi
 
 # container-logs (2 jobs)
-echo -e "\n[""$BLUE JOB""$NC""] Redis logs are copied to ./docker_logs/redis.log" 
+echo -e "\n[""${BLUE} JOB""${NC}""] Redis logs are copied to ./docker_logs/redis.log" 
 docker container logs embark_redis -f &> ./docker_logs/redis.log & 
-echo -e "\n[""$BLUE JOB""$NC""] DB logs are copied to ./embark/logs/mysql.log"
+echo -e "\n[""${BLUE} JOB""${NC}""] DB logs are copied to ./embark/logs/mysql.log"
 docker container logs embark_db -f &> ./docker_logs/mysql.log &
 
 # start the supervisor
@@ -193,10 +193,10 @@ fi
 if ! [[ -d /var/www/conf/cert ]]; then
   mkdir /var/www/conf/cert
 fi
-copy_file "$PWD"/cert/embark.local.crt /var/www/conf/cert
-copy_file "$PWD"/cert/embark.local.key /var/www/conf/cert
-copy_file "$PWD"/cert/embark-ws.local.key /var/www/conf/cert
-copy_file "$PWD"/cert/embark-ws.local.crt /var/www/conf/cert
+copy_file "${PWD}"/cert/embark.local.crt /var/www/conf/cert
+copy_file "${PWD}"/cert/embark.local.key /var/www/conf/cert
+copy_file "${PWD}"/cert/embark-ws.local.key /var/www/conf/cert
+copy_file "${PWD}"/cert/embark-ws.local.crt /var/www/conf/cert
 
 # cp .env
 copy_file ./.env /var/www/embark/embark/settings/
@@ -214,23 +214,23 @@ if ! [[ -d /var/www/logs ]]; then
 fi
 
 # db_init
-echo -e "\n[""$BLUE JOB""$NC""] Starting migrations - log to embark/logs/migration.log"
+echo -e "\n[""${BLUE} JOB""${NC}""] Starting migrations - log to embark/logs/migration.log"
 pipenv run ./manage.py makemigrations | tee -a /var/www/logs/migration.log
 pipenv run ./manage.py migrate | tee -a /var/www/logs/migration.log
 
 # collect staticfiles and make accesable for server
-echo -e "\n[""$BLUE JOB""$NC""] Collecting static files"
+echo -e "\n[""${BLUE} JOB""${NC}""] Collecting static files"
 pipenv run ./manage.py collectstatic --no-input
 chown www-embark /var/www/ -R
 chmod 760 /var/www/media/ -R
 
-echo -e "\n[""$BLUE JOB""$NC""] Starting runapscheduler"
+echo -e "\n[""${BLUE} JOB""${NC}""] Starting runapscheduler"
 pipenv run ./manage.py runapscheduler | tee -a /var/www/logs/scheduler.log &
 sleep 5
 
-echo -e "\n[""$BLUE JOB""$NC""] Starting Apache"
+echo -e "\n[""${BLUE} JOB""${NC}""] Starting Apache"
 pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
---host "$BIND_IP" --port="$HTTP_PORT" --limit-request-body "$FILE_SIZE" \
+--host "${BIND_IP}" --port="${HTTP_PORT}" --limit-request-body "${FILE_SIZE}" \
 --url-alias /static/ /var/www/static/ \
 --url-alias /media/ /var/www/media/ \
 --allow-localhost --working-directory /var/www/embark/ --server-root /var/www/httpd80/ \
@@ -240,22 +240,22 @@ pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --log-level debug \
 --server-name embark.local "${WSGI_FLAGS[@]}" &
 # --ssl-certificate /var/www/conf/cert/embark.local --ssl-certificate-key-file /var/www/conf/cert/embark.local.key \
-# --https-port "$HTTPS_PORT" &
+# --https-port "${HTTPS_PORT}" &
 #  --https-only --enable-debugger \
 sleep 5
 
-echo -e "\n[""$BLUE JOB""$NC""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-pipenv run daphne --access-log /var/www/logs/daphne.log -e ssl:8000:privateKey=/var/www/conf/cert/embark-ws.local.key:certKey=/var/www/conf/cert/embark-ws.local.crt -b "$BIND_IP" -p 8001 -s embark-ws.local --root-path=/var/www/embark embark.asgi:application &
+echo -e "\n[""${BLUE} JOB""${NC}""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
+pipenv run daphne --access-log /var/www/logs/daphne.log -e ssl:8000:privateKey=/var/www/conf/cert/embark-ws.local.key:certKey=/var/www/conf/cert/embark-ws.local.crt -b "${BIND_IP}" -p 8001 -s embark-ws.local --root-path=/var/www/embark embark.asgi:application &
 sleep 5
 
 
-echo -e "\n""$ORANGE$BOLD""=============================================================""$NC"
-echo -e "\n""$ORANGE$BOLD""EMBA logs are under /var/www/emba_logs/<id> ""$NC"
-# echo -e "\n\n""$GREEN$BOLD""the trusted rootCA.key for the ssl encryption is in ./cert""$NC"
+echo -e "\n""${ORANGE}${BOLD}""=============================================================""${NC}"
+echo -e "\n""${ORANGE}${BOLD}""EMBA logs are under /var/www/emba_logs/<id> ""${NC}"
+# echo -e "\n\n""${GREEN}${BOLD}""the trusted rootCA.key for the ssl encryption is in ./cert""${NC}"
 if [[ ${#SERVER_ALIAS[@]} -ne 0 ]]; then
-  echo -e "\n""$ORANGE$BOLD""Server started on http://embark.local with alias:""${SERVER_ALIAS[*]}""$NC"
+  echo -e "\n""${ORANGE}${BOLD}""Server started on http://embark.local with alias:""${SERVER_ALIAS[*]}""${NC}"
 else
-  echo -e "\n""$ORANGE$BOLD""Server started on http://embark.local""$NC"
+  echo -e "\n""${ORANGE}${BOLD}""Server started on http://embark.local""${NC}"
 fi
-# echo -e "\n""$ORANGE$BOLD""For SSL you may use https://embark.local (Not recommended for local use)""$NC"
+# echo -e "\n""${ORANGE}${BOLD}""For SSL you may use https://embark.local (Not recommended for local use)""${NC}"
 wait

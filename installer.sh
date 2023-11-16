@@ -35,36 +35,36 @@ export GREEN='\033[0;32m'
 export ORANGE='\033[0;33m'
 export CYAN='\033[0;36m'
 export BOLD='\033[1m'
-export NC='\033[0m' # no 
+export NC='\033[0m' # no
 
 print_help(){
-  echo -e "\\n""$CYAN""USAGE""$NC"
-  echo -e "$CYAN-h$NC         Print this help message"
-  echo -e "$CYAN-d$NC         EMBArk default installation"
-  echo -e "$CYAN-F$NC         Installation of EMBArk for developers"
-  echo -e "$CYAN-e$NC         Install EMBA only"
-  echo -e "$CYAN-s$NC         Installation without EMBA (use in combination with d/F)"
+  echo -e "\\n""${CYAN}""USAGE""${NC}"
+  echo -e "${CYAN}-h${NC}         Print this help message"
+  echo -e "${CYAN}-d${NC}         EMBArk default installation"
+  echo -e "${CYAN}-F${NC}         Installation of EMBArk for developers"
+  echo -e "${CYAN}-e${NC}         Install EMBA only"
+  echo -e "${CYAN}-s${NC}         Installation without EMBA (use in combination with d/F)"
   echo -e "---------------------------------------------------------------------------"
-  echo -e "$CYAN-U$NC         Uninstall EMBArk"
-  echo -e "$CYAN-rd$NC        Reinstallation of EMBArk with all dependencies"
-  echo -e "$CYAN-rF$NC        Reinstallation of EMBArk with all dependencies in Developer-mode"
-  echo -e "$RED               ! Both options delete all Database-files as well !""$NC"
+  echo -e "${CYAN}-U${NC}         Uninstall EMBArk"
+  echo -e "${CYAN}-rd${NC}        Reinstallation of EMBArk with all dependencies"
+  echo -e "${CYAN}-rF${NC}        Reinstallation of EMBArk with all dependencies in Developer-mode"
+  echo -e "${RED}               ! Both options delete all Database-files as well !""${NC}"
 }
 
 import_helper(){
   local HELPERS=()
   local HELPER_COUNT=0
   local HELPER_FILE=""
-  mapfile -d '' HELPERS < <(find "$HELP_DIR" -iname "helper_embark_*.sh" -print0 2> /dev/null)
+  mapfile -d '' HELPERS < <(find "${HELP_DIR}" -iname "helper_embark_*.sh" -print0 2> /dev/null)
   for HELPER_FILE in "${HELPERS[@]}" ; do
-    if ( file "$HELPER_FILE" | grep -q "shell script" ) && ! [[ "$HELPER_FILE" =~ \ |\' ]] ; then
+    if ( file "${HELPER_FILE}" | grep -q "shell script" ) && ! [[ "${HELPER_FILE}" =~ \ |\' ]] ; then
       # https://github.com/koalaman/shellcheck/wiki/SC1090
       # shellcheck source=/dev/null
-      source "$HELPER_FILE"
+      source "${HELPER_FILE}"
       (( HELPER_COUNT+=1 ))
     fi
   done
-  echo -e "\\n""==> ""$GREEN""Imported ""$HELPER_COUNT"" necessary files""$NC\\n"
+  echo -e "\\n""==> ""${GREEN}""Imported ""${HELPER_COUNT}"" necessary files""${NC}\\n"
 }
 
 # Source: https://stackoverflow.com/questions/4023830/how-to-compare-two-strings-in-dot-separated-version-format-in-bash
@@ -88,12 +88,12 @@ write_env(){
   local ENV_FILES=()
   local LAST_PW_HASH=""
   local CHECK_PW=""
-  
+
   if [[ -d safe ]]; then
     mapfile -d '' ENV_FILES < <(find ./safe -iname "*.env" -print0 2> /dev/null)
     if [[ ${#ENV_FILES[@]} -gt 0 ]] && [[ -f safe/history.env ]]; then
-      echo -e "$ORANGE""$BOLD""Using old env file""$NC"
-      # check which env file was the last one where $(echo "$PASSWORD_" | sha256sum) matches the first line and entry
+      echo -e "${ORANGE}""${BOLD}""Using old env file""${NC}"
+      # check which env file was the last one where $(echo "${PASSWORD_}" | sha256sum) matches the first line and entry
       LAST_PW_HASH="$(grep -v "$(echo "" | sha256sum)" safe/history.env | tail -n 1 | cut -d";" -f1)"
       for FILE_ in "${ENV_FILES[@]}"; do
         CHECK_PW="$(grep "DATABASE_PASSWORD=" "${FILE_}" | sed -e "s/^DATABASE_PASSWORD=//" )"
@@ -107,59 +107,59 @@ write_env(){
   fi
 
   if [[ -z ${DJANGO_SECRET_KEY} ]] || [[ -z ${DJANGO_SECRET_KEY} ]]; then
-    echo -e "$ORANGE""$BOLD""Did not find safed passwords""$NC"
+    echo -e "${ORANGE}""${BOLD}""Did not find safed passwords""${NC}"
     DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
     RANDOM_PW=$(openssl rand -base64 12)
   fi
-  
-  echo -e "$ORANGE""$BOLD""Creating a EMBArk configuration file .env""$NC"
+
+  echo -e "${ORANGE}""${BOLD}""Creating a EMBArk configuration file .env""${NC}"
   {
     echo "DATABASE_NAME=embark"
-    echo "DATABASE_USER=embark" 
-    echo "DATABASE_PASSWORD=$RANDOM_PW"
+    echo "DATABASE_USER=embark"
+    echo "DATABASE_PASSWORD=${RANDOM_PW}"
     echo "DATABASE_HOST=172.22.0.5"
     echo "DATABASE_PORT=3306"
-    echo "MYSQL_PASSWORD=$RANDOM_PW"
+    echo "MYSQL_PASSWORD=${RANDOM_PW}"
     echo "MYSQL_USER=embark"
     echo "MYSQL_DATABASE=embark"
     echo "REDIS_HOST=172.22.0.8"
     echo "REDIS_PORT=7777"
-    echo "SECRET_KEY=$DJANGO_SECRET_KEY"
-    echo "DJANGO_SUPERUSER_USERNAME=$SUPER_USER"
-    echo "DJANGO_SUPERUSER_EMAIL=$SUPER_EMAIL"
-    echo "DJANGO_SUPERUSER_PASSWORD=$SUPER_PW"
+    echo "SECRET_KEY=${DJANGO_SECRET_KEY}"
+    echo "DJANGO_SUPERUSER_USERNAME=${SUPER_USER}"
+    echo "DJANGO_SUPERUSER_EMAIL=${SUPER_EMAIL}"
+    echo "DJANGO_SUPERUSER_PASSWORD=${SUPER_PW}"
     echo "PYTHONPATH=${PWD}:${PWD}/embark:/var/www/:/var/www/embark"
   } > .env
   chmod 600 .env
 }
 
 install_emba(){
-  echo -e "\n$GREEN""$BOLD""Installation of the firmware scanner EMBA on host""$NC"
+  echo -e "\n${GREEN}""${BOLD}""Installation of the firmware scanner EMBA on host""${NC}"
   if git submodule status emba | grep --quiet '^-'; then
-    sudo -u "${SUDO_USER:-${USER}}" git submodule init emba 
+    sudo -u "${SUDO_USER:-${USER}}" git submodule init emba
   fi
   sudo -u "${SUDO_USER:-${USER}}" git submodule update --remote
-  sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "$PWD"/emba
+  sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "${PWD}"/emba
   cd emba
   ./installer.sh -d || ( echo "Could not install EMBA" && exit 1 )
   cd ..
   if ! (cd emba && ./emba -d 1); then
-    echo -e "\n$RED""$BOLD""EMBA installation failed""$NC"
+    echo -e "\n${RED}""${BOLD}""EMBA installation failed""${NC}"
     exit 1
   fi
   chown -R "${SUDO_USER:-${USER}}" emba
-  echo -e "\n""--------------------------------------------------------------------""$NC"
+  echo -e "\n""--------------------------------------------------------------------""${NC}"
 }
 
 create_ca (){
-  # FIXME could use some work 
-  echo -e "\n$GREEN""$BOLD""Creating SSL Cert""$NC"
+  # FIXME could use some work
+  echo -e "\n${GREEN}""${BOLD}""Creating SSL Cert""${NC}"
   if ! [[ -d cert ]]; then
     sudo -u "${SUDO_USER:-${USER}}" git checkout -- cert
   fi
   cd cert || exit 1
-  if [[ -f embark.local.csr ]] || [[ -f embark-ws.local.csr ]] || [[ -f embark.local.crt ]] || [[ -f embark-ws.local.crt ]]; then 
-    echo -e "\n$GREEN""$BOLD""Certs already generated, skipping""$NC"
+  if [[ -f embark.local.csr ]] || [[ -f embark-ws.local.csr ]] || [[ -f embark.local.crt ]] || [[ -f embark-ws.local.crt ]]; then
+    echo -e "\n${GREEN}""${BOLD}""Certs already generated, skipping""${NC}"
   else
     # create CA
     openssl genrsa -out rootCA.key 4096
@@ -177,16 +177,16 @@ create_ca (){
 }
 
 dns_resolve(){
-  echo -e "\n$GREEN""$BOLD""Install hostnames for local dns-resolve""$NC"
+  echo -e "\n${GREEN}""${BOLD}""Install hostnames for local dns-resolve""${NC}"
   if ! grep -q "embark.local" /etc/hosts ; then
     printf "0.0.0.0     embark.local\n" >>/etc/hosts
   else
-    echo -e "\n$ORANGE""$BOLD""hostname already in use!""$NC"
+    echo -e "\n${ORANGE}""${BOLD}""hostname already in use!""${NC}"
   fi
 }
 
 reset_docker(){
-  echo -e "\\n$GREEN""$BOLD""Reset EMBArk docker images""$NC\\n"
+  echo -e "\\n${GREEN}""${BOLD}""Reset EMBArk docker images""${NC}\\n"
 
   # EMBArk
   docker_image_rm "mysql" "latest"
@@ -205,7 +205,7 @@ reset_docker(){
 
 install_debs(){
   local DOCKER_COMP_VER=""
-  echo -e "\n$GREEN""$BOLD""Install debian packages for EMBArk installation""$NC"
+  echo -e "\n${GREEN}""${BOLD}""Install debian packages for EMBArk installation""${NC}"
   apt-get update -y
   # Git
   if ! command -v git > /dev/null ; then
@@ -228,8 +228,8 @@ install_debs(){
     apt-get install build-essential
   fi
   # Docker
-  if [[ "$WSL" -eq 1 ]]; then
-    echo -e "\n${ORANGE}WARNING: If you are using WSL2, disable docker integration from the docker-desktop daemon!$NC"
+  if [[ "${WSL}" -eq 1 ]]; then
+    echo -e "\n${ORANGE}WARNING: If you are using WSL2, disable docker integration from the docker-desktop daemon!${NC}"
     read -p "Fix docker stuff, then continue. Press any key to continue ..." -n1 -s -r
   fi
   if ! command -v docker > /dev/null ; then
@@ -243,9 +243,9 @@ install_debs(){
       fi
   else
       DOCKER_COMP_VER=$(docker-compose -v | grep version | awk '{print $3}' | tr -d ',')
-      if [[ $(version "$DOCKER_COMP_VER") -lt $(version "1.28.5") ]]; then
-      echo -e "\n${ORANGE}WARNING: compatibility of the used docker-compose version is unknown!$NC"
-      echo -e "\n${ORANGE}Please consider updating your docker-compose installation to version 1.28.5 or later.$NC"
+      if [[ $(version "${DOCKER_COMP_VER}") -lt $(version "1.28.5") ]]; then
+      echo -e "\n${ORANGE}WARNING: compatibility of the used docker-compose version is unknown!${NC}"
+      echo -e "\n${ORANGE}Please consider updating your docker-compose installation to version 1.28.5 or later.${NC}"
       read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
       fi
   fi
@@ -261,15 +261,15 @@ install_debs(){
 }
 
 install_daemon(){
-  echo -e "\n$GREEN""$BOLD""Install embark daemon""$NC"
-  sed -i "s|{\$EMBARK_ROOT_DIR}|$PWD|g" embark.service
+  echo -e "\n${GREEN}""${BOLD}""Install embark daemon""${NC}"
+  sed -i "s|{\$EMBARK_ROOT_DIR}|${PWD}|g" embark.service
   if ! [[ -e /etc/systemd/system/embark.service ]] ; then
-    ln -s "$PWD"/embark.service /etc/systemd/system/embark.service
+    ln -s "${PWD}"/embark.service /etc/systemd/system/embark.service
   fi
 }
 
 uninstall_daemon(){
-  echo -e "\n$ORANGE""$BOLD""Uninstalling embark daemon""$NC"
+  echo -e "\n${ORANGE}""${BOLD}""Uninstalling embark daemon""${NC}"
   if [[ -e /etc/systemd/system/embark.service ]] ; then
     systemctl stop embark.service
     systemctl disable embark.service
@@ -279,15 +279,15 @@ uninstall_daemon(){
 }
 
 install_embark_default(){
-  echo -e "\n$GREEN""$BOLD""Installation of the firmware scanning environment EMBArk""$NC"
+  echo -e "\n${GREEN}""${BOLD}""Installation of the firmware scanning environment EMBArk""${NC}"
 
-  if [[ "$WSL" -eq 1 ]]; then
-    echo -e "$RED""$BOLD""EMBArk currently does not support WSL in default mode. (only in Dev-mode)""$NC"
+  if [[ "${WSL}" -eq 1 ]]; then
+    echo -e "${RED}""${BOLD}""EMBArk currently does not support WSL in default mode. (only in Dev-mode)""${NC}"
   fi
-  
+
   #debs
   apt-get install -y -q default-libmysqlclient-dev build-essential mysql-client-core-8.0
-  
+
   # install pipenv
   pip3.10 install pipenv
 
@@ -323,7 +323,7 @@ install_embark_default(){
 
   # daemon
   install_daemon
-  
+
   #add ssl cert
   create_ca
 
@@ -332,18 +332,20 @@ install_embark_default(){
 
   #install packages
   cp ./Pipfile* /var/www/
-  (cd /var/www && PIPENV_VENV_IN_PROJECT=1 pipenv install)
+  (cd /var/www && MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv install)
   
 
   # download externals
   if ! [[ -d ./embark/static/external ]]; then
-    echo -e "\n$GREEN""$BOLD""Downloading of external files, e.g. jQuery, for the offline usability of EMBArk""$NC"
+    echo -e "\n${GREEN}""${BOLD}""Downloading of external files, e.g. jQuery, for the offline usability of EMBArk""${NC}"
     mkdir -p ./embark/static/external/{scripts,css}
     wget -O ./embark/static/external/scripts/jquery.js https://code.jquery.com/jquery-3.6.0.min.js
     wget -O ./embark/static/external/scripts/confirm.js https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js
     wget -O ./embark/static/external/scripts/bootstrap.js https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js
     wget -O ./embark/static/external/scripts/datatable.js https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.js
     wget -O ./embark/static/external/scripts/charts.js https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js
+    wget -O ./embark/static/external/scripts/base64.js https://cdn.jsdelivr.net/npm/js-base64@3.7.5/+esm
+    wget -O ./embark/static/external/scripts/ansi_up.js https://cdn.jsdelivr.net/npm/ansi_up@6.0.2/ansi_up.min.js
     wget -O ./embark/static/external/css/confirm.css https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css
     wget -O ./embark/static/external/css/bootstrap.css https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css
     wget -O ./embark/static/external/css/datatable.css https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.css
@@ -353,7 +355,7 @@ install_embark_default(){
   # write env-vars into ./.env
   write_env
 
-  if [[ "$WSL" -eq 1 ]]; then
+  if [[ "${WSL}" -eq 1 ]]; then
     check_docker_wsl
   fi
 
@@ -365,12 +367,12 @@ install_embark_default(){
   systemctl start embark.service
   check_db
   docker-compose stop
-  echo -e "$GREEN""$BOLD""Ready to use \$sudo ./run-server.sh ""$NC"
-  echo -e "$GREEN""$BOLD""Which starts the server on (0.0.0.0) port 80 ""$NC"
+  echo -e "${GREEN}""${BOLD}""Ready to use \$sudo ./run-server.sh ""${NC}"
+  echo -e "${GREEN}""${BOLD}""Which starts the server on (0.0.0.0) port 80 ""${NC}"
 }
 
 install_embark_dev(){
-  echo -e "\n$GREEN""$BOLD""Building Developent-Enviroment for EMBArk""$NC"
+  echo -e "\n${GREEN}""${BOLD}""Building Developent-Enviroment for EMBArk""${NC}"
   # apt packages
   apt-get install -y npm pycodestyle python3-pylint-django default-libmysqlclient-dev build-essential bandit yamllint mysql-client-core-8.0
   # get geckodriver
@@ -381,19 +383,19 @@ install_embark_dev(){
   # npm packages
   npm install -g jshint
   # npm install -g dockerlinter
-  
+
   # install pipenv
   pip3 install pipenv
 
   #Add user nosudo
-  echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD: ""$PWD""/emba/emba" | EDITOR='tee -a' visudo
+  echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD: ""${PWD}""/emba/emba" | EDITOR='tee -a' visudo
   echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD: /bin/pkill" | EDITOR='tee -a' visudo
-  echo "root ALL=(ALL) NOPASSWD: ""$PWD""/emba/emba" | EDITOR='tee -a' visudo
+  echo "root ALL=(ALL) NOPASSWD: ""${PWD}""/emba/emba" | EDITOR='tee -a' visudo
   echo "root ALL=(ALL) NOPASSWD: /bin/pkill" | EDITOR='tee -a' visudo
-  
+
 
   #pipenv
-  PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
+  MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
 
   #Server-Dir
   if ! [[ -d media ]]; then
@@ -414,13 +416,15 @@ install_embark_dev(){
 
   # download externals
   if ! [[ -d ./embark/static/external ]]; then
-    echo -e "\n$GREEN""$BOLD""Downloading of external files, e.g. jQuery, for the offline usability of EMBArk""$NC"
+    echo -e "\n${GREEN}""${BOLD}""Downloading of external files, e.g. jQuery, for the offline usability of EMBArk""${NC}"
     mkdir -p ./embark/static/external/{scripts,css}
     wget -O ./embark/static/external/scripts/jquery.js https://code.jquery.com/jquery-3.6.0.min.js
     wget -O ./embark/static/external/scripts/confirm.js https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js
     wget -O ./embark/static/external/scripts/bootstrap.js https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js
     wget -O ./embark/static/external/scripts/datatable.js https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.js
     wget -O ./embark/static/external/scripts/charts.js https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js
+    wget -O ./embark/static/external/scripts/base64.js https://cdn.jsdelivr.net/npm/js-base64@3.7.5/+esm
+    wget -O ./embark/static/external/scripts/ansi_up.js https://cdn.jsdelivr.net/npm/ansi_up@6.0.2/ansi_up.min.js
     wget -O ./embark/static/external/css/confirm.css https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css
     wget -O ./embark/static/external/css/bootstrap.css https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css
     wget -O ./embark/static/external/css/datatable.css https://cdn.datatables.net/v/bs5/dt-1.11.2/datatables.min.css
@@ -437,22 +441,22 @@ install_embark_dev(){
 
   check_db
   docker-compose stop
-  echo -e "$GREEN""$BOLD""Ready to use \$sudo ./dev-tools/debug-server-start.sh""$NC"
-  echo -e "$GREEN""$BOLD""Or use otherwise""$NC"
+  echo -e "${GREEN}""${BOLD}""Ready to use \$sudo ./dev-tools/debug-server-start.sh""${NC}"
+  echo -e "${GREEN}""${BOLD}""Or use otherwise""${NC}"
 }
 
 uninstall (){
-  echo -e "[+]$CYAN""$BOLD""Uninstalling EMBArk""$NC"
+  echo -e "[+]${CYAN}""${BOLD}""Uninstalling EMBArk""${NC}"
   # check for changes
   if [[ $(git status --porcelain --untracked-files=no --ignore-submodules=all) ]]; then
     # Changes
-    echo -e "[!!]$RED""$BOLD""Changes detected - please stash or commit them $ORANGE( \$git stash )""$NC"
+    echo -e "[!!]${RED}""${BOLD}""Changes detected - please stash or commit them ${ORANGE}( \$git stash )""${NC}"
     git status
     exit 1
   fi
 
   # delete directories
-  echo -e "$ORANGE""$BOLD""Delete Directories""$NC"
+  echo -e "${ORANGE}""${BOLD}""Delete Directories""${NC}"
   if [[ -d /var/www ]]; then
     rm -Rv /var/www
   fi
@@ -477,17 +481,17 @@ uninstall (){
   if [[ -d ./logs ]]; then
     rm -Rvf ./logs
   fi
-  if [[ "$REFORCE" -eq 0 ]]; then
+  if [[ "${REFORCE}" -eq 0 ]]; then
     # user-files
     if [[ -d ./emba_logs ]]; then
-      echo -e "$RED""$BOLD""Do you wish to remove the EMBA-Logs (and backups)""$NC"
+      echo -e "${RED}""${BOLD}""Do you wish to remove the EMBA-Logs (and backups)""${NC}"
       rm -RIv ./emba_logs
     fi
     if [[ -d ./embark_db ]]; then
-      echo -e "$RED""$BOLD""Do you wish to remove the database(and backups)""$NC"
+      echo -e "${RED}""${BOLD}""Do you wish to remove the database(and backups)""${NC}"
       rm -RIv ./embark_db
       if [[ -f ./safe/history.env ]]; then
-        echo -e "$RED""$BOLD""Moved old history file""$NC"
+        echo -e "${RED}""${BOLD}""Moved old history file""${NC}"
         mv --force ./safe/history.env ./safe/old_env_history
       fi
     fi
@@ -495,36 +499,36 @@ uninstall (){
 
 
   # delete user www-embark and reset visudo
-  echo -e "$ORANGE""$BOLD""Delete user""$NC"
-  
+  echo -e "${ORANGE}""${BOLD}""Delete user""${NC}"
+
   if id -u www-embark &>/dev/null ; then
     userdel www-embark
   fi
 
   # remove all emba/embark NOPASSWD entries into sudoer file
   if grep -qE "NOPASSWD\:.*\/emba\/emba" /etc/sudoers ; then
-    echo -e "$ORANGE""$BOLD""Deleting EMBA NOPASSWD entries""$NC"
+    echo -e "${ORANGE}""${BOLD}""Deleting EMBA NOPASSWD entries""${NC}"
     sed -i '/NOPASSWD\:.*\/emba\/emba/d' /etc/sudoers
   fi
   if grep -qE "NOPASSWD\:.*\/bin\/pkill" /etc/sudoers ; then
-    echo -e "$ORANGE""$BOLD""Deleting pkill NOPASSWD entries""$NC"
+    echo -e "${ORANGE}""${BOLD}""Deleting pkill NOPASSWD entries""${NC}"
     sed -i '/NOPASSWD\:.*\/bin\/pkill/d' /etc/sudoers
   fi
 
   # delete .env
-  echo -e "$ORANGE""$BOLD""Delete env""$NC"
+  echo -e "${ORANGE}""${BOLD}""Delete env""${NC}"
   if [[ -f ./.env ]]; then
     rm -Rvf ./.env
   fi
 
   # delete shared volumes and migrations
-  echo -e "$ORANGE""$BOLD""Delete migration-files""$NC"
+  echo -e "${ORANGE}""${BOLD}""Delete migration-files""${NC}"
   find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
   find . -path "*/migrations/*.pyc"  -delete
 
   # delete all docker interfaces and containers + images
   reset_docker
-  echo -e "$ORANGE""$BOLD""Consider running " "$CYAN""\$docker system prune""$NC"
+  echo -e "${ORANGE}""${BOLD}""Consider running " "${CYAN}""\$docker system prune""${NC}"
 
   # delete/uninstall submodules
   # emba
@@ -532,11 +536,11 @@ uninstall (){
     rm -r ./emba/external/
   fi
   # all submodules
-  if [[ $REFORCE -eq 1 ]]; then
+  if [[ ${REFORCE} -eq 1 ]]; then
     sudo -u "${SUDO_USER:-${USER}}" git submodule status
   else
     if [[ $(sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git status --porcelain --untracked-files=no) ]]; then
-      echo -e "[!!]$RED""$BOLD""Submodule changes detected - please commit them...otherwise they will be lost""$NC"
+      echo -e "[!!]${RED}""${BOLD}""Submodule changes detected - please commit them...otherwise they will be lost""${NC}"
       read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
     fi
     sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git reset --hard
@@ -545,31 +549,31 @@ uninstall (){
   fi
 
   # stop&reset daemon
-  if [[ "$WSL" -ne 1 ]]; then
+  if [[ "${WSL}" -ne 1 ]]; then
     uninstall_daemon
     systemctl daemon-reload
   fi
   sudo -u "${SUDO_USER:-${USER}}" git checkout HEAD -- embark.service
-  
+
   # reset ownership etc
 
   # reset server-certs
   sudo -u "${SUDO_USER:-${USER}}" git checkout HEAD -- cert
 
   # final
-  if [[ "$REFORCE" -eq 0 ]]; then
+  if [[ "${REFORCE}" -eq 0 ]]; then
     sudo -u "${SUDO_USER:-${USER}}" git reset
     rm -r ./safe
   fi
-  echo -e "$ORANGE""$BOLD""Consider ""$CYAN""\$git pull""$ORANGE""$BOLD"" and ""$CYAN""\$git clean""$NC"
+  echo -e "${ORANGE}""${BOLD}""Consider ""${CYAN}""\$git pull""${ORANGE}""${BOLD}"" and ""${CYAN}""\$git clean""${NC}"
 }
 
-echo -e "\\n$ORANGE""$BOLD""EMBArk Installer""$NC\\n""$BOLD=================================================================$NC"
-echo -e "$ORANGE""$BOLD""WARNING: This script can harm your environment!""$NC\n"
+echo -e "\\n${ORANGE}""${BOLD}""EMBArk Installer""${NC}\\n""${BOLD}=================================================================${NC}"
+echo -e "${ORANGE}""${BOLD}""WARNING: This script can harm your environment!""${NC}\n"
 
 import_helper
 
-if [[ "$STRICT_MODE" -eq 1 ]]; then
+if [[ "${STRICT_MODE}" -eq 1 ]]; then
   # http://redsymbol.net/articles/unofficial-bash-strict-mode/
   # https://github.com/tests-always-included/wick/blob/master/doc/bash-strict-mode.md
   set -e                # Exit immediately if a command exits with a non-zero status
@@ -582,76 +586,76 @@ if [[ "$STRICT_MODE" -eq 1 ]]; then
 fi
 
 if [ "$#" -ne 1 ]; then
-  echo -e "$RED""$BOLD""Invalid number of arguments""$NC"
+  echo -e "${RED}""${BOLD}""Invalid number of arguments""${NC}"
   print_help
   exit 1
 fi
 
 while getopts esFUrdDSh OPT ; do
-  case $OPT in
+  case ${OPT} in
     e)
       export EMBA_ONLY=1
-      echo -e "$GREEN""$BOLD""Install only emba""$NC"
+      echo -e "${GREEN}""${BOLD}""Install only emba""${NC}"
       ;;
     s)
       export NO_EMBA=1
-      echo -e "$GREEN""$BOLD""Install without emba""$NC"
+      echo -e "${GREEN}""${BOLD}""Install without emba""${NC}"
       ;;
     F)
       export DEV=1
-      echo -e "$GREEN""$BOLD""Building Development-Enviroment""$NC"
+      echo -e "${GREEN}""${BOLD}""Building Development-Enviroment""${NC}"
       ;;
     U)
       export UNINSTALL=1
-      echo -e "$GREEN""$BOLD""Uninstall EMBArk""$NC"
+      echo -e "${GREEN}""${BOLD}""Uninstall EMBArk""${NC}"
       ;;
     r)
       export UNINSTALL=1
       export REFORCE=1
-      echo -e "$GREEN""$BOLD""Re-Install all dependecies while keeping user-files""$NC"
+      echo -e "${GREEN}""${BOLD}""Re-Install all dependecies while keeping user-files""${NC}"
       ;;
     d)
       export DEFAULT=1
-      echo -e "$GREEN""$BOLD""Default installation of EMBArk""$NC"
+      echo -e "${GREEN}""${BOLD}""Default installation of EMBArk""${NC}"
       ;;
     S)
       export STRICT_MODE=1
-      echo -e "$GREEN""$BOLD""Strict-mode enabled""$NC"
+      echo -e "${GREEN}""${BOLD}""Strict-mode enabled""${NC}"
       ;;
     h)
       print_help
       exit 0
       ;;
     *)
-      echo -e "$RED""$BOLD""Invalid option""$NC"
+      echo -e "${RED}""${BOLD}""Invalid option""${NC}"
       print_help
       exit 1
       ;;
   esac
 done
 
-enable_strict_mode $STRICT_MODE
+enable_strict_mode ${STRICT_MODE}
 
 # WSL/OS version check
 # WSL support - currently experimental!
 if grep -q -i wsl /proc/version; then
-  echo -e "\n${ORANGE}INFO: System running in WSL environment!$NC"
-  echo -e "\n${ORANGE}INFO: WSL is currently experimental!$NC"
-  echo -e "\n${ORANGE}INFO: Ubuntu 22.04 is required for WSL!$NC"
+  echo -e "\n${ORANGE}INFO: System running in WSL environment!${NC}"
+  echo -e "\n${ORANGE}INFO: WSL is currently experimental!${NC}"
+  echo -e "\n${ORANGE}INFO: Ubuntu 22.04 is required for WSL!${NC}"
   read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
   WSL=1
 fi
 
-if [[ $EUID -ne 0 ]]; then
-  echo -e "\\n$RED""Run EMBArk installation script with root permissions!""$NC\\n"
+if [[ ${EUID} -ne 0 ]]; then
+  echo -e "\\n${RED}""Run EMBArk installation script with root permissions!""${NC}\\n"
   print_help
   exit 1
 fi
 
-if [[ $REFORCE -eq 1 ]] && [[ $UNINSTALL -eq 1 ]]; then
+if [[ ${REFORCE} -eq 1 ]] && [[ ${UNINSTALL} -eq 1 ]]; then
   save_old_env
   uninstall
-elif [[ $UNINSTALL -eq 1 ]]; then
+elif [[ ${UNINSTALL} -eq 1 ]]; then
   save_old_env
   uninstall
   exit 0
@@ -660,17 +664,17 @@ fi
 install_debs
 
 # mark dir as safe for git
-sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "$PWD"
+sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "${PWD}"
 
-if [[ "$NO_EMBA" -eq 0 ]]; then
+if [[ "${NO_EMBA}" -eq 0 ]]; then
   install_emba
 fi
-if [[ "$EMBA_ONLY" -eq 1 ]]; then
+if [[ "${EMBA_ONLY}" -eq 1 ]]; then
   exit 0
 fi
-if [[ $DEFAULT -eq 1 ]]; then
+if [[ ${DEFAULT} -eq 1 ]]; then
   install_embark_default
-elif [[ $DEV -eq 1 ]]; then
+elif [[ ${DEV} -eq 1 ]]; then
   install_embark_dev
 fi
 exit 0

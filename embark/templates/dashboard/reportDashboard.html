@@ -100,10 +100,11 @@
                                             </div>
                                         {% endif %}
                                     {% endif %}
+                                    
                                 </div>
                                 <!--ButtonRow with log-->
                                 <div class="buttonRow">
-                                    <form action={% url 'embark-show-log' firmware.id %} method='get'>
+                                    <form action={% url 'embark-show-logviewer' firmware.id %} method='get'>
                                         <button type="submit" class="btn buttonRowElem" >View Log</button>
                                     </form>
                                     <button type="button" class="btn buttonRowElem btn-danger" data-bs-toggle="modal" data-bs-target="#DeleteModal-{{ firmware.id }}">

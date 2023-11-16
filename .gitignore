@@ -25,3 +25,4 @@ safe/
 
 # migrations
 **/migrations/*_initial.py
+media/**/*

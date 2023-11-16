@@ -122,8 +122,31 @@ def show_log(request, analysis_id):
     log_file_path_ = f"{Path(firmware.path_to_logs).parent}/emba_run.log"
     logger.debug("Taking file at %s and render it", log_file_path_)
     try:
-        with open(log_file_path_, 'r', encoding='utf-8') as log_file_:
+        with open(log_file_path_, 'rb') as log_file_:
             return HttpResponse(content=log_file_, content_type="text/plain")
+    except FileNotFoundError:
+        return HttpResponseServerError(content="File is not yet available")
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def show_logviewer(request, analysis_id):
+    """
+    renders a log viewer to scroll through emba_run.log
+
+    :params request: HTTP request
+
+    :return: rendered emba_run.log
+    """
+
+    logger.info("showing log viewer for analyze_id: %s", analysis_id)
+    firmware = FirmwareAnalysis.objects.get(id=analysis_id)
+    # get the file path
+    log_file_path_ = f"{Path(firmware.path_to_logs).parent}/emba_run.log"
+    logger.debug("Taking file at %s and render it", log_file_path_)
+    try:
+        return render(request, 'dashboard/logViewer.html', {'analysis_id': analysis_id, 'username': request.user.username})
+
     except FileNotFoundError:
         return HttpResponseServerError(content="File is not yet available")
 

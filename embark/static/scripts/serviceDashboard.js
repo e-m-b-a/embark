@@ -135,6 +135,12 @@ function add_container_to_running(status_dict) {
                 <ul class="log_phase logUL" id="log_module_` + status_dict.analysis + `"></ul>
             </div>
         </div>
+
+        <div class="buttonRow">
+            <form action=../logviewer/` + status_dict.analysis + ` method='get'>
+                <button type="submit" class="btn buttonRowElem" >Follow Logs</button>
+            </form>
+        </div>
         <div id="progress-wrapper">
             <div id="pBar_` + status_dict.analysis + `" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
                     0 % 
