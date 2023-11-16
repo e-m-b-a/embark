@@ -11,7 +11,7 @@ urlpatterns = [
     path('dashboard/individualReport/<uuid:analysis_id>', views.individual_report_dashboard, name='embark-IndividualReportDashboard'),
     path('dashboard/stop/', views.stop_analysis, name='embark-stop-analysis'),
     path('dashboard/report/deleteAnalysis/<uuid:analysis_id>', views.delete_analysis, name='embark-dashboard-delete-analysis'),
-    path('dashboard/archive/<uuid:analysis_id>', views.archive_analysis, name='embark-dashboard-archive')
+    path('dashboard/archive/<uuid:analysis_id>', views.archive_analysis, name='embark-dashboard-archive'),
     path('dashboard/log/<uuid:analysis_id>', views.show_log, name='embark-show-log'),
     path('dashboard/logviewer/<uuid:analysis_id>', views.show_logviewer, name='embark-show-logviewer')
 ]

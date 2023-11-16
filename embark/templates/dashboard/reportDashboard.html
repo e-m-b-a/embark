@@ -33,6 +33,8 @@
                     </thead>
 
                     <tbody>
+                    {% load tz %}
+                    {% timezone request.session.django_timezone %}
                     {% for firmware in firmwares %}
                         <tr>
                             <td>{{ firmware.id }}</td>
@@ -44,10 +46,11 @@
                                 {% endfor %}
                             </td>
                             <td>{{ firmware.version }}</td>
-                            <td>{{ firmware.start_date }}</td>
+                            
+                            <td>{{ firmware.start_date}}</td>
                             <td>
                                 {% if firmware.end_date is not None %}
-                                    {{ firmware.end_date }}
+                                    {{ firmware.end_date}}
                                 {% else %}
                                     <button class="btn btn-primary" type="button" disabled>
                                         <span class="badge badge-danger">Results are on their way</span>
@@ -141,6 +144,7 @@
                             </td>
                         </tr>
                     {% endfor %}
+                    {% endtimezone %}
                     </tbody>
                 </table>
             </div>
