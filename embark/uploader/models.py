@@ -383,6 +383,15 @@ class FirmwareAnalysis(models.Model):
         # running emba
         logger.info("final emba parameters %s", command)
         return command
+    
+    def do_archive(self):
+        """
+        cleans up the firmwareanalysis log_dir up to a point where it's minimal
+        TODO since it's only deletes we don't need it to be in boundedexec
+        """
+        logger.info("Archiving %s", self.id)
+        logger.debug("Function not implemented yet. %s stays the same", self.id)
+        pass
 
 
 @receiver(pre_delete, sender=FirmwareAnalysis)
