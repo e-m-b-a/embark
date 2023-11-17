@@ -195,7 +195,7 @@ def archive_analysis(request, analysis_id):
     and sets analysis into archived state
     """
     logger.info("Archiving Analysis with id: %s", analysis_id)
-    analysis = FirmwareAnalysis.get(id=analysis_id)
+    analysis = FirmwareAnalysis.objects.get(id=analysis_id)
     if analysis.zip_file is not None:
         # make archive for uuid
         _ = make_zip(request, analysis_id)
