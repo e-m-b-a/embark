@@ -383,7 +383,7 @@ class FirmwareAnalysis(models.Model):
         # running emba
         logger.info("final emba parameters %s", command)
         return command
-    
+
     def do_archive(self):
         """
         cleans up the firmwareanalysis log_dir up to a point where it's minimal
@@ -391,7 +391,6 @@ class FirmwareAnalysis(models.Model):
         """
         logger.info("Archiving %s", self.id)
         logger.debug("Function not implemented yet. %s stays the same", self.id)
-        pass
 
 
 @receiver(pre_delete, sender=FirmwareAnalysis)
@@ -412,7 +411,7 @@ def delete_analysis_pre_delete(sender, instance, **kwargs):
         else:
             pass
     except builtins.Exception as _error:
-        logger.error("Error durring delete of: %s - %s", str(sender),_error)
+        logger.error("Error durring delete of: %s - %s", str(sender), _error)
 
 
 class ResourceTimestamp(models.Model):

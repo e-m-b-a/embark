@@ -4,7 +4,6 @@ import logging
 from datetime import datetime
 
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -17,11 +16,12 @@ from users.models import User
 
 logger = logging.getLogger(__name__)
 
+
 @require_http_methods(["GET"])
 def user_main(request):
-    logger.debug("Account settings for %s",request.user)
-    
+    logger.debug("Account settings for %s", request.user)
     return render(request, 'user/index.html', {"timezones": settings.TIMEZONES})
+
 
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
@@ -213,6 +213,7 @@ def get_log(request, log_type, lines):      # FIXME update or remove
         return render(request, 'user/log.html', {'header': log_file + '.log', 'log': ''.join(result), 'username': request.user.username})
     except IOError:
         return render(request, 'user/log.html', {'header': 'Error', 'log': file_path + ' not found!', 'username': request.user.username})
+
 
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)

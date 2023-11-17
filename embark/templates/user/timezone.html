@@ -1,6 +1,6 @@
 {% load tz %}
 {% get_current_timezone as TIME_ZONE %}
-<form action="{% url 'embark-acc-timezone' %}" method="POST">
+<form action="{% url 'embark-acc-timezone' %}" method="post">
     {% csrf_token %}
     <label for="timezone">Time zone:</label>
     <select name="timezone">
