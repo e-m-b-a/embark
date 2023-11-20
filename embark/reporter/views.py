@@ -193,6 +193,15 @@ def get_accumulated_reports(request):
                 charfield = charfield.split("/", 2)[:2]
                 charfield = f"{charfield[0]}{charfield[1]}"
                 charfield = (charfield[:16] + '..') if len(charfield) > 18 else charfield
+            # clean-up for architecture descriptions
+            if isinstance(charfield,dict):
+                for key_,value_ in charfield.items():
+                    if value_.lower() == 'el':
+                        charfield = f"{key_} - Little Endian"
+                    elif value_.lower() == 'eb':
+                        charfield = f"{key_} - Big Endian"
+                    else:
+                        charfield = key_
 
             if charfield not in data:
                 data[charfield] = {}
