@@ -9,12 +9,16 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect, HttpResponseServerError
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
+from django.contrib import messages
+from django.shortcuts import redirect
 from tracker.forms import AssociateForm
 from uploader.boundedexecutor import BoundedExecutor
 
 from uploader.models import FirmwareAnalysis
 from dashboard.models import Result
 from dashboard.forms import StopAnalysisForm
+from porter.views import make_zip
+
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +54,7 @@ def stop_analysis(request):
         logger.debug("PID is %s", pid)
         try:
             BoundedExecutor.submit_kill(analysis.id)
-            os.killpg(os.getpgid(pid), signal.SIGTERM)
+            os.killpg(os.getpgid(pid), signal.SIGTERM)  # kill proc group too
             form = StopAnalysisForm()
             form.fields['analysis'].queryset = FirmwareAnalysis.objects.filter(finished=False)
             return render(request, 'dashboard/serviceDashboard.html', {'username': request.user.username, 'form': form, 'success_message': True, 'message': "Stopped successfully"})
@@ -145,3 +149,57 @@ def show_logviewer(request, analysis_id):
 
     except FileNotFoundError:
         return HttpResponseServerError(content="File is not yet available")
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def delete_analysis(request, analysis_id):
+    """
+    :params request: HTTP request
+    :params analysis_id: uuid of analysis the user wants to stop
+
+    :return: redirect
+    """
+    logger.info("Deleting analyze_id: %s", analysis_id)
+    analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    # check that the user is authorized
+    if request.user == analysis.user or request.user.is_superuser:
+        if analysis.finished is False:
+            try:
+                BoundedExecutor.submit_kill(analysis.id)
+                os.killpg(os.getpgid(analysis.pid), signal.SIGTERM)  # kill proc group too
+            except builtins.Exception as error:
+                logger.error("Error %s when stopping", error)
+                messages.error(request, 'Error when stopping Analysis')
+        # check if finished
+        if analysis.finished is True:
+            # delete
+            try:
+                analysis.delete(keep_parents=True)
+                messages.success(request, 'Analysis: ' + str(analysis_id) + ' successfully deleted')
+            except builtins.Exception as error:
+                logger.error("Error %s", error)
+                messages.error(request, 'Error when deleting Analysis')
+        else:
+            messages.error(request, 'Analysis is still running')
+        return redirect('..')
+    messages.error(request, "You are not authorized to delete another users Analysis")
+    return redirect('..')
+
+
+@login_required(login_url='/' + settings.LOGIN_URL)
+@require_http_methods(["GET"])
+def archive_analysis(request, analysis_id):
+    """
+    archives analysis, safes zip instead of normal log directory
+    and sets analysis into archived state
+    """
+    logger.info("Archiving Analysis with id: %s", analysis_id)
+    analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    if analysis.zip_file is None:
+        # make archive for uuid
+        _ = make_zip(request, analysis_id)
+    analysis.do_archive()
+    analysis.archived = True
+    analysis.save(update_fields=["archived"])
+    return redirect('..')

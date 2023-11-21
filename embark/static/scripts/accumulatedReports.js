@@ -519,7 +519,7 @@ function makeCharts(returnData) {
             plugins: {
                 title: {
                     display: true,
-                    text: 'Binaries with weak functions',
+                    text: 'Binaries using legacy C-function strcpy',
                     position: 'top',
                     color: 666,
                     padding: {
@@ -574,7 +574,7 @@ function makeCharts(returnData) {
             plugins: {
                 title: {
                     display: true,
-                    text: 'System Binaries',
+                    text: 'Binaries using C-function system',
                     position: 'top',
                     color: 666,
                     padding: {

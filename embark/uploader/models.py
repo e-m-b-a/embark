@@ -1,4 +1,4 @@
-from datetime import timedelta
+import builtins
 import logging
 import os
 import shutil
@@ -315,11 +315,15 @@ class FirmwareAnalysis(models.Model):
     path_to_logs = models.FilePathField(default="/", blank=True)
     log_size = models.PositiveBigIntegerField(default=0, blank=True)
     start_date = models.DateTimeField(default=datetime.now, blank=True)
-    end_date = models.DateTimeField(default=datetime.min, blank=True)
-    scan_time = models.DurationField(default=timedelta(), blank=True)
+    end_date = models.DateTimeField(default=None, null=True)
+    scan_time = models.DurationField(default=None, null=True)
     duration = models.CharField(blank=True, null=True, max_length=100, help_text='')
     finished = models.BooleanField(default=False, blank=False)
     failed = models.BooleanField(default=False, blank=False)
+
+    # view option fields
+    archived = models.BooleanField(default=False, blank=False)
+    hidden = models.BooleanField(default=False, blank=False)
 
     # status/logreader-stuff
     status = models.JSONField(null=False, default=jsonfield_default_value)
@@ -379,6 +383,35 @@ class FirmwareAnalysis(models.Model):
         # running emba
         logger.info("final emba parameters %s", command)
         return command
+
+    def do_archive(self):
+        """
+        cleans up the firmwareanalysis log_dir up to a point where it's minimal
+        TODO since it's only deletes we don't need it to be in boundedexec
+        """
+        logger.info("Archiving %s", self.id)
+        logger.debug("Function not implemented yet. %s stays the same", self.id)
+
+
+@receiver(pre_delete, sender=FirmwareAnalysis)
+def delete_analysis_pre_delete(sender, instance, **kwargs):
+    """
+    callback function
+    delete the analysis and folder structure in storage on recieve
+    """
+    # delete logs
+    try:
+        if sender.archived is False:
+            if sender.path_to_logs != "/" and settings.EMBA_LOG_ROOT in sender.path_to_logs:
+                shutil.rmtree(instance.path_to_logs, ignore_errors=False, onerror=logger.error("Error when trying to delete %s", instance.path_to_logs))
+            logger.error("Can't delete log directory of: %s since it's %s", str(sender), instance.path_to_logs)
+        elif sender.archived is True:
+            # delete zip file
+            sender.zip_file.delete()
+        else:
+            pass
+    except builtins.Exception as _error:
+        logger.error("Error durring delete of: %s - %s", str(sender), _error)
 
 
 class ResourceTimestamp(models.Model):

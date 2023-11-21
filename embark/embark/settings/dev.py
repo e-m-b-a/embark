@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import pytz
 
 from dotenv import load_dotenv
 
@@ -195,7 +196,9 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = False
+USE_TZ = True
+
+TIMEZONES = tuple(zip(pytz.all_timezones, pytz.all_timezones))
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/

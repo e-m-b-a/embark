@@ -19,6 +19,7 @@ from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.urls import reverse
+from embark.helper import cleanup_charfield
 from uploader.boundedexecutor import BoundedExecutor
 
 from uploader.models import FirmwareAnalysis, ResourceTimestamp
@@ -188,11 +189,7 @@ def get_accumulated_reports(request):
             system_bin_dict[key] += int(system_bin[key])
 
         for charfield in charfields:
-            # clean-up for linux extensive os-descriptions
-            if charfield.startswith("Linux"):
-                charfield = charfield.split("/", 2)[:2]
-                charfield = f"{charfield[0]}{charfield[1]}"
-                charfield = (charfield[:16] + '..') if len(charfield) > 18 else charfield
+            charfield = cleanup_charfield(charfield)
 
             if charfield not in data:
                 data[charfield] = {}

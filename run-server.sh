@@ -107,7 +107,8 @@ if [[ ${#SERVER_ALIAS[@]} -ne 0 ]]; then
   done
 fi
 
-cd "$(dirname "${0}")" || exit 1
+EMBARK_BASEDIR="$(dirname "${0}")"
+cd "${EMBARK_BASEDIR}" || exit 1
 import_helper
 enable_strict_mode "${STRICT_MODE}"
 set -a
@@ -174,10 +175,7 @@ systemctl enable embark.service
 systemctl start embark.service
 
 # copy django server
-if [[ -d /var/www/embark ]]; then
-  rm -Rf /var/www/embark
-fi
-cp -R ./embark/ /var/www/embark/
+rsync -r -u --progress --chown=www-embark:sudo ./embark/ /var/www/embark/
 
 # config apache
 # add all modules we want (mod_ssl mod_auth_basic etc)
@@ -259,3 +257,6 @@ else
 fi
 # echo -e "\n""${ORANGE}${BOLD}""For SSL you may use https://embark.local (Not recommended for local use)""${NC}"
 wait
+
+# sync migrations with pwd
+rsync -r -u --progress --chown="${SUDO_USER}" . "${EMBARK_BASEDIR}/embark"
