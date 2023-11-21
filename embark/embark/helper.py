@@ -55,7 +55,7 @@ def cleanup_charfield(charfield):
         charfield = (charfield[:16] + '..') if len(charfield) > 18 else charfield
     # clean-up for architecture descriptions
     elif isinstance(charfield, dict):
-        for key_,value_ in charfield.items():
+        for key_, value_ in charfield.items():
             if value_.lower() == 'el':
                 charfield = f"{key_} - Little Endian"
             elif value_.lower() == 'eb':
