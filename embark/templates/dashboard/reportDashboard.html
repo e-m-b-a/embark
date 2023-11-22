@@ -52,9 +52,11 @@
                                 {% if firmware.end_date is not None %}
                                     {{ firmware.end_date}}
                                 {% else %}
-                                    <button class="btn btn-primary" type="button" disabled>
-                                        <span class="badge badge-danger">Results are on their way</span>
-                                    </button>
+                                    <form action={% url 'embark-show-logviewer' firmware.id %} method='get'>
+                                        <button type="submit" class="btn btn-primary">
+                                            <span class="badge badge-danger">Results are on their way</span>
+                                        </button>
+                                    </form>
                                 {% endif %}   
                             </td>
                             <td>
