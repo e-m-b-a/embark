@@ -183,19 +183,19 @@ def get_accumulated_reports(request):
         result.pop('firmware', None)
         result.pop('emba_command', None)
 
-        # architecture
-        architecture = result.pop('architecture_verified', '{}')
-        if isinstance(architecture, dict):
-            # clean-up for architecture descriptions
-            for key_, value_ in architecture.items():
-                if value_.lower() == 'el':
-                    charfields['architecture_verified'] += f"{key_}-Little Endian "
-                elif value_.lower() == 'eb':
-                    charfields['architecture_verified'] += f"{key_}-Big Endian "
-                else:
-                    charfields['architecture_verified'] += f"{key_}-{value_} "
-        else:
-            charfields['architecture_verified'] = str(architecture)
+        # architecture FIXME
+        # architecture = result.pop('architecture_verified', '{}')
+        # if isinstance(architecture, dict):
+        #     # clean-up for architecture descriptions
+        #     for key_, value_ in architecture.items():
+        #         if value_.lower() == 'el':
+        #             data['architecture_verified'] += f"{key_}-Little Endian "
+        #         elif value_.lower() == 'eb':
+        #             data['architecture_verified'] += f"{key_}-Big Endian "
+        #         else:
+        #             data['architecture_verified'] += f"{key_}-{value_} "
+        # else:
+        #     data['architecture_verified'] = str(architecture)
 
         # Get counts for all strcpy_bin and system_bin values
         system_bin = json.loads(result.pop('system_bin', '{}'))
