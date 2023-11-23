@@ -6,7 +6,7 @@ import signal
 
 from django.conf import settings
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect, HttpResponseServerError
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
@@ -29,7 +29,8 @@ def main_dashboard(request):
     if request.user.is_authenticated:
         if FirmwareAnalysis.objects.filter(finished=True, failed=False).count() > 0 and Result.objects.all().count() > 0:
             return render(request, 'dashboard/mainDashboard.html', {'nav_switch': True, 'username': request.user.username})
-        return HttpResponseRedirect('../../uploader/')
+        messages.info(request,"There are no Results to display yet, redirecting to uploader")
+        return redirect('embark-uploader-home')
     return HttpResponseForbidden
 
 
