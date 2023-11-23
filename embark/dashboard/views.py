@@ -64,7 +64,7 @@ def stop_analysis(request):
             analysis_object_ = FirmwareAnalysis.objects.get(id=analysis.id)
             analysis_object_.failed = True
             analysis_object_.save(update_fields=["failed"])
-            return HttpResponseServerError("Failed to stop process, please handle manually: PID=" + str(pid))
+            return HttpResponseServerError("Failed to stop process, but set its status to failed. Please handle EMBA process manually: PID=" + str(pid))
     return HttpResponseBadRequest("invalid form")
 
 
