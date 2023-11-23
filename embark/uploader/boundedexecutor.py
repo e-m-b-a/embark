@@ -11,7 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 from threading import BoundedSemaphore
 
 from django.dispatch import receiver
-from django.utils.datetime_safe import datetime
+from django.utils import timezone
 from django.conf import settings
 
 from uploader import finish_execution
@@ -116,8 +116,8 @@ class BoundedExecutor:
 
         # finalize db entry
         if analysis:
-            analysis.end_date = datetime.now()
-            analysis.scan_time = datetime.now() - analysis.start_date
+            analysis.end_date = timezone.now()
+            analysis.scan_time = timezone.now() - analysis.start_date
             analysis.duration = str(analysis.scan_time)
             analysis.finished = True
             analysis.failed = exit_fail

@@ -1,7 +1,7 @@
 # pylint: disable=W0602
 # ignores no-assignment error since there is one!
 import builtins
-import datetime
+from django.utils import timezone
 import difflib
 import pathlib
 import re
@@ -75,7 +75,7 @@ class LogReader:
         logger.debug("Appending status with message: %s", self.status_msg)
         # append message to the json-field structure of the analysis
         self.analysis.status["percentage"] = self.status_msg["percentage"]
-        self.analysis.status["last_update"] = str(datetime.datetime.now())
+        self.analysis.status["last_update"] = str(timezone.now())
         # append modules and phase list
         if self.status_msg["module"] != self.analysis.status["last_module"]:
             self.analysis.status["last_module"] = self.status_msg["module"]

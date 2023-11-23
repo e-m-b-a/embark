@@ -1,7 +1,6 @@
 # pylint: disable=R1705
 import builtins
 import logging
-from datetime import datetime
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
@@ -11,6 +10,7 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.auth import authenticate, login, logout, get_user
 from django.contrib import messages
 from django.conf import settings
+from django.utils import timezone
 
 from users.models import User
 
@@ -162,8 +162,8 @@ def acc_delete(request):
     if request.method == "POST":
         logger.debug('disabling account')
         user = get_user(request)
-        logger.debug(' %s Account: %s disabled', datetime.now().strftime("%H:%M:%S"), user)
-        user.username = user.get_username() + '_disactivated_' + datetime.now().strftime(
+        logger.debug(' %s Account: %s disabled', timezone.now().strftime("%H:%M:%S"), user)
+        user.username = user.get_username() + '_disactivated_' + timezone.now().strftime(
             "%H:%M:%S")  # workaround for not duplicating entry users_user.username
         user.is_active = False
         user.save()
