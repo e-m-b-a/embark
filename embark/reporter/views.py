@@ -143,6 +143,10 @@ def get_individual_report(request, analysis_id):
         return_dict['version'] = analysis_object.version
         return_dict['path_to_logs'] = analysis_object.path_to_logs
         return_dict['strcpy_bin'] = json.loads(return_dict['strcpy_bin'])
+        # architecture
+        arch_ = json.loads(return_dict['architecture_verified'])
+        for key_, value_ in arch_.items():
+            return_dict['architecture_verified'] += f"{key_}-{value_} " 
 
         return JsonResponse(data=return_dict, status=HTTPStatus.OK)
     except Result.DoesNotExist:
@@ -165,16 +169,27 @@ def get_accumulated_reports(request):
         }
     """
     results = Result.objects.all()
-    charfields = ['architecture_verified', 'os_verified']
+    charfields = ['os_verified', 'architecture_verified']
     data = {}
     strcpy_bins = {}
     system_bin_dict = {}
     for result in results:
         result = model_to_dict(result)
-        # Pop firmware object_id
+        # Pop all unnecessary data
         result.pop('vulnerability', None)   # FIXME this is disabled for now
         result.pop('firmware', None)
         result.pop('emba_command', None)
+
+        # architecture
+        architecture = json.loads(result.pop('architecture_verified', '{}'))
+        # clean-up for architecture descriptions
+        for key_, value_ in architecture.items():
+            if value_.lower() == 'el':
+                charfields['architecture_verified'] += f"{key_}-Little Endian "
+            elif value_.lower() == 'eb':
+                charfields['architecture_verified'] += f"{key_}-Big Endian "
+            else:
+                charfields['architecture_verified'] += f"{key_}-{value_} "
 
         # Get counts for all strcpy_bin and system_bin values
         system_bin = json.loads(result.pop('system_bin', '{}'))
@@ -188,18 +203,16 @@ def get_accumulated_reports(request):
                 system_bin_dict[key] = 0
             system_bin_dict[key] += int(system_bin[key])
 
+        # os_verified
         for charfield in charfields:
             charfield = cleanup_charfield(charfield)
-
             if charfield not in data:
                 data[charfield] = {}
-
             value = result.pop(charfield)
-
             if value not in data[charfield]:
                 data[charfield][value] = 0
-
             data[charfield][value] += 1
+
         for field in result:
             if field not in data:
                 data[field] = {'sum': 0, 'count': 0}
