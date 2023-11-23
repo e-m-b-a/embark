@@ -10,13 +10,10 @@ from django.db import models
 from django import forms
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
-from django.utils.datetime_safe import datetime
+from django.utils import timezone
+
 from porter.models import LogZipFile
-
-# from hashid_field import HashidAutoField
-
 from users.models import User as Userclass
-
 
 logger = logging.getLogger(__name__)
 
@@ -128,7 +125,7 @@ class FirmwareFile(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
 
     is_archive = models.BooleanField(default=False, blank=True)
-    upload_date = models.DateTimeField(default=datetime.now, blank=True)
+    upload_date = models.DateTimeField(default=timezone.now, blank=True)
     user = models.ForeignKey(Userclass, on_delete=models.SET_NULL, related_name='Fw_Upload_User', null=True, blank=True)
 
     def get_storage_path(self, filename):
@@ -193,7 +190,7 @@ class Label (models.Model):
     label_name = models.CharField(
         help_text='label name', verbose_name="label name", max_length=MAX_LENGTH,
         blank=True, unique=True)
-    label_date = models.DateTimeField(default=datetime.now, blank=True)
+    label_date = models.DateTimeField(default=timezone.now, blank=True)
 
     class Meta:
         ordering = ['label_name']
@@ -216,7 +213,7 @@ class Device(models.Model):
     device_name = models.CharField(help_text='Device name', verbose_name="Device name", max_length=MAX_LENGTH, blank=True)
     device_vendor = models.ForeignKey(Vendor, on_delete=models.SET_NULL, null=True)
     device_label = models.ForeignKey(Label, on_delete=models.SET_NULL, null=True, help_text='label/tag', related_query_name='label', editable=True, blank=True)   # TODO make many to many field
-    device_date = models.DateTimeField(default=datetime.now, blank=True)
+    device_date = models.DateTimeField(default=timezone.now, blank=True)
     device_user = models.ForeignKey(Userclass, on_delete=models.SET_NULL, related_name='Device_User', null=True)    # TODO change acces control to usergroup??
 
     visible = models.BooleanField(editable=True, default=True)
@@ -314,7 +311,7 @@ class FirmwareAnalysis(models.Model):
     # embark meta data
     path_to_logs = models.FilePathField(default="/", blank=True)
     log_size = models.PositiveBigIntegerField(default=0, blank=True)
-    start_date = models.DateTimeField(default=datetime.now, blank=True)
+    start_date = models.DateTimeField(default=timezone.now, blank=True)
     end_date = models.DateTimeField(default=None, null=True)
     scan_time = models.DurationField(default=None, null=True)
     duration = models.CharField(blank=True, null=True, max_length=100, help_text='')
@@ -420,6 +417,6 @@ class ResourceTimestamp(models.Model):
     Model to store zipped or bin firmware file and upload date
     """
 
-    timestamp = models.DateTimeField(default=datetime.now)
+    timestamp = models.DateTimeField(default=timezone.now)
     cpu_percentage = models.FloatField(default=0.0)
     memory_percentage = models.FloatField(default=0.0)

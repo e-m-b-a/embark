@@ -1,4 +1,3 @@
-from datetime import datetime, timedelta
 import logging
 
 from django.conf import settings
@@ -8,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import redirect
 from django.contrib import messages
+from django.utils import timezone
 
 from django_tables2 import RequestConfig
 
@@ -44,7 +44,7 @@ def tracker(request):
             return redirect('embark-uploader-home')
         logger.error("invalid date form")
         return redirect('..')
-    date = datetime.today() - timedelta(days=7)
+    date = timezone.localdate() - timezone.timedelta(days=7)
     vendor_list = Vendor.objects.all()
     if vendor_list.count() != 0:
         label_list = []

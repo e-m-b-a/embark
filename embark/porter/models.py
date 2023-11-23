@@ -5,7 +5,7 @@ import uuid
 from django.conf import settings
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
-from django.utils.datetime_safe import datetime
+from django.utils import timezone
 from django.db import models
 
 from users.models import User as Userclass
@@ -20,7 +20,7 @@ class LogZipFile(models.Model):
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
 
-    upload_date = models.DateTimeField(default=datetime.now, blank=True)
+    upload_date = models.DateTimeField(default=timezone.now, blank=True)
     user = models.ForeignKey(Userclass, on_delete=models.SET_NULL, related_name='Import_zip_Upload_User', null=True, blank=True)
 
     def get_storage_path(self, filename):
