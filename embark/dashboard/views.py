@@ -29,7 +29,7 @@ def main_dashboard(request):
     if request.user.is_authenticated:
         if FirmwareAnalysis.objects.filter(finished=True, failed=False).count() > 0 and Result.objects.all().count() > 0:
             return render(request, 'dashboard/mainDashboard.html', {'nav_switch': True, 'username': request.user.username})
-        messages.info(request,"Redirected - There are no Results to display yet")
+        messages.info(request, "Redirected - There are no Results to display yet")
         return redirect('embark-uploader-home')
     return HttpResponseForbidden
 
