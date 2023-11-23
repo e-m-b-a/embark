@@ -61,6 +61,9 @@ def stop_analysis(request):
             return render(request, 'dashboard/serviceDashboard.html', {'username': request.user.username, 'form': form, 'success_message': True, 'message': "Stopped successfully"})
         except builtins.Exception as error:
             logger.error("Error %s", error)
+            analysis_object_ = FirmwareAnalysis.objects.get(id=analysis.id)
+            analysis_object_.failed = True
+            analysis_object_.save(update_fields=["failed"])
             return HttpResponseServerError("Failed to stop process, please handle manually: PID=" + str(pid))
     return HttpResponseBadRequest("invalid form")
 
