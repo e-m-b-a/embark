@@ -1,7 +1,6 @@
 # pylint: disable=W0602
 # ignores no-assignment error since there is one!
 import builtins
-from django.utils import timezone
 import difflib
 import pathlib
 import re
@@ -15,6 +14,7 @@ from asgiref.sync import async_to_sync
 
 from channels.layers import get_channel_layer
 from django.conf import settings
+from django.utils import timezone
 
 from uploader.models import FirmwareAnalysis
 
