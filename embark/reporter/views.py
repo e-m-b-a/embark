@@ -128,7 +128,7 @@ def get_individual_report(request, analysis_id):
 
         logger.debug("getting individual report for %s", result)
 
-        return_dict = dict(model_to_dict(instance=result, exclude=['vulnerability']))
+        return_dict = model_to_dict(instance=result, exclude=['vulnerability'])
 
         return_dict['firmware_name'] = analysis_object.firmware_name
         if analysis_object.firmware:
@@ -144,9 +144,12 @@ def get_individual_report(request, analysis_id):
         return_dict['path_to_logs'] = analysis_object.path_to_logs
         return_dict['strcpy_bin'] = json.loads(return_dict['strcpy_bin'])
         # architecture
-        arch_ = json.loads(return_dict['architecture_verified'])
-        for key_, value_ in arch_.items():
-            return_dict['architecture_verified'] += f"{key_}-{value_} " 
+        if isinstance(return_dict['architecture_verified'], dict):
+            arch_ = json.loads(return_dict['architecture_verified'])
+            for key_, value_ in arch_.items():
+                return_dict['architecture_verified'] += f"{key_}-{value_} "
+        else:
+            return_dict['architecture_verified'] = str(return_dict['architecture_verified'])
 
         return JsonResponse(data=return_dict, status=HTTPStatus.OK)
     except Result.DoesNotExist:
@@ -181,15 +184,18 @@ def get_accumulated_reports(request):
         result.pop('emba_command', None)
 
         # architecture
-        architecture = json.loads(result.pop('architecture_verified', '{}'))
-        # clean-up for architecture descriptions
-        for key_, value_ in architecture.items():
-            if value_.lower() == 'el':
-                charfields['architecture_verified'] += f"{key_}-Little Endian "
-            elif value_.lower() == 'eb':
-                charfields['architecture_verified'] += f"{key_}-Big Endian "
-            else:
-                charfields['architecture_verified'] += f"{key_}-{value_} "
+        architecture = result.pop('architecture_verified', '{}')
+        if isinstance(architecture, dict):
+            # clean-up for architecture descriptions
+            for key_, value_ in architecture.items():
+                if value_.lower() == 'el':
+                    charfields['architecture_verified'] += f"{key_}-Little Endian "
+                elif value_.lower() == 'eb':
+                    charfields['architecture_verified'] += f"{key_}-Big Endian "
+                else:
+                    charfields['architecture_verified'] += f"{key_}-{value_} "
+        else:
+            charfields['architecture_verified'] = str(architecture)
 
         # Get counts for all strcpy_bin and system_bin values
         system_bin = json.loads(result.pop('system_bin', '{}'))
