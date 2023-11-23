@@ -10,6 +10,9 @@
         <pre id="logArea" style="font-family: monospace;">
         </pre>
         <div class="buttonRow">
+            <form action={% url 'embark-dashboard-service' %} method='get'>
+                <button type="submit" class="btn buttonRowElem">Back</button>
+            </form>
             <form action={% url 'embark-show-log' analysis_id %} method='get'>
                 <button type="submit" class="btn buttonRowElem">Raw EMBA log file</button>
             </form>
