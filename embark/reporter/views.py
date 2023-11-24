@@ -46,7 +46,7 @@ def html_report(request, analysis_id, html_file):
             logger.debug("html_report - analysis_id: %s html_file: %s", analysis_id, html_file)
             return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
     logger.error("could  not get template - %s", request)
-    return HttpResponseBadRequest
+    return HttpResponseBadRequest("Bad Request")
 
 
 @require_http_methods(["GET"])
@@ -60,7 +60,7 @@ def html_report_path(request, analysis_id, html_path, html_file):
             logger.debug("html_report - analysis_id: %s path: %s html_file: %s", analysis_id, html_path, html_file)
             return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
     logger.error("could  not get path - %s", request)
-    return HttpResponseBadRequest
+    return HttpResponseBadRequest("Bad Request")
 
 
 @require_http_methods(["GET"])
