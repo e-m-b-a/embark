@@ -47,24 +47,15 @@ def zip_check(content_list):
     return all(value_ in content_list for value_ in check_list)
 
 
-def cleanup_charfield(charfield):
+def cleanup_charfield(charfield) -> str:
     # clean-up for linux extensive os-descriptions
     if charfield.startswith("Linux"):
         charfield = charfield.split("/", 2)[:2]
         charfield = f"{charfield[0]}{charfield[1]}"
         charfield = (charfield[:16] + '..') if len(charfield) > 18 else charfield
-    # clean-up for architecture descriptions
-    elif isinstance(charfield, dict):
-        for key_, value_ in charfield.items():
-            if value_.lower() == 'el':
-                charfield = f"{key_} - Little Endian"
-            elif value_.lower() == 'eb':
-                charfield = f"{key_} - Big Endian"
-            else:
-                charfield = key_
     return charfield
 
 
 if __name__ == '__main__':
-    print(rnd_rgb_color())
-    print(rnd_rgb_full())
+    TEST_STRING = 'Linux / v2.6.33.2'
+    print(cleanup_charfield(TEST_STRING))

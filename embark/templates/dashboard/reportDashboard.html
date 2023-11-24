@@ -52,15 +52,25 @@
                                 {% if firmware.end_date is not None %}
                                     {{ firmware.end_date}}
                                 {% else %}
-                                    <button class="btn btn-primary" type="button" disabled>
-                                        <span class="badge badge-danger">Results are on their way</span>
-                                    </button>
+                                    <form action={% url 'embark-show-logviewer' firmware.id %} method='get'>
+                                        <button type="submit" class="btn btn-primary">
+                                            <span class="badge badge-danger">Results are on their way</span>
+                                        </button>
+                                    </form>
                                 {% endif %}   
                             </td>
                             <td>
                                 <!--ButtonRow with menue-->
                                 <div class="buttonRow">
                                     {% if firmware.finished is False %}
+                                        {% if firmware.failed is True %}
+                                            <button class="btn btn-primary" type="button" disabled>
+                                                <span class="badge badge-danger">Failed/Error</span>
+                                            </button>
+                                            <button type="button" class="btn buttonRowElem btn-danger" data-bs-toggle="modal" data-bs-target="#DeleteModal-{{ firmware.id }}">
+                                                Delete Analysis
+                                            </button>
+                                        {% endif %}
                                         <button class="btn btn-primary" type="button" disabled>
                                             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                             Loading...
@@ -109,32 +119,32 @@
                                                 </button>
                                             </div>
                                         </div>
-                                        <!-- Modals -->
-                                        <div class="modal fade" id="DeleteModal-{{ firmware.id }}" tabindex="-1" role="dialog" aria-hidden="true">
-                                            <div class="modal-dialog" role="document">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title" id="DeleteModal-{{ firmware.id }}-Label">Delete Analysis {{ firmware.id }}</h5>
-                                                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                                                            <span aria-hidden="true">Close</span>
-                                                        </button>
-                                                    </div>
-                                                    <div class="modal-body">
-                                                        Are you sure you want to delete this analysis of {{ firmware.firmware_name }}?
-                                                        -- if the analysis is archived already, this will delete it from the archives,too!
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">NO</button>
-    
-                                                        <form action="{% url 'embark-dashboard-delete-analysis' firmware.id %}" method="get" id="delete-form-{{ firmware.id }}">
-                                                            <button type="submit" class="btn btn-primary">YES</button>
-                                                        </form>
-    
-                                                    </div>
+                                    {% endif %}
+                                    <!-- Modals -->
+                                    <div class="modal fade" id="DeleteModal-{{ firmware.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="DeleteModal-{{ firmware.id }}-Label">Delete Analysis {{ firmware.id }}</h5>
+                                                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">Close</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    Are you sure you want to delete this analysis of {{ firmware.firmware_name }}?
+                                                    -- if the analysis is archived already, this will delete it from the archives,too!
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">NO</button>
+
+                                                    <form action="{% url 'embark-dashboard-delete-analysis' firmware.id %}" method="get" id="delete-form-{{ firmware.id }}">
+                                                        <button type="submit" class="btn btn-primary">YES</button>
+                                                    </form>
+
                                                 </div>
                                             </div>
                                         </div>
-                                    {% endif %}
+                                    </div>
                                 </div>  
                             </td>
                         </tr>

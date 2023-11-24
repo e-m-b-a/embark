@@ -1,7 +1,6 @@
 # pylint: disable=W0602
 # ignores no-assignment error since there is one!
 import builtins
-import datetime
 import difflib
 import pathlib
 import re
@@ -15,6 +14,7 @@ from asgiref.sync import async_to_sync
 
 from channels.layers import get_channel_layer
 from django.conf import settings
+from django.utils import timezone
 
 from uploader.models import FirmwareAnalysis
 
@@ -75,7 +75,7 @@ class LogReader:
         logger.debug("Appending status with message: %s", self.status_msg)
         # append message to the json-field structure of the analysis
         self.analysis.status["percentage"] = self.status_msg["percentage"]
-        self.analysis.status["last_update"] = str(datetime.datetime.now())
+        self.analysis.status["last_update"] = str(timezone.now())
         # append modules and phase list
         if self.status_msg["module"] != self.analysis.status["last_module"]:
             self.analysis.status["last_module"] = self.status_msg["module"]

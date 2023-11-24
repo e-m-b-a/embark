@@ -6,7 +6,7 @@ import signal
 
 from django.conf import settings
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect, HttpResponseServerError
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
@@ -29,7 +29,8 @@ def main_dashboard(request):
     if request.user.is_authenticated:
         if FirmwareAnalysis.objects.filter(finished=True, failed=False).count() > 0 and Result.objects.all().count() > 0:
             return render(request, 'dashboard/mainDashboard.html', {'nav_switch': True, 'username': request.user.username})
-        return HttpResponseRedirect('../../uploader/')
+        messages.info(request, "Redirected - There are no Results to display yet")
+        return redirect('embark-uploader-home')
     return HttpResponseForbidden
 
 
@@ -60,7 +61,10 @@ def stop_analysis(request):
             return render(request, 'dashboard/serviceDashboard.html', {'username': request.user.username, 'form': form, 'success_message': True, 'message': "Stopped successfully"})
         except builtins.Exception as error:
             logger.error("Error %s", error)
-            return HttpResponseServerError("Failed to stop process, please handle manually: PID=" + str(pid))
+            analysis_object_ = FirmwareAnalysis.objects.get(id=analysis.id)
+            analysis_object_.failed = True
+            analysis_object_.save(update_fields=["failed"])
+            return HttpResponseServerError("Failed to stop process, but set its status to failed. Please handle EMBA process manually: PID=" + str(pid))
     return HttpResponseBadRequest("invalid form")
 
 

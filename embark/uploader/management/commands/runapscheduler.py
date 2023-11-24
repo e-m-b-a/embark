@@ -1,4 +1,3 @@
-import datetime as dtime
 import logging
 import psutil
 
@@ -6,7 +5,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from django.utils.datetime_safe import datetime
+from django.utils import timezone
 from django_apscheduler.jobstores import DjangoJobStore
 from django_apscheduler.models import DjangoJobExecution
 from django_apscheduler import util
@@ -54,7 +53,7 @@ def delete_old_job_executions(max_age=1_209_600):
     DjangoJobExecution.objects.delete_old_job_executions(max_age)
 
     # delete entries in db older than 2 weeks
-    time_delta = datetime.now() - dtime.timedelta(seconds=max_age)
+    time_delta = timezone.now() - timezone.timedelta(seconds=max_age)
     ResourceTimestamp.objects.all().filter(timestamp__lt=time_delta).delete()
 
 
