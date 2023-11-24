@@ -95,7 +95,8 @@ def report_dashboard(request):
 
     :return: rendered ReportDashboard
     """
-    firmwares = FirmwareAnalysis.objects.filter(hidden=False)
+    # show all not hidden by others and ALL of your own
+    firmwares = (FirmwareAnalysis.objects.filter(hidden=False) | FirmwareAnalysis.objects.filter(user=request.user)).distinct()
     return render(request, 'dashboard/reportDashboard.html', {'firmwares': firmwares, 'username': request.user.username})
 
 
@@ -218,4 +219,21 @@ def archive_analysis(request, analysis_id):
     analysis.do_archive()
     analysis.archived = True
     analysis.save(update_fields=["archived"])
+    return redirect('..')
+
+
+@login_required(login_url='/' + settings.LOGIN_URL)
+@require_http_methods(["GET"])
+def hide_analysis(request, analysis_id):
+    """
+    hides the analysis
+    checks user
+    """
+    logger.info("Hiding Analysis with id: %s", analysis_id)
+    analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    # check if user auth
+    if request.user != analysis.user and not request.user.is_superuser:
+        return HttpResponseForbidden("You are not authorized!")
+    analysis.hidden = True
+    analysis.save(update_fields=["hidden"])
     return redirect('..')

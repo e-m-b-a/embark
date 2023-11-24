@@ -62,6 +62,11 @@
                             <td>
                                 <!--ButtonRow with menue-->
                                 <div class="buttonRow">
+                                    {% if firmware.hidden is False %}
+                                        <button type="button" class="btn buttonRowElem btn-danger" data-bs-toggle="modal" data-bs-target="#Hide-{{ firmware.id }}">
+                                            Hide Analysis
+                                        </button>
+                                    {% endif %}
                                     {% if firmware.finished is False %}
                                         {% if firmware.failed is True %}
                                             <button class="btn btn-primary" type="button" disabled>
@@ -137,10 +142,32 @@
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">NO</button>
 
-                                                    <form action="{% url 'embark-dashboard-delete-analysis' firmware.id %}" method="get" id="delete-form-{{ firmware.id }}">
+                                                    <form action={% url 'embark-dashboard-delete-analysis' firmware.id %} method="get" id="delete-form-{{ firmware.id }}">
                                                         <button type="submit" class="btn btn-primary">YES</button>
                                                     </form>
 
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal fade" id="#Hide-{{ firmware.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="#Hide-{{ firmware.id }}-Label">Hide {{ firmware.id }}</h5>
+                                                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">Close</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    Are you sure you want to hide this analysis of {{ firmware.firmware_name }}?
+                                                    -- This will make the analysis inaccessible for others!
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">NO</button>
+                                                    <form action={% url 'embark-dashboard-hide' firmware.id %} method='get' id="hide-form-{{ firmware.id }}">
+                                                        <button type="submit" class="btn btn-primary" >YES</button>
+                                                    </form>
                                                 </div>
                                             </div>
                                         </div>

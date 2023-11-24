@@ -10,6 +10,7 @@ urlpatterns = [
     path('dashboard/report/', views.report_dashboard, name='embark-ReportDashboard'),
     path('dashboard/report/deleteAnalysis/<uuid:analysis_id>', views.delete_analysis, name='embark-dashboard-delete-analysis'),
     path('dashboard/report/archive/<uuid:analysis_id>', views.archive_analysis, name='embark-dashboard-archive'),
+    path('dashboard/report/hide/<uuid:analysis_id>', views.hide_analysis, name='embark-dashboard-hide'),
     path('dashboard/individualReport/<uuid:analysis_id>', views.individual_report_dashboard, name='embark-IndividualReportDashboard'),
     path('dashboard/stop/', views.stop_analysis, name='embark-stop-analysis'),
     path('dashboard/log/<uuid:analysis_id>', views.show_log, name='embark-show-log'),
