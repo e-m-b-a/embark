@@ -28,6 +28,7 @@
                         <th scope="col">Version</th>
                         <th scope="col">Start Date</th>
                         <th scope="col">End Date</th>
+                        <th scope="col">Labels</th>
                         <th data-orderable="false" data-priority="1" scope="col">Actions</th>
                     </tr>
                     </thead>
@@ -46,11 +47,10 @@
                                 {% endfor %}
                             </td>
                             <td>{{ firmware.version }}</td>
-                            
-                            <td>{{ firmware.start_date}}</td>
+                            <td>{{ firmware.start_date }}</td>
                             <td>
                                 {% if firmware.end_date is not None %}
-                                    {{ firmware.end_date}}
+                                    {{ firmware.end_date }}
                                 {% else %}
                                     <form action={% url 'embark-show-logviewer' firmware.id %} method='get'>
                                         <button type="submit" class="btn btn-primary">
@@ -58,6 +58,14 @@
                                         </button>
                                     </form>
                                 {% endif %}   
+                            </td>
+                            <td>
+                                {% if firmware.archived is True %}
+                                    <button class="btn btn-primary" type="button" disabled>
+                                        <span class="badge badge-danger">Archived</span>
+                                    </button>
+                                {% endif %}
+                                <!--TODO {{ firmware.labels() }}-->
                             </td>
                             <td>
                                 <!--ButtonRow with menue-->
