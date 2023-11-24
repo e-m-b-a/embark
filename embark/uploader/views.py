@@ -1,10 +1,9 @@
-# pylint: disable=W0613,C0206
 import logging
 import os
 
 from django.conf import settings
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseServerError
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
@@ -23,8 +22,9 @@ req_logger = logging.getLogger("requests")
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["GET"])
 def uploader_home(request):
-    if FirmwareFile.objects.all().count() > 0:
-        analysis_form = FirmwareAnalysisForm(initial={'firmware': FirmwareFile.objects.latest('upload_date')})
+    req_logger.info("User %s called uploader_home", request.user.username)
+    if FirmwareFile.objects.filter(user=request.user).count() > 0:
+        analysis_form = FirmwareAnalysisForm(initial={'firmware': FirmwareFile.objects.filter(user=request.user).latest('upload_date')})
         device_form = DeviceForm()
         label_form = LabelForm()
         vendor_form = VendorForm()
@@ -47,6 +47,7 @@ def save_file(request):
 
     :return: HttpResponse including the status
     """
+    req_logger.info("User %s called save_file", request.user.username)
     logger.info("User %s tryied to upload %s", request.user.username, request.FILES.getlist('file'))
     for file in request.FILES.getlist('file'):      # FIXME determin usecase for multi-file-upload in one request
         firmware_file = FirmwareFile.objects.create(file=file)
@@ -59,6 +60,7 @@ def save_file(request):
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def device_setup(request):
+    req_logger.info("User %s called device_setup", request.user.username)
     # TODO redirect is static ? change to 200
     form = DeviceForm(request.POST)
     if form.is_valid():
@@ -80,6 +82,7 @@ def device_setup(request):
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def vendor(request):
+    req_logger.info("User %s called vendor", request.user.username)
     form = VendorForm(request.POST)
     if form.is_valid():
         logger.info("User %s tryied to create vendor %s", request.user.username, request.POST['vendor_name'])
@@ -98,6 +101,7 @@ def vendor(request):
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def label(request):
+    req_logger.info("User %s called label", request.user.username)
     form = LabelForm(request.POST)
     if form.is_valid():
         logger.info("User %s tryied to create label %s", request.user.username, request.POST['label_name'])
@@ -128,24 +132,22 @@ def start_analysis(request):
     Returns: redirect
 
     """
+    req_logger.info("User %s called start_analysis", request.user.username)
     if request.method == 'POST':
         form = FirmwareAnalysisForm(request.POST)
-        logger.debug("Form: %s", form.is_valid())
         logger.debug("Form: %s", form.errors)
         if form.is_valid():
-            logger.debug("Posted Form is valid")
             logger.info("Starting analysis with %s", form.Meta.model.id)
-
             new_analysis = form.save(commit=False)
-            new_analysis.user = request.user
+            # get the id of the firmware-file to submit
+            new_firmware_file = FirmwareFile.objects.get(id=new_analysis.firmware.id)
+            logger.debug("Firmware file: %s", new_firmware_file)
+            if request.user != new_firmware_file.user and not request.user.is_superuser:
+                return HttpResponseForbidden("You are not authorized!")
+            new_analysis.user = new_firmware_file.user
             logger.debug(" FILE_NAME is %s", new_analysis.firmware.file.name)
             new_analysis.firmware_name = os.path.basename(new_analysis.firmware.file.name)
             new_analysis = form.save()
-
-            # get the id of the firmware-file to submit
-            new_firmware_file = FirmwareFile.objects.get(id=new_analysis.firmware.id)
-            logger.info("Firmware file: %s", new_firmware_file)
-
             # inject into bounded Executor
             if BoundedExecutor.submit_firmware(firmware_flags=new_analysis, firmware_file=new_firmware_file):
                 return redirect('embark-dashboard-service')
@@ -153,8 +155,8 @@ def start_analysis(request):
             return HttpResponseServerError("Queue full")
         logger.error("Form invalid %s", request.POST)
         return HttpResponseBadRequest("Bad Request")
-    if FirmwareFile.objects.all().count() > 0:
-        analysis_form = FirmwareAnalysisForm(initial={'firmware': FirmwareFile.objects.latest('upload_date')})
+    if FirmwareFile.objects.filter(user=request.user).count() > 0:
+        analysis_form = FirmwareAnalysisForm(initial={'firmware': FirmwareFile.objects.filter(user=request.user).latest('upload_date')})
         return render(request, 'uploader/index.html', {'analysis_form': analysis_form})
     analysis_form = FirmwareAnalysisForm()
     device_form = DeviceForm()
@@ -166,8 +168,9 @@ def start_analysis(request):
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def manage_file(request):
-    if FirmwareFile.objects.all().count() > 0:
-        form = DeleteFirmwareForm(initial={'firmware': FirmwareFile.objects.latest('upload_date').id})
+    req_logger.info("User %s called manage_file", request.user.username)
+    if FirmwareFile.objects.filter(user=request.user).count() > 0:
+        form = DeleteFirmwareForm(initial={'firmware': FirmwareFile.objects.filter(user=request.user).latest('upload_date').id})
         return render(request, 'uploader/manage.html', {'delete_form': form})
     form = DeleteFirmwareForm()
     return render(request, 'uploader/manage.html', {'delete_form': form})
@@ -184,6 +187,7 @@ def delete_fw_file(request):
 
     :return: HttpResponse including the status
     """
+    req_logger.info("User %s called delete_fw_file", request.user.username)
     form = DeleteFirmwareForm(request.POST)
 
     if form.is_valid():
@@ -191,7 +195,8 @@ def delete_fw_file(request):
 
         # get relevant data
         firmware_file = form.cleaned_data['firmware']
-        # if firmware_file.user is request.user:
+        if request.user != firmware_file.user and not request.user.is_superuser:
+            return HttpResponseForbidden("You are not authorized!")
         firmware_file.delete()
         messages.info(request, 'delete successful.')
         return redirect('..')
