@@ -78,7 +78,7 @@ def service_dashboard(request):
     :return httpresp: html servicedashboard
     """
     form = StopAnalysisForm()
-    form.fields['analysis'].queryset = FirmwareAnalysis.objects.filter(finished=False)
+    form.fields['analysis'].queryset = FirmwareAnalysis.objects.filter(user=request.user).filter(finished=False)
     return render(request, 'dashboard/serviceDashboard.html', {'username': request.user.username, 'form': form, 'success_message': False})
 
 
