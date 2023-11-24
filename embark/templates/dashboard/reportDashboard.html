@@ -70,11 +70,6 @@
                             <td>
                                 <!--ButtonRow with menue-->
                                 <div class="buttonRow">
-                                    {% if firmware.hidden is False %}
-                                        <button type="button" class="btn buttonRowElem btn-danger" data-bs-toggle="modal" data-bs-target="#Hide-{{ firmware.id }}">
-                                            Hide Analysis
-                                        </button>
-                                    {% endif %}
                                     {% if firmware.finished is False %}
                                         {% if firmware.failed is True %}
                                             <button class="btn btn-primary" type="button" disabled>
@@ -127,6 +122,11 @@
                                                 <form action={% url 'embark-show-logviewer' firmware.id %} method='get'>
                                                     <button type="submit" class="btn buttonRowElem" >View Log</button>
                                                 </form>
+                                                {% if firmware.hidden is False %}
+                                                    <button type="button" class="btn buttonRowElem btn-danger" data-bs-toggle="modal" data-bs-target="#Hide-{{ firmware.id }}">
+                                                        Hide Analysis
+                                                    </button>
+                                                {% endif %}
                                                 <button type="button" class="btn buttonRowElem btn-danger" data-bs-toggle="modal" data-bs-target="#DeleteModal-{{ firmware.id }}">
                                                     Delete Analysis
                                                 </button>
