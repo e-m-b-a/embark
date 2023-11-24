@@ -57,5 +57,5 @@ def cleanup_charfield(charfield) -> str:
 
 
 if __name__ == '__main__':
-    test_string = 'Linux / v2.6.33.2'
-    print(cleanup_charfield(test_string))
+    TEST_STRING = 'Linux / v2.6.33.2'
+    print(cleanup_charfield(TEST_STRING))
