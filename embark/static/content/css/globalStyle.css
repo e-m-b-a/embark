@@ -11,6 +11,7 @@ body {
     background: #1a1a1a;
     background-image: url('/static/content/images/bg.png');
     background-repeat: repeat;
+    margin-bottom: 10px;
 }
 
 .container-fluid,

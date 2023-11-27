@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load tz %}
 {% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/reportDashboard.css' %}"/>{% endblock style %}
 {% block title %}EMBArk report dashboard{% endblock title %}
 {% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
@@ -33,7 +34,6 @@
                     </thead>
 
                     <tbody>
-                    {% load tz %}
                     {% timezone request.session.django_timezone %}
                     {% for firmware in firmwares %}
                         <tr>

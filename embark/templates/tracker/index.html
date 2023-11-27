@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load django_bootstrap5 %}
+{% load tz %}
 
 {% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/tracker.css' %}"/>{% endblock style %}
 {% block js %}
@@ -14,7 +15,7 @@
 {% bootstrap_messages %}
 
 {% block maincontent %}
-
+{% timezone request.session.django_timezone %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mx-auto border-bottom">
     <h1 class="h2">Tracking-board</h1>
     <div class="btn-toolbar mx-auto">
@@ -72,5 +73,5 @@
         {% render_table table %}
     </div>
 </div>
-
+{% endtimezone %}
 {% endblock %}
