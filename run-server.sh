@@ -1,7 +1,7 @@
 #!/bin/bash
 # EMBArk - The firmware security scanning environment
 #
-# Copyright 2020-2022 Siemens Energy AG
+# Copyright 2020-2023 Siemens Energy AG
 # Copyright 2020-2022 Siemens AG
 #
 # EMBArk comes with ABSOLUTELY NO WARRANTY.
@@ -125,20 +125,8 @@ if ! [[ -d ./emba ]]; then
   echo -e "${RED}""${BOLD}""You are using the wrong installation and missing the EMBA subdirectory""${NC}"
 fi
 if ! (cd "${PWD}"/emba && ./emba -d 1); then
-  echo -e "${BLUE}""Trying auto-maintain""${NC}"
-  # automaintain
-  if ! [[ -d ./emba ]]; then
-    echo -e "${RED}""EMBA not installed""${NC}"
-    exit 1
-  fi
-  cd ./emba || exit 1
-  systemctl restart NetworkManager docker
-  ./emba -d 1 1>/dev/null
-  if [[ $? -eq 1 ]]; then
-    echo -e "${RED}""EMBA is not configured correctly""${NC}"
-    exit 1
-  fi
-  cd .. || exit 1
+  echo -e "${RED}""EMBA is not configured correctly""${NC}"
+  exit 1
 fi
 
 # check venv 
@@ -146,7 +134,7 @@ if ! [[ -d /var/www/.venv ]]; then
   echo -e "${RED}""${BOLD}""Pip-enviroment not found!""${NC}"
   exit 1
 fi
-if ! nc -zw1 google.com 443 &>/dev/null ; then
+if ! nc -zw1 pypi.org 443 &>/dev/null ; then
   (cd /var/www && pipenv check && pipenv verify)
 fi
 
