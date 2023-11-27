@@ -2,7 +2,7 @@
 
 # EMBArk - The firmware security scanning environment
 #
-# Copyright 2020-2021 Siemens Energy AG
+# Copyright 2020-2023 Siemens Energy AG
 # Copyright 2020-2021 Siemens AG
 #
 # EMBArk comes with ABSOLUTELY NO WARRANTY.
@@ -271,19 +271,82 @@ yamlchecker(){
   done
 }
 
+list_linter_exceptions(){
+  # lists all linter exceptions for a given toolname inside a directory 
+  # $1 tool name
+  # $2 directory
+  local TOOL_NAME_="${1:-}"
+  local DIR_="${2:-}"
+  local SEARCH_PAR_=""
+  local SEARCH_TYPE_=""
+  echo -e "\\n""${GREEN}""Checking for ${TOOL_NAME_} Exceptions inside ${DIR_}:""${NC}""\\n"
+  case "${TOOL_NAME_}" in
+    jshint)
+      SEARCH_PAR_="jshint ignore"
+      SEARCH_TYPE_="js"
+      ;;
+    shellcheck)
+      SEARCH_PAR_="shellcheck disable"
+      SEARCH_TYPE_="sh"
+      ;;
+    bandit)
+      SEARCH_PAR_="nosec"
+      SEARCH_TYPE_="py"
+      ;;
+    pylint)
+      SEARCH_PAR_="pylint"
+      SEARCH_TYPE_="py"
+      ;;
+    djlint)
+      SEARCH_PAR_="djlint"
+      SEARCH_TYPE_="html"
+      ;;
+  esac
+  mapfile -t EXCEPTION_SCRIPTS < <(find "${DIR_}" -iname "*.${SEARCH_TYPE_}" -exec grep -H "${SEARCH_PAR_}" {} \;)
+  for EXCEPTION_ in "${EXCEPTION_SCRIPTS[@]}"; do
+    echo -e "\\n""${GREEN}""Found Exception in ${EXCEPTION_%%:*}:""${ORANGE}""${EXCEPTION_##*:}""${NC}""\\n"
+    EXCEPTIONS_TO_CHECK_ARR+=( "${EXCEPTION_%%:*}" )
+  done
+}
+
+copy_right_check(){
+  # checks all Copyright occurences for supplied end-year 
+  # $1 end-year
+  # $2 dir to look in
+  local YEAR_="${1:-}"
+  local DIR_="${2:-}"
+  local EXCLUDE_="${3:-}"
+  echo -e "\\n""${ORANGE}""${BOLD}""EMBArk Copyright check""${NC}""\\n""${BOLD}""=================================================================""${NC}"
+  mapfile -t COPYRIGHT_LINE_ < <(find "${DIR_}" -type d -path "${EXCLUDE_}" -prune -false -o -type f -path "${0}" -prune -false -o -iname "*.sh" -exec grep -H "Copyright" {} \;)
+  for LINE_ in "${COPYRIGHT_LINE_[@]}"; do
+    if ! grep -q "${YEAR_}.*Siemens Energy AG" "${LINE_%%:*}"; then
+      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+      MODULES_TO_CHECK_ARR+=( "${LINE_%%:*}" )  
+      echo -e "Found problem with Copyright in ${LINE_%%:*}: ${ORANGE}${LINE_##*:}""${NC}""\\n"
+      echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
+    fi
+  done
+}
+
 #main
 check_tools
 MODULES_TO_CHECK=0
 MODULES_TO_CHECK_ARR=()
+EXCEPTIONS_TO_CHECK_ARR=()
 shellchecker
+list_linter_exceptions "shellcheck" "$PWD"
 dockerchecker
 jscheck
+list_linter_exceptions "jshint" "$PWD"
 templatechecker
+list_linter_exceptions "djlint" "$PWD"
 pycodestyle_check
 banditer
+list_linter_exceptions "bandit" "$PWD"
 pylinter
 check_django
 yamlchecker
+copy_right_check 2023 "${PWD}" "${PWD}/emba_logs"
 
 if [[ "${#MODULES_TO_CHECK_ARR[@]}" -gt 0 ]]; then
   echo -e "\\n\\n""${GREEN}${BOLD}""SUMMARY:${NC}\\n"
@@ -292,6 +355,9 @@ if [[ "${#MODULES_TO_CHECK_ARR[@]}" -gt 0 ]]; then
     echo -e "${RED}${BOLD}==> FIX MODULE: ""${MODULE}""${NC}"
   done
   exit 1
+fi
+if [[ "${#EXCEPTIONS_TO_CHECK_ARR[@]}" -gt 0 ]]; then
+  echo -e "${ORANGE}${BOLD}==> Please take a look at those Exceptions!""${NC}"
 fi
 echo -e "${GREEN}${BOLD}===> ALL CHECKS SUCCESSFUL""${NC}"
 exit 0
