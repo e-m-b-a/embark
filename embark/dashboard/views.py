@@ -219,6 +219,7 @@ def archive_analysis(request, analysis_id):
     analysis.do_archive()
     analysis.archived = True
     analysis.save(update_fields=["archived"])
+    messages.success(request, 'Analysis: ' + str(analysis_id) + ' successfully archived')
     return redirect('..')
 
 
@@ -236,4 +237,5 @@ def hide_analysis(request, analysis_id):
         return HttpResponseForbidden("You are not authorized!")
     analysis.hidden = True
     analysis.save(update_fields=["hidden"])
+    messages.success(request, 'Analysis: ' + str(analysis_id) + ' successfully hidden')
     return redirect('..')
