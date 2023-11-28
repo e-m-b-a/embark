@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 @login_required(login_url='/' + settings.LOGIN_URL)
 def main_dashboard(request):
     if request.user.is_authenticated:
-        if FirmwareAnalysis.objects.filter(finished=True, failed=False).count() > 0 and Result.objects.all().count() > 0:
+        if FirmwareAnalysis.objects.filter(finished=True, failed=False).count() > 0 and Result.objects.filter(restricted=False).count() > 0:
             return render(request, 'dashboard/mainDashboard.html', {'nav_switch': True, 'username': request.user.username})
         messages.info(request, "Redirected - There are no Results to display yet")
         return redirect('embark-uploader-home')
@@ -50,18 +50,21 @@ def stop_analysis(request):
         logger.debug("Posted Form is valid")
         # get id
         analysis = form.cleaned_data['analysis']
-        logger.info("Stopping analysis with id %s", analysis.id)
-        pid = FirmwareAnalysis.objects.get(id=analysis.id).pid
+        analysis_object_ = FirmwareAnalysis.objects.get(id=analysis.id)
+        # check if user auth
+        if request.user != analysis_object_.user:
+            return HttpResponseForbidden("You are not authorized!")
+        logger.info("Stopping analysis with id %s", analysis_object_.id)
+        pid = analysis_object_.pid
         logger.debug("PID is %s", pid)
         try:
             BoundedExecutor.submit_kill(analysis.id)
             os.killpg(os.getpgid(pid), signal.SIGTERM)  # kill proc group too
             form = StopAnalysisForm()
-            form.fields['analysis'].queryset = FirmwareAnalysis.objects.filter(finished=False)
+            form.fields['analysis'].queryset = FirmwareAnalysis.objects.filter(user=request.user).filter(finished=False)
             return render(request, 'dashboard/serviceDashboard.html', {'username': request.user.username, 'form': form, 'success_message': True, 'message': "Stopped successfully"})
         except builtins.Exception as error:
             logger.error("Error %s", error)
-            analysis_object_ = FirmwareAnalysis.objects.get(id=analysis.id)
             analysis_object_.failed = True
             analysis_object_.save(update_fields=["failed"])
             return HttpResponseServerError("Failed to stop process, but set its status to failed. Please handle EMBA process manually: PID=" + str(pid))
@@ -78,7 +81,7 @@ def service_dashboard(request):
     :return httpresp: html servicedashboard
     """
     form = StopAnalysisForm()
-    form.fields['analysis'].queryset = FirmwareAnalysis.objects.filter(finished=False)
+    form.fields['analysis'].queryset = FirmwareAnalysis.objects.filter(user=request.user).filter(finished=False)
     return render(request, 'dashboard/serviceDashboard.html', {'username': request.user.username, 'form': form, 'success_message': False})
 
 
@@ -92,7 +95,8 @@ def report_dashboard(request):
 
     :return: rendered ReportDashboard
     """
-    firmwares = FirmwareAnalysis.objects.all()
+    # show all not hidden by others and ALL of your own
+    firmwares = (FirmwareAnalysis.objects.filter(hidden=False) | FirmwareAnalysis.objects.filter(user=request.user)).distinct()
     return render(request, 'dashboard/reportDashboard.html', {'firmwares': firmwares, 'username': request.user.username})
 
 
@@ -122,6 +126,9 @@ def show_log(request, analysis_id):
     """
     logger.info("showing log for analyze_id: %s", analysis_id)
     firmware = FirmwareAnalysis.objects.get(id=analysis_id)
+    # check if user auth
+    if request.user != firmware.user:
+        return HttpResponseForbidden("You are not authorized!")
     # get the file path
     log_file_path_ = f"{Path(firmware.path_to_logs).parent}/emba_run.log"
     logger.debug("Taking file at %s and render it", log_file_path_)
@@ -145,6 +152,9 @@ def show_logviewer(request, analysis_id):
 
     logger.info("showing log viewer for analyze_id: %s", analysis_id)
     firmware = FirmwareAnalysis.objects.get(id=analysis_id)
+    # check if user auth
+    if request.user != firmware.user:
+        return HttpResponseForbidden("You are not authorized!")
     # get the file path
     log_file_path_ = f"{Path(firmware.path_to_logs).parent}/emba_run.log"
     logger.debug("Taking file at %s and render it", log_file_path_)
@@ -200,10 +210,32 @@ def archive_analysis(request, analysis_id):
     """
     logger.info("Archiving Analysis with id: %s", analysis_id)
     analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    # check if user auth
+    if request.user != analysis.user and not request.user.is_superuser:
+        return HttpResponseForbidden("You are not authorized!")
     if analysis.zip_file is None:
         # make archive for uuid
         _ = make_zip(request, analysis_id)
     analysis.do_archive()
     analysis.archived = True
     analysis.save(update_fields=["archived"])
+    messages.success(request, 'Analysis: ' + str(analysis_id) + ' successfully archived')
+    return redirect('..')
+
+
+@login_required(login_url='/' + settings.LOGIN_URL)
+@require_http_methods(["GET"])
+def hide_analysis(request, analysis_id):
+    """
+    hides the analysis
+    checks user
+    """
+    logger.info("Hiding Analysis with id: %s", analysis_id)
+    analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    # check if user auth
+    if request.user != analysis.user and not request.user.is_superuser:
+        return HttpResponseForbidden("You are not authorized!")
+    analysis.hidden = True
+    analysis.save(update_fields=["hidden"])
+    messages.success(request, 'Analysis: ' + str(analysis_id) + ' successfully hidden')
     return redirect('..')

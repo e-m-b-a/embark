@@ -88,7 +88,7 @@ def import_read(request):
         messages.error(request, 'import failed')
         return redirect('..')
     messages.error(request, 'form invalid')
-    return HttpResponseBadRequest
+    return HttpResponseBadRequest("invalid form")
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)

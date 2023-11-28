@@ -118,7 +118,7 @@ def get_report_for_device(request, device_id):
         return render(request=request, template_name='tracker/device.html', context={'username': request.user.username, 'device_id': device_id, 'device': device, 'labels': label_list, 'data': data})
     logger.error("device id nonexistent: %s", device_id)
     logger.error("could  not get template - %s", request)
-    return HttpResponseBadRequest
+    return HttpResponseBadRequest("Bad Request")
 
 
 @require_http_methods(["GET"])
@@ -133,7 +133,7 @@ def tracker_time(request, time):
             data.append(Device.objects.filter(device_vendor=_vendor).count())
         device_table = SimpleDeviceTable(data=Device.objects.all(), template_name="django_tables2/bootstrap-responsive.html")
         return render(request=request, template_name='tracker/index.html', context={'username': request.user.username, 'table': device_table, 'labels': label_list, 'data': data})
-    return HttpResponseBadRequest
+    return HttpResponseBadRequest("Bad Request")
 
 
 @require_http_methods(["POST"])
