@@ -15,7 +15,7 @@ from django.http.response import Http404
 from django.shortcuts import redirect
 from django.contrib import messages
 from django.template.loader import get_template
-from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.urls import reverse
@@ -68,6 +68,7 @@ def html_report_path(request, analysis_id, html_path, html_file):
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report_download(request, analysis_id, html_path, download_file):    # TODO Needed for EMBA?
+    response = Http404("Resource not found")
     if FirmwareAnalysis.objects.filter(id=analysis_id).exists():
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         if analysis.hidden is False or analysis.user == request.user or request.user.is_superuser:
@@ -83,9 +84,7 @@ def html_report_download(request, analysis_id, html_path, download_file):    # T
                     response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(full_path)
                     logger.info("html_report - analysis_id: %s html_path: %s download_file: %s", analysis_id, html_path,
                                 download_file)
-                    return response
-        response = Http404("Resource not found")
-        return response
+    return response
 
 
 @require_http_methods(["GET"])
