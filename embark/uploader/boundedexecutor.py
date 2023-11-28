@@ -9,6 +9,8 @@ import zipfile
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from threading import BoundedSemaphore
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 from django.dispatch import receiver
 from django.utils import timezone
@@ -264,11 +266,25 @@ class BoundedExecutor:
         :param analysis_id: primary key for firmware-analysis entry
         """
         logger.debug("Zipping ID: %s", analysis_id)
-        try:
-            analysis = FirmwareAnalysis.objects.get(id=analysis_id)
-            analysis.finished = False
-            analysis.save()
+        room_group_name = f"services_{analysis.user}"
+        channel_layer = get_channel_layer()
+        
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        analysis.finished = False
+        analysis.status['finished'] = False
+        analysis.status['work'] = True
+        analysis.status['last_update'] = str(timezone.now())
+        analysis.status['last_phase'] = "Started Zipping"
+        analysis.save()
 
+        # send ws message
+        async_to_sync(channel_layer.group_send)(
+            room_group_name, {
+                "type": 'send.message',
+                "message": {str(analysis.id): analysis.status}
+            }
+        )
+        try:
             # archive = Archiver.pack(f"{settings.MEDIA_ROOT}/log_zip/{analysis_id}", 'zip', analysis.path_to_logs, './*')
             archive = Archiver.make_zipfile(f"{settings.MEDIA_ROOT}/log_zip/{analysis_id}.zip", analysis.path_to_logs)
 
@@ -277,7 +293,18 @@ class BoundedExecutor:
         except builtins.Exception as exce:
             logger.error("Zipping failed: %s", exce)
         analysis.finished = True
+        analysis.status['finished'] = True
+        analysis.status['work'] = False
+        analysis.status['last_update'] = str(timezone.now())
+        analysis.status['last_module'] = "Finished Zipping"
         analysis.save()
+        # send ws message
+        async_to_sync(channel_layer.group_send)(
+            room_group_name, {
+                "type": 'send.message',
+                "message": {str(analysis.id): analysis.status}
+            }
+        )
 
     @classmethod
     def unzip_log(cls, analysis_id, file_loc):

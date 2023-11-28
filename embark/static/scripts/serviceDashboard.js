@@ -167,6 +167,28 @@ function add_container_to_finished(status_dict) {
 }
 
 
+function add_container_to_work(status_dict) {
+    "use strict";
+    var htmlToAdd = `
+    <div class="box" id="Container_` + status_dict.analysis + `">
+        <div class="mainText">
+            <small>`+ status_dict.analysis + `</small>
+            <br>
+            <span>`+ status_dict.firmware_name.split(".")[0] + `</span>
+            <br>
+            <h1> Working </h1>
+        </div>
+        <div class="log tile phaseLog">
+            <ul class="log_phase logUL" id="log_module_` + status_dict.analysis + `"></ul>
+        </div>
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>`;
+    document.getElementsByClassName("RunningRow")[0].insertAdjacentHTML('beforeend', htmlToAdd);
+}
+
+
 /**
  * This method is called whenever a message from the backend arrives
  * */
@@ -190,10 +212,14 @@ socket.onmessage = function (event) {
                     // set percentage and other metadata
                     makeProgress(data[analysis_].percentage, data[analysis_].analysis);
                 }
-            } else if (data[analysis_].finished == true){
+            } else if (data[analysis_].finished == true ){
                 newContainer.remove();
                 add_container_to_finished(data[analysis_]);
             } else {
+                if (data[analysis_].work == True){
+                    add_container_to_work(data[analysis_]);
+                    livelog_phase(data[analysis_].phase_list, data[analysis_].analysis);
+                }
                 // append phase and module arrays
                 livelog_module(data[analysis_].module_list, data[analysis_].analysis);
                 livelog_phase(data[analysis_].phase_list, data[analysis_].analysis);
