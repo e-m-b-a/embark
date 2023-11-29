@@ -169,9 +169,7 @@ function add_container_to_finished(status_dict) {
 
 function set_container_to_work(status_dict) {
     "use strict";
-    var Container = document.getElementById("Container_" + data[analysis_].analysis);
-    Container.innerHTML = `
-    <div class="box" id="Container_` + status_dict.analysis + `">
+    $("#Container_" + status_dict.analysis).html(`
         <div class="mainText">
             <small>`+ status_dict.analysis + `</small>
             <br>
@@ -184,8 +182,7 @@ function set_container_to_work(status_dict) {
         </div>
         <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>
-        </div>
-    </div>`;
+        </div>`);
 }
 
 
@@ -216,17 +213,14 @@ socket.onmessage = function (event) {
                 newContainer.remove();
                 add_container_to_finished(data[analysis_]);
             } else {
-                if (data[analysis_].work == True){
-                    
-                    add_container_to_running(data[analysis_]);
-                    add_container_to_work(data[analysis_]);
-                    livelog_phase(data[analysis_].phase_list, data[analysis_].analysis);
-                }
                 // append phase and module arrays
                 livelog_module(data[analysis_].module_list, data[analysis_].analysis);
                 livelog_phase(data[analysis_].phase_list, data[analysis_].analysis);
                 // set percentage and other metadata
                 makeProgress(data[analysis_].percentage, data[analysis_].analysis);
+            }
+            if (data[analysis_].work == true){
+                add_container_to_work(data[analysis_]);
             }
         }
     }
