@@ -296,7 +296,7 @@ class BoundedExecutor:
         analysis.status['finished'] = True
         analysis.status['work'] = False
         analysis.status['last_update'] = str(timezone.now())
-        analysis.status['last_module'] = "Finished Zipping"
+        analysis.status['last_phase'] = "Finished Zipping"
         analysis.save()
         # send ws message
         async_to_sync(channel_layer.group_send)(
