@@ -173,13 +173,16 @@ def make_zip(request, analysis_id):
     """
     req_logger.info("Zipping Req by user: %s for analysis %s", request.user, analysis_id)
     try:
-        _ = FirmwareAnalysis.objects.get(id=analysis_id)
-        if BoundedExecutor.submit_zip(uuid=analysis_id) is not None:
-            # success
-            logger.info("Successfully submitted zip request %s", str(analysis_id))
-            messages.info(request, 'Zipping ' + str(analysis_id))
-            return redirect('embark-dashboard-service')
-        messages.error(request, 'zipping failed, queue full?')
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        # check that the user is authorized
+        if request.user == analysis.user or request.user.is_superuser:
+            if BoundedExecutor.submit_zip(uuid=analysis_id) is not None:
+                # success
+                logger.info("Successfully submitted zip request %s", str(analysis_id))
+                messages.info(request, 'Zipping ' + str(analysis_id))
+                return redirect('embark-dashboard-service')
+            messages.error(request, 'zipping failed, queue full?')
+        messages.error(request, 'Not authorized')
     except FirmwareAnalysis.DoesNotExist:
         messages.error(request, 'No analysis with that id found')
     return redirect('embark-ReportDashboard')

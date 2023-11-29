@@ -266,8 +266,6 @@ class BoundedExecutor:
         :param analysis_id: primary key for firmware-analysis entry
         """
         logger.debug("Zipping ID: %s", analysis_id)
-        room_group_name = f"services_{analysis.user}"
-        channel_layer = get_channel_layer()
         
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         analysis.finished = False
@@ -277,6 +275,8 @@ class BoundedExecutor:
         analysis.status['last_phase'] = "Started Zipping"
         analysis.save()
 
+        room_group_name = f"services_{analysis.user}"
+        channel_layer = get_channel_layer()
         # send ws message
         async_to_sync(channel_layer.group_send)(
             room_group_name, {
