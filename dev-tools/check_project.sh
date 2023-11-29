@@ -279,7 +279,7 @@ list_linter_exceptions(){
   local DIR_="${2:-}"
   local SEARCH_PAR_=""
   local SEARCH_TYPE_=""
-  echo -e "\\n""${GREEN}""Checking for ${TOOL_NAME_} Exceptions inside ${DIR_}:""${NC}""\\n"
+  echo -e "\\n""${GREEN}""Checking for ${TOOL_NAME_} exceptions inside ${DIR_}:""${NC}""\\n"
   case "${TOOL_NAME_}" in
     jshint)
       SEARCH_PAR_="jshint ignore"
@@ -303,10 +303,14 @@ list_linter_exceptions(){
       ;;
   esac
   mapfile -t EXCEPTION_SCRIPTS < <(find "${DIR_}" -iname "*.${SEARCH_TYPE_}" -exec grep -H "${SEARCH_PAR_}" {} \;)
-  for EXCEPTION_ in "${EXCEPTION_SCRIPTS[@]}"; do
-    echo -e "\\n""${GREEN}""Found Exception in ${EXCEPTION_%%:*}:""${ORANGE}""${EXCEPTION_##*:}""${NC}""\\n"
-    EXCEPTIONS_TO_CHECK_ARR+=( "${EXCEPTION_%%:*}" )
-  done
+  if [[ "${#EXCEPTION_SCRIPTS[@]}" -gt 0 ]]; then
+    for EXCEPTION_ in "${EXCEPTION_SCRIPTS[@]}"; do
+      echo -e "\\n""${GREEN}""Found exception in ${EXCEPTION_%%:*}:""${ORANGE}""${EXCEPTION_##*:}""${NC}""\\n"
+      EXCEPTIONS_TO_CHECK_ARR+=( "${EXCEPTION_%%:*}" )
+    done
+  else
+    echo -e "\\n""${GREEN}""=> Found no exceptions for ${TOOL_NAME_}""${NC}""\\n"
+  fi
 }
 
 copy_right_check(){
