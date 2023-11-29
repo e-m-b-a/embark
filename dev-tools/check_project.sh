@@ -275,8 +275,10 @@ list_linter_exceptions(){
   # lists all linter exceptions for a given toolname inside a directory 
   # $1 tool name
   # $2 directory
+  # $3 excluded dir for find
   local TOOL_NAME_="${1:-}"
   local DIR_="${2:-}"
+  local EXCLUDE_="${3:-}"
   local SEARCH_PAR_=""
   local SEARCH_TYPE_=""
   echo -e "\\n""${GREEN}""Checking for ${TOOL_NAME_} exceptions inside ${DIR_}:""${NC}""\\n"
@@ -302,7 +304,7 @@ list_linter_exceptions(){
       SEARCH_TYPE_="html"
       ;;
   esac
-  mapfile -t EXCEPTION_SCRIPTS < <(find "${DIR_}" -iname "*.${SEARCH_TYPE_}" -exec grep -H "${SEARCH_PAR_}" {} \;)
+  mapfile -t EXCEPTION_SCRIPTS < <(find "${DIR_}" -type d -path "${EXCLUDE_}" -prune -false -o -iname "*.${SEARCH_TYPE_}" -exec grep -H "${SEARCH_PAR_}" {} \;)
   if [[ "${#EXCEPTION_SCRIPTS[@]}" -gt 0 ]]; then
     for EXCEPTION_ in "${EXCEPTION_SCRIPTS[@]}"; do
       echo -e "\\n""${GREEN}""Found exception in ${EXCEPTION_%%:*}:""${ORANGE}""${EXCEPTION_##*:}""${NC}""\\n"
@@ -317,6 +319,7 @@ copy_right_check(){
   # checks all Copyright occurences for supplied end-year 
   # $1 end-year
   # $2 dir to look in
+  # $3 excluded dir for find
   local YEAR_="${1:-}"
   local DIR_="${2:-}"
   local EXCLUDE_="${3:-}"
@@ -346,7 +349,7 @@ templatechecker
 list_linter_exceptions "djlint" "$PWD"
 pycodestyle_check
 banditer
-list_linter_exceptions "bandit" "$PWD"
+list_linter_exceptions "bandit" "$PWD" "${PWD}/.venv"
 pylinter
 check_django
 yamlchecker
