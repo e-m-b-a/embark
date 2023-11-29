@@ -167,9 +167,10 @@ function add_container_to_finished(status_dict) {
 }
 
 
-function add_container_to_work(status_dict) {
+function set_container_to_work(status_dict) {
     "use strict";
-    var htmlToAdd = `
+    var Container = document.getElementById("Container_" + data[analysis_].analysis);
+    Container.innerHTML = `
     <div class="box" id="Container_` + status_dict.analysis + `">
         <div class="mainText">
             <small>`+ status_dict.analysis + `</small>
@@ -185,7 +186,6 @@ function add_container_to_work(status_dict) {
             <span class="visually-hidden">Loading...</span>
         </div>
     </div>`;
-    document.getElementsByClassName("RunningRow")[0].insertAdjacentHTML('beforeend', htmlToAdd);
 }
 
 
@@ -217,6 +217,8 @@ socket.onmessage = function (event) {
                 add_container_to_finished(data[analysis_]);
             } else {
                 if (data[analysis_].work == True){
+                    
+                    add_container_to_running(data[analysis_]);
                     add_container_to_work(data[analysis_]);
                     livelog_phase(data[analysis_].phase_list, data[analysis_].analysis);
                 }
