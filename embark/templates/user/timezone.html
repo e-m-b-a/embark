@@ -1,5 +1,8 @@
 {% load tz %}
 {% get_current_timezone as TIME_ZONE %}
+<div class="d-flex justify-content-center">
+    <h3><span class="badge bg-secondary">The servers timezone is: {{ server_tz }}</span></h3>
+</div>
 <form action="{% url 'embark-acc-timezone' %}" method="post">
     {% csrf_token %}
     <label for="timezone">Time zone:</label>

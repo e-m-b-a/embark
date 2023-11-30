@@ -169,7 +169,8 @@ function add_container_to_finished(status_dict) {
 
 function set_container_to_work(status_dict) {
     "use strict";
-    $("#Container_" + status_dict.analysis).html(`
+    var $Container = $("#Container_" + status_dict.analysis);
+    $Container.html(`
         <div class="mainText">
             <small>`+ status_dict.analysis + `</small>
             <br>
@@ -177,11 +178,13 @@ function set_container_to_work(status_dict) {
             <br>
             <h1> Working </h1>
         </div>
-        <div class="log tile phaseLog">
-            <ul class="log_phase logUL" id="log_module_` + status_dict.analysis + `"></ul>
+        <div class="log tile lastphase">
+            <span>` + status_dict.last_phase +  `</span>
         </div>
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
         </div>`);
 }
 
@@ -220,7 +223,7 @@ socket.onmessage = function (event) {
                 makeProgress(data[analysis_].percentage, data[analysis_].analysis);
             }
             if (data[analysis_].work == true){
-                add_container_to_work(data[analysis_]);
+                set_container_to_work(data[analysis_]);
             }
         }
     }

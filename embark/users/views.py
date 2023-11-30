@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 @require_http_methods(["GET"])
 def user_main(request):
     logger.debug("Account settings for %s", request.user)
-    return render(request, 'user/index.html', {"timezones": settings.TIMEZONES})
+    return render(request, 'user/index.html', {"timezones": settings.TIMEZONES, "server_tz": settings.TIME_ZONE})
 
 
 @csrf_exempt
