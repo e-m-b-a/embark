@@ -15,7 +15,7 @@ from django.http.response import Http404
 from django.shortcuts import redirect
 from django.contrib import messages
 from django.template.loader import get_template
-from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.urls import reverse
@@ -41,12 +41,13 @@ def html_report(request, analysis_id, html_file):
     report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
     if FirmwareAnalysis.objects.filter(id=analysis_id).exists():
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
-        if analysis.user == request.user:
+        if analysis.hidden is False or analysis.user == request.user or request.user.is_superuser:
             html_body = get_template(report_path)
             logger.debug("html_report - analysis_id: %s html_file: %s", analysis_id, html_file)
             return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
+        messages.error(request, "User not authorized")
     logger.error("could  not get template - %s", request)
-    return HttpResponseBadRequest
+    return redirect("..")
 
 
 @require_http_methods(["GET"])
@@ -55,58 +56,62 @@ def html_report_path(request, analysis_id, html_path, html_file):
     report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
     if FirmwareAnalysis.objects.filter(id=analysis_id).exists():
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
-        if analysis.user == request.user:
+        if analysis.hidden is False or analysis.user == request.user or request.user.is_superuser:
             html_body = get_template(report_path)
             logger.debug("html_report - analysis_id: %s path: %s html_file: %s", analysis_id, html_path, html_file)
             return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
+        messages.error(request, "User not authorized")
     logger.error("could  not get path - %s", request)
-    return HttpResponseBadRequest
+    return redirect("..")
 
 
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def html_report_download(request, analysis_id, html_path, download_file):    # Needed for EMBA?
-    base_path = f"{settings.EMBA_LOG_ROOT}"
-    if request.path.startswith('/'):
-        file_path = request.path[1:]
-    else:
-        file_path = request.path[2:]
-    full_path = os.path.normpath(os.path.join(base_path, file_path))
-    if full_path.startswith(base_path):
-        with open(full_path, 'rb') as requested_file:
-            response = HttpResponse(requested_file.read(), content_type="text/plain")
-            response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(full_path)
-            logger.info("html_report - analysis_id: %s html_path: %s download_file: %s", analysis_id, html_path,
-                        download_file)
-            return response
-    else:
-        response = Http404
-        return response
+def html_report_download(request, analysis_id, html_path, download_file):    # TODO Needed for EMBA?
+    response = Http404("Resource not found")
+    if FirmwareAnalysis.objects.filter(id=analysis_id).exists():
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        if analysis.hidden is False or analysis.user == request.user or request.user.is_superuser:
+            base_path = f"{settings.EMBA_LOG_ROOT}"
+            if request.path.startswith('/'):
+                file_path = request.path[1:]
+            else:
+                file_path = request.path[2:]
+            full_path = os.path.normpath(os.path.join(base_path, file_path))
+            if full_path.startswith(base_path):
+                with open(full_path, 'rb') as requested_file:
+                    response = HttpResponse(requested_file.read(), content_type="text/plain")
+                    response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(full_path)
+                    logger.info("html_report - analysis_id: %s html_path: %s download_file: %s", analysis_id, html_path,
+                                download_file)
+    return response
 
 
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report_resource(request, analysis_id, img_file):
-    content_type = "text/plain"
+    if FirmwareAnalysis.objects.filter(id=analysis_id).exists():
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        if analysis.hidden is False or analysis.user == request.user or request.user.is_superuser:
+            content_type = "text/plain"
 
-    if img_file.endswith(".css"):
-        content_type = "text/css"
-    elif img_file.endswith(".svg"):
-        content_type = "image/svg+xml"
-    elif img_file.endswith(".png"):
-        content_type = "image/png"
+            if img_file.endswith(".css"):
+                content_type = "text/css"
+            elif img_file.endswith(".svg"):
+                content_type = "image/svg+xml"
+            elif img_file.endswith(".png"):
+                content_type = "image/png"
 
-    resource_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
-    logger.info("html_report_resource - analysis_id: %s request.path: %s", analysis_id, request.path)
+            resource_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
+            logger.info("html_report_resource - analysis_id: %s request.path: %s", analysis_id, request.path)
 
-    try:
-        # CodeQL issue is not relevant as the urls are defined via urls.py
-        with open(resource_path, "rb") as file_:
-            return HttpResponse(file_.read(), content_type=content_type)
-    except IOError as error:
-        logger.error(error)
-        logger.error(request.path)
-
+            try:
+                # CodeQL issue is not relevant as the urls are defined via urls.py
+                with open(resource_path, "rb") as file_:
+                    return HttpResponse(file_.read(), content_type=content_type)
+            except IOError as error:
+                logger.error(error)
+                logger.error(request.path)
     # just in case -> back to report intro
     report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
     html_body = get_template(report_path)
@@ -119,42 +124,43 @@ def get_individual_report(request, analysis_id):
     """
     Get individual firmware report based on scan id (analysis_id)
     """
-    if not analysis_id:
-        logger.error('Bad request for get_individual_report')
-        return JsonResponse(data={'error': 'Bad request'}, status=HTTPStatus.BAD_REQUEST)
-    try:
+    if FirmwareAnalysis.objects.filter(id=analysis_id).exists():
         analysis_object = FirmwareAnalysis.objects.get(id=analysis_id)
-        result = Result.objects.get(firmware_analysis=analysis_object)
+        if analysis_object.hidden is False or analysis_object.user == request.user or request.user.is_superuser:
+            try:
+                result = Result.objects.get(firmware_analysis=analysis_object)
 
-        logger.debug("getting individual report for %s", result)
+                logger.debug("getting individual report for %s", result)
 
-        return_dict = model_to_dict(instance=result, exclude=['vulnerability'])
+                return_dict = model_to_dict(instance=result, exclude=['vulnerability'])
 
-        return_dict['firmware_name'] = analysis_object.firmware_name
-        if analysis_object.firmware:
-            return_dict['id'] = analysis_object.firmware.id
-        else:
-            return_dict['id'] = "Firmware was deleted"
-        return_dict['device_list'] = [str(_device) for _device in analysis_object.device.all()]
-        return_dict['start_date'] = analysis_object.start_date
-        return_dict['end_date'] = analysis_object.end_date
-        return_dict['duration'] = analysis_object.duration
-        return_dict['notes'] = analysis_object.notes
-        return_dict['version'] = analysis_object.version
-        return_dict['path_to_logs'] = analysis_object.path_to_logs
-        return_dict['strcpy_bin'] = json.loads(return_dict['strcpy_bin'])
-        # architecture
-        if isinstance(return_dict['architecture_verified'], dict):
-            arch_ = json.loads(return_dict['architecture_verified'])
-            for key_, value_ in arch_.items():
-                return_dict['architecture_verified'] += f"{key_}-{value_} "
-        else:
-            return_dict['architecture_verified'] = str(return_dict['architecture_verified'])
+                return_dict['firmware_name'] = analysis_object.firmware_name
+                if analysis_object.firmware:
+                    return_dict['id'] = analysis_object.firmware.id
+                else:
+                    return_dict['id'] = "Firmware was deleted"
+                return_dict['device_list'] = [str(_device) for _device in analysis_object.device.all()]
+                return_dict['start_date'] = analysis_object.start_date
+                return_dict['end_date'] = analysis_object.end_date
+                return_dict['duration'] = analysis_object.duration
+                return_dict['notes'] = analysis_object.notes
+                return_dict['version'] = analysis_object.version
+                return_dict['path_to_logs'] = analysis_object.path_to_logs
+                return_dict['strcpy_bin'] = json.loads(return_dict['strcpy_bin'])
+                # architecture
+                if isinstance(return_dict['architecture_verified'], dict):
+                    arch_ = json.loads(return_dict['architecture_verified'])
+                    for key_, value_ in arch_.items():
+                        return_dict['architecture_verified'] += f"{key_}-{value_} "
+                else:
+                    return_dict['architecture_verified'] = str(return_dict['architecture_verified'])
 
-        return JsonResponse(data=return_dict, status=HTTPStatus.OK)
-    except Result.DoesNotExist:
-        logger.error('Report for firmware_id: %s not found in database', analysis_id)
-        return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)
+                return JsonResponse(data=return_dict, status=HTTPStatus.OK)
+            except Result.DoesNotExist:
+                logger.error('Report for firmware_id: %s not found in database', analysis_id)
+                return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)
+    logger.error('Bad request for get_individual_report')
+    return JsonResponse(data={'error': 'Bad request'}, status=HTTPStatus.BAD_REQUEST)
 
 
 @require_http_methods(["GET"])
@@ -257,6 +263,7 @@ def download_zipped(request, analysis_id):
 
     :return: HttpResponse with zipped log directory on success or HttpResponse including error message
     """
+    # TODO only user can download zips
     logger.debug("entry download_zipped")
     try:
         firmware = FirmwareAnalysis.objects.get(id=analysis_id)
@@ -282,6 +289,7 @@ def make_zip(request, analysis_id):
     """
     submit analysis for zipping log directory
     """
+    # TODO only user can make zips
     try:
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         # look for LogZipFile
