@@ -57,7 +57,8 @@ def html_report_path(request, analysis_id, html_path, html_file):
     if FirmwareAnalysis.objects.filter(id=analysis_id).exists():
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         if analysis.hidden is False or analysis.user == request.user or request.user.is_superuser:
-            html_body = get_template(report_path)
+            with open(report_path, 'rb') as requested_file:
+                html_body = requested_file.read()
             logger.debug("html_report - analysis_id: %s path: %s html_file: %s", analysis_id, html_path, html_file)
             return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
         messages.error(request, "User not authorized")

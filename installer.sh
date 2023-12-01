@@ -294,7 +294,13 @@ install_embark_default(){
   #Add user for server
   if ! cut -d: -f1 /etc/passwd | grep -E www-embark ; then
     useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /var/www/embark
+  fi
+  # emba nopw
+  if ! grep 'www-embark ALL=(ALL) NOPASSWD: /var/www/emba/emba' /etc/sudoers ; then
     echo 'www-embark ALL=(ALL) NOPASSWD: /var/www/emba/emba' | EDITOR='tee -a' visudo
+  fi
+  # pkill nopw
+  if ! grep 'www-embark ALL=(ALL) NOPASSWD: /bin/pkill' /etc/sudoers ; then
     echo 'www-embark ALL=(ALL) NOPASSWD: /bin/pkill' | EDITOR='tee -a' visudo
   fi
 
