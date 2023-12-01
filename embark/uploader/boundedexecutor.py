@@ -266,7 +266,6 @@ class BoundedExecutor:
         :param analysis_id: primary key for firmware-analysis entry
         """
         logger.debug("Zipping ID: %s", analysis_id)
-        
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         analysis.finished = False
         analysis.status['finished'] = False
