@@ -7,12 +7,14 @@ import logging
 
 from operator import itemgetter
 from http import HTTPStatus
+from shutil import move
+import codecs
 from uuid import UUID
 
 from django.conf import settings
 from django.forms import model_to_dict
 from django.http.response import Http404
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.contrib import messages
 from django.template.loader import get_template
 from django.http import HttpResponse, JsonResponse
@@ -27,6 +29,7 @@ from dashboard.models import Result
 
 logger = logging.getLogger(__name__)
 
+BLOCKSIZE = 1048576 # or some other, desired size in bytes
 
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -53,14 +56,28 @@ def html_report(request, analysis_id, html_file):
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report_path(request, analysis_id, html_path, html_file):
-    report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
     if FirmwareAnalysis.objects.filter(id=analysis_id).exists():
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         if analysis.hidden is False or analysis.user == request.user or request.user.is_superuser:
-            with open(report_path, 'rb') as requested_file:
-                html_body = requested_file.read()
+            report_path = f'{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/html-report/{html_path}/{html_file}'
             logger.debug("html_report - analysis_id: %s path: %s html_file: %s", analysis_id, html_path, html_file)
-            return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
+            try:
+                return render(request, report_path, {'embarkBackUrl': reverse('embark-ReportDashboard')}, content_type='text/html')
+            except UnicodeDecodeError as decode_error:
+                logger.error("{%s} with error: %s", report_path, decode_error)
+                # removes all non utf8 chars from html USING: https://stackoverflow.com/questions/191359/how-to-convert-a-file-to-utf-8-in-python
+                with codecs.open(report_path, "r", encoding='latin1') as sourceFile:
+                    with codecs.open(f'{report_path}.new', "w", "utf-8") as targetFile:
+                        while True:
+                            contents = sourceFile.read(BLOCKSIZE)
+                            if not contents:
+                                break
+                            targetFile.write(contents)
+                # exchange files
+                move(report_path, f'{report_path}.old')
+                move(f'{report_path}.new', report_path)
+                logger.debug("Removed problematic char from %s", report_path)
+                return render(request, report_path, {'embarkBackUrl': reverse('embark-ReportDashboard')}, content_type='text/html')
         messages.error(request, "User not authorized")
     logger.error("could  not get path - %s", request)
     return redirect("..")
