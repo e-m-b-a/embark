@@ -27,9 +27,12 @@ from uploader.boundedexecutor import BoundedExecutor
 from uploader.models import FirmwareAnalysis, ResourceTimestamp
 from dashboard.models import Result
 
+
+BLOCKSIZE = 1048576     # for codec change
+
+
 logger = logging.getLogger(__name__)
 
-BLOCKSIZE = 1048576 # or some other, desired size in bytes
 
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -67,13 +70,13 @@ def html_report_path(request, analysis_id, html_path, html_file):
                 logger.error("{%s} with error: %s", report_path, decode_error)
                 # removes all non utf8 chars from html USING: https://stackoverflow.com/questions/191359/how-to-convert-a-file-to-utf-8-in-python
                 # CodeQL issue is not relevant
-                with codecs.open(report_path, "r", encoding='latin1') as sourceFile:
-                    with codecs.open(f'{report_path}.new', "w", "utf-8") as targetFile:
+                with codecs.open(report_path, "r", encoding='latin1') as source_file:
+                    with codecs.open(f'{report_path}.new', "w", "utf-8") as target_file:
                         while True:
-                            contents = sourceFile.read(BLOCKSIZE)
+                            contents = source_file.read(BLOCKSIZE)
                             if not contents:
                                 break
-                            targetFile.write(contents)
+                            target_file.write(contents)
                 # exchange files
                 move(report_path, f'{report_path}.old')
                 move(f'{report_path}.new', report_path)
