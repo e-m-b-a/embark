@@ -66,6 +66,7 @@ def html_report_path(request, analysis_id, html_path, html_file):
             except UnicodeDecodeError as decode_error:
                 logger.error("{%s} with error: %s", report_path, decode_error)
                 # removes all non utf8 chars from html USING: https://stackoverflow.com/questions/191359/how-to-convert-a-file-to-utf-8-in-python
+                # CodeQL issue is not relevant
                 with codecs.open(report_path, "r", encoding='latin1') as sourceFile:
                     with codecs.open(f'{report_path}.new', "w", "utf-8") as targetFile:
                         while True:
