@@ -40,7 +40,8 @@ def jsonfield_default_value():
         'module_list': [],
         'last_phase': "",
         'phase_list': [],
-        'finished': False
+        'finished': False,
+        'work': False
     }
 
 

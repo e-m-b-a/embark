@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load tz %}
 {% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/reportDashboard.css' %}"/>{% endblock style %}
 {% block title %}EMBArk report dashboard{% endblock title %}
 {% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
@@ -34,7 +35,6 @@
                     </thead>
 
                     <tbody>
-                    {% load tz %}
                     {% timezone request.session.django_timezone %}
                     {% for firmware in firmwares %}
                         <tr>
@@ -102,7 +102,7 @@
                                                 </form>
                                             {% elif firmware.archived is False %}
                                                 <form action={% url 'embark-make-zip' firmware.id %} method='get'>
-                                                    <button type="submit" class="btn buttonRowElem" >Make Zip Logs</button>
+                                                    <button type="submit" class="btn buttonRowElem" >Make Zip of EMBA-logs</button>
                                                 </form>
                                             {% endif %}
                                             <form action={% url 'embark-html-report' firmware.id 'index.html' %} method='get'>

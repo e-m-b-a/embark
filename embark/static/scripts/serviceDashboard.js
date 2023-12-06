@@ -167,6 +167,28 @@ function add_container_to_finished(status_dict) {
 }
 
 
+function set_container_to_work(status_dict) {
+    "use strict";
+    var $Container = $("#Container_" + status_dict.analysis);
+    $Container.html(`
+        <div class="mainText">
+            <small>`+ status_dict.analysis + `</small>
+            <br>
+            <span>`+ status_dict.firmware_name.split(".")[0] + `</span>
+            <br>
+            <h1> Working </h1>
+        </div>
+        <div class="log tile lastphase">
+            <span>` + status_dict.last_phase +  `</span>
+        </div>
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>`);
+}
+
+
 /**
  * This method is called whenever a message from the backend arrives
  * */
@@ -190,7 +212,7 @@ socket.onmessage = function (event) {
                     // set percentage and other metadata
                     makeProgress(data[analysis_].percentage, data[analysis_].analysis);
                 }
-            } else if (data[analysis_].finished == true){
+            } else if (data[analysis_].finished == true ){
                 newContainer.remove();
                 add_container_to_finished(data[analysis_]);
             } else {
@@ -199,6 +221,9 @@ socket.onmessage = function (event) {
                 livelog_phase(data[analysis_].phase_list, data[analysis_].analysis);
                 // set percentage and other metadata
                 makeProgress(data[analysis_].percentage, data[analysis_].analysis);
+            }
+            if (data[analysis_].work == true){
+                set_container_to_work(data[analysis_]);
             }
         }
     }

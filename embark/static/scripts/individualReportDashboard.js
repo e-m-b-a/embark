@@ -191,7 +191,7 @@ get_individual_report().then(function (returnData) {
         "High CVE": returnData.cve_high,
         "Medium CVE": returnData.cve_medium,
         "Low CVE": returnData.cve_low,
-        "NX disabled binaries": returnData.nx,
+        "NX disabled binaries": returnData.no_exec,
         "RELRO disabled binaries": returnData.relro,
         "PIE disabled binaries": returnData.pie,
         "Stack canaries disabled binaries": returnData.canary,

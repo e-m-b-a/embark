@@ -141,11 +141,13 @@ fi
 # check db and start container
 check_db
 
-# copy emba
-if [[ -d /var/www/emba ]]; then
-  rm -Rf /var/www/emba
+# update cves
+if [[ -d ./emba/external/nvd-json-data-feeds ]]; then
+  (cd ./emba/external/nvd-json-data-feeds && git pull)
 fi
-cp -Ru ./emba/ /var/www/emba/
+
+# sync emba
+rsync -r -u --progress --chown=www-embark:sudo ./emba/ /var/www/emba/
 
 # logs
 if ! [[ -d ./docker_logs ]]; then
