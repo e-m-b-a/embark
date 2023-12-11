@@ -4,24 +4,14 @@
 {% block title %}EMBArk login{% endblock title %}
 {% block maincontent %}
     <div class="login-form-container">
-        {% if error_message %}
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <medium>{{ message }}</medium>
-        </div>
-        {% endif %}
-        {% if success_message %}
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <medium>{{ message }}</medium>
-        </div>
-        {% endif %}
         <div id="embarkLogo">
           <img src="{% static 'content/images/embark_logo.svg' %}" alt="EMBArk logo graphic" height="auto" width="auto"/>
         </div>
         <div class="d-flex justify-content-center">
-            <h3><span class="badge bg-secondary">New</span>Per-user timezone settings in the user menu</h3>
+            <h2><span class="badge bg-primary">New</span>  Version 0.1</h2>
         </div>
         <div class="d-flex justify-content-center">
-          <h3><span class="badge bg-secondary">New</span>New Buttons everywhere</h3>
+          <h3><span class="badge bg-secondary">New</span>  New Buttons everywhere</h3>
         </div>
         <div class="login">
             <form action="{% url 'embark-login' %}" class="login-form" method="post">

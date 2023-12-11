@@ -36,37 +36,25 @@ def register(request):
                 username = body['username']
                 password = body['password']
                 confirm_password = body['confirm_password']
-
-                if password == confirm_password:
-                    logger.debug('Passwords match. Creating user')
-                    user = User.objects.create(username=username)
-                    user.set_password(password)
-                    user.save()
-                    logger.debug('User created')
-                else:
+                if password != confirm_password:
                     logger.debug('Passwords do not match')
-                    return render(
-                        request,
-                        'user/register.html',
-                        {'error_message': True, 'message': 'Passwords do not match.'}
-                    )
-
-                return render(
-                    request,
-                    'user/login.html',
-                    {'success_message': True, 'message': 'Registration successful.'}
-                )
-
+                    messages.success(request, 'Passwords do not match.')
+                    return render(request, 'user/register.html')
+                logger.debug('Passwords match. Creating user')
+                user = User.objects.create(username=username)
+                user.set_password(password)
+                user.save()
+                logger.debug('User created')
+                messages.success(request, 'Registration successful.')
+                return redirect('../../')
             except KeyError:
                 logger.exception('Missing keys from data- Username, password, password_confirm')
-                return render(request, 'user/register.html', {'error_message': True, 'message': 'User data is invalid.'})
+                messages.error(request, 'User data is missing/invalid.')
+                return render(request, 'user/register.html')
         except builtins.Exception as error:
             logger.exception('Wide exception in Signup: %s', error)
-            return render(
-                request,
-                'user/register.html',
-                {'error_message': True, 'message': 'Something went wrong when signing up the user.'}
-            )
+            messages.error(request, 'Something went wrong when signing up the user.')
+            return render(request, 'user/register.html')
     return render(request, 'user/register.html')
 
 
@@ -83,7 +71,8 @@ def embark_login(request):
                 password = body['password']
             except KeyError:
                 logger.exception('Missing keys from data- Username and password')
-                return render(request, 'user/login.html', {'error_message': True, 'message': 'Username or password are wrong.'})
+                messages.error(request, 'Username or password are wrong.')
+                return render(request, 'user/login.html')
 
             logger.debug('Found user name and password')
             user = authenticate(request, username=username, password=password)
@@ -96,12 +85,12 @@ def embark_login(request):
                 return redirect('../../dashboard/main/')
             # else:
             logger.debug('User could not be authenticated')
-            messages.info(request, "Invalid user data")
-            return render(request, 'user/login.html', {'error_message': True, 'message': 'Invalid user data.'})
+            messages.error(request, "Invalid user data")
+            return render(request, 'user/login.html')
         except builtins.Exception as error:
             logger.exception('Wide exception in Signup: %s', error)
-            messages.info(request, "Invalid user data")
-            return render(request, 'user/login.html', {'error_message': True, 'message': 'Something went wrong when logging in the user.'})
+            messages.error(request, 'Something went wrong when logging in the user.')
+            return render(request, 'user/login.html')
     return render(request, 'user/login.html')
 
 
@@ -110,7 +99,8 @@ def embark_login(request):
 def embark_logout(request):     # FIXME this just flushes session_id??!
     logout(request=request)
     logger.debug("Logout user %s", request)
-    return render(request, 'user/login.html', {'success_message': True, 'message': 'Logout successful.'})
+    messages.success(request, 'Logout successful.')
+    return render(request, 'user/login.html')
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -132,26 +122,32 @@ def password_change(request):
                 if user.check_password(old_password):
                     if old_password == new_password:
                         logger.debug('New password = old password')
-                        return render(request, 'user/passwordChange.html', {'error_message': True, 'message': 'New password matches the old password'})
+                        messages.error(request, 'New password matches the old password')
+                        return render(request, 'user/passwordChange.html')
                     if new_password == confirm_password:
                         user.set_password(new_password)
                         user.save()
                         authenticate(request, username=user.username, password=new_password)
                         login(request, user)
                         logger.debug('New password set, user authenticated')
-                        return render(request, 'user/passwordChangeDone.html', {'success_message': True, 'message': 'Password change successful.'})
+                        messages.success(request, 'Password change successful.')
+                        return render(request, 'user/passwordChangeDone.html')
                     else:
                         logger.debug('Passwords do not match')
-                        return render(request, 'user/passwordChange.html', {'error_message': True, 'message': 'Passwords do not match.'})
+                        messages.error(request, 'Passwords do not match.')
+                        return render(request, 'user/passwordChange.html')
                 else:
                     logger.debug('Old password is incorrect')
-                    return render(request, 'user/passwordChange.html', {'error_message': True, 'message': 'Old password is incorrect.'})
+                    messages.error(request, 'Old password is incorrect.')
+                    return render(request, 'user/passwordChange.html')
             except KeyError:
                 logger.exception('Missing keys from data-passwords')
-                return render(request, 'user/passwordChange.html', {'error_message': True, 'message': 'Some fields are empty!'})
+                messages.error(request, 'Some fields are empty!')
+                return render(request, 'user/passwordChange.html')
         except builtins.Exception as error:
             logger.exception('Wide exception in Password Change: %s', error)
-            return render(request, 'user/passwordChange.html', {'error_message': True, 'message': 'Something went wrong when changing the password for the user.'})
+            messages.error(request, 'Something went wrong when changing the password for the user.')
+            return render(request, 'user/passwordChange.html')
     return render(request, 'user/passwordChange.html')
 
 
@@ -167,7 +163,8 @@ def acc_delete(request):
             "%H:%M:%S")  # workaround for not duplicating entry users_user.username
         user.is_active = False
         user.save()
-        return render(request, 'user/register.html', {'success_message': True, 'message': 'Account successfully deleted.'})
+        messages.success(request, 'Account successfully deleted.')
+        return render(request, 'user/register.html')    # TODO should be redirect
     return render(request, 'user/accountDelete.html')
 
 
