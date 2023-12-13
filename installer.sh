@@ -204,8 +204,6 @@ reset_docker(){
 }
 
 install_debs(){
-  local DOCKER_COMP_VER=""
-  local DOCKER_VER=""
   echo -e "\n${GREEN}""${BOLD}""Install debian packages for EMBArk installation""${NC}"
   apt-get update -y
   # Git
