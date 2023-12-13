@@ -68,7 +68,7 @@ import_helper(){
 }
 
 # Source: https://stackoverflow.com/questions/4023830/how-to-compare-two-strings-in-dot-separated-version-format-in-bash
-version(){ echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; }
+# version(){ echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; }
 
 save_old_env(){
   if ! [[ -d ./safe ]]; then
@@ -204,8 +204,6 @@ reset_docker(){
 }
 
 install_debs(){
-  local DOCKER_COMP_VER=""
-  local DOCKER_VER=""
   echo -e "\n${GREEN}""${BOLD}""Install debian packages for EMBArk installation""${NC}"
   apt-get update -y
   # Git
@@ -226,37 +224,32 @@ install_debs(){
   fi
   # Gcc
   if ! command -v gcc > /dev/null ; then
-    apt-get install build-essential
+    apt-get install -y build-essential
   fi
-  # Docker
+  # Docker + docker-compose
   if [[ "${WSL}" -eq 1 ]]; then
     echo -e "\n${ORANGE}WARNING: If you are using WSL2, disable docker integration from the docker-desktop daemon!${NC}"
     read -p "Fix docker stuff, then continue. Press any key to continue ..." -n1 -s -r
   fi
-  if ! command -v docker > /dev/null ; then
-    apt-get install -y docker.io
+  if ! command -v docker > /dev/null || ! command -v docker-compose > /dev/null ; then
+    # Add Docker's official GPG key:
+    apt-get install -y ca-certificates curl gnupg
+    install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    chmod a+r /etc/apt/keyrings/docker.gpg
+    # Add the repository to Apt sources:
+    # shellcheck source=/dev/null
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+      $(. /etc/os-release && echo "${VERSION_CODENAME}") stable" | \
+      tee /etc/apt/sources.list.d/docker.list > /dev/null
+    apt-get update -y
+    apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
   fi
-  DOCKER_VER=$(pip3 show docker | grep Version: | awk '{print $2}')
-  if [[ $(version "${DOCKER_VER}") -ge $(version "7.0.0") ]]; then
-    echo -e "\n${ORANGE}WARNING: compatibility of the used docker version is unknown!${NC}"
-    echo -e "\n${ORANGE}Please consider downgrading your pip3 docker version. \$pip3 install \"docker<7.0.0\"${NC}"
-    read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
+  # alias for compose to stay backwards comp
+  if docker --help | grep -q compose; then
+    alias docker-compose="docker compose"
   fi
-  # docker-compose
-  if ! command -v docker-compose > /dev/null ; then
-    pip3 install docker-compose --upgrade || true
-    if ! [[ -d /usr/bin/docker-compose ]]; then
-      ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
-    fi
-  else
-    DOCKER_COMP_VER=$(docker-compose -v | grep version | awk '{print $3}' | tr -d ',')
-    if [[ $(version "${DOCKER_COMP_VER}") -lt $(version "1.28.5") ]]; then
-      echo -e "\n${ORANGE}WARNING: compatibility of the used docker-compose version is unknown!${NC}"
-      echo -e "\n${ORANGE}Please consider updating your docker-compose installation to version 1.28.5 or later.${NC}"
-      read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
-    fi
-  fi
-
   # python3-dev
   if ! dpkg -l python3.10-dev &>/dev/null; then
     apt-get install -y python3.10-dev || apt-get install -y -q python3-dev
