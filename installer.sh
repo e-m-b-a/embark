@@ -246,6 +246,10 @@ install_debs(){
     apt-get update -y
     apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
   fi
+  # alias for compose to stay backwards comp
+  if docker --help | grep -q compose; then
+    alias docker-compose="docker compose"
+  fi
   # python3-dev
   if ! dpkg -l python3.10-dev &>/dev/null; then
     apt-get install -y python3.10-dev || apt-get install -y -q python3-dev
@@ -362,13 +366,13 @@ install_embark_default(){
   fi
 
   # download images for container
-  docker compose pull
-  docker compose up -d
+  docker-compose pull
+  docker-compose up -d
 
   # activate daemon
   systemctl start embark.service
   check_db
-  docker compose stop
+  docker-compose stop
   echo -e "${GREEN}""${BOLD}""Ready to use \$sudo ./run-server.sh ""${NC}"
   echo -e "${GREEN}""${BOLD}""Which starts the server on (0.0.0.0) port 80 ""${NC}"
 }
@@ -438,11 +442,11 @@ install_embark_dev(){
   chmod 644 .env
 
   # download images for container
-  docker compose pull
-  docker compose up -d
+  docker-compose pull
+  docker-compose up -d
 
   check_db
-  docker compose stop
+  docker-compose stop
   echo -e "${GREEN}""${BOLD}""Ready to use \$sudo ./dev-tools/debug-server-start.sh""${NC}"
   echo -e "${GREEN}""${BOLD}""Or use otherwise""${NC}"
 }

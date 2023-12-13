@@ -242,7 +242,7 @@ dockerchecker(){
   mapfile -t DOCKER_COMPS < <(find . -maxdepth 1 -type d -name migrations -prune -false -o -iname "docker-compose*.yml")
   for DOCKER_COMP in "${DOCKER_COMPS[@]}"; do
     echo -e "\\n""${GREEN}""Run docker check on ${DOCKER_COMP}:""${NC}""\\n"
-    if docker compose -f "${DOCKER_COMP}" config 1>/dev/null || [[ $? -ne 1 ]]; then # TODO check
+    if docker-compose -f "${DOCKER_COMP}" config 1>/dev/null || [[ $? -ne 1 ]]; then # TODO check
       echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
     else
       echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
