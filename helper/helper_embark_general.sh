@@ -113,9 +113,9 @@ check_db() {
   HOST_ENV=$(grep DATABASE_HOST ./.env | sed 's/DATABASE\_HOST\=//')
   echo -e "\\n${ORANGE}""${BOLD}""checking database""${NC}\\n""${BOLD}=================================================================${NC}"
   echo -e "${BLUE}""${BOLD}""1. checking startup""${NC}\\n"
-  if docker-compose -f ./docker-compose.yml up -d ; then
+  if docker compose -f ./docker-compose.yml up -d ; then
     echo -e "${GREEN}""${BOLD}""Finished setup mysql and redis docker images""${NC}"
-    add_to_env_history "${PW_ENV}" "$(docker-compose ps -q embark_db)"
+    add_to_env_history "${PW_ENV}" "$(docker compose ps -q embark_db)"
   else
     echo -e "${ORANGE}""${BOLD}""Failed setup mysql and redis docker images""${NC}"
     exit 1
