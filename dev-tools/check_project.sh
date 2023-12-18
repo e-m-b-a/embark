@@ -183,6 +183,8 @@ banditer() {
     echo -e "\\n""${ORANGE}""bandit not found!""${NC}""\\n""${ORANGE}""Install bandit via 'apt-get install bandit'!""${NC}\\n"
     exit 1
   fi
+  
+  mapfile -t PY_SCRIPTS < <(find . -type d -name migrations -prune -false -o -iname "*.py" -not -path "./.venv/*")
 
   for PY_SCRIPT in "${PY_SCRIPTS[@]}"; do
     echo -e "\\n""${GREEN}""Run bandit on ${PY_SCRIPT}:""${NC}""\\n"
