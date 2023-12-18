@@ -30,6 +30,7 @@ These people have contributed to EMBArk:
 * [Mani1210](https://github.com/Mani1210)
 * [Maximilian Wagner](https://github.com/MaximilianWagner)
 * [ravichandraachanta](https://github.com/ravichandraachanta)
+* [Christian Bieg](https://github.com/0x6368)
 * [Vaish1795](https://github.com/Vaish1795)
 * [Vamsi Krishna Annavarapu](https://github.com/VKrishna09)
 * [Yuliana Poliakova](https://github.com/YulianaPoliakova)
