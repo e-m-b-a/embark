@@ -250,6 +250,10 @@ install_debs(){
   if ! command -v gcc > /dev/null ; then
     apt-get install -y build-essential
   fi
+  # jq
+  if ! command -v jq > /dev/null ; then
+    apt-get install -y jq
+  fi
   # Docker + docker-compose
   if [[ "${WSL}" -eq 1 ]]; then
     echo -e "\n${ORANGE}WARNING: If you are using WSL2, disable docker integration from the docker-desktop daemon!${NC}"
