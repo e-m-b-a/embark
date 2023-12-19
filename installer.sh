@@ -691,7 +691,7 @@ if [[ ${EUID} -ne 0 ]]; then
   exit 1
 fi
 
-if [[ -d .git ]]; then
+if ! [[ -d .git ]]; then
   export NO_GIT=1
 fi
 
