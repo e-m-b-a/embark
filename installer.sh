@@ -153,13 +153,12 @@ install_emba(){
 }
 
 install_emba_src(){
-  local TARBALL_URL_=""
+  local TARBALL_URL_="https://github.com/e-m-b-a/emba/tarball/master/"
 
   echo -e "\n${GREEN}""${BOLD}""Installation of the firmware scanner EMBA on host""${NC}"
   if ! [[ -f ./emba/installer.sh ]]; then
-    TARBALL_URL_="$(curl -s https://api.github.com/repos/e-m-b-a/emba/releases/latest | jq ".tarball_url")"
     if [[ -n "${TARBALL_URL_}" ]]; then
-      wget -O emba.tar.gz "${TARBALL_URL_//\"/}"
+      wget -O emba.tar.gz "${TARBALL_URL_}"
       # extract all but toplevel node into existing emba dir
       tar -xf emba.tar.gz -C emba --strip-components 1
     fi
@@ -249,10 +248,6 @@ install_debs(){
   # Gcc
   if ! command -v gcc > /dev/null ; then
     apt-get install -y build-essential
-  fi
-  # jq
-  if ! command -v jq > /dev/null ; then
-    apt-get install -y jq
   fi
   # Docker + docker-compose
   if [[ "${WSL}" -eq 1 ]]; then
