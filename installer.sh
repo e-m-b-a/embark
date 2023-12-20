@@ -160,8 +160,8 @@ install_emba_src(){
     TARBALL_URL_="$(curl -s https://api.github.com/repos/e-m-b-a/emba/releases/latest | jq ".tarball_url")"
     if [[ -n "${TARBALL_URL_}" ]]; then
       wget -O emba.tar.gz "${TARBALL_URL_//\"/}"
-      tar -xf emba.tar.gz
-      mv "e-m-b-a-emba-"* ./emba
+      # extract all but toplevel node into existing emba dir
+      tar -xf emba.tar.gz -C emba --strip-components 1
     fi
   fi
   [[ -f ./emba/installer.sh ]] || ( echo "Could not install EMBA" && exit 1 )
