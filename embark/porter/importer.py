@@ -33,8 +33,10 @@ def result_read_in(analysis_id):
                 res = f50_csv(file_, analysis_id)
                 logger.debug("Result for %s created or updated", analysis_id)
             elif file_.endswith('f20_vul_aggregator.csv'):
-                res = f20_csv(file_, analysis_id)
-                logger.debug("Result for %s created or updated", analysis_id)
+                logger.info("f20 readin for %s skipped", analysis_id)
+                # FIXME f20 in emba is broken!
+                # res = f20_csv(file_, analysis_id)
+                # logger.debug("Result for %s created or updated", analysis_id)
             # TODO license info etc
     return res
 
