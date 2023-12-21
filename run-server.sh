@@ -147,7 +147,8 @@ if [[ -d ./emba/external/nvd-json-data-feeds ]]; then
 fi
 
 # sync emba
-rsync -r -u --progress --chown=www-embark:sudo ./emba/ /var/www/emba/
+cp -Rf ./emba/ /var/www/emba/
+chown -R www-embark /var/www/emba/
 
 # logs
 if ! [[ -d ./docker_logs ]]; then
