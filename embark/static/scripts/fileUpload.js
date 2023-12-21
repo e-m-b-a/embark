@@ -1,13 +1,5 @@
 // jshint unused:false
 // ^ this should only be added AFTER successful check (disables warning for global functions)
-/**
- * The following event calls prevent default to turn off the browsers default drag and drop handler
- * @param {*} ev Event
- */
-function dragOverHandler(ev) {
-  "use strict";
-  ev.preventDefault();
-}
 
 function getCookie(name) {
     "use strict";
@@ -47,7 +39,7 @@ $(window).bind("load", function() {
  * Makes Ajax call and save files locally
  * @param {*} formData Information of the uploaded file or Files
  */
- async function postFiles(formData) {
+async function postFiles(formData) {
   "use strict";
   try {
     //formData.append('file', fileData);
@@ -97,7 +89,7 @@ $(window).bind("load", function() {
       }
     });
   } catch (error) {
-      console.log(error.message);
+    console.log(error.message);
   }
 }
 
@@ -105,15 +97,61 @@ $(window).bind("load", function() {
  * Checks for any Multiple uploads and the Passes to save
  */
 function saveFiles() {
-    "use strict";
-    var progressBar = document.getElementById("progress-wrapper");
-    progressBar.style.display = "block";
-    var fileData = document.getElementById('file-input').files;
-    var formData = new FormData();
-    for (let index = 0; index < fileData.length; index++) {
-      fileData[index].inputFileName = fileData[index].name;
-      formData.append('file', fileData[index]);
-    }
+  "use strict";
+  var progressBar = document.getElementById("progress-wrapper");
+  progressBar.style.display = "block";
+  var fileData = document.getElementById('file-input').files;
+  var formData = new FormData();
+  for (let index = 0; index < fileData.length; index++) {
+    fileData[index].inputFileName = fileData[index].name;
+    formData.append('file', fileData[index]);
+  }
   postFiles(formData);
 }
 
+function dragOverHandler(ev) {
+  "use strict";
+  console.log("File(s) in drop zone");
+
+  // Prevent default behavior (Prevent file from being opened)
+  ev.preventDefault();
+  ev.target.classList.add('highlight');
+}
+
+function addFiles(files) {
+  "use strict";
+  var progressBar = document.getElementById("progress-wrapper");
+  progressBar.style.display = "block";
+  var fileData = files;
+  var formData = new FormData();
+  for (let index = 0; index < fileData.length; index++) {
+    fileData[index].inputFileName = fileData[index].name;
+    formData.append('file', fileData[index]);
+  }
+  postFiles(formData);
+}
+
+function dropHandler(ev) {
+  "use strict";
+  console.log("File(s) dropped");
+
+  // Prevent default behavior (Prevent file from being opened)
+  ev.preventDefault();
+  if (ev.dataTransfer.items) {
+    // Use DataTransferItemList interface to access the file(s)
+    [...ev.dataTransfer.items].forEach((item, i) => {
+      // If dropped items aren't files, reject them
+      if (item.kind === "file") {
+        const file = item.getAsFile();
+        console.log(`… file[${i}].name = ${file.name}`);
+      }
+    });
+  } else {
+    // Use DataTransfer interface to access the file(s)
+    [...ev.dataTransfer.files].forEach((file, i) => {
+      console.log(`… file[${i}].name = ${file.name}`);
+    });
+  }
+  addFiles(ev.dataTransfer.files);
+  ev.target.classList.remove('highlight');
+}

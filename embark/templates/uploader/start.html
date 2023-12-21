@@ -8,7 +8,7 @@
         <form action="{% url 'embark-uploader-start-analysis' %}" method="post" id="analyze-form">
             {% csrf_token %}
             <div class="innerBlock">
-                <label for="expertMode">Expert mode</label>
+                <label for="expertModeSwitch">Expert mode</label>
                 <label class="switch">
                     <input id="expertModeSwitch" type="checkbox" onclick="expertModeOn()"/>
                     <span class="slider round"></span>
