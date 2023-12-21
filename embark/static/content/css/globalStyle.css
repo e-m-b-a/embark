@@ -36,8 +36,6 @@ textarea:focus,
 .form-control:focus,
 .btn:focus {
     outline: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
     box-shadow: none;
 }
 
@@ -137,6 +135,7 @@ button[type="delete"]:hover {
     background-color: #fff;
     color: #000;
     padding-top: 12px;
+    border-radius: 10px;
 }
 
 .innerBlock {
