@@ -565,12 +565,12 @@ uninstall(){
   if [[ -d ./emba/external ]]; then
     rm -r ./emba/external/
   fi
-  if [[ "${NO_GIT}" -eq 1 && ${REFORCE} -eq 0 ]]; then
+  if [[ "${NO_GIT}" -eq 1 && "${REFORCE}" -eq 0 ]]; then
     # simple delete emba
     rm -RIv ./emba
   else
     # delete/uninstall submodules
-    if [[ ${REFORCE} -eq 1 ]]; then
+    if [[ "${REFORCE}" -eq 1 ]]; then
       sudo -u "${SUDO_USER:-${USER}}" git submodule status
     else
       if [[ $(sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git status --porcelain --untracked-files=no) ]]; then
