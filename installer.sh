@@ -27,6 +27,7 @@ export DEFAULT=0
 export DEV=0
 export EMBA_ONLY=0
 export NO_EMBA=0
+export NO_GIT=0
 
 export WSL=0
 
@@ -151,6 +152,29 @@ install_emba(){
   echo -e "\n""--------------------------------------------------------------------""${NC}"
 }
 
+install_emba_src(){
+  local TARBALL_URL_="https://github.com/e-m-b-a/emba/tarball/master/"
+
+  echo -e "\n${GREEN}""${BOLD}""Installation of the firmware scanner EMBA on host""${NC}"
+  if ! [[ -f ./emba/installer.sh ]]; then
+    if [[ -n "${TARBALL_URL_}" ]]; then
+      wget -O emba.tar.gz "${TARBALL_URL_}"
+      # extract all but toplevel node into existing emba dir
+      tar -xf emba.tar.gz -C emba --strip-components 1
+    fi
+  fi
+  [[ -f ./emba/installer.sh ]] || ( echo "Could not install EMBA" && exit 1 )
+  cd emba
+  ./installer.sh -d || ( echo "Could not install EMBA" && exit 1 )
+  cd ..
+  if ! (cd emba && ./emba -d 1); then
+    echo -e "\n${RED}""${BOLD}""EMBA installation failed""${NC}"
+    exit 1
+  fi
+  chown -R "${SUDO_USER:-${USER}}" emba
+  echo -e "\n""--------------------------------------------------------------------""${NC}"
+}
+
 create_ca (){
   # FIXME could use some work
   echo -e "\n${GREEN}""${BOLD}""Creating SSL Cert""${NC}"
@@ -190,13 +214,12 @@ reset_docker(){
 
   # EMBArk
   docker_image_rm "mysql" "latest"
-  docker_image_rm "redis" "5"
+  docker_image_rm "redis" "5"   # FIXME check newer version
   docker_network_rm "embark_backend"
 
   # EMBA
   if [[ "${REFORCE}" -eq 0 ]]; then
     docker_image_rm "embeddedanalyzer/emba" "latest"
-    docker_network_rm "emba_runs"
   fi
 
   docker container prune -f --filter "label=flag" || true
@@ -274,7 +297,7 @@ uninstall_daemon(){
     systemctl stop embark.service
     systemctl disable embark.service
   fi
-  sudo -u "${SUDO_USER:-${USER}}" git checkout HEAD -- embark.service
+  sed -i "s|${PWD}|{\$EMBARK_ROOT_DIR}|g" embark.service
   systemctl daemon-reload
 }
 
@@ -451,14 +474,17 @@ install_embark_dev(){
   echo -e "${GREEN}""${BOLD}""Or use otherwise""${NC}"
 }
 
-uninstall (){
+uninstall(){
   echo -e "[+]${CYAN}""${BOLD}""Uninstalling EMBArk""${NC}"
-  # check for changes
-  if [[ $(git status --porcelain --untracked-files=no --ignore-submodules=all) ]]; then
-    # Changes
-    echo -e "[!!]${RED}""${BOLD}""Changes detected - please stash or commit them ${ORANGE}( \$git stash )""${NC}"
-    git status
-    exit 1
+
+  if [[ "${NO_GIT}" -eq 0 ]]; then
+    # check for changes
+    if [[ $(git status --porcelain --untracked-files=no --ignore-submodules=all) ]]; then
+      # Changes
+      echo -e "[!!]${RED}""${BOLD}""Changes detected - please stash or commit them ${ORANGE}( \$git stash )""${NC}"
+      git status
+      exit 1
+    fi
   fi
 
   # delete directories
@@ -503,7 +529,6 @@ uninstall (){
     fi
   fi
 
-
   # delete user www-embark and reset visudo
   echo -e "${ORANGE}""${BOLD}""Delete user""${NC}"
 
@@ -535,23 +560,27 @@ uninstall (){
   # delete all docker interfaces and containers + images
   reset_docker
   echo -e "${ORANGE}""${BOLD}""Consider running " "${CYAN}""\$docker system prune""${NC}"
-
-  # delete/uninstall submodules
+  
   # emba
   if [[ -d ./emba/external ]]; then
     rm -r ./emba/external/
   fi
-  # all submodules
-  if [[ ${REFORCE} -eq 1 ]]; then
-    sudo -u "${SUDO_USER:-${USER}}" git submodule status
+  if [[ "${NO_GIT}" -eq 1 && "${REFORCE}" -eq 0 ]]; then
+    # simple delete emba
+    rm -RIv ./emba
   else
-    if [[ $(sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git status --porcelain --untracked-files=no) ]]; then
-      echo -e "[!!]${RED}""${BOLD}""Submodule changes detected - please commit them...otherwise they will be lost""${NC}"
-      read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
+    # delete/uninstall submodules
+    if [[ "${REFORCE}" -eq 1 ]]; then
+      sudo -u "${SUDO_USER:-${USER}}" git submodule status
+    else
+      if [[ $(sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git status --porcelain --untracked-files=no) ]]; then
+        echo -e "[!!]${RED}""${BOLD}""Submodule changes detected - please commit them...otherwise they will be lost""${NC}"
+        read -p "If you know what you are doing you can press any key to continue ..." -n1 -s -r
+      fi
+      sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git reset --hard
+      sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git clean -f -x
+      sudo -u "${SUDO_USER:-${USER}}" git submodule deinit --all -f
     fi
-    sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git reset --hard
-    sudo -u "${SUDO_USER:-${USER}}" git submodule foreach git clean -f -x
-    sudo -u "${SUDO_USER:-${USER}}" git submodule deinit --all -f
   fi
 
   # stop&reset daemon
@@ -559,19 +588,22 @@ uninstall (){
     uninstall_daemon
     systemctl daemon-reload
   fi
-  sudo -u "${SUDO_USER:-${USER}}" git checkout HEAD -- embark.service
-
-  # reset ownership etc
 
   # reset server-certs
-  sudo -u "${SUDO_USER:-${USER}}" git checkout HEAD -- cert
+  rm -RIv ./cert/*
 
   # final
   if [[ "${REFORCE}" -eq 0 ]]; then
-    sudo -u "${SUDO_USER:-${USER}}" git reset
     rm -r ./safe
   fi
-  echo -e "${ORANGE}""${BOLD}""Consider ""${CYAN}""\$git pull""${ORANGE}""${BOLD}"" and ""${CYAN}""\$git clean""${NC}"
+  if [[ "${NO_GIT}" -eq 0 ]]; then
+    sudo -u "${SUDO_USER:-${USER}}" git checkout HEAD -- embark.service
+    sudo -u "${SUDO_USER:-${USER}}" git checkout HEAD -- cert
+    sudo -u "${SUDO_USER:-${USER}}" git reset
+    echo -e "${ORANGE}""${BOLD}""Consider ""${CYAN}""\$git pull""${ORANGE}""${BOLD}"" and ""${CYAN}""\$git clean""${NC}"
+  else
+    echo -e "${ORANGE}""${BOLD}""Consider removing this directory manually""${NC}"
+  fi
 }
 
 echo -e "\\n${ORANGE}""${BOLD}""EMBArk Installer""${NC}\\n""${BOLD}=================================================================${NC}"
@@ -658,6 +690,10 @@ if [[ ${EUID} -ne 0 ]]; then
   exit 1
 fi
 
+if ! [[ -d .git ]]; then
+  export NO_GIT=1
+fi
+
 if [[ ${REFORCE} -eq 1 ]] && [[ ${UNINSTALL} -eq 1 ]]; then
   save_old_env
   uninstall
@@ -673,7 +709,12 @@ install_debs
 sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "${PWD}"
 
 if [[ "${NO_EMBA}" -eq 0 ]]; then
-  install_emba
+  # use git or release
+  if [[ "${NO_GIT}" -eq 1 ]]; then
+    install_emba_src
+  else
+    install_emba
+  fi
 fi
 if [[ "${EMBA_ONLY}" -eq 1 ]]; then
   exit 0
