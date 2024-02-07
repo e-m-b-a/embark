@@ -15,6 +15,11 @@ www/
 safe/
 .embark_db_backup
 
+# temp dirs/files
+.tmp/
+**/.tmp/
+**/*.tmp
+
 # other stuff
 *.zip
 *.bin
