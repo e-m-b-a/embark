@@ -326,6 +326,9 @@ class FirmwareAnalysis(models.Model):
     # status/logreader-stuff
     status = models.JSONField(null=False, default=jsonfield_default_value)
 
+    # additional Labels
+    label = models.ManyToManyField(Label, help_text='tag/label', related_query_name='analysis-label', editable=True, max_length=MAX_LENGTH, blank=True)
+
     class Meta:
         app_label = 'uploader'
 
