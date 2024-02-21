@@ -10,17 +10,11 @@
     <div class="col-sm" id="reportDashboardMainContainer">
 
             {% csrf_token %}
-            <!-- Iterate over all fields and set expmode on fields in expert mode -->
             <div class="col-sm-2 input-group float-right searchBar">
-                <input type="text" class="form-control input-lg" placeholder="Search..." id="mySearchText"/>
-                <span class="input-group-btn">
-                    <button class="btn btn-info btn-sm" type="submit" id="mySearchButton">
-                        <svg height="21" viewBox="0 0 21 21" width="21" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd" stroke="#000" stroke-linecap="round" stroke-linejoin="round"><circle cx="8.5" cy="8.5" r="5"/><path d="m17.571 17.5-5.571-5.5"/></g></svg>
-                    </button>
-                </span>
+                <input type="text" class="form-control input-lg" placeholder="Search..." id="search"/>
             </div>
             <div class="tableData">
-                <table class="table table-striped table-light table-hover" id="report-table">
+                <table class="table table-striped table-light table-hover" id="report-table-head">
                     <thead>
                     <tr>
                         <th data-priority="2" scope="col">ID</th>
@@ -35,7 +29,7 @@
                     </tr>
                     </thead>
 
-                    <tbody>
+                    <tbody  id="report-table">
                     {% timezone request.session.django_timezone %}
                     {% for firmware in firmwares %}
                         <tr>
@@ -66,8 +60,8 @@
                                         {% if firmware.label.all is not None %}
                                             {% for label in firmware.label.all %}
                                                 <div class="col-sm">
-                                                    <!-- TODO clinking should filter for this label -->
-                                                    <a href="#" class="badge rounded-pill bg-info">{{ label.label_name }}</a>
+                                                    <!-- TODO clicking should filter for this label -->
+                                                    <button onclick="label_filter('{{ label.label_name }}');" class="badge rounded-pill bg-info">{{ label.label_name }}</button>
                                                 </div>
                                             {% endfor %}
                                         {% endif %}
@@ -230,17 +224,20 @@
 {% endblock maincontent %}
 {% block inlinejs %}
     <script>
-        $(document).ready(function() {
-            let table = $('#report-table').DataTable({sDom: 'lrtip'});
-
-            $('#mySearchButton').on( 'keyup click', function () {
-                table.search($('#mySearchText').val()).draw();
-            } );
-
-            $("#mySearchText").change(function(){
-                table.search($('#mySearchText').val()).draw();
+        $("#search").on("keyup", function() {
+            var value = $(this).val().toLowerCase();
+            $("#report-table tr").filter(function() {
+                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
             });
-        } );
+        });
 
+        function label_filter(label){
+            // TODO
+            var value = label.toLowerCase();
+            $("#report-table tr").filter(function() {
+                console.log($(this).children().eq(8).find('.button').text())
+                //$(this).toggle($(this).find('#td').eq(8).text().toLowerCase().indexOf(value) > -1)
+            });
+        };
     </script>
 {% endblock inlinejs %}
