@@ -12,7 +12,7 @@ from django.views.decorators.csrf import csrf_protect
 
 from uploader.boundedexecutor import BoundedExecutor
 from uploader.forms import DeviceForm, FirmwareAnalysisForm, DeleteFirmwareForm, LabelForm, VendorForm
-from uploader.models import Device, FirmwareFile
+from uploader.models import FirmwareFile
 
 logger = logging.getLogger(__name__)
 

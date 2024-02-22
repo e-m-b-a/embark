@@ -264,10 +264,11 @@ def create_label(request):
         messages.error(request, 'creation failed.')
     return redirect('..')
 
+
 @csrf_protect
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def add_label(request,analysis_id):
+def add_label(request, analysis_id):
     req_logger.info("User %s called add label", request.user.username)
     form = LabelSelectForm(request.POST)
     if form.is_valid():
