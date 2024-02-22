@@ -326,7 +326,7 @@ copy_right_check(){
   local DIR_="${2:-}"
   local EXCLUDE_="${3:-}"
   echo -e "\\n""${ORANGE}""${BOLD}""EMBArk Copyright check""${NC}""\\n""${BOLD}""=================================================================""${NC}"
-  mapfile -t COPYRIGHT_LINE_ < <(find "${DIR_}" -type d -path "${EXCLUDE_}" -prune -false -o -type f -path "${0}" -prune -false -o -iname "*.sh" -exec grep -H "Copyright" {} \;)
+  mapfile -t COPYRIGHT_LINE_ < <(find "${DIR_}" -type d -path "${PWD}/emba" -prune -false -o -type d -path "${EXCLUDE_}" -prune -false -o -type f -path "${0}" -prune -false -o -iname "*.sh" -exec grep -H "Copyright" {} \;)
   if [[ "${#COPYRIGHT_LINE_[@]}" -gt 0 ]]; then
     for LINE_ in "${COPYRIGHT_LINE_[@]}"; do
       if ! grep -q "${YEAR_}.*Siemens Energy AG" "${LINE_%%:*}" && ! grep -q "Siemens AG" "${LINE_%%:*}"; then
