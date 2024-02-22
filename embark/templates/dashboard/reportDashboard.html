@@ -60,8 +60,7 @@
                                         {% if firmware.label.all is not None %}
                                             {% for label in firmware.label.all %}
                                                 <div class="col-sm">
-                                                    <!-- TODO clicking should filter for this label -->
-                                                    <button onclick="label_filter('{{ label.label_name }}');" class="badge rounded-pill bg-info">{{ label.label_name }}</button>
+                                                    <button onclick="onclick_label('label={{ label.label_name }}');" class="label badge rounded-pill bg-info">{{ label.label_name }}</button>
                                                 </div>
                                             {% endfor %}
                                         {% endif %}
@@ -204,9 +203,9 @@
                                                         {% bootstrap_button "Add" button_type="submit" button_class="btn-primary" %}
                                                     </div>
                                                 </form>
+                                                {% block label %}{% include "dashboard/label.html" %}{% endblock label %}
                                             </div>
                                             <div class="modal-footer">
-                                                {% block label %}{% include "dashboard/label.html" %}{% endblock label %}
                                             </div>
                                         </div>
                                     </div>
@@ -223,21 +222,10 @@
     </div>
 {% endblock maincontent %}
 {% block inlinejs %}
-    <script>
+    <script type="text/javascript">
         $("#search").on("keyup", function() {
-            var value = $(this).val().toLowerCase();
-            $("#report-table tr").filter(function() {
-                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-            });
+            search($(this).val());
         });
-
-        function label_filter(label){
-            // TODO
-            var value = label.toLowerCase();
-            $("#report-table tr").filter(function() {
-                console.log($(this).children().eq(8).find('.button').text())
-                //$(this).toggle($(this).find('#td').eq(8).text().toLowerCase().indexOf(value) > -1)
-            });
-        };
     </script>
+    <script type="text/javascript" src="{% static 'scripts/reportDashboard.js' %}"></script>
 {% endblock inlinejs %}
