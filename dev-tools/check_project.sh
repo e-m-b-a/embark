@@ -2,7 +2,7 @@
 
 # EMBArk - The firmware security scanning environment
 #
-# Copyright 2020-2023 Siemens Energy AG
+# Copyright 2020-2024 Siemens Energy AG
 # Copyright 2020-2021 Siemens AG
 #
 # EMBArk comes with ABSOLUTELY NO WARRANTY.
@@ -326,7 +326,7 @@ copy_right_check(){
   local DIR_="${2:-}"
   local EXCLUDE_="${3:-}"
   echo -e "\\n""${ORANGE}""${BOLD}""EMBArk Copyright check""${NC}""\\n""${BOLD}""=================================================================""${NC}"
-  mapfile -t COPYRIGHT_LINE_ < <(find "${DIR_}" -type d -path "${EXCLUDE_}" -prune -false -o -type f -path "${0}" -prune -false -o -iname "*.sh" -exec grep -H "Copyright" {} \;)
+  mapfile -t COPYRIGHT_LINE_ < <(find "${DIR_}" -type d -path "${PWD}/emba" -prune -false -o -type d -path "${EXCLUDE_}" -prune -false -o -type f -path "${0}" -prune -false -o -iname "*.sh" -exec grep -H "Copyright" {} \;)
   if [[ "${#COPYRIGHT_LINE_[@]}" -gt 0 ]]; then
     for LINE_ in "${COPYRIGHT_LINE_[@]}"; do
       if ! grep -q "${YEAR_}.*Siemens Energy AG" "${LINE_%%:*}" && ! grep -q "Siemens AG" "${LINE_%%:*}"; then
@@ -359,7 +359,7 @@ list_linter_exceptions "bandit" "$PWD" "${PWD}/.venv"
 pylinter
 check_django
 yamlchecker
-copy_right_check 2023 "${PWD}" "${PWD}/emba_logs"
+copy_right_check 2024 "${PWD}" "${PWD}/emba_logs"
 
 if [[ "${#MODULES_TO_CHECK_ARR[@]}" -gt 0 ]]; then
   echo -e "\\n\\n""${GREEN}${BOLD}""SUMMARY:${NC}\\n"
