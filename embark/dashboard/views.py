@@ -11,16 +11,19 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.shortcuts import redirect
+from django.views.decorators.csrf import csrf_protect
 from tracker.forms import AssociateForm
 from uploader.boundedexecutor import BoundedExecutor
+from uploader.forms import LabelForm
 
 from uploader.models import FirmwareAnalysis
 from dashboard.models import Result
-from dashboard.forms import StopAnalysisForm
+from dashboard.forms import LabelSelectForm, StopAnalysisForm
 from porter.views import make_zip
 
 
 logger = logging.getLogger(__name__)
+req_logger = logging.getLogger("requests")
 
 
 @require_http_methods(["GET"])
@@ -97,7 +100,9 @@ def report_dashboard(request):
     """
     # show all not hidden by others and ALL of your own
     firmwares = (FirmwareAnalysis.objects.filter(hidden=False) | FirmwareAnalysis.objects.filter(user=request.user)).distinct()
-    return render(request, 'dashboard/reportDashboard.html', {'firmwares': firmwares, 'username': request.user.username})
+    label_form = LabelForm()
+    label_select_form = LabelSelectForm()
+    return render(request, 'dashboard/reportDashboard.html', {'firmwares': firmwares, 'username': request.user.username, 'label_form': label_form, 'label_select_form': label_select_form})
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -238,4 +243,43 @@ def hide_analysis(request, analysis_id):
     analysis.hidden = True
     analysis.save(update_fields=["hidden"])
     messages.success(request, 'Analysis: ' + str(analysis_id) + ' successfully hidden')
+    return redirect('..')
+
+
+@csrf_protect
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def create_label(request):
+    req_logger.info("User %s called create label", request.user.username)
+    form = LabelForm(request.POST)
+    if form.is_valid():
+        logger.info("User %s tryied to create label %s", request.user.username, request.POST['label_name'])
+        new_label = form.save()
+        messages.info(request, 'creation successful of ' + str(new_label))
+        return redirect('..')
+    logger.error("label form invalid %s ", request.POST)
+    if 'label_name' in form.errors:
+        messages.error(request, 'Label already exists')
+    else:
+        messages.error(request, 'creation failed.')
+    return redirect('..')
+
+
+@csrf_protect
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def add_label(request, analysis_id):
+    req_logger.info("User %s called add label", request.user.username)
+    form = LabelSelectForm(request.POST)
+    if form.is_valid():
+        new_label = form.cleaned_data["label"]
+        logger.info("User %s tryied to add label %s", request.user.username, new_label.label_name)
+        # get analysis obj
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        analysis.label.add(new_label)
+        analysis.save()
+        messages.info(request, 'adding successful of ' + str(new_label))
+        return redirect('..')
+    logger.error("label form invalid %s ", request.POST)
+    messages.error(request, 'Adding Label failed')
     return redirect('..')

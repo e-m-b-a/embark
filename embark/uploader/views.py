@@ -148,7 +148,16 @@ def start_analysis(request):
             new_analysis.user = new_firmware_file.user
             logger.debug(" FILE_NAME is %s", new_analysis.firmware.file.name)
             new_analysis.firmware_name = os.path.basename(new_analysis.firmware.file.name)
-            new_analysis = form.save()
+            # save form
+            new_analysis = form.save(commit=True)
+            # add labels from devices
+            devices = form.cleaned_data["device"]
+            logger.debug("Got %d devices in this analysis", devices.count())
+            for device in devices:
+                logger.debug(" Adding Label=%s", device.device_label.label_name)
+                new_analysis.label.add(device.device_label)
+            new_analysis.save()
+            logger.debug("new_analysis %s has label: %s", new_analysis, new_analysis.label)
             # inject into bounded Executor
             if BoundedExecutor.submit_firmware(firmware_flags=new_analysis, firmware_file=new_firmware_file):
                 return redirect('embark-dashboard-service')

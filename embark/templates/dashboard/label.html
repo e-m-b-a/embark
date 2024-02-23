@@ -1,0 +1,10 @@
+{% load django_bootstrap5 %}
+
+<form action="{% url 'embark-dashboard-create-label' %}" method="post" id="form">
+    {% csrf_token %}
+    <div class="innerBlock">
+        {% load filters %}
+        {% bootstrap_form label_form layout='grid' %}
+        {% bootstrap_button "Create" button_type="submit" button_class="btn-primary" %}
+    </div>
+</form>

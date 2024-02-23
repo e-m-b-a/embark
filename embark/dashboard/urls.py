@@ -14,5 +14,7 @@ urlpatterns = [
     path('dashboard/individualReport/<uuid:analysis_id>', views.individual_report_dashboard, name='embark-IndividualReportDashboard'),
     path('dashboard/stop/', views.stop_analysis, name='embark-stop-analysis'),
     path('dashboard/log/<uuid:analysis_id>', views.show_log, name='embark-show-log'),
-    path('dashboard/logviewer/<uuid:analysis_id>', views.show_logviewer, name='embark-show-logviewer')
+    path('dashboard/logviewer/<uuid:analysis_id>', views.show_logviewer, name='embark-show-logviewer'),
+    path('dashboard/report/createlabel/', views.create_label, name='embark-dashboard-create-label'),
+    path('dashboard/report/addlabel/<uuid:analysis_id>', views.add_label, name='embark-dashboard-add-label')
 ]
