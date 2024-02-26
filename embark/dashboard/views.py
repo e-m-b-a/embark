@@ -1,5 +1,6 @@
 __copyright__ = 'Copyright 2022-2024 Siemens Energy AG, Copyright 2023 Christian Bieg'
 __author__ = 'Benedikt Kuehne, Christian Bieg'
+__license__ = 'MIT'
 
 import builtins
 import logging

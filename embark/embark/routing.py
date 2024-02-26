@@ -1,5 +1,6 @@
 __copyright__ = 'Copyright 2021-2024 Siemens Energy AG, Copyright 2021 The AMOS Projects, Copyright 2023 Christian Bieg'
 __author__ = 'm-1-k-3, diegiesskanne, Benedikt Kuehne, Garima Chauhan, Christian Bieg'
+__license__ = 'MIT'
 
 from django.urls import path
 # from django.urls import re_path

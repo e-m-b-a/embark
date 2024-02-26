@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/3.2/howto/deployment/asgi/
 """
 __copyright__ = 'Copyright 2021-2024 Siemens Energy AG, Copyright 2021 The AMOS Projects'
 __author__ = 'Benedikt Kuehne, diegiesskanne, m-1-k-3'
+__license__ = 'MIT'
 
 import os
 

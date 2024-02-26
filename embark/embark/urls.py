@@ -15,6 +15,7 @@ Including another URLconf
 """
 __copyright__ = 'Copyright 2021-2024 Siemens Energy AG, Copyright 2021 The AMOS Projects'
 __author__ = 'm-1-k-3, RaviChandra, Garima Chauhan, Maximilian Wagner, diegiesskanne'
+__license__ = 'MIT'
 
 # from django.contrib import admin
 from django.urls import path, include
