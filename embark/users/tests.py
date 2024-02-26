@@ -1,3 +1,6 @@
+__copyright__ = 'Copyright 2021-2024 Siemens Energy AG'
+__author__ = 'Benedikt Kuehne'
+
 from http import HTTPStatus
 from selenium import webdriver
 from selenium.webdriver.common.by import By

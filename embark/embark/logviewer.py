@@ -1,3 +1,6 @@
+__copyright__ = 'Copyright 2023 Christian Bieg'
+__author__ = 'Christian Bieg'
+
 import asyncio
 import os
 import base64
