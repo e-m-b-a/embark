@@ -283,3 +283,18 @@ def add_label(request, analysis_id):
     logger.error("label form invalid %s ", request.POST)
     messages.error(request, 'Adding Label failed')
     return redirect('..')
+
+
+@csrf_protect
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def rm_label(request, analysis_id, label_name):
+    req_logger.info("User %s called rm label", request.user.username)
+
+    logger.info("User %s tryied to rm label %s", request.user.username, label_name)
+    # get analysis obj
+    analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    analysis.label.remove(label_name)
+    analysis.save()
+    messages.info(request, 'removing successful of ' + str(label_name))
+    return redirect('..')

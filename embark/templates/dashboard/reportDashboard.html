@@ -61,6 +61,13 @@
                                             {% for label in firmware.label.all %}
                                                 <div class="col-sm">
                                                     <button onclick="onclick_label('label={{ label.label_name }}');" class="label badge rounded-pill bg-info">{{ label.label_name }}</button>
+                                                    <!-- TODO add hover and remove -->
+                                                    
+                                                        <form action="{% url 'embark-dashboard-remove-label' firmware.id label.label_name %}" method="post" id="form">
+                                                            {% csrf_token %}
+                                                        </form>
+
+                                                    {{ label.label_name }}
                                                 </div>
                                             {% endfor %}
                                         {% endif %}
@@ -194,15 +201,6 @@
                                                 </button>
                                             </div>
                                             <div class="modal-body">
-                                                <!-- TODO click select with all options-->
-                                                <form action="{% url 'embark-dashboard-add-label' firmware.id %}" method="post" id="form">
-                                                    {% csrf_token %}
-                                                    <div class="innerBlock">
-                                                        {% load filters %}
-                                                        {% bootstrap_form label_select_form %}
-                                                        {% bootstrap_button "Add" button_type="submit" button_class="btn-primary" %}
-                                                    </div>
-                                                </form>
                                                 {% block label %}{% include "dashboard/label.html" %}{% endblock label %}
                                             </div>
                                             <div class="modal-footer">
