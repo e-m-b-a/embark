@@ -1,4 +1,15 @@
 #!/bin/bash
+# EMBArk - The firmware security scanning environment
+#
+# Copyright 2020-2024 Siemens Energy AG
+#
+# EMBArk comes with ABSOLUTELY NO WARRANTY.
+#
+# EMBArk is licensed under MIT
+#
+# Author(s): Benedikt Kuehne
+
+# Description: Helper script to get our Copyright things in order
 
 YEAR=2024
 
