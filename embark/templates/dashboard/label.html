@@ -8,8 +8,7 @@
         {% bootstrap_button "Add" button_type="submit" button_class="btn-primary" %}
     </div>
 </form>
-
-
+<hr>
 <form action="{% url 'embark-dashboard-create-label' %}" method="post" id="form">
     {% csrf_token %}
     <div class="innerBlock">
