@@ -33,41 +33,48 @@ write_headers(){
 
 
   echo "start finding files"
-  mapfile -t PYTHON_FILES < <(find "${DIR_}" -type d -path "${PWD}/.*" -prune -false -o -type d -path "${PWD}/emba" -prune -false -o -iname "*.py")
+  mapfile -t PYTHON_FILES < <(find "${DIR_}" -type d -path ".*" -prune -false -o -type d -path "migrations" -prune -false -o -type d -path "${PWD}/emba" -prune -false -o -iname "*.py")
   if [[ "${#PYTHON_FILES[@]}" -gt 0 ]]; then
     for FILE_ in "${PYTHON_FILES[@]}"; do
 
-
+      if grep -q "__copyright__" "${FILE_}" ; then
+        continue
+      fi
+      
       local STARTYEAR="$(git log --follow --format=%ad --date default "${FILE_}" | tail -1 | cut -d ' ' -f 5)"
       local COPYRIGHT_HEADER="__copyright__ = 'Copyright ${STARTYEAR}-${YEAR} Siemens Energy AG'"
       local AUTHOR_ARR=()
       local AUTHOR_HEADER="__author__ = '"
-      local LICENSE_HEADER="__license__ = 'MIT'" # Copyright 2021 The AMOS Projects TODO
-
-
+      local LICENSE_HEADER="__license__ = 'MIT'"
 
       readarray -t AUTHOR_ARR < <(git shortlog -n -s "${FILE_}" 2>/dev/null | sort -gr | cut -c 8- ) # gets commit count for file/folder
       AUTHOR_ARR=( "${AUTHOR_ARR[@]/%/,}" )
       AUTHOR_HEADER+="${AUTHOR_ARR[@]}"
       AUTHOR_HEADER="${AUTHOR_HEADER%?}'"
 
+      echo "debug-print \$\{\#AUTHOR_ARR\[\@\]\} ${#AUTHOR_ARR[@]}"
+      echo "debug-print \$\{AUTHOR_ARR\[\*\]\} ${AUTHOR_ARR[*]}"
+      if [[ "${#AUTHOR_ARR[@]}" -eq 1 && ! "${AUTHOR_ARR[*]}" =~ "Benedikt" ]]; then
+        # add AMOS copyright
+        COPYRIGHT_HEADER="${COPYRIGHT_HEADER%?}, Copyright 2021 The AMOS Projects'"
+      fi 
+      
+
       # debug messages
       echo "FILE: ${FILE_}"
       echo "get copyright: ${COPYRIGHT_HEADER}"
       echo "gets authors: ${AUTHOR_HEADER}"
+      echo "gets license: ${LICENSE_HEADER}"
       echo "file first line is:"
       head -n 1 "${FILE_}"
       echo
 
-
-      # TODO write between imports and first
       
       if ! ( head -n 1 "${FILE_}" | grep -q '#' ) ; then
         echo "Doesn't have a #"
-
-        sed -i "1s/^/${AUTHOR_HEADER}\n\n/" "${FILE_}"
+        sed -i "1s/^/${LICENSE_HEADER}\n\n/" "${FILE_}"
+        sed -i "1s/^/${AUTHOR_HEADER}\n/" "${FILE_}"
         sed -i "1s/^/${COPYRIGHT_HEADER}\n/" "${FILE_}"
-        sed -i "1s/^/${LICENSE_HEADER}\n/" "${FILE_}"
       else
         echo "HAS a #"
 
@@ -83,7 +90,7 @@ write_headers(){
 }
 
 
-write_headers 2024 "${PWD}/embark/embark/"
+write_headers 2024 "${PWD}/embark/"
 
 
 if [[ "${#EXCEPTIONS_TO_CHECK_ARR[@]}" -gt 0 ]]; then

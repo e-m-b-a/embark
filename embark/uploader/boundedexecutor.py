@@ -1,4 +1,8 @@
 # pylint: disable=R1732, C0201, E1129, W1509
+__copyright__ = 'Copyright 2021-2024 Siemens Energy AG, Copyright 2021 The AMOS Projects'
+__author__ = 'Benedikt Kuehne, m-1-k-3'
+__license__ = 'MIT'
+
 import builtins
 import logging
 import os

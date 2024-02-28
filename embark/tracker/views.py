@@ -1,5 +1,5 @@
 __copyright__ = 'Copyright 2022-2024 Siemens Energy AG'
-__author__ = 'Benedikt Kuehne, Benedikt Kuehne'
+__author__ = 'Benedikt Kuehne'
 __license__ = 'MIT'
 
 import logging

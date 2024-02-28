@@ -1,3 +1,7 @@
+__copyright__ = 'Copyright 2021-2024 Siemens Energy AG, Copyright 2021 The AMOS Projects'
+__author__ = 'Maximilian Wagner, Benedikt Kuehne, diegiesskanne'
+__license__ = 'MIT'
+
 import signal
 import sys
 import logging
