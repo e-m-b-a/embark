@@ -16,7 +16,7 @@ from tracker.forms import AssociateForm
 from uploader.boundedexecutor import BoundedExecutor
 from uploader.forms import LabelForm
 
-from uploader.models import FirmwareAnalysis
+from uploader.models import FirmwareAnalysis, Label
 from dashboard.models import Result
 from dashboard.forms import LabelSelectForm, StopAnalysisForm
 from porter.views import make_zip
@@ -294,7 +294,9 @@ def rm_label(request, analysis_id, label_name):
     logger.info("User %s tryied to rm label %s", request.user.username, label_name)
     # get analysis obj
     analysis = FirmwareAnalysis.objects.get(id=analysis_id)
-    analysis.label.remove(label_name)
+    # get lobel obj
+    label_obj = Label.objects.get(label_name=label_name)
+    analysis.label.remove(label_obj)
     analysis.save()
     messages.info(request, 'removing successful of ' + str(label_name))
     return redirect('..')

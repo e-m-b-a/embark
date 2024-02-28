@@ -60,14 +60,13 @@
                                         {% if firmware.label.all is not None %}
                                             {% for label in firmware.label.all %}
                                                 <div class="col-sm">
-                                                    <button onclick="onclick_label('label={{ label.label_name }}');" class="label badge rounded-pill bg-info">{{ label.label_name }}</button>
-                                                    <!-- TODO add hover and remove -->
-                                                    
-                                                        <form action="{% url 'embark-dashboard-remove-label' firmware.id label.label_name %}" method="post" id="form">
+                                                    <a onclick="onclick_label('label={{ label.label_name }}');" class="badge label bg-info position-relative" role="button">
+                                                        {{ label.label_name }}
+                                                        <form action={% url 'embark-dashboard-remove-label' firmware.id label.label_name %} method="post" id="remove-label-{{ label.label_name }}-{{ firmware.id }}">
                                                             {% csrf_token %}
+                                                            <button type="submit" class="hidden position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">x</button>
                                                         </form>
-
-                                                    {{ label.label_name }}
+                                                    </a>
                                                 </div>
                                             {% endfor %}
                                         {% endif %}
