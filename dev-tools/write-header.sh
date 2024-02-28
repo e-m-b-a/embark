@@ -11,9 +11,7 @@
 
 # Description: Helper script to get our Copyright things in order
 
-YEAR=2024
-
-RED='\033[0;31m'
+# RED='\033[0;31m'
 GREEN='\033[0;32m'
 ORANGE='\033[0;33m'
 BOLD='\033[1m'
@@ -41,16 +39,18 @@ write_headers(){
         continue
       fi
       
-      local STARTYEAR="$(git log --follow --format=%ad --date default "${FILE_}" | tail -1 | cut -d ' ' -f 5)"
-      local COPYRIGHT_HEADER="__copyright__ = 'Copyright ${STARTYEAR}-${YEAR} Siemens Energy AG'"
+      local STARTYEAR=""
+      local COPYRIGHT_HEADER="__copyright__ = 'Copyright ${STARTYEAR}-${YEAR_} Siemens Energy AG'"
       local AUTHOR_ARR=()
       local AUTHOR_HEADER="__author__ = '"
       local LICENSE_HEADER="__license__ = 'MIT'"
 
       readarray -t AUTHOR_ARR < <(git shortlog -n -s "${FILE_}" 2>/dev/null | sort -gr | cut -c 8- ) # gets commit count for file/folder
       AUTHOR_ARR=( "${AUTHOR_ARR[@]/%/,}" )
-      AUTHOR_HEADER+="${AUTHOR_ARR[@]}"
+      AUTHOR_HEADER+="${AUTHOR_ARR[]}"
       AUTHOR_HEADER="${AUTHOR_HEADER%?}'"
+
+      STARTYEAR="$(git log --follow --format=%ad --date default "${FILE_}" | tail -1 | cut -d ' ' -f 5)"
 
       echo "debug-print \$\{\#AUTHOR_ARR\[\@\]\} ${#AUTHOR_ARR[@]}"
       echo "debug-print \$\{AUTHOR_ARR\[\*\]\} ${AUTHOR_ARR[*]}"
