@@ -1,3 +1,7 @@
+__copyright__ = 'Copyright 2022-2024 Siemens Energy AG'
+__author__ = 'Benedikt Kuehne'
+__license__ = 'MIT'
+
 import django_tables2 as tables
 
 from django.utils.html import format_html
