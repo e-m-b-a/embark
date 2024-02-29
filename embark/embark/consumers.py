@@ -1,4 +1,8 @@
 # pylint: disable=W0201
+__copyright__ = 'Copyright 2021-2024 Siemens Energy AG, Copyright 2021 The AMOS Projects, Copyright 2023 Christian Bieg'
+__author__ = 'Benedikt Kuehne, diegiesskanne, m-1-k-3, Maximilian Wagner, Garima Chauhan, Christian Bieg, Ashutosh Singh'
+__license__ = 'MIT'
+
 import json
 import logging
 
