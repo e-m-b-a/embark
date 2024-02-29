@@ -56,3 +56,11 @@ table.dataTable td, table.dataTable th {
 .buttonRowElem {
     margin: 2px;
 }
+
+.hidden {
+    display: none;
+}
+
+.label:hover form button, .label:focus form button {
+    display: block;
+}
