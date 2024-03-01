@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 class EmbaUpdateForm(forms.Form):
     option = forms.ChoiceField(choices=[
-        (0, 'Git Update'), (1, 'Docker Update')
+        (0, 'Git Update'), (1, 'Docker Update'), (2, 'CVE Update')
     ], help_text='Update EMBA', widget=forms.CheckboxSelectMultiple, required=True)
 
 

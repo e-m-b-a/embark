@@ -18,12 +18,14 @@ logger = logging.getLogger(__name__)
 
 req_logger = logging.getLogger("requests")
 
+
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["GET"])
 def updater_home(request):
     req_logger.info("User %s called updater_home", request.user.username)
     emba_update_form = EmbaUpdateForm()
     return render(request, 'updater/index.html', {'emba_update_form': emba_update_form})
+
 
 @csrf_protect
 @require_http_methods(["POST"])
@@ -50,17 +52,14 @@ def check_update(request):
     logger.error("Form invalid")
     messages.error(request, 'Form invalid')
     return redirect('..')
-    
 
-    
 
 @csrf_protect
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def update_emba(request):
     """
-    update emba via form with 3 options
-    submits update alls to boundedexec
+    updates nvd database for emba
 
     :params request: HTTP request
 
