@@ -348,6 +348,33 @@ class BoundedExecutor:
         analysis.save(update_fields=["finished", "log_size"])
 
     @classmethod
+    def emba_check(cls, option):
+        """
+        does a emba dep check with option(int)
+
+        1. run dep check with option
+        2. return result via WS message
+        Args:
+            option 1/2
+        """
+        logger.debug("Checking EMBA with: %d", option)
+        try:
+            cmd = f"{EMBA_SCRIPT_LOCATION} -d{str(option)}"
+
+            with open(f"{settings.EMBA_LOG_ROOT}/check.log", "w+", encoding="utf-8") as file:
+                proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
+                # wait for completion
+                proc.communicate()
+            # success
+            logger.info("Kill Successful: %s", cmd)
+        except BaseException as exce:
+            logger.error("kill_emba_cmd error: %s", exce)
+        
+        # take resulting log and show to user
+
+        
+
+    @classmethod
     def submit_zip(cls, uuid):
         # submit zip req to executor threadpool
         emba_fut = BoundedExecutor.submit(cls.zip_log, uuid)
@@ -357,6 +384,12 @@ class BoundedExecutor:
     def submit_unzip(cls, uuid, file_loc):
         # submit zip req to executor threadpool
         emba_fut = BoundedExecutor.submit(cls.unzip_log, uuid, file_loc)
+        return emba_fut
+
+    @classmethod
+    def submit_emba_check(cls,uuid, option):
+        # submit dep check to executor threadpool
+        emba_fut = BoundedExecutor.submit(cls.emba_check, uuid, option)
         return emba_fut
 
     @staticmethod

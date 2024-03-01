@@ -1,0 +1,18 @@
+{% load django_bootstrap5 %}
+
+<div class="collapse" id="collapseEMBA">
+    <div class="box">
+        <p class="mainText">EMBA Configuration</p>
+        <p class="subText">Update EMBA</p>
+
+        <form action="{% url 'embark-updater-emba' %}" method="post" id="form">
+            {% csrf_token %}
+            <div class="innerBlock">
+                {% load filters %}
+                {% bootstrap_form emba_update_form %}
+                <button type="submit" class="btn btn-primary" data-bs-toggle="collapse.show" data-bs-target="collapseStart">Create</button>
+            </div>
+        </form>
+
+    </div>
+</div>

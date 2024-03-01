@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load static %}
+{% load django_bootstrap5 %}
+{% load tz %}
+
+{% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/updater.css' %}"/>{% endblock style %}
+
+{% block title %}EMBArk updater dashboard{% endblock title %}
+{% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
+
+{% bootstrap_messages %}
+
+{% block maincontent %}
+{% timezone request.session.django_timezone %}
+<h1>Updater TODO</h1>
+<!-- TODO
+-->
+{% endtimezone %}
+{% endblock %}
