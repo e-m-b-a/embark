@@ -42,7 +42,7 @@ executor = ThreadPoolExecutor(max_workers=MAX_WORKERS)
 semaphore = BoundedSemaphore(MAX_QUEUE)
 
 # emba directories
-EMBA_SCRIPT_LOCATION = f"cd {settings.EMBA_ROOT} && sudo -E ./emba"
+EMBA_SCRIPT_LOCATION = f"cd {settings.EMBA_ROOT} && sudo ./emba"
 
 
 class BoundedException(Exception):
