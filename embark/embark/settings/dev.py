@@ -4,6 +4,8 @@ import pytz
 
 from dotenv import load_dotenv
 
+from embark.helper import get_version_strings
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 load_dotenv(dotenv_path=os.path.join(BASE_DIR.parent, '.env'))
@@ -33,7 +35,8 @@ INSTALLED_APPS = [
     'reporter',
     'dashboard',
     'tracker',
-    'porter'
+    'porter',
+    'updater'
 ]
 
 AUTH_USER_MODEL = 'users.User'
@@ -61,6 +64,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'embark.context_processor.embark_version'
             ],
         },
     },
@@ -134,6 +138,10 @@ LOGGING = {
             'level': 'WARNING',
             'handlers': ['info_handler', 'console_handler'],
         },
+         'updater': {
+            'handlers': ['debug_handler', 'info_handler', 'console_handler'],
+            'level': 'DEBUG',
+         },
         'uploader': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
             'level': 'DEBUG',
@@ -283,3 +291,5 @@ except FileNotFoundError as file_error:
     EMBA_P_MOD_CNT = 18
     EMBA_F_MOD_CNT = 4
     EMBA_L_MOD_CNT = 8
+
+VERSION = get_version_strings()

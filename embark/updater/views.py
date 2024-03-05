@@ -24,7 +24,8 @@ req_logger = logging.getLogger("requests")
 def updater_home(request):
     req_logger.info("User %s called updater_home", request.user.username)
     emba_update_form = EmbaUpdateForm()
-    return render(request, 'updater/index.html', {'emba_update_form': emba_update_form})
+    emba_check_form = CheckForm()
+    return render(request, 'updater/index.html', {'emba_update_form': emba_update_form, 'emba_check_form': emba_check_form})
 
 
 @csrf_protect
@@ -40,18 +41,20 @@ def check_update(request):
     """
     req_logger.info("User %s called check_update", request.user.username)
     # add dep check
-    form = CheckForm()
+    form = CheckForm(request.POST)
     if form.is_valid():
         option = form.cleaned_data["option"]
         logger.debug("Got option %d for emba dep check", option)
         # inject into bounded Executor
         if BoundedExecutor.submit_emba_check(option=option):
-            return HttpResponse("OK")
+            messages.info(request, "Checking now")
+            return redirect('embark-updater-home')
         logger.error("Server Queue full, or other boundenexec error")
-        return HttpResponseServerError("Queue full")
+        messages.error(request, 'Queue full')
+        return redirect('embark-updater-home')
     logger.error("Form invalid")
     messages.error(request, 'Form invalid')
-    return redirect('..')
+    return redirect('embark-updater-home')
 
 
 @csrf_protect
@@ -69,11 +72,15 @@ def update_emba(request):
     form = EmbaUpdateForm(request.POST)
     if form.is_valid():
         logger.info("User %s tryied to update emba", request.user.username)
-        # TODO update emba
+        option = form.cleaned_data['option']
+        # do something with it
+        logger.debug("Option was: %s", option)
+        for option_ in option:
+            if option_ == 'GIT':
+                pass
         # TODO change shown version
-        stable_emba_version, container_version, nvd_version, github_emba_version = get_version_strings()
-        messages.info(request, "")
-        return redirect('..')
-    logger.error("update form invalid %s ", request.POST)
+        messages.info(request, "Updating now")
+        return redirect('embark-updater-home')
+    logger.error("update form invalid %s with error: %s", request.POST, form.errors)
     messages.error(request, 'update not successful')
-    return redirect('..')
+    return redirect('embark-updater-home')

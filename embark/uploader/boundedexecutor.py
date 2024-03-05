@@ -366,11 +366,11 @@ class BoundedExecutor:
                 # wait for completion
                 proc.communicate()
             # success
-            logger.info("Kill Successful: %s", cmd)
+            logger.info("Check Successful: %s", cmd)
         except BaseException as exce:
-            logger.error("kill_emba_cmd error: %s", exce)
+            logger.error("emba dep check error: %s", exce)
         
-        # take resulting log and show to user
+        # TODO take resulting log and show to user
 
         
 
@@ -387,9 +387,9 @@ class BoundedExecutor:
         return emba_fut
 
     @classmethod
-    def submit_emba_check(cls,uuid, option):
+    def submit_emba_check(cls, option):
         # submit dep check to executor threadpool
-        emba_fut = BoundedExecutor.submit(cls.emba_check, uuid, option)
+        emba_fut = BoundedExecutor.submit(cls.emba_check, option)
         return emba_fut
 
     @staticmethod

@@ -12,8 +12,32 @@
 
 {% block maincontent %}
 {% timezone request.session.django_timezone %}
-<h1>Updater TODO</h1>
-<!-- TODO
--->
+<div class="update-form-container">
+    <div id="embarkLogo">
+      <img src="{% static 'content/images/embark_logo.svg' %}" alt="EMBArk logo graphic" height="auto" width="auto"/>
+    </div>
+    <div class="d-flex justify-content-center">
+        <h2><span class="badge bg-primary">Current Version:</span>  {{ EMBARK_VERSION }}</h2>
+    </div>
+    <div class="d-flex justify-content-center">
+        <a href="https://github.com/e-m-b-a/embark/releases/latest">Release-Notes</a>
+    </div>
+    <hr>
+    <div class="update-check d-flex justify-content-center">
+      <h3><span class="badge bg-secondary">EMBA version</span>  {{ EMBA_VERSION }}</h3>
+      {% block check %}{% include "updater/check.html" %}{% endblock check %}
+    </div>
+    <div class="update">
+        <div class="row uploadRow">
+            <p>
+              <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEMBA" aria-expanded="false" aria-controls="collapseEMBA" title="Update EMBA">
+                Update EMBA
+              </button>
+            </p>
+        {% block update %}{% include "updater/update.html" %}{% endblock update %}
+    </div>
+   
+</div>
+
 {% endtimezone %}
 {% endblock %}
