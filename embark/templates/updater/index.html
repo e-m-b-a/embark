@@ -25,6 +25,8 @@
     <hr>
     <div class="update-check d-flex justify-content-center">
       <h3><span class="badge bg-secondary">EMBA version</span>  {{ EMBA_VERSION }}</h3>
+    </div>
+    <div class="check">
       {% block check %}{% include "updater/check.html" %}{% endblock check %}
     </div>
     <div class="update">

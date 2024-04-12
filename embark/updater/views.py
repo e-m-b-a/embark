@@ -44,11 +44,15 @@ def check_update(request):
     form = CheckForm(request.POST)
     if form.is_valid():
         option = form.cleaned_data["option"]
-        logger.debug("Got option %d for emba dep check", option)
+        if option == 'BOTH':
+            check_option = '1'
+        elif option == 'CONTAINER':
+            check_option = '2'
+        logger.debug("Got option %d for emba dep check", check_option)
         # inject into bounded Executor
-        if BoundedExecutor.submit_emba_check(option=option):
+        if BoundedExecutor.submit_emba_check(option=check_option):
             messages.info(request, "Checking now")
-            return redirect('embark-updater-home')
+            return redirect('embark-updater-log')
         logger.error("Server Queue full, or other boundenexec error")
         messages.error(request, 'Queue full')
         return redirect('embark-updater-home')
@@ -84,3 +88,13 @@ def update_emba(request):
     logger.error("update form invalid %s with error: %s", request.POST, form.errors)
     messages.error(request, 'update not successful')
     return redirect('embark-updater-home')
+
+
+@csrf_protect
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def progress(request):
+    """
+    shows the dep check to the user
+    """
+    return render(request, 'updater/progress.html', {})

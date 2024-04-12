@@ -11,6 +11,6 @@ class EmbaUpdateForm(forms.Form):
 
 
 class CheckForm(forms.Form):
-    option = forms.MultipleChoiceField(choices=[
+    option = forms.ChoiceField(choices=[
         ('BOTH', 'Host and container'), ('CONTAINER', 'Only Container')
-    ], help_text='Check EMBA', widget=forms.CheckboxSelectMultiple, required=True)
+    ], help_text='Check EMBA', widget=forms.Select, required=True)

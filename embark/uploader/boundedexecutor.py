@@ -359,7 +359,7 @@ class BoundedExecutor:
         """
         logger.debug("Checking EMBA with: %d", option)
         try:
-            cmd = f"{EMBA_SCRIPT_LOCATION} -d{str(option)}"
+            cmd = f"{EMBA_SCRIPT_LOCATION} -d{option}"
 
             with open(f"{settings.EMBA_LOG_ROOT}/check.log", "w+", encoding="utf-8") as file:
                 proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
@@ -371,7 +371,16 @@ class BoundedExecutor:
             logger.error("emba dep check error: %s", exce)
         
         # TODO take resulting log and show to user
-
+            
+        room_group_name = f"versions"
+        channel_layer = get_channel_layer()
+        # send ws message
+        async_to_sync(channel_layer.group_send)(
+            room_group_name, {
+                "type": 'send.message',
+                "message": {}   # TODO same as logviewer
+            }
+        )
         
 
     @classmethod
