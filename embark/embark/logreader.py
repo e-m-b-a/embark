@@ -132,6 +132,9 @@ class LogReader:
         elif re.search(pattern=re.escape(failed_pattern), string=status_message["phase"]):
             max_module = -2
             phase_nmbr = EMBA_PHASE_CNT
+        else:
+            logger.info("Undefined pattern in logreader %s ", status_message["phase"])
+            logger.info("Not updating status percentage")
         return max_module, phase_nmbr
 
     # update our dict whenever a new module is being processed
@@ -146,12 +149,14 @@ class LogReader:
             self.module_cnt = self.module_cnt % max_module  # make sure it's in range
             percentage = phase_nmbr * (100 / EMBA_PHASE_CNT) + ((100 / EMBA_PHASE_CNT) / max_module) * self.module_cnt   # increments: F=6.25, S=0.65, L=3.57, P=1.25
         else:
-            logger.debug("Undefined state in logreader %s ", self.status_msg)
+            logger.error("Undefined state in logreader %s ", self.status_msg)
+            percentage = self.status_msg["percentage"]
 
         logger.debug("Status is %d, in phase %d, with modules %d", percentage, phase_nmbr, max_module)
 
         # set attributes of current message
         self.status_msg["module"] = stream_item_list[0]
+
         # ignore all Q-modules for percentage calc
         if not re.match(".*Q[0-9][0-9]", stream_item_list[0]):
             self.status_msg["percentage"] = percentage
