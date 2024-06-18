@@ -99,17 +99,16 @@ def html_report_download(request, analysis_id, html_path, download_file):
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         if analysis.hidden is False or analysis.user == request.user or request.user.is_superuser:
             resource_path = Path(f'{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/html-report/{html_path}/{download_file}')
-            if Path(f'{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/html-report/') in resource_path.parents:
-                try:
-                    with open(resource_path, 'rb') as requested_file:
-                        response = HttpResponse(requested_file.read(), content_type="text/plain")
-                        response['Content-Disposition'] = 'attachment; filename=' + download_file
-                        logger.info("html_report - analysis_id: %s html_path: %s download_file: %s", analysis_id, html_path,
-                                    download_file)
-                except FileNotFoundError:
-                    messages.error(request, "File not found on the server")
-                    logger.error("Couldn't find %s", resource_path)
-                    response = HttpResponse("Couldn't find %s", resource_path)
+            try:
+                with open(resource_path, 'rb') as requested_file:
+                    response = HttpResponse(requested_file.read(), content_type="text/plain")
+                    response['Content-Disposition'] = 'attachment; filename=' + download_file
+                    logger.info("html_report - analysis_id: %s html_path: %s download_file: %s", analysis_id, html_path,
+                                download_file)
+            except FileNotFoundError:
+                messages.error(request, "File not found on the server")
+                logger.error("Couldn't find %s", resource_path)
+                response = HttpResponse("Couldn't find %s", resource_path)
     return response
 
 
