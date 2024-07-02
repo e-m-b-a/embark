@@ -62,56 +62,58 @@ def html_report(request, analysis_id, html_file):
 
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def html_report_path(request, analysis_id, html_path, html_file):
+def html_report_path(request, analysis_id, html_path, file):
+    """
+    The functions needs to either server html files or provide download 
+    """
     if FirmwareAnalysis.objects.filter(id=analysis_id).exists():
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         if analysis.hidden is False or analysis.user == request.user or request.user.is_superuser:
-            report_path = f'{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/html-report/{html_path}/{html_file}'
-            logger.debug("html_report - analysis_id: %s path: %s html_file: %s", analysis_id, html_path, html_file)
-            try:
-                return render(request, report_path, {'embarkBackUrl': reverse('embark-ReportDashboard')}, content_type='text/html')
-            except UnicodeDecodeError as decode_error:
-                logger.error("{%s} with error: %s", report_path, decode_error)
-                # removes all non utf8 chars from html USING: https://stackoverflow.com/questions/191359/how-to-convert-a-file-to-utf-8-in-python
-                # CodeQL issue is not relevant
-                with codecs.open(report_path, "r", encoding='latin1') as source_file:
-                    with codecs.open(f'{report_path}.new', "w", "utf-8") as target_file:
-                        while True:
-                            contents = source_file.read(BLOCKSIZE)
-                            if not contents:
-                                break
-                            target_file.write(contents)
-                # exchange files
-                move(report_path, f'{report_path}.old')
-                move(f'{report_path}.new', report_path)
-                logger.debug("Removed problematic char from %s", report_path)
-                return render(request, report_path, {'embarkBackUrl': reverse('embark-ReportDashboard')}, content_type='text/html')
-        messages.error(request, "User not authorized")
-    logger.error("could  not get path - %s", request)
-    return redirect("..")
-
-
-@require_http_methods(["GET"])
-@login_required(login_url='/' + settings.LOGIN_URL)
-def html_report_download(request, analysis_id, html_path, download_file):
-    response = Http404("Resource not found")
-    if FirmwareAnalysis.objects.filter(id=analysis_id).exists():
-        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
-        if analysis.hidden is False or analysis.user == request.user or request.user.is_superuser:
-            resource_path = os.path.abspath(f'{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/html-report/{html_path}/{download_file}')
+            resource_path = f'{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/html-report/{html_path}/{file}'
             parent_path = os.path.abspath(f'{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/html-report/')
             if os.path.commonpath([parent_path, resource_path]) == parent_path:
-                try:
-                    with open(resource_path, 'rb') as requested_file:
-                        response = HttpResponse(requested_file.read(), content_type="text/plain")
-                        response['Content-Disposition'] = 'attachment; filename=' + download_file
-                        logger.info("html_report - analysis_id: %s html_path: %s download_file: %s", analysis_id, html_path,
-                                    download_file)
-                except FileNotFoundError:
-                    messages.error(request, "File not found on the server")
-                    logger.error("Couldn't find %s", resource_path)
-                    response = HttpResponse("Couldn't find %s", resource_path)
-    return response
+                if file.endswith(".tar.gz"):
+                    content_type = "text/plain"
+                    try:
+                        with open(resource_path, 'rb') as requested_file:
+                            response = HttpResponse(requested_file.read(), content_type="text/plain")
+                            response['Content-Disposition'] = 'attachment; filename=' + requested_file
+                            logger.info("html_report - analysis_id: %s html_path: %s download_file: %s", analysis_id, html_path, requested_file)
+                            return response
+                    except FileNotFoundError:
+                        messages.error(request, "File not found on the server")
+                        logger.error("Couldn't find %s", resource_path)
+                        return redirect("..")
+
+                elif file.endswith(".html"):
+                    content_type = "text/html"
+                    logger.debug("html_report - analysis_id: %s path: %s html_file: %s", analysis_id, html_path, file)
+                    try:
+                        return render(request, resource_path, {'embarkBackUrl': reverse('embark-ReportDashboard')}, content_type='text/html')
+                    except UnicodeDecodeError as decode_error:
+                        logger.error("{%s} with error: %s", resource_path, decode_error)
+                        # removes all non utf8 chars from html USING: https://stackoverflow.com/questions/191359/how-to-convert-a-file-to-utf-8-in-python
+                        # CodeQL issue is not relevant
+                        with codecs.open(resource_path, "r", encoding='latin1') as source_file:
+                            with codecs.open(f'{resource_path}.new', "w", "utf-8") as target_file:
+                                while True:
+                                    contents = source_file.read(BLOCKSIZE)
+                                    if not contents:
+                                        break
+                                    target_file.write(contents)
+                        # exchange files
+                        move(resource_path, f'{resource_path}.old')
+                        move(f'{resource_path}.new', resource_path)
+                        logger.debug("Removed problematic char from %s", resource_path)
+                        return render(request, resource_path, {'embarkBackUrl': reverse('embark-ReportDashboard')}, content_type='text/html')
+                messages.error(request, "Can't server that file")
+                logger.error("Server can't handle that file - %s", request)
+                return redirect("..")    
+        messages.error(request, "User not authorized")
+        logger.error("User not authorized - %s", request)
+        return redirect("..")
+    logger.error("could  not get path - %s", request)
+    return redirect("..")
 
 
 @require_http_methods(["GET"])
