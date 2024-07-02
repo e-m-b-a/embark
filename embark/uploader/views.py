@@ -154,12 +154,13 @@ def start_analysis(request):
             new_analysis.firmware_name = os.path.basename(new_analysis.firmware.file.name)
             # save form
             new_analysis = form.save(commit=True)
-            # add labels from devices
+            # add labels from devices FIXME what if device has no label
             devices = form.cleaned_data["device"]
             logger.debug("Got %d devices in this analysis", devices.count())
             for device in devices:
-                logger.debug(" Adding Label=%s", device.device_label.label_name)
-                new_analysis.label.add(device.device_label)
+                if device.device_label:
+                    logger.debug(" Adding Label=%s", device.device_label.label_name)
+                    new_analysis.label.add(device.device_label)
             new_analysis.save()
             logger.debug("new_analysis %s has label: %s", new_analysis, new_analysis.label)
             # inject into bounded Executor
