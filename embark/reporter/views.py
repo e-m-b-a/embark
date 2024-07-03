@@ -17,7 +17,6 @@ from uuid import UUID
 
 from django.conf import settings
 from django.forms import model_to_dict
-from django.http.response import Http404
 from django.shortcuts import redirect, render
 from django.contrib import messages
 from django.template.loader import get_template
@@ -76,7 +75,7 @@ def html_report_path(request, analysis_id, html_path, file):
                     content_type = "text/plain"
                     try:
                         with open(resource_path, 'rb') as requested_file:
-                            response = HttpResponse(requested_file.read(), content_type="text/plain")
+                            response = HttpResponse(requested_file.read(), content_type=content_type)
                             response['Content-Disposition'] = 'attachment; filename=' + requested_file
                             logger.info("html_report - analysis_id: %s html_path: %s download_file: %s", analysis_id, html_path, requested_file)
                             return response
@@ -89,7 +88,7 @@ def html_report_path(request, analysis_id, html_path, file):
                     content_type = "text/html"
                     logger.debug("html_report - analysis_id: %s path: %s html_file: %s", analysis_id, html_path, file)
                     try:
-                        return render(request, resource_path, {'embarkBackUrl': reverse('embark-ReportDashboard')}, content_type='text/html')
+                        return render(request, resource_path, {'embarkBackUrl': reverse('embark-ReportDashboard')}, content_type=content_type)
                     except UnicodeDecodeError as decode_error:
                         logger.error("{%s} with error: %s", resource_path, decode_error)
                         # removes all non utf8 chars from html USING: https://stackoverflow.com/questions/191359/how-to-convert-a-file-to-utf-8-in-python
@@ -105,10 +104,10 @@ def html_report_path(request, analysis_id, html_path, file):
                         move(resource_path, f'{resource_path}.old')
                         move(f'{resource_path}.new', resource_path)
                         logger.debug("Removed problematic char from %s", resource_path)
-                        return render(request, resource_path, {'embarkBackUrl': reverse('embark-ReportDashboard')}, content_type='text/html')
+                        return render(request, resource_path, {'embarkBackUrl': reverse('embark-ReportDashboard')}, content_type=content_type)
                 messages.error(request, "Can't server that file")
                 logger.error("Server can't handle that file - %s", request)
-                return redirect("..")    
+                return redirect("..")
         messages.error(request, "User not authorized")
         logger.error("User not authorized - %s", request)
         return redirect("..")
