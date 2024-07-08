@@ -1,4 +1,4 @@
-# pylint: disable=W0613,C0206
+# pylint: disable=C0206
 __copyright__ = 'Copyright 2021-2024 Siemens Energy AG'
 __author__ = 'Benedikt Kuehne'
 __license__ = 'MIT'
@@ -11,6 +11,7 @@ import logging
 
 from operator import itemgetter
 from http import HTTPStatus
+import re
 from shutil import move
 import codecs
 from uuid import UUID
@@ -47,14 +48,17 @@ def reports(request):
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report(request, analysis_id, html_file):
-    report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
-    if FirmwareAnalysis.objects.filter(id=analysis_id).exists():
-        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
-        if analysis.hidden is False or analysis.user == request.user or request.user.is_superuser:
-            html_body = get_template(report_path)
-            logger.debug("html_report - analysis_id: %s html_file: %s", analysis_id, html_file)
-            return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
-        messages.error(request, "User not authorized")
+    # make sure the html file is valid
+    html_file_pattern = re.compile(r'^[\w,\s-]+\.html$')
+    if html_file.endswith('.html') and bool(re.match(html_file_pattern, html_file)):
+        report_path = Path(f'{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/html-report/{html_file}')
+        if FirmwareAnalysis.objects.filter(id=analysis_id).exists():
+            analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+            if analysis.hidden is False or analysis.user == request.user or request.user.is_superuser:
+                html_body = get_template(report_path)
+                logger.debug("html_report - analysis_id: %s html_file: %s", analysis_id, html_file)
+                return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
+            messages.error(request, "User not authorized")
     logger.error("could  not get template - %s", request)
     return redirect("..")
 
@@ -63,7 +67,7 @@ def html_report(request, analysis_id, html_file):
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report_path(request, analysis_id, html_path, file):
     """
-    The functions needs to either server html files or provide download 
+    The functions needs to either server html files or provide download
     """
     if FirmwareAnalysis.objects.filter(id=analysis_id).exists():
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
@@ -118,32 +122,33 @@ def html_report_path(request, analysis_id, html_path, file):
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report_resource(request, analysis_id, img_file):
-    if FirmwareAnalysis.objects.filter(id=analysis_id).exists():
-        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
-        if analysis.hidden is False or analysis.user == request.user or request.user.is_superuser:
-            content_type = "text/plain"
+    # make sure the html file is valid
+    img_file_pattern = re.compile(r'^[\w,\s-]+\.+(css|svg|png)$')
+    if bool(re.match(img_file_pattern, img_file)):
+        if FirmwareAnalysis.objects.filter(id=analysis_id).exists():
+            analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+            if analysis.hidden is False or analysis.user == request.user or request.user.is_superuser:
+                content_type = "text/plain"
 
-            if img_file.endswith(".css"):
-                content_type = "text/css"
-            elif img_file.endswith(".svg"):
-                content_type = "image/svg+xml"
-            elif img_file.endswith(".png"):
-                content_type = "image/png"
+                if img_file.endswith(".css"):
+                    content_type = "text/css"
+                elif img_file.endswith(".svg"):
+                    content_type = "image/svg+xml"
+                elif img_file.endswith(".png"):
+                    content_type = "image/png"
 
-            resource_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
-            logger.info("html_report_resource - analysis_id: %s request.path: %s", analysis_id, request.path)
+                resource_path = Path(f'{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/html-report/style/{img_file}')
+                logger.info("html_report_resource - analysis_id: %s request.path: %s", analysis_id, request.path)
 
-            try:
-                # CodeQL issue is not relevant as the urls are defined via urls.py
-                with open(resource_path, "rb") as file_:
-                    return HttpResponse(file_.read(), content_type=content_type)
-            except IOError as error:
-                logger.error(error)
-                logger.error(request.path)
-    # just in case -> back to report intro
-    report_path = Path(f'{settings.EMBA_LOG_ROOT}{request.path[10:]}')
-    html_body = get_template(report_path)
-    return HttpResponse(html_body.render())
+                try:
+                    # CodeQL issue is not relevant as the urls are defined via urls.py
+                    with open(resource_path, "rb") as file_:
+                        return HttpResponse(file_.read(), content_type=content_type)
+                except IOError as error:
+                    logger.error(error)
+                    logger.error(request.path)
+    logger.error("could  not get path - %s", request)
+    return redirect("..")
 
 
 @require_http_methods(["GET"])

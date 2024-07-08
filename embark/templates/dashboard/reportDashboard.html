@@ -115,7 +115,7 @@
                                                     <button type="submit" class="btn buttonRowElem" >Make Zip of EMBA-logs</button>
                                                 </form>
                                             {% endif %}
-                                            <form action={% url 'embark-html-report' firmware.id 'index.html' %} method='get'>
+                                            <form action={% url 'embark-html-report-index' firmware.id 'index.html' %} method='get'>
                                                 <button type="submit" class="btn buttonRowElem" >Open Report</button>
                                             </form>
                                             <form action={% url 'embark-IndividualReportDashboard' firmware.id %} method='get'>
