@@ -184,7 +184,7 @@ banditer() {
     exit 1
   fi
   
-  mapfile -t PY_SCRIPTS < <(find . -type d -name migrations -prune -false -o -iname "*.py" -not -path "./.venv/*" -not -path "./emba/*")
+  mapfile -t PY_SCRIPTS < <(find . -type d -name migrations -prune -false -o -iname "*.py" -not -path "./.venv/*" -not -path "./emba/*" -not -path "./emba_logs/*")
 
   for PY_SCRIPT in "${PY_SCRIPTS[@]}"; do
     echo -e "\\n""${GREEN}""Run bandit on ${PY_SCRIPT}:""${NC}""\\n"
@@ -294,11 +294,11 @@ list_linter_exceptions(){
       SEARCH_TYPE_="sh"
       ;;
     bandit)
-      SEARCH_PAR_="nosec"
+      SEARCH_PAR_=" nosec"
       SEARCH_TYPE_="py"
       ;;
     pylint)
-      SEARCH_PAR_="pylint"
+      SEARCH_PAR_="pylint: disable"
       SEARCH_TYPE_="py"
       ;;
     djlint)
@@ -350,13 +350,14 @@ shellchecker
 list_linter_exceptions "shellcheck" "$PWD"
 dockerchecker
 jscheck
-list_linter_exceptions "jshint" "$PWD"
+list_linter_exceptions "jshint" "$PWD/embark"
 templatechecker
-list_linter_exceptions "djlint" "$PWD"
+list_linter_exceptions "djlint" "$PWD/embark"
 pycodestyle_check
 banditer
-list_linter_exceptions "bandit" "$PWD" "${PWD}/.venv"
+list_linter_exceptions "bandit" "$PWD/embark"
 pylinter
+list_linter_exceptions "pylint" "$PWD/embark"
 check_django
 yamlchecker
 copy_right_check 2024 "${PWD}" "${PWD}/emba_logs"
