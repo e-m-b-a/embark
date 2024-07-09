@@ -48,17 +48,21 @@ def reports(request):
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report(request, analysis_id, html_file):
+    """
+    Let's the user request any html in the html-report
+    Checks: valid filename
+    TODO test traversal
+    """
     # make sure the html file is valid
     html_file_pattern = re.compile(r'^[\w,\s-]+\.html$')
-    if html_file.endswith('.html') and bool(re.match(html_file_pattern, html_file)):
-        report_path = Path(f'{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/html-report/{html_file}')
-        if FirmwareAnalysis.objects.filter(id=analysis_id).exists():
-            analysis = FirmwareAnalysis.objects.get(id=analysis_id)
-            if analysis.hidden is False or analysis.user == request.user or request.user.is_superuser:
-                html_body = get_template(report_path)
-                logger.debug("html_report - analysis_id: %s html_file: %s", analysis_id, html_file)
-                return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
-            messages.error(request, "User not authorized")
+    report_path = Path(f'{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/html-report/{html_file}')
+    if FirmwareAnalysis.objects.filter(id=analysis_id).exists() and bool(re.match(html_file_pattern, html_file)):
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        if analysis.hidden is False or analysis.user == request.user or request.user.is_superuser:
+            html_body = get_template(report_path)
+            logger.debug("html_report - analysis_id: %s html_file: %s", analysis_id, html_file)
+            return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
+        messages.error(request, "User not authorized")
     logger.error("could  not get template - %s", request)
     return redirect("..")
 
@@ -67,9 +71,12 @@ def html_report(request, analysis_id, html_file):
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report_path(request, analysis_id, html_path, file):
     """
-    The functions needs to either server html files or provide download
+    The functions needs to either serve html files or provide download of files in the subdirs
+    Checks: valid filename, path.resolved in correct parent
     """
-    if FirmwareAnalysis.objects.filter(id=analysis_id).exists():
+    # make sure the html file is valid
+    file_pattern = re.compile(r'^[\w,\s-]+\.+(tar.gz|html)$')
+    if FirmwareAnalysis.objects.filter(id=analysis_id).exists() and bool(re.match(file_pattern, file)):
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         if analysis.hidden is False or analysis.user == request.user or request.user.is_superuser:
             resource_path = f'{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/html-report/{html_path}/{file}'
@@ -122,6 +129,10 @@ def html_report_path(request, analysis_id, html_path, file):
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report_resource(request, analysis_id, img_file):
+    """
+    Serves all resource files needed by the report
+    Chcks: filename validity
+    """
     # make sure the html file is valid
     img_file_pattern = re.compile(r'^[\w,\s-]+\.+(css|svg|png)$')
     if bool(re.match(img_file_pattern, img_file)):
