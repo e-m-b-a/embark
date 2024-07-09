@@ -1,5 +1,7 @@
+import base64
 import logging
 import os
+import re
 
 from django.conf import settings
 from django.shortcuts import render
@@ -25,7 +27,11 @@ def updater_home(request):
     req_logger.info("User %s called updater_home", request.user.username)
     emba_update_form = EmbaUpdateForm()
     emba_check_form = CheckForm()
-    return render(request, 'updater/index.html', {'emba_update_form': emba_update_form, 'emba_check_form': emba_check_form})
+    # get into the progress.html f"{settings.EMBA_LOG_ROOT}/emba_check.html"
+    with open(f"{settings.EMBA_LOG_ROOT}/emba_check.html", 'r') as in_file_:
+        text = in_file_.read()
+        #text = re.search(r'<html>\n.*?<\\html>', in_file_.read(), re.DOTALL).group()
+    return render(request, 'updater/index.html', {'emba_update_form': emba_update_form, 'emba_check_form': emba_check_form, 'log_content': text})
 
 
 @csrf_protect
@@ -33,7 +39,7 @@ def updater_home(request):
 @login_required(login_url='/' + settings.LOGIN_URL)
 def check_update(request):
     """
-    checks if components are updateable via wss
+    checks if components are updateable
 
     :params request: HTTP request
 
@@ -52,7 +58,7 @@ def check_update(request):
         # inject into bounded Executor
         if BoundedExecutor.submit_emba_check(option=check_option):
             messages.info(request, "Checking now")
-            return redirect('embark-updater-log')
+            return redirect('embark-updater-home')
         logger.error("Server Queue full, or other boundenexec error")
         messages.error(request, 'Queue full')
         return redirect('embark-updater-home')
@@ -97,4 +103,14 @@ def progress(request):
     """
     shows the dep check to the user
     """
+    return render(request, 'updater/progress.html', {})
+
+@csrf_protect
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def raw_progress(request):
+    """
+    shows the dep check to the user as raw file
+    """
+    # TODO
     return render(request, 'updater/progress.html', {})

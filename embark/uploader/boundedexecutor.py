@@ -29,6 +29,7 @@ from embark.helper import get_size, zip_check
 from porter.models import LogZipFile
 from porter.importer import result_read_in
 
+from ansi2html import Ansi2HTMLConverter
 
 logger = logging.getLogger(__name__)
 
@@ -367,16 +368,21 @@ class BoundedExecutor:
         try:
             cmd = f"{EMBA_SCRIPT_LOCATION} -d{option}"
 
-            with open(f"{settings.EMBA_LOG_ROOT}/check.log", "w+", encoding="utf-8") as file:
+            with open(f"{settings.EMBA_LOG_ROOT}/emba_check.log", "w+", encoding="utf-8") as file:
                 proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
                 # wait for completion
                 proc.communicate()
+                return_code = proc.wait()
             # success
             logger.info("Check Successful: %s", cmd)
-        except BaseException as exce:
+            if return_code != 0:
+                raise BoundedException("EMBA has non zero exit-code")
+            with open(f"{settings.EMBA_LOG_ROOT}/emba_check.log", 'r') as in_file_, open(f"{settings.EMBA_LOG_ROOT}/emba_check.html", 'w+') as out_file_:
+                conv = Ansi2HTMLConverter()
+                file_content = conv.convert(in_file_.read())
+                out_file_.write(file_content)
+        except (BaseException, BoundedException) as exce:
             logger.error("emba dep check error: %s", exce)
-        
-        # TODO take resulting log and show to user
             
         room_group_name = f"versions"
         channel_layer = get_channel_layer()
@@ -384,7 +390,7 @@ class BoundedExecutor:
         async_to_sync(channel_layer.group_send)(
             room_group_name, {
                 "type": 'send.message',
-                "message": {}   # TODO same as logviewer
+                "message": {f"EMBA dep check {option}": return_code}
             }
         )
         

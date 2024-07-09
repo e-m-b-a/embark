@@ -3,7 +3,10 @@
 {% load django_bootstrap5 %}
 {% load tz %}
 
-{% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/updater.css' %}"/>{% endblock style %}
+{% block style %}
+<link rel="stylesheet" type="text/css" href="{% static 'content/css/logviewer.css' %}"/>
+<link rel="stylesheet" type="text/css" href="{% static 'content/css/updater.css' %}"/>
+{% endblock style %}
 
 {% block title %}EMBArk updater dashboard{% endblock title %}
 {% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
@@ -26,16 +29,18 @@
     <div class="update-check d-flex justify-content-center">
       <h3><span class="badge bg-secondary">EMBA version</span>  {{ EMBA_VERSION }}</h3>
     </div>
-    <div class="check">
+    <div id="progress">
+      {% block progress %}{% include "updater/progress.html" %}{% endblock progress %}
+    </div>
+    <div id="check">
       {% block check %}{% include "updater/check.html" %}{% endblock check %}
     </div>
-    <div class="update">
-        <div class="row uploadRow">
-            <p>
-              <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEMBA" aria-expanded="false" aria-controls="collapseEMBA" title="Update EMBA">
-                Update EMBA
-              </button>
-            </p>
+    <div id="update">
+          <p>
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEMBA" aria-expanded="false" aria-controls="collapseEMBA" title="Update EMBA">
+              Update EMBA
+            </button>
+          </p>
         {% block update %}{% include "updater/update.html" %}{% endblock update %}
     </div>
    
