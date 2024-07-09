@@ -75,7 +75,7 @@ def html_report_path(request, analysis_id, html_path, file):
     Checks: valid filename, path.resolved in correct parent
     """
     # make sure the html file is valid
-    file_pattern = re.compile(r'^[\w][\w\.]+\.(tar.gz|html)$')
+    file_pattern = re.compile(r'^[\w\.-]+\.(tar.gz|html)$')
     if FirmwareAnalysis.objects.filter(id=analysis_id).exists() and bool(re.match(file_pattern, file)):
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         if analysis.hidden is False or analysis.user == request.user or request.user.is_superuser:
