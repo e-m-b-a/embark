@@ -416,12 +416,14 @@ install_embark_dev(){
   # install pipenv
   pip3 install pipenv
 
-  #Add user nosudo
+  # Add user nosudo
   echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD: ""${PWD}""/emba/emba" | EDITOR='tee -a' visudo
   echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD: /bin/pkill" | EDITOR='tee -a' visudo
   echo "root ALL=(ALL) NOPASSWD: ""${PWD}""/emba/emba" | EDITOR='tee -a' visudo
   echo "root ALL=(ALL) NOPASSWD: /bin/pkill" | EDITOR='tee -a' visudo
 
+  # Set some globals
+  echo "NO_UPDATE_CHECK=1" >> /etc/environment
 
   #pipenv
   MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv install --dev

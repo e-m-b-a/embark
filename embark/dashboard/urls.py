@@ -1,3 +1,7 @@
+__copyright__ = 'Copyright 2022-2024 Siemens Energy AG, Copyright 2023 Christian Bieg'
+__author__ = 'Benedikt Kuehne, Christian Bieg'
+__license__ = 'MIT'
+
 from django.urls import path
 
 from dashboard import views
@@ -16,5 +20,6 @@ urlpatterns = [
     path('dashboard/log/<uuid:analysis_id>', views.show_log, name='embark-show-log'),
     path('dashboard/logviewer/<uuid:analysis_id>', views.show_logviewer, name='embark-show-logviewer'),
     path('dashboard/report/createlabel/', views.create_label, name='embark-dashboard-create-label'),
-    path('dashboard/report/addlabel/<uuid:analysis_id>', views.add_label, name='embark-dashboard-add-label')
+    path('dashboard/report/addlabel/<uuid:analysis_id>', views.add_label, name='embark-dashboard-add-label'),
+    path('dashboard/report/rmlabel/<uuid:analysis_id><str:label_name>', views.rm_label, name='embark-dashboard-remove-label'),
 ]

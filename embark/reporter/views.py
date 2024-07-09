@@ -1,4 +1,8 @@
 # pylint: disable=W0613,C0206
+__copyright__ = 'Copyright 2021-2024 Siemens Energy AG'
+__author__ = 'Benedikt Kuehne'
+__license__ = 'MIT'
+
 from pathlib import Path
 
 import json
@@ -89,23 +93,24 @@ def html_report_path(request, analysis_id, html_path, html_file):
 
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def html_report_download(request, analysis_id, html_path, download_file):    # TODO Needed for EMBA?
+def html_report_download(request, analysis_id, html_path, download_file):
     response = Http404("Resource not found")
     if FirmwareAnalysis.objects.filter(id=analysis_id).exists():
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         if analysis.hidden is False or analysis.user == request.user or request.user.is_superuser:
-            base_path = f"{settings.EMBA_LOG_ROOT}"
-            if request.path.startswith('/'):
-                file_path = request.path[1:]
-            else:
-                file_path = request.path[2:]
-            full_path = os.path.normpath(os.path.join(base_path, file_path))
-            if full_path.startswith(base_path):
-                with open(full_path, 'rb') as requested_file:
-                    response = HttpResponse(requested_file.read(), content_type="text/plain")
-                    response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(full_path)
-                    logger.info("html_report - analysis_id: %s html_path: %s download_file: %s", analysis_id, html_path,
-                                download_file)
+            resource_path = os.path.abspath(f'{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/html-report/{html_path}/{download_file}')
+            parent_path = os.path.abspath(f'{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/html-report/')
+            if os.path.commonpath([parent_path, resource_path]) == parent_path:
+                try:
+                    with open(resource_path, 'rb') as requested_file:
+                        response = HttpResponse(requested_file.read(), content_type="text/plain")
+                        response['Content-Disposition'] = 'attachment; filename=' + download_file
+                        logger.info("html_report - analysis_id: %s html_path: %s download_file: %s", analysis_id, html_path,
+                                    download_file)
+                except FileNotFoundError:
+                    messages.error(request, "File not found on the server")
+                    logger.error("Couldn't find %s", resource_path)
+                    response = HttpResponse("Couldn't find %s", resource_path)
     return response
 
 

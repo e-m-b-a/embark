@@ -1,3 +1,7 @@
+__copyright__ = 'Copyright 2021-2024 Siemens Energy AG'
+__author__ = 'Benedikt Kuehne'
+__license__ = 'MIT'
+
 from pathlib import Path
 import os
 import pytz

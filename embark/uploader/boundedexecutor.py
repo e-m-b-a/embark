@@ -1,4 +1,8 @@
 # pylint: disable=R1732, C0201, E1129, W1509
+__copyright__ = 'Copyright 2021-2024 Siemens Energy AG, Copyright 2021 The AMOS Projects'
+__author__ = 'Benedikt Kuehne, m-1-k-3'
+__license__ = 'MIT'
+
 import builtins
 import logging
 import os
@@ -15,6 +19,7 @@ from channels.layers import get_channel_layer
 from django.dispatch import receiver
 from django.utils import timezone
 from django.conf import settings
+from django.db import close_old_connections
 
 from uploader import finish_execution
 from uploader.archiver import Archiver
@@ -92,6 +97,7 @@ class BoundedExecutor:
             if return_code != 0:
                 raise BoundedException("EMBA has non zero exit-code")
 
+            close_old_connections()
             # get csv log location
             csv_log_location = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/csv_logs/f50_base_aggregator.csv"
 

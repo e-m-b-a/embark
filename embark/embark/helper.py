@@ -1,6 +1,10 @@
-from pathlib import Path
+__copyright__ = 'Copyright 2022-2024 Siemens Energy AG'
+__author__ = 'Benedikt Kuehne'
+__license__ = 'MIT'
+
 from random import randrange
 import os
+from pathlib import Path
 
 # from embark.settings.deploy import EMBA_ROOT
 EMBA_ROOT = os.path.join('/home/benedikt/embark', 'emba')
