@@ -28,10 +28,14 @@ def updater_home(request):
     emba_update_form = EmbaUpdateForm()
     emba_check_form = CheckForm()
     # get into the progress.html f"{settings.EMBA_LOG_ROOT}/emba_check.html"
-    with open(f"{settings.EMBA_LOG_ROOT}/emba_check.html", 'r') as in_file_:
-        text = in_file_.read()
-        #text = re.search(r'<html>\n.*?<\\html>', in_file_.read(), re.DOTALL).group()
-    return render(request, 'updater/index.html', {'emba_update_form': emba_update_form, 'emba_check_form': emba_check_form, 'log_content': text})
+    try:
+        with open(f"{settings.EMBA_LOG_ROOT}/emba_check.html", 'r') as in_file_:
+            log_content = in_file_.read()
+    except FileNotFoundError:
+        logger.error('No dep check file exists yet')
+        messages.error(request, "There is no dependancy check log yet")
+        log_content = "EMPTY"
+    return render(request, 'updater/index.html', {'emba_update_form': emba_update_form, 'emba_check_form': emba_check_form, 'log_content': log_content})
 
 
 @csrf_protect

@@ -281,6 +281,10 @@ install_debs(){
   if ! dpkg -l python3-django &>/dev/null; then
     apt-get install -y python3-django
   fi
+  # ansifilter
+  if ! command -v ansifilter > /dev/null ; then
+    apt-get install -y ansifilter
+  fi
 }
 
 install_daemon(){

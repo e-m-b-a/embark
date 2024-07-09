@@ -29,8 +29,6 @@ from embark.helper import get_size, zip_check
 from porter.models import LogZipFile
 from porter.importer import result_read_in
 
-from ansi2html import Ansi2HTMLConverter
-
 logger = logging.getLogger(__name__)
 
 # maximum concurrent running workers
@@ -366,9 +364,9 @@ class BoundedExecutor:
         """
         logger.debug("Checking EMBA with: %d", option)
         try:
-            cmd = f"{EMBA_SCRIPT_LOCATION} -d{option}"
+            cmd = f"{EMBA_SCRIPT_LOCATION} -d{option} | ansifilter -H -o {settings.EMBA_LOG_ROOT}/emba_check.html"
 
-            with open(f"{settings.EMBA_LOG_ROOT}/emba_check.log", "w+", encoding="utf-8") as file:
+            with open(f"{settings.EMBA_LOG_ROOT}/emba_check.log", "w+", encoding="utf-8") as file: # File should be empty
                 proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
                 # wait for completion
                 proc.communicate()
@@ -377,10 +375,6 @@ class BoundedExecutor:
             logger.info("Check Successful: %s", cmd)
             if return_code != 0:
                 raise BoundedException("EMBA has non zero exit-code")
-            with open(f"{settings.EMBA_LOG_ROOT}/emba_check.log", 'r') as in_file_, open(f"{settings.EMBA_LOG_ROOT}/emba_check.html", 'w+') as out_file_:
-                conv = Ansi2HTMLConverter()
-                file_content = conv.convert(in_file_.read())
-                out_file_.write(file_content)
         except (BaseException, BoundedException) as exce:
             logger.error("emba dep check error: %s", exce)
             
