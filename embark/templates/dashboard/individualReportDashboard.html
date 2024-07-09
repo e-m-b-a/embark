@@ -39,9 +39,11 @@
                     <form action={% url 'embark-html-report-index' analysis_id 'index.html' %} method='get'>
                         <button class="btn buttonRowElem" type="submit">Open Report</button>
                     </form>
-                    <form action={% url 'embark-download' analysis_id %} method='get'>
-                        <button class="btn buttonRowElem" type="submit">Download Report</button>
-                    </form>
+                    {% if firmware.zip_file is not None %}
+                      <form action={% url 'embark-download' analysis_id %} method='get'>
+                          <button class="btn buttonRowElem" type="submit">Download Report</button>
+                      </form>
+                    {% endif %}
                     <!-- TODO add another uploader/start pattern for firmware_id-->
                     <form action={% url 'embark-uploader-home' %} method='get'>
                         <button type="submit" class="btn buttonRowElem" >Rescan</button>
