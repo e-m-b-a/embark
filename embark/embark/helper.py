@@ -67,13 +67,13 @@ def get_version_strings():
     # gets us the currently installed version
     if Path(EMBA_ROOT + "/external/onlinechecker").exists():
         # get the latest version nnumbers
-        with open(Path(EMBA_ROOT + "/external/onlinechecker/EMBA_VERSION.txt"),'r') as emba_version_file:
+        with open(Path(EMBA_ROOT + "/external/onlinechecker/EMBA_VERSION.txt"),'r', 'UTF-8') as emba_version_file:
             stable_emba_version = emba_version_file.read().splitlines()[0]
-        with open(Path(EMBA_ROOT + "/external/onlinechecker/EMBA_CONTAINER_HASH.txt"),'r') as container_version_file:
+        with open(Path(EMBA_ROOT + "/external/onlinechecker/EMBA_CONTAINER_HASH.txt"),'r', 'UTF-8') as container_version_file:
             container_version = container_version_file.read().splitlines()[0]
         with open(Path(EMBA_ROOT + "/external/onlinechecker/NVD_HASH.txt"),'r') as nvd_version_file:
             nvd_version = nvd_version_file.read().splitlines()[0]
-        with open(Path(EMBA_ROOT + "/external/onlinechecker/EMBA_GITHUB_HASH.txt"),'r') as emba_github_version_file:
+        with open(Path(EMBA_ROOT + "/external/onlinechecker/EMBA_GITHUB_HASH.txt"),'r', 'UTF-8') as emba_github_version_file:
             github_emba_version = emba_github_version_file.read().splitlines()[0]
     else:
         stable_emba_version = ""
@@ -82,13 +82,13 @@ def get_version_strings():
         github_emba_version = ""
 
     if Path(EMBA_ROOT + "/config/VERSION.txt").exists():
-        with open(Path(EMBA_ROOT + "/config/VERSION.txt"),'r') as emba_version_file:
+        with open(Path(EMBA_ROOT + "/config/VERSION.txt"),'r', 'UTF-8') as emba_version_file:
             emba_version = emba_version_file.read().splitlines()[0]
     else:
         emba_version = ""
 
     if Path("./VERSION.txt").exists():
-        with open(Path("./VERSION.txt"),'r') as embark_version_file:
+        with open(Path("./VERSION.txt"),'r', 'UTF-8') as embark_version_file:
             embark_version = embark_version_file.read().splitlines()[0]
     else:
         embark_version = ""

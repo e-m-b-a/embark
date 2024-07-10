@@ -386,8 +386,8 @@ class BoundedExecutor:
                 raise BoundedException("EMBA has non zero exit-code")
         except (BaseException, BoundedException) as exce:
             logger.error("emba dep check error: %s", exce)
-            
-        room_group_name = f"versions"
+
+        room_group_name = "versions"
         channel_layer = get_channel_layer()
         # send ws message
         async_to_sync(channel_layer.group_send)(

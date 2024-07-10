@@ -1,17 +1,12 @@
-import base64
 import logging
-import os
-import re
 
 from django.conf import settings
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.views.decorators.csrf import csrf_protect
-from embark.helper import get_version_strings
 
 from updater.forms import CheckForm, EmbaUpdateForm
 from uploader.boundedexecutor import BoundedExecutor
