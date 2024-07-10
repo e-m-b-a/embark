@@ -329,13 +329,22 @@ class BoundedExecutor:
                 # 1.check archive contents (security)
                 zip_contents = zip_.namelist()
                 if zip_check(zip_contents):
-                    # 2.extract
+                    # 2.extract blindly
                     logger.debug("extracting....")
                     zip_.extractall(path=Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/"))
                     logger.debug("finished unzipping....")
                 else:
-                    logger.error("Wont extract since there are inconsistencies with the zip file")
-
+                    logger.info("There are inconsistencies with the zip file, extracting.....")
+                    zip_.extractall(path=Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/tmp/"))
+                    logger.debug("finished unzipping, now renaming")
+                    # renaming and moving
+                    # 1. find toplevel in tmp (takes first find)
+                    for root_, dir_ in os.walk(Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/tmp/")):
+                        if os.path.dirname(dir_) == "html-report":
+                            top_level = os.path.abspath(root_)
+                            break
+                    # 2. move dirs and file from there into emba_logs
+                    shutil.move(top_level, f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs")
                 # 3. sanity check (conformity)
                 # TODO check the files
         except builtins.Exception as exce:
