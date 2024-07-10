@@ -55,9 +55,9 @@ def check_update(request):
     if form.is_valid():
         option = form.cleaned_data["option"]
         if option == 'BOTH':
-            check_option = '1'
+            check_option = 1
         elif option == 'CONTAINER':
-            check_option = '2'
+            check_option = 2
         logger.debug("Got option %d for emba dep check", check_option)
         # inject into bounded Executor
         if BoundedExecutor.submit_emba_check(option=check_option):

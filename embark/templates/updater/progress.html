@@ -1,9 +1,5 @@
 {% load django_bootstrap5 %}
 {% load static %}
 <div class="box">
-    <div class="col-sm">
-        <div class="box">
-            {{ log_content|safe }}
-        </div>
-    </div>
+    {{ log_content|safe }}
 </div>

@@ -373,7 +373,7 @@ class BoundedExecutor:
         """
         logger.debug("Checking EMBA with: %d", option)
         try:
-            cmd = f"{EMBA_SCRIPT_LOCATION} -d{option} | ansifilter -H -o {settings.EMBA_LOG_ROOT}/emba_check.html"
+            cmd = f"{EMBA_SCRIPT_LOCATION} -d{option} | ansifilter -H -o {settings.EMBA_LOG_ROOT}/emba_check.html -s 5pt"
 
             with open(f"{settings.EMBA_LOG_ROOT}/emba_check.log", "w+", encoding="utf-8") as file: # File should be empty
                 proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
