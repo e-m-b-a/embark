@@ -429,10 +429,10 @@ install_embark_dev(){
   # Set some globals
   echo "NO_UPDATE_CHECK=1" >> /etc/environment
 
-  #pipenv
+  # pipenv
   MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
 
-  #Server-Dir
+  # Server-Dir
   if ! [[ -d media ]]; then
     mkdir media
   fi
