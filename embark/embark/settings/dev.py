@@ -142,7 +142,7 @@ LOGGING = {
             'level': 'WARNING',
             'handlers': ['info_handler', 'console_handler'],
         },
-         'updater': {
+        'updater': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
             'level': 'DEBUG',
          },

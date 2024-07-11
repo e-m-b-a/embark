@@ -375,7 +375,7 @@ class BoundedExecutor:
         try:
             cmd = f"{EMBA_SCRIPT_LOCATION} -d{option} | ansifilter -H -o {settings.EMBA_LOG_ROOT}/emba_check.html -s 5pt"
 
-            with open(f"{settings.EMBA_LOG_ROOT}/emba_check.log", "w+", encoding="utf-8") as file: # File should be empty
+            with open(f"{settings.EMBA_LOG_ROOT}/emba_check.log", "w+", encoding="utf-8") as file:
                 proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
                 # wait for completion
                 proc.communicate()
@@ -396,7 +396,6 @@ class BoundedExecutor:
                 "message": {f"EMBA dep check {option}": return_code}
             }
         )
-        
 
     @classmethod
     def submit_zip(cls, uuid):

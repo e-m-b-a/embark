@@ -24,7 +24,7 @@ def updater_home(request):
     emba_check_form = CheckForm()
     # get into the progress.html f"{settings.EMBA_LOG_ROOT}/emba_check.html"
     try:
-        with open(f"{settings.EMBA_LOG_ROOT}/emba_check.html", 'r') as in_file_:
+        with open(f"{settings.EMBA_LOG_ROOT}/emba_check.html", 'r', encoding='UTF-8') as in_file_:
             log_content = in_file_.read()
     except FileNotFoundError:
         logger.error('No dep check file exists yet')
@@ -49,8 +49,9 @@ def check_update(request):
     form = CheckForm(request.POST)
     if form.is_valid():
         option = form.cleaned_data["option"]
+        check_option = 1
         if option == 'BOTH':
-            check_option = 1
+            pass
         elif option == 'CONTAINER':
             check_option = 2
         logger.debug("Got option %d for emba dep check", check_option)
@@ -103,6 +104,7 @@ def progress(request):
     shows the dep check to the user
     """
     return render(request, 'updater/progress.html', {})
+
 
 @csrf_protect
 @require_http_methods(["GET"])

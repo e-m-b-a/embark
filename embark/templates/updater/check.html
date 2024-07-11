@@ -1,8 +1,6 @@
 {% load django_bootstrap5 %}
 
 <div class="box">
-
-
     <form action="{% url 'embark-updater-check' %}" method="post" id="form">
         {% csrf_token %}
         <div class="innerBlock">
@@ -11,5 +9,4 @@
             <button type="submit" class="btn btn-primary">Check</button>
         </div>
     </form>
-
 </div>
