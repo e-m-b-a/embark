@@ -12,6 +12,8 @@ import pytz
 
 from dotenv import load_dotenv
 
+from embark.helper import get_version_strings
+
 # load .env file
 load_dotenv()
 
@@ -56,7 +58,8 @@ INSTALLED_APPS = [
     'reporter',
     'dashboard',
     'tracker',
-    'porter'
+    'porter',
+    'updater'
 ]
 
 AUTH_USER_MODEL = 'users.User'
@@ -193,6 +196,10 @@ LOGGING = {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
             'level': 'INFO',
         },
+        'updater': {
+            'handlers': ['debug_handler', 'info_handler', 'console_handler'],
+            'level': 'DEBUG',
+        },
         'embark': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
             'level': 'INFO',
@@ -325,3 +332,5 @@ except FileNotFoundError as file_error:
     EMBA_P_MOD_CNT = 18
     EMBA_F_MOD_CNT = 4
     EMBA_L_MOD_CNT = 8
+
+VERSION = get_version_strings()

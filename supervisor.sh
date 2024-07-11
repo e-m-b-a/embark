@@ -21,8 +21,8 @@ exec 2>&1
 
 while :; do
   if ! ip a show embark_backend | grep -q "172.22.0.1" ; then
-    systemctl restart NetworkManager docker
-    echo "$(date +"%D %T")""retstarted docker-networks"
+    systemctl restart docker
+    echo "$(date +"%D %T")""retstarted docker"
   fi
   sleep 1m
 done
