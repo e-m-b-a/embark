@@ -6,8 +6,7 @@ from random import randrange
 import os
 from pathlib import Path
 
-# from embark.settings.deploy import EMBA_ROOT
-EMBA_ROOT = os.path.join('/home/benedikt/embark', 'emba')
+from django.conf import settings
 
 
 def rnd_rgb_color():
@@ -66,15 +65,15 @@ def cleanup_charfield(charfield) -> str:
 
 def get_version_strings():
     # gets us the currently installed version
-    if Path(EMBA_ROOT + "/external/onlinechecker").exists():
+    if Path(settings.EMBA_ROOT + "/external/onlinechecker").exists():
         # get the latest version nnumbers
-        with open(Path(EMBA_ROOT + "/external/onlinechecker/EMBA_VERSION.txt"), 'r', encoding='UTF-8') as emba_version_file:
+        with open(Path(settings.EMBA_ROOT + "/external/onlinechecker/EMBA_VERSION.txt"), 'r', encoding='UTF-8') as emba_version_file:
             stable_emba_version = emba_version_file.read().splitlines()[0]
-        with open(Path(EMBA_ROOT + "/external/onlinechecker/EMBA_CONTAINER_HASH.txt"), 'r', encoding='UTF-8') as container_version_file:
+        with open(Path(settings.EMBA_ROOT + "/external/onlinechecker/EMBA_CONTAINER_HASH.txt"), 'r', encoding='UTF-8') as container_version_file:
             container_version = container_version_file.read().splitlines()[0]
-        with open(Path(EMBA_ROOT + "/external/onlinechecker/NVD_HASH.txt"), 'r', encoding='UTF-8') as nvd_version_file:
+        with open(Path(settings.EMBA_ROOT + "/external/onlinechecker/NVD_HASH.txt"), 'r', encoding='UTF-8') as nvd_version_file:
             nvd_version = nvd_version_file.read().splitlines()[0]
-        with open(Path(EMBA_ROOT + "/external/onlinechecker/EMBA_GITHUB_HASH.txt"), 'r', encoding='UTF-8') as emba_github_version_file:
+        with open(Path(settings.EMBA_ROOT + "/external/onlinechecker/EMBA_GITHUB_HASH.txt"), 'r', encoding='UTF-8') as emba_github_version_file:
             github_emba_version = emba_github_version_file.read().splitlines()[0]
     else:
         stable_emba_version = ""
@@ -82,8 +81,8 @@ def get_version_strings():
         nvd_version = ""
         github_emba_version = ""
 
-    if Path(EMBA_ROOT + "/config/VERSION.txt").exists():
-        with open(Path(EMBA_ROOT + "/config/VERSION.txt"), 'r', encoding='UTF-8') as emba_version_file:
+    if Path(settings.EMBA_ROOT + "/config/VERSION.txt").exists():
+        with open(Path(settings.EMBA_ROOT + "/config/VERSION.txt"), 'r', encoding='UTF-8') as emba_version_file:
             emba_version = emba_version_file.read().splitlines()[0]
     else:
         emba_version = ""
