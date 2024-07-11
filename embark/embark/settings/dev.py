@@ -145,7 +145,7 @@ LOGGING = {
         'updater': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
             'level': 'DEBUG',
-         },
+        },
         'uploader': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
             'level': 'DEBUG',
