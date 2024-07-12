@@ -63,6 +63,24 @@ def cleanup_charfield(charfield) -> str:
     return charfield
 
 
+def count_emba_modules(emba_dir_path):
+    s_module_cnt, p_module_cnt, q_module_cnt, l_module_cnt, f_module_cnt, d_module_cnt = 0, 0, 0, 0, 0, 0
+    for mod_file_ in os.listdir(f"{emba_dir_path}/modules"):
+        if mod_file_.startswith('S'):
+            s_module_cnt += 1
+        elif mod_file_.startswith('P'):
+            p_module_cnt += 1
+        elif mod_file_.startswith('F'):
+            f_module_cnt += 1
+        elif mod_file_.startswith('L'):
+            l_module_cnt += 1
+        elif mod_file_.startswith('Q'):
+            q_module_cnt += 1
+        elif mod_file_.startswith('D'):
+            d_module_cnt += 1
+    return s_module_cnt, p_module_cnt, q_module_cnt, l_module_cnt, f_module_cnt, d_module_cnt
+
+
 def get_version_strings():
     # gets us the currently installed version
     if Path(settings.EMBA_ROOT + "/external/onlinechecker").exists():
@@ -100,4 +118,4 @@ if __name__ == '__main__':
     TEST_STRING = 'Linux / v2.6.33.2'
     print(cleanup_charfield(TEST_STRING))
 
-    print(get_version_strings())
+    print(count_emba_modules(emba_dir_path="/home/cylox/embark/emba"))

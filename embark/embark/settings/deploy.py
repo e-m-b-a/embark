@@ -12,7 +12,7 @@ import pytz
 
 from dotenv import load_dotenv
 
-from embark.helper import get_version_strings
+from embark.helper import count_emba_modules, get_version_strings
 
 # load .env file
 load_dotenv()
@@ -307,30 +307,9 @@ CHANNEL_LAYERS = {
 SECURE_HSTS_SECONDS = 0
 SECURE_SSL_REDIRECT = False
 
-
-def count_emba_modules(emba_dir_path):
-    s_module_cnt, p_module_cnt, q_module_cnt, l_module_cnt, f_module_cnt = 0, 0, 0, 0, 0
-    for mod_file_ in os.listdir(f"{emba_dir_path}/modules"):
-        if mod_file_.startswith('S'):
-            s_module_cnt += 1
-        elif mod_file_.startswith('P'):
-            p_module_cnt += 1
-        elif mod_file_.startswith('F'):
-            f_module_cnt += 1
-        elif mod_file_.startswith('L'):
-            l_module_cnt += 1
-        elif mod_file_.startswith('Q'):
-            q_module_cnt += 1
-    return s_module_cnt, p_module_cnt, f_module_cnt, l_module_cnt, q_module_cnt
-
-
 try:
-    EMBA_S_MOD_CNT, EMBA_P_MOD_CNT, EMBA_F_MOD_CNT, EMBA_L_MOD_CNT, EMBA_Q_MOD_CNT = count_emba_modules(EMBA_ROOT)
+    EMBA_S_MOD_CNT, EMBA_P_MOD_CNT, EMBA_Q_MOD_CNT, EMBA_L_MOD_CNT, EMBA_F_MOD_CNT, EMBA_D_MOD_CNT = count_emba_modules(EMBA_ROOT)
 except FileNotFoundError as file_error:
-    print("[Warning] Installation is missing the EMBA submodule")
-    EMBA_S_MOD_CNT = 44
-    EMBA_P_MOD_CNT = 18
-    EMBA_F_MOD_CNT = 4
-    EMBA_L_MOD_CNT = 8
+    EMBA_S_MOD_CNT, EMBA_P_MOD_CNT, EMBA_Q_MOD_CNT, EMBA_L_MOD_CNT, EMBA_F_MOD_CNT, EMBA_D_MOD_CNT = 46, 20, 1, 10, 6, 3
 
 VERSION = get_version_strings()
