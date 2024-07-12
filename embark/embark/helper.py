@@ -105,8 +105,11 @@ def get_version_strings():
     else:
         emba_version = ""
 
-    if Path("./VERSION.txt").exists():
-        with open(Path("./VERSION.txt"), 'r', encoding='UTF-8') as embark_version_file:
+    if Path(f"{settings.BASE_DIR}/VERSION.txt").exists():
+        with open(Path(f"{settings.BASE_DIR}/VERSION.txt"), 'r', encoding='UTF-8') as embark_version_file:
+            embark_version = embark_version_file.read().splitlines()[0]
+    elif Path(f"{settings.BASE_DIR.parent}/VERSION.txt").exists():
+        with open(Path(f"{settings.BASE_DIR.parent}/VERSION.txt"), 'r', encoding='UTF-8') as embark_version_file:
             embark_version = embark_version_file.read().splitlines()[0]
     else:
         embark_version = ""
