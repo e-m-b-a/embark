@@ -187,8 +187,10 @@ copy_file "${PWD}"/cert/embark.local.key /var/www/conf/cert
 copy_file "${PWD}"/cert/embark-ws.local.key /var/www/conf/cert
 copy_file "${PWD}"/cert/embark-ws.local.crt /var/www/conf/cert
 
-# cp .env
+
+# cp .env and version
 copy_file ./.env /var/www/embark/embark/settings/
+copy_file ./VERSION.txt /var/www/embark/
 
 # !DIRECTORY-CHANGE!
 cd /var/www/embark/ || exit 1

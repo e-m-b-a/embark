@@ -6,8 +6,7 @@ from random import randrange
 import os
 from pathlib import Path
 
-# from embark.settings.deploy import EMBA_ROOT
-EMBA_ROOT = os.path.join('/home/benedikt/embark', 'emba')
+from django.conf import settings
 
 
 def rnd_rgb_color():
@@ -64,17 +63,35 @@ def cleanup_charfield(charfield) -> str:
     return charfield
 
 
+def count_emba_modules(emba_dir_path):
+    s_module_cnt, p_module_cnt, q_module_cnt, l_module_cnt, f_module_cnt, d_module_cnt = 0, 0, 0, 0, 0, 0
+    for mod_file_ in os.listdir(f"{emba_dir_path}/modules"):
+        if mod_file_.startswith('S'):
+            s_module_cnt += 1
+        elif mod_file_.startswith('P'):
+            p_module_cnt += 1
+        elif mod_file_.startswith('F'):
+            f_module_cnt += 1
+        elif mod_file_.startswith('L'):
+            l_module_cnt += 1
+        elif mod_file_.startswith('Q'):
+            q_module_cnt += 1
+        elif mod_file_.startswith('D'):
+            d_module_cnt += 1
+    return s_module_cnt, p_module_cnt, q_module_cnt, l_module_cnt, f_module_cnt, d_module_cnt
+
+
 def get_version_strings():
     # gets us the currently installed version
-    if Path(EMBA_ROOT + "/external/onlinechecker").exists():
+    if Path(settings.EMBA_ROOT + "/external/onlinechecker").exists():
         # get the latest version nnumbers
-        with open(Path(EMBA_ROOT + "/external/onlinechecker/EMBA_VERSION.txt"), 'r', encoding='UTF-8') as emba_version_file:
+        with open(Path(settings.EMBA_ROOT + "/external/onlinechecker/EMBA_VERSION.txt"), 'r', encoding='UTF-8') as emba_version_file:
             stable_emba_version = emba_version_file.read().splitlines()[0]
-        with open(Path(EMBA_ROOT + "/external/onlinechecker/EMBA_CONTAINER_HASH.txt"), 'r', encoding='UTF-8') as container_version_file:
+        with open(Path(settings.EMBA_ROOT + "/external/onlinechecker/EMBA_CONTAINER_HASH.txt"), 'r', encoding='UTF-8') as container_version_file:
             container_version = container_version_file.read().splitlines()[0]
-        with open(Path(EMBA_ROOT + "/external/onlinechecker/NVD_HASH.txt"), 'r', encoding='UTF-8') as nvd_version_file:
+        with open(Path(settings.EMBA_ROOT + "/external/onlinechecker/NVD_HASH.txt"), 'r', encoding='UTF-8') as nvd_version_file:
             nvd_version = nvd_version_file.read().splitlines()[0]
-        with open(Path(EMBA_ROOT + "/external/onlinechecker/EMBA_GITHUB_HASH.txt"), 'r', encoding='UTF-8') as emba_github_version_file:
+        with open(Path(settings.EMBA_ROOT + "/external/onlinechecker/EMBA_GITHUB_HASH.txt"), 'r', encoding='UTF-8') as emba_github_version_file:
             github_emba_version = emba_github_version_file.read().splitlines()[0]
     else:
         stable_emba_version = ""
@@ -82,14 +99,17 @@ def get_version_strings():
         nvd_version = ""
         github_emba_version = ""
 
-    if Path(EMBA_ROOT + "/config/VERSION.txt").exists():
-        with open(Path(EMBA_ROOT + "/config/VERSION.txt"), 'r', encoding='UTF-8') as emba_version_file:
+    if Path(settings.EMBA_ROOT + "/config/VERSION.txt").exists():
+        with open(Path(settings.EMBA_ROOT + "/config/VERSION.txt"), 'r', encoding='UTF-8') as emba_version_file:
             emba_version = emba_version_file.read().splitlines()[0]
     else:
         emba_version = ""
 
-    if Path("./VERSION.txt").exists():
-        with open(Path("./VERSION.txt"), 'r', encoding='UTF-8') as embark_version_file:
+    if Path(f"{settings.BASE_DIR}/VERSION.txt").exists():
+        with open(Path(f"{settings.BASE_DIR}/VERSION.txt"), 'r', encoding='UTF-8') as embark_version_file:
+            embark_version = embark_version_file.read().splitlines()[0]
+    elif Path(f"{settings.BASE_DIR.parent}/VERSION.txt").exists():
+        with open(Path(f"{settings.BASE_DIR.parent}/VERSION.txt"), 'r', encoding='UTF-8') as embark_version_file:
             embark_version = embark_version_file.read().splitlines()[0]
     else:
         embark_version = ""
@@ -101,4 +121,4 @@ if __name__ == '__main__':
     TEST_STRING = 'Linux / v2.6.33.2'
     print(cleanup_charfield(TEST_STRING))
 
-    print(get_version_strings())
+    print(count_emba_modules(emba_dir_path="/home/cylox/embark/emba"))
