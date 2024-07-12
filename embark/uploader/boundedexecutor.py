@@ -29,7 +29,6 @@ from embark.helper import get_size, zip_check
 from porter.models import LogZipFile
 from porter.importer import result_read_in
 
-
 logger = logging.getLogger(__name__)
 
 # maximum concurrent running workers
@@ -330,13 +329,22 @@ class BoundedExecutor:
                 # 1.check archive contents (security)
                 zip_contents = zip_.namelist()
                 if zip_check(zip_contents):
-                    # 2.extract
+                    # 2.extract blindly
                     logger.debug("extracting....")
                     zip_.extractall(path=Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/"))
                     logger.debug("finished unzipping....")
                 else:
-                    logger.error("Wont extract since there are inconsistencies with the zip file")
-
+                    logger.info("There are inconsistencies with the zip file, extracting.....")
+                    zip_.extractall(path=Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/tmp/"))
+                    logger.debug("finished unzipping, now renaming")
+                    # renaming and moving
+                    # 1. find toplevel in tmp (takes first find)
+                    for root_, dir_ in os.walk(Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/tmp/")):
+                        if os.path.dirname(dir_) == "html-report":
+                            top_level = os.path.abspath(root_)
+                            break
+                    # 2. move dirs and file from there into emba_logs
+                    shutil.move(top_level, f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs")
                 # 3. sanity check (conformity)
                 # TODO check the files
         except builtins.Exception as exce:
@@ -354,6 +362,42 @@ class BoundedExecutor:
         analysis.save(update_fields=["finished", "log_size"])
 
     @classmethod
+    def emba_check(cls, option):
+        """
+        does a emba dep check with option(int)
+
+        1. run dep check with option
+        2. return result via WS message
+        Args:
+            option 1/2
+        """
+        logger.debug("Checking EMBA with: %d", option)
+        try:
+            cmd = f"{EMBA_SCRIPT_LOCATION} -d{option} | ansifilter -H -o {settings.EMBA_LOG_ROOT}/emba_check.html -s 5pt"
+
+            with open(f"{settings.EMBA_LOG_ROOT}/emba_check.log", "w+", encoding="utf-8") as file:
+                proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
+                # wait for completion
+                proc.communicate()
+                return_code = proc.wait()
+            # success
+            logger.info("Check Successful: %s", cmd)
+            if return_code != 0:
+                raise BoundedException("EMBA has non zero exit-code")
+        except (BaseException, BoundedException) as exce:
+            logger.error("emba dep check error: %s", exce)
+
+        room_group_name = "versions"
+        channel_layer = get_channel_layer()
+        # send ws message
+        async_to_sync(channel_layer.group_send)(
+            room_group_name, {
+                "type": 'send.message',
+                "message": {f"EMBA dep check {option}": return_code}
+            }
+        )
+
+    @classmethod
     def submit_zip(cls, uuid):
         # submit zip req to executor threadpool
         emba_fut = BoundedExecutor.submit(cls.zip_log, uuid)
@@ -363,6 +407,12 @@ class BoundedExecutor:
     def submit_unzip(cls, uuid, file_loc):
         # submit zip req to executor threadpool
         emba_fut = BoundedExecutor.submit(cls.unzip_log, uuid, file_loc)
+        return emba_fut
+
+    @classmethod
+    def submit_emba_check(cls, option):
+        # submit dep check to executor threadpool
+        emba_fut = BoundedExecutor.submit(cls.emba_check, option)
         return emba_fut
 
     @staticmethod

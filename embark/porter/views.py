@@ -59,6 +59,7 @@ def import_read(request):
         zip_file_obj = form.cleaned_data['zip_log_file']
         if zip_file_obj.user != request.user:
             logger.error("Permission denied - %s", request)
+            messages.error(request, "You don't have permission")
             return redirect('..')
         # create new analysis
         new_analysis = FirmwareAnalysis.objects.create(user=request.user)
