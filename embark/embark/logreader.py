@@ -112,8 +112,8 @@ class LogReader:
         failed_pattern = "EMBA failed in docker mode!"
 
         # calculate percentage
-        max_module = -1
-        phase_nmbr = -1
+        max_module = -2
+        phase_nmbr = -2
         if re.search(pattern=re.escape(pre_checker_phase_pattern), string=status_message["phase"]):
             max_module = EMBA_P_MOD_CNT
             phase_nmbr = EMBA_P_PHASE
@@ -130,8 +130,11 @@ class LogReader:
             max_module = 0
             phase_nmbr = EMBA_PHASE_CNT
         elif re.search(pattern=re.escape(failed_pattern), string=status_message["phase"]):
-            max_module = -2
+            max_module = -1
             phase_nmbr = EMBA_PHASE_CNT
+        else:
+            logger.info("Undefined pattern in logreader %s ", status_message["phase"])
+            logger.info("Not updating status percentage")
         return max_module, phase_nmbr
 
     # update our dict whenever a new module is being processed
@@ -144,14 +147,20 @@ class LogReader:
         elif max_module > 0:
             self.module_cnt += 1
             self.module_cnt = self.module_cnt % max_module  # make sure it's in range
-            percentage = phase_nmbr * (100 / EMBA_PHASE_CNT) + ((100 / EMBA_PHASE_CNT) / max_module) * self.module_cnt   # increments: F=6.25, S=0.65, L=3.57, P=1.25
+            percentage = phase_nmbr * (100 / EMBA_PHASE_CNT) + ((100 / EMBA_PHASE_CNT) / max_module) * self.module_cnt
+        elif max_module == -1:
+            percentage = 100
+            self.finish = True
+            logger.error("EMBA failed with  %s ", self.status_msg)
         else:
-            logger.debug("Undefined state in logreader %s ", self.status_msg)
+            logger.error("Undefined state in logreader %s ", self.status_msg)
+            percentage = self.status_msg["percentage"]  # stays the same
 
         logger.debug("Status is %d, in phase %d, with modules %d", percentage, phase_nmbr, max_module)
 
         # set attributes of current message
         self.status_msg["module"] = stream_item_list[0]
+
         # ignore all Q-modules for percentage calc
         if not re.match(".*Q[0-9][0-9]", stream_item_list[0]):
             self.status_msg["percentage"] = percentage
