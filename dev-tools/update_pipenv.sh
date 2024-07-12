@@ -11,18 +11,17 @@
 
 # Description: Automates updating the pipfile
 
-
 # 1. find out which installation
-local lINSTALL=""
+INSTALL=""
 
-lINSTALL="deploy"
+INSTALL="deploy"
 
 if grep -q "EMBARK_INSTALL=dev" ./.env ; then
   INSTALL="dev"
 fi
 
 # 2. update pipfile
-if [[ lINSTALL == "dev" ]]:
+if [[ "${INSTALL}" == "dev" ]]; then
   MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv update
 else
   echo "This is not a developer setup...still trying to update"
