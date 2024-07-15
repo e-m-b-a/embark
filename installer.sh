@@ -387,7 +387,7 @@ install_embark_default(){
 
   # write env-vars into ./.env
   write_env
-  echo "EMBARK_INSTALL=deploy" > ./.env
+  echo "EMBARK_INSTALL=deploy" >> ./.env
 
   if [[ "${WSL}" -eq 1 ]]; then
     check_docker_wsl
@@ -469,7 +469,7 @@ install_embark_dev(){
 
   # write env-vars into ./.env
   write_env
-  echo "EMBARK_INSTALL=dev" > ./.env
+  echo "EMBARK_INSTALL=dev" >> ./.env
   chmod 644 .env
 
   # download images for container
