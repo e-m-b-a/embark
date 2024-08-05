@@ -254,11 +254,9 @@ install_debs(){
     echo -e "\n${ORANGE}WARNING: If you are using WSL2, disable docker integration from the docker-desktop daemon!${NC}"
     read -p "Fix docker stuff, then continue. Press any key to continue ..." -n1 -s -r
   fi
-  if ! command -v docker-compose > /dev/null;
-    echo -e "\n${RED}""${BOLD}""Old docker-compose version found, please uninstall""${NC}"
-    exit 1
-  fi
-  if ! command -v docker > /dev/null || ! command -v docker compose > /dev/null ; then
+  if command -v docker-compose > /dev/null;
+    echo -e "\n${ORANGE}""${BOLD}""Old docker-compose version found""${NC}"
+  elif ! command -v docker > /dev/null || ! command -v docker compose > /dev/null ; then
     # Add Docker's official GPG key:
     apt-get install -y ca-certificates curl gnupg
     install -m 0755 -d /etc/apt/keyrings
@@ -270,6 +268,10 @@ install_debs(){
     $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
     apt-get update -y
     apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker compose-plugin
+  fi
+  # alias for compose to stay backwards comp
+  if ! command -v docker-compose > /dev/null ; then
+    alias docker-compose="docker compose"
   fi
   # python3-dev
   if ! dpkg -l python3.10-dev &>/dev/null; then
