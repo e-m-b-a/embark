@@ -249,12 +249,16 @@ install_debs(){
   if ! command -v gcc > /dev/null ; then
     apt-get install -y build-essential
   fi
-  # Docker + docker-compose
+  # Docker + docker compose
   if [[ "${WSL}" -eq 1 ]]; then
     echo -e "\n${ORANGE}WARNING: If you are using WSL2, disable docker integration from the docker-desktop daemon!${NC}"
     read -p "Fix docker stuff, then continue. Press any key to continue ..." -n1 -s -r
   fi
-  if ! command -v docker > /dev/null || ! command -v docker-compose > /dev/null ; then
+  if ! command -v docker-compose > /dev/null;
+    echo -e "\n${RED}""${BOLD}""Old docker-compose version found, please uninstall""${NC}"
+    exit 1
+  fi
+  if ! command -v docker > /dev/null || ! command -v docker compose > /dev/null ; then
     # Add Docker's official GPG key:
     apt-get install -y ca-certificates curl gnupg
     install -m 0755 -d /etc/apt/keyrings
@@ -265,13 +269,7 @@ install_debs(){
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
     $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
     apt-get update -y
-    apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-  fi
-  # alias for compose to stay backwards comp
-  if ! command -v docker-compose > /dev/null ; then
-    if docker --help | grep -q compose; then
-      alias docker-compose="docker compose"
-    fi
+    apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker compose-plugin
   fi
   # python3-dev
   if ! dpkg -l python3.10-dev &>/dev/null; then
@@ -394,13 +392,13 @@ install_embark_default(){
   fi
 
   # download images for container
-  docker-compose pull
-  docker-compose up -d
+  docker compose pull
+  docker compose up -d
 
   # activate daemon
   systemctl start embark.service
   check_db
-  docker-compose stop
+  docker compose stop
   echo -e "${GREEN}""${BOLD}""Ready to use \$sudo ./run-server.sh ""${NC}"
   echo -e "${GREEN}""${BOLD}""Which starts the server on (0.0.0.0) port 80 ""${NC}"
 }
@@ -473,11 +471,11 @@ install_embark_dev(){
   chmod 644 .env
 
   # download images for container
-  docker-compose pull
-  docker-compose up -d
+  docker compose pull
+  docker compose up -d
 
   check_db
-  docker-compose stop
+  docker compose stop
   echo -e "${GREEN}""${BOLD}""Ready to use \$sudo ./dev-tools/debug-server-start.sh""${NC}"
   echo -e "${GREEN}""${BOLD}""Or use otherwise""${NC}"
 }
