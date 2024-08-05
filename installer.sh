@@ -254,7 +254,7 @@ install_debs(){
     echo -e "\n${ORANGE}WARNING: If you are using WSL2, disable docker integration from the docker-desktop daemon!${NC}"
     read -p "Fix docker stuff, then continue. Press any key to continue ..." -n1 -s -r
   fi
-  if command -v docker-compose > /dev/null;
+  if command -v docker-compose > /dev/null ; then
     echo -e "\n${ORANGE}""${BOLD}""Old docker-compose version found""${NC}"
   elif ! command -v docker > /dev/null || ! command -v docker compose > /dev/null ; then
     # Add Docker's official GPG key:
