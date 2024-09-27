@@ -2,6 +2,7 @@ __copyright__ = 'Copyright 2022-2024 Siemens Energy AG'
 __author__ = 'Benedikt Kuehne'
 __license__ = 'MIT'
 
+import uuid
 from django.db import models
 from django.core.validators import MinLengthValidator
 
@@ -13,8 +14,14 @@ class Vulnerability(models.Model):
     Many-to-Many object for CVEs
     """
     cve = models.CharField(max_length=18, validators=[MinLengthValidator(13)], help_text='CVE-XXXX-XXXXXXX')
-    info = models.JSONField(null=True)
+    info = models.JSONField(null=True, editable=True)
 
+class SoftwareBillofMaterial(models.Model):
+    """
+    1-1 object for SBOM
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    data = models.JSONField(null=True)
 
 class Result(models.Model):
     """
@@ -71,3 +78,4 @@ class Result(models.Model):
     system_bin = models.TextField(default='{}')
 
     vulnerability = models.ManyToManyField(Vulnerability, help_text='CVE/Vulnerability', related_query_name='CVE', editable=True, blank=True)
+    sbom = models.OneToOneField(SoftwareBillofMaterial, help_text='Software Bill of Material', related_query_name='sbom', editable=True, on_delete=models.CASCADE, null=True)
