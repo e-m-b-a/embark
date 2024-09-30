@@ -14,7 +14,7 @@ import re
 
 from django.conf import settings
 
-from dashboard.models import Vulnerability, Result
+from dashboard.models import SoftwareBillofMaterial, Vulnerability, Result
 from uploader.models import FirmwareAnalysis
 
 logger = logging.getLogger(__name__)
@@ -27,8 +27,10 @@ def result_read_in(analysis_id):
     """
     logger.debug("starting read-in of %s", analysis_id)
     res = None
-    directory = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/csv_logs/"
-    csv_list = [os.path.join(directory, file_) for file_ in os.listdir(directory)]
+    csv_directory = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/csv_logs/"
+    csv_list = [os.path.join(csv_directory, file_) for file_ in os.listdir(csv_directory)]
+    json_directory = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/json_logs/"
+    json_list = [os.path.join(json_directory, file_) for file_ in os.listdir(json_directory)]
     for file_ in csv_list:
         logger.debug("trying to read: %s", file_)
         if os.path.isfile(file_):      # TODO change check. > if valid EMBA csv file
@@ -41,7 +43,15 @@ def result_read_in(analysis_id):
                 # FIXME f20 in emba is broken!
                 # res = f20_csv(file_, analysis_id)
                 # logger.debug("Result for %s created or updated", analysis_id)
-            # TODO license info etc
+    for file_ in json_list:
+        logger.debug("trying to read: %s", file_)
+        if os.path.isfile(file_):      # TODO change check. > if valid EMBA json file
+            logger.debug("File %s found and attempting to read", file_)
+            if file_.endswith('f21_cyclonedx_sbom_json.json'):
+                logger.info("f21 readin for %s skipped", analysis_id)
+                # f21_cyclonedx_sbom_json.json move into db object
+                res = f21_json(file_, analysis_id)
+        # TODO license info etc
     return res
 
 
@@ -192,6 +202,20 @@ def f10_csv(_file_path, _analysis_id):
     # FIXME needs implementation
     logger.debug("read f10 csv done")
 
+
+def f21_json(_file_path, _analysis_id):
+    """
+    return: result obj/ None
+    SBOM json
+    """
+    logger.debug("starting f21 json import")
+    res, _ = Result.objects.get_or_create(
+        firmware_analysis=FirmwareAnalysis.objects.get(id=_analysis_id)
+    )
+    with open(_file_path, 'r', encoding='utf-8') as f21_json_file:
+        f21_data = json.load(f21_json_file)
+        res.sbom = SoftwareBillofMaterial(data=f21_data)
+    logger.debug("read f21 json done")
 
 if __name__ == "__main__":
     BASE_DIR = Path(__file__).resolve().parent.parent.parent
