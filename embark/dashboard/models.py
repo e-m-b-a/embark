@@ -16,12 +16,20 @@ class Vulnerability(models.Model):
     cve = models.CharField(max_length=18, validators=[MinLengthValidator(13)], help_text='CVE-XXXX-XXXXXXX')
     info = models.JSONField(null=True, editable=True)
 
-class SoftwareBillofMaterial(models.Model):
+
+class SoftwareInfo(models.Model):
     """
-    1-1 object for SBOM
+    Many-to-many object for SBOM
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    data = models.JSONField(null=True)
+    name = models.CharField(verbose_name="software name", blank=False, editable=True, max_length=256)
+    version = models.CharField(verbose_name="software version", blank=False, editable=True, default="1.0", max_length=32)
+    hashes = models.JSONField(null=True, unique=True)
+    cpe = models.CharField(verbose_name="CPE identifier", blank=False, editable=True, max_length=256)
+    type = models.CharField(verbose_name="software type", blank=False, editable=True, default="data", max_length=50)
+    purl = models.CharField(verbose_name="PUrl identifier", blank=False, editable=True, max_length=256)
+    details = models.JSONField(null=True)
+
 
 class Result(models.Model):
     """
@@ -78,4 +86,4 @@ class Result(models.Model):
     system_bin = models.TextField(default='{}')
 
     vulnerability = models.ManyToManyField(Vulnerability, help_text='CVE/Vulnerability', related_query_name='CVE', editable=True, blank=True)
-    sbom = models.OneToOneField(SoftwareBillofMaterial, help_text='Software Bill of Material', related_query_name='sbom', editable=True, on_delete=models.CASCADE, null=True)
+    sbom = models.ManyToManyField(SoftwareInfo, help_text='Software Bill of Material', related_query_name='sbom', editable=True, null=True)

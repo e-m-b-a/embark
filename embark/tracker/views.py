@@ -15,10 +15,10 @@ from django.utils import timezone
 
 from django_tables2 import RequestConfig
 
-from dashboard.models import Result
+from dashboard.models import Result, SoftwareInfo
 from embark.helper import rnd_rgb_color, rnd_rgb_full
 from uploader.models import FirmwareAnalysis, Device, Vendor
-from tracker.tables import SimpleDeviceTable
+from tracker.tables import SimpleDeviceTable, SimpleSBOMTable
 from tracker.forms import AssociateForm, TimeForm
 
 logger = logging.getLogger(__name__)
@@ -118,6 +118,9 @@ def get_report_for_device(request, device_id):
             dataset['pointHoverBackgroundColor'] = '#fff'
             dataset['pointHoverBorderColor'] = rnd_rgb_color()
             data.append(dataset)
+        # sbom table
+        sbom_table = SimpleSBOMTable(data=result_queryset.sbom, template_name="django_tables2/bootstrap-responsive.html")
+        RequestConfig(request).configure(sbom_table)
         logger.debug("tracker/device data: %s", str(data))
         return render(request=request, template_name='tracker/device.html', context={'username': request.user.username, 'device_id': device_id, 'device': device, 'labels': label_list, 'data': data})
     logger.error("device id nonexistent: %s", device_id)

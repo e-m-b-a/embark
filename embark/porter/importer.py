@@ -14,7 +14,7 @@ import re
 
 from django.conf import settings
 
-from dashboard.models import SoftwareBillofMaterial, Vulnerability, Result
+from dashboard.models import SoftwareInfo, Vulnerability, Result
 from uploader.models import FirmwareAnalysis
 
 logger = logging.getLogger(__name__)
@@ -47,10 +47,10 @@ def result_read_in(analysis_id):
         logger.debug("trying to read: %s", file_)
         if os.path.isfile(file_):      # TODO change check. > if valid EMBA json file
             logger.debug("File %s found and attempting to read", file_)
-            if file_.endswith('f21_cyclonedx_sbom_json.json'):
-                logger.info("f21 readin for %s skipped", analysis_id)
+            if file_.endswith('f15_cyclonedx_sbom.json'):
+                logger.info("f15 readin for %s skipped", analysis_id)
                 # f21_cyclonedx_sbom_json.json move into db object
-                res = f21_json(file_, analysis_id)
+                res = f15_json(file_, analysis_id)
         # TODO license info etc
     return res
 
@@ -203,27 +203,45 @@ def f10_csv(_file_path, _analysis_id):
     logger.debug("read f10 csv done")
 
 
-def f21_json(_file_path, _analysis_id):
+def f15_json(_file_path, _analysis_id):
     """
     return: result obj/ None
     SBOM json
     """
-    logger.debug("starting f21 json import")
+    logger.debug("starting f15 json import")
     res, _ = Result.objects.get_or_create(
         firmware_analysis=FirmwareAnalysis.objects.get(id=_analysis_id)
     )
-    with open(_file_path, 'r', encoding='utf-8') as f21_json_file:
-        f21_data = json.load(f21_json_file)
-        res.sbom = SoftwareBillofMaterial(data=f21_data)
-    logger.debug("read f21 json done")
+    with open(_file_path, 'r', encoding='utf-8') as f15_json_file:
+        f15_data = json.load(f15_json_file)
+        for component_ in f15_data.components:
+            try:
+                new_sbom, add_ = SoftwareInfo.objects.update_or_create(
+                    name=component_.name,
+                    version=component_.version,
+                    hashes=component_.hashes,
+                    cpe=component_.cpe,
+                    type=component_.type,
+                    purl=component_.purl,
+                    details=component_
+                )
+                logger.debug("Adding SBOM item: %s to res %s", new_sbom, res)
+                if add_:
+                    res.sbom.add(new_sbom)
+            except builtins.Exception as error_:
+                logger.error("Error in f15 readin: %s", error_)
+                logger.error("Component is %s ; Was new? %s", component_, add_)
+    logger.debug("read f15 json done")
+    return res
+
 
 if __name__ == "__main__":
     BASE_DIR = Path(__file__).resolve().parent.parent.parent
     TEST_DIR = os.path.join(BASE_DIR, 'test/porter')
 
     # test print f50
-    with open(os.path.join(TEST_DIR, 'f50_test.json'), 'w', encoding='utf-8') as json_file:
-        json_file.write(json.dumps(read_csv(os.path.join(TEST_DIR, 'f50_test.csv')), indent=4))
+    # with open(os.path.join(TEST_DIR, 'f50_test.json'), 'w', encoding='utf-8') as json_file:
+    #     json_file.write(json.dumps(read_csv(os.path.join(TEST_DIR, 'f50_test.csv')), indent=4))
 
     # with open(os.path.join(TEST_DIR, 'f20_test.json'), 'w', encoding='utf-8') as json_file:
     #     json_file.write(json.dumps(
