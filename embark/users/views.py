@@ -50,7 +50,6 @@ def register(request):
                 user.is_active = False
                 user.save()
                 logger.debug('User created')
-                # TODO create email + token
                 token = default_token_generator.make_token(user)
                 current_site = get_current_site(request)
                 mail_subject = 'Activate your EMBArk account.'
@@ -62,18 +61,22 @@ def register(request):
                     'token': token,
                     })
                 
-                if settings.EMAIL_ACTIVE:
+                if settings.EMAIL_ACTIVE == True:
                     send_mail(mail_subject, message, 'system@' + settings.DOMAIN, [email])
                     messages.success(request, 'Registration successful. Please check your email to activate')
                     return redirect(reverse('embark-login'))
                 else:
                     logger.debug("Registered, redirecting to login")
-                    activate_user(user.id, token)
+                    if activate_user(user.id, token):
+                        messages.success(request, 'Registration successful.')
+                        return redirect(reverse('embark-login'))
+                    else:
+                        raise Exception("Activation Error")
         except builtins.Exception as error:
             logger.exception('Wide exception in Signup: %s', error)
             messages.error(request, 'Something went wrong when signing up the user.')
-            return render(request, 'user/register.html')
-    return render(request, 'user/register.html')
+    register_form = SignupForm()
+    return render(request, 'user/register.html', {'signup_form': register_form})
 
 
 @require_http_methods(["GET", "POST"])
