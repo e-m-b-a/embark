@@ -5,7 +5,7 @@ __license__ = 'MIT'
 import enum
 
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import User as DjangoUser
 from django.conf import settings
 
 from lib.choice_enum import ChoiceIntEnum
@@ -26,10 +26,7 @@ class Team(models.Model):
     modified = models.DateTimeField(auto_now=True, help_text='Date time when this entry was modified')
 
 
-class User(AbstractUser):
-    is_active = models.BooleanField(default=True, help_text='User active or not')
-    created = models.DateTimeField(auto_now_add=True, help_text='Date time when this entry was created')
-    modified = models.DateTimeField(auto_now=True, help_text='Date time when this entry was modified')
+class User(DjangoUser):
     timezone = models.CharField(max_length=32, choices=settings.TIMEZONES, default='UTC')
 
 

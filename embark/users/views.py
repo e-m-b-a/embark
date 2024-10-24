@@ -7,15 +7,20 @@ import builtins
 import logging
 
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login, logout, get_user
+from django.contrib.auth.tokens import default_token_generator
+from django.contrib.sites.shortcuts import get_current_site
+from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-
-from django.contrib.auth import authenticate, login, logout, get_user
-from django.contrib import messages
+from django.template.loader import render_to_string
 from django.conf import settings
 from django.utils import timezone
+from django.urls import reverse
+from django.core.mail import send_mail
 
+from users.forms import ActivationForm, SignupForm
 from users.models import User
 
 logger = logging.getLogger(__name__)
@@ -32,29 +37,38 @@ def user_main(request):
 def register(request):
     if request.method == "POST":
         logger.debug(request.POST)
-        data = {k: v[0] for k, v in dict(request.POST).items()}
-        logger.debug(data)
         try:
-            body = {k: v[0] for k, v in dict(request.POST).items()}
-            try:
-                username = body['username']
-                password = body['password']
-                confirm_password = body['confirm_password']
-                if password != confirm_password:
-                    logger.debug('Passwords do not match')
-                    messages.success(request, 'Passwords do not match.')
-                    return render(request, 'user/register.html')
+            user = get_user(request)
+            signup_form = SignupForm(request.POST)
+            if signup_form.is_valid():
+                username = signup_form.cleaned_data.get('username')
+                password = signup_form.cleaned_data.get('password')
+                email = signup_form.cleaned_data.get('email')
                 logger.debug('Passwords match. Creating user')
-                user = User.objects.create(username=username)
+                user = User.objects.create(username=username, email=email)
                 user.set_password(password)
+                user.is_active = False
                 user.save()
                 logger.debug('User created')
-                messages.success(request, 'Registration successful.')
-                return redirect('../../')
-            except KeyError:
-                logger.exception('Missing keys from data- Username, password, password_confirm')
-                messages.error(request, 'User data is missing/invalid.')
-                return render(request, 'user/register.html')
+                # TODO create email + token
+                token = default_token_generator.make_token(user)
+                current_site = get_current_site(request)
+                mail_subject = 'Activate your EMBArk account.'
+                message = render_to_string('email_template.html', context={
+                    'user': user,
+                    'username': user.username,
+                    'domain': current_site.domain,
+                    'uid': user.id,
+                    'token': token,
+                    })
+                
+                if settings.EMAIL_ACTIVE:
+                    send_mail(mail_subject, message, 'system@' + settings.DOMAIN, [email])
+                    messages.success(request, 'Registration successful. Please check your email to activate')
+                    return redirect(reverse('embark-login'))
+                else:
+                    logger.debug("Registered, redirecting to login")
+                    activate_user(user.id, token)
         except builtins.Exception as error:
             logger.exception('Wide exception in Signup: %s', error)
             messages.error(request, 'Something went wrong when signing up the user.')
@@ -230,3 +244,40 @@ def set_timezone(request):
     else:
         messages.error(request, 'Timezone could not be set')
         return redirect("..")
+
+
+def activate_user(user, token):
+    """
+    activates user with token
+    """
+    if default_token_generator.check_token(user, token):
+        user.is_active = True
+        user.save()
+        return True
+    return False
+
+
+@require_http_methods(["GET", "POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def activate(request):
+    """
+    activation page + form request
+    activates user through the usage of token
+    """
+    if request.method == "POST":
+        logger.debug(request.POST)
+        try:
+            user = get_user(request)
+            activation_form = ActivationForm(request.POST)
+            if activation_form.is_valid():
+                token = activation_form.cleand_data["token"]
+                if activate_user(user, token):
+                    messages.success(request, str(user.username) + 'activated')
+                else:
+                    messages.error(request, "Token invalid - maybe it expired?")
+        except ValueError as val_error:
+            logger.error(f"{val_error} in token {token}")
+        return redirect(reverse('embark-login'))
+    else:
+        activation_form = ActivationForm()
+        render(request, 'activate.html', {'activation-form': activation_form})

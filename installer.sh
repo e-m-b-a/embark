@@ -81,9 +81,9 @@ save_old_env(){
 }
 
 write_env(){
-  local SUPER_PW="embark"
-  local SUPER_EMAIL="idk@lol.com"
-  local SUPER_USER="superuser"
+  local SUPER_PW="$(openssl rand -base64 8)"
+  local SUPER_EMAIL="admin@embark.local"
+  local SUPER_USER="admin"
   local RANDOM_PW=""
   local DJANGO_SECRET_KEY=""
   local ENV_FILES=()
