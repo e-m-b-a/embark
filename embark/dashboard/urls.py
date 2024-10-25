@@ -9,6 +9,7 @@ from dashboard import views
 
 # view routing
 urlpatterns = [
+    path('', views.main_dashboard, name='embark-MainDashboard'),
     path('dashboard/main/', views.main_dashboard, name='embark-MainDashboard'),
     path('dashboard/service/', views.service_dashboard, name='embark-dashboard-service'),
     path('dashboard/report/', views.report_dashboard, name='embark-ReportDashboard'),

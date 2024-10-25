@@ -28,6 +28,7 @@ class Team(models.Model):
 
 class User(AbstractUser):
     timezone = models.CharField(max_length=32, choices=settings.TIMEZONES, default='UTC')
+    email = models.EmailField(verbose_name="email address", blank=True, unique=True)
 
 
 class TeamMember(models.Model):

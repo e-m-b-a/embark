@@ -6,9 +6,9 @@
 {% block maincontent %}
     <div class="login-form-container">
         <div id="embarkLogo"><img src="{% static 'content/images/embark_logo.svg' %}" alt="EMBArk logo graphic" height="auto" width="auto"/></div>
-            <form action="{% url 'embark-register' %}" class="register-form" method="post" novalidate>
+            <form action="{% url 'embark-register' %}" class="register-form" method="post">
                 {% csrf_token %}
-                {% for field in signup_form %}
+                {% for field in form %}
                     {% bootstrap_field field %}
                 {% endfor %}
                 <input id="loginButton" type="submit" class="solid btn-login" value="Register" />
