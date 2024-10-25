@@ -45,13 +45,11 @@ def register(request):
             signup_form = SignUpForm(data=request.POST)
             if signup_form.is_valid():
                 username = signup_form.cleaned_data.get('username')
-                password = signup_form.cleaned_data.get('password')
+                password = signup_form.cleaned_data.get('password2')
                 email = signup_form.cleaned_data.get('email')
-                logger.debug('Passwords match. Creating user')
                 user = User.objects.create(username=username, email=email)
                 user.set_password(password)
                 user.is_active = False
-                # user.is_active = True
                 user.save()
                 logger.debug('User created')
                 token = default_token_generator.make_token(user)
@@ -87,7 +85,7 @@ def register(request):
 def embark_login(request):
     if request.method == "POST":
         try:
-            login_form = LoginForm(request, request.POST)
+            login_form = LoginForm(request=request, data=request.POST)
             logger.debug(login_form)
             if login_form.is_valid():
                 logger.debug('form valid')
@@ -107,8 +105,7 @@ def embark_login(request):
         except builtins.Exception as error:
             logger.exception('Wide exception in Signup: %s', error)
             messages.error(request, 'Something went wrong when logging in the user.')
-    else:
-        login_form = LoginForm()
+    login_form = LoginForm()
     return render(request, 'user/login.html', {'form': login_form})
 
 
