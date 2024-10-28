@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth import password_validation 
 from django.contrib.auth.validators import UnicodeUsernameValidator
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordResetForm
 from users.models import User
 
 
@@ -40,3 +40,6 @@ class LoginForm(AuthenticationForm):
         "inactive": "This account is not yet activated",
         "deactivated": "Account was deactivated",
     }
+
+class ResetForm(PasswordResetForm):
+     pass

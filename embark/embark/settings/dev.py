@@ -22,7 +22,7 @@ EMBA_LOG_URL = 'emba_logs/'
 
 DEBUG = True
 DOMAIN = "embark.local"
-EMAIL_ACTIVE = False
+EMAIL_ACTIVE = True
 
 
 INSTALLED_APPS = [

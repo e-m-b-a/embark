@@ -21,7 +21,7 @@ from django.utils import timezone
 from django.urls import reverse
 from django.core.mail import send_mail
 
-from users.forms import LoginForm, SignUpForm
+from users.forms import LoginForm, SignUpForm, ResetForm
 from users.models import User
 
 logger = logging.getLogger(__name__)
@@ -29,8 +29,8 @@ logger = logging.getLogger(__name__)
 
 @require_http_methods(["GET"])
 def user_main(request):
-    logger.debug("Account settings for %s", request.user)
     user = get_user(request)
+    logger.debug("Account settings for %s", user)
     #   return render(request, 'user/index.html', {"timezones": settings.TIMEZONES, "server_tz": settings.TIME_ZONE, 'user': user})
     return render(request, 'user/index.html', {"timezones": settings.TIMEZONES, "server_tz": settings.TIME_ZONE})
 
@@ -119,7 +119,7 @@ def embark_logout(request):
 
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["GET", "POST"])
-def password_change(request):   # FIXME
+def password_change(request):   # TODO adapt t
     if request.method == "POST":
         logger.debug(request.POST)
         user = get_user(request)
@@ -296,4 +296,12 @@ def activate(request, user_id, token):
 
 @require_http_methods(["GET", "POST"])
 def reset_password(request):
-    pass
+    if request.method == 'POST':
+        reset_form = ResetForm(request.POST)
+        if reset_form.is_valid():
+            logger.debug('Form is valid')
+            reset_form.save(request=request)            
+            messages.success(request,'Send Password reset request')
+    reset_form = ResetForm()
+    admin_email = User.objects.get(username='admin').email
+    return render(request, 'user/lostPassword.html', {'form': reset_form, 'email_setting': settings.EMAIL_ACTIVE, 'admin_email': admin_email})
