@@ -15,7 +15,7 @@ from django.utils import timezone
 
 from django_tables2 import RequestConfig
 
-from dashboard.models import Result, SoftwareInfo
+from dashboard.models import Result
 from embark.helper import rnd_rgb_color, rnd_rgb_full
 from uploader.models import FirmwareAnalysis, Device, Vendor
 from tracker.tables import SimpleDeviceTable, SimpleSBOMTable

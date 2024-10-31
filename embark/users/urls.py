@@ -19,5 +19,5 @@ urlpatterns = [
     path('user/delete/', views.acc_delete, name='embark-acc-delete'),
     path('user/<int:user_id>/deactivate', views.deactivate, name='embark-deactivate-user'),
     path('user/set_timezone/', views.set_timezone, name='embark-acc-timezone'),
-    path('log/<int:log_type>/<int:lines>/', views.get_log, name='log'), # TODO move to admin
+    path('log/<int:log_type>/<int:lines>/', views.get_log, name='log'),     # TODO move to admin
 ]

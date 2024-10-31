@@ -81,7 +81,8 @@ save_old_env(){
 }
 
 write_env(){
-  local SUPER_PW="$(openssl rand -base64 8)"
+  local SUPER_PW=""
+  SUPER_PW="$(openssl rand -base64 8)"
   local SUPER_EMAIL="admin@embark.local"
   local SUPER_USER="admin"
   local RANDOM_PW=""

@@ -5,7 +5,7 @@
 {% block title %}EMBArk register{% endblock title %}
 {% block maincontent %}
     <div class="login-form-container">
-        <div id="embarkLogo"><img src="{% static 'content/images/embark_logo.svg' %}" alt="EMBArk logo graphic" height="auto" width="auto"/></div>
+        <div id="embarkLogo"><img src="{% static 'content/images/embark_logo.svg' %}" alt="EMBArk logo graphic" height="auto" width="auto"/>
             <form action="{% url 'embark-register' %}" class="register-form" method="post">
                 {% csrf_token %}
                 {% for field in form %}

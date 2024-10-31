@@ -5,7 +5,7 @@ __license__ = 'MIT'
 import enum
 
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Group
 from django.conf import settings
 
 from lib.choice_enum import ChoiceIntEnum
@@ -19,8 +19,7 @@ class Role(ChoiceIntEnum):
     MANAGER = 3
 
 
-class Team(models.Model):
-    name = models.CharField(max_length=150, unique=True, help_text='Name of the team')
+class Team(Group):
     is_active = models.BooleanField(default=True, help_text='Whether this Team is active or not')
     created = models.DateTimeField(auto_now_add=True, help_text='Date time when this entry was created')
     modified = models.DateTimeField(auto_now=True, help_text='Date time when this entry was modified')
@@ -29,12 +28,6 @@ class Team(models.Model):
 class User(AbstractUser):
     timezone = models.CharField(max_length=32, choices=settings.TIMEZONES, default='UTC')
     email = models.EmailField(verbose_name="email address", blank=True, unique=True)
-
-
-class TeamMember(models.Model):
-    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='team_member')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_team_member')
-    role = models.IntegerField(choices=Role.choices(), default=Role.VIEWER)
-    is_active = models.BooleanField(default=True, help_text='Whether this team member is active or not')
-    created = models.DateTimeField(auto_now_add=True, help_text='Date time when this entry was created')
-    modified = models.DateTimeField(auto_now=True, help_text='Date time when this entry was modified')
+    team = models.ManyToManyField(Team, blank=True, related_name='member_of_team')
+    team_role = models.IntegerField(choices=Role.choices(), default=Role.VIEWER)
+    is_active_member = models.BooleanField(default=True, help_text='Whether this team member is active or not')

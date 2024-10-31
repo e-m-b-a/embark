@@ -60,19 +60,18 @@ def register(request):
                     'domain': current_site.domain,
                     'uid': user.id,
                     'token': token,
-                    })
-                
-                if settings.EMAIL_ACTIVE == True:
+                })
+                if settings.EMAIL_ACTIVE is True:
                     send_mail(mail_subject, message, 'system@' + settings.DOMAIN, [email])
                     messages.success(request, 'Registration successful. Please check your email to activate')
-                    return redirect(reverse('embark-activate-user', kwargs={'uuid':user.id}))
+                    return redirect(reverse('embark-activate-user', kwargs={'uuid': user.id}))
                 else:
                     logger.debug("Registered, redirecting to login")
                     if activate_user(user, token):
                         messages.success(request, 'Registration successful.')
                         return redirect(reverse('embark-login'))
                     else:
-                        raise Exception("Activation Error")
+                        raise ValidationError("Activation Error")
         except builtins.Exception as error:
             logger.exception('Wide exception in Signup: %s', error)
             messages.error(request, 'Something went wrong when signing up the user.')
@@ -182,15 +181,15 @@ def acc_delete(request):
             'domain': current_site.domain,
             'uid': user.id,
             'token': token,
-            })
-        if settings.EMAIL_ACTIVE == True:
+        })
+        if settings.EMAIL_ACTIVE is True:
             send_mail(mail_subject, message, 'system@' + settings.DOMAIN, [email])
             messages.success(request, 'Please check your email to confirm deletion')
-            return redirect(reverse('embark-deactivate-user', kwargs={'uuid':user.id}))
+            return redirect(reverse('embark-deactivate-user', kwargs={'uuid': user.id}))
         else:
             logger.debug(' %s Account: %s disabled', timezone.now().strftime("%H:%M:%S"), user)
             user.username = user.get_username() + '_disactivated_' + timezone.now().strftime(
-                "%H:%M:%S")  # workaround for not duplicating entry users_user.username
+                "%H:%M:%S")     # workaround for not duplicating entry users_user.username
             user.is_active = False
             user.save()
             messages.success(request, 'Account successfully deleted.')
@@ -198,10 +197,10 @@ def acc_delete(request):
     return render(request, 'user/accountDelete.html')
 
 
-@require_http_methods(["POST"])
-@login_required(login_url='/' + settings.LOGIN_URL)
-def deactivate(request, uid):
-    pass
+@require_http_methods(["GET"])
+def deactivate(request, user_id):   # TODO
+    logger.debug("deactivating user with id : %s", user_id)
+    return render(request, 'user/login.html')
 
 
 @require_http_methods(["GET"])
@@ -290,7 +289,7 @@ def activate(request, user_id, token):
         else:
             messages.error(request, "Token invalid - maybe it expired?")
     except ValueError as val_error:
-        logger.error(f"{val_error} in token {token}")
+        logger.error("%s in token %s", val_error, token)
     return redirect(reverse('embark-MainDashboard'))
 
 
@@ -300,8 +299,8 @@ def reset_password(request):
         reset_form = ResetForm(request.POST)
         if reset_form.is_valid():
             logger.debug('Form is valid')
-            reset_form.save(request=request)            
-            messages.success(request,'Send Password reset request')
+            reset_form.save(request=request)
+            messages.success(request, 'Send Password reset request')
     reset_form = ResetForm()
     admin_email = User.objects.get(username='admin').email
     return render(request, 'user/lostPassword.html', {'form': reset_form, 'email_setting': settings.EMAIL_ACTIVE, 'admin_email': admin_email})
