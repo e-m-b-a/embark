@@ -19,7 +19,7 @@ class Vulnerability(models.Model):
 
 class SoftwareInfo(models.Model):
     """
-    Many-to-many object for SBOM
+    Many-to-many object for SBOM entries
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     name = models.CharField(verbose_name="software name", blank=False, editable=True, default="NA", max_length=256)
