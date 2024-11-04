@@ -721,9 +721,14 @@ if [[ "${NO_EMBA}" -eq 0 ]]; then
   # use git or release
   if [[ "${NO_GIT}" -eq 1 ]]; then
     install_emba_src
+    echo "EMBA_INSTALL=src" >> .env
   else
     install_emba
+    echo "EMBA_INSTALL=git" >> .env
   fi
+fi
+if [[ "${NO_EMBA}" -eq 1 ]]; then
+  echo "EMBA_INSTALL=no" >> .env
 fi
 if [[ "${EMBA_ONLY}" -eq 1 ]]; then
   exit 0
