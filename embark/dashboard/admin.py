@@ -4,7 +4,7 @@ __license__ = 'MIT'
 
 from django.contrib import admin
 
-from dashboard.models import *
+from dashboard.models import Result, Vulnerability, SoftwareInfo
 
 admin.site.register(Result)
 admin.site.register(Vulnerability)
