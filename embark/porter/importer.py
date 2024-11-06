@@ -29,8 +29,6 @@ def result_read_in(analysis_id):
     res = None
     csv_directory = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/csv_logs/"
     csv_list = [os.path.join(csv_directory, file_) for file_ in os.listdir(csv_directory)]
-    json_directory = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/json_logs/"
-    json_list = [os.path.join(json_directory, file_) for file_ in os.listdir(json_directory)]
     for file_ in csv_list:
         logger.debug("trying to read: %s", file_)
         if os.path.isfile(file_):      # TODO change check. > if valid EMBA csv file
@@ -43,15 +41,20 @@ def result_read_in(analysis_id):
                 # FIXME f20 in emba is broken!
                 # res = f20_csv(file_, analysis_id)
                 # logger.debug("Result for %s created or updated", analysis_id)
-    for file_ in json_list:
-        logger.debug("trying to read: %s", file_)
-        if os.path.isfile(file_):      # TODO change check. > if valid EMBA json file
-            logger.debug("File %s found and attempting to read", file_)
-            if file_.endswith('f15_cyclonedx_sbom.json'):
-                logger.info("f15 readin for %s skipped", analysis_id)
-                # f21_cyclonedx_sbom_json.json move into db object
-                res = f15_json(file_, analysis_id)
-        # TODO license info etc
+    # json_directory = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/json_logs/"
+    # json_list = [os.path.join(json_directory, file_) for file_ in os.listdir(json_directory)]
+    # for file_ in json_list:
+    #     logger.debug("trying to read: %s", file_)
+    #     if os.path.isfile(file_):      # TODO change check. > if valid EMBA json file
+    #         logger.debug("File %s found and attempting to read", file_)
+    #         if file_.endswith('f15_cyclonedx_sbom.json'):
+    #             logger.info("f15 readin for %s skipped", analysis_id)
+    #             # f21_cyclonedx_sbom_json.json move into db object
+    #             res = f15_json(file_, analysis_id)
+    sbom_file = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/SBOM/EMBA_cyclonedx_sbom.json"
+    if os.path.isfile(sbom_file):
+        logger.debug("File %s found and attempting to read", sbom_file)
+        res = f15_json(sbom_file, analysis_id)
     return res
 
 
@@ -214,23 +217,27 @@ def f15_json(_file_path, _analysis_id):
     )
     with open(_file_path, 'r', encoding='utf-8') as f15_json_file:
         f15_data = json.load(f15_json_file)
-        for component_ in f15_data.components:
+        for component_ in f15_data['components']:
+            logger.debug("Component is %s", component_)
             try:
                 new_sbom, add_ = SoftwareInfo.objects.update_or_create(
-                    name=component_.name,
-                    version=component_.version,
-                    hashes=component_.hashes,
-                    cpe=component_.cpe,
-                    type=component_.type,
-                    purl=component_.purl,
-                    details=component_
+                    id=component_['bom-ref'],
+                    name=component_['name'],
+                    type=component_['type'],
+                    group=component_['group'] or 'NA',
+                    version=component_['version'] or 'NA',
+                    hashes=component_['hashes'],
+                    cpe=component_['cpe'] or 'NA',
+                    purl=component_['purl'] or 'NA',
+                    description=component_['description'] or 'NA',
+                    properties=component_['properties'] or 'NA'
                 )
+                logger.debug("Was new? %s", add_)
                 logger.debug("Adding SBOM item: %s to res %s", new_sbom, res)
                 if add_:
                     res.sbom.add(new_sbom)
             except builtins.Exception as error_:
                 logger.error("Error in f15 readin: %s", error_)
-                logger.error("Component is %s ; Was new? %s", component_, add_)
     logger.debug("read f15 json done")
     return res
 

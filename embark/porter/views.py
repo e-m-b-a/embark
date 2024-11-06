@@ -19,8 +19,9 @@ from uploader.boundedexecutor import BoundedExecutor
 from uploader.forms import DeviceForm, LabelForm, VendorForm
 from uploader.models import FirmwareAnalysis
 from porter.exporter import result_json
+from porter.importer import result_read_in
 from porter.models import LogZipFile
-from porter.forms import FirmwareAnalysisImportForm, FirmwareAnalysisExportForm, DeleteZipForm
+from porter.forms import FirmwareAnalysisImportForm, FirmwareAnalysisExportForm, DeleteZipForm, RetryImportForm
 
 
 logger = logging.getLogger(__name__)
@@ -30,6 +31,7 @@ req_logger = logging.getLogger("requests")
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["GET"])
 def import_menu(request):
+    retry_form = RetryImportForm()
     import_read_form = FirmwareAnalysisImportForm()
     device_form = DeviceForm()
     vendor_form = VendorForm()
@@ -38,7 +40,7 @@ def import_menu(request):
         delete_form = DeleteZipForm(initial={'zip-file': LogZipFile.objects.latest('upload_date')})
     else:
         delete_form = DeleteZipForm()
-    return render(request, 'porter/import.html', {'import_read_form': import_read_form, 'device_form': device_form, 'vendor_form': vendor_form, 'label_form': label_form, 'delete_form': delete_form})
+    return render(request, 'porter/import.html', {'import_read_form': import_read_form, 'device_form': device_form, 'vendor_form': vendor_form, 'label_form': label_form, 'delete_form': delete_form, 'retry_form': retry_form})
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -191,3 +193,38 @@ def make_zip(request, analysis_id):
     except FirmwareAnalysis.DoesNotExist:
         messages.error(request, 'No analysis with that id found')
     return redirect('embark-ReportDashboard')
+
+
+@login_required(login_url='/' + settings.LOGIN_URL)
+@require_http_methods(["POST"])
+def retry_import(request):
+    """
+    retry to read emba_log foler with the importer
+
+        returns:
+        messages, status
+    """
+    req_logger.info("%s requested with: %s", __name__, request)
+    form = RetryImportForm(request.POST)
+    if form.is_valid():
+        logger.debug("Posted Form is valid")
+        analysis = form.cleaned_data['analysis']
+        if analysis.user != request.user:
+            logger.error("Permission denied - %s", request)
+            messages.error(request, "You don't have permission")
+            return redirect('..')
+        # trying to re-import
+        logger.info("Importing analysis with %s", analysis.id)
+        # TODO
+        if result_read_in(analysis.id) is not None:
+            analysis.finished = True
+            analysis.failed = False
+            analysis.save(update_fields=["finished", "failed"])
+            # success
+            logger.info("Successfully submitted for re-import %s", analysis.id)
+            messages.info(request, 'import submitted for ' + str(analysis.id))
+            return redirect('..')
+        messages.error(request, 're-import failed')
+        return redirect('..')
+    messages.error(request, 'form invalid')
+    return HttpResponseBadRequest("invalid form")

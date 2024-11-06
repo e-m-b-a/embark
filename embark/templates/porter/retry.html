@@ -1,0 +1,18 @@
+{% load django_bootstrap5 %}
+
+        <div class="col-sm">
+            <div class="box">
+                <p class="mainText">Retry-importing</p>
+                <p class="subText">Manually</p>
+
+                <form action="{% url 'embark-retry-import' %}" method="post" id="form">
+                    {% csrf_token %}
+                    <div class="innerBlock">
+                        {% load filters %}
+                        {% bootstrap_form retry_form %}
+                        {% bootstrap_button "Re-import" button_type="submit" button_class="btn-primary" %}
+                    </div>
+                </form>
+
+            </div>
+        </div>

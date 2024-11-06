@@ -21,14 +21,17 @@ class SoftwareInfo(models.Model):
     """
     Many-to-many object for SBOM entries
     """
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
+    type = models.CharField(verbose_name="type of blob", blank=False, editable=True, default="NA", max_length=256)
     name = models.CharField(verbose_name="software name", blank=False, editable=True, default="NA", max_length=256)
+    group = models.CharField(verbose_name="grouping", blank=False, editable=True, default="NA", max_length=256)
     version = models.CharField(verbose_name="software version", blank=False, editable=True, default="1.0", max_length=32)
-    hash = models.CharField(verbose_name="identivication hash", blank=False, editable=True, default="NA", max_length=1024)
+    hashes = models.CharField(verbose_name="identivication hash", blank=False, editable=True, default="NA", max_length=1024)
     cpe = models.CharField(verbose_name="CPE identifier", blank=False, editable=True, default="NA", max_length=256)
     type = models.CharField(verbose_name="software type", blank=False, editable=True, default="data", max_length=50)
     purl = models.CharField(verbose_name="PUrl identifier", blank=False, editable=True, default="NA", max_length=256)
-    details = models.JSONField(null=True)
+    description = models.CharField(verbose_name="description", blank=False, editable=True, default="NA", max_length=1024)
+    properties = models.JSONField(null=True, editable=True)
 
 
 class Result(models.Model):
