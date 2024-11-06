@@ -18,7 +18,7 @@ class SimpleDeviceTable(tables.Table):
         orderable = True
 
     def render_id(self, value):
-        return format_html(f"<a href=\"{reverse(viewname='embark-tracker-sbom', args=[value])}\">{value}</a>")
+        return format_html(f"<a href=\"{reverse(viewname='embark-tracker-device', args=[value])}\">{value}</a>")
 
 
 class SimpleSBOMTable(tables.Table):
@@ -28,4 +28,4 @@ class SimpleSBOMTable(tables.Table):
         orderable = True
 
     #  def render_id(self, value):
-    #      return format_html(f"<a href=\"{reverse(viewname='embark-tracker-device', args=[value])}\">{value}</a>")
+    #      return format_html(f"<a href=\"{reverse(viewname='embark-tracker-sbom', args=[value])}\">{value}</a>")
