@@ -14,7 +14,7 @@ import re
 
 from django.conf import settings
 
-from dashboard.models import SoftwareInfo, Vulnerability, Result
+from dashboard.models import SoftwareBillOfMaterial, SoftwareInfo, Vulnerability, Result
 from uploader.models import FirmwareAnalysis
 
 logger = logging.getLogger(__name__)
@@ -212,32 +212,44 @@ def f15_json(_file_path, _analysis_id):
     SBOM json
     """
     logger.debug("starting f15 json import")
-    res, _ = Result.objects.get_or_create(
-        firmware_analysis=FirmwareAnalysis.objects.get(id=_analysis_id)
-    )
     with open(_file_path, 'r', encoding='utf-8') as f15_json_file:
         f15_data = json.load(f15_json_file)
-        for component_ in f15_data['components']:
-            logger.debug("Component is %s", component_)
-            try:
-                new_sbom, add_ = SoftwareInfo.objects.update_or_create(
-                    id=component_['bom-ref'],
-                    name=component_['name'],
-                    type=component_['type'],
-                    group=component_['group'] or 'NA',
-                    version=component_['version'] or 'NA',
-                    hashes=component_['hashes'],
-                    cpe=component_['cpe'] or 'NA',
-                    purl=component_['purl'] or 'NA',
-                    description=component_['description'] or 'NA',
-                    properties=component_['properties'] or 'NA'
-                )
-                logger.debug("Was new? %s", add_)
-                logger.debug("Adding SBOM item: %s to res %s", new_sbom, res)
-                if add_:
-                    res.sbom.add(new_sbom)
-            except builtins.Exception as error_:
-                logger.error("Error in f15 readin: %s", error_)
+        sbom_obj, add_sbom = SoftwareBillOfMaterial.objects.get_or_create(
+            id=f15_data['serialNumber'] #TODO grep uuid from this: "urn:uuid:f601dc24-7ba9-4821-b398-a30c59f7775e"
+        )
+        if add_sbom:
+            res, _ = Result.objects.get_or_create(
+                firmware_analysis=FirmwareAnalysis.objects.get(id=_analysis_id),
+                sbom=add_sbom
+            )
+        else:
+            for component_ in f15_data['components']:
+                logger.debug("Component is %s", component_)
+                try:
+                    new_sitem, add_sitem = SoftwareInfo.objects.update_or_create(
+                        id=component_['bom-ref'],
+                        name=component_['name'],
+                        type=component_['type'],
+                        group=component_['group'] or 'NA',
+                        version=component_['version'] or 'NA',
+                        hashes=component_['hashes'],
+                        cpe=component_['cpe'] or 'NA',
+                        purl=component_['purl'] or 'NA',
+                        description=component_['description'] or 'NA',
+                        properties=component_['properties'] or 'NA'
+                    )
+                    logger.debug("Was new? %s", add_sitem)
+                    logger.debug("Adding SBOM item: %s to sbom %s", new_sitem, sbom_obj)
+                    if add_sitem:
+                        sbom_obj.add(add_sitem)
+                    else:
+                        sbom_obj.add(new_sitem)
+                except builtins.Exception as error_:
+                    logger.error("Error in f15 readin: %s", error_)
+            res, _ = Result.objects.get_or_create(
+                firmware_analysis=FirmwareAnalysis.objects.get(id=_analysis_id),
+                sbom=sbom_obj
+            )
     logger.debug("read f15 json done")
     return res
 

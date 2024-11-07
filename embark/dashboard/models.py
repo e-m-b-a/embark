@@ -19,7 +19,7 @@ class Vulnerability(models.Model):
 
 class SoftwareInfo(models.Model):
     """
-    Many-to-many object for SBOM entries
+    Many-to-one object for SBOM entries
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
     type = models.CharField(verbose_name="type of blob", blank=False, editable=True, default="NA", max_length=256)
@@ -32,6 +32,15 @@ class SoftwareInfo(models.Model):
     purl = models.CharField(verbose_name="PUrl identifier", blank=False, editable=True, default="NA", max_length=256)
     description = models.CharField(verbose_name="description", blank=False, editable=True, default="NA", max_length=1024)
     properties = models.JSONField(null=True, editable=True)
+
+
+class SoftwareBillOfMaterial(models.Model):
+    """
+    1-to-1 object for result
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
+    meta = models.CharField(verbose_name="meta data sbom", blank=False, editable=True, default="NA", max_length=1024)
+    component = models.ManyToManyField(SoftwareInfo, help_text='Software Bill of Material', related_query_name='sbom', editable=True, blank=True)
 
 
 class Result(models.Model):
@@ -89,4 +98,4 @@ class Result(models.Model):
     system_bin = models.TextField(default='{}')
 
     vulnerability = models.ManyToManyField(Vulnerability, help_text='CVE/Vulnerability', related_query_name='CVE', editable=True, blank=True)
-    sbom = models.ManyToManyField(SoftwareInfo, help_text='Software Bill of Material', related_query_name='sbom', editable=True, blank=True)
+    sbom = models.OneToOneField(SoftwareBillOfMaterial, help_text='Software Bill of Material', related_query_name='sbom', editable=True, blank=True, on_delete=models.CASCADE, null=True)

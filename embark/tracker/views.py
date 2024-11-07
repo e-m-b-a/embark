@@ -18,7 +18,7 @@ from django_tables2 import RequestConfig
 from dashboard.models import Result
 from embark.helper import rnd_rgb_color, rnd_rgb_full
 from uploader.models import FirmwareAnalysis, Device, Vendor
-from tracker.tables import SimpleDeviceTable, SimpleSBOMTable
+from tracker.tables import SimpleDeviceTable, SimpleResultTable, SimpleSBOMTable
 from tracker.forms import AssociateForm, TimeForm
 
 logger = logging.getLogger(__name__)
@@ -73,12 +73,12 @@ def tracker(request):
     return redirect('embark-uploader-home')
 
 
-@require_http_methods(["GET"])
+@require_http_methods(["GET", "POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def get_report_for_device(request, device_id):
     if Device.objects.filter(id=device_id).exists():
         device = Device.objects.get(id=device_id)
-        analysis_queryset = FirmwareAnalysis.objects.filter(device=device)  # TODO uhm Q working? and add user check
+        analysis_queryset = FirmwareAnalysis.objects.filter(device=device, failed=False)  # TODO uhm Q working? and add user check
         label_list = [
             'strcpy',
             'cve_high',
@@ -118,14 +118,22 @@ def get_report_for_device(request, device_id):
             dataset['pointHoverBackgroundColor'] = '#fff'
             dataset['pointHoverBorderColor'] = rnd_rgb_color()
             data.append(dataset)
-        # sbom table
-        sbom_table = SimpleSBOMTable(data=result_queryset.sbom, template_name="django_tables2/bootstrap-responsive.html")
-        RequestConfig(request).configure(sbom_table)
+
+        result_queryset = Result.objects.filter(firmware_analysis__in=analysis_queryset)
+        if result_queryset:
+            result_table = SimpleResultTable(data=analysis_queryset.all(), template_name="django_tables2/bootstrap-responsive.html")
+            RequestConfig(request).configure(result_table)
         logger.debug("tracker/device data: %s", str(data))
-        return render(request=request, template_name='tracker/device.html', context={'username': request.user.username, 'device_id': device_id, 'device': device, 'labels': label_list, 'data': data})
+        return render(request=request, template_name='tracker/device.html', context={'username': request.user.username, 'device_id': device_id, 'device': device, 'labels': label_list, 'data': data, 'result_table': result_table})
     logger.error("device id nonexistent: %s", device_id)
     logger.error("could  not get template - %s", request)
     return HttpResponseBadRequest("Bad Request")
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def get_sbom_for_device(request, device_id, result_id):
+    pass    # TODO 
 
 
 @require_http_methods(["GET"])
