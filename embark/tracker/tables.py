@@ -38,4 +38,4 @@ class SimpleResultTable(tables.Table):
         orderable = True
 
     def render_sbom(self, value):
-       return format_html(f"<a href=\"{reverse(viewname='embark-tracker-sbom', args=[value])}\">{value}</a>")
+        return format_html(f"<a href=\"{reverse(viewname='embark-tracker-sbom', args=[value])}\">{value}</a>")
