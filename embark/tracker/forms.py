@@ -6,6 +6,7 @@ import logging
 
 from django import forms
 
+from dashboard.models import Result
 from uploader.models import Device
 
 

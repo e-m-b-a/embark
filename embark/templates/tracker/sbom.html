@@ -1,0 +1,25 @@
+{% load static %}
+{% load django_bootstrap5 %}
+
+{% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/tracker.css' %}"/>{% endblock style %}
+
+{% block title %}EMBArk tracker sbom{% endblock title %}
+{% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
+{% block sidebar %}{% include "tracker/sidebar.html" %}{% endblock sidebar %}
+
+{% bootstrap_messages %}
+
+{% block maincontent %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mx-auto border-bottom">
+  {% for label in device.label.all %}
+    <span class="badge rounded-pill bg-primary">{{ label|safe }}</span>
+  {% endfor %}
+
+</div><div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-top">
+    <div class="justify-content-between flex-wrap flex-md-nowrap align-items-center mx-auto">
+        <h2>SBOM</h2>
+        {% load django_tables2 %}
+        {% render_table sbom_table %}
+    </div>
+</div>
+{% endblock %}

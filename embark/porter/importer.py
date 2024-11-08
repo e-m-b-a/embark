@@ -214,15 +214,10 @@ def f15_json(_file_path, _analysis_id):
     logger.debug("starting f15 json import")
     with open(_file_path, 'r', encoding='utf-8') as f15_json_file:
         f15_data = json.load(f15_json_file)
-        sbom_obj, add_sbom = SoftwareBillOfMaterial.objects.get_or_create(
-            id=f15_data['serialNumber'] #TODO grep uuid from this: "urn:uuid:f601dc24-7ba9-4821-b398-a30c59f7775e"
-        )
-        if add_sbom:
-            res, _ = Result.objects.get_or_create(
-                firmware_analysis=FirmwareAnalysis.objects.get(id=_analysis_id),
-                sbom=add_sbom
-            )
-        else:
+        sbom_uuid = f15_data['serialNumber'].split(":")[2]
+        logger.debug("Reading sbom uuid=%s", sbom_uuid)
+        sbom_obj, add_sbom = SoftwareBillOfMaterial.objects.get_or_create(id=sbom_uuid)
+        if not add_sbom:
             for component_ in f15_data['components']:
                 logger.debug("Component is %s", component_)
                 try:
@@ -240,16 +235,13 @@ def f15_json(_file_path, _analysis_id):
                     )
                     logger.debug("Was new? %s", add_sitem)
                     logger.debug("Adding SBOM item: %s to sbom %s", new_sitem, sbom_obj)
-                    if add_sitem:
-                        sbom_obj.add(add_sitem)
-                    else:
-                        sbom_obj.add(new_sitem)
+                    sbom_obj.component.add(new_sitem)
                 except builtins.Exception as error_:
                     logger.error("Error in f15 readin: %s", error_)
-            res, _ = Result.objects.get_or_create(
-                firmware_analysis=FirmwareAnalysis.objects.get(id=_analysis_id),
-                sbom=sbom_obj
-            )
+        res, _ = Result.objects.get_or_create(
+            firmware_analysis=FirmwareAnalysis.objects.get(id=_analysis_id),
+            sbom=sbom_obj
+        )
     logger.debug("read f15 json done")
     return res
 

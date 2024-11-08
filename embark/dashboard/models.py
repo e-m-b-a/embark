@@ -5,6 +5,7 @@ __license__ = 'MIT'
 import uuid
 from django.db import models
 from django.core.validators import MinLengthValidator
+from django.utils import timezone
 
 from uploader.models import FirmwareAnalysis
 
@@ -51,6 +52,7 @@ class Result(models.Model):
     firmware_analysis = models.OneToOneField(FirmwareAnalysis, on_delete=models.CASCADE, primary_key=True)
     emba_command = models.CharField(blank=True, null=True, max_length=(FirmwareAnalysis.MAX_LENGTH * 6), help_text='')
     restricted = models.BooleanField(default=False, help_text='')
+    date = models.DateTimeField(default=timezone.now, blank=True)
 
     # base identifier
     os_verified = models.CharField(blank=True, null=True, max_length=256, help_text='')

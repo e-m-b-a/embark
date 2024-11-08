@@ -12,16 +12,18 @@ from django.views.decorators.http import require_http_methods
 from django.shortcuts import redirect
 from django.contrib import messages
 from django.utils import timezone
+from django.core.exceptions import MultipleObjectsReturned
 
 from django_tables2 import RequestConfig
 
-from dashboard.models import Result
+from dashboard.models import Result, SoftwareBillOfMaterial
 from embark.helper import rnd_rgb_color, rnd_rgb_full
 from uploader.models import FirmwareAnalysis, Device, Vendor
 from tracker.tables import SimpleDeviceTable, SimpleResultTable, SimpleSBOMTable
 from tracker.forms import AssociateForm, TimeForm
 
 logger = logging.getLogger(__name__)
+req_logger = logging.getLogger("requests")
 
 
 @require_http_methods(["GET", "POST"])
@@ -132,8 +134,17 @@ def get_report_for_device(request, device_id):
 
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def get_sbom_for_device(request, device_id, result_id):
-    pass    # TODO 
+def get_sbom(request, sbom_id):
+    req_logger.info("REquest from %s : %s", request.user, request)
+    try:
+        sbom_obj = SoftwareBillOfMaterial.objects.filter(id=sbom_id)
+        sbom_table = SimpleSBOMTable(data=sbom_obj, template_name="django_tables2/bootstrap-responsive.html")
+        RequestConfig(request).configure(sbom_table)
+    except MultipleObjectsReturned as multi_error:
+        messages.error(request, "wrong number of result objects %s ", multi_error)
+        sbom_table = None
+    logger.debug("Rendering sbom.html")
+    return render(request, "tracker/sbom.html", {'sbom_table': sbom_table})
 
 
 @require_http_methods(["GET"])

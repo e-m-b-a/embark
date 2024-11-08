@@ -361,7 +361,7 @@ class FirmwareAnalysis(models.Model):
 
         command = ""
         if self.version:
-            command = command + r" -X " + "\"" + re.sub(r"[^a-zA-Z0-9\.\-\_\ \+]+", "", str(self.version)) + "\""
+            command = command + r" -X " + "\"" + re.sub(r"[^a-zA-Z0-9\.\-\_\+]+", "", str(self.version)) + "\""
         if self.device:
             devices = self.device.all()
             logger.debug("get_flags - device - to dict query returns %s", devices)

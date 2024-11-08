@@ -7,7 +7,7 @@ import django_tables2 as tables
 from django.utils.html import format_html
 from django.urls import reverse
 
-from dashboard.models import Result, SoftwareInfo
+from dashboard.models import Result, SoftwareBillOfMaterial
 from uploader.models import Device
 
 
@@ -24,7 +24,7 @@ class SimpleDeviceTable(tables.Table):
 class SimpleSBOMTable(tables.Table):
 
     class Meta:
-        model = SoftwareInfo
+        model = SoftwareBillOfMaterial
         orderable = True
 
     #  def render_id(self, value):
@@ -36,3 +36,7 @@ class SimpleResultTable(tables.Table):
     class Meta:
         model = Result
         orderable = True
+    
+    def render_sbom(self, value):
+       return format_html(f"<a href=\"{reverse(viewname='embark-tracker-sbom', args=[value])}\">{value}</a>")
+
