@@ -6,7 +6,7 @@ __license__ = 'MIT'
 import builtins
 import logging
 
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import authenticate, login, logout, get_user
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.sites.shortcuts import get_current_site
@@ -27,6 +27,7 @@ from users.models import User
 logger = logging.getLogger(__name__)
 
 
+@permission_required("users.user_permission", login_url='/')
 @require_http_methods(["GET"])
 def user_main(request):
     user = get_user(request)
@@ -116,6 +117,7 @@ def embark_logout(request):
     return redirect('embark-login')
 
 
+@permission_required("users.user_permission", login_url='/')
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["GET", "POST"])
 def password_change(request):   # TODO adapt t
@@ -203,6 +205,7 @@ def deactivate(request, user_id):   # TODO
     return render(request, 'user/login.html')
 
 
+@permission_required("users.user_permission", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def get_log(request, log_type, lines):      # FIXME move to admin
@@ -247,6 +250,7 @@ def get_log(request, log_type, lines):      # FIXME move to admin
         return render(request, 'user/log.html', {'header': 'Error', 'log': file_path + ' not found!', 'username': request.user.username})
 
 
+@permission_required("users.user_permission", login_url='/')
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def set_timezone(request):
