@@ -32,7 +32,6 @@ class User(AbstractUser):
     team_role = models.IntegerField(choices=Role.choices(), default=Role.VIEWER)
     is_active_member = models.BooleanField(default=True, help_text='Whether this team member is active or not')
 
-
     class Meta:
         permissions = (
             ("non_minimal", "Can access more functionalities of embark"),

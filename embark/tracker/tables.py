@@ -32,7 +32,6 @@ class SimpleSBOMTable(tables.Table):
             '{}'
             '</div', record.id, record.id, record.id, record.id, value
         )
-    
 
     class Meta:
         model = SoftwareInfo
