@@ -7,7 +7,7 @@ import logging
 from django.conf import settings
 from django.shortcuts import render
 from django.http import HttpResponseBadRequest
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import redirect
 from django.contrib import messages
@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 req_logger = logging.getLogger("requests")
 
 
+@permission_required("user.non_minimal")
 @require_http_methods(["GET", "POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def tracker(request):
@@ -123,7 +124,7 @@ def get_report_for_device(request, device_id):
 
         result_queryset = Result.objects.filter(firmware_analysis__in=analysis_queryset)
         if result_queryset:
-            result_table = SimpleResultTable(data=analysis_queryset.all(), template_name="django_tables2/bootstrap-responsive.html")
+            result_table = SimpleResultTable(data=result_queryset.all(), template_name="django_tables2/bootstrap-responsive.html")
             RequestConfig(request).configure(result_table)
         logger.debug("tracker/device data: %s", str(data))
         return render(request=request, template_name='tracker/device.html', context={'username': request.user.username, 'device_id': device_id, 'device': device, 'labels': label_list, 'data': data, 'result_table': result_table})
@@ -137,8 +138,9 @@ def get_report_for_device(request, device_id):
 def get_sbom(request, sbom_id):
     req_logger.info("REquest from %s : %s", request.user, request)
     try:
-        sbom_obj = SoftwareBillOfMaterial.objects.filter(id=sbom_id)
-        sbom_table = SimpleSBOMTable(data=sbom_obj, template_name="django_tables2/bootstrap-responsive.html")
+        sbom_obj = SoftwareBillOfMaterial.objects.get(id=sbom_id)
+        sbom_table = SimpleSBOMTable(data=sbom_obj.component.all(), template_name="django_tables2/bootstrap-responsive.html")
+        logger.debug("Look at this sbmo table!: %s", sbom_table)
         RequestConfig(request).configure(sbom_table)
     except MultipleObjectsReturned as multi_error:
         messages.error(request, "wrong number of result objects %s ", multi_error)

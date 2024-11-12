@@ -32,7 +32,7 @@ class SoftwareInfo(models.Model):
     type = models.CharField(verbose_name="software type", blank=False, editable=True, default="data", max_length=50)
     purl = models.CharField(verbose_name="PUrl identifier", blank=False, editable=True, default="NA", max_length=256)
     description = models.CharField(verbose_name="description", blank=False, editable=True, default="NA", max_length=1024)
-    properties = models.JSONField(null=True, editable=True)
+    properties = models.JSONField(verbose_name="Properties", null=True, editable=True, serialize=True)
 
 
 class SoftwareBillOfMaterial(models.Model):

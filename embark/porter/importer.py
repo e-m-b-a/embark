@@ -13,6 +13,7 @@ from pathlib import Path
 import re
 
 from django.conf import settings
+from django.db import DatabaseError
 
 from dashboard.models import SoftwareBillOfMaterial, SoftwareInfo, Vulnerability, Result
 from uploader.models import FirmwareAnalysis
@@ -54,7 +55,10 @@ def result_read_in(analysis_id):
     sbom_file = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/SBOM/EMBA_cyclonedx_sbom.json"
     if os.path.isfile(sbom_file):
         logger.debug("File %s found and attempting to read", sbom_file)
-        res = f15_json(sbom_file, analysis_id)
+        try:
+            res = f15_json(sbom_file, analysis_id)
+        except DatabaseError as error:
+            logger.error("DB error in f15_json: %s", error, exc_info=1)
     return res
 
 
@@ -221,16 +225,15 @@ def f15_json(_file_path, _analysis_id):
             for component_ in f15_data['components']:
                 logger.debug("Component is %s", component_)
                 try:
-                    new_sitem, add_sitem = SoftwareInfo.objects.update_or_create(
+                    new_sitem, add_sitem = SoftwareInfo.objects.get_or_create(
                         id=component_['bom-ref'],
                         name=component_['name'],
                         type=component_['type'],
                         group=component_['group'] or 'NA',
                         version=component_['version'] or 'NA',
-                        hashes=component_['hashes'],
+                        hashes=[f"{key}:{value}" for key, value in component_['hashes']],
                         cpe=component_['cpe'] or 'NA',
                         purl=component_['purl'] or 'NA',
-                        description=component_['description'] or 'NA',
                         properties=component_['properties'] or 'NA'
                     )
                     logger.debug("Was new? %s", add_sitem)
@@ -240,8 +243,9 @@ def f15_json(_file_path, _analysis_id):
                     logger.error("Error in f15 readin: %s", error_)
         res, _ = Result.objects.get_or_create(
             firmware_analysis=FirmwareAnalysis.objects.get(id=_analysis_id),
-            sbom=sbom_obj
         )
+        res.sbom = sbom_obj
+        res.save()
     logger.debug("read f15 json done")
     return res
 
