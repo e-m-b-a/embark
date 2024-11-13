@@ -273,7 +273,6 @@ def activate_user(user, token) -> bool:
     """
     activates user with token
     """
-    user = User.objects.get(id=1)
     if default_token_generator.check_token(user, token):
         user.is_active = True
         default_permission_set = Permission.objects.filter(
@@ -287,7 +286,7 @@ def activate_user(user, token) -> bool:
             Q(codename = "dashboard_permission_minimal") |
             Q(codename = "dashboard_permission_advance")
         )
-        user.user_permissions.add(default_permission_set)
+        user.user_permissions.set(default_permission_set)
         user.save()
         return True
     return False
