@@ -22,7 +22,10 @@ EMBA_LOG_URL = 'emba_logs/'
 
 DEBUG = True
 DOMAIN = "embark.local"
+
 EMAIL_ACTIVE = True
+EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
+EMAIL_FILE_PATH = os.path.join(BASE_DIR.parent, 'mail')
 
 
 INSTALLED_APPS = [
