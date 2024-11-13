@@ -222,7 +222,6 @@ def delete_fw_file(request):
     messages.error(request, 'error in form')
     return redirect('..')
 
-    ################# minimalistic views #############################
 
 @permission_required("users.uploader_permission_minimal", login_url='/')
 @login_required(login_url='/' + settings.LOGIN_URL)
