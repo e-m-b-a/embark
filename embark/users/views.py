@@ -9,6 +9,7 @@ import logging
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import authenticate, login, logout, get_user
 from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth.models import Permission
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib import messages
 from django.forms import ValidationError
@@ -20,6 +21,7 @@ from django.conf import settings
 from django.utils import timezone
 from django.urls import reverse
 from django.core.mail import send_mail
+from django.db.models import Q
 
 from users.forms import LoginForm, SignUpForm, ResetForm
 from users.models import User
@@ -267,12 +269,25 @@ def set_timezone(request):
         return redirect("..")
 
 
-def activate_user(user, token):
+def activate_user(user, token) -> bool:
     """
     activates user with token
     """
+    user = User.objects.get(id=1)
     if default_token_generator.check_token(user, token):
         user.is_active = True
+        default_permission_set = Permission.objects.filter(
+            Q(codename = "user_permission") |
+            Q(codename = "tracker_permission") |
+            Q(codename = "updater_permission") |
+            Q(codename = "uploader_permission_minimal") |
+            Q(codename = "uploader_permission_advanced") |
+            Q(codename = "porter_permission") |
+            Q(codename = "reporter_permission") |
+            Q(codename = "dashboard_permission_minimal") |
+            Q(codename = "dashboard_permission_advance")
+        )
+        user.user_permissions.add(default_permission_set)
         user.save()
         return True
     return False
