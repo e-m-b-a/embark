@@ -67,7 +67,7 @@ def register(request):
                 if settings.EMAIL_ACTIVE is True:
                     send_mail(mail_subject, message, 'system@' + settings.DOMAIN, [email])
                     messages.success(request, 'Registration successful. Please check your email to activate')
-                    return redirect(reverse('embark-activate-user', kwargs={'uuid': user.id}))
+                    return redirect(reverse('embark-login'))
                 else:
                     logger.debug("Registered, redirecting to login")
                     if activate_user(user, token):
@@ -119,7 +119,6 @@ def embark_logout(request):
     return redirect('embark-login')
 
 
-@permission_required("users.user_permission", login_url='/')
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["GET", "POST"])
 def password_change(request):   # TODO adapt t
@@ -294,7 +293,7 @@ def activate_user(user, token) -> bool:
 
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def activate(request, user_id, token):
+def activate(request, token, user_id):
     """
     activation page + form request
     activates user through the usage of token
@@ -308,6 +307,8 @@ def activate(request, user_id, token):
             messages.error(request, "Token invalid - maybe it expired?")
     except ValueError as val_error:
         logger.error("%s in token %s", val_error, token)
+    except User.DoesNotExist as no_user_error:
+        logger.error("%s in request %s", no_user_error, request)
     return redirect(reverse('embark-MainDashboard'))
 
 
