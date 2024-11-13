@@ -1,0 +1,36 @@
+{% load static %}
+{% load django_bootstrap5 %}
+
+<div class="collapse" id="collapseStart">
+  <div class="col-sm">
+    <div class="box">
+        <p class="mainText">Analyze a firmware image/archive</p>
+        <form action="{% url 'embark-uploader-start-analysis' %}" method="post" id="analyze-form">
+            {% csrf_token %}
+            <div class="innerBlock">
+                <label for="SBOMModeSwitch">SBOM mode</label>
+                <label class="switch">
+                    <input id="SBOMModeSwitch" type="checkbox" onclick="SBOMModeToggle()"/>
+                    <span class="slider round"></span>
+                </label>
+                <br>
+                {% load filters %}
+                <!-- Iterate over all fields and set expmode on fields in expert mode -->
+                {% for field in analysis_form %}
+                    {% if field.name == "sbom_only_test" %}
+                        <div class="row expertModeOptions SBOMOption" value="expmode_off">
+                                {% bootstrap_field field %}
+                        </div>
+                    {% elif not field.field.expert_mode and field.name != "scan_modules" %}
+                            {% bootstrap_field field %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <div class="buttonRow">
+                <button type="submit" class="btn buttonRowElem">Analyze</button>
+                <button type="reset" class="btn buttonRowElem">Cancel</button>
+            </div>
+        </form>
+    </div>
+  </div>
+</div>
