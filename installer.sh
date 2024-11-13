@@ -412,10 +412,13 @@ install_embark_dev(){
   # apt packages
   apt-get install -y npm pycodestyle python3-pylint-django default-libmysqlclient-dev build-essential bandit yamllint mysql-client-core-8.0
   # get geckodriver
-  wget https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz
-  tar -xvf geckodriver-v0.33.0-linux64.tar.gz
-  mv geckodriver  /usr/local/bin
-  chmod +x /usr/local/bin/geckodriver
+  if ! command -v geckodriver > /dev/null ; then
+    wget https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz
+    tar -xvf geckodriver-v0.33.0-linux64.tar.gz
+    mv geckodriver  /usr/local/bin
+    chmod +x /usr/local/bin/geckodriver
+    rm geckodriver-v0.33.0-linux64.tar.gz
+  fi
   # npm packages
   npm install -g jshint
   # npm install -g dockerlinter
@@ -721,6 +724,15 @@ install_debs
 # mark dir as safe for git
 sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "${PWD}"
 
+
+if [[ "${EMBA_ONLY}" -eq 0 ]]; then
+  if [[ ${DEFAULT} -eq 1 ]]; then
+    install_embark_default
+  elif [[ ${DEV} -eq 1 ]]; then
+    install_embark_dev
+  fi
+fi
+
 if [[ "${NO_EMBA}" -eq 0 ]]; then
   # use git or release
   if [[ "${NO_GIT}" -eq 1 ]]; then
@@ -734,12 +746,5 @@ fi
 if [[ "${NO_EMBA}" -eq 1 ]]; then
   echo "EMBA_INSTALL=no" >> .env
 fi
-if [[ "${EMBA_ONLY}" -eq 1 ]]; then
-  exit 0
-fi
-if [[ ${DEFAULT} -eq 1 ]]; then
-  install_embark_default
-elif [[ ${DEV} -eq 1 ]]; then
-  install_embark_dev
-fi
+
 exit 0
