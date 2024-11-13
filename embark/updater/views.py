@@ -2,7 +2,7 @@ import logging
 
 from django.conf import settings
 from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.shortcuts import redirect
@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 req_logger = logging.getLogger("requests")
 
 
+@permission_required("users.updater_permission", login_url='/')
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["GET"])
 def updater_home(request):
@@ -33,7 +34,7 @@ def updater_home(request):
     return render(request, 'updater/index.html', {'emba_update_form': emba_update_form, 'emba_check_form': emba_check_form, 'log_content': log_content})
 
 
-@csrf_protect
+@permission_required("users.updater_permission", login_url='/')
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def check_update(request):
@@ -67,7 +68,7 @@ def check_update(request):
     return redirect('embark-updater-home')
 
 
-@csrf_protect
+@permission_required("users.updater_permission", login_url='/')
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def update_emba(request):
@@ -96,7 +97,7 @@ def update_emba(request):
     return redirect('embark-updater-home')
 
 
-@csrf_protect
+@permission_required("users.updater_permission", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def progress(request):
@@ -106,7 +107,7 @@ def progress(request):
     return render(request, 'updater/progress.html', {})
 
 
-@csrf_protect
+@permission_required("users.updater_permission", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def raw_progress(request):
