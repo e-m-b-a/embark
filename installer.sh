@@ -102,6 +102,7 @@ write_env(){
         if [[ "${LAST_PW_HASH}" == "$(echo "${CHECK_PW}" | sha256sum)" ]]; then
           RANDOM_PW="${CHECK_PW}"
           DJANGO_SECRET_KEY="$(grep "SECRET_KEY=" "${FILE_}" | sed -e "s/^SECRET_KEY=//" )"
+          SUPER_PW="$(grep "DJANGO_SUPERUSER_PASSWORD=" "${FILE_}" | sed -e "s/^DJANGO_SUPERUSER_PASSWORD=//" )"
           break
         fi
       done
@@ -449,6 +450,9 @@ install_embark_dev(){
   fi
   if ! [[ -d uploadedFirmwareImages/active/ ]]; then
     mkdir uploadedFirmwareImages/active
+  fi
+  if ! [[ -d mail ]]; then
+    mkdir mail
   fi
 
   # download externals
