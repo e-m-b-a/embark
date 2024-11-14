@@ -292,7 +292,6 @@ def activate_user(user, token) -> bool:
 
 
 @require_http_methods(["GET"])
-@login_required(login_url='/' + settings.LOGIN_URL)
 def activate(request, token, user_id):
     """
     activation page + form request
@@ -301,15 +300,14 @@ def activate(request, token, user_id):
     try:
         user = User.objects.get(id=user_id)
         if activate_user(user, token):
-            login(request, user)
-            messages.success(request, str(user.username) + 'activated')
+            messages.success(request, str(user.username) + ' was successfully activated')
         else:
             messages.error(request, "Token invalid - maybe it expired?")
     except ValueError as val_error:
         logger.error("%s in token %s", val_error, token)
     except User.DoesNotExist as no_user_error:
         logger.error("%s in request %s", no_user_error, request)
-    return redirect(reverse('embark-MainDashboard'))
+    return redirect(reverse('embark-login'))
 
 
 @require_http_methods(["GET", "POST"])
