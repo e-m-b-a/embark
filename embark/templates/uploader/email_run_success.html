@@ -1,0 +1,7 @@
+{% autoescape off %}
+Dear {{ username }},
+
+Please follow the link to look at your result,
+http://{{ domain }}{% url 'embark-IndividualReportDashboard' analysis_id=analysis_id %}
+
+{% endautoescape %}

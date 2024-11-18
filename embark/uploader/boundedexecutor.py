@@ -20,6 +20,8 @@ from django.dispatch import receiver
 from django.utils import timezone
 from django.conf import settings
 from django.db import close_old_connections
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
 
 from uploader import finish_execution
 from uploader.archiver import Archiver
@@ -28,6 +30,7 @@ from embark.logreader import LogReader
 from embark.helper import get_size, zip_check
 from porter.models import LogZipFile
 from porter.importer import result_read_in
+from users.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -120,6 +123,9 @@ class BoundedExecutor:
             logger.error("EMBA run was probably not successful!")
             logger.error("run_emba_cmd error: %s", execpt)
             exit_fail = True
+            logger.debug("sending email to admin")
+            admin_email = User.objects.get(name="admin").email
+            send_mail(subject="Failed EMBA run", message=f"analysis {analysis_id} failed @{timezone.now()}", from_email='system@' + settings.DOMAIN, recipient_list=[admin_email])
 
         # finalize db entry
         if analysis:
@@ -129,6 +135,25 @@ class BoundedExecutor:
             analysis.finished = True
             analysis.failed = exit_fail
             analysis.save(update_fields=["end_date", "scan_time", "duration", "finished", "failed"])
+
+        if settings.EMAIL_ACTIVE is True:
+            logger.debug("SEnding email with result")
+            user = analysis.user
+            mail_subject = 'Analysis completed'
+            domain = settings.DOMAIN
+            if exit_fail:
+                message = render_to_string('uploader/email_run_failed.html', context={
+                'username': user.username,
+                'domain': domain,
+                'analysis_id': analysis_id
+                })
+            else:
+                message = render_to_string('uploader/email_run_success.html', context={
+                    'username': user.username,
+                    'domain': domain,
+                    'analysis_id': analysis_id
+                })
+            send_mail(mail_subject, message, 'system@' + settings.DOMAIN, [user.email])
 
         logger.info("Successful cleaned up: %s", cmd)
 

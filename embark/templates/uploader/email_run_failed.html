@@ -1,0 +1,9 @@
+{% autoescape off %}
+Dear {{ username }},
+
+Sadly the automated analysis was not successful.
+An admin was notified and will look at the issue.
+You can follow this link to see the logs
+http://{{ domain }}{% url 'embark-show-logviewer' analysis_id=analysis_id %}
+
+{% endautoescape %}
