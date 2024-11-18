@@ -184,7 +184,9 @@ fi
   echo -e "Order deny,allow"
   echo -e "Deny from all"
   echo -e "Allow from 127.0.0.1"
-  echo -e "Allow from ${ADMIN_HOST_RANGE[*]}"
+  if [[ -n "${ADMIN_HOST_RANGE}" ]]; then
+    echo -e "Allow from ${ADMIN_HOST_RANGE[*]}"
+  fi
   echo -e "</Location>"
 } > /var/www/conf/embark.conf
 
