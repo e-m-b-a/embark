@@ -725,6 +725,14 @@ install_debs
 sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "${PWD}"
 
 
+if [[ "${NO_EMBA}" -eq 0 ]]; then
+  if [[ "${NO_GIT}" -eq 1 ]]; then
+    install_emba_src
+  else
+    install_emba
+  fi
+fi
+
 if [[ "${EMBA_ONLY}" -eq 0 ]]; then
   if [[ ${DEFAULT} -eq 1 ]]; then
     install_embark_default
@@ -733,18 +741,13 @@ if [[ "${EMBA_ONLY}" -eq 0 ]]; then
   fi
 fi
 
-if [[ "${NO_EMBA}" -eq 0 ]]; then
-  # use git or release
-  if [[ "${NO_GIT}" -eq 1 ]]; then
-    install_emba_src
-    echo "EMBA_INSTALL=src" >> .env
-  else
-    install_emba
-    echo "EMBA_INSTALL=git" >> .env
-  fi
-fi
-if [[ "${NO_EMBA}" -eq 1 ]]; then
+if [[ "${NO_GIT}" -eq 1 ]]; then
+  echo "EMBA_INSTALL=src" >> .env
+elif [[ "${NO_EMBA}" -eq 1 ]]; then
   echo "EMBA_INSTALL=no" >> .env
+else
+  install_emba
+  echo "EMBA_INSTALL=git" >> .env
 fi
 
 exit 0
