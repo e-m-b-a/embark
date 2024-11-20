@@ -4,8 +4,6 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-channels = "*"
-channels-redis = "*"
 daphne = "*"
 mysqlclient = "*"
 django-apscheduler = "*"
@@ -22,6 +20,8 @@ django-tables2 = "*"
 requests = "*"
 djangorestframework = "*"
 watchdog = "*"
+channels = "*"
+channels-redis = "*"
 
 [dev-packages]
 pycodestyle = "*"

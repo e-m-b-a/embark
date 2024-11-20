@@ -29,6 +29,7 @@ EMAIL_FILE_PATH = os.path.join(BASE_DIR.parent, 'mail')
 
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -39,7 +40,6 @@ INSTALLED_APPS = [
     'django_tables2',
     'mod_wsgi.server',
     'django_apscheduler',
-    'channels',
     'uploader',
     'users',
     'reporter',
@@ -243,7 +243,7 @@ REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-ASGI_APPLICATION = 'embark.asgi.application'
+ASGI_APPLICATION = 'embark.asgi_dev.application'
 
 # Format string for displaying run time timestamps in the Django admin site. The default
 # just adds seconds to the standard Django format, which is useful for displaying the timestamps
@@ -267,7 +267,7 @@ CHANNEL_LAYERS = {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
             "hosts": [(REDIS_HOST, REDIS_PORT)],
-        },
+        }
     },
 }
 # TODO check this https://docs.djangoproject.com/en/5.1/topics/cache/

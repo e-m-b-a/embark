@@ -12,7 +12,7 @@
 # Description: Automates setup of developer environment for Debug-Server
 
 # http-server options
-PORT="8000"
+PORT="8001"
 IP="0.0.0.0"
 
 export RED='\033[0;31m'
@@ -125,19 +125,12 @@ python3 ./embark/manage.py createsuperuser --noinput
 echo -e "\n[""${BLUE} JOB""${NC}""] Starting runapscheduler"
 python3 ./embark/manage.py runapscheduler | tee -a ./logs/scheduler.log &
 
-echo -e "\n[""${BLUE} JOB""${NC}""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-echo "START DAPHNE" >./logs/daphne.log
-cd ./embark || exit 1
-pipenv run daphne -v 3 -p 8001 -b "${IP}" --root-path="${PWD}"/embark embark.asgi:application &>../logs/daphne.log &
-cd .. || exit 1
-
 # start embark
 # systemctl start embark.service
 
-echo -e "${ORANGE}""${BOLD}""start EMBArk server (WS/WSS not enabled -a also asgi)""${NC}"
+echo -e "${ORANGE}""${BOLD}""start EMBArk server(ASGI only)""${NC}"
 python3 ./embark/manage.py runserver "${IP}":"${PORT}" |& tee -a ./logs/debug-server.log
 
 wait
-
 
 echo -e "\n${ORANGE}""${BOLD}""Done. To clean-up use the clean-setup script""${NC}"
