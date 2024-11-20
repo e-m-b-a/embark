@@ -287,6 +287,10 @@ install_debs(){
   if ! command -v ansifilter > /dev/null ; then
     apt-get install -y ansifilter
   fi
+  #apache2 apache2-dev
+  if ! command -v apache2 > /dev/null ; then
+    apt-get install -y apache2 apache2-dev
+  fi
 }
 
 install_daemon(){
@@ -746,7 +750,6 @@ if [[ "${NO_GIT}" -eq 1 ]]; then
 elif [[ "${NO_EMBA}" -eq 1 ]]; then
   echo "EMBA_INSTALL=no" >> .env
 else
-  install_emba
   echo "EMBA_INSTALL=git" >> .env
 fi
 
