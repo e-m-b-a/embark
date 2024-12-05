@@ -184,7 +184,7 @@ fi
   echo -e "Order deny,allow"
   echo -e "Deny from all"
   echo -e "Allow from 127.0.0.1"
-  if [[ -n "${ADMIN_HOST_RANGE}" ]]; then
+  if [[ ${#ADMIN_HOST_RANGE[@]} -ne 0 ]]; then
     echo -e "Allow from ${ADMIN_HOST_RANGE[*]}"
   fi
   echo -e "</Location>"
