@@ -41,7 +41,7 @@ EMBA_LOG_URL = 'emba_logs/'
 
 # Application definition - defines what apps gets migrated
 INSTALLED_APPS = [
-    'daphne'
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -52,7 +52,6 @@ INSTALLED_APPS = [
     'django_bootstrap5',
     'django_tables2',
     'mod_wsgi.server',
-    'channels',
     'uploader',
     'users',
     'reporter',

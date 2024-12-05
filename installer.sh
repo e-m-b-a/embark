@@ -372,7 +372,6 @@ install_embark_default(){
   #install packages
   cp ./Pipfile* /var/www/
   (cd /var/www && MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv install)
-  
 
   # download externals
   if ! [[ -d ./embark/static/external ]]; then

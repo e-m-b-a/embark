@@ -21,7 +21,7 @@ djangorestframework = "*"
 watchdog = "*"
 channels = "*"
 channels-redis = "*"
-mod-wsgi = "*"
+mod-wsgi-standalone = "*"
 
 [dev-packages]
 pycodestyle = "*"
