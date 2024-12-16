@@ -1,0 +1,9 @@
+<!--
+This renders a interactive result table for the device -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-top">
+    <div class="justify-content-between flex-wrap flex-md-nowrap align-items-center mx-auto">
+        <h2>Results</h2>
+        {% load django_tables2 %}
+        {% render_table result_table %}
+    </div>
+</div>

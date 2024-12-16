@@ -1,0 +1,8 @@
+{% autoescape off %}
+Dear {{ username }},
+
+Please follow the link to confirm your registration,
+http://{{ domain }}{% url 'embark-activate-user' user_id=uid token=token %}
+
+OR manually input the following token: {{ token }}
+{% endautoescape %}

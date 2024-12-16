@@ -3,9 +3,9 @@ __author__ = 'Benedikt Kuehne'
 __license__ = 'MIT'
 
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin, GroupAdmin
 
-from users.models import User, Team, TeamMember
+from users.models import User, Team
 
-admin.site.register(User)
-admin.site.register(Team)
-admin.site.register(TeamMember)
+admin.site.register(User, UserAdmin)
+admin.site.register(Team, GroupAdmin)

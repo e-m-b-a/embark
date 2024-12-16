@@ -1,0 +1,5 @@
+{% csrf_token %}
+{% for field in form %}
+<label >{{ field.label_tag }}</label>
+{{ field }}
+{% endfor %}

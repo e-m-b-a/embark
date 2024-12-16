@@ -1,0 +1,8 @@
+{% autoescape off %}
+Dear {{ username }},
+
+Please follow the link to confirm the account deletion,
+http://{{ domain }}{% url 'embark-deactivate-user' user_id=uid activation_token=token %}
+
+OR manually input the following token: {{ token }}
+{% endautoescape %}

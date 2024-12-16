@@ -13,8 +13,9 @@ from pathlib import Path
 import re
 
 from django.conf import settings
+from django.db import DatabaseError
 
-from dashboard.models import Vulnerability, Result
+from dashboard.models import SoftwareBillOfMaterial, SoftwareInfo, Vulnerability, Result
 from uploader.models import FirmwareAnalysis
 
 logger = logging.getLogger(__name__)
@@ -27,8 +28,8 @@ def result_read_in(analysis_id):
     """
     logger.debug("starting read-in of %s", analysis_id)
     res = None
-    directory = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/csv_logs/"
-    csv_list = [os.path.join(directory, file_) for file_ in os.listdir(directory)]
+    csv_directory = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/csv_logs/"
+    csv_list = [os.path.join(csv_directory, file_) for file_ in os.listdir(csv_directory)]
     for file_ in csv_list:
         logger.debug("trying to read: %s", file_)
         if os.path.isfile(file_):      # TODO change check. > if valid EMBA csv file
@@ -41,7 +42,23 @@ def result_read_in(analysis_id):
                 # FIXME f20 in emba is broken!
                 # res = f20_csv(file_, analysis_id)
                 # logger.debug("Result for %s created or updated", analysis_id)
-            # TODO license info etc
+    # json_directory = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/json_logs/"
+    # json_list = [os.path.join(json_directory, file_) for file_ in os.listdir(json_directory)]
+    # for file_ in json_list:
+    #     logger.debug("trying to read: %s", file_)
+    #     if os.path.isfile(file_):      # TODO change check. > if valid EMBA json file
+    #         logger.debug("File %s found and attempting to read", file_)
+    #         if file_.endswith('f15_cyclonedx_sbom.json'):
+    #             logger.info("f15 readin for %s skipped", analysis_id)
+    #             # f21_cyclonedx_sbom_json.json move into db object
+    #             res = f15_json(file_, analysis_id)
+    sbom_file = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/SBOM/EMBA_cyclonedx_sbom.json"
+    if os.path.isfile(sbom_file):
+        logger.debug("File %s found and attempting to read", sbom_file)
+        try:
+            res = f15_json(sbom_file, analysis_id)
+        except DatabaseError as error:
+            logger.error("DB error in f15_json: %s", error, exc_info=1)
     return res
 
 
@@ -193,13 +210,53 @@ def f10_csv(_file_path, _analysis_id):
     logger.debug("read f10 csv done")
 
 
+def f15_json(_file_path, _analysis_id):
+    """
+    return: result obj/ None
+    SBOM json
+    """
+    logger.debug("starting f15 json import")
+    with open(_file_path, 'r', encoding='utf-8') as f15_json_file:
+        f15_data = json.load(f15_json_file)
+        sbom_uuid = f15_data['serialNumber'].split(":")[2]
+        logger.debug("Reading sbom uuid=%s", sbom_uuid)
+        sbom_obj, add_sbom = SoftwareBillOfMaterial.objects.get_or_create(id=sbom_uuid)
+        if not add_sbom:
+            for component_ in f15_data['components']:
+                logger.debug("Component is %s", component_)
+                try:
+                    new_sitem, add_sitem = SoftwareInfo.objects.get_or_create(
+                        id=component_['bom-ref'],
+                        name=component_['name'],
+                        type=component_['type'],
+                        group=component_['group'] or 'NA',
+                        version=component_['version'] or 'NA',
+                        hashes=[f"{key}:{value}" for key, value in component_['hashes']],
+                        cpe=component_['cpe'] or 'NA',
+                        purl=component_['purl'] or 'NA',
+                        properties=component_['properties'] or 'NA'
+                    )
+                    logger.debug("Was new? %s", add_sitem)
+                    logger.debug("Adding SBOM item: %s to sbom %s", new_sitem, sbom_obj)
+                    sbom_obj.component.add(new_sitem)
+                except builtins.Exception as error_:
+                    logger.error("Error in f15 readin: %s", error_)
+        res, _ = Result.objects.get_or_create(
+            firmware_analysis=FirmwareAnalysis.objects.get(id=_analysis_id),
+        )
+        res.sbom = sbom_obj
+        res.save()
+    logger.debug("read f15 json done")
+    return res
+
+
 if __name__ == "__main__":
     BASE_DIR = Path(__file__).resolve().parent.parent.parent
     TEST_DIR = os.path.join(BASE_DIR, 'test/porter')
 
     # test print f50
-    with open(os.path.join(TEST_DIR, 'f50_test.json'), 'w', encoding='utf-8') as json_file:
-        json_file.write(json.dumps(read_csv(os.path.join(TEST_DIR, 'f50_test.csv')), indent=4))
+    # with open(os.path.join(TEST_DIR, 'f50_test.json'), 'w', encoding='utf-8') as json_file:
+    #     json_file.write(json.dumps(read_csv(os.path.join(TEST_DIR, 'f50_test.csv')), indent=4))
 
     # with open(os.path.join(TEST_DIR, 'f20_test.json'), 'w', encoding='utf-8') as json_file:
     #     json_file.write(json.dumps(

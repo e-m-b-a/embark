@@ -21,6 +21,9 @@ EMBA_LOG_ROOT = os.path.join(BASE_DIR.parent, 'emba_logs')
 EMBA_LOG_URL = 'emba_logs/'
 
 DEBUG = True
+DOMAIN = "embark.local"
+EMAIL_ACTIVE = True
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -79,6 +82,7 @@ CSRF_COOKIE_HTTPONLY = False  # False since we will grab it via universal-cookie
 
 SESSION_COOKIE_SAMESITE = 'Strict'
 SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = False
 
 WSGI_APPLICATION = 'embark.wsgi.application'
 
@@ -184,16 +188,19 @@ LOGGING = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {
+            "min_length": 8,
+        },
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -223,10 +230,10 @@ STATICFILES_DIRS = [
 # STATICFILES_FINDERS
 
 # URL of Login-Page
-LOGIN_URL = ''
+LOGIN_URL = 'user/login/'
 
 # URL of Logout-Page
-LOGOUT_REDIRECT_URL = ''
+LOGOUT_REDIRECT_URL = 'user/logout'
 
 # Added for FIle storage to get the path to save Firmware images.
 MEDIA_ROOT = os.path.join(BASE_DIR.parent, 'media')
@@ -269,6 +276,7 @@ CHANNEL_LAYERS = {
         },
     },
 }
+# TODO check this https://docs.djangoproject.com/en/5.1/topics/cache/
 TEMP_DIR = Path("/tmp/")
 
 try:

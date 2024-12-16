@@ -91,10 +91,12 @@ if [[ "${WSL}" -eq 1 ]]; then
 fi
 
 # check emba
-echo -e "${BLUE}""${BOLD}""checking EMBA""${NC}"
-if ! (cd ./emba && ./emba -d 1) ; then
-  echo -e "${RED}""EMBA is not configured correctly""${NC}"
-  exit 1
+if ! grep -q "EMBA_INSTALL=no" ./.env ; then
+  echo -e "${BLUE}""${BOLD}""checking EMBA""${NC}"
+  if ! (cd ./emba && ./emba -d 1) ; then
+    echo -e "${RED}""EMBA is not configured correctly""${NC}"
+    exit 1
+  fi
 fi
 
 check_db

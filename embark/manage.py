@@ -7,7 +7,7 @@ import sys
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'embark.settings.dev')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'embark.settings.deploy')
 
     try:
         # pylint: disable=import-outside-toplevel

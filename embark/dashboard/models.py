@@ -2,8 +2,10 @@ __copyright__ = 'Copyright 2022-2024 Siemens Energy AG'
 __author__ = 'Benedikt Kuehne'
 __license__ = 'MIT'
 
+import uuid
 from django.db import models
 from django.core.validators import MinLengthValidator
+from django.utils import timezone
 
 from uploader.models import FirmwareAnalysis
 
@@ -13,7 +15,33 @@ class Vulnerability(models.Model):
     Many-to-Many object for CVEs
     """
     cve = models.CharField(max_length=18, validators=[MinLengthValidator(13)], help_text='CVE-XXXX-XXXXXXX')
-    info = models.JSONField(null=True)
+    info = models.JSONField(null=True, editable=True)
+
+
+class SoftwareInfo(models.Model):
+    """
+    Many-to-one object for SBOM entries
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
+    type = models.CharField(verbose_name="type of blob", blank=False, editable=True, default="NA", max_length=256)
+    name = models.CharField(verbose_name="software name", blank=False, editable=True, default="NA", max_length=256)
+    group = models.CharField(verbose_name="grouping", blank=False, editable=True, default="NA", max_length=256)
+    version = models.CharField(verbose_name="software version", blank=False, editable=True, default="1.0", max_length=32)
+    hashes = models.CharField(verbose_name="identivication hash", blank=False, editable=True, default="NA", max_length=1024)
+    cpe = models.CharField(verbose_name="CPE identifier", blank=False, editable=True, default="NA", max_length=256)
+    type = models.CharField(verbose_name="software type", blank=False, editable=True, default="data", max_length=50)
+    purl = models.CharField(verbose_name="PUrl identifier", blank=False, editable=True, default="NA", max_length=256)
+    description = models.CharField(verbose_name="description", blank=False, editable=True, default="NA", max_length=1024)
+    properties = models.JSONField(verbose_name="Properties", null=True, editable=True, serialize=True)
+
+
+class SoftwareBillOfMaterial(models.Model):
+    """
+    1-to-1 object for result
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
+    meta = models.CharField(verbose_name="meta data sbom", blank=False, editable=True, default="NA", max_length=1024)
+    component = models.ManyToManyField(SoftwareInfo, help_text='Software Bill of Material', related_query_name='sbom', editable=True, blank=True)
 
 
 class Result(models.Model):
@@ -24,6 +52,7 @@ class Result(models.Model):
     firmware_analysis = models.OneToOneField(FirmwareAnalysis, on_delete=models.CASCADE, primary_key=True)
     emba_command = models.CharField(blank=True, null=True, max_length=(FirmwareAnalysis.MAX_LENGTH * 6), help_text='')
     restricted = models.BooleanField(default=False, help_text='')
+    date = models.DateTimeField(default=timezone.now, blank=True)
 
     # base identifier
     os_verified = models.CharField(blank=True, null=True, max_length=256, help_text='')
@@ -71,3 +100,4 @@ class Result(models.Model):
     system_bin = models.TextField(default='{}')
 
     vulnerability = models.ManyToManyField(Vulnerability, help_text='CVE/Vulnerability', related_query_name='CVE', editable=True, blank=True)
+    sbom = models.OneToOneField(SoftwareBillOfMaterial, help_text='Software Bill of Material', related_query_name='sbom', editable=True, blank=True, on_delete=models.CASCADE, null=True)

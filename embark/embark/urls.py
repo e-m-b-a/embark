@@ -17,12 +17,12 @@ __copyright__ = 'Copyright 2021-2024 Siemens Energy AG, Copyright 2021 The AMOS 
 __author__ = 'm-1-k-3, RaviChandra, Garima Chauhan, Maximilian Wagner, diegiesskanne'
 __license__ = 'MIT'
 
-# from django.contrib import admin
+from django.contrib import admin
 from django.urls import path, include
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 urlpatterns = [
-    # path('admin/', admin.site.urls),
+    path('admin/', admin.site.urls),
     path('', include('updater.urls')),
     path('', include('uploader.urls')),
     path('', include('users.urls')),

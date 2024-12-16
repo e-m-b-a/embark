@@ -279,6 +279,9 @@ class FirmwareAnalysis(models.Model):
     user_emulation_test = BooleanFieldExpertMode(help_text='Enables automated qemu emulation tests', default=False, expert_mode=True, blank=True)
     system_emulation_test = BooleanFieldExpertMode(help_text='Enables automated qemu system emulation tests', default=False, expert_mode=True, blank=True)
 
+    # SBOM mode option
+    sbom_only_test = models.BooleanField(verbose_name='SBOM only test', help_text='Enables SBOM tests', default=False, blank=True)
+
     # S-modules
     scan_modules = models.JSONField(blank=True, null=True, default=scan_modules_default_value)
 
@@ -358,7 +361,7 @@ class FirmwareAnalysis(models.Model):
 
         command = ""
         if self.version:
-            command = command + r" -X " + "\"" + re.sub(r"[^a-zA-Z0-9\.\-\_\ \+]+", "", str(self.version)) + "\""
+            command = command + r" -X " + "\"" + re.sub(r"[^a-zA-Z0-9\.\-\_\+]+", "", str(self.version)) + "\""
         if self.device:
             devices = self.device.all()
             logger.debug("get_flags - device - to dict query returns %s", devices)

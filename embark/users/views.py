@@ -7,15 +7,21 @@ import builtins
 import logging
 
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login, logout, get_user
+from django.contrib.auth.tokens import default_token_generator
+from django.contrib.sites.shortcuts import get_current_site
+from django.contrib import messages
+from django.forms import ValidationError
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-
-from django.contrib.auth import authenticate, login, logout, get_user
-from django.contrib import messages
+from django.template.loader import render_to_string
 from django.conf import settings
 from django.utils import timezone
+from django.urls import reverse
+from django.core.mail import send_mail
 
+from users.forms import LoginForm, SignUpForm, ResetForm
 from users.models import User
 
 logger = logging.getLogger(__name__)
@@ -23,7 +29,9 @@ logger = logging.getLogger(__name__)
 
 @require_http_methods(["GET"])
 def user_main(request):
-    logger.debug("Account settings for %s", request.user)
+    user = get_user(request)
+    logger.debug("Account settings for %s", user)
+    #   return render(request, 'user/index.html', {"timezones": settings.TIMEZONES, "server_tz": settings.TIME_ZONE, 'user': user})
     return render(request, 'user/index.html', {"timezones": settings.TIMEZONES, "server_tz": settings.TIME_ZONE})
 
 
@@ -32,84 +40,85 @@ def user_main(request):
 def register(request):
     if request.method == "POST":
         logger.debug(request.POST)
-        data = {k: v[0] for k, v in dict(request.POST).items()}
-        logger.debug(data)
         try:
-            body = {k: v[0] for k, v in dict(request.POST).items()}
-            try:
-                username = body['username']
-                password = body['password']
-                confirm_password = body['confirm_password']
-                if password != confirm_password:
-                    logger.debug('Passwords do not match')
-                    messages.success(request, 'Passwords do not match.')
-                    return render(request, 'user/register.html')
-                logger.debug('Passwords match. Creating user')
-                user = User.objects.create(username=username)
+            user = get_user(request)
+            signup_form = SignUpForm(data=request.POST)
+            if signup_form.is_valid():
+                username = signup_form.cleaned_data.get('username')
+                password = signup_form.cleaned_data.get('password2')
+                email = signup_form.cleaned_data.get('email')
+                user = User.objects.create(username=username, email=email)
                 user.set_password(password)
+                user.is_active = False
                 user.save()
                 logger.debug('User created')
-                messages.success(request, 'Registration successful.')
-                return redirect('../../')
-            except KeyError:
-                logger.exception('Missing keys from data- Username, password, password_confirm')
-                messages.error(request, 'User data is missing/invalid.')
-                return render(request, 'user/register.html')
+                token = default_token_generator.make_token(user)
+                current_site = get_current_site(request)
+                mail_subject = 'Activate your EMBArk account.'
+                message = render_to_string('user/email_template_activation.html', context={
+                    'username': user.username,
+                    'domain': current_site.domain,
+                    'uid': user.id,
+                    'token': token,
+                })
+                if settings.EMAIL_ACTIVE is True:
+                    send_mail(mail_subject, message, 'system@' + settings.DOMAIN, [email])
+                    messages.success(request, 'Registration successful. Please check your email to activate')
+                    return redirect(reverse('embark-activate-user', kwargs={'uuid': user.id}))
+                else:
+                    logger.debug("Registered, redirecting to login")
+                    if activate_user(user, token):
+                        messages.success(request, 'Registration successful.')
+                        return redirect(reverse('embark-login'))
+                    else:
+                        raise ValidationError("Activation Error")
         except builtins.Exception as error:
             logger.exception('Wide exception in Signup: %s', error)
             messages.error(request, 'Something went wrong when signing up the user.')
-            return render(request, 'user/register.html')
-    return render(request, 'user/register.html')
+    else:
+        signup_form = SignUpForm()
+    return render(request, 'user/register.html', {'form': signup_form})
 
 
 @require_http_methods(["GET", "POST"])
 def embark_login(request):
     if request.method == "POST":
-        logger.debug(request.POST)
-        data = {k: v[0] for k, v in dict(request.POST).items()}
-        logger.debug(data)
         try:
-            body = {k: v[0] for k, v in dict(request.POST).items()}
-            try:
-                username = body['username']
-                password = body['password']
-            except KeyError:
-                logger.exception('Missing keys from data- Username and password')
-                messages.error(request, 'Username or password are wrong.')
-                return render(request, 'user/login.html')
-
-            logger.debug('Found user name and password')
-            user = authenticate(request, username=username, password=password)
-            if user is not None:
-                logger.debug('User authenticated')
-                login(request, user)
-                logger.debug('User logged in')
-                request.session["django_timezone"] = user.timezone
-                # messages.success(request, str(user.username) + ' timezone set to : ' + str(user.timezone))
-                return redirect('../../dashboard/main/')
-            # else:
-            logger.debug('User could not be authenticated')
-            messages.error(request, "Invalid user data")
-            return render(request, 'user/login.html')
+            login_form = LoginForm(request=request, data=request.POST)
+            logger.debug(login_form)
+            if login_form.is_valid():
+                logger.debug('form valid')
+                user = login_form.get_user()
+                if user:
+                    logger.debug('User authenticated')
+                    login(request, user)
+                    logger.debug('User logged in')
+                    request.session["django_timezone"] = user.timezone
+                    # messages.success(request, str(user.username) + ' timezone set to : ' + str(user.timezone))
+                    return redirect('embark-uploader-home')
+                logger.debug('User could not be authenticated')
+            logger.debug('Form errors: %s', str(login_form.errors))
+        except ValidationError as valid_error:
+            logger.error("Exception in value: %s ", valid_error)
+            messages.error(request, 'User is deactivated')
         except builtins.Exception as error:
             logger.exception('Wide exception in Signup: %s', error)
             messages.error(request, 'Something went wrong when logging in the user.')
-            return render(request, 'user/login.html')
-    return render(request, 'user/login.html')
+    login_form = LoginForm()
+    return render(request, 'user/login.html', {'form': login_form})
 
 
-# @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required(login_url='/' + settings.LOGIN_URL)
-def embark_logout(request):     # FIXME this just flushes session_id??!
+def embark_logout(request):
     logout(request=request)
     logger.debug("Logout user %s", request)
     messages.success(request, 'Logout successful.')
-    return render(request, 'user/login.html')
+    return redirect('embark-login')
 
 
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["GET", "POST"])
-def password_change(request):
+def password_change(request):   # TODO adapt t
     if request.method == "POST":
         logger.debug(request.POST)
         user = get_user(request)
@@ -162,19 +171,41 @@ def acc_delete(request):
     if request.method == "POST":
         logger.debug('disabling account')
         user = get_user(request)
-        logger.debug(' %s Account: %s disabled', timezone.now().strftime("%H:%M:%S"), user)
-        user.username = user.get_username() + '_disactivated_' + timezone.now().strftime(
-            "%H:%M:%S")  # workaround for not duplicating entry users_user.username
-        user.is_active = False
-        user.save()
-        messages.success(request, 'Account successfully deleted.')
-        return render(request, 'user/register.html')    # TODO should be redirect
+        email = user.email
+        token = default_token_generator.make_token(user)
+        current_site = get_current_site(request)
+        mail_subject = 'Delete your EMBArk account.'
+        message = render_to_string('user/email_template_deactivation.html', context={
+            'user': user,
+            'username': user.username,
+            'domain': current_site.domain,
+            'uid': user.id,
+            'token': token,
+        })
+        if settings.EMAIL_ACTIVE is True:
+            send_mail(mail_subject, message, 'system@' + settings.DOMAIN, [email])
+            messages.success(request, 'Please check your email to confirm deletion')
+            return redirect(reverse('embark-deactivate-user', kwargs={'uuid': user.id}))
+        else:
+            logger.debug(' %s Account: %s disabled', timezone.now().strftime("%H:%M:%S"), user)
+            user.username = user.get_username() + '_disactivated_' + timezone.now().strftime(
+                "%H:%M:%S")     # workaround for not duplicating entry users_user.username
+            user.is_active = False
+            user.save()
+            messages.success(request, 'Account successfully deleted.')
+            return redirect('embark-login')
     return render(request, 'user/accountDelete.html')
 
 
 @require_http_methods(["GET"])
+def deactivate(request, user_id):   # TODO
+    logger.debug("deactivating user with id : %s", user_id)
+    return render(request, 'user/login.html')
+
+
+@require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def get_log(request, log_type, lines):      # FIXME update or remove
+def get_log(request, log_type, lines):      # FIXME move to admin
     """
     View takes a get request with following params:
     1. log_type: selector of log file (daphne, migration, mysql_db, redis_db, uwsgi, web)
@@ -230,3 +261,46 @@ def set_timezone(request):
     else:
         messages.error(request, 'Timezone could not be set')
         return redirect("..")
+
+
+def activate_user(user, token):
+    """
+    activates user with token
+    """
+    if default_token_generator.check_token(user, token):
+        user.is_active = True
+        user.save()
+        return True
+    return False
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def activate(request, user_id, token):
+    """
+    activation page + form request
+    activates user through the usage of token
+    """
+    try:
+        user = User.objects.get(id=user_id)
+        if activate_user(user, token):
+            login(request, user)
+            messages.success(request, str(user.username) + 'activated')
+        else:
+            messages.error(request, "Token invalid - maybe it expired?")
+    except ValueError as val_error:
+        logger.error("%s in token %s", val_error, token)
+    return redirect(reverse('embark-MainDashboard'))
+
+
+@require_http_methods(["GET", "POST"])
+def reset_password(request):
+    if request.method == 'POST':
+        reset_form = ResetForm(request.POST)
+        if reset_form.is_valid():
+            logger.debug('Form is valid')
+            reset_form.save(request=request)
+            messages.success(request, 'Send Password reset request')
+    reset_form = ResetForm()
+    admin_email = User.objects.get(username='admin').email
+    return render(request, 'user/lostPassword.html', {'form': reset_form, 'email_setting': settings.EMAIL_ACTIVE, 'admin_email': admin_email})

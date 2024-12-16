@@ -36,7 +36,7 @@ function navToggle() {
 function expertModeOn() {
     "use strict";
     try {
-        var expertOptions = document.querySelectorAll('div.expertModeOptions');
+        var expertOptions = document.querySelectorAll('div.expertModeOptions:not(.SBOMOption)');
 
         for (var i = 0; i < expertOptions.length; i++) {
             var expertDiv = expertOptions[i];
@@ -66,4 +66,31 @@ function confirmDelete(event) {
     } else {
         successAlert(`firmware file deleted: ${event.target.elements.firmware.value}`);
     }
+}
+
+/**
+ * To toggle SBOM mode option during analysing the Firmware
+ */
+function SBOMModeToggle() {
+    "use strict";
+    try {
+        var sbomOptions = document.querySelectorAll('div.expertModeOptions.SBOMOption');
+
+        for (var i = 0; i < sbomOptions.length; i++) {
+            var expertDiv = sbomOptions[i];
+            if (expertDiv.getAttribute("value") === "expmode_off") {
+                expertDiv.setAttribute("value","expmode_on");
+            } else {
+                expertDiv.setAttribute("value","expmode_off");
+            }
+        }
+        // turn on too
+        let checkbox = document.getElementById('id_sbom_only_test');
+        checkbox.click();
+
+    } catch (error) {
+        console.log(error.message);
+    }
+    /* we enable the help text automatically in sbom mode */
+    helpTextOn();
 }

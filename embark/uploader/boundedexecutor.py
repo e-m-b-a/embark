@@ -206,7 +206,11 @@ class BoundedExecutor:
         firmware_flags.status["firmware_name"] = firmware_flags.firmware_name
         firmware_flags.save(update_fields=["status", "path_to_logs"])
 
-        emba_cmd = f"{EMBA_SCRIPT_LOCATION} -p ./scan-profiles/default-scan-no-notify.emba -f {image_file_location} -l {emba_log_location} {emba_flags}"
+        if firmware_flags.sbom_only_test is True:
+            scan_profile = "./scan-profiles/sbom-default.emba"
+        else:
+            scan_profile = "./scan-profiles/default-scan-no-notify.emba"
+        emba_cmd = f"{EMBA_SCRIPT_LOCATION} -p {scan_profile} -f {image_file_location} -l {emba_log_location} {emba_flags}"
 
         # submit command to executor threadpool
         emba_fut = BoundedExecutor.submit(cls.run_emba_cmd, emba_cmd, firmware_flags.id, active_analyzer_dir)

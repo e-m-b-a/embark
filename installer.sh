@@ -81,9 +81,10 @@ save_old_env(){
 }
 
 write_env(){
-  local SUPER_PW="embark"
-  local SUPER_EMAIL="idk@lol.com"
-  local SUPER_USER="superuser"
+  local SUPER_PW=""
+  SUPER_PW="$(openssl rand -base64 8)"
+  local SUPER_EMAIL="admin@embark.local"
+  local SUPER_USER="admin"
   local RANDOM_PW=""
   local DJANGO_SECRET_KEY=""
   local ENV_FILES=()
@@ -720,9 +721,14 @@ if [[ "${NO_EMBA}" -eq 0 ]]; then
   # use git or release
   if [[ "${NO_GIT}" -eq 1 ]]; then
     install_emba_src
+    echo "EMBA_INSTALL=src" >> .env
   else
     install_emba
+    echo "EMBA_INSTALL=git" >> .env
   fi
+fi
+if [[ "${NO_EMBA}" -eq 1 ]]; then
+  echo "EMBA_INSTALL=no" >> .env
 fi
 if [[ "${EMBA_ONLY}" -eq 1 ]]; then
   exit 0

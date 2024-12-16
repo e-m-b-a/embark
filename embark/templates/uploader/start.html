@@ -8,11 +8,18 @@
         <form action="{% url 'embark-uploader-start-analysis' %}" method="post" id="analyze-form">
             {% csrf_token %}
             <div class="innerBlock">
+                <label for="SBOMModeSwitch">SBOM mode</label>
+                <label class="switch">
+                    <input id="SBOMModeSwitch" type="checkbox" onclick="SBOMModeToggle()"/>
+                    <span class="slider round"></span>
+                </label>
+                <br>
                 <label for="expertModeSwitch">Expert mode</label>
                 <label class="switch">
                     <input id="expertModeSwitch" type="checkbox" onclick="expertModeOn()"/>
                     <span class="slider round"></span>
                 </label>
+
                 {% load filters %}
                 <!-- Iterate over all fields and set expmode on fields in expert mode -->
                 {% for field in analysis_form %}
@@ -22,6 +29,10 @@
                     </div>
                     {% elif field.name == "scan_modules" %}
                     <div class="row expertModeOptions" value="expmode_off">
+                            {% bootstrap_field field %}
+                    </div>
+                    {% elif field.name == "sbom_only_test" %}
+                    <div class="row expertModeOptions SBOMOption" value="expmode_off">
                             {% bootstrap_field field %}
                     </div>
                     {% else %}
