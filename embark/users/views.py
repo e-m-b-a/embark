@@ -275,15 +275,15 @@ def activate_user(user, token) -> bool:
     if default_token_generator.check_token(user, token):
         user.is_active = True
         default_permission_set = Permission.objects.filter(
-            Q(codename = "user_permission") |
-            Q(codename = "tracker_permission") |
-            Q(codename = "updater_permission") |
-            Q(codename = "uploader_permission_minimal") |
-            Q(codename = "uploader_permission_advanced") |
-            Q(codename = "porter_permission") |
-            Q(codename = "reporter_permission") |
-            Q(codename = "dashboard_permission_minimal") |
-            Q(codename = "dashboard_permission_advance")
+            Q(codename="user_permission")
+            | Q(codename="tracker_permission")
+            | Q(codename="updater_permission")
+            | Q(codename="uploader_permission_minimal")
+            | Q(codename="uploader_permission_advanced")
+            | Q(codename="porter_permission")
+            | Q(codename="reporter_permission")
+            | Q(codename="dashboard_permission_minimal")
+            | Q(codename="dashboard_permission_advance")
         )
         user.user_permissions.set(default_permission_set)
         user.save()
