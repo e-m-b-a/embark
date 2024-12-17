@@ -128,7 +128,7 @@ python3 ./embark/manage.py runapscheduler | tee -a ./logs/scheduler.log &
 # start embark
 # systemctl start embark.service
 
-echo -e "${ORANGE}""${BOLD}""start EMBArk server(ASGI only)""${NC}"
+echo -e "${ORANGE}""${BOLD}""start EMBArk server(ASGI only) on port ${PORT}""${NC}"
 python3 ./embark/manage.py runserver "${IP}":"${PORT}" |& tee -a ./logs/debug-server.log
 
 wait

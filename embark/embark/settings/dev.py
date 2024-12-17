@@ -224,10 +224,10 @@ STATICFILES_DIRS = [
 # STATICFILES_FINDERS
 
 # URL of Login-Page
-LOGIN_URL = 'user/login/'
+LOGIN_URL = ''
 
 # URL of Logout-Page
-LOGOUT_REDIRECT_URL = 'user/logout'
+LOGOUT_REDIRECT_URL = ''
 
 # Added for FIle storage to get the path to save Firmware images.
 MEDIA_ROOT = os.path.join(BASE_DIR.parent, 'media')

@@ -143,9 +143,9 @@ class BoundedExecutor:
             domain = settings.DOMAIN
             if exit_fail:
                 message = render_to_string('uploader/email_run_failed.html', context={
-                'username': user.username,
-                'domain': domain,
-                'analysis_id': analysis_id
+                    'username': user.username,
+                    'domain': domain,
+                    'analysis_id': analysis_id
                 })
             else:
                 message = render_to_string('uploader/email_run_success.html', context={
