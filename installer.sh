@@ -409,7 +409,7 @@ install_embark_default(){
 install_embark_dev(){
   echo -e "\n${GREEN}""${BOLD}""Building Developent-Enviroment for EMBArk""${NC}"
   # apt packages
-  apt-get install -y npm pycodestyle python3-pylint-django default-libmysqlclient-dev build-essential bandit yamllint mysql-client-core-8.0
+  apt-get install -y npm pylint pycodestyle default-libmysqlclient-dev build-essential bandit yamllint mysql-client-core-8.0
 
   # apache2 apache2-dev
   # if ! command -v apache2 > /dev/null ; then
