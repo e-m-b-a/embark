@@ -287,10 +287,6 @@ install_debs(){
   if ! command -v ansifilter > /dev/null ; then
     apt-get install -y ansifilter
   fi
-  #apache2 apache2-dev
-  if ! command -v apache2 > /dev/null ; then
-    apt-get install -y apache2 apache2-dev
-  fi
 }
 
 install_daemon(){
@@ -414,6 +410,12 @@ install_embark_dev(){
   echo -e "\n${GREEN}""${BOLD}""Building Developent-Enviroment for EMBArk""${NC}"
   # apt packages
   apt-get install -y npm pycodestyle python3-pylint-django default-libmysqlclient-dev build-essential bandit yamllint mysql-client-core-8.0
+
+  # apache2 apache2-dev
+  # if ! command -v apache2 > /dev/null ; then
+  #   apt-get install -y apache2 apache2-dev
+  # fi
+
   # get geckodriver
   if ! command -v geckodriver > /dev/null ; then
     wget https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz
