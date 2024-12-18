@@ -32,7 +32,13 @@ Furthermore, *EMBArk* improves the data provision by aggregating the various sca
 ## Quick-Start
 `git clone https://github.com/e-m-b-a/embark.git; cd embark; sudo ./installer.sh -d`
 
-`sudo ./run-server.sh [-a <IP/HOSTNAME>] [-h]`
+`sudo ./run-server.sh [-a <IP/HOSTNAME>] [-b <IP/RANGE>] [-h]`
+
+Example:
+
+To start the server on the host with the ipv4 192.168.126.123 and get management access from anywhere in that subnet
+
+`sudo ./run-server.sh -a 192.168.126.123 -b 192.168.126.1`
 
 
 ## Automated setup on Ubuntu 22.04 LTS
@@ -50,6 +56,7 @@ This starts the http-Server on 0.0.0.0:80
 
 Note: The default server name is "embark.local" and has to be resolved via host files or a DNS-server.\
 If you want to query the server using an IP or other hostname please use the `-a` option. (multiple inputs supported)
+To access the admin pages from outside localhost use the `-b` option.
 
 ## Upgrading
 - Use the `export-DB.sh` to back up your database
