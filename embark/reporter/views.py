@@ -22,7 +22,7 @@ from django.shortcuts import redirect, render
 from django.contrib import messages
 from django.template.loader import get_template
 from django.http import HttpResponse, JsonResponse
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.http import require_http_methods
 from django.urls import reverse
 from embark.helper import cleanup_charfield
@@ -38,6 +38,7 @@ BLOCKSIZE = 1048576     # for codec change
 logger = logging.getLogger(__name__)
 
 
+@permission_required("users.reporter_permission", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def reports(request):
@@ -45,6 +46,7 @@ def reports(request):
     return HttpResponse(html_body.render({'username': request.user.username}))
 
 
+@permission_required("users.reporter_permission", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report(request, analysis_id, html_file):
@@ -67,6 +69,7 @@ def html_report(request, analysis_id, html_file):
     return redirect("..")
 
 
+@permission_required("users.reporter_permission", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report_path(request, analysis_id, html_path, file):
@@ -126,6 +129,7 @@ def html_report_path(request, analysis_id, html_path, file):
     return redirect("..")
 
 
+@permission_required("users.reporter_permission", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report_resource(request, analysis_id, img_file):
@@ -162,6 +166,7 @@ def html_report_resource(request, analysis_id, img_file):
     return redirect("..")
 
 
+@permission_required("users.reporter_permission", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def get_individual_report(request, analysis_id):
@@ -207,6 +212,7 @@ def get_individual_report(request, analysis_id):
     return JsonResponse(data={'error': 'Bad request'}, status=HTTPStatus.BAD_REQUEST)
 
 
+@permission_required("users.reporter_permission", login_url='/')
 @require_http_methods(["GET"])
 # @login_required(login_url='/' + settings.LOGIN_URL)
 def get_accumulated_reports(request):
@@ -296,6 +302,7 @@ def get_accumulated_reports(request):
     return JsonResponse(data=data, status=HTTPStatus.OK)
 
 
+@permission_required("users.reporter_permission", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def download_zipped(request, analysis_id):
@@ -327,6 +334,7 @@ def download_zipped(request, analysis_id):
         return HttpResponse("Firmware ID does not exist in DB! How did you get here?")
 
 
+@permission_required("users.reporter_permission", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def make_zip(request, analysis_id):
@@ -349,6 +357,7 @@ def make_zip(request, analysis_id):
         return HttpResponse("Firmware ID does not exist in DB! How did you get here?")
 
 
+@permission_required("users.reporter_permission", login_url='/')
 @require_http_methods(["GET"])
 # @login_required(login_url='/' + settings.LOGIN_URL)
 def get_load(request):

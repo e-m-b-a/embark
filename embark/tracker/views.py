@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 req_logger = logging.getLogger("requests")
 
 
-@permission_required("user.non_minimal")
+@permission_required("users.tracker_permission", login_url='/')
 @require_http_methods(["GET", "POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def tracker(request):
@@ -76,6 +76,7 @@ def tracker(request):
     return redirect('embark-uploader-home')
 
 
+@permission_required("users.tracker_permission", login_url='/')
 @require_http_methods(["GET", "POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def get_report_for_device(request, device_id):
@@ -133,6 +134,7 @@ def get_report_for_device(request, device_id):
     return HttpResponseBadRequest("Bad Request")
 
 
+@permission_required("users.tracker_permission", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def get_sbom(request, sbom_id):
@@ -149,6 +151,7 @@ def get_sbom(request, sbom_id):
     return render(request, "tracker/sbom.html", {'sbom_table': sbom_table})
 
 
+@permission_required("users.tracker_permission", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def tracker_time(request, time):
@@ -164,6 +167,7 @@ def tracker_time(request, time):
     return HttpResponseBadRequest("Bad Request")
 
 
+@permission_required("users.tracker_permission", login_url='/')
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def set_associate_device_to(request, analysis_id):
@@ -178,6 +182,7 @@ def set_associate_device_to(request, analysis_id):
     return redirect('.')
 
 
+@permission_required("users.tracker_permission", login_url='/')
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def toggle_device_visible(request, device_id):

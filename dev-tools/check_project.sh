@@ -206,7 +206,7 @@ pylinter(){
   mapfile -t PY_SCRIPTS < <(find . -type d -name migrations -prune -false -o -iname "*.py")
   for PY_SCRIPT in "${PY_SCRIPTS[@]}"; do
     echo -e "\\n""${GREEN}""Run pylint on ${PY_SCRIPT}:""${NC}""\\n"
-    mapfile -t PY_RESULT < <(pipenv run pylint --rcfile=../.pylintrc "${PY_SCRIPT}" 2> >(grep -v "Courtesy Notice\|Loading .env" >&2) )
+    mapfile -t PY_RESULT < <(pipenv run pylint --load-plugins pylint_django --rcfile=../.pylintrc "${PY_SCRIPT}" 2> >(grep -v "Courtesy Notice\|Loading .env" >&2) )
     local RATING_10=0
     if [[ "${#PY_RESULT[@]}" -gt 0 ]]; then 
       if ! printf '%s\n' "${PY_RESULT[@]}" | grep -q -P '^Your code has been rated at 10'; then
@@ -229,14 +229,14 @@ pylinter(){
   done
 
   echo -e "\\n""${GREEN}""Run pylint on all scripts:""${NC}""\\n"
-  pipenv run pylint --rcfile=../.pylintrc ./*  2> >(grep -v "Courtesy Notice\|Loading .env" >&2) | grep "Your code has been rated"
+  pipenv run pylint --load-plugins pylint_django --rcfile=../.pylintrc ./*  2> >(grep -v "Courtesy Notice\|Loading .env" >&2) | grep "Your code has been rated"
   cd .. || exit 1
 }
 
 dockerchecker(){
   if ! [[ -f .env ]]; then
     ENV=1
-    touch .env    #dummy file
+    touch .env  # dummy file
   else
     ENV=0
   fi

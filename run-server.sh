@@ -28,6 +28,7 @@ export BIND_IP='0.0.0.0'
 export FILE_SIZE=2000000000
 export SERVER_ALIAS=()
 export WSGI_FLAGS=()
+export ADMIN_HOST_RANGE=()
 
 STRICT_MODE=0
 
@@ -70,12 +71,13 @@ cleaner() {
 # main
 echo -e "\\n${ORANGE}""${BOLD}""EMBArk Startup""${NC}\\n""${BOLD}=================================================================${NC}"
 
-while getopts "ha:" OPT ; do
+while getopts "ha:b:" OPT ; do
   case ${OPT} in
     h)
       echo -e "\\n""${CYAN}""USAGE""${NC}"
       echo -e "${CYAN}-h${NC}           Print this help message"
       echo -e "${CYAN}-a <IP/Name>${NC} Add a server Domain-name alias"
+      echo -e "${CYAN}-b <IP/Range>${NC} Add a ipv4 to access the admin pages from"
       echo -e "---------------------------------------------------------------------------"
       if ip addr show eth0 &>/dev/null ; then
         IP=$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
@@ -89,8 +91,11 @@ while getopts "ha:" OPT ; do
       SERVER_ALIAS+=("${OPTARG}")
       WSGI_FLAGS+=(--server-alias "${OPTARG}")
       ;;
+    b)
+      ADMIN_HOST_RANGE+=("${OPTARG}")
+      ;;
     :)
-      echo -e "${CYAN} Usage: [-a <IP/HOSTNAME>] ${NC}"
+      echo -e "${CYAN} Usage: [-a <IP/HOSTNAME>] [-b <IP/Range>] ${NC}"
       exit 1
       ;;
     *)
@@ -175,7 +180,14 @@ if ! [[ -d /var/www/conf ]]; then
   mkdir /var/www/conf
 fi
 {
-  echo -e ''
+  echo -e "<Location /admin>"
+  echo -e "Order deny,allow"
+  echo -e "Deny from all"
+  echo -e "Allow from 127.0.0.1"
+  if [[ ${#ADMIN_HOST_RANGE[@]} -ne 0 ]]; then
+    echo -e "Allow from ${ADMIN_HOST_RANGE[*]}"
+  fi
+  echo -e "</Location>"
 } > /var/www/conf/embark.conf
 
 # certs
@@ -219,6 +231,10 @@ echo -e "\n[""${BLUE} JOB""${NC}""] Starting runapscheduler"
 pipenv run ./manage.py runapscheduler | tee -a /var/www/logs/scheduler.log &
 sleep 5
 
+# create admin superuser
+echo -e "\n[""${BLUE} JOB""${NC}""] Creating Admin account"
+pipenv run ./manage.py createsuperuser --noinput
+
 echo -e "\n[""${BLUE} JOB""${NC}""] Starting Apache"
 pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --host "${BIND_IP}" --port="${HTTP_PORT}" --limit-request-body "${FILE_SIZE}" \
@@ -230,13 +246,14 @@ pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --graceful-timeout 5 \
 --log-level debug \
 --server-name embark.local "${WSGI_FLAGS[@]}" &
+
 # --ssl-certificate /var/www/conf/cert/embark.local --ssl-certificate-key-file /var/www/conf/cert/embark.local.key \
 # --https-port "${HTTPS_PORT}" &
 #  --https-only --enable-debugger \
 sleep 5
 
 echo -e "\n[""${BLUE} JOB""${NC}""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-pipenv run daphne --access-log /var/www/logs/daphne.log -e ssl:8000:privateKey=/var/www/conf/cert/embark-ws.local.key:certKey=/var/www/conf/cert/embark-ws.local.crt -b "${BIND_IP}" -p 8001 -s embark-ws.local --root-path=/var/www/embark embark.asgi:application &
+cd /var/www/embark && pipenv run daphne --access-log /var/www/logs/daphne.log -e ssl:8000:privateKey=/var/www/conf/cert/embark-ws.local.key:certKey=/var/www/conf/cert/embark-ws.local.crt -b "${BIND_IP}" -p 8001 -s embark-ws.local embark.asgi:application &
 sleep 5
 
 

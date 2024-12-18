@@ -6,9 +6,10 @@ __license__ = 'MIT'
 import builtins
 import logging
 
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import authenticate, login, logout, get_user
 from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth.models import Permission
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib import messages
 from django.forms import ValidationError
@@ -20,6 +21,7 @@ from django.conf import settings
 from django.utils import timezone
 from django.urls import reverse
 from django.core.mail import send_mail
+from django.db.models import Q
 
 from users.forms import LoginForm, SignUpForm, ResetForm
 from users.models import User
@@ -27,6 +29,7 @@ from users.models import User
 logger = logging.getLogger(__name__)
 
 
+@permission_required("users.user_permission", login_url='/')
 @require_http_methods(["GET"])
 def user_main(request):
     user = get_user(request)
@@ -64,7 +67,7 @@ def register(request):
                 if settings.EMAIL_ACTIVE is True:
                     send_mail(mail_subject, message, 'system@' + settings.DOMAIN, [email])
                     messages.success(request, 'Registration successful. Please check your email to activate')
-                    return redirect(reverse('embark-activate-user', kwargs={'uuid': user.id}))
+                    return redirect(reverse('embark-login'))
                 else:
                     logger.debug("Registered, redirecting to login")
                     if activate_user(user, token):
@@ -203,6 +206,7 @@ def deactivate(request, user_id):   # TODO
     return render(request, 'user/login.html')
 
 
+@permission_required("users.user_permission", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def get_log(request, log_type, lines):      # FIXME move to admin
@@ -247,6 +251,7 @@ def get_log(request, log_type, lines):      # FIXME move to admin
         return render(request, 'user/log.html', {'header': 'Error', 'log': file_path + ' not found!', 'username': request.user.username})
 
 
+@permission_required("users.user_permission", login_url='/')
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def set_timezone(request):
@@ -263,20 +268,31 @@ def set_timezone(request):
         return redirect("..")
 
 
-def activate_user(user, token):
+def activate_user(user, token) -> bool:
     """
     activates user with token
     """
     if default_token_generator.check_token(user, token):
         user.is_active = True
+        default_permission_set = Permission.objects.filter(
+            Q(codename="user_permission")
+            | Q(codename="tracker_permission")
+            | Q(codename="updater_permission")
+            | Q(codename="uploader_permission_minimal")
+            | Q(codename="uploader_permission_advanced")
+            | Q(codename="porter_permission")
+            | Q(codename="reporter_permission")
+            | Q(codename="dashboard_permission_minimal")
+            | Q(codename="dashboard_permission_advanced")
+        )
+        user.user_permissions.set(default_permission_set)
         user.save()
         return True
     return False
 
 
 @require_http_methods(["GET"])
-@login_required(login_url='/' + settings.LOGIN_URL)
-def activate(request, user_id, token):
+def activate(request, token, user_id):
     """
     activation page + form request
     activates user through the usage of token
@@ -284,13 +300,14 @@ def activate(request, user_id, token):
     try:
         user = User.objects.get(id=user_id)
         if activate_user(user, token):
-            login(request, user)
-            messages.success(request, str(user.username) + 'activated')
+            messages.success(request, str(user.username) + ' was successfully activated')
         else:
             messages.error(request, "Token invalid - maybe it expired?")
     except ValueError as val_error:
         logger.error("%s in token %s", val_error, token)
-    return redirect(reverse('embark-MainDashboard'))
+    except User.DoesNotExist as no_user_error:
+        logger.error("%s in request %s", no_user_error, request)
+    return redirect(reverse('embark-login'))
 
 
 @require_http_methods(["GET", "POST"])

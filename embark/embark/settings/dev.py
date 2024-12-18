@@ -22,10 +22,14 @@ EMBA_LOG_URL = 'emba_logs/'
 
 DEBUG = True
 DOMAIN = "embark.local"
+
 EMAIL_ACTIVE = True
+EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
+EMAIL_FILE_PATH = os.path.join(BASE_DIR.parent, 'mail')
 
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -36,7 +40,6 @@ INSTALLED_APPS = [
     'django_tables2',
     'mod_wsgi.server',
     'django_apscheduler',
-    'channels',
     'uploader',
     'users',
     'reporter',
@@ -188,20 +191,11 @@ LOGGING = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
         "OPTIONS": {
-            "min_length": 8,
+            "min_length": 4,
         },
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+    }
 ]
 
 # Internationalization
@@ -230,10 +224,10 @@ STATICFILES_DIRS = [
 # STATICFILES_FINDERS
 
 # URL of Login-Page
-LOGIN_URL = 'user/login/'
+LOGIN_URL = ''
 
 # URL of Logout-Page
-LOGOUT_REDIRECT_URL = 'user/logout'
+LOGOUT_REDIRECT_URL = ''
 
 # Added for FIle storage to get the path to save Firmware images.
 MEDIA_ROOT = os.path.join(BASE_DIR.parent, 'media')
@@ -249,7 +243,7 @@ REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-ASGI_APPLICATION = 'embark.asgi.application'
+ASGI_APPLICATION = 'embark.asgi_dev.application'
 
 # Format string for displaying run time timestamps in the Django admin site. The default
 # just adds seconds to the standard Django format, which is useful for displaying the timestamps
@@ -273,7 +267,7 @@ CHANNEL_LAYERS = {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
             "hosts": [(REDIS_HOST, REDIS_PORT)],
-        },
+        }
     },
 }
 # TODO check this https://docs.djangoproject.com/en/5.1/topics/cache/

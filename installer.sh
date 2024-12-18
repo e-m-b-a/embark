@@ -102,6 +102,7 @@ write_env(){
         if [[ "${LAST_PW_HASH}" == "$(echo "${CHECK_PW}" | sha256sum)" ]]; then
           RANDOM_PW="${CHECK_PW}"
           DJANGO_SECRET_KEY="$(grep "SECRET_KEY=" "${FILE_}" | sed -e "s/^SECRET_KEY=//" )"
+          SUPER_PW="$(grep "DJANGO_SUPERUSER_PASSWORD=" "${FILE_}" | sed -e "s/^DJANGO_SUPERUSER_PASSWORD=//" )"
           break
         fi
       done
@@ -367,7 +368,6 @@ install_embark_default(){
   #install packages
   cp ./Pipfile* /var/www/
   (cd /var/www && MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv install)
-  
 
   # download externals
   if ! [[ -d ./embark/static/external ]]; then
@@ -409,12 +409,21 @@ install_embark_default(){
 install_embark_dev(){
   echo -e "\n${GREEN}""${BOLD}""Building Developent-Enviroment for EMBArk""${NC}"
   # apt packages
-  apt-get install -y npm pycodestyle python3-pylint-django default-libmysqlclient-dev build-essential bandit yamllint mysql-client-core-8.0
+  apt-get install -y npm pylint pycodestyle default-libmysqlclient-dev build-essential bandit yamllint mysql-client-core-8.0
+
+  # apache2 apache2-dev
+  # if ! command -v apache2 > /dev/null ; then
+  #   apt-get install -y apache2 apache2-dev
+  # fi
+
   # get geckodriver
-  wget https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz
-  tar -xvf geckodriver-v0.33.0-linux64.tar.gz
-  mv geckodriver  /usr/local/bin
-  chmod +x /usr/local/bin/geckodriver
+  if ! command -v geckodriver > /dev/null ; then
+    wget https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz
+    tar -xvf geckodriver-v0.33.0-linux64.tar.gz
+    mv geckodriver  /usr/local/bin
+    chmod +x /usr/local/bin/geckodriver
+    rm geckodriver-v0.33.0-linux64.tar.gz
+  fi
   # npm packages
   npm install -g jshint
   # npm install -g dockerlinter
@@ -449,6 +458,9 @@ install_embark_dev(){
   fi
   if ! [[ -d uploadedFirmwareImages/active/ ]]; then
     mkdir uploadedFirmwareImages/active
+  fi
+  if ! [[ -d mail ]]; then
+    mkdir mail
   fi
 
   # download externals
@@ -717,25 +729,29 @@ install_debs
 # mark dir as safe for git
 sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "${PWD}"
 
+
 if [[ "${NO_EMBA}" -eq 0 ]]; then
-  # use git or release
   if [[ "${NO_GIT}" -eq 1 ]]; then
     install_emba_src
-    echo "EMBA_INSTALL=src" >> .env
   else
     install_emba
-    echo "EMBA_INSTALL=git" >> .env
   fi
 fi
-if [[ "${NO_EMBA}" -eq 1 ]]; then
+
+if [[ "${EMBA_ONLY}" -eq 0 ]]; then
+  if [[ ${DEFAULT} -eq 1 ]]; then
+    install_embark_default
+  elif [[ ${DEV} -eq 1 ]]; then
+    install_embark_dev
+  fi
+fi
+
+if [[ "${NO_GIT}" -eq 1 ]]; then
+  echo "EMBA_INSTALL=src" >> .env
+elif [[ "${NO_EMBA}" -eq 1 ]]; then
   echo "EMBA_INSTALL=no" >> .env
+else
+  echo "EMBA_INSTALL=git" >> .env
 fi
-if [[ "${EMBA_ONLY}" -eq 1 ]]; then
-  exit 0
-fi
-if [[ ${DEFAULT} -eq 1 ]]; then
-  install_embark_default
-elif [[ ${DEV} -eq 1 ]]; then
-  install_embark_dev
-fi
+
 exit 0

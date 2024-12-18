@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 
 from django.http import HttpResponseBadRequest, JsonResponse
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.http import require_http_methods
 
 from django.conf import settings
@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 req_logger = logging.getLogger("requests")
 
 
+@permission_required('users.porter_permission', login_url='/')
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["GET"])
 def import_menu(request):
@@ -43,6 +44,7 @@ def import_menu(request):
     return render(request, 'porter/import.html', {'import_read_form': import_read_form, 'device_form': device_form, 'vendor_form': vendor_form, 'label_form': label_form, 'delete_form': delete_form, 'retry_form': retry_form})
 
 
+@permission_required('users.porter_permission', login_url='/')
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["POST"])
 def import_read(request):
@@ -98,6 +100,7 @@ def import_read(request):
     return HttpResponseBadRequest("invalid form")
 
 
+@permission_required('users.porter_permission', login_url='/')
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["POST"])
 def import_save(request):
@@ -118,6 +121,7 @@ def import_save(request):
     return redirect('..')
 
 
+@permission_required('users.porter_permission', login_url='/')
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["POST"])
 def import_delete(request):
@@ -141,6 +145,7 @@ def import_delete(request):
     return redirect('..')
 
 
+@permission_required('users.porter_permission', login_url='/')
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["GET"])
 def export_menu(request):
@@ -151,6 +156,7 @@ def export_menu(request):
     return render(request, 'porter/export.html', {'export_form': export_form})
 
 
+@permission_required('users.porter_permission', login_url='/')
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["POST"])
 def export_analysis(request):
@@ -172,6 +178,7 @@ def export_analysis(request):
     return redirect('..')
 
 
+@permission_required('users.porter_permission', login_url='/')
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["GET"])
 def make_zip(request, analysis_id):
@@ -195,6 +202,7 @@ def make_zip(request, analysis_id):
     return redirect('embark-ReportDashboard')
 
 
+@permission_required('users.porter_permission', login_url='/')
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["POST"])
 def retry_import(request):

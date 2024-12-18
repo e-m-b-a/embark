@@ -8,11 +8,10 @@ import os
 from django.conf import settings
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.shortcuts import redirect
-from django.views.decorators.csrf import csrf_protect
 
 from uploader.boundedexecutor import BoundedExecutor
 from uploader.forms import DeviceForm, FirmwareAnalysisForm, DeleteFirmwareForm, LabelForm, VendorForm
@@ -23,6 +22,7 @@ logger = logging.getLogger(__name__)
 req_logger = logging.getLogger("requests")
 
 
+@permission_required("users.uploader_permission_advanced", login_url='/')
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["GET"])
 def uploader_home(request):
@@ -40,7 +40,7 @@ def uploader_home(request):
     return render(request, 'uploader/index.html', {'analysis_form': analysis_form, 'device_form': device_form, 'vendor_form': vendor_form, 'label_form': label_form})
 
 
-@csrf_protect
+@permission_required("users.uploader_permission_minimal", login_url='/')
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def save_file(request):
@@ -61,7 +61,7 @@ def save_file(request):
     return HttpResponse("successful upload")
 
 
-@csrf_protect
+@permission_required("users.uploader_permission_advanced", login_url='/')
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def device_setup(request):
@@ -83,7 +83,7 @@ def device_setup(request):
     return redirect('..')
 
 
-@csrf_protect
+@permission_required("users.uploader_permission_advanced", login_url='/')
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def vendor(request):
@@ -102,7 +102,7 @@ def vendor(request):
     return redirect('..')
 
 
-@csrf_protect
+@permission_required("users.uploader_permission_advanced", login_url='/')
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def label(request):
@@ -121,7 +121,7 @@ def label(request):
     return redirect('..')
 
 
-@csrf_protect
+@permission_required("users.uploader_permission_advanced", login_url='/')
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["GET", "POST"])
 def start_analysis(request):
@@ -180,6 +180,7 @@ def start_analysis(request):
     return render(request, 'uploader/index.html', {'analysis_form': analysis_form, 'device_form': device_form, 'vendor_form': vendor_form, 'label_form': label_form})
 
 
+@permission_required("users.uploader_permission_advanced", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def manage_file(request):
@@ -191,7 +192,7 @@ def manage_file(request):
     return render(request, 'uploader/manage.html', {'delete_form': form})
 
 
-@csrf_protect
+@permission_required("users.uploader_permission_advanced", login_url='/')
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def delete_fw_file(request):
@@ -220,3 +221,17 @@ def delete_fw_file(request):
     logger.error("Form error: %s", form.errors)
     messages.error(request, 'error in form')
     return redirect('..')
+
+
+@permission_required("users.uploader_permission_minimal", login_url='/')
+@login_required(login_url='/' + settings.LOGIN_URL)
+@require_http_methods(["GET"])
+def uploader_home_minimal(request):
+    req_logger.info("User %s called uploader_home_minimal", request.user.username)
+    if FirmwareFile.objects.filter(user=request.user).count() > 0:
+        analysis_form = FirmwareAnalysisForm(initial={'firmware': FirmwareFile.objects.filter(user=request.user).latest('upload_date')})
+        analysis_form.fields.pop('device')
+        return render(request, 'uploader/minimal.html', {'analysis_form': analysis_form})
+    analysis_form = FirmwareAnalysisForm()
+    analysis_form.fields.pop('device')
+    return render(request, 'uploader/minimal.html', {'analysis_form': analysis_form})

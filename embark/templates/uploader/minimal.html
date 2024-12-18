@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load static %}
+{% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/uploader.css' %}"/>{% endblock style %}
+{% block js %}<script type="text/javascript" src="{% static 'scripts/fileUpload.js' %}"></script>{% endblock js %}
+{% block title %}EMBArk analyzer{% endblock title %}
+
+{% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
+
+{% block sidebar %}{% include "uploader/sidebar.html" %}{% endblock sidebar %}
+{% block maincontent %}
+    <div class="row uploadRow">
+      
+      <p>
+        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUpload" aria-expanded="false" aria-controls="collapseUpload" title="Upload">
+          1. Upload
+        </button>
+        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseStart" aria-expanded="false" aria-controls="collapseStart" title="Configure Analysis">
+          2. Analyze
+        </button>
+      </p>
+        {% block upload %}{% include "uploader/upload.html" %}{% endblock upload %}
+        {% block start %}{% include "uploader/start-minimal.html" %}{% endblock start %}
+    </div>
+{% endblock maincontent %}
+

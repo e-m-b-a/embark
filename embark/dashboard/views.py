@@ -11,11 +11,10 @@ import signal
 from django.conf import settings
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.shortcuts import redirect
-from django.views.decorators.csrf import csrf_protect
 from tracker.forms import AssociateForm
 from uploader.boundedexecutor import BoundedExecutor
 from uploader.forms import LabelForm
@@ -30,6 +29,7 @@ logger = logging.getLogger(__name__)
 req_logger = logging.getLogger("requests")
 
 
+@permission_required("users.dashboard_permission_minimal", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def main_dashboard(request):
@@ -41,6 +41,7 @@ def main_dashboard(request):
     return HttpResponseForbidden
 
 
+@permission_required("users.dashboard_permission_advanced", login_url='/')
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["POST"])
 def stop_analysis(request):
@@ -78,6 +79,7 @@ def stop_analysis(request):
     return HttpResponseBadRequest("invalid form")
 
 
+@permission_required("users.dashboard_permission_minimal", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def service_dashboard(request):
@@ -92,6 +94,7 @@ def service_dashboard(request):
     return render(request, 'dashboard/serviceDashboard.html', {'username': request.user.username, 'form': form, 'success_message': False})
 
 
+@permission_required("users.dashboard_permission_minimal", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def report_dashboard(request):
@@ -109,6 +112,7 @@ def report_dashboard(request):
     return render(request, 'dashboard/reportDashboard.html', {'firmwares': firmwares, 'username': request.user.username, 'label_form': label_form, 'label_select_form': label_select_form})
 
 
+@permission_required("users.dashboard_permission_minimal", login_url='/')
 @login_required(login_url='/' + settings.LOGIN_URL)
 def individual_report_dashboard(request, analysis_id):
     """
@@ -123,6 +127,7 @@ def individual_report_dashboard(request, analysis_id):
     return render(request, 'dashboard/individualReportDashboard.html', {'username': request.user.username, 'analysis_id': analysis_id, 'form': form})
 
 
+@permission_required("users.dashboard_permission_advanced", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def show_log(request, analysis_id):
@@ -148,6 +153,7 @@ def show_log(request, analysis_id):
         return HttpResponseServerError(content="File is not yet available")
 
 
+@permission_required("users.dashboard_permission_advanced", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def show_logviewer(request, analysis_id):
@@ -174,6 +180,7 @@ def show_logviewer(request, analysis_id):
         return HttpResponseServerError(content="File is not yet available")
 
 
+@permission_required("users.dashboard_permission_advanced", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def delete_analysis(request, analysis_id):
@@ -210,6 +217,7 @@ def delete_analysis(request, analysis_id):
     return redirect('..')
 
 
+@permission_required("users.dashboard_permission_minimal", login_url='/')
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["GET"])
 def archive_analysis(request, analysis_id):
@@ -232,6 +240,7 @@ def archive_analysis(request, analysis_id):
     return redirect('..')
 
 
+@permission_required("users.dashboard_permission_advanced", login_url='/')
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["GET"])
 def hide_analysis(request, analysis_id):
@@ -250,7 +259,7 @@ def hide_analysis(request, analysis_id):
     return redirect('..')
 
 
-@csrf_protect
+@permission_required("users.dashboard_permission_advanced", login_url='/')
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def create_label(request):
@@ -269,7 +278,7 @@ def create_label(request):
     return redirect('..')
 
 
-@csrf_protect
+@permission_required("users.dashboard_permission_advanced", login_url='/')
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def add_label(request, analysis_id):
@@ -289,7 +298,7 @@ def add_label(request, analysis_id):
     return redirect('..')
 
 
-@csrf_protect
+@permission_required("users.dashboard_permission_advanced", login_url='/')
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def rm_label(request, analysis_id, label_name):

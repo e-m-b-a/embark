@@ -4,8 +4,6 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-channels = "*"
-channels-redis = "*"
 daphne = "*"
 mysqlclient = "*"
 django-apscheduler = "*"
@@ -16,12 +14,15 @@ psutil = "*"
 msgpack = "*"
 django = "*"
 django-hashid-field = "*"
-mod-wsgi-standalone = "*"
-django-bootstrap5 = "*"
 django-tables2 = "*"
 requests = "*"
 djangorestframework = "*"
 watchdog = "*"
+channels = "*"
+channels-redis = "*"
+mod-wsgi-standalone = "*"
+django-bootstrap5 = "*"
+pytz = "*"
 
 [dev-packages]
 pycodestyle = "*"
