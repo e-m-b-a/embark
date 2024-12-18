@@ -232,7 +232,7 @@ class BoundedExecutor:
         firmware_flags.save(update_fields=["status", "path_to_logs"])
 
         if firmware_flags.sbom_only_test is True:
-            scan_profile = "./scan-profiles/quick-sbom.emba"
+            scan_profile = "./scan-profiles/default-sbom.emba"
         else:
             scan_profile = "./scan-profiles/default-scan-no-notify.emba"
         emba_cmd = f"{EMBA_SCRIPT_LOCATION} -p {scan_profile} -f {image_file_location} -l {emba_log_location} {emba_flags}"
