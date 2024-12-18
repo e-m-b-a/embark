@@ -38,7 +38,7 @@ Example:
 
 To start the server on the host with the ipv4 192.168.126.123 and get management access from anywhere in that subnet
 
-`sudo ./run-server.sh -a 192.168.126.123 -b 192.168.126.1`
+`sudo ./run-server.sh -a 192.168.126.123 -b 192.168.126.1/24`
 
 
 ## Automated setup on Ubuntu 22.04 LTS
