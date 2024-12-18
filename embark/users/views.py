@@ -283,7 +283,7 @@ def activate_user(user, token) -> bool:
             | Q(codename="porter_permission")
             | Q(codename="reporter_permission")
             | Q(codename="dashboard_permission_minimal")
-            | Q(codename="dashboard_permission_advance")
+            | Q(codename="dashboard_permission_advanced")
         )
         user.user_permissions.set(default_permission_set)
         user.save()

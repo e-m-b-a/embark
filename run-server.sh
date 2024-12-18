@@ -231,6 +231,10 @@ echo -e "\n[""${BLUE} JOB""${NC}""] Starting runapscheduler"
 pipenv run ./manage.py runapscheduler | tee -a /var/www/logs/scheduler.log &
 sleep 5
 
+# create admin superuser
+echo -e "\n[""${BLUE} JOB""${NC}""] Creating Admin account"
+pipenv run ./manage.py createsuperuser --noinput
+
 echo -e "\n[""${BLUE} JOB""${NC}""] Starting Apache"
 pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --host "${BIND_IP}" --port="${HTTP_PORT}" --limit-request-body "${FILE_SIZE}" \
