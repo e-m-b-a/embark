@@ -238,6 +238,7 @@ def get_accumulated_reports(request):
         result.pop('vulnerability', None)   # FIXME this is disabled for now
         result.pop('firmware', None)
         result.pop('emba_command', None)
+        result.pop('date', None)
 
         # architecture FIXME
         # architecture = result.pop('architecture_verified', '{}')
