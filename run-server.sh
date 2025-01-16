@@ -233,7 +233,7 @@ sleep 5
 
 # create admin superuser
 echo -e "\n[""${BLUE} JOB""${NC}""] Creating Admin account"
-pipenv run ./manage.py createsuperuser --noinput
+pipenv run ./manage.py createsuperuser --noinput 2>/dev/null
 
 echo -e "\n[""${BLUE} JOB""${NC}""] Starting Apache"
 pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
