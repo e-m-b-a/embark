@@ -152,7 +152,11 @@ if [[ -d ./emba/external/nvd-json-data-feeds ]]; then
 fi
 
 # sync emba
-rsync -r -u --progress --chown=www-embark:sudo ./emba/ /var/www/emba/
+if [[ ! -L "${PWD}/emba" ]] && [[ -d "${PWD}/emba" ]] && [[ ! -d "/var/www/emba/" ]]; then
+  mv "${PWD}/emba" /var/www
+  ln -s /var/www/emba/ "${PWD}/emba"
+fi
+# rsync -r -u --progress --chown=www-embark:sudo ./emba/ /var/www/emba/
 chown -R www-embark /var/www/emba/
 
 # logs
@@ -269,4 +273,10 @@ fi
 wait
 
 # sync migrations with pwd
-rsync -r -u --progress --chown="${SUDO_USER}" . "${EMBARK_BASEDIR}/embark"
+# rsync -r -u --progress --chown="${SUDO_USER}" . "${EMBARK_BASEDIR}/embark"
+# if [[ -d "${PWD}/emba" ]]; then
+#   rm "${PWD}/emba"
+# fi
+# if [[ -d "/var/www/emba" ]]; then
+#   mv /var/www/emba "${PWD}"
+# fi
