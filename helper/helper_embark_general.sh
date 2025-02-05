@@ -185,5 +185,3 @@ sync_migrations_backward() {
     cp -f "${MIGRATION_}" "${EMBARK_BASEDIR}""${MIGRATION_#\/var\/www}"
   done
 }
-
-sync_migrations_backward
