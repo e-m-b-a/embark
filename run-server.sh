@@ -31,6 +31,7 @@ export WSGI_FLAGS=()
 export ADMIN_HOST_RANGE=()
 
 STRICT_MODE=0
+EMBARK_BASEDIR="$(dirname "${0}")"
 
 import_helper()
 {
@@ -64,8 +65,38 @@ cleaner() {
   # docker network rm embark_backend
   # docker container prune -f --filter "label=flag"
 
+  sync_emba_backward
   systemctl stop embark.service
   exit 1
+}
+
+sync_emba_forward() {
+  local EMBA_STATE=""
+  local EMBA_URL=""
+
+  EMBA_STATE="$(cd "${EMBARK_BASEDIR}"/emba && git rev-parse HEAD)"
+  EMBA_URL="$(cd "${EMBARK_BASEDIR}"/emba && git remote get-url origin)"
+  # rsync -r -u --progress --chown=www-embark:sudo ./emba/ /var/www/emba/
+  if [[ ! -d "/var/www/emba/" ]]; then
+    git clone "${EMBA_URL}" /var/www/
+    git config --global --add safe.directory /var/www/emba
+    chown -R www-embark /var/www/emba/
+  fi
+  (cd "/var/www/emba/" && git fetch origin "${EMBA_STATE}") || exit 1
+  rsync -r -u --progress --chown=www-embark:sudo "${EMBARK_BASEDIR}"/emba/external /var/www/emba/
+  echo "DEBUG: emba check"
+  (cd "/var/www/emba/" && ./emba -d2)
+}
+
+sync_emba_backward() {
+  local EMBA_STATE=""
+  local EMBA_URL=""
+
+  EMBA_STATE="$(cd /var/www/emba && git rev-parse HEAD)"
+  EMBA_URL="$(cd /var/www/emba && git remote get-url origin)"
+
+  (cd "${EMBARK_BASEDIR}"/emba && git fetch origin "${EMBA_STATE}")
+  rsync -r -u --progress --chown=www-embark:sudo /var/www/emba/external "${EMBARK_BASEDIR}"/emba/
 }
 
 # main
@@ -112,7 +143,6 @@ if [[ ${#SERVER_ALIAS[@]} -ne 0 ]]; then
   done
 fi
 
-EMBARK_BASEDIR="$(dirname "${0}")"
 cd "${EMBARK_BASEDIR}" || exit 1
 import_helper
 enable_strict_mode "${STRICT_MODE}"
@@ -157,12 +187,7 @@ if [[ -d ./emba/external/nvd-json-data-feeds ]]; then
 fi
 
 # sync emba
-if [[ ! -L "${PWD}/emba" ]] && [[ -d "${PWD}/emba" ]] && [[ ! -d "/var/www/emba/" ]]; then
-  mv "${PWD}/emba" /var/www
-  ln -s /var/www/emba/ "${PWD}/emba"
-fi
-# rsync -r -u --progress --chown=www-embark:sudo ./emba/ /var/www/emba/
-chown -R www-embark /var/www/emba/
+sync_emba
 
 # logs
 if ! [[ -d ./docker_logs ]]; then
@@ -210,7 +235,7 @@ copy_file "${PWD}"/cert/embark-ws.local.crt /var/www/conf/cert
 
 
 # cp .env and version
-copy_file ./.env /var/www/embark/embark/settings/
+copy_file ./.env /var/www/embark/embark/settings/   # security-- # TODO
 copy_file ./VERSION.txt /var/www/embark/
 
 # !DIRECTORY-CHANGE!
