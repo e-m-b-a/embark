@@ -28,7 +28,7 @@ class Team(Group):
 class User(AbstractUser):
     timezone = models.CharField(max_length=32, choices=settings.TIMEZONES, default='UTC')
     email = models.EmailField(verbose_name="email address", blank=True, unique=True)
-    team = models.ManyToManyField(Team, blank=True, related_name='member_of_team')
+    team = models.ForeignKey(Team, blank=True, related_name='member_of_team', null=True)
     team_role = models.IntegerField(choices=Role.choices(), default=Role.VIEWER)
     is_active_member = models.BooleanField(default=True, help_text='Whether this team member is active or not')
 
