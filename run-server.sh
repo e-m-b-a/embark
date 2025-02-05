@@ -70,35 +70,6 @@ cleaner() {
   exit 1
 }
 
-sync_emba_forward() {
-  local EMBA_STATE=""
-  local EMBA_URL=""
-
-  EMBA_STATE="$(cd "${EMBARK_BASEDIR}"/emba && git rev-parse HEAD)"
-  EMBA_URL="$(cd "${EMBARK_BASEDIR}"/emba && git remote get-url origin)"
-  # rsync -r -u --progress --chown=www-embark:sudo ./emba/ /var/www/emba/
-  if [[ ! -d "/var/www/emba/" ]]; then
-    git clone "${EMBA_URL}" /var/www/
-    git config --global --add safe.directory /var/www/emba
-    chown -R www-embark /var/www/emba/
-  fi
-  (cd "/var/www/emba/" && git fetch origin "${EMBA_STATE}") || exit 1
-  rsync -r -u --progress --chown=www-embark:sudo "${EMBARK_BASEDIR}"/emba/external /var/www/emba/
-  echo "DEBUG: emba check"
-  (cd "/var/www/emba/" && ./emba -d2)
-}
-
-sync_emba_backward() {
-  local EMBA_STATE=""
-  local EMBA_URL=""
-
-  EMBA_STATE="$(cd /var/www/emba && git rev-parse HEAD)"
-  EMBA_URL="$(cd /var/www/emba && git remote get-url origin)"
-
-  (cd "${EMBARK_BASEDIR}"/emba && git fetch origin "${EMBA_STATE}")
-  rsync -r -u --progress --chown=www-embark:sudo /var/www/emba/external "${EMBARK_BASEDIR}"/emba/
-}
-
 # main
 echo -e "\\n${ORANGE}""${BOLD}""EMBArk Startup""${NC}\\n""${BOLD}=================================================================${NC}"
 
@@ -154,6 +125,9 @@ if ! [[ ${EUID} -eq 0 ]] ; then
   exit 1
 fi
 
+# start container first (speedup?)
+docker compose -f ./docker-compose.yml up -d 
+
 # check emba
 echo -e "${BLUE}""${BOLD}""checking EMBA""${NC}"
 if ! [[ -d ./emba ]]; then
@@ -174,7 +148,9 @@ fi
 rsync -r -u --progress --chown="${SUDO_USER}" "${EMBARK_BASEDIR}"/Pipfile* /var/www/
 
 if ! nc -zw1 pypi.org 443 &>/dev/null ; then
-  (cd /var/www && MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv update)
+  if ! (cd /var/www && pipenv verify) ; then
+    (cd /var/www && MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv update)
+  fi
   (cd /var/www && pipenv check)
 fi
 
