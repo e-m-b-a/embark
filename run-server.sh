@@ -139,8 +139,13 @@ if ! [[ -d /var/www/.venv ]]; then
   echo -e "${RED}""${BOLD}""Pip-enviroment not found!""${NC}"
   exit 1
 fi
+
+# sync pipfile
+rsync -r -u --progress --chown="${SUDO_USER}" "${EMBARK_BASEDIR}"/Pipfile* /var/www/
+
 if ! nc -zw1 pypi.org 443 &>/dev/null ; then
-  (cd /var/www && pipenv check && pipenv verify)
+  (cd /var/www && MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv update)
+  (cd /var/www && pipenv check)
 fi
 
 # check db and start container
@@ -265,18 +270,9 @@ echo -e "\n""${ORANGE}${BOLD}""=================================================
 echo -e "\n""${ORANGE}${BOLD}""EMBA logs are under /var/www/emba_logs/<id> ""${NC}"
 # echo -e "\n\n""${GREEN}${BOLD}""the trusted rootCA.key for the ssl encryption is in ./cert""${NC}"
 if [[ ${#SERVER_ALIAS[@]} -ne 0 ]]; then
-  echo -e "\n""${ORANGE}${BOLD}""Server started on http://embark.local with alias:""${SERVER_ALIAS[*]}""${NC}"
+  echo -e "\n""${ORANGE}${BOLD}""Server started on with alias:""http://""${SERVER_ALIAS[*]}"":""${HTTP_PORT}""${NC}"
 else
-  echo -e "\n""${ORANGE}${BOLD}""Server started on http://embark.local""${NC}"
+  echo -e "\n""${ORANGE}${BOLD}""Server started on http://embark.local"":""${HTTP_PORT}""${NC}"
 fi
 # echo -e "\n""${ORANGE}${BOLD}""For SSL you may use https://embark.local (Not recommended for local use)""${NC}"
 wait
-
-# sync migrations with pwd
-# rsync -r -u --progress --chown="${SUDO_USER}" . "${EMBARK_BASEDIR}/embark"
-# if [[ -d "${PWD}/emba" ]]; then
-#   rm "${PWD}/emba"
-# fi
-# if [[ -d "/var/www/emba" ]]; then
-#   mv /var/www/emba "${PWD}"
-# fi
