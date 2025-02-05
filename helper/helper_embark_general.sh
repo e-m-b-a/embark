@@ -133,6 +133,7 @@ check_db() {
           echo -e "${CYAN}""The mysql-db was first started with the password(sha256sum): $(head -n1 ./safe/history.env | cut -d";" -f1) ""${NC}\\n"
           echo -e "${CYAN}""And the password used was (sha256sum): $(echo "${PW_ENV}" | sha256sum)""${NC}\\n"
         fi
+        echo -e "${CYAN}""Also try restarting the docker service!""${NC}\\n"
         exit 1
     fi
   fi
@@ -149,3 +150,40 @@ add_to_env_history(){
   printf '%s;%s;\n' "$(echo "${PASSWORD_}" | sha256sum)" "${CONTAINER_HASH_}" >> ./safe/history.env
 
 }
+
+sync_emba_forward() {
+  local lEMBA_STATE=""
+  local lEMBA_URL=""
+
+  lEMBA_STATE="$(cd "${EMBARK_BASEDIR}"/emba && git rev-parse HEAD)"
+  lEMBA_URL="$(cd "${EMBARK_BASEDIR}"/emba && git remote get-url origin)"
+  # rsync -r -u --progress --chown=www-embark:sudo ./emba/ /var/www/emba/
+  if [[ ! -d "/var/www/emba/" ]]; then
+    git clone "${EMBA_URL}" /var/www/
+    git config --global --add safe.directory /var/www/emba
+    chown -R www-embark /var/www/emba/
+  fi
+  (cd "/var/www/emba/" && git fetch origin "${EMBA_STATE}") || exit 1
+  rsync -r -u --progress --chown=www-embark:sudo "${EMBARK_BASEDIR}"/emba/external /var/www/emba/
+  echo "DEBUG: emba check"
+  (cd "/var/www/emba/" && ./emba -d2)
+}
+
+sync_emba_backward() {
+  local lEMBA_STATE=""
+
+  lEMBA_STATE="$(cd /var/www/emba && git rev-parse HEAD)"
+
+  (cd "${EMBARK_BASEDIR}"/emba && git fetch origin "${lEMBA_STATE}")
+  rsync -r -u --progress --chown=www-embark:sudo /var/www/emba/external "${EMBARK_BASEDIR}"/emba/
+}
+
+sync_migrations_backward() {
+  local lMIGRATIONS
+  mapfile -t lMIGRATIONS < <(find /var/www/embark/*/migrations/ -type f -iname "0*.py")
+  for MIGRATION_ in "${lMIGRATIONS[@]}" ; do
+    cp -f "${MIGRATION_}" "${EMBARK_BASEDIR}""${MIGRATION_#\/var\/www}"
+  done
+}
+
+sync_migrations_backward
