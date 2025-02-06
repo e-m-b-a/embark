@@ -87,6 +87,10 @@ def update_emba(request):
         logger.debug("Option was: %s", option)
         for option_ in option:
             if option_ == 'GIT':
+                # 1. Update state of original emba dir (not the servers)
+                # 2. remove external dir
+                # 3. re-install emba through script + docker pull
+                # 4. sync server dir
                 pass
         # TODO change shown version
         messages.info(request, "Updating now")

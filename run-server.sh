@@ -31,6 +31,7 @@ export WSGI_FLAGS=()
 export ADMIN_HOST_RANGE=()
 
 STRICT_MODE=0
+EMBARK_BASEDIR="$(dirname "${0}")"
 
 import_helper()
 {
@@ -64,6 +65,7 @@ cleaner() {
   # docker network rm embark_backend
   # docker container prune -f --filter "label=flag"
 
+  sync_emba_backward
   systemctl stop embark.service
   exit 1
 }
@@ -112,7 +114,6 @@ if [[ ${#SERVER_ALIAS[@]} -ne 0 ]]; then
   done
 fi
 
-EMBARK_BASEDIR="$(dirname "${0}")"
 cd "${EMBARK_BASEDIR}" || exit 1
 import_helper
 enable_strict_mode "${STRICT_MODE}"
@@ -123,6 +124,9 @@ if ! [[ ${EUID} -eq 0 ]] ; then
   echo -e "\\n${RED}""Run Server script with root permissions!""${NC}\\n"
   exit 1
 fi
+
+# start container first (speedup?)
+docker compose -f ./docker-compose.yml up -d 
 
 # check emba
 echo -e "${BLUE}""${BOLD}""checking EMBA""${NC}"
@@ -139,8 +143,15 @@ if ! [[ -d /var/www/.venv ]]; then
   echo -e "${RED}""${BOLD}""Pip-enviroment not found!""${NC}"
   exit 1
 fi
+
+# sync pipfile
+rsync -r -u --progress --chown="${SUDO_USER}" "${EMBARK_BASEDIR}"/Pipfile* /var/www/
+
 if ! nc -zw1 pypi.org 443 &>/dev/null ; then
-  (cd /var/www && pipenv check && pipenv verify)
+  if ! (cd /var/www && pipenv verify) ; then
+    (cd /var/www && MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv update)
+  fi
+  (cd /var/www && pipenv check)
 fi
 
 # check db and start container
@@ -152,8 +163,7 @@ if [[ -d ./emba/external/nvd-json-data-feeds ]]; then
 fi
 
 # sync emba
-rsync -r -u --progress --chown=www-embark:sudo ./emba/ /var/www/emba/
-chown -R www-embark /var/www/emba/
+sync_emba_forward
 
 # logs
 if ! [[ -d ./docker_logs ]]; then
@@ -201,7 +211,7 @@ copy_file "${PWD}"/cert/embark-ws.local.crt /var/www/conf/cert
 
 
 # cp .env and version
-copy_file ./.env /var/www/embark/embark/settings/
+copy_file ./.env /var/www/embark/embark/settings/   # security-- # TODO
 copy_file ./VERSION.txt /var/www/embark/
 
 # !DIRECTORY-CHANGE!
@@ -233,7 +243,7 @@ sleep 5
 
 # create admin superuser
 echo -e "\n[""${BLUE} JOB""${NC}""] Creating Admin account"
-pipenv run ./manage.py createsuperuser --noinput
+pipenv run ./manage.py createsuperuser --noinput 2>/dev/null
 
 echo -e "\n[""${BLUE} JOB""${NC}""] Starting Apache"
 pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
@@ -261,12 +271,9 @@ echo -e "\n""${ORANGE}${BOLD}""=================================================
 echo -e "\n""${ORANGE}${BOLD}""EMBA logs are under /var/www/emba_logs/<id> ""${NC}"
 # echo -e "\n\n""${GREEN}${BOLD}""the trusted rootCA.key for the ssl encryption is in ./cert""${NC}"
 if [[ ${#SERVER_ALIAS[@]} -ne 0 ]]; then
-  echo -e "\n""${ORANGE}${BOLD}""Server started on http://embark.local with alias:""${SERVER_ALIAS[*]}""${NC}"
+  echo -e "\n""${ORANGE}${BOLD}""Server started on with alias: ""http://""${SERVER_ALIAS[*]}"":""${HTTP_PORT}""${NC}"
 else
-  echo -e "\n""${ORANGE}${BOLD}""Server started on http://embark.local""${NC}"
+  echo -e "\n""${ORANGE}${BOLD}""Server started on http://embark.local"":""${HTTP_PORT}""${NC}"
 fi
 # echo -e "\n""${ORANGE}${BOLD}""For SSL you may use https://embark.local (Not recommended for local use)""${NC}"
 wait
-
-# sync migrations with pwd
-rsync -r -u --progress --chown="${SUDO_USER}" . "${EMBARK_BASEDIR}/embark"

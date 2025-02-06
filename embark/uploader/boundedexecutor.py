@@ -402,7 +402,7 @@ class BoundedExecutor:
         """
         logger.debug("Checking EMBA with: %d", option)
         try:
-            cmd = f"{EMBA_SCRIPT_LOCATION} -d{option} | ansifilter -H -o {settings.EMBA_LOG_ROOT}/emba_check.html -s 5pt"
+            cmd = f"{EMBA_SCRIPT_LOCATION} -d{option} &| ansifilter -H -o {settings.EMBA_LOG_ROOT}/emba_check.html -s 5pt"
 
             with open(f"{settings.EMBA_LOG_ROOT}/emba_check.log", "w+", encoding="utf-8") as file:
                 proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
@@ -423,6 +423,59 @@ class BoundedExecutor:
             room_group_name, {
                 "type": 'send.message',
                 "message": {f"EMBA dep check {option}": return_code}
+            }
+        )
+
+    @classmethod
+    def emba_update(cls, option):
+        """
+        does a emba update with either git or source
+
+        1. Update state of original emba dir (not the servers) - git checkout origin/master
+        2. re-install emba through script + docker pull
+        Args:
+            option 1/2
+        """
+        logger.debug("Update EMBA with: %d", option)
+        # git update
+        try:
+            cmd = f"cd {settings.EMBA_ROOT} && git pull origin master"
+
+            with open(f"{settings.EMBA_LOG_ROOT}/update.log", "w+", encoding="utf-8") as file:
+                proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
+                # wait for completion
+                proc.communicate()
+                return_code = proc.wait()
+            # success
+            logger.info("Git pull Successful: %s", cmd)
+            if return_code != 0:
+                raise BoundedException("Git has non zero exit-code")
+        except (BaseException, BoundedException) as exce:
+            logger.error("emba update error: %s", exce)
+
+        # emba update
+        try:
+            cmd = f"{EMBA_SCRIPT_LOCATION} -U &| ansifilter -H -o {settings.EMBA_LOG_ROOT}/emba_update.html -s 5pt"
+
+            with open(f"{settings.EMBA_LOG_ROOT}/update.log", "a", encoding="utf-8") as file:
+                proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
+                # wait for completion
+                proc.communicate()
+                return_code = proc.wait()
+            # success
+            logger.info("EMBA update Successful: %s", cmd)
+            if return_code != 0:
+                raise BoundedException("EMBA has non zero exit-code")
+        except (BaseException, BoundedException) as exce:
+            logger.error("emba update error: %s", exce)
+
+        room_group_name = "versions"
+        channel_layer = get_channel_layer()
+        # send ws message
+        async_to_sync(channel_layer.group_send)(
+            room_group_name, {
+                "type": 'send.message',
+                "message": {f"EMBA update {option}": return_code}
             }
         )
 
