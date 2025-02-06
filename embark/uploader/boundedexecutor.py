@@ -479,7 +479,6 @@ class BoundedExecutor:
             }
         )
 
-
     @classmethod
     def submit_zip(cls, uuid):
         # submit zip req to executor threadpool
