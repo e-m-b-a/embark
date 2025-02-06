@@ -155,18 +155,19 @@ sync_emba_forward() {
   local lEMBA_STATE=""
   local lEMBA_URL=""
 
-  lEMBA_STATE="$(cd "${EMBARK_BASEDIR}"/emba && git rev-parse HEAD)"
-  lEMBA_URL="$(cd "${EMBARK_BASEDIR}"/emba && git remote get-url origin)"
-  # rsync -r -u --progress --chown=www-embark:sudo ./emba/ /var/www/emba/
+  lEMBA_STATE=$(cd "${EMBARK_BASEDIR:=${PWD}}"/emba && git rev-parse HEAD)
+  lEMBA_URL=$(cd "${EMBARK_BASEDIR:=${PWD}}"/emba && git remote get-url origin)
+  echo -e "\\n${ORANGE}""${BOLD}""Synchronising EMBA""${NC}\\n""${BOLD}=================================================================${NC}"
+  
   if [[ ! -d "/var/www/emba/" ]]; then
-    git clone "${EMBA_URL}" /var/www/
+    git clone "${lEMBA_URL:='https://github.com/e-m-b-a/emba'}" /var/www/emba
     git config --global --add safe.directory /var/www/emba
     chown -R www-embark /var/www/emba/
   fi
-  (cd "/var/www/emba/" && git fetch origin "${EMBA_STATE}") || exit 1
-  rsync -r -u --progress --chown=www-embark:sudo "${EMBARK_BASEDIR}"/emba/external /var/www/emba/
-  echo "DEBUG: emba check"
-  (cd "/var/www/emba/" && ./emba -d2)
+  
+  (cd "/var/www/emba/" && git fetch origin "${lEMBA_STATE}") || exit 1
+  rsync -r -u --progress --chown=www-embark:sudo "${EMBARK_BASEDIR:=${PWD}}"/emba/external /var/www/emba/
+  echo -e "${GREEN}""${BOLD}""[+] Everything checks out""${NC}\\n"
 }
 
 sync_emba_backward() {
@@ -174,14 +175,14 @@ sync_emba_backward() {
 
   lEMBA_STATE="$(cd /var/www/emba && git rev-parse HEAD)"
 
-  (cd "${EMBARK_BASEDIR}"/emba && git fetch origin "${lEMBA_STATE}")
-  rsync -r -u --progress --chown=www-embark:sudo /var/www/emba/external "${EMBARK_BASEDIR}"/emba/
+  (cd "${EMBARK_BASEDIR:=${PWD}}"/emba && git fetch origin "${lEMBA_STATE}")
+  rsync -r -u --progress --chown=www-embark:sudo /var/www/emba/external "${EMBARK_BASEDIR:=${PWD}}"/emba/
 }
 
 sync_migrations_backward() {
   local lMIGRATIONS
   mapfile -t lMIGRATIONS < <(find /var/www/embark/*/migrations/ -type f -iname "0*.py")
   for MIGRATION_ in "${lMIGRATIONS[@]}" ; do
-    cp -f "${MIGRATION_}" "${EMBARK_BASEDIR}""${MIGRATION_#\/var\/www}"
+    cp -f "${MIGRATION_}" "${EMBARK_BASEDIR:=${PWD}}""${MIGRATION_#\/var\/www}"
   done
 }
