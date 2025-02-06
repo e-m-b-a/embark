@@ -155,8 +155,8 @@ sync_emba_forward() {
   local lEMBA_STATE=""
   local lEMBA_URL=""
 
-  lEMBA_STATE=$(cd "${EMBARK_BASEDIR:=${PWD}}"/emba && git rev-parse HEAD)
-  lEMBA_URL=$(cd "${EMBARK_BASEDIR:=${PWD}}"/emba && git remote get-url origin)
+  lEMBA_STATE=$(cd "${EMBARK_BASEDIR:-${PWD}}"/emba && git rev-parse HEAD)
+  lEMBA_URL=$(cd "${EMBARK_BASEDIR:-${PWD}}"/emba && git remote get-url origin)
   echo -e "\\n${ORANGE}""${BOLD}""Synchronising EMBA""${NC}\\n""${BOLD}=================================================================${NC}"
   
   if [[ ! -d "/var/www/emba/" ]]; then
@@ -166,7 +166,7 @@ sync_emba_forward() {
   fi
   
   (cd "/var/www/emba/" && git fetch origin "${lEMBA_STATE}") || exit 1
-  rsync -r -u --progress --chown=www-embark:sudo "${EMBARK_BASEDIR:=${PWD}}"/emba/external /var/www/emba/
+  rsync -r -u --progress --chown=www-embark:sudo "${EMBARK_BASEDIR:-${PWD}}"/emba/external /var/www/emba/
   echo -e "${GREEN}""${BOLD}""[+] Everything checks out""${NC}\\n"
 }
 
@@ -175,8 +175,8 @@ sync_emba_backward() {
 
   lEMBA_STATE="$(cd /var/www/emba && git rev-parse HEAD)"
 
-  (cd "${EMBARK_BASEDIR:=${PWD}}"/emba && git fetch origin "${lEMBA_STATE}")
-  rsync -r -u --progress --chown=www-embark:sudo /var/www/emba/external "${EMBARK_BASEDIR:=${PWD}}"/emba/
+  (cd "${EMBARK_BASEDIR:-${PWD}}"/emba && git fetch origin "${lEMBA_STATE}")
+  rsync -r -u --progress --chown=www-embark:sudo /var/www/emba/external "${EMBARK_BASEDIR:-${PWD}}"/emba/
 }
 
 sync_migrations_backward() {
