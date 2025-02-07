@@ -133,7 +133,7 @@ check_db() {
           echo -e "${CYAN}""The mysql-db was first started with the password(sha256sum): $(head -n1 ./safe/history.env | cut -d";" -f1) ""${NC}\\n"
           echo -e "${CYAN}""And the password used was (sha256sum): $(echo "${PW_ENV}" | sha256sum)""${NC}\\n"
         fi
-        echo -e "${CYAN}""Also try restarting the docker service!""${NC}\\n"
+        echo -e "${ORANGE}""Also try restarting the docker service!""${NC}\\n"
         exit 1
     fi
   fi
@@ -175,8 +175,8 @@ sync_emba_backward() {
 
   lEMBA_STATE="$(cd /var/www/emba && git rev-parse HEAD)"
 
-  (cd "${EMBARK_BASEDIR:-${PWD}}"/emba && git fetch origin "${lEMBA_STATE}")
-  rsync -r -u --progress --chown=www-embark:sudo /var/www/emba/external "${EMBARK_BASEDIR:-${PWD}}"/emba/
+  (cd "${EMBARK_BASEDIR:-${PWD}}"/emba &&  git fetch origin "${lEMBA_STATE}")
+  rsync -r -u --progress --chown=www-embark:sudo --exclude=nvd-json-data-feeds/ /var/www/emba/external "${EMBARK_BASEDIR:-${PWD}}"/emba/
 }
 
 sync_migrations_backward() {
