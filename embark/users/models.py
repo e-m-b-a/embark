@@ -3,8 +3,9 @@ __author__ = 'Garima Chauhan, m-1-k-3, Benedikt Kuehne'
 __license__ = 'MIT'
 
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Group
 from django.conf import settings
+from django.dispatch import receiver
 
 
 class Team(models.Model):
@@ -12,15 +13,6 @@ class Team(models.Model):
     is_active = models.BooleanField(default=True, help_text='Whether this Team is active or not')
     created = models.DateTimeField(auto_now_add=True, help_text='Date time when this entry was created')
     modified = models.DateTimeField(auto_now=True, help_text='Date time when this entry was modified')
-
-    class Meta:
-        default_permissions = ()    # disable "add", "change", "delete" and "view" default permissions
-        permissions = (
-            ("no_permission", "Applicant - no permissions"),
-            ("member_permission", "Member - read permissions"),
-            ("manager_permission", "Manager - edit permissions"),
-            ("owner_permission", "Owner - all permissions"),
-        )
 
 
 class User(AbstractUser):

@@ -90,7 +90,7 @@ while getopts "ha:b:" OPT ; do
       if [[ -n "${IP}" ]]; then
         echo -e "${GREEN} Suggestion:${NC}  sudo ./run-server.sh -a ${IP} -b ${IP}/24"
         echo -e "${GREEN} nslookup helper:${NC}"
-        nslookup "${IP}"
+        nslookup -timeout=1"${IP}"
       fi
       exit 0
       ;;
@@ -249,6 +249,10 @@ sleep 5
 # create admin superuser
 echo -e "\n[""${BLUE} JOB""${NC}""] Creating Admin account"
 pipenv run ./manage.py createsuperuser --noinput 2>/dev/null
+
+# create default groups
+echo -e "\n[""${BLUE} JOB""${NC}""] Creating default permission groups"
+pipenv run ./manage.py createdefaultgroups --noinput 2>/dev/null
 
 echo -e "\n[""${BLUE} JOB""${NC}""] Starting Apache"
 pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
