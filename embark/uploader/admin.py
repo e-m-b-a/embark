@@ -4,8 +4,10 @@ __license__ = 'MIT'
 
 from django.contrib import admin
 
-from uploader.models import FirmwareAnalysis, FirmwareFile, Device
+from uploader.models import FirmwareAnalysis, FirmwareFile, Device, Label, Vendor
 
 admin.site.register(FirmwareAnalysis)
 admin.site.register(Device)
 admin.site.register(FirmwareFile)
+admin.site.register(Label)
+admin.site.register(Vendor)
