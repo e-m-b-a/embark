@@ -32,7 +32,7 @@ export ADMIN_HOST_RANGE=()
 export EMBARK_BASEDIR=""
 
 STRICT_MODE=0
-EMBARK_BASEDIR="$(realpath $(dirname "${0}"))"
+EMBARK_BASEDIR="$(realpath "$(dirname "${0}")")"
 
 import_helper()
 {
@@ -85,12 +85,12 @@ while getopts "ha:b:" OPT ; do
       if ip addr show eth0 &>/dev/null ; then
         IP=$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
       elif ip -4 a show scope 0 &>/dev/null ; then
-        IP=$(ip -4 a show scope 0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
+        IP=$(ip -4 a show scope 0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1 | head -n 1)
       fi
       if [[ -n "${IP}" ]]; then
-        echo -e "${GREEN} Suggestion:${NC}  sudo ./run-server.sh -a ${IP} -b ${IP}/24"
+        echo -e "${GREEN} Suggestion:${NC}  sudo ./run-server.sh -a ${IP} -b ${IP}/24""\n"
         echo -e "${GREEN} nslookup helper:${NC}"
-        nslookup -timeout=1"${IP}"
+        nslookup -timeout=1 "${IP}"
       fi
       exit 0
       ;;
