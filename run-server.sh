@@ -250,9 +250,9 @@ sleep 5
 echo -e "\n[""${BLUE} JOB""${NC}""] Creating Admin account"
 pipenv run ./manage.py createsuperuser --noinput 2>/dev/null
 
-# create default groups
+# load default groups
 echo -e "\n[""${BLUE} JOB""${NC}""] Creating default permission groups"
-pipenv run ./manage.py createdefaultgroups --noinput 2>/dev/null
+pipenv run ./manage.py loaddata ./embark/*/fixtures/*.json
 
 echo -e "\n[""${BLUE} JOB""${NC}""] Starting Apache"
 pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \

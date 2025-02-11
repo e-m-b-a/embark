@@ -3,7 +3,7 @@ __author__ = 'Benedikt Kuehne'
 __license__ = 'MIT'
 
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin, GroupAdmin
+from django.contrib.auth.admin import UserAdmin
 
 from users.models import User, Team
 

@@ -3,9 +3,8 @@ __author__ = 'Garima Chauhan, m-1-k-3, Benedikt Kuehne'
 __license__ = 'MIT'
 
 from django.db import models
-from django.contrib.auth.models import AbstractUser, Group
+from django.contrib.auth.models import AbstractUser
 from django.conf import settings
-from django.dispatch import receiver
 
 
 class Team(models.Model):
