@@ -360,7 +360,7 @@ pylinter
 list_linter_exceptions "pylint" "$PWD/embark"
 check_django
 yamlchecker
-copy_right_check 2024 "${PWD}" "${PWD}/emba_logs"
+copy_right_check 2025 "${PWD}" "${PWD}/emba_logs"
 
 if [[ "${#MODULES_TO_CHECK_ARR[@]}" -gt 0 ]]; then
   echo -e "\\n\\n""${GREEN}${BOLD}""SUMMARY:${NC}\\n"

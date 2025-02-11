@@ -1,7 +1,7 @@
 #!/bin/bash
 # EMBArk - The firmware security scanning environment
 #
-# Copyright 2020-2024 Siemens Energy AG
+# Copyright 2020-2025 Siemens Energy AG
 #
 # EMBArk comes with ABSOLUTELY NO WARRANTY.
 #
@@ -90,7 +90,7 @@ write_headers(){
 }
 
 
-write_headers 2024 "${PWD}/embark/"
+write_headers 2025 "${PWD}/embark/"
 
 
 if [[ "${#EXCEPTIONS_TO_CHECK_ARR[@]}" -gt 0 ]]; then
