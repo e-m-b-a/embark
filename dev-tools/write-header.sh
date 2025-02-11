@@ -47,7 +47,7 @@ write_headers(){
 
       readarray -t AUTHOR_ARR < <(git shortlog -n -s "${FILE_}" 2>/dev/null | sort -gr | cut -c 8- ) # gets commit count for file/folder
       AUTHOR_ARR=( "${AUTHOR_ARR[@]/%/,}" )
-      AUTHOR_HEADER+="${AUTHOR_ARR[]}"
+      AUTHOR_HEADER+="${AUTHOR_ARR[*]}"
       AUTHOR_HEADER="${AUTHOR_HEADER%?}'"
 
       STARTYEAR="$(git log --follow --format=%ad --date default "${FILE_}" | tail -1 | cut -d ' ' -f 5)"
