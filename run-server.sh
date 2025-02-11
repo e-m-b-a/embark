@@ -252,7 +252,7 @@ pipenv run ./manage.py createsuperuser --noinput 2>/dev/null
 
 # load default groups
 echo -e "\n[""${BLUE} JOB""${NC}""] Creating default permission groups"
-pipenv run ./manage.py loaddata ./*/fixtures/*.json 2>/dev/null
+pipenv run ./manage.py loaddata */fixtures/*.json 2>/dev/null
 
 echo -e "\n[""${BLUE} JOB""${NC}""] Starting Apache"
 pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
