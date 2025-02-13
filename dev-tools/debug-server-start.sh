@@ -121,6 +121,9 @@ python3 ./embark/manage.py migrate | tee -a ./logs/migration.log
 # superuser
 python3 ./embark/manage.py createsuperuser --noinput
 
+# load fixtures
+python3 ./embark/manage.py loaddata ./embark/*/fixtures/*.json
+
 ##
 echo -e "\n[""${BLUE} JOB""${NC}""] Starting runapscheduler"
 python3 ./embark/manage.py runapscheduler | tee -a ./logs/scheduler.log &

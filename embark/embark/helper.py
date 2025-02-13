@@ -117,6 +117,10 @@ def get_version_strings():
     return embark_version, emba_version, stable_emba_version, container_version, nvd_version, github_emba_version
 
 
+def user_is_staff(user):
+    return user.is_staff
+
+
 if __name__ == '__main__':
     TEST_STRING = 'Linux / v2.6.33.2'
     print(cleanup_charfield(TEST_STRING))

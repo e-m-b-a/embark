@@ -30,7 +30,7 @@
                     </thead>
 
                     <tbody  id="report-table">
-                    {% timezone request.session.django_timezone %}
+                    {% timezone request.user.timezone %}
                     {% for firmware in firmwares %}
                         <tr>
                             <td>{{ firmware.id }}</td>

@@ -14,7 +14,7 @@
 {% bootstrap_messages %}
 
 {% block maincontent %}
-{% timezone request.session.django_timezone %}
+{% timezone request.user.timezone %}
 <div class="update-form-container">
     <div id="embarkLogo">
       <img src="{% static 'content/images/embark_logo.svg' %}" alt="EMBArk logo graphic" height="auto" width="auto"/>

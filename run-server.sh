@@ -29,9 +29,10 @@ export FILE_SIZE=2000000000
 export SERVER_ALIAS=()
 export WSGI_FLAGS=()
 export ADMIN_HOST_RANGE=()
+export EMBARK_BASEDIR=""
 
 STRICT_MODE=0
-EMBARK_BASEDIR="$(dirname "${0}")"
+EMBARK_BASEDIR="$(realpath "$(dirname "${0}")")"
 
 import_helper()
 {
@@ -52,7 +53,7 @@ import_helper()
 
 cleaner() {
   pkill -u root daphne
-  pkill -u root "${PWD}"/emba/emba
+  pkill -u root "${EMBARK_BASEDIR:-${PWD}}"/emba/emba
   pkill -u root runapscheduler
 
   fuser -k "${HTTP_PORT}"/tcp
@@ -83,9 +84,13 @@ while getopts "ha:b:" OPT ; do
       echo -e "---------------------------------------------------------------------------"
       if ip addr show eth0 &>/dev/null ; then
         IP=$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
-        echo -e "${GREEN} Suggestion:${NC}  sudo ./run-server.sh -a ${IP}"
+      elif ip -4 a show scope 0 &>/dev/null ; then
+        IP=$(ip -4 a show scope 0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1 | head -n 1)
+      fi
+      if [[ -n "${IP}" ]]; then
+        echo -e "${GREEN} Suggestion:${NC}  sudo ./run-server.sh -a ${IP} -b ${IP}/24""\n"
         echo -e "${GREEN} nslookup helper:${NC}"
-        nslookup "${IP}"
+        nslookup -timeout=1 "${IP}"
       fi
       exit 0
       ;;
@@ -133,7 +138,7 @@ echo -e "${BLUE}""${BOLD}""checking EMBA""${NC}"
 if ! [[ -d ./emba ]]; then
   echo -e "${RED}""${BOLD}""You are using the wrong installation and missing the EMBA subdirectory""${NC}"
 fi
-if ! (cd "${PWD}"/emba && ./emba -d 1); then
+if ! (cd "${EMBARK_BASEDIR:-${PWD}}"/emba && ./emba -d 1); then
   echo -e "${RED}""EMBA is not configured correctly""${NC}"
   exit 1
 fi
@@ -204,10 +209,10 @@ fi
 if ! [[ -d /var/www/conf/cert ]]; then
   mkdir /var/www/conf/cert
 fi
-copy_file "${PWD}"/cert/embark.local.crt /var/www/conf/cert
-copy_file "${PWD}"/cert/embark.local.key /var/www/conf/cert
-copy_file "${PWD}"/cert/embark-ws.local.key /var/www/conf/cert
-copy_file "${PWD}"/cert/embark-ws.local.crt /var/www/conf/cert
+copy_file "${EMBARK_BASEDIR:-${PWD}}"/cert/embark.local.crt /var/www/conf/cert
+copy_file "${EMBARK_BASEDIR:-${PWD}}"/cert/embark.local.key /var/www/conf/cert
+copy_file "${EMBARK_BASEDIR:-${PWD}}"/cert/embark-ws.local.key /var/www/conf/cert
+copy_file "${EMBARK_BASEDIR:-${PWD}}"/cert/embark-ws.local.crt /var/www/conf/cert
 
 
 # cp .env and version
@@ -245,6 +250,10 @@ sleep 5
 echo -e "\n[""${BLUE} JOB""${NC}""] Creating Admin account"
 pipenv run ./manage.py createsuperuser --noinput 2>/dev/null
 
+# load default groups
+echo -e "\n[""${BLUE} JOB""${NC}""] Creating default permission groups"
+pipenv run ./manage.py loaddata ./*/fixtures/*.json 2>/dev/null
+
 echo -e "\n[""${BLUE} JOB""${NC}""] Starting Apache"
 pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --host "${BIND_IP}" --port="${HTTP_PORT}" --limit-request-body "${FILE_SIZE}" \
@@ -271,7 +280,7 @@ echo -e "\n""${ORANGE}${BOLD}""=================================================
 echo -e "\n""${ORANGE}${BOLD}""EMBA logs are under /var/www/emba_logs/<id> ""${NC}"
 # echo -e "\n\n""${GREEN}${BOLD}""the trusted rootCA.key for the ssl encryption is in ./cert""${NC}"
 if [[ ${#SERVER_ALIAS[@]} -ne 0 ]]; then
-  echo -e "\n""${ORANGE}${BOLD}""Server started on with alias: ""http://""${SERVER_ALIAS[*]}"":""${HTTP_PORT}""${NC}"
+  echo -e "\n""${ORANGE}${BOLD}""Server started on http://embark.local with alias: ""http://""${SERVER_ALIAS[*]}"":""${HTTP_PORT}""${NC}"
 else
   echo -e "\n""${ORANGE}${BOLD}""Server started on http://embark.local"":""${HTTP_PORT}""${NC}"
 fi

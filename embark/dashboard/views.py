@@ -15,6 +15,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.shortcuts import redirect
+from embark.helper import user_is_staff
 from tracker.forms import AssociateForm
 from uploader.boundedexecutor import BoundedExecutor
 from uploader.forms import LabelForm
@@ -140,8 +141,8 @@ def show_log(request, analysis_id):
     """
     logger.info("showing log for analyze_id: %s", analysis_id)
     firmware = FirmwareAnalysis.objects.get(id=analysis_id)
-    # check if user auth
-    if request.user != firmware.user:
+    # check if user auth TODO change to group auth
+    if request.user != firmware.user or not user_is_staff(request.user):
         return HttpResponseForbidden("You are not authorized!")
     # get the file path
     log_file_path_ = f"{Path(firmware.path_to_logs).parent}/emba_run.log"
@@ -168,7 +169,7 @@ def show_logviewer(request, analysis_id):
     logger.info("showing log viewer for analyze_id: %s", analysis_id)
     firmware = FirmwareAnalysis.objects.get(id=analysis_id)
     # check if user auth
-    if request.user != firmware.user:
+    if request.user != firmware.user or not user_is_staff(request.user):
         return HttpResponseForbidden("You are not authorized!")
     # get the file path
     log_file_path_ = f"{Path(firmware.path_to_logs).parent}/emba_run.log"

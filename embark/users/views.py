@@ -9,7 +9,7 @@ import logging
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import authenticate, login, logout, get_user
 from django.contrib.auth.tokens import default_token_generator
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Permission, Group
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib import messages
 from django.forms import ValidationError
@@ -53,6 +53,8 @@ def register(request):
                 user = User.objects.create(username=username, email=email)
                 user.set_password(password)
                 user.is_active = False
+                if Group.objects.get(name='New_User'):
+                    user.groups.add(Group.objects.get(name='New_User'))
                 user.save()
                 logger.debug('User created')
                 token = default_token_generator.make_token(user)
@@ -258,7 +260,7 @@ def set_timezone(request):
     if request.method == "POST":
         user = get_user(request)
         new_timezone = request.POST["timezone"]
-        request.session["django_timezone"] = new_timezone
+        # request.session["django_timezone"] = new_timezone
         user.timezone = new_timezone
         user.save()
         messages.success(request, str(user.username) + ' timezone set to : ' + str(new_timezone))
