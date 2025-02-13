@@ -1,7 +1,7 @@
 #!/bin/bash
 # EMBArk - The firmware security scanning environment
 #
-# Copyright 2024 Siemens Energy AG
+# Copyright 2024-2025 Siemens Energy AG
 #
 # EMBArk comes with ABSOLUTELY NO WARRANTY.
 #
