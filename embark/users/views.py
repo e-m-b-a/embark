@@ -260,7 +260,7 @@ def set_timezone(request):
     if request.method == "POST":
         user = get_user(request)
         new_timezone = request.POST["timezone"]
-        request.session["django_timezone"] = new_timezone
+        # request.session["django_timezone"] = new_timezone
         user.timezone = new_timezone
         user.save()
         messages.success(request, str(user.username) + ' timezone set to : ' + str(new_timezone))
