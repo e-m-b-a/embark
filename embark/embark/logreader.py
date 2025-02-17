@@ -1,6 +1,6 @@
 # pylint: disable=W0602
 # ignores no-assignment error since there is one!
-__copyright__ = 'Copyright 2021-2024 Siemens Energy AG, Copyright 2021 The AMOS Projects'
+__copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2021 The AMOS Projects'
 __author__ = 'Benedikt Kuehne, m-1-k-3, diegiesskanne, Maximilian Wagner, Garima Chauhan, Ashutosh Singh'
 __license__ = 'MIT'
 

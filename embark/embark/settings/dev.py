@@ -1,4 +1,4 @@
-__copyright__ = 'Copyright 2021-2024 Siemens Energy AG'
+__copyright__ = 'Copyright 2021-2025 Siemens Energy AG'
 __author__ = 'Benedikt Kuehne'
 __license__ = 'MIT'
 

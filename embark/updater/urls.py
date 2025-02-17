@@ -1,3 +1,7 @@
+__copyright__ = 'Copyright 2025 Siemens Energy AG'
+__author__ = 'Benedikt Kuehne'
+__license__ = 'MIT'
+
 from django.urls import path
 
 from updater import views

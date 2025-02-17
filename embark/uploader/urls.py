@@ -1,4 +1,4 @@
-__copyright__ = 'Copyright 2021-2024 Siemens Energy AG, Copyright 2021 The AMOS Projects, Copyright 2021 Siemens AG'
+__copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2021 The AMOS Projects, Copyright 2021 Siemens AG'
 __author__ = 'Benedikt Kuehne, Maximilian Wagner, p4cx, Ashutosh Singh, VAISHNAVI UMESH, diegiesskanne, uk61elac, RaviChandra, Vaish1795, Garima Chauhan, m-1-k-3'
 __license__ = 'MIT'
 
