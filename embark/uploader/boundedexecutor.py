@@ -102,15 +102,16 @@ class BoundedExecutor:
             close_old_connections()
             # get csv log location
             csv_log_location = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/csv_logs/f50_base_aggregator.csv"
+            sbom_log_location = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/SBOM/EMBA_cyclonedx_sbom.json"
 
             # read f50_aggregator and store it into a Result form
             logger.info('Reading report from: %s', csv_log_location)
             logger.debug("contents of that dir are %r", Path(csv_log_location).exists())
             # if Path(csv_log_location).exists:
-            if Path(csv_log_location).is_file():
+            if Path(csv_log_location).is_file() or Path(sbom_log_location).is_file():
                 cls.csv_read(analysis_id=analysis_id, _path=csv_log_location, _cmd=cmd)
             else:
-                logger.error("CSV file %s for report: %s not generated", csv_log_location, analysis_id)
+                logger.error("No importable log file %s for report: %s generated", csv_log_location, analysis_id)
                 logger.error("EMBA run was probably not successful!")
                 exit_fail = True
 
