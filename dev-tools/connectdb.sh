@@ -83,8 +83,8 @@ docker container logs embark_redis -f > ./logs/redis_dev.log &
 echo -e "\n[""${BLUE} JOB""${NC}""] DB logs are copied to ./logs/mysql_dev.log""${NC}"
 docker container logs embark_db -f > ./logs/mysql_dev.log & 
 
-# shellcheck disable=SC1091
 echo -e "\n[""${BLUE} VENV""${NC}""] Sourcing venv""${NC}" 
+# shellcheck disable=SC1091
 source ./.venv/bin/activate || exit 1
 
 echo -e "\n[""${BLUE} MySQL""${NC}""] connecting to DB""${NC}" 
