@@ -44,8 +44,8 @@ executor = ThreadPoolExecutor(max_workers=MAX_WORKERS)
 # create semaphore to track queue state
 semaphore = BoundedSemaphore(MAX_QUEUE)
 
-# emba directories
-EMBA_SCRIPT_LOCATION = f"cd {settings.EMBA_ROOT} && sudo ./emba"
+# emba command
+EMBA_BASE_CMD = f"DISABLE_STATUS_BAR=1 DISABLE_NOTIFICATIONS=1 HTML=1 FORMAT_LOG=1 sudo --preserve-env {settings.EMBA_ROOT}/emba"
 
 
 class BoundedException(Exception):
@@ -218,9 +218,6 @@ class BoundedExecutor:
             shutil.rmtree(active_analyzer_dir)
             return None
 
-        # get emba flags from command parser
-        emba_flags = firmware_flags.get_flags()
-
         # evaluate meta information and safely create log dir
 
         emba_log_location = f"{settings.EMBA_LOG_ROOT}/{firmware_flags.id}/emba_logs"
@@ -232,11 +229,23 @@ class BoundedExecutor:
         firmware_flags.status["firmware_name"] = firmware_flags.firmware_name
         firmware_flags.save(update_fields=["status", "path_to_logs"])
 
+        # get emba flags from command parser
+        emba_flags = firmware_flags.get_flags()
+
         if firmware_flags.sbom_only_test is True:
             scan_profile = "./scan-profiles/default-sbom.emba"
+        elif firmware_flags.system_emulation_test is True or firmware_flags.user_emulation_test is True:  # if any expert fields are active
+            scan_profile = None
         else:
             scan_profile = "./scan-profiles/default-scan-no-notify.emba"
-        emba_cmd = f"{EMBA_SCRIPT_LOCATION} -p {scan_profile} -f {image_file_location} -l {emba_log_location} {emba_flags}"
+
+        # building EMBA command
+        emba_cmd = f"cd {settings.EMBA_ROOT} && {EMBA_BASE_CMD} -f {image_file_location} -l {emba_log_location}"
+
+        if scan_profile:
+            emba_cmd += f"-p {scan_profile} "
+
+        emba_cmd += f"{emba_flags}"
 
         # submit command to executor threadpool
         emba_fut = BoundedExecutor.submit(cls.run_emba_cmd, emba_cmd, firmware_flags.id, active_analyzer_dir)

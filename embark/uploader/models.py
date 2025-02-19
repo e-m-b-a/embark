@@ -274,13 +274,11 @@ class FirmwareAnalysis(models.Model):
         help_text='Architecture of the linux firmware [MIPS, ARM, x86, x64, PPC, NIOS2] -a will be added (note: other options are not in use yet)',
         max_length=MAX_LENGTH, blank=True, expert_mode=True
     )
-
-    # expertmode options
     user_emulation_test = BooleanFieldExpertMode(help_text='Enables automated qemu emulation tests', default=False, expert_mode=True, blank=True)
     system_emulation_test = BooleanFieldExpertMode(help_text='Enables automated qemu system emulation tests', default=False, expert_mode=True, blank=True)
 
     # SBOM mode option
-    sbom_only_test = models.BooleanField(verbose_name='SBOM only test', help_text='Enables SBOM tests', default=False, blank=True)
+    sbom_only_test = models.BooleanField(verbose_name='SBOM only test', help_text='Enables SBOM default-profile', default=False, blank=True)
 
     # S-modules
     scan_modules = models.JSONField(blank=True, null=True, default=scan_modules_default_value)

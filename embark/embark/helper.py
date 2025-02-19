@@ -63,21 +63,48 @@ def cleanup_charfield(charfield) -> str:
     return charfield
 
 
-def count_emba_modules(emba_dir_path):
-    s_module_cnt, p_module_cnt, q_module_cnt, l_module_cnt, f_module_cnt, d_module_cnt = 0, 0, 0, 0, 0, 0
+def get_emba_modules(emba_dir_path) -> dict:
+    """
+    {
+        S_Modules: [
+            ('s02', 'S02_UEFI_FwHunt'), 
+            ...
+        ],
+        P_modules : [...]
+    }
+    """
+    module_dict = {
+        "S_Modules": [],
+        "P_Modules": [],
+        "Q_Modules": [],
+        "L_Modules": [],
+        "F_Modules": [],
+        "D_Modules": [],
+        }
     for mod_file_ in os.listdir(f"{emba_dir_path}/modules"):
-        if mod_file_.startswith('S'):
-            s_module_cnt += 1
-        elif mod_file_.startswith('P'):
-            p_module_cnt += 1
-        elif mod_file_.startswith('F'):
-            f_module_cnt += 1
-        elif mod_file_.startswith('L'):
-            l_module_cnt += 1
-        elif mod_file_.startswith('Q'):
-            q_module_cnt += 1
-        elif mod_file_.startswith('D'):
-            d_module_cnt += 1
+        if os.path.isfile(os.path.join(f"{emba_dir_path}/modules", mod_file_)):
+            if mod_file_.startswith('S'):
+                module_dict["S_Modules"].append((str(mod_file_.split("_",1)[0]).lower(),str(mod_file_)[:-3]))
+            elif mod_file_.startswith('P'):
+                module_dict["P_Modules"].append((str(mod_file_.split("_",1)[0]).lower(),str(mod_file_)[:-3]))
+            elif mod_file_.startswith('F'):
+                module_dict["F_Modules"].append((str(mod_file_.split("_",1)[0]).lower(),str(mod_file_)[:-3]))
+            elif mod_file_.startswith('L'):
+                module_dict["L_Modules"].append((str(mod_file_.split("_",1)[0]).lower(),str(mod_file_)[:-3]))
+            elif mod_file_.startswith('Q'):
+                module_dict["Q_Modules"].append((str(mod_file_.split("_",1)[0]).lower(),str(mod_file_)[:-3]))
+            elif mod_file_.startswith('D'):
+                module_dict["D_Modules"].append((str(mod_file_.split("_",1)[0]).lower(),str(mod_file_)[:-3]))
+    return module_dict
+
+
+def count_emba_modules(module_dict):
+    s_module_cnt = len(module_dict["S_Modules"])
+    p_module_cnt = len(module_dict["P_Modules"])
+    q_module_cnt = len(module_dict["Q_Modules"])
+    l_module_cnt = len(module_dict["L_Modules"])
+    f_module_cnt = len(module_dict["F_Modules"])
+    d_module_cnt = len(module_dict["D_Modules"])
     return s_module_cnt, p_module_cnt, q_module_cnt, l_module_cnt, f_module_cnt, d_module_cnt
 
 
@@ -122,7 +149,9 @@ def user_is_staff(user):
 
 
 if __name__ == '__main__':
+    import pprint
     TEST_STRING = 'Linux / v2.6.33.2'
     print(cleanup_charfield(TEST_STRING))
-
-    print(count_emba_modules(emba_dir_path="/home/cylox/embark/emba"))
+    emba_modle_list = get_emba_modules(emba_dir_path="/home/cylox/embark/emba")
+    print(pprint.pformat(emba_modle_list, indent=1))
+    print(count_emba_modules(emba_modle_list))
