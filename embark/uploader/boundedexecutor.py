@@ -240,7 +240,7 @@ class BoundedExecutor:
             scan_profile = "./scan-profiles/default-scan-no-notify.emba"
 
         # building EMBA command
-        emba_cmd = f"cd {settings.EMBA_ROOT} && {EMBA_BASE_CMD} -f {image_file_location} -l {emba_log_location}"
+        emba_cmd = f"cd {settings.EMBA_ROOT} && {EMBA_BASE_CMD} -f {image_file_location} -l {emba_log_location} "
 
         if scan_profile:
             emba_cmd += f"-p {scan_profile} "
