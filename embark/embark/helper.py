@@ -67,7 +67,7 @@ def get_emba_modules(emba_dir_path) -> dict:
     """
     {
         S_Modules: [
-            ('s02', 'S02_UEFI_FwHunt'), 
+            ('s02', 'S02_UEFI_FwHunt'),
             ...
         ],
         P_modules : [...]
@@ -80,21 +80,21 @@ def get_emba_modules(emba_dir_path) -> dict:
         "L_Modules": [],
         "F_Modules": [],
         "D_Modules": [],
-        }
+    }
     for mod_file_ in os.listdir(f"{emba_dir_path}/modules"):
         if os.path.isfile(os.path.join(f"{emba_dir_path}/modules", mod_file_)):
             if mod_file_.startswith('S'):
-                module_dict["S_Modules"].append((str(mod_file_.split("_",1)[0]).lower(),str(mod_file_)[:-3]))
+                module_dict["S_Modules"].append((str(mod_file_.split("_", 1)[0]).lower(), str(mod_file_)[:-3]))
             elif mod_file_.startswith('P'):
-                module_dict["P_Modules"].append((str(mod_file_.split("_",1)[0]).lower(),str(mod_file_)[:-3]))
+                module_dict["P_Modules"].append((str(mod_file_.split("_", 1)[0]).lower(), str(mod_file_)[:-3]))
             elif mod_file_.startswith('F'):
-                module_dict["F_Modules"].append((str(mod_file_.split("_",1)[0]).lower(),str(mod_file_)[:-3]))
+                module_dict["F_Modules"].append((str(mod_file_.split("_", 1)[0]).lower(), str(mod_file_)[:-3]))
             elif mod_file_.startswith('L'):
-                module_dict["L_Modules"].append((str(mod_file_.split("_",1)[0]).lower(),str(mod_file_)[:-3]))
+                module_dict["L_Modules"].append((str(mod_file_.split("_", 1)[0]).lower(), str(mod_file_)[:-3]))
             elif mod_file_.startswith('Q'):
-                module_dict["Q_Modules"].append((str(mod_file_.split("_",1)[0]).lower(),str(mod_file_)[:-3]))
+                module_dict["Q_Modules"].append((str(mod_file_.split("_", 1)[0]).lower(), str(mod_file_)[:-3]))
             elif mod_file_.startswith('D'):
-                module_dict["D_Modules"].append((str(mod_file_.split("_",1)[0]).lower(),str(mod_file_)[:-3]))
+                module_dict["D_Modules"].append((str(mod_file_.split("_", 1)[0]).lower(), str(mod_file_)[:-3]))
     return module_dict
 
 

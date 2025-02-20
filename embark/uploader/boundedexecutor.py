@@ -45,7 +45,7 @@ executor = ThreadPoolExecutor(max_workers=MAX_WORKERS)
 semaphore = BoundedSemaphore(MAX_QUEUE)
 
 # emba command
-EMBA_BASE_CMD = f"DISABLE_STATUS_BAR=1 DISABLE_NOTIFICATIONS=1 HTML=1 FORMAT_LOG=1 sudo --preserve-env {settings.EMBA_ROOT}/emba"
+EMBA_BASE_CMD = f"sudo DISABLE_STATUS_BAR=1 DISABLE_NOTIFICATIONS=1 HTML=1 FORMAT_LOG=1 {settings.EMBA_ROOT}/emba"
 
 
 class BoundedException(Exception):
@@ -412,7 +412,7 @@ class BoundedExecutor:
         """
         logger.debug("Checking EMBA with: %d", option)
         try:
-            cmd = f"{EMBA_SCRIPT_LOCATION} -d{option} &| ansifilter -H -o {settings.EMBA_LOG_ROOT}/emba_check.html -s 5pt"
+            cmd = f"{EMBA_BASE_CMD} -d{option} &| ansifilter -H -o {settings.EMBA_LOG_ROOT}/emba_check.html -s 5pt"
 
             with open(f"{settings.EMBA_LOG_ROOT}/emba_check.log", "w+", encoding="utf-8") as file:
                 proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
@@ -465,7 +465,7 @@ class BoundedExecutor:
 
         # emba update
         try:
-            cmd = f"{EMBA_SCRIPT_LOCATION} -U &| ansifilter -H -o {settings.EMBA_LOG_ROOT}/emba_update.html -s 5pt"
+            cmd = f"{EMBA_BASE_CMD} -U &| ansifilter -H -o {settings.EMBA_LOG_ROOT}/emba_update.html -s 5pt"
 
             with open(f"{settings.EMBA_LOG_ROOT}/update.log", "a", encoding="utf-8") as file:
                 proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec

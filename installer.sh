@@ -325,8 +325,8 @@ install_embark_default(){
     useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /var/www/embark
   fi
   # emba nopw
-  if ! grep 'www-embark ALL=(ALL) NOPASSWD: /var/www/emba/emba' /etc/sudoers ; then
-    echo 'www-embark ALL=(ALL) NOPASSWD: /var/www/emba/emba' | EDITOR='tee -a' visudo
+  if ! grep 'www-embark ALL=(ALL) NOPASSWD:SETENV: /var/www/emba/emba' /etc/sudoers ; then
+    echo 'www-embark ALL=(ALL) NOPASSWD:SETENV: /var/www/emba/emba' | EDITOR='tee -a' visudo
   fi
   # pkill nopw
   if ! grep 'www-embark ALL=(ALL) NOPASSWD: /bin/pkill' /etc/sudoers ; then
@@ -432,9 +432,9 @@ install_embark_dev(){
   pip3 install pipenv
 
   # Add user nosudo
-  echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD: ""${PWD}""/emba/emba" | EDITOR='tee -a' visudo
+  echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD:SETENV: ""${PWD}""/emba/emba" | EDITOR='tee -a' visudo
   echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD: /bin/pkill" | EDITOR='tee -a' visudo
-  echo "root ALL=(ALL) NOPASSWD: ""${PWD}""/emba/emba" | EDITOR='tee -a' visudo
+  echo "root ALL=(ALL) NOPASSWD:SETENV: ""${PWD}""/emba/emba" | EDITOR='tee -a' visudo
   echo "root ALL=(ALL) NOPASSWD: /bin/pkill" | EDITOR='tee -a' visudo
 
   # Set some globals
