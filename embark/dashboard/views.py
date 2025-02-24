@@ -15,7 +15,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.shortcuts import redirect
-from embark.helper import user_is_staff
+from embark.helper import user_is_auth
 from tracker.forms import AssociateForm
 from uploader.boundedexecutor import BoundedExecutor
 from uploader.forms import LabelForm
@@ -34,12 +34,10 @@ req_logger = logging.getLogger("requests")
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def main_dashboard(request):
-    if request.user.is_authenticated:
-        if FirmwareAnalysis.objects.filter(finished=True, failed=False).count() > 0 and Result.objects.filter(restricted=False).count() > 0:
-            return render(request, 'dashboard/mainDashboard.html', {'nav_switch': True, 'username': request.user.username})
-        messages.info(request, "Redirected - There are no Results to display yet")
-        return redirect('embark-uploader-home')
-    return HttpResponseForbidden
+    if FirmwareAnalysis.objects.filter(finished=True, failed=False).count() > 0 and Result.objects.filter(restricted=False).count() > 0:
+        return render(request, 'dashboard/mainDashboard.html', {'nav_switch': True, 'username': request.user.username})
+    messages.info(request, "Redirected - There are no Results to display yet")
+    return redirect('embark-uploader-home')
 
 
 @permission_required("users.dashboard_permission_advanced", login_url='/')
@@ -61,7 +59,7 @@ def stop_analysis(request):
         analysis = form.cleaned_data['analysis']
         analysis_object_ = FirmwareAnalysis.objects.get(id=analysis.id)
         # check if user auth
-        if request.user != analysis_object_.user:
+        if not user_is_auth(request.user, analysis_object_.user):
             return HttpResponseForbidden("You are not authorized!")
         logger.info("Stopping analysis with id %s", analysis_object_.id)
         pid = analysis_object_.pid
@@ -142,7 +140,7 @@ def show_log(request, analysis_id):
     logger.info("showing log for analyze_id: %s", analysis_id)
     firmware = FirmwareAnalysis.objects.get(id=analysis_id)
     # check if user auth TODO change to group auth
-    if request.user != firmware.user or not user_is_staff(request.user):
+    if not user_is_auth(request.user, firmware.user):
         return HttpResponseForbidden("You are not authorized!")
     # get the file path
     log_file_path_ = f"{Path(firmware.path_to_logs).parent}/emba_run.log"
@@ -169,7 +167,7 @@ def show_logviewer(request, analysis_id):
     logger.info("showing log viewer for analyze_id: %s", analysis_id)
     firmware = FirmwareAnalysis.objects.get(id=analysis_id)
     # check if user auth
-    if request.user != firmware.user or not user_is_staff(request.user):
+    if not user_is_auth(request.user, firmware.user):
         return HttpResponseForbidden("You are not authorized!")
     # get the file path
     log_file_path_ = f"{Path(firmware.path_to_logs).parent}/emba_run.log"
@@ -194,7 +192,7 @@ def delete_analysis(request, analysis_id):
     logger.info("Deleting analyze_id: %s", analysis_id)
     analysis = FirmwareAnalysis.objects.get(id=analysis_id)
     # check that the user is authorized
-    if request.user == analysis.user or request.user.is_superuser:
+    if user_is_auth(request.user, analysis.user):
         if analysis.finished is False:
             try:
                 BoundedExecutor.submit_kill(analysis.id)
@@ -229,7 +227,7 @@ def archive_analysis(request, analysis_id):
     logger.info("Archiving Analysis with id: %s", analysis_id)
     analysis = FirmwareAnalysis.objects.get(id=analysis_id)
     # check if user auth
-    if request.user != analysis.user and not request.user.is_superuser:
+    if not user_is_auth(request.user, analysis.user):
         return HttpResponseForbidden("You are not authorized!")
     if analysis.zip_file is None:
         # make archive for uuid
@@ -252,7 +250,7 @@ def hide_analysis(request, analysis_id):
     logger.info("Hiding Analysis with id: %s", analysis_id)
     analysis = FirmwareAnalysis.objects.get(id=analysis_id)
     # check if user auth
-    if request.user != analysis.user and not request.user.is_superuser:
+    if not user_is_auth(request.user, analysis.user):
         return HttpResponseForbidden("You are not authorized!")
     analysis.hidden = True
     analysis.save(update_fields=["hidden"])
@@ -290,6 +288,10 @@ def add_label(request, analysis_id):
         logger.info("User %s tryied to add label %s", request.user.username, new_label.label_name)
         # get analysis obj
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        # check auth
+        if not user_is_auth(request.user, analysis.user):
+            messages.error(request, 'No permissions for this analysis')
+            return redirect('..')
         analysis.label.add(new_label)
         analysis.save()
         messages.info(request, 'adding successful of ' + str(new_label))
@@ -310,6 +312,10 @@ def rm_label(request, analysis_id, label_name):
     analysis = FirmwareAnalysis.objects.get(id=analysis_id)
     # get lobel obj
     label_obj = Label.objects.get(label_name=label_name)
+    # check auth
+    if not user_is_auth(request.user, analysis.user):
+        messages.error(request, 'Removing Label failed, no permissions')
+        return redirect('..')
     analysis.label.remove(label_obj)
     analysis.save()
     messages.info(request, 'removing successful of ' + str(label_name))

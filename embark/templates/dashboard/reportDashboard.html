@@ -118,10 +118,12 @@
                                             <form action={% url 'embark-html-report-index' firmware.id 'index.html' %} method='get'>
                                                 <button type="submit" class="btn buttonRowElem" >Open Report</button>
                                             </form>
+                                            
                                             <form action={% url 'embark-IndividualReportDashboard' firmware.id %} method='get'>
                                                 <button type="submit" class="btn buttonRowElem" >Detail View</button>
                                             </form>
                                             <form action={% url 'embark-uploader-home' %} method='get'>
+                                                <!--We should try and pre-select the original scan settings-->
                                                 <button type="submit" class="btn buttonRowElem" >Rescan/delete</button>
                                             </form>
                                             {% if firmware.archived is False %}

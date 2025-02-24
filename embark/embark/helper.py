@@ -144,8 +144,16 @@ def get_version_strings():
     return embark_version, emba_version, stable_emba_version, container_version, nvd_version, github_emba_version
 
 
-def user_is_staff(user):
-    return user.is_staff
+def user_is_auth(req_user, own_user):
+    if req_user.is_superuser:
+        return True
+    elif req_user.is_staff:
+        return True
+    elif req_user.team == own_user.team:
+        return True
+    elif req_user.groups.filter(name='Administration_Group').exists() and own_user.team is None:
+        return True
+    return False
 
 
 if __name__ == '__main__':

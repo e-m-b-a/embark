@@ -103,6 +103,7 @@ class BoundedExecutor:
             # get csv log location
             csv_log_location = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/csv_logs/f50_base_aggregator.csv"
             sbom_log_location = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/SBOM/EMBA_cyclonedx_sbom.json"
+            error_log_location = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/emba_error.log"
 
             # read f50_aggregator and store it into a Result form
             logger.info('Reading report from: %s', csv_log_location)
@@ -110,10 +111,13 @@ class BoundedExecutor:
             # if Path(csv_log_location).exists:
             if Path(csv_log_location).is_file() or Path(sbom_log_location).is_file():
                 cls.csv_read(analysis_id=analysis_id, _path=csv_log_location, _cmd=cmd)
-            else:
+            elif Path(error_log_location).is_file():
                 logger.error("No importable log file %s for report: %s generated", csv_log_location, analysis_id)
-                logger.error("EMBA run was probably not successful!")
+                logger.error("EMBA run was not successful!")
                 exit_fail = True
+            else:
+                logger.error("EMBA run was probably not successful!")
+                logger.error("Please check this manually and create a bug report!!")
 
             # take care of cleanup
             if active_analyzer_dir:
