@@ -62,7 +62,7 @@ def import_read(request):
     if form.is_valid():
         logger.debug("Posted Form is valid")
         zip_file_obj = form.cleaned_data['zip_log_file']
-         # check auth
+        # check auth
         if not user_is_auth(request.user, zip_file_obj.user):
             logger.error("Permission denied - %s", request)
             messages.error(request, "You don't have permission")

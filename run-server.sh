@@ -280,7 +280,10 @@ echo -e "\n""${ORANGE}${BOLD}""=================================================
 echo -e "\n""${ORANGE}${BOLD}""EMBA logs are under /var/www/emba_logs/<id> ""${NC}"
 # echo -e "\n\n""${GREEN}${BOLD}""the trusted rootCA.key for the ssl encryption is in ./cert""${NC}"
 if [[ ${#SERVER_ALIAS[@]} -ne 0 ]]; then
-  echo -e "\n""${ORANGE}${BOLD}""Server started on http://embark.local with alias: ""http://""${SERVER_ALIAS[*]}"":""${HTTP_PORT}""${NC}"
+  echo -e "\n""${ORANGE}${BOLD}""Server started on http://embark.local with aliases: \n"
+  for _alias in "${!SERVER_ALIAS[@]}" ; do
+    echo "http://""${SERVER_ALIAS[$_alias]}"":""${HTTP_PORT}""${NC}"
+  done
 else
   echo -e "\n""${ORANGE}${BOLD}""Server started on http://embark.local"":""${HTTP_PORT}""${NC}"
 fi
