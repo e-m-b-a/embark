@@ -320,3 +320,24 @@ def rm_label(request, analysis_id, label_name):
     analysis.save()
     messages.info(request, 'removing successful of ' + str(label_name))
     return redirect('..')
+
+
+@permission_required("users.dashboard_permission_minimal", login_url='/')
+@login_required(login_url='/' + settings.LOGIN_URL)
+@require_http_methods(["GET"])
+def get_sbom(request, analysis_id):
+    """
+    exports sbom as raw json
+    """
+    logger.info("export sbom for Analysis with id: %s", analysis_id)
+    analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    result = Result.objects.get(analysis=analysis)
+    # check if user auth
+    if not user_is_auth(request.user, analysis.user):
+        return HttpResponseForbidden("You are not authorized!")
+    if result.sbom is None:
+       messages.error(request, 'Analysis: ' + str(analysis_id) + ' can not find sbom')
+       return redirect('..')
+    with open(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/SBOM/EMBA_cyclonedx_sbom.json","rb") as sbom_file:
+        messages.success(request, 'Analysis: ' + str(analysis_id) + ' successfully exported sbom')
+        return HttpResponse(sbom_file)
