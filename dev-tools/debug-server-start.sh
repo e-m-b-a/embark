@@ -25,6 +25,7 @@ export NC='\033[0m' # no color
 export DJANGO_SETTINGS_MODULE=embark.settings.dev
 
 export NO_UPDATE_CHECK=1
+export IGNORE_EMBA=${IGNORE_EMBA:=0}
 
 export WSL=0
 
@@ -91,7 +92,9 @@ if [[ "${WSL}" -eq 1 ]]; then
 fi
 
 # check emba
-if ! grep -q "EMBA_INSTALL=no" ./.env ; then
+if [[ "${IGNORE_EMBA}" -eq 1 ]] || grep -q "EMBA_INSTALL=no" ./.env; then
+  echo -e "${BLUE}""${BOLD}""ignoring EMBA""${NC}"
+else
   echo -e "${BLUE}""${BOLD}""checking EMBA""${NC}"
   if ! (cd ./emba && ./emba -d 1) ; then
     echo -e "${RED}""EMBA is not configured correctly""${NC}"

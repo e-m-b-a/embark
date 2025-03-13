@@ -1,7 +1,13 @@
 {% autoescape off %}
 Dear {{ username }},
 
-Please follow the link to look at your result,
-http://{{ domain }}{% url 'embark-IndividualReportDashboard' analysis_id=analysis_id %}
+Please follow the link to look at your
+<a href="http://{{ domain }}{% url 'embark-IndividualReportDashboard' analysis_id=analysis_id %}">
+    Result
+</a>
+OR
+<a href="http://{{ domain }}{% url 'embark-dashboard-sbom' analysis_id %}">
+    SBOM
+</a>
 
 {% endautoescape %}
