@@ -113,26 +113,28 @@ docker container logs embark_db -f > ./logs/mysql_dev.log &
 # shellcheck disable=SC1091
 source ./.venv/bin/activate || exit 1
 
+cd ./embark || exit 1
+
 # db_init
 echo -e "[*] Starting migrations - log to embark/logs/migration.log"
-python3 ./embark/manage.py makemigrations users uploader reporter dashboard porter | tee -a ./logs/migration.log
-python3 ./embark/manage.py migrate | tee -a ./logs/migration.log
+python3 ./manage.py makemigrations users uploader reporter dashboard porter | tee -a ../logs/migration.log
+python3 ./manage.py migrate | tee -a ../logs/migration.log
 
 # superuser
-python3 ./embark/manage.py createsuperuser --noinput
+python3 ./manage.py createsuperuser --noinput
 
 # load fixtures
-python3 ./embark/manage.py loaddata ./embark/*/fixtures/*.json
+python3 ./manage.py loaddata ./*/fixtures/*.json
 
 ##
 echo -e "\n[""${BLUE} JOB""${NC}""] Starting runapscheduler"
-python3 ./embark/manage.py runapscheduler | tee -a ./logs/scheduler.log &
+python3 ./manage.py runapscheduler | tee -a ../logs/scheduler.log &
 
 # start embark
 # systemctl start embark.service
 
 echo -e "${ORANGE}""${BOLD}""start EMBArk server(ASGI only) on port ${PORT}""${NC}"
-python3 ./embark/manage.py runserver "${IP}":"${PORT}" |& tee -a ./logs/debug-server.log
+python3 ./manage.py runserver "${IP}":"${PORT}" |& tee -a ../logs/debug-server.log
 
 wait
 
