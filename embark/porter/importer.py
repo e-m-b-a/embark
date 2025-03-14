@@ -266,12 +266,11 @@ def read_cyclone_dx_json(_file_path):
 if __name__ == "__main__":
     BASE_DIR = Path(__file__).resolve().parent.parent.parent
     TEST_DIR = os.path.join(BASE_DIR, 'test/porter')
-
     # test print f50
     # with open(os.path.join(TEST_DIR, 'f50_test.json'), 'w', encoding='utf-8') as json_file:
     #     json_file.write(json.dumps(read_csv(os.path.join(TEST_DIR, 'f50_test.csv')), indent=4))
-
+    #
     # with open(os.path.join(TEST_DIR, 'f50_test.json'), 'w', encoding='utf-8') as output_file:
     #     json_data = read_cyclone_dx_json(os.path.join(TEST_DIR, 'EMBA_cyclonedx_sbom.json'))
-    #     for component_ in json_data['components']:                
+    #     for component_ in json_data['components']
     #         output_file.write(json.dumps(component_, indent=4))

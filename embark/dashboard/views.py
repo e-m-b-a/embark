@@ -389,7 +389,7 @@ def get_sbom_analysis(request, analysis_id):
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         result = Result.objects.get(firmware_analysis=analysis)
         sbom = result.sbom
-    except FirmwareAnalysis.DoesNotExist or SoftwareBillOfMaterial.DoesNotExist or Result.DoesNotExist:
+    except Result.DoesNotExist:
         sbom = None
         messages.error(request, "SBOM does not exist")
         return redirect('..')
@@ -399,8 +399,8 @@ def get_sbom_analysis(request, analysis_id):
     if sbom is None:
         messages.error(request, 'Analysis: ' + str(analysis_id) + ' can not find sbom')
         return redirect('..')
-    with open(sbom.file,"rb") as sbom_file:
-        response = HttpResponse(sbom_file.read(), content_type="application/json")
+    with open(sbom.file, "rb") as sbom_file:
+        response = JsonResponse(sbom_file.read())
         response['Content-Disposition'] = 'inline; filename=' + str(analysis_id) + '_sbom.json'
         messages.success(request, 'Analysis: ' + str(analysis_id) + ' successfully exported sbom')
         return response
