@@ -315,7 +315,7 @@ class FirmwareAnalysis(models.Model):
     zip_file = models.ForeignKey(LogZipFile, on_delete=models.SET_NULL, help_text='', null=True, editable=True)
 
     # embark meta data
-    path_to_logs = models.FilePathField(default="/", blank=True)
+    path_to_logs = models.FilePathField(default=settings.EMBA_LOG_ROOT, editable=True)
     log_size = models.PositiveBigIntegerField(default=0, blank=True)
     start_date = models.DateTimeField(default=timezone.now, blank=True)
     end_date = models.DateTimeField(default=None, null=True)

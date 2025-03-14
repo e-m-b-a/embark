@@ -36,6 +36,9 @@
         </div>  
     </div>
 </div>
+<div class="justify-content-betweenalign-items-center mx-auto border-bottom" id="TrackerCreate">
+    {% block create %}{% include "tracker/create.html" %}{% endblock create %}
+</div>
 <div>
     <canvas id="trackerChart" width="900" height="380"></canvas>
     <script>

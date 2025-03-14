@@ -353,6 +353,7 @@ install_embark_default(){
   fi
   if ! [[ -d /var/www/emba_logs ]]; then
     mkdir /var/www/emba_logs
+    echo "{}" > /var/www/emba_logs/empty.json
   fi
   if ! [[ -d /var/www/static ]]; then
     mkdir /var/www/static
@@ -464,6 +465,11 @@ install_embark_dev(){
   if ! [[ -d mail ]]; then
     mkdir mail
   fi
+  if ! [[ -d emba_logs ]]; then
+    mkdir emba_logs
+    echo "{}" > emba_logs/empty.json
+  fi
+  
 
   # download externals
   if ! [[ -d ./embark/static/external ]]; then

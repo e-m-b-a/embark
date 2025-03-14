@@ -131,10 +131,10 @@
                                                     <button type="submit" class="btn buttonRowElem" >Archive</button>
                                                 </form>
                                             {% endif %}
-                                            {% if firmware.sbom is not None %}
-                                            <form action={% url 'embark-dashboard-sbom' firmware.id %} method='get'>
-                                                <button type="submit" class="btn buttonRowElem" >Get SBOM</button>
-                                            </form>
+                                            {% if firmware.result.sbom is not None %}
+                                                <form action={% url 'embark-dashboard-sbom' firmware.id %} method='get'>
+                                                    <button type="submit" class="btn buttonRowElem" >Get SBOM</button>
+                                                </form>
                                             {% endif %}
                                         {% endif %}
                                         <form action={% url 'embark-show-logviewer' firmware.id %} method='get'>

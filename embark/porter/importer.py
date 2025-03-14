@@ -56,7 +56,7 @@ def result_read_in(analysis_id):
     if os.path.isfile(sbom_file):
         logger.debug("File %s found and attempting to read", sbom_file)
         try:
-            res = f15_json(sbom_file, analysis_id)
+            res = sbom_json(sbom_file, analysis_id)
         except DatabaseError as error:
             logger.error("DB error in f15_json: %s", error, exc_info=1)
     return res
@@ -210,44 +210,57 @@ def f10_csv(_file_path, _analysis_id):
     logger.debug("read f10 csv done")
 
 
-def f15_json(_file_path, _analysis_id):
+def sbom_json(_file_path, _analysis_id):
     """
     return: result obj/ None
     SBOM json
     """
-    logger.debug("starting f15 json import")
-    with open(_file_path, 'r', encoding='utf-8') as f15_json_file:
-        f15_data = json.load(f15_json_file)
-        sbom_uuid = f15_data['serialNumber'].split(":")[2]
-        logger.debug("Reading sbom uuid=%s", sbom_uuid)
-        sbom_obj, add_sbom = SoftwareBillOfMaterial.objects.get_or_create(id=sbom_uuid)
-        if not add_sbom:
-            for component_ in f15_data['components']:
-                logger.debug("Component is %s", component_)
-                try:
-                    new_sitem, add_sitem = SoftwareInfo.objects.get_or_create(
-                        id=component_['bom-ref'],
-                        name=component_['name'],
-                        type=component_['type'],
-                        group=component_['group'] or 'NA',
-                        version=component_['version'] or 'NA',
-                        hashes=[f"{key}:{value}" for key, value in component_['hashes']],
-                        cpe=component_['cpe'] or 'NA',
-                        purl=component_['purl'] or 'NA',
-                        properties=component_['properties'] or 'NA'
-                    )
-                    logger.debug("Was new? %s", add_sitem)
-                    logger.debug("Adding SBOM item: %s to sbom %s", new_sitem, sbom_obj)
-                    sbom_obj.component.add(new_sitem)
-                except builtins.Exception as error_:
-                    logger.error("Error in f15 readin: %s", error_)
-        res, _ = Result.objects.get_or_create(
-            firmware_analysis=FirmwareAnalysis.objects.get(id=_analysis_id),
-        )
-        res.sbom = sbom_obj
-        res.save()
+    logger.debug("starting SBOM json import")
+    json_data = read_cyclone_dx_json(_file_path)
+    sbom_uuid = json_data['serialNumber'].split(":")[2]
+    logger.debug("Reading sbom uuid=%s", sbom_uuid)
+    sbom_obj, add_sbom = SoftwareBillOfMaterial.objects.get_or_create(id=sbom_uuid)
+    if not add_sbom:
+        for component_ in json_data['components']:
+            logger.debug("Component is %s", component_)
+            try:
+                new_sitem, add_sitem = SoftwareInfo.objects.get_or_create(
+                    id=component_['bom-ref'],
+                    name=component_['name'],
+                    type=component_['type'],
+                    supplier=component_['supplier'] or 'NA',
+                    license=component_['license'] or 'NA',
+                    group=component_['group'] or 'NA',
+                    version=component_['version'] or 'NA',
+                    hashes=[f"{key}:{value}" for key, value in component_['hashes']],
+                    cpe=component_['cpe'] or 'NA',
+                    purl=component_['purl'] or 'NA',
+                    properties=component_['properties'] or 'NA'
+                )
+                logger.debug("Was new? %s", add_sitem)
+                logger.debug("Adding SBOM item: %s to sbom %s", new_sitem, sbom_obj)
+                sbom_obj.component.add(new_sitem)
+            except builtins.Exception as error_:
+                logger.error("Error in sbom readin: %s", error_)
+         # set file sbom path
+        sbom_obj.file = _file_path
+        sbom_obj.save()
+    res, _ = Result.objects.get_or_create(
+        firmware_analysis=FirmwareAnalysis.objects.get(id=_analysis_id),
+    )
+    res.sbom = sbom_obj
+    res.save()
     logger.debug("read f15 json done")
     return res
+
+
+def read_cyclone_dx_json(_file_path):
+    """
+    returns json
+    """
+    with open(_file_path, 'r', encoding='utf-8') as json_file:
+        # TODO validate the sbom
+        return json.load(json_file)
 
 
 if __name__ == "__main__":
@@ -258,8 +271,7 @@ if __name__ == "__main__":
     # with open(os.path.join(TEST_DIR, 'f50_test.json'), 'w', encoding='utf-8') as json_file:
     #     json_file.write(json.dumps(read_csv(os.path.join(TEST_DIR, 'f50_test.csv')), indent=4))
 
-    # with open(os.path.join(TEST_DIR, 'f20_test.json'), 'w', encoding='utf-8') as json_file:
-    #     json_file.write(json.dumps(
-    #         f20_csv(os.path.join(TEST_DIR, 'f20_test.csv')),
-    #         indent=4
-    #     ))
+    with open(os.path.join(TEST_DIR, 'f50_test.json'), 'w', encoding='utf-8') as output_file:
+        json_data = read_cyclone_dx_json(os.path.join(TEST_DIR, 'EMBA_cyclonedx_sbom.json'))
+        for component_ in json_data['components']:                
+            output_file.write(json.dumps(component_, indent=4))

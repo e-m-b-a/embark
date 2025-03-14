@@ -21,7 +21,7 @@ from uploader.boundedexecutor import BoundedExecutor
 from uploader.forms import LabelForm
 
 from uploader.models import FirmwareAnalysis, Label
-from dashboard.models import Result
+from dashboard.models import Result, SoftwareBillOfMaterial
 from dashboard.forms import LabelSelectForm, StopAnalysisForm
 from porter.views import make_zip
 
@@ -138,12 +138,17 @@ def show_log(request, analysis_id):
     :return: rendered emba_run.log
     """
     logger.info("showing log for analyze_id: %s", analysis_id)
-    firmware = FirmwareAnalysis.objects.get(id=analysis_id)
+    try:
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    except FirmwareAnalysis.DoesNotExist:
+        analysis = None
+        messages.error(request, "Analysis does not exist")
+        return redirect('..')
     # check if user auth TODO change to group auth
-    if not user_is_auth(request.user, firmware.user):
+    if not user_is_auth(request.user, analysis.user):
         return HttpResponseForbidden("You are not authorized!")
     # get the file path
-    log_file_path_ = f"{Path(firmware.path_to_logs).parent}/emba_run.log"
+    log_file_path_ = f"{Path(analysis.path_to_logs).parent}/emba_run.log"
     logger.debug("Taking file at %s and render it", log_file_path_)
     try:
         with open(log_file_path_, 'rb') as log_file_:
@@ -165,12 +170,17 @@ def show_logviewer(request, analysis_id):
     """
 
     logger.info("showing log viewer for analyze_id: %s", analysis_id)
-    firmware = FirmwareAnalysis.objects.get(id=analysis_id)
+    try:
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    except FirmwareAnalysis.DoesNotExist:
+        analysis = None
+        messages.error(request, "Analysis does not exist")
+        return redirect('..')
     # check if user auth
-    if not user_is_auth(request.user, firmware.user):
+    if not user_is_auth(request.user, analysis.user):
         return HttpResponseForbidden("You are not authorized!")
     # get the file path
-    log_file_path_ = f"{Path(firmware.path_to_logs).parent}/emba_run.log"
+    log_file_path_ = f"{Path(analysis.path_to_logs).parent}/emba_run.log"
     logger.debug("Taking file at %s and render it", log_file_path_)
     try:
         return render(request, 'dashboard/logViewer.html', {'analysis_id': analysis_id, 'username': request.user.username})
@@ -190,7 +200,12 @@ def delete_analysis(request, analysis_id):
     :return: redirect
     """
     logger.info("Deleting analyze_id: %s", analysis_id)
-    analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    try:
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    except FirmwareAnalysis.DoesNotExist:
+        analysis = None
+        messages.error(request, "Analysis does not exist")
+        return redirect('..')
     # check that the user is authorized
     if user_is_auth(request.user, analysis.user):
         if analysis.finished is False:
@@ -225,7 +240,12 @@ def archive_analysis(request, analysis_id):
     and sets analysis into archived state
     """
     logger.info("Archiving Analysis with id: %s", analysis_id)
-    analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    try:
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    except FirmwareAnalysis.DoesNotExist:
+        analysis = None
+        messages.error(request, "Analysis does not exist")
+        return redirect('..')
     # check if user auth
     if not user_is_auth(request.user, analysis.user):
         return HttpResponseForbidden("You are not authorized!")
@@ -248,7 +268,12 @@ def hide_analysis(request, analysis_id):
     checks user
     """
     logger.info("Hiding Analysis with id: %s", analysis_id)
-    analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    try:
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    except FirmwareAnalysis.DoesNotExist:
+        analysis = None
+        messages.error(request, "Analysis does not exist")
+        return redirect('..')
     # check if user auth
     if not user_is_auth(request.user, analysis.user):
         return HttpResponseForbidden("You are not authorized!")
@@ -287,7 +312,12 @@ def add_label(request, analysis_id):
         new_label = form.cleaned_data["label"]
         logger.info("User %s tryied to add label %s", request.user.username, new_label.label_name)
         # get analysis obj
-        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        try:
+            analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        except FirmwareAnalysis.DoesNotExist:
+            analysis = None
+            messages.error(request, "Analysis does not exist")
+            return redirect('..')
         # check auth
         if not user_is_auth(request.user, analysis.user):
             messages.error(request, 'No permissions for this analysis')
@@ -306,10 +336,14 @@ def add_label(request, analysis_id):
 @login_required(login_url='/' + settings.LOGIN_URL)
 def rm_label(request, analysis_id, label_name):
     req_logger.info("User %s called rm label", request.user.username)
-
     logger.info("User %s tryied to rm label %s", request.user.username, label_name)
     # get analysis obj
-    analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    try:
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    except FirmwareAnalysis.DoesNotExist:
+        analysis = None
+        messages.error(request, "Analysis does not exist")
+        return redirect('..')
     # get lobel obj
     label_obj = Label.objects.get(label_name=label_name)
     # check auth
@@ -325,19 +359,48 @@ def rm_label(request, analysis_id, label_name):
 @permission_required("users.dashboard_permission_minimal", login_url='/')
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["GET"])
-def get_sbom(request, analysis_id):
+def get_sbom(request, sbom_id):
     """
     exports sbom as raw json
     """
-    logger.info("export sbom for Analysis with id: %s", analysis_id)
-    analysis = FirmwareAnalysis.objects.get(id=analysis_id)
-    result = Result.objects.get(analysis=analysis)
+    logger.info("getting sbom with id: %s", sbom_id)
+    try:
+        sbom = SoftwareBillOfMaterial.objects.get(id=sbom_id)
+    except SoftwareBillOfMaterial.DoesNotExist:
+        sbom = None
+        messages.error(request, "SBOM does not exist")
+        return redirect('..')
+    with open(sbom.file,"rb") as sbom_file:
+        response = HttpResponse(sbom_file.read(), content_type="application/json")
+        response['Content-Disposition'] = 'inline; filename=' + str(sbom_id) + '.json'
+        messages.success(request, 'SBOM: ' + str(sbom_id) + ' successfully exported')
+        return response
+
+
+@permission_required("users.dashboard_permission_minimal", login_url='/')
+@login_required(login_url='/' + settings.LOGIN_URL)
+@require_http_methods(["GET"])
+def get_sbom_analysis(request, analysis_id):
+    """
+    exports sbom as raw json
+    """
+    logger.info("export sbom with analysis id: %s", analysis_id)
+    try:
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        result = Result.objects.get(firmware_analysis=analysis)
+        sbom = result.sbom
+    except FirmwareAnalysis.DoesNotExist and SoftwareBillOfMaterial.DoesNotExist and Result.DoesNotExist:
+        sbom = None
+        messages.error(request, "SBOM does not exist")
+        return redirect('..')
     # check if user auth
     if not user_is_auth(request.user, analysis.user):
         return HttpResponseForbidden("You are not authorized!")
-    if result.sbom is None:
+    if sbom is None:
        messages.error(request, 'Analysis: ' + str(analysis_id) + ' can not find sbom')
        return redirect('..')
-    with open(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/SBOM/EMBA_cyclonedx_sbom.json","rb") as sbom_file:
+    with open(sbom.file,"rb") as sbom_file:
+        response = HttpResponse(sbom_file.read(), content_type="application/json")
+        response['Content-Disposition'] = 'inline; filename=' + str(analysis_id) + '_sbom.json'
         messages.success(request, 'Analysis: ' + str(analysis_id) + ' successfully exported sbom')
-        return HttpResponse(sbom_file)
+        return response
