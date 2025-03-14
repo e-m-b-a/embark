@@ -220,7 +220,10 @@ def sbom_json(_file_path, _analysis_id):
     sbom_uuid = json_data['serialNumber'].split(":")[2]
     logger.debug("Reading sbom uuid=%s", sbom_uuid)
     sbom_obj, add_sbom = SoftwareBillOfMaterial.objects.get_or_create(id=sbom_uuid)
+    logger.debug("SBOM with uuid %s created", sbom_obj.id)
+    sbom_obj.file = _file_path
     if not add_sbom:
+        logger.debug("Trying to read %s", json_data['components'])
         for component_ in json_data['components']:
             logger.debug("Component is %s", component_)
             try:
@@ -242,9 +245,7 @@ def sbom_json(_file_path, _analysis_id):
                 sbom_obj.component.add(new_sitem)
             except builtins.Exception as error_:
                 logger.error("Error in sbom readin: %s", error_)
-        # set file sbom path
-        sbom_obj.file = _file_path
-        sbom_obj.save()
+    sbom_obj.save()
     res, _ = Result.objects.get_or_create(
         firmware_analysis=FirmwareAnalysis.objects.get(id=_analysis_id),
     )
