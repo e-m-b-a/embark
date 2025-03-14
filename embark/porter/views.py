@@ -137,7 +137,7 @@ def import_delete(request):
         logger.debug("Posted Form is valid")
         zip_file = form.cleaned_data['zip_file']
         logger.info("User %s tryied to delete %s", request.user.username, zip_file)
-         # check auth
+        # check auth
         if not user_is_auth(request.user, zip_file.user):
             messages.error(request=request, message='Unauthorized')
             return redirect('..')

@@ -86,8 +86,7 @@ def tracker(request):
         'device_form': device_form,
         'vendor_form': vendor_form,
         'label_form': label_form
-        }
-    )
+    })
 
 
 @permission_required("users.tracker_permission", login_url='/')

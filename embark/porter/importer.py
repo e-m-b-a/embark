@@ -242,7 +242,7 @@ def sbom_json(_file_path, _analysis_id):
                 sbom_obj.component.add(new_sitem)
             except builtins.Exception as error_:
                 logger.error("Error in sbom readin: %s", error_)
-         # set file sbom path
+        # set file sbom path
         sbom_obj.file = _file_path
         sbom_obj.save()
     res, _ = Result.objects.get_or_create(
@@ -271,7 +271,7 @@ if __name__ == "__main__":
     # with open(os.path.join(TEST_DIR, 'f50_test.json'), 'w', encoding='utf-8') as json_file:
     #     json_file.write(json.dumps(read_csv(os.path.join(TEST_DIR, 'f50_test.csv')), indent=4))
 
-    with open(os.path.join(TEST_DIR, 'f50_test.json'), 'w', encoding='utf-8') as output_file:
-        json_data = read_cyclone_dx_json(os.path.join(TEST_DIR, 'EMBA_cyclonedx_sbom.json'))
-        for component_ in json_data['components']:                
-            output_file.write(json.dumps(component_, indent=4))
+    # with open(os.path.join(TEST_DIR, 'f50_test.json'), 'w', encoding='utf-8') as output_file:
+    #     json_data = read_cyclone_dx_json(os.path.join(TEST_DIR, 'EMBA_cyclonedx_sbom.json'))
+    #     for component_ in json_data['components']:                
+    #         output_file.write(json.dumps(component_, indent=4))

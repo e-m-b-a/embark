@@ -10,7 +10,7 @@ import signal
 
 from django.conf import settings
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError, JsonResponse
 from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
@@ -370,8 +370,8 @@ def get_sbom(request, sbom_id):
         sbom = None
         messages.error(request, "SBOM does not exist")
         return redirect('..')
-    with open(sbom.file,"rb") as sbom_file:
-        response = HttpResponse(sbom_file.read(), content_type="application/json")
+    with open(sbom.file, "rb") as sbom_file:
+        response = JsonResponse(sbom_file.read())
         response['Content-Disposition'] = 'inline; filename=' + str(sbom_id) + '.json'
         messages.success(request, 'SBOM: ' + str(sbom_id) + ' successfully exported')
         return response
@@ -389,7 +389,7 @@ def get_sbom_analysis(request, analysis_id):
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         result = Result.objects.get(firmware_analysis=analysis)
         sbom = result.sbom
-    except FirmwareAnalysis.DoesNotExist and SoftwareBillOfMaterial.DoesNotExist and Result.DoesNotExist:
+    except FirmwareAnalysis.DoesNotExist or SoftwareBillOfMaterial.DoesNotExist or Result.DoesNotExist:
         sbom = None
         messages.error(request, "SBOM does not exist")
         return redirect('..')
@@ -397,8 +397,8 @@ def get_sbom_analysis(request, analysis_id):
     if not user_is_auth(request.user, analysis.user):
         return HttpResponseForbidden("You are not authorized!")
     if sbom is None:
-       messages.error(request, 'Analysis: ' + str(analysis_id) + ' can not find sbom')
-       return redirect('..')
+        messages.error(request, 'Analysis: ' + str(analysis_id) + ' can not find sbom')
+        return redirect('..')
     with open(sbom.file,"rb") as sbom_file:
         response = HttpResponse(sbom_file.read(), content_type="application/json")
         response['Content-Disposition'] = 'inline; filename=' + str(analysis_id) + '_sbom.json'
