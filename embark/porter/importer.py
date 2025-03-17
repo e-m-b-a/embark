@@ -56,7 +56,7 @@ def result_read_in(analysis_id):
     if os.path.isfile(sbom_file):
         logger.debug("File %s found and attempting to read", sbom_file)
         try:
-            res = f15_json(sbom_file, analysis_id)
+            res = sbom_json(sbom_file, analysis_id)
         except DatabaseError as error:
             logger.error("DB error in f15_json: %s", error, exc_info=1)
     return res
@@ -141,9 +141,10 @@ def f50_csv(file_path, analysis_id):
         res.strcpy_bin = json.dumps(res_dict.get("strcpy_bin", {}))
         res.system_bin = json.dumps(res_dict.get("system_bin", {}))
         res.versions_identified = int(res_dict.get("versions_identified", 0))
-        res.cve_high = int(res_dict.get("cve_high", 0))
-        res.cve_medium = int(res_dict.get("cve_medium", 0))
-        res.cve_low = int(res_dict.get("cve_low", 0))
+        # 'cve_high': {'614': '17'}, 'cve_medium': {'1247': '13'}, 'cve_low': {'20': '0'}
+        res.cve_high = json.dumps(res_dict.get("cve_high", {}))
+        res.cve_medium = json.dumps(res_dict.get("cve_medium", {}))
+        res.cve_low = json.dumps(res_dict.get("cve_low", {}))
         res.exploits = int(res_dict.get("exploits", 0))
         res.metasploit_modules = int(res_dict.get("metasploit_modules", 0))
         res.certificates = int(res_dict.get("certificates", 0))
@@ -210,56 +211,69 @@ def f10_csv(_file_path, _analysis_id):
     logger.debug("read f10 csv done")
 
 
-def f15_json(_file_path, _analysis_id):
+def sbom_json(_file_path, _analysis_id):
     """
     return: result obj/ None
     SBOM json
     """
-    logger.debug("starting f15 json import")
-    with open(_file_path, 'r', encoding='utf-8') as f15_json_file:
-        f15_data = json.load(f15_json_file)
-        sbom_uuid = f15_data['serialNumber'].split(":")[2]
-        logger.debug("Reading sbom uuid=%s", sbom_uuid)
-        sbom_obj, add_sbom = SoftwareBillOfMaterial.objects.get_or_create(id=sbom_uuid)
-        if not add_sbom:
-            for component_ in f15_data['components']:
-                logger.debug("Component is %s", component_)
-                try:
-                    new_sitem, add_sitem = SoftwareInfo.objects.get_or_create(
-                        id=component_['bom-ref'],
-                        name=component_['name'],
-                        type=component_['type'],
-                        group=component_['group'] or 'NA',
-                        version=component_['version'] or 'NA',
-                        hashes=[f"{key}:{value}" for key, value in component_['hashes']],
-                        cpe=component_['cpe'] or 'NA',
-                        purl=component_['purl'] or 'NA',
-                        properties=component_['properties'] or 'NA'
-                    )
-                    logger.debug("Was new? %s", add_sitem)
-                    logger.debug("Adding SBOM item: %s to sbom %s", new_sitem, sbom_obj)
-                    sbom_obj.component.add(new_sitem)
-                except builtins.Exception as error_:
-                    logger.error("Error in f15 readin: %s", error_)
-        res, _ = Result.objects.get_or_create(
-            firmware_analysis=FirmwareAnalysis.objects.get(id=_analysis_id),
-        )
-        res.sbom = sbom_obj
-        res.save()
+    logger.debug("starting SBOM json import")
+    json_data = read_cyclone_dx_json(_file_path)
+    sbom_uuid = json_data['serialNumber'].split(":")[2]
+    logger.debug("Reading sbom uuid=%s", sbom_uuid)
+    sbom_obj, created_sbom = SoftwareBillOfMaterial.objects.get_or_create(id=sbom_uuid)
+    logger.debug("SBOM with uuid %s created", sbom_obj.id)
+    logger.debug("setting File path  to: %s", _file_path)
+    sbom_obj.file = _file_path
+    if created_sbom:
+        logger.debug("Trying to read %s", json_data['components'])
+        for component_ in json_data['components']:
+            logger.debug("Component is %s", component_)
+            try:
+                new_sitem, add_sitem = SoftwareInfo.objects.get_or_create(
+                    id=component_['bom-ref'],
+                    name=component_['name'],
+                    type=component_['type'],
+                    supplier=component_['supplier'] or 'NA',
+                    license=component_['licenses'] or 'NA',
+                    group=component_['group'] or 'NA',
+                    version=component_['version'] or 'NA',
+                    hashes=[f"{key}:{value}" for key, value in component_['hashes']],
+                    cpe=component_['cpe'] or 'NA',
+                    purl=component_['purl'] or 'NA',
+                    properties=component_['properties'] or 'NA'
+                )
+                logger.debug("Was new? %s", add_sitem)
+                logger.debug("Adding SBOM item: %s to sbom %s", new_sitem, sbom_obj)
+                sbom_obj.component.add(new_sitem)
+            except builtins.Exception as error_:
+                logger.error("Error in sbom readin: %s", error_)
+    sbom_obj.save()
+    res, _ = Result.objects.get_or_create(
+        firmware_analysis=FirmwareAnalysis.objects.get(id=_analysis_id),
+    )
+    res.sbom = sbom_obj
+    res.save()
     logger.debug("read f15 json done")
     return res
+
+
+def read_cyclone_dx_json(_file_path):
+    """
+    returns json
+    """
+    with open(_file_path, 'r', encoding='utf-8') as json_file:
+        # TODO validate the sbom
+        return json.load(json_file)
 
 
 if __name__ == "__main__":
     BASE_DIR = Path(__file__).resolve().parent.parent.parent
     TEST_DIR = os.path.join(BASE_DIR, 'test/porter')
-
     # test print f50
     # with open(os.path.join(TEST_DIR, 'f50_test.json'), 'w', encoding='utf-8') as json_file:
     #     json_file.write(json.dumps(read_csv(os.path.join(TEST_DIR, 'f50_test.csv')), indent=4))
-
-    # with open(os.path.join(TEST_DIR, 'f20_test.json'), 'w', encoding='utf-8') as json_file:
-    #     json_file.write(json.dumps(
-    #         f20_csv(os.path.join(TEST_DIR, 'f20_test.csv')),
-    #         indent=4
-    #     ))
+    #
+    # with open(os.path.join(TEST_DIR, 'f50_test.json'), 'w', encoding='utf-8') as output_file:
+    #     json_data = read_cyclone_dx_json(os.path.join(TEST_DIR, 'EMBA_cyclonedx_sbom.json'))
+    #     for component_ in json_data['components']
+    #         output_file.write(json.dumps(component_, indent=4))

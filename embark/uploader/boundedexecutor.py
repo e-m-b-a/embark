@@ -44,8 +44,8 @@ executor = ThreadPoolExecutor(max_workers=MAX_WORKERS)
 # create semaphore to track queue state
 semaphore = BoundedSemaphore(MAX_QUEUE)
 
-# emba directories
-EMBA_SCRIPT_LOCATION = f"cd {settings.EMBA_ROOT} && sudo ./emba"
+# emba command
+EMBA_BASE_CMD = f"sudo DISABLE_STATUS_BAR=1 DISABLE_NOTIFICATIONS=1 HTML=1 FORMAT_LOG=1 {settings.EMBA_ROOT}/emba"
 
 
 class BoundedException(Exception):
@@ -103,6 +103,7 @@ class BoundedExecutor:
             # get csv log location
             csv_log_location = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/csv_logs/f50_base_aggregator.csv"
             sbom_log_location = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/SBOM/EMBA_cyclonedx_sbom.json"
+            error_log_location = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/emba_error.log"
 
             # read f50_aggregator and store it into a Result form
             logger.info('Reading report from: %s', csv_log_location)
@@ -110,10 +111,13 @@ class BoundedExecutor:
             # if Path(csv_log_location).exists:
             if Path(csv_log_location).is_file() or Path(sbom_log_location).is_file():
                 cls.csv_read(analysis_id=analysis_id, _path=csv_log_location, _cmd=cmd)
-            else:
+            elif Path(error_log_location).is_file():
                 logger.error("No importable log file %s for report: %s generated", csv_log_location, analysis_id)
-                logger.error("EMBA run was probably not successful!")
+                logger.error("EMBA run was not successful!")
                 exit_fail = True
+            else:
+                logger.error("EMBA run was probably not successful!")
+                logger.error("Please check this manually and create a bug report!!")
 
             # take care of cleanup
             if active_analyzer_dir:
@@ -218,9 +222,6 @@ class BoundedExecutor:
             shutil.rmtree(active_analyzer_dir)
             return None
 
-        # get emba flags from command parser
-        emba_flags = firmware_flags.get_flags()
-
         # evaluate meta information and safely create log dir
 
         emba_log_location = f"{settings.EMBA_LOG_ROOT}/{firmware_flags.id}/emba_logs"
@@ -232,11 +233,23 @@ class BoundedExecutor:
         firmware_flags.status["firmware_name"] = firmware_flags.firmware_name
         firmware_flags.save(update_fields=["status", "path_to_logs"])
 
+        # get emba flags from command parser
+        emba_flags = firmware_flags.get_flags()
+
         if firmware_flags.sbom_only_test is True:
             scan_profile = "./scan-profiles/default-sbom.emba"
+        elif firmware_flags.system_emulation_test is True or firmware_flags.user_emulation_test is True:  # if any expert fields are active
+            scan_profile = None
         else:
             scan_profile = "./scan-profiles/default-scan-no-notify.emba"
-        emba_cmd = f"{EMBA_SCRIPT_LOCATION} -p {scan_profile} -f {image_file_location} -l {emba_log_location} {emba_flags}"
+
+        # building EMBA command
+        emba_cmd = f"cd {settings.EMBA_ROOT} && {EMBA_BASE_CMD} -f {image_file_location} -l {emba_log_location} "
+
+        if scan_profile:
+            emba_cmd += f"-p {scan_profile} "
+
+        emba_cmd += f"{emba_flags}"
 
         # submit command to executor threadpool
         emba_fut = BoundedExecutor.submit(cls.run_emba_cmd, emba_cmd, firmware_flags.id, active_analyzer_dir)
@@ -403,7 +416,7 @@ class BoundedExecutor:
         """
         logger.debug("Checking EMBA with: %d", option)
         try:
-            cmd = f"{EMBA_SCRIPT_LOCATION} -d{option} &| ansifilter -H -o {settings.EMBA_LOG_ROOT}/emba_check.html -s 5pt"
+            cmd = f"{EMBA_BASE_CMD} -d{option} &| ansifilter -H -o {settings.EMBA_LOG_ROOT}/emba_check.html -s 5pt"
 
             with open(f"{settings.EMBA_LOG_ROOT}/emba_check.log", "w+", encoding="utf-8") as file:
                 proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
@@ -456,7 +469,7 @@ class BoundedExecutor:
 
         # emba update
         try:
-            cmd = f"{EMBA_SCRIPT_LOCATION} -U &| ansifilter -H -o {settings.EMBA_LOG_ROOT}/emba_update.html -s 5pt"
+            cmd = f"{EMBA_BASE_CMD} -U &| ansifilter -H -o {settings.EMBA_LOG_ROOT}/emba_update.html -s 5pt"
 
             with open(f"{settings.EMBA_LOG_ROOT}/update.log", "a", encoding="utf-8") as file:
                 proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec

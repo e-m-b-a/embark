@@ -25,7 +25,7 @@ from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.http import require_http_methods
 from django.urls import reverse
-from embark.helper import cleanup_charfield
+from embark.helper import cleanup_charfield, user_is_auth
 from uploader.boundedexecutor import BoundedExecutor
 
 from uploader.models import FirmwareAnalysis, ResourceTimestamp
@@ -60,10 +60,11 @@ def html_report(request, analysis_id, html_file):
     report_path = Path(f'{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/html-report/{html_file}')
     if FirmwareAnalysis.objects.filter(id=analysis_id).exists() and bool(re.match(html_file_pattern, html_file)):
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
-        if analysis.hidden is False or analysis.user == request.user or request.user.is_superuser:
-            html_body = get_template(report_path)
-            logger.debug("html_report - analysis_id: %s html_file: %s", analysis_id, html_file)
-            return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
+        if user_is_auth(request.user, analysis.user):
+            if (analysis.hidden and analysis.user == request.user) or request.user.is_superuser:
+                html_body = get_template(report_path)
+                logger.debug("html_report - analysis_id: %s html_file: %s", analysis_id, html_file)
+                return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
         messages.error(request, "User not authorized")
     logger.error("could  not get template - %s", request)
     return redirect("..")
@@ -81,7 +82,7 @@ def html_report_path(request, analysis_id, html_path, file):
     file_pattern = re.compile(r'^[\w\.-]+\.(tar.gz|html)$')
     if FirmwareAnalysis.objects.filter(id=analysis_id).exists() and bool(re.match(file_pattern, file)):
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
-        if analysis.hidden is False or analysis.user == request.user or request.user.is_superuser:
+        if analysis.user == request.user or (not analysis.hidden and user_is_auth(request.user, analysis.user)):
             resource_path = f'{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/html-report/{html_path}/{file}'
             parent_path = os.path.abspath(f'{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/html-report/')
             if os.path.commonpath([parent_path, resource_path]) == parent_path:

@@ -42,6 +42,7 @@ To start the server on the host with the ipv4 192.168.126.123 and get management
 
 
 ## Automated setup on Ubuntu 22.04 LTS
+<details>
 
 1. Checkout the repository (e.g. `git clone https://github.com/e-m-b-a/embark.git`)
 2. Change directory to root of the repository i.e `cd embark`

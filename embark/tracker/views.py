@@ -18,6 +18,7 @@ from django_tables2 import RequestConfig
 
 from dashboard.models import Result, SoftwareBillOfMaterial
 from embark.helper import rnd_rgb_color, rnd_rgb_full
+from uploader.forms import DeviceForm, LabelForm, VendorForm
 from uploader.models import FirmwareAnalysis, Device, Vendor
 from tracker.tables import SimpleDeviceTable, SimpleResultTable, SimpleSBOMTable
 from tracker.forms import AssociateForm, TimeForm
@@ -53,27 +54,39 @@ def tracker(request):
         return redirect('..')
     date = timezone.localdate() - timezone.timedelta(days=7)
     vendor_list = Vendor.objects.all()
-    if vendor_list.count() != 0:
-        label_list = []
-        data = []
-        color_list = []
-        border_list = []
-        for _vendor in vendor_list:
-            label_list.append(_vendor.vendor_name)
-            _device_count = Device.objects.filter(device_vendor=_vendor, device_date__gte=date).count()
-            logger.debug("device count in tracker is : %d", _device_count)
-            data.append(_device_count)
-            color_list.append(rnd_rgb_full())
-            border_list.append(rnd_rgb_color())
-        device_table = SimpleDeviceTable(data=Device.objects.filter(device_date__gte=date), template_name="django_tables2/bootstrap-responsive.html")
-        RequestConfig(request).configure(device_table)
-        time_form = TimeForm()
-        logger.debug("device data : %s , %s, %s", data, color_list, border_list)
-        return render(request=request, template_name='tracker/index.html', context={
-            'username': request.user.username, 'table': device_table, 'labels': label_list, 'data': data, 'colors': color_list, 'borders': border_list, 'time_form': time_form}
-        )
-    logger.info("no data for the tracker yet - %s", request)
-    return redirect('embark-uploader-home')
+    if vendor_list.count() == 0:
+        logger.info("no data for the tracker yet - %s", request)
+        messages.error(request, "no data for the tracker yet")
+    label_list = []
+    data = []
+    color_list = []
+    border_list = []
+    for _vendor in vendor_list:
+        label_list.append(_vendor.vendor_name)
+        _device_count = Device.objects.filter(device_vendor=_vendor, device_date__gte=date).count()
+        logger.debug("device count in tracker is : %d", _device_count)
+        data.append(_device_count)
+        color_list.append(rnd_rgb_full())
+        border_list.append(rnd_rgb_color())
+    device_table = SimpleDeviceTable(data=Device.objects.filter(device_date__gte=date), template_name="django_tables2/bootstrap-responsive.html")
+    RequestConfig(request).configure(device_table)
+    time_form = TimeForm()
+    device_form = DeviceForm()
+    label_form = LabelForm()
+    vendor_form = VendorForm()
+    logger.debug("device data : %s , %s, %s", data, color_list, border_list)
+    return render(request=request, template_name='tracker/index.html', context={
+        'username': request.user.username,
+        'table': device_table,
+        'labels': label_list,
+        'data': data,
+        'colors': color_list,
+        'borders': border_list,
+        'time_form': time_form,
+        'device_form': device_form,
+        'vendor_form': vendor_form,
+        'label_form': label_form
+    })
 
 
 @permission_required("users.tracker_permission", login_url='/')
@@ -92,8 +105,10 @@ def get_report_for_device(request, device_id):
         ]
         data = []
         if not analysis_queryset:
+            # FIXME
+            messages.error(request, "there seems to be only failed analysis for this device")
             logger.debug("No firmware analysis available for this device")
-            return render(request=request, template_name='tracker/device.html', context={'username': request.user.username, 'device_id': device_id, 'device': device, 'labels': ['No Data'], 'data': [{'label': 'NoData', 'data': [0]}]})
+            return redirect('embark-tracker')
         for _analysis in analysis_queryset:
             dataset = {}
             dataset['label'] = str(_analysis.version)
@@ -142,7 +157,7 @@ def get_sbom(request, sbom_id):
     try:
         sbom_obj = SoftwareBillOfMaterial.objects.get(id=sbom_id)
         sbom_table = SimpleSBOMTable(data=sbom_obj.component.all(), template_name="django_tables2/bootstrap-responsive.html")
-        logger.debug("Look at this sbmo table!: %s", sbom_table)
+        logger.debug("Look at this sbom table!: %s", sbom_table)
         RequestConfig(request).configure(sbom_table)
     except MultipleObjectsReturned as multi_error:
         messages.error(request, "wrong number of result objects %s ", multi_error)
@@ -179,7 +194,7 @@ def set_associate_device_to(request, analysis_id):
             analysis = FirmwareAnalysis.objects.get(id=analysis_id)
             analysis.device.add(device)
             messages.info(request, "Send request for association")
-    return redirect('.')
+    return redirect('embark-tracker')
 
 
 @permission_required("users.tracker_permission", login_url='/')

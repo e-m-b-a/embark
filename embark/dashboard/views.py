@@ -3,6 +3,7 @@ __author__ = 'Benedikt Kuehne, Christian Bieg'
 __license__ = 'MIT'
 
 import builtins
+import json
 import logging
 import os
 from pathlib import Path
@@ -10,18 +11,18 @@ import signal
 
 from django.conf import settings
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError, JsonResponse
 from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.shortcuts import redirect
-from embark.helper import user_is_staff
+from embark.helper import user_is_auth
 from tracker.forms import AssociateForm
 from uploader.boundedexecutor import BoundedExecutor
 from uploader.forms import LabelForm
 
 from uploader.models import FirmwareAnalysis, Label
-from dashboard.models import Result
+from dashboard.models import Result, SoftwareBillOfMaterial
 from dashboard.forms import LabelSelectForm, StopAnalysisForm
 from porter.views import make_zip
 
@@ -34,12 +35,10 @@ req_logger = logging.getLogger("requests")
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 def main_dashboard(request):
-    if request.user.is_authenticated:
-        if FirmwareAnalysis.objects.filter(finished=True, failed=False).count() > 0 and Result.objects.filter(restricted=False).count() > 0:
-            return render(request, 'dashboard/mainDashboard.html', {'nav_switch': True, 'username': request.user.username})
-        messages.info(request, "Redirected - There are no Results to display yet")
-        return redirect('embark-uploader-home')
-    return HttpResponseForbidden
+    if FirmwareAnalysis.objects.filter(finished=True, failed=False).count() > 0 and Result.objects.filter(restricted=False).count() > 0:
+        return render(request, 'dashboard/mainDashboard.html', {'nav_switch': True, 'username': request.user.username})
+    messages.info(request, "Redirected - There are no Results to display yet")
+    return redirect('embark-uploader-home')
 
 
 @permission_required("users.dashboard_permission_advanced", login_url='/')
@@ -61,7 +60,7 @@ def stop_analysis(request):
         analysis = form.cleaned_data['analysis']
         analysis_object_ = FirmwareAnalysis.objects.get(id=analysis.id)
         # check if user auth
-        if request.user != analysis_object_.user:
+        if not user_is_auth(request.user, analysis_object_.user):
             return HttpResponseForbidden("You are not authorized!")
         logger.info("Stopping analysis with id %s", analysis_object_.id)
         pid = analysis_object_.pid
@@ -140,12 +139,17 @@ def show_log(request, analysis_id):
     :return: rendered emba_run.log
     """
     logger.info("showing log for analyze_id: %s", analysis_id)
-    firmware = FirmwareAnalysis.objects.get(id=analysis_id)
+    try:
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    except FirmwareAnalysis.DoesNotExist:
+        analysis = None
+        messages.error(request, "Analysis does not exist")
+        return redirect('..')
     # check if user auth TODO change to group auth
-    if request.user != firmware.user or not user_is_staff(request.user):
+    if not user_is_auth(request.user, analysis.user):
         return HttpResponseForbidden("You are not authorized!")
     # get the file path
-    log_file_path_ = f"{Path(firmware.path_to_logs).parent}/emba_run.log"
+    log_file_path_ = f"{Path(analysis.path_to_logs).parent}/emba_run.log"
     logger.debug("Taking file at %s and render it", log_file_path_)
     try:
         with open(log_file_path_, 'rb') as log_file_:
@@ -167,12 +171,17 @@ def show_logviewer(request, analysis_id):
     """
 
     logger.info("showing log viewer for analyze_id: %s", analysis_id)
-    firmware = FirmwareAnalysis.objects.get(id=analysis_id)
+    try:
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    except FirmwareAnalysis.DoesNotExist:
+        analysis = None
+        messages.error(request, "Analysis does not exist")
+        return redirect('..')
     # check if user auth
-    if request.user != firmware.user or not user_is_staff(request.user):
+    if not user_is_auth(request.user, analysis.user):
         return HttpResponseForbidden("You are not authorized!")
     # get the file path
-    log_file_path_ = f"{Path(firmware.path_to_logs).parent}/emba_run.log"
+    log_file_path_ = f"{Path(analysis.path_to_logs).parent}/emba_run.log"
     logger.debug("Taking file at %s and render it", log_file_path_)
     try:
         return render(request, 'dashboard/logViewer.html', {'analysis_id': analysis_id, 'username': request.user.username})
@@ -192,9 +201,14 @@ def delete_analysis(request, analysis_id):
     :return: redirect
     """
     logger.info("Deleting analyze_id: %s", analysis_id)
-    analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    try:
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    except FirmwareAnalysis.DoesNotExist:
+        analysis = None
+        messages.error(request, "Analysis does not exist")
+        return redirect('..')
     # check that the user is authorized
-    if request.user == analysis.user or request.user.is_superuser:
+    if user_is_auth(request.user, analysis.user):
         if analysis.finished is False:
             try:
                 BoundedExecutor.submit_kill(analysis.id)
@@ -227,9 +241,14 @@ def archive_analysis(request, analysis_id):
     and sets analysis into archived state
     """
     logger.info("Archiving Analysis with id: %s", analysis_id)
-    analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    try:
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    except FirmwareAnalysis.DoesNotExist:
+        analysis = None
+        messages.error(request, "Analysis does not exist")
+        return redirect('..')
     # check if user auth
-    if request.user != analysis.user and not request.user.is_superuser:
+    if not user_is_auth(request.user, analysis.user):
         return HttpResponseForbidden("You are not authorized!")
     if analysis.zip_file is None:
         # make archive for uuid
@@ -250,9 +269,14 @@ def hide_analysis(request, analysis_id):
     checks user
     """
     logger.info("Hiding Analysis with id: %s", analysis_id)
-    analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    try:
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    except FirmwareAnalysis.DoesNotExist:
+        analysis = None
+        messages.error(request, "Analysis does not exist")
+        return redirect('..')
     # check if user auth
-    if request.user != analysis.user and not request.user.is_superuser:
+    if not user_is_auth(request.user, analysis.user):
         return HttpResponseForbidden("You are not authorized!")
     analysis.hidden = True
     analysis.save(update_fields=["hidden"])
@@ -289,7 +313,16 @@ def add_label(request, analysis_id):
         new_label = form.cleaned_data["label"]
         logger.info("User %s tryied to add label %s", request.user.username, new_label.label_name)
         # get analysis obj
-        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        try:
+            analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        except FirmwareAnalysis.DoesNotExist:
+            analysis = None
+            messages.error(request, "Analysis does not exist")
+            return redirect('..')
+        # check auth
+        if not user_is_auth(request.user, analysis.user):
+            messages.error(request, 'No permissions for this analysis')
+            return redirect('..')
         analysis.label.add(new_label)
         analysis.save()
         messages.info(request, 'adding successful of ' + str(new_label))
@@ -304,13 +337,71 @@ def add_label(request, analysis_id):
 @login_required(login_url='/' + settings.LOGIN_URL)
 def rm_label(request, analysis_id, label_name):
     req_logger.info("User %s called rm label", request.user.username)
-
     logger.info("User %s tryied to rm label %s", request.user.username, label_name)
     # get analysis obj
-    analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    try:
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    except FirmwareAnalysis.DoesNotExist:
+        analysis = None
+        messages.error(request, "Analysis does not exist")
+        return redirect('..')
     # get lobel obj
     label_obj = Label.objects.get(label_name=label_name)
+    # check auth
+    if not user_is_auth(request.user, analysis.user):
+        messages.error(request, 'Removing Label failed, no permissions')
+        return redirect('..')
     analysis.label.remove(label_obj)
     analysis.save()
     messages.info(request, 'removing successful of ' + str(label_name))
     return redirect('..')
+
+
+@permission_required("users.dashboard_permission_minimal", login_url='/')
+@login_required(login_url='/' + settings.LOGIN_URL)
+@require_http_methods(["GET"])
+def get_sbom(request, sbom_id):
+    """
+    exports sbom as raw json
+    """
+    logger.info("getting sbom with id: %s", sbom_id)
+    try:
+        sbom = SoftwareBillOfMaterial.objects.get(id=sbom_id)
+    except SoftwareBillOfMaterial.DoesNotExist:
+        sbom = None
+        messages.error(request, "SBOM does not exist")
+        return redirect('..')
+    with open(sbom.file, "r", encoding='UTF-8') as sbom_file:
+        response = JsonResponse(json.load(sbom_file))
+        response['Content-Disposition'] = 'inline; filename=' + str(sbom_id) + '.json'
+        messages.success(request, 'SBOM: ' + str(sbom_id) + ' successfully exported')
+        return response
+
+
+@permission_required("users.dashboard_permission_minimal", login_url='/')
+@login_required(login_url='/' + settings.LOGIN_URL)
+@require_http_methods(["GET"])
+def get_sbom_analysis(request, analysis_id):
+    """
+    exports sbom as raw json
+    """
+    logger.info("export sbom with analysis id: %s", analysis_id)
+    try:
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        result = Result.objects.get(firmware_analysis=analysis)
+        sbom = result.sbom
+    except Result.DoesNotExist:
+        sbom = None
+        messages.error(request, "SBOM does not exist")
+        return redirect('..')
+    # check if user auth
+    if not user_is_auth(request.user, analysis.user):
+        return HttpResponseForbidden("You are not authorized!")
+    if sbom is None:
+        messages.error(request, 'Analysis: ' + str(analysis_id) + ' can not find sbom')
+        return redirect('..')
+    with open(sbom.file, "r", encoding='UTF-8') as sbom_file:
+        response = JsonResponse(json.load(sbom_file))
+        response['Content-Disposition'] = 'inline; filename=' + str(analysis_id) + '_sbom.json'
+        messages.success(request, 'Analysis: ' + str(analysis_id) + ' successfully exported sbom')
+        return response

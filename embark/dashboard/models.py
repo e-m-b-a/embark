@@ -2,7 +2,9 @@ __copyright__ = 'Copyright 2022-2025 Siemens Energy AG'
 __author__ = 'Benedikt Kuehne'
 __license__ = 'MIT'
 
+import os
 import uuid
+from django.conf import settings
 from django.db import models
 from django.core.validators import MinLengthValidator
 from django.utils import timezone
@@ -27,6 +29,8 @@ class SoftwareInfo(models.Model):
     name = models.CharField(verbose_name="software name", blank=False, editable=True, default="NA", max_length=256)
     group = models.CharField(verbose_name="grouping", blank=False, editable=True, default="NA", max_length=256)
     version = models.CharField(verbose_name="software version", blank=False, editable=True, default="1.0", max_length=32)
+    supplier = models.CharField(verbose_name="software supplier", blank=False, editable=True, default="NA", max_length=1024)
+    license = models.CharField(verbose_name="software license", blank=False, editable=True, default="NA", max_length=1024)
     hashes = models.CharField(verbose_name="identivication hash", blank=False, editable=True, default="NA", max_length=1024)
     cpe = models.CharField(verbose_name="CPE identifier", blank=False, editable=True, default="NA", max_length=256)
     type = models.CharField(verbose_name="software type", blank=False, editable=True, default="data", max_length=50)
@@ -42,6 +46,7 @@ class SoftwareBillOfMaterial(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
     meta = models.CharField(verbose_name="meta data sbom", blank=False, editable=True, default="NA", max_length=1024)
     component = models.ManyToManyField(SoftwareInfo, help_text='Software Bill of Material', related_query_name='sbom', editable=True, blank=True)
+    file = models.FilePathField(verbose_name='sbom_file', editable=True, default=os.path.join(settings.EMBA_LOG_ROOT, 'empty.json'), max_length=110)
 
 
 class Result(models.Model):
@@ -63,9 +68,9 @@ class Result(models.Model):
     entropy_value = models.FloatField(default=0.0, help_text='')
 
     # f50
-    cve_high = models.IntegerField(default=0, help_text='')
-    cve_medium = models.IntegerField(default=0, help_text='')
-    cve_low = models.IntegerField(default=0, help_text='')
+    cve_high = models.TextField(default='{}')
+    cve_medium = models.TextField(default='{}')
+    cve_low = models.TextField(default='{}')
     exploits = models.IntegerField(default=0, help_text='')
     metasploit_modules = models.IntegerField(default=0, help_text='')
 

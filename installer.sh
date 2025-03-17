@@ -111,7 +111,7 @@ write_env(){
 
   if [[ -z ${DJANGO_SECRET_KEY} ]] || [[ -z ${DJANGO_SECRET_KEY} ]]; then
     echo -e "${ORANGE}""${BOLD}""Did not find safed passwords""${NC}"
-    DJANGO_SECRET_KEY=$(python3.10 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+    DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
     RANDOM_PW=$(openssl rand -base64 12)
   fi
 
@@ -236,17 +236,22 @@ install_debs(){
     apt-get install -y git
   fi
   # Python3
-  if ! command -v python3.10 > /dev/null ; then
-    apt-get install -y python3.10
+  if ! command -v python3 > /dev/null ; then
+    apt-get install -y python3
   fi
   # GCC
   if ! command -v gcc > /dev/null ; then
     apt-get install -y build-essential
   fi
   # Pip
-  if ! command -v pip3.10 > /dev/null ; then
+  if ! command -v pip3 > /dev/null ; then
     apt-get install -y python3-pip
   fi
+  # install pipenv
+  if ! command -v pipenv > /dev/null ; then
+    apt-get install -y pipenv
+  fi
+
   # Gcc
   if ! command -v gcc > /dev/null ; then
     apt-get install -y build-essential
@@ -256,28 +261,31 @@ install_debs(){
     echo -e "\n${ORANGE}WARNING: If you are using WSL2, disable docker integration from the docker-desktop daemon!${NC}"
     read -p "Fix docker stuff, then continue. Press any key to continue ..." -n1 -s -r
   fi
+  
   if command -v docker-compose > /dev/null ; then
-    echo -e "\n${ORANGE}""${BOLD}""Old docker-compose version found""${NC}"
-  elif ! command -v docker > /dev/null || ! command -v docker compose > /dev/null ; then
-    # Add Docker's official GPG key:
-    apt-get install -y ca-certificates curl gnupg
-    install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-    chmod a+r /etc/apt/keyrings/docker.asc
-    # Add the repository to Apt sources:
-    # shellcheck source=/dev/null
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-    apt-get update -y
-    apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker compose-plugin
+    echo -e "\n${RED}""${BOLD}""Old docker-compose version found remove it please""${NC}"
+    exit 1
   fi
-  # alias for compose to stay backwards comp
-  if ! command -v docker-compose > /dev/null ; then
-    alias docker-compose="docker compose"
+  if ! command -v docker > /dev/null || ! command -v docker compose > /dev/null ; then
+    if grep -q "VERSION_ID=\"24.04\"" /etc/os-release 2>/dev/null ; then
+      apt-get install -y docker.io wmdocker docker-compose-plugin > /dev/null
+    else
+      # Add Docker's official GPG key:
+      apt-get install -y ca-certificates curl gnupg
+      install -m 0755 -d /etc/apt/keyrings
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+      chmod a+r /etc/apt/keyrings/docker.asc
+      # Add the repository to Apt sources:
+      # shellcheck source=/dev/null
+      echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+      $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+      apt-get update -y
+      apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker compose-plugin
+    fi
   fi
   # python3-dev
-  if ! dpkg -l python3.10-dev &>/dev/null; then
-    apt-get install -y python3.10-dev || apt-get install -y -q python3-dev
+  if ! dpkg -l python3-dev &>/dev/null; then
+    apt-get install -y python3-dev
   fi
   #  python3-django
   if ! dpkg -l python3-django &>/dev/null; then
@@ -317,16 +325,13 @@ install_embark_default(){
   #debs
   apt-get install -y -q default-libmysqlclient-dev build-essential mysql-client-core-8.0
 
-  # install pipenv
-  pip3.10 install pipenv
-
   #Add user for server
   if ! cut -d: -f1 /etc/passwd | grep -E www-embark ; then
     useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /var/www/embark
   fi
   # emba nopw
-  if ! grep 'www-embark ALL=(ALL) NOPASSWD: /var/www/emba/emba' /etc/sudoers ; then
-    echo 'www-embark ALL=(ALL) NOPASSWD: /var/www/emba/emba' | EDITOR='tee -a' visudo
+  if ! grep 'www-embark ALL=(ALL) NOPASSWD:SETENV: /var/www/emba/emba' /etc/sudoers ; then
+    echo 'www-embark ALL=(ALL) NOPASSWD:SETENV: /var/www/emba/emba' | EDITOR='tee -a' visudo
   fi
   # pkill nopw
   if ! grep 'www-embark ALL=(ALL) NOPASSWD: /bin/pkill' /etc/sudoers ; then
@@ -348,6 +353,7 @@ install_embark_default(){
   fi
   if ! [[ -d /var/www/emba_logs ]]; then
     mkdir /var/www/emba_logs
+    echo "{}" > /var/www/emba_logs/empty.json
   fi
   if ! [[ -d /var/www/static ]]; then
     mkdir /var/www/static
@@ -428,13 +434,10 @@ install_embark_dev(){
   npm install -g jshint
   # npm install -g dockerlinter
 
-  # install pipenv
-  pip3 install pipenv
-
   # Add user nosudo
-  echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD: ""${PWD}""/emba/emba" | EDITOR='tee -a' visudo
+  echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD:SETENV: ""${PWD}""/emba/emba" | EDITOR='tee -a' visudo
   echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD: /bin/pkill" | EDITOR='tee -a' visudo
-  echo "root ALL=(ALL) NOPASSWD: ""${PWD}""/emba/emba" | EDITOR='tee -a' visudo
+  echo "root ALL=(ALL) NOPASSWD:SETENV: ""${PWD}""/emba/emba" | EDITOR='tee -a' visudo
   echo "root ALL=(ALL) NOPASSWD: /bin/pkill" | EDITOR='tee -a' visudo
 
   # Set some globals
@@ -462,6 +465,11 @@ install_embark_dev(){
   if ! [[ -d mail ]]; then
     mkdir mail
   fi
+  if ! [[ -d emba_logs ]]; then
+    mkdir emba_logs
+    echo "{}" > emba_logs/empty.json
+  fi
+  
 
   # download externals
   if ! [[ -d ./embark/static/external ]]; then

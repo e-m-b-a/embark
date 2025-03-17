@@ -15,6 +15,7 @@ from django.conf import settings
 from django.shortcuts import render, redirect
 from django.contrib import messages
 
+from embark.helper import user_is_auth
 from uploader.boundedexecutor import BoundedExecutor
 from uploader.forms import DeviceForm, LabelForm, VendorForm
 from uploader.models import FirmwareAnalysis
@@ -61,7 +62,8 @@ def import_read(request):
     if form.is_valid():
         logger.debug("Posted Form is valid")
         zip_file_obj = form.cleaned_data['zip_log_file']
-        if zip_file_obj.user != request.user:
+        # check auth
+        if not user_is_auth(request.user, zip_file_obj.user):
             logger.error("Permission denied - %s", request)
             messages.error(request, "You don't have permission")
             return redirect('..')
@@ -135,6 +137,10 @@ def import_delete(request):
         logger.debug("Posted Form is valid")
         zip_file = form.cleaned_data['zip_file']
         logger.info("User %s tryied to delete %s", request.user.username, zip_file)
+        # check auth
+        if not user_is_auth(request.user, zip_file.user):
+            messages.error(request=request, message='Unauthorized')
+            return redirect('..')
         zip_file.delete()
         messages.info(request, 'delete successful.')
         return redirect('..')
@@ -172,6 +178,10 @@ def export_analysis(request):
     if form.is_valid():
         logger.debug("Posted Form is valid")
         analysis_obj = form.cleaned_data['analysis']
+        # check auth
+        if not user_is_auth(request.user, analysis_obj.user):
+            messages.error(request=request, message='Unauthorized')
+            return redirect('..')
         response_data = result_json(analysis_obj.id)
         return JsonResponse(data=response_data, status=HTTPStatus.OK)
     messages.error(request=request, message='form invalid')
@@ -189,7 +199,7 @@ def make_zip(request, analysis_id):
     try:
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         # check that the user is authorized
-        if request.user == analysis.user or request.user.is_superuser:
+        if user_is_auth(request.user, analysis.user):
             if BoundedExecutor.submit_zip(uuid=analysis_id) is not None:
                 # success
                 logger.info("Successfully submitted zip request %s", str(analysis_id))
@@ -217,7 +227,8 @@ def retry_import(request):
     if form.is_valid():
         logger.debug("Posted Form is valid")
         analysis = form.cleaned_data['analysis']
-        if analysis.user != request.user:
+        # check auth
+        if not user_is_auth(request.user, analysis.user):
             logger.error("Permission denied - %s", request)
             messages.error(request, "You don't have permission")
             return redirect('..')

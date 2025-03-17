@@ -104,10 +104,10 @@ class LogReader:
     @staticmethod
     def phase_identify(status_message):
         # phase patterns to match
-        pre_checker_phase_pattern = "Pre-checking phase"
-        testing_phase_pattern = "Testing phase"
-        simulation_phase_pattern = "System emulation phase"
-        reporting_phase_pattern = "Reporting phase"
+        pre_checker_phase_pattern = "Pre-checking phase"        # P-modules
+        testing_phase_pattern = "Testing phase"                 # S-Modules
+        simulation_phase_pattern = "System emulation phase"     # L-Modules
+        reporting_phase_pattern = "Reporting phase"             # P-Modules
         done_pattern = "Test ended on"
         failed_pattern = "EMBA failed in docker mode!"
 
@@ -163,6 +163,9 @@ class LogReader:
 
         # ignore all Q-modules for percentage calc
         if not re.match(".*Q[0-9][0-9]", stream_item_list[0]):
+            self.status_msg["percentage"] = percentage
+        # ignore all D-modules for percentage calc
+        elif not re.match(".*D[0-9][0-9]", stream_item_list[0]):
             self.status_msg["percentage"] = percentage
 
         # get copy of the current status message
@@ -238,7 +241,6 @@ class LogReader:
         """
         if re.match(pat, inp):
             return True
-        # else:
         return False
 
     def copy_file_content(self, diff):

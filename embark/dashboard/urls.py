@@ -10,6 +10,7 @@ from dashboard import views
 # view routing
 urlpatterns = [
     path('', views.main_dashboard, name='embark-MainDashboard'),
+    path('dashboard/', views.main_dashboard, name='embark-MainDashboard'),
     path('dashboard/main/', views.main_dashboard, name='embark-MainDashboard'),
     path('dashboard/service/', views.service_dashboard, name='embark-dashboard-service'),
     path('dashboard/report/', views.report_dashboard, name='embark-ReportDashboard'),
@@ -23,4 +24,6 @@ urlpatterns = [
     path('dashboard/report/createlabel/', views.create_label, name='embark-dashboard-create-label'),
     path('dashboard/report/addlabel/<uuid:analysis_id>', views.add_label, name='embark-dashboard-add-label'),
     path('dashboard/report/rmlabel/<uuid:analysis_id><str:label_name>', views.rm_label, name='embark-dashboard-remove-label'),
+    path('dashboard/report/sbom/<uuid:analysis_id>', views.get_sbom_analysis, name='embark-dashboard-sbom'),
+    path('dashboard/report/sbom/<uuid:sbom_id>', views.get_sbom, name='embark-get-sbom')
 ]
