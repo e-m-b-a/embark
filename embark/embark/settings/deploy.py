@@ -12,7 +12,7 @@ import pytz
 
 from dotenv import load_dotenv
 
-from embark.helper import count_emba_modules, get_version_strings
+from embark.helper import count_emba_modules, get_emba_modules, get_version_strings
 
 # load .env file
 load_dotenv()
