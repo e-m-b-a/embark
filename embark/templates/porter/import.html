@@ -13,11 +13,11 @@
             {% block upload %}{% include "porter/upload.html" %}{% endblock upload %}
             {% block delete %}{% include "porter/delete.html" %}{% endblock delete %}
             <p>
-              <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDevice3" aria-expanded="false" aria-controls="collapseDevice">
+              <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCreate" aria-expanded="false" aria-controls="collapseCreate">
                 Toggle Device Config
               </button>
             </p>
-            {% block device %}{% include "uploader/device.html" %}{% endblock device %}
+            {% block create %}{% include "porter/create.html" %}{% endblock create %}
         </div>
         <div class="col-sm">
             {% block read %}{% include "porter/read.html" %}{% endblock read %}

@@ -141,13 +141,10 @@ def f50_csv(file_path, analysis_id):
         res.strcpy_bin = json.dumps(res_dict.get("strcpy_bin", {}))
         res.system_bin = json.dumps(res_dict.get("system_bin", {}))
         res.versions_identified = int(res_dict.get("versions_identified", 0))
-        # we are not using the exploitable numbers TODO
-        cve_high_dict = json.dumps(res_dict.get("cve_high", {}))
-        cve_medium_dict = json.dumps(res_dict.get("cve_medium", {}))
-        cve_low_dict = json.dumps(res_dict.get("cve_low", {}))
-        res.cve_high = int(cve_high_dict.values()[1])
-        res.cve_medium = int(cve_medium_dict.values()[1])
-        res.cve_low = int(cve_low_dict.values()[1])
+        # 'cve_high': {'614': '17'}, 'cve_medium': {'1247': '13'}, 'cve_low': {'20': '0'}
+        res.cve_high = json.dumps(res_dict.get("cve_high", {}))
+        res.cve_medium = json.dumps(res_dict.get("cve_medium", {}))
+        res.cve_low = json.dumps(res_dict.get("cve_low", {}))
         res.exploits = int(res_dict.get("exploits", 0))
         res.metasploit_modules = int(res_dict.get("metasploit_modules", 0))
         res.certificates = int(res_dict.get("certificates", 0))
@@ -225,6 +222,7 @@ def sbom_json(_file_path, _analysis_id):
     logger.debug("Reading sbom uuid=%s", sbom_uuid)
     sbom_obj, add_sbom = SoftwareBillOfMaterial.objects.get_or_create(id=sbom_uuid)
     logger.debug("SBOM with uuid %s created", sbom_obj.id)
+    logger.debug("setting File path  to: %s", _file_path)
     sbom_obj.file = _file_path
     if not add_sbom:
         logger.debug("Trying to read %s", json_data['components'])
@@ -236,7 +234,7 @@ def sbom_json(_file_path, _analysis_id):
                     name=component_['name'],
                     type=component_['type'],
                     supplier=component_['supplier'] or 'NA',
-                    license=component_['license'] or 'NA',
+                    license=component_['licenses'] or 'NA',
                     group=component_['group'] or 'NA',
                     version=component_['version'] or 'NA',
                     hashes=[f"{key}:{value}" for key, value in component_['hashes']],

@@ -46,7 +46,7 @@ class SoftwareBillOfMaterial(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
     meta = models.CharField(verbose_name="meta data sbom", blank=False, editable=True, default="NA", max_length=1024)
     component = models.ManyToManyField(SoftwareInfo, help_text='Software Bill of Material', related_query_name='sbom', editable=True, blank=True)
-    file = models.FilePathField(verbose_name='sbom_file', editable=True, default=os.path.join(settings.EMBA_LOG_ROOT, 'empty.json'))
+    file = models.FilePathField(verbose_name='sbom_file', editable=True, default=os.path.join(settings.EMBA_LOG_ROOT, 'empty.json'), max_length=110)
 
 
 class Result(models.Model):
@@ -68,9 +68,9 @@ class Result(models.Model):
     entropy_value = models.FloatField(default=0.0, help_text='')
 
     # f50
-    cve_high = models.IntegerField(default=0, help_text='')
-    cve_medium = models.IntegerField(default=0, help_text='')
-    cve_low = models.IntegerField(default=0, help_text='')
+    cve_high = models.TextField(default='{}')
+    cve_medium = models.TextField(default='{}')
+    cve_low = models.TextField(default='{}')
     exploits = models.IntegerField(default=0, help_text='')
     metasploit_modules = models.IntegerField(default=0, help_text='')
 

@@ -371,7 +371,7 @@ def get_sbom(request, sbom_id):
         sbom = None
         messages.error(request, "SBOM does not exist")
         return redirect('..')
-    with open(sbom.file, "r") as sbom_file:
+    with open(sbom.file, "r", encoding='UTF-8') as sbom_file:
         response = JsonResponse(json.load(sbom_file))
         response['Content-Disposition'] = 'inline; filename=' + str(sbom_id) + '.json'
         messages.success(request, 'SBOM: ' + str(sbom_id) + ' successfully exported')
@@ -400,7 +400,7 @@ def get_sbom_analysis(request, analysis_id):
     if sbom is None:
         messages.error(request, 'Analysis: ' + str(analysis_id) + ' can not find sbom')
         return redirect('..')
-    with open(sbom.file, "r") as sbom_file:
+    with open(sbom.file, "r", encoding='UTF-8') as sbom_file:
         response = JsonResponse(json.load(sbom_file))
         response['Content-Disposition'] = 'inline; filename=' + str(analysis_id) + '_sbom.json'
         messages.success(request, 'Analysis: ' + str(analysis_id) + ' successfully exported sbom')
