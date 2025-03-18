@@ -95,6 +95,9 @@ function make_chart(html_chart, label_1, label_2, color_1, color_2, data_cmp, da
  */
 get_individual_report().then(function (returnData) {
     "use strict";
+    let high = JSON.parse(returnData.cve_high)[0];
+    let medium = JSON.parse(returnData.cve_medium)[0];
+    let low = JSON.parse(returnData.cve_low)[0];
     let cvedoughnutChart = new Chart(accumulatedCveDoughnut, {
         type: 'doughnut',
         data: {
@@ -105,7 +108,7 @@ get_individual_report().then(function (returnData) {
             ],
             datasets: [{
                 label: 'CVE DATA',
-                data: [returnData.cve_high, returnData.cve_low, returnData.cve_medium],
+                data: [high, medium, low],
                 backgroundColor: [
                     'rgb(255, 99, 132)',
                     'rgb(54, 162, 235)',
