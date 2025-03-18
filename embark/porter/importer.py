@@ -143,6 +143,7 @@ def f50_csv(file_path, analysis_id):
             res.system_bin = json.dumps(res_dict.get("system_bin", {}))
             res.versions_identified = int(res_dict.get("versions_identified", 0))
             # 'cve_high': {'614': '17'}, 'cve_medium': {'1247': '13'}, 'cve_low': {'20': '0'}
+            res.cve_critical = json.dumps(res_dict.get("cve_critical", {'0': '0'}).popitem())
             res.cve_high = json.dumps(res_dict.get("cve_high", {'0': '0'}).popitem())
             res.cve_medium = json.dumps(res_dict.get("cve_medium", {'0': '0'}).popitem())
             res.cve_low = json.dumps(res_dict.get("cve_low", {'0': '0'}).popitem())
