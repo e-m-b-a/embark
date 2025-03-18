@@ -1,46 +1,50 @@
 {% load django_bootstrap5 %}
 
-<div class="box">
-    
-    <p class="mainText">Label Configuration</p>
-    <p class="subText">Define a Label to enhance tracking</p>
+<div class="row">
 
-    <form action="{% url 'embark-uploader-label' %}" method="post" id="form">
-        {% csrf_token %}
-        <div class="innerBlock">
-            {% load filters %}
-            {% bootstrap_form label_form layout='grid' %}
-            {% bootstrap_button "Create" button_type="submit" button_class="btn-primary" %}
-        </div>
-    </form>
+    <div class="col box">
+        
+        <p class="mainText">Label Configuration</p>
+        <p class="subText">Define a Label to enhance tracking</p>
 
-</div>
+        <form action="{% url 'embark-tracker-label' %}" method="post" id="form">
+            {% csrf_token %}
+            <div class="innerBlock">
+                {% load filters %}
+                {% bootstrap_form label_form layout='grid' %}
+                {% bootstrap_button "Create" button_type="submit" button_class="btn-primary" %}
+            </div>
+        </form>
 
-<div class="box">
+    </div>
 
-    <p class="mainText">Vendor Configuration</p>
-    <p class="subText">Define vendor parameters for tracking</p>
+    <div class="col box">
 
-    <form action="{% url 'embark-uploader-vendor' %}" method="post" id="form">
-        {% csrf_token %}
-        <div class="innerBlock">
-            {% load filters %}
-            {% bootstrap_form vendor_form layout='inline' %}
-            {% bootstrap_button "Create" button_type="submit" button_class="btn-primary" %}
-        </div>
-    </form>
-</div>
-<div class="box">
-    <p class="mainText">Device Configuration</p>
-    <p class="subText">Define firmware parameters for tracking</p>
+        <p class="mainText">Vendor Configuration</p>
+        <p class="subText">Define vendor parameters for tracking</p>
 
-    <form action="{% url 'embark-uploader-device' %}" method="post" id="form">
-        {% csrf_token %}
-        <div class="innerBlock">
-            {% load filters %}
-            {% bootstrap_form device_form %}
-            <button type="submit" class="btn btn-primary" data-bs-toggle="collapse.show" data-bs-target="collapseStart">Create</button>
-        </div>
-    </form>
+        <form action="{% url 'embark-tracker-vendor' %}" method="post" id="form">
+            {% csrf_token %}
+            <div class="innerBlock">
+                {% load filters %}
+                {% bootstrap_form vendor_form layout='inline' %}
+                {% bootstrap_button "Create" button_type="submit" button_class="btn-primary" %}
+            </div>
+        </form>
+    </div>
 
+    <div class="col box">
+        <p class="mainText">Device Configuration</p>
+        <p class="subText">Define firmware parameters for tracking</p>
+
+        <form action="{% url 'embark-tracker-device' %}" method="post" id="form">
+            {% csrf_token %}
+            <div class="innerBlock">
+                {% load filters %}
+                {% bootstrap_form device_form %}
+                <button type="submit" class="btn btn-primary" data-bs-toggle="collapse.show" data-bs-target="collapseStart">Create</button>
+            </div>
+        </form>
+
+    </div>
 </div>
