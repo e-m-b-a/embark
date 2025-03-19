@@ -95,21 +95,27 @@ function make_chart(html_chart, label_1, label_2, color_1, color_2, data_cmp, da
  */
 get_individual_report().then(function (returnData) {
     "use strict";
+    let critical = JSON.parse(returnData.cve_critical)[0];
+    let high = JSON.parse(returnData.cve_high)[0];
+    let medium = JSON.parse(returnData.cve_medium)[0];
+    let low = JSON.parse(returnData.cve_low)[0];
     let cvedoughnutChart = new Chart(accumulatedCveDoughnut, {
         type: 'doughnut',
         data: {
             labels: [
+                'CVE-Critical',
                 'CVE-High',
-                'CVE-Low',
-                'CVE-Medium'
+                'CVE-Medium',
+                'CVE-Low'
             ],
             datasets: [{
                 label: 'CVE DATA',
-                data: [returnData.cve_high, returnData.cve_low, returnData.cve_medium],
+                data: [critical, high, medium, low],
                 backgroundColor: [
-                    'rgb(255, 99, 132)',
-                    'rgb(54, 162, 235)',
-                    'rgb(255, 205, 86)'
+                    'rgb(255, 99, 99)',
+                    'rgb(255, 172, 99)',
+                    'rgb(255, 205, 86)',
+                    'rgb(54, 162, 235)' ,
                 ],
                 hoverOffset: 4
             }]
@@ -188,6 +194,7 @@ get_individual_report().then(function (returnData) {
         "Versions identified": returnData.versions_identified,
         "Exploits identified": returnData.exploits,
         "Metasploit modules": returnData.metasploit_modules,
+        "Critical CVE": returnData.cve_critical,
         "High CVE": returnData.cve_high,
         "Medium CVE": returnData.cve_medium,
         "Low CVE": returnData.cve_low,

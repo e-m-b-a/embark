@@ -285,6 +285,9 @@ def get_accumulated_reports(request):
             if result[field] is not None:
                 if isinstance(result[field], UUID):
                     pass
+                elif field in ['cve_critical', 'cve_high', 'cve_medium', 'cve_low']:
+                    cve_value = json.loads(result[field])
+                    data[field]['sum'] += int(cve_value[0])
                 else:
                     data[field]['sum'] += result[field]
 

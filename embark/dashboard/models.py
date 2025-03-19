@@ -68,6 +68,7 @@ class Result(models.Model):
     entropy_value = models.FloatField(default=0.0, help_text='')
 
     # f50
+    cve_critical = models.TextField(default='{}')
     cve_high = models.TextField(default='{}')
     cve_medium = models.TextField(default='{}')
     cve_low = models.TextField(default='{}')

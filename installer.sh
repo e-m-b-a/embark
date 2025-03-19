@@ -372,6 +372,7 @@ install_embark_default(){
   dns_resolve
 
   #install packages
+  echo -e "\n${GREEN}""${BOLD}""Install embark python envirnment""${NC}"
   cp ./Pipfile* /var/www/
   (cd /var/www && MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv install)
 

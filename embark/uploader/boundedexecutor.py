@@ -400,9 +400,12 @@ class BoundedExecutor:
 
         logger.debug("Got %s from zip", result_obj)
 
+        analysis.end_date = timezone.now()
+        analysis.scan_time = timezone.now() - analysis.start_date
+        analysis.duration = str(analysis.scan_time)
         analysis.finished = True
         analysis.log_size = get_size(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/")
-        analysis.save(update_fields=["finished", "log_size"])
+        analysis.save(update_fields=["log_size", "end_date", "scan_time", "duration", "finished"])
 
     @classmethod
     def emba_check(cls, option):

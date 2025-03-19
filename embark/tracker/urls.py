@@ -5,7 +5,7 @@ __license__ = 'MIT'
 from django.urls import path
 
 from tracker import views
-
+from uploader import views as uploader
 
 # view routing
 urlpatterns = [
@@ -15,5 +15,8 @@ urlpatterns = [
     path('tracker/sbom/<uuid:sbom_id>', views.get_sbom, name='embark-tracker-sbom'),
     path('tracker/device/<int:device_id>/toggle', views.toggle_device_visible, name='embark-tracker-device-visible'),
     # path('tracker/vendor/<str:vendor_name>/', views.get_report_for_vendor, name='embark-tracker-vendor'),
-    path('tracker/associate/<uuid:analysis_id>', views.set_associate_device_to, name='embark-tracker-ass')
+    path('tracker/associate/<uuid:analysis_id>', views.set_associate_device_to, name='embark-tracker-ass'),
+    path('tracker/device/', uploader.device_setup, name='embark-tracker-device'),
+    path('tracker/vendor/', uploader.vendor, name='embark-tracker-vendor'),
+    path('tracker/label/', uploader.label, name='embark-tracker-label'),
 ]

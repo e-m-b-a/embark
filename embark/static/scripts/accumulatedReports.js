@@ -78,17 +78,19 @@ function makeCharts(returnData) {
         type: 'pie',
         data: {
             labels: [
+                'CVE_CRITICAL',
                 'CVE-High',
-                'CVE-Low',
-                'CVE-Medium'
+                'CVE-Medium',
+                'CVE-Low'
             ],
             datasets: [{
                 label: 'CVE DATA',
-                data: [returnData.cve_high.sum, returnData.cve_low.sum, returnData.cve_medium.sum],
+                data: [returnData.cve_critical.sum,returnData.cve_high.sum, returnData.cve_medium.sum, returnData.cve_low.sum],
                 backgroundColor: [
                     'rgb(255, 99, 132)',
-                    'rgb(54, 162, 235)',
-                    'rgb(255, 205, 86)'
+                    'rgb(250, 164, 5)',
+                    'rgb(240, 252, 0)',
+                    'rgb(54, 162, 235)'
                 ],
                 hoverOffset: 4
             }]

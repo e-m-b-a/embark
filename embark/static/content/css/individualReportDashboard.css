@@ -1,12 +1,5 @@
-.leftCol {
-    grid-template-rows: 25% auto;
-    display: grid;
-    grid-gap: 10px;
-    max-height: 100%;
-}
-
 .dataCardIRRow1 {
-    grid-template-columns: 30% auto;
+    grid-template-columns: auto;
     grid-gap: 10px;
     display: grid;
     margin-bottom: 10px;
@@ -14,19 +7,11 @@
 
 .dataCardIRRow2 {
     grid-template-columns: repeat(4, 1fr);
-    display: grid;
+    display: flex;
     grid-gap: 10px;
     height: 350px;
 }
 
 .IRReportCard {
     max-height: 350px;
-}
-
-.IRReportCard1 {
-    max-height: 450px;
-}
-
-.table-individualrep tr td:first-child {
-  min-width: 350px;
 }
