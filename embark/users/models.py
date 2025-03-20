@@ -8,7 +8,7 @@ from django.conf import settings
 
 
 class Team(models.Model):
-    name = models.CharField(verbose_name="name", max_length=150, unique=True)
+    name = models.CharField(primary_key=True, verbose_name="name", max_length=150, unique=True)
     is_active = models.BooleanField(default=True, help_text='Whether this Team is active or not')
     created = models.DateTimeField(auto_now_add=True, help_text='Date time when this entry was created')
     modified = models.DateTimeField(auto_now=True, help_text='Date time when this entry was modified')
