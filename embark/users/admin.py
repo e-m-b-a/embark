@@ -10,9 +10,9 @@ from django.contrib.sessions.models import Session
 from users.models import User, Team
 
 
-UserAdmin.list_display += ('timezone',)
-UserAdmin.list_filter += ('timezone',)
-UserAdmin.fieldsets += (("Custom", {"fields": ('timezone',)}),)
+UserAdmin.list_display += ('timezone', 'team',)
+UserAdmin.list_filter += ('timezone', 'team',)
+UserAdmin.fieldsets += (("Custom", {"fields": ('timezone', 'team',)}),)
 
 
 class SessionAdmin(admin.ModelAdmin):
