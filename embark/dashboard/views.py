@@ -161,6 +161,36 @@ def show_log(request, analysis_id):
 @permission_required("users.dashboard_permission_advanced", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
+def show_error(request, analysis_id):
+    """
+    renders emba_error.log
+
+    :params request: HTTP request
+
+    :return: rendered emba_error.log
+    """
+    logger.info("showing emba_error.log for analyze_id: %s", analysis_id)
+    try:
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    except FirmwareAnalysis.DoesNotExist:
+        analysis = None
+        messages.error(request, "Analysis does not exist")
+        return redirect('..')
+    if not user_is_auth(request.user, analysis.user):
+        return HttpResponseForbidden("You are not authorized!")
+    # get the file path
+    log_file_path_ = f"{Path(analysis.path_to_logs).parent}/emba_error.log"
+    logger.debug("Taking file at %s and render it", log_file_path_)
+    try:
+        with open(log_file_path_, 'rb') as log_file_:
+            return HttpResponse(content=log_file_, content_type="text/plain")
+    except FileNotFoundError:
+        return HttpResponseServerError(content="File is not yet available")
+
+
+@permission_required("users.dashboard_permission_advanced", login_url='/')
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
 def show_logviewer(request, analysis_id):
     """
     renders a log viewer to scroll through emba_run.log

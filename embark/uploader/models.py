@@ -388,10 +388,15 @@ class FirmwareAnalysis(models.Model):
     def do_archive(self):
         """
         cleans up the firmwareanalysis log_dir up to a point where it's minimal
-        TODO since it's only deletes we don't need it to be in boundedexec
         """
         logger.info("Archiving %s", self.id)
-        logger.debug("Function not implemented yet. %s stays the same", self.id)
+        needed_content_list = ["html_report", "SBOM", "csv_logs", "emba_error.log", "emba.log", "firmware_entropy.png", "json_logs", "pixd.png"]
+        log_path = f"{self.path_to_logs}/emba_logs/"
+        for _content in os.listdir(log_path):
+            if _content not in needed_content_list and os.path.exists(os.path.join(log_path, _content)):
+                shutil.rmtree(os.path.join(log_path, _content), ignore_errors=False, onerror=logger.error("Error when trying to delete %s", os.path.join(log_path, _content)))
+        logger.debug("Reduced the size to. stat=%s", os.stat(log_path))
+        logger.debug("Archived %s", self.id)
 
 
 @receiver(pre_delete, sender=FirmwareAnalysis)

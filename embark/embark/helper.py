@@ -149,6 +149,8 @@ def user_is_auth(req_user, own_user):
         return True
     elif req_user.is_staff:
         return True
+    elif req_user == own_user:
+        return True
     elif req_user.team == own_user.team:
         return True
     elif req_user.groups.filter(name='Administration_Group').exists() and own_user.team is None:
