@@ -234,7 +234,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR.parent, 'media')
 MEDIA_URL = '/media/'
 
 # Active Firmware
-ACTIVE_FW = os.path.join(BASE_DIR.parent, 'uploadedFirmwareImages/active/')
+ACTIVE_FW = os.path.join(MEDIA_ROOT, 'active')
 
 REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
 REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))

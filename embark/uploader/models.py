@@ -247,7 +247,7 @@ class FirmwareAnalysis(models.Model):
     # pid from within boundedexec
     pid = models.BigIntegerField(help_text='process id of subproc', verbose_name='PID', blank=True, null=True)
 
-    firmware = models.ForeignKey(FirmwareFile, on_delete=models.SET_NULL, help_text='', null=True, editable=True)
+    firmware = models.ForeignKey(FirmwareFile, on_delete=models.SET_NULL, help_text='Firmware File object', null=True, editable=True, blank=True)
     firmware_name = models.CharField(editable=True, default="File unknown", max_length=MAX_LENGTH)
 
     # emba basic flags
@@ -315,7 +315,7 @@ class FirmwareAnalysis(models.Model):
     zip_file = models.ForeignKey(LogZipFile, on_delete=models.SET_NULL, help_text='', null=True, editable=True)
 
     # embark meta data
-    path_to_logs = models.FilePathField(default=settings.EMBA_LOG_ROOT, editable=True)
+    path_to_logs = models.FilePathField(path=settings.EMBA_LOG_ROOT, editable=True)
     log_size = models.PositiveBigIntegerField(default=0, blank=True)
     start_date = models.DateTimeField(default=timezone.now, blank=True)
     end_date = models.DateTimeField(default=None, null=True)
