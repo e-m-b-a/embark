@@ -179,15 +179,16 @@ def show_logviewer(request, analysis_id):
         return redirect('..')
     # check if user auth
     if not user_is_auth(request.user, analysis.user):
-        return HttpResponseForbidden("You are not authorized!")
+        messages.error(request, "You are not authorized!")
+        return redirect('..')
     # get the file path
     log_file_path_ = f"{Path(analysis.path_to_logs).parent}/emba_run.log"
-    logger.debug("Taking file at %s and render it", log_file_path_)
-    try:
+    if os.path.isfile(log_file_path_):
+        if os.path.getsize(log_file_path_) > 10000000:  # bigger than 10MB
+            messages.info(request, "The Log is very big, give it some time to open")
         return render(request, 'dashboard/logViewer.html', {'analysis_id': analysis_id, 'username': request.user.username})
-
-    except FileNotFoundError:
-        return HttpResponseServerError(content="File is not yet available")
+    messages.error(request, "File is not yet available")
+    return redirect('..')
 
 
 @permission_required("users.dashboard_permission_advanced", login_url='/')
