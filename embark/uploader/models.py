@@ -126,7 +126,6 @@ class FirmwareFile(models.Model):
     """
     MAX_LENGTH = 127
 
-    # id = HashidAutoField(primary_key=True, prefix='fw_')
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
 
     is_archive = models.BooleanField(default=False, blank=True)
@@ -144,10 +143,6 @@ class FirmwareFile(models.Model):
 
     def get_abs_folder_path(self):
         return f"{settings.MEDIA_ROOT}/{self.pk}"
-
-    # def __init__(self, *args, **kwargs):
-    #    super().__init__(*args, **kwargs)
-        # self.file_name = self.file.name
 
     def __str__(self):
         return f"{self.file.name.replace('/', ' - ')}"  # this the only sanitizing we do?
