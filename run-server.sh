@@ -52,7 +52,6 @@ import_helper()
 }
 
 cleaner() {
-  pkill -u root daphne
   pkill -u root "${EMBARK_BASEDIR:-${PWD}}"/emba/emba
   pkill -u root runapscheduler
 

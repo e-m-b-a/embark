@@ -344,6 +344,7 @@ install_embark_default(){
   fi
   if ! [[ -d /var/www/media ]]; then
     mkdir /var/www/media
+    touch /var/www/media/empty
   fi
   if ! [[ -d /var/www/media/log_zip ]]; then
     mkdir /var/www/media/log_zip
@@ -450,18 +451,14 @@ install_embark_dev(){
   # Server-Dir
   if ! [[ -d media ]]; then
     mkdir media
+    touch media/empty
+    mkdir media/active
   fi
   if ! [[ -d media/log_zip ]]; then
     mkdir media/log_zip
   fi
   if ! [[ -d media ]]; then
     mkdir static
-  fi
-  if ! [[ -d uploadedFirmwareImages ]]; then
-    mkdir uploadedFirmwareImages
-  fi
-  if ! [[ -d uploadedFirmwareImages/active/ ]]; then
-    mkdir uploadedFirmwareImages/active
   fi
   if ! [[ -d mail ]]; then
     mkdir mail
