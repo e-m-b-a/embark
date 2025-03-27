@@ -45,4 +45,4 @@ We welcome [pull requests](https://github.com/e-m-b-a/embark/pulls) and bug repo
 ## Acknowledgement
 This project was originally initiated by [Siemens Energy](https://www.siemens-energy.com/) as [AMOS project](https://oss.cs.fau.de/teaching/the-amos-project/) in cooperation with the [FAU](https://oss.cs.fau.de/).
 
-See also the original [*EMBArk* AMOS project](https://github.com/amosproj/amos2021ss01-emba-service) and [AMOS](https://github.com/amosproj).
+See also the original [*EMBArk* AMOS project](https://github.com/amosproj/amos2021ss01-emba-service) and [AMOS](https://github.com/amosproj)
