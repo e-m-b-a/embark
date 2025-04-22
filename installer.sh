@@ -244,13 +244,15 @@ install_debs(){
     apt-get install -y build-essential
   fi
   # Pip
-  if ! command -v pip3 > /dev/null ; then
+  if ! command -v pip > /dev/null ; then
     apt-get install -y python3-pip
   fi
+  pip install --upgrade pip
   # install pipenv
   if ! command -v pipenv > /dev/null ; then
-    apt-get install -y pipenv
+    pip install pipenv
   fi
+  pip install --upgrade pipenv
 
   # Gcc
   if ! command -v gcc > /dev/null ; then
