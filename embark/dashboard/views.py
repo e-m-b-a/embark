@@ -284,6 +284,7 @@ def archive_analysis(request, analysis_id):
     if analysis.zip_file is None:
         # make archive for uuid
         _ = make_zip(request, analysis_id)
+    # TODO is this ever reached??
     analysis.do_archive()
     analysis.archived = True
     analysis.save(update_fields=["archived"])
