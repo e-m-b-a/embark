@@ -247,16 +247,9 @@ install_debs(){
   if ! command -v pip > /dev/null ; then
     apt-get install -y python3-pip
   fi
-  pip install --upgrade pip
   # install pipenv
   if ! command -v pipenv > /dev/null ; then
-    pip install pipenv
-  fi
-  pip install --upgrade pipenv
-
-  # Gcc
-  if ! command -v gcc > /dev/null ; then
-    apt-get install -y build-essential
+    apt-get install -y pipenv
   fi
   # Docker + docker compose
   if [[ "${WSL}" -eq 1 ]]; then
@@ -375,7 +368,7 @@ install_embark_default(){
   dns_resolve
 
   #install packages
-  echo -e "\n${GREEN}""${BOLD}""Install embark python envirnment""${NC}"
+  echo -e "\n${GREEN}""${BOLD}""Install embark python environment""${NC}"
   cp ./Pipfile* /var/www/
   (cd /var/www && MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv install)
 
@@ -448,6 +441,7 @@ install_embark_dev(){
   echo "NO_UPDATE_CHECK=1" >> /etc/environment
 
   # pipenv
+  echo -e "\n${GREEN}""${BOLD}""Install embark python environment""${NC}"
   MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
 
   # Server-Dir
