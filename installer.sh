@@ -9,8 +9,7 @@
 #
 # EMBArk is licensed under MIT
 #
-# Author(s): Michael Messner, Pascal Eckmann
-# Contributor(s): Benedikt Kuehne
+# Author(s): Michael Messner, Pascal Eckmann, Benedikt Kuehne
 
 # Description: Installer for EMBArk
 
