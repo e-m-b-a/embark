@@ -289,6 +289,10 @@ install_debs(){
   if ! command -v ansifilter > /dev/null ; then
     apt-get install -y ansifilter
   fi
+  # in Ubuntu 22 the apt package is broken
+  if ! pipenv --version ; then
+    pip install --upgrade pipenv
+  fi
 }
 
 install_daemon(){
