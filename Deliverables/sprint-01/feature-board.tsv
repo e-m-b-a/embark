@@ -1,0 +1,7 @@
+Title	URL	Assignees	Status	Estimated size	Real size
+API | Generate API-Key in user interface	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/4		Product Backlog		
+API | Upload firmware and add to queue	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/5		Product Backlog		
+API | Get status report	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/6		Product Backlog		
+Formalize build process with CI/CD pipeline	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/9		Product Backlog		
+Firmware analysis can be run on worker node	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/7		Product Backlog		
+Orchestrate multiple worker nodes	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/8		Product Backlog		
