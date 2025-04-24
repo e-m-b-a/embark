@@ -307,10 +307,10 @@ class FirmwareAnalysis(models.Model):
         expert_mode=True, blank=True)
     """
     # Zip file for porting and download
-    zip_file = models.ForeignKey(LogZipFile, on_delete=models.SET_NULL, help_text='', null=True, editable=True)
+    zip_file = models.ForeignKey(LogZipFile, on_delete=models.SET_NULL, help_text='Archive file', null=True, editable=True, blank=True)
 
     # embark meta data
-    path_to_logs = models.FilePathField(path=settings.EMBA_LOG_ROOT, editable=True)
+    path_to_logs = models.FilePathField(path=settings.EMBA_LOG_ROOT, editable=True, allow_folders=True)
     log_size = models.PositiveBigIntegerField(default=0, blank=True)
     start_date = models.DateTimeField(default=timezone.now, blank=True)
     end_date = models.DateTimeField(default=None, null=True)
