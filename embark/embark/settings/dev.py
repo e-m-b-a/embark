@@ -8,7 +8,7 @@ import pytz
 
 from dotenv import load_dotenv
 
-from embark.helper import get_emba_modules, count_emba_modules, get_version_strings
+from embark.helper import get_version_strings
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent

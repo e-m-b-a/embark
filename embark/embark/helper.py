@@ -122,7 +122,7 @@ def get_version_strings():
 
 
 def get_emba_version():
-        # gets us the currently installed version
+    # gets us the currently installed version
     if Path(settings.EMBA_ROOT + "/external/onlinechecker").exists():
         # get the latest version nnumbers
         with open(Path(settings.EMBA_ROOT + "/external/onlinechecker/EMBA_VERSION.txt"), 'r', encoding='UTF-8') as emba_version_file:
@@ -144,7 +144,7 @@ def get_emba_version():
             emba_version = emba_version_file.read().splitlines()[0]
     else:
         emba_version = ""
-    
+
     return emba_version, stable_emba_version, container_version, nvd_version, github_emba_version
 
 

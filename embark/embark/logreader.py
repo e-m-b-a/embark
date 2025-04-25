@@ -10,7 +10,7 @@ import pathlib
 import re
 import time
 import logging
-from embark.helper import count_emba_modules, get_emba_modules
+
 import rx
 import rx.operators as ops
 
@@ -22,6 +22,7 @@ from django.conf import settings
 from django.utils import timezone
 
 from uploader.models import FirmwareAnalysis
+from embark.helper import count_emba_modules, get_emba_modules
 
 
 logger = logging.getLogger(__name__)
@@ -106,7 +107,7 @@ class LogReader:
         failed_pattern = "EMBA failed in docker mode!"
         try:
             emba_module_dict = get_emba_modules(settings.EMBA_ROOT)
-        except FileNotFoundError as file_error:
+        except FileNotFoundError:
             emba_module_dict = {
                 'D_Modules': [
                     ('d10', 'D10_firmware_diffing'),
@@ -206,7 +207,7 @@ class LogReader:
                 ]
             }
         emba_s_mod_cnt, emba_p_mod_cnt, _emba_q_mod_cnt, emba_l_mod_cnt, emba_f_mod_cnt, _emba_d_mod_cnt = count_emba_modules(emba_module_dict)
-
+        del _emba_q_mod_cnt, _emba_d_mod_cnt
         # calculate percentage
         max_module = -2
         phase_nmbr = -2

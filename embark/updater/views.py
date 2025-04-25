@@ -32,13 +32,13 @@ def updater_home(request):
     emba_check_form = CheckForm()
     emba_version, stable_emba_version, container_version, nvd_version, github_emba_version = get_emba_version()
     return render(request, 'updater/index.html', {
-                    'emba_update_form': emba_update_form, 
-                    'emba_check_form': emba_check_form,
-                    'emba_version': emba_version,
-                    'stable_emba_version': stable_emba_version,
-                    'container_version': container_version,
-                    'nvd_version': nvd_version,
-                    'github_emba_version': github_emba_version})
+        'emba_update_form': emba_update_form,
+        'emba_check_form': emba_check_form,
+        'emba_version': emba_version,
+        'stable_emba_version': stable_emba_version,
+        'container_version': container_version,
+        'nvd_version': nvd_version,
+        'github_emba_version': github_emba_version})
 
 
 @permission_required("users.updater_permission", login_url='/')
