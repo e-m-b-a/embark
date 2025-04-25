@@ -518,7 +518,7 @@ class BoundedExecutor:
         # submit dep check to executor threadpool
         emba_fut = BoundedExecutor.submit(cls.emba_check, option)
         return emba_fut
-    
+
     @classmethod
     def submit_emba_update(cls, option):
         # submit update to executor threadpool

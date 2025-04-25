@@ -91,8 +91,7 @@ def update_emba(request):
             logger.error("Server Queue full, or other boundenexec error")
             messages.error(request, 'Queue full')
             return redirect('embark-updater-home')
-    
-    
+
         # TODO change shown version
         messages.info(request, "Updating now")
         return redirect('embark-updater-home')
@@ -114,8 +113,8 @@ def raw_progress(request):
     """
     logger.info("showing log for update")
     # check if user auth TODO change to group auth
-    if not request.user.is_staff :
-        messages.error(request,"You are not authorized!")
+    if not request.user.is_staff:
+        messages.error(request, "You are not authorized!")
         return redirect("..")
     # get the file path
     log_file_path_ = f"{Path(settings.EMBA_LOG_ROOT)}/emba_update.log"

@@ -176,7 +176,7 @@ class LineCache:
 
 
 class AnalysisLogConsumer(LogConsumer):
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.analysis_id = None
