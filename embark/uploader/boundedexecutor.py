@@ -419,9 +419,9 @@ class BoundedExecutor:
         """
         logger.debug("Checking EMBA with: %d", option)
         try:
-            cmd = f"{EMBA_BASE_CMD} -d{option} &| ansifilter -H -o {settings.EMBA_LOG_ROOT}/emba_check.html -s 5pt"
+            cmd = f"cd {settings.EMBA_ROOT} && {EMBA_BASE_CMD} -d{option}"
 
-            with open(f"{settings.EMBA_LOG_ROOT}/emba_check.log", "w+", encoding="utf-8") as file:
+            with open(f"{settings.EMBA_LOG_ROOT}/emba_update.log", "w+", encoding="utf-8") as file:
                 proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
                 # wait for completion
                 proc.communicate()
@@ -451,14 +451,19 @@ class BoundedExecutor:
         1. Update state of original emba dir (not the servers) - git checkout origin/master
         2. re-install emba through script + docker pull
         Args:
-            option 1/2
+            option GIT / DOCKER / NVD
+
+        # 1. Update state of original emba dir (not the servers)
+        # 2. remove external dir
+        # 3. re-install emba through script + docker pull
+        # 4. sync server dir
         """
         logger.debug("Update EMBA with: %d", option)
         # git update
         try:
             cmd = f"cd {settings.EMBA_ROOT} && git pull origin master"
 
-            with open(f"{settings.EMBA_LOG_ROOT}/update.log", "w+", encoding="utf-8") as file:
+            with open(f"{settings.EMBA_LOG_ROOT}/emba_update.log", "w+", encoding="utf-8") as file:
                 proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
                 # wait for completion
                 proc.communicate()
@@ -472,9 +477,9 @@ class BoundedExecutor:
 
         # emba update
         try:
-            cmd = f"{EMBA_BASE_CMD} -U &| ansifilter -H -o {settings.EMBA_LOG_ROOT}/emba_update.html -s 5pt"
+            cmd = f"cd {settings.EMBA_ROOT} && {EMBA_BASE_CMD} -U"
 
-            with open(f"{settings.EMBA_LOG_ROOT}/update.log", "a", encoding="utf-8") as file:
+            with open(f"{settings.EMBA_LOG_ROOT}/emba_update.log", "a", encoding="utf-8") as file:
                 proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
                 # wait for completion
                 proc.communicate()
@@ -512,6 +517,12 @@ class BoundedExecutor:
     def submit_emba_check(cls, option):
         # submit dep check to executor threadpool
         emba_fut = BoundedExecutor.submit(cls.emba_check, option)
+        return emba_fut
+    
+    @classmethod
+    def submit_emba_update(cls, option):
+        # submit update to executor threadpool
+        emba_fut = BoundedExecutor.submit(cls.emba_update, option)
         return emba_fut
 
     @staticmethod

@@ -3,8 +3,10 @@ __author__ = 'Benedikt Kuehne'
 __license__ = 'MIT'
 
 import logging
+from pathlib import Path
 
 from django.conf import settings
+from django.http import HttpResponse, HttpResponseServerError
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.http import require_http_methods
@@ -26,15 +28,7 @@ def updater_home(request):
     req_logger.info("User %s called updater_home", request.user.username)
     emba_update_form = EmbaUpdateForm()
     emba_check_form = CheckForm()
-    # get into the progress.html f"{settings.EMBA_LOG_ROOT}/emba_check.html"
-    try:
-        with open(f"{settings.EMBA_LOG_ROOT}/emba_check.html", 'r', encoding='UTF-8') as in_file_:
-            log_content = in_file_.read()
-    except FileNotFoundError:
-        logger.error('No dep check file exists yet')
-        messages.error(request, "There is no dependancy check log yet")
-        log_content = "EMPTY"
-    return render(request, 'updater/index.html', {'emba_update_form': emba_update_form, 'emba_check_form': emba_check_form, 'log_content': log_content})
+    return render(request, 'updater/index.html', {'emba_update_form': emba_update_form, 'emba_check_form': emba_check_form})
 
 
 @permission_required("users.updater_permission", login_url='/')
@@ -90,12 +84,15 @@ def update_emba(request):
         # do something with it
         logger.debug("Option was: %s", option)
         for option_ in option:
-            if option_ == 'GIT':
-                # 1. Update state of original emba dir (not the servers)
-                # 2. remove external dir
-                # 3. re-install emba through script + docker pull
-                # 4. sync server dir
-                pass
+            # inject into bounded Executor
+            if BoundedExecutor.submit_emba_update(option=option_):
+                messages.info(request, "Updating now")
+                return redirect('embark-updater-home')
+            logger.error("Server Queue full, or other boundenexec error")
+            messages.error(request, 'Queue full')
+            return redirect('embark-updater-home')
+    
+    
         # TODO change shown version
         messages.info(request, "Updating now")
         return redirect('embark-updater-home')
@@ -107,19 +104,24 @@ def update_emba(request):
 @permission_required("users.updater_permission", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def progress(request):
-    """
-    shows the dep check to the user
-    """
-    return render(request, 'updater/progress.html', {})
-
-
-@permission_required("users.updater_permission", login_url='/')
-@require_http_methods(["GET"])
-@login_required(login_url='/' + settings.LOGIN_URL)
 def raw_progress(request):
     """
-    shows the dep check to the user as raw file
+    renders emba_update.log
+
+    :params request: HTTP request
+
+    :return: rendered emba_update.log
     """
-    # TODO
-    return render(request, 'updater/progress.html', {})
+    logger.info("showing log for update")
+    # check if user auth TODO change to group auth
+    if not request.user.is_staff :
+        messages.error(request,"You are not authorized!")
+        return redirect("..")
+    # get the file path
+    log_file_path_ = f"{Path(settings.EMBA_LOG_ROOT)}/emba_update.log"
+    logger.debug("Taking file at %s and render it", log_file_path_)
+    try:
+        with open(log_file_path_, 'rb') as log_file_:
+            return HttpResponse(content=log_file_, content_type="text/plain")
+    except FileNotFoundError:
+        return HttpResponseServerError(content="File is not yet available")

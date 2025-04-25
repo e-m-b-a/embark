@@ -29,21 +29,20 @@
     <div class="update-check d-flex justify-content-center">
       <h3><span class="badge bg-secondary">EMBA version</span>  {{ EMBA_VERSION }}</h3>
     </div>
+    <p class="mainText">EMBA Configuration</p>
     <div id="progress">
       {% block progress %}{% include "updater/progress.html" %}{% endblock progress %}
     </div>
-    <div id="check">
-      {% block check %}{% include "updater/check.html" %}{% endblock check %}
+    <div class="container-fluid">
+      <div class="row">
+        <div class=col id="check">
+          {% block check %}{% include "updater/check.html" %}{% endblock check %}
+        </div>
+        <div class=col id="update">
+          {% block update %}{% include "updater/update.html" %}{% endblock update %}
+        </div>
+      </div>
     </div>
-    <div id="update">
-          <p>
-            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEMBA" aria-expanded="false" aria-controls="collapseEMBA" title="Update EMBA">
-              Update EMBA
-            </button>
-          </p>
-        {% block update %}{% include "updater/update.html" %}{% endblock update %}
-    </div>
-   
 </div>
 
 {% endtimezone %}

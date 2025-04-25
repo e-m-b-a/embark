@@ -1,5 +1,5 @@
-__copyright__ = 'Copyright 2023 Christian Bieg'
-__author__ = 'Christian Bieg'
+__copyright__ = 'Copyright 2023 Christian Bieg, Copyright 2025 Siemens Energy AG'
+__author__ = 'Christian Bieg, Benedikt Kuehne'
 __license__ = 'MIT'
 
 import asyncio
@@ -9,6 +9,8 @@ import logging
 import json
 
 from pathlib import Path
+
+from django.conf import settings
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from channels.db import database_sync_to_async
@@ -23,15 +25,15 @@ class LogConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.analysis_id = None
+        self.log_file_path = None
         self.line_cache = None
         self.file_view = None
         self.observer = None
 
     def load_file_content(self):
         logger.info(
-            'Getting file content for analysis id "%s"; view: %s',
-            self.analysis_id,
+            'Getting file content for path "%s"; view: %s',
+            self.log_file_path,
             self.file_view,
         )
 
@@ -50,42 +52,8 @@ class LogConsumer(AsyncWebsocketConsumer):
         self.file_view.content = base64.b64encode(content).decode("ascii")
         self.file_view.num_lines = num_lines
 
-    @database_sync_to_async
-    def get_firmware(self, analysis_id: str) -> FirmwareAnalysis:
-        return FirmwareAnalysis.objects.get(id=analysis_id, user=self.scope["user"])
-
     async def connect(self):
-        logger.info("WS - connect")
-        await self.accept()
-        logger.info("WS - connect - accept")
-
-        self.analysis_id = self.scope["url_route"]["kwargs"]["analysis_id"]
-
-        firmware = await self.get_firmware(self.analysis_id)
-
-        log_file_path_ = f"{Path(firmware.path_to_logs).parent}/emba_run.log"
-
-        if not os.path.isfile(log_file_path_):
-            await self.send_message({"error": "The log file does not exist, yet."})
-            await self.close()
-
-        self.line_cache = LineCache(log_file_path_)
-
-        self.file_view = FileView()
-
-        this = self
-
-        class ModifyEventHandler(FileSystemEventHandler):
-            def on_modified(self, _event):
-                asyncio.run(this.update_lines())
-
-        event_handler = ModifyEventHandler()
-
-        self.observer = Observer()
-        self.observer.schedule(event_handler, log_file_path_)
-        self.observer.start()
-
-        await self.update_lines()
+        pass
 
     async def send_file_content(self) -> None:
         self.load_file_content()
@@ -205,3 +173,79 @@ class LineCache:
 
     def close(self) -> None:
         self.filehandle.close()
+
+
+class AnalysisLogConsumer(LogConsumer):
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.analysis_id = None
+
+    @database_sync_to_async
+    def get_firmware(self, analysis_id: str) -> FirmwareAnalysis:
+        return FirmwareAnalysis.objects.get(id=analysis_id, user=self.scope["user"])
+
+    async def connect(self):
+        logger.info("WS - connect")
+        await self.accept()
+        logger.info("WS - connect - accept")
+
+        self.analysis_id = self.scope["url_route"]["kwargs"]["analysis_id"]
+        firmware = await self.get_firmware(self.analysis_id)
+        self.log_file_path = f"{Path(firmware.path_to_logs).parent}/emba_run.log"
+
+        if not os.path.isfile(self.log_file_path):
+            await self.send_message({"error": "The log file does not exist, yet."})
+            await self.close()
+
+        self.line_cache = LineCache(self.log_file_path)
+
+        self.file_view = FileView()
+
+        this = self
+
+        class ModifyEventHandler(FileSystemEventHandler):
+            def on_modified(self, _event):
+                asyncio.run(this.update_lines())
+
+        event_handler = ModifyEventHandler()
+
+        self.observer = Observer()
+        self.observer.schedule(event_handler, self.log_file_path)
+        self.observer.start()
+
+        await self.update_lines()
+
+
+class UpdateLogConsumer(LogConsumer):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.log_file_path = f"{Path(settings.EMBA_LOG_ROOT)}/emba_update.log"
+
+    async def connect(self):
+        logger.info("WS - connect")
+        await self.accept()
+        logger.info("WS - connect - accept")
+
+        if not os.path.isfile(self.log_file_path):
+            await self.send_message({"error": "The log file does not exist, yet."})
+            await self.close()
+
+        self.line_cache = LineCache(self.log_file_path)
+
+        self.file_view = FileView()
+
+        this = self
+
+        class ModifyEventHandler(FileSystemEventHandler):
+            def on_modified(self, _event):
+                asyncio.run(this.update_lines())
+
+        event_handler = ModifyEventHandler()
+
+        self.observer = Observer()
+        self.observer.schedule(event_handler, self.log_file_path)
+        self.observer.start()
+
+        await self.update_lines()

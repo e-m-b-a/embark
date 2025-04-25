@@ -1,5 +1,53 @@
 {% load django_bootstrap5 %}
 {% load static %}
-<div class="box">
-    {{ log_content|safe }}
+
+
+<div class="container">
+    <p class="mainText">EMBA Log</p>
+    <pre id="logArea" style="font-family: monospace;">
+
+    </pre>
+    <div class="box">
+        <p class="mainText">Controls</p>
+        <div>
+            <div>
+                <button title="Shortcut: ↑" type="submit" id="uarr" class="btn" onclick="LogControls.move_offset(1); return false;">
+                    ↑
+                </button>
+                <button title="Shortcut: PgUp" type="submit" id="uarr" class="btn" onclick="LogControls.move_offset(5); return false;">
+                    ↑×<span class="scroll-multiplicator">5</span>
+                </button>
+                <button type="submit" id="uarr-top" class="btn" onclick="LogControls.set_offset(file_view.num_lines); return false;">
+                    ⤒
+                </button>
+                <button title="Shortcut: Shift+↑ or Shift+PgUp (x5)" type="submit" id="uarr" class="btn" onclick="LogControls.increase_view_size(1); return false;">
+                    increase view size
+                </button>
+            </div>
+            <div>
+                <button title="Shortcut: ↓" type="submit" id="uarr" class="btn" onclick="LogControls.move_offset(-1); return false;">
+                    ↓
+                </button>
+                <button title="Shortcut: PgDn" type="submit" id="darr" class="btn" onclick="LogControls.move_offset(-5); return false;">
+                    ↓×<span class="scroll-multiplicator">5</span>
+                </button>
+                <button type="submit" id="darr-bot" class="btn" onclick="LogControls.set_offset(0); return false;">
+                    ⤓
+                </button>
+                <button title="Shortcut: Shift+↓ or Shift+PgDn (x5)" type="submit" id="uarr" class="btn" onclick="LogControls.increase_view_size(-1); return false;">
+                    decrease view size
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="buttonRow">
+        <form action={% url 'embark-updater-raw' %} method='get'>
+            <button type="submit" class="btn buttonRowElem">Raw EMBA log file</button>
+        </form>
+    </div>
 </div>
+
+{% block inlinejs %}
+<script>var analysis_id = "update";</script>
+<script type="module" src="{% static 'scripts/logViewer.js' %}"></script>
+{% endblock inlinejs %}
