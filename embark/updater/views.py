@@ -9,10 +9,12 @@ from django.conf import settings
 from django.http import HttpResponse, HttpResponseServerError
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.shortcuts import redirect
 
+from embark.helper import get_version_strings
 from updater.forms import CheckForm, EmbaUpdateForm
 from uploader.boundedexecutor import BoundedExecutor
 
@@ -28,7 +30,8 @@ def updater_home(request):
     req_logger.info("User %s called updater_home", request.user.username)
     emba_update_form = EmbaUpdateForm()
     emba_check_form = CheckForm()
-    return render(request, 'updater/index.html', {'emba_update_form': emba_update_form, 'emba_check_form': emba_check_form})
+    emba_version = get_version_strings()
+    return render(request, 'updater/index.html', {'emba_update_form': emba_update_form, 'emba_check_form': emba_check_form, 'EMBA_VERSION': emba_version})
 
 
 @permission_required("users.updater_permission", login_url='/')
@@ -68,6 +71,7 @@ def check_update(request):
 @permission_required("users.updater_permission", login_url='/')
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
+@staff_member_required
 def update_emba(request):
     """
     updates nvd database for emba
@@ -92,7 +96,7 @@ def update_emba(request):
             messages.error(request, 'Queue full')
             return redirect('embark-updater-home')
 
-        # TODO change shown version
+        # update version shown on site
         messages.info(request, "Updating now")
         return redirect('embark-updater-home')
     logger.error("update form invalid %s with error: %s", request.POST, form.errors)
@@ -103,6 +107,7 @@ def update_emba(request):
 @permission_required("users.updater_permission", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
+@staff_member_required
 def raw_progress(request):
     """
     renders emba_update.log
@@ -112,10 +117,6 @@ def raw_progress(request):
     :return: rendered emba_update.log
     """
     logger.info("showing log for update")
-    # check if user auth TODO change to group auth
-    if not request.user.is_staff:
-        messages.error(request, "You are not authorized!")
-        return redirect("..")
     # get the file path
     log_file_path_ = f"{Path(settings.EMBA_LOG_ROOT)}/emba_update.log"
     logger.debug("Taking file at %s and render it", log_file_path_)

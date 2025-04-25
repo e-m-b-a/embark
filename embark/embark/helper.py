@@ -109,7 +109,20 @@ def count_emba_modules(module_dict):
 
 
 def get_version_strings():
-    # gets us the currently installed version
+    if Path(f"{settings.BASE_DIR}/VERSION.txt").exists():
+        with open(Path(f"{settings.BASE_DIR}/VERSION.txt"), 'r', encoding='UTF-8') as embark_version_file:
+            embark_version = embark_version_file.read().splitlines()[0]
+    elif Path(f"{settings.BASE_DIR.parent}/VERSION.txt").exists():
+        with open(Path(f"{settings.BASE_DIR.parent}/VERSION.txt"), 'r', encoding='UTF-8') as embark_version_file:
+            embark_version = embark_version_file.read().splitlines()[0]
+    else:
+        embark_version = ""
+
+    return embark_version
+
+
+def get_emba_version():
+        # gets us the currently installed version
     if Path(settings.EMBA_ROOT + "/external/onlinechecker").exists():
         # get the latest version nnumbers
         with open(Path(settings.EMBA_ROOT + "/external/onlinechecker/EMBA_VERSION.txt"), 'r', encoding='UTF-8') as emba_version_file:
@@ -131,17 +144,8 @@ def get_version_strings():
             emba_version = emba_version_file.read().splitlines()[0]
     else:
         emba_version = ""
-
-    if Path(f"{settings.BASE_DIR}/VERSION.txt").exists():
-        with open(Path(f"{settings.BASE_DIR}/VERSION.txt"), 'r', encoding='UTF-8') as embark_version_file:
-            embark_version = embark_version_file.read().splitlines()[0]
-    elif Path(f"{settings.BASE_DIR.parent}/VERSION.txt").exists():
-        with open(Path(f"{settings.BASE_DIR.parent}/VERSION.txt"), 'r', encoding='UTF-8') as embark_version_file:
-            embark_version = embark_version_file.read().splitlines()[0]
-    else:
-        embark_version = ""
-
-    return embark_version, emba_version, stable_emba_version, container_version, nvd_version, github_emba_version
+    
+    return emba_version, stable_emba_version, container_version, nvd_version, github_emba_version
 
 
 def user_is_auth(req_user, own_user):
