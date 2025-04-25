@@ -14,7 +14,7 @@ from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.shortcuts import redirect
 
-from embark.helper import get_version_strings
+from embark.helper import get_emba_version
 from updater.forms import CheckForm, EmbaUpdateForm
 from uploader.boundedexecutor import BoundedExecutor
 
@@ -30,8 +30,15 @@ def updater_home(request):
     req_logger.info("User %s called updater_home", request.user.username)
     emba_update_form = EmbaUpdateForm()
     emba_check_form = CheckForm()
-    emba_version = get_version_strings()
-    return render(request, 'updater/index.html', {'emba_update_form': emba_update_form, 'emba_check_form': emba_check_form, 'EMBA_VERSION': emba_version})
+    emba_version, stable_emba_version, container_version, nvd_version, github_emba_version = get_emba_version()
+    return render(request, 'updater/index.html', {
+                    'emba_update_form': emba_update_form, 
+                    'emba_check_form': emba_check_form,
+                    'emba_version': emba_version,
+                    'stable_emba_version': stable_emba_version,
+                    'container_version': container_version,
+                    'nvd_version': nvd_version,
+                    'github_emba_version': github_emba_version})
 
 
 @permission_required("users.updater_permission", login_url='/')

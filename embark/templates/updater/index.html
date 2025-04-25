@@ -26,14 +26,20 @@
         <a href="https://github.com/e-m-b-a/embark/releases/latest">Release-Notes</a>
     </div>
     <hr>
+    <p class="mainText"><span class="badge bg-danger-subtle">EMBA Configuration</span></p>
     <div class="update-check d-flex justify-content-center">
-      <h3><span class="badge bg-secondary">EMBA version</span>  {{ EMBA_VERSION }}</h3>
-    </div>
-    <p class="mainText">EMBA Configuration</p>
-    <div id="progress">
-      {% block progress %}{% include "updater/progress.html" %}{% endblock progress %}
+      <h3>
+        <span class="badge bg-primary">EMBA version</span>  {{ emba_version }}
+        <br>
+        <span class="badge bg-secondary">Container version</span>  {{ container_version }}
+        <br>
+        <span class="badge bg-secondary">Github hash</span>  {{ github_emba_version }}
+      </h3>
     </div>
     <div class="container-fluid">
+      <div class="row justify-content-md-center" id="progress">
+        {% block progress %}{% include "updater/progress.html" %}{% endblock progress %}
+      </div>
       <div class="row">
         <div class="col" id="check">
           {% block check %}{% include "updater/check.html" %}{% endblock check %}
