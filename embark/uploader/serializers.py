@@ -7,9 +7,9 @@ import logging
 
 from django.conf import settings
 from django import forms
+from rest_framework import serializers
 
 from uploader import models
-from rest_framework import serializers
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 #         _scan_modules = self.cleaned_data.get('scan_modules') or None
 #         logger.debug("got modules : %s", _scan_modules)
 #         return _scan_modules
-    
+
 class FirmwareAnalysisSerializer(serializers.ModelSerializer):
     MODULE_CHOICES = settings.EMBA_MODULE_DICT['F_Modules'] + settings.EMBA_MODULE_DICT['L_Modules'] + settings.EMBA_MODULE_DICT['P_Modules'] + settings.EMBA_MODULE_DICT['S_Modules'] + settings.EMBA_MODULE_DICT['Q_Modules']
     scan_modules = forms.MultipleChoiceField(choices=MODULE_CHOICES, help_text='Enable/disable specific scan-modules for your analysis', widget=forms.CheckboxSelectMultiple, required=False)
@@ -39,5 +39,3 @@ class FirmwareAnalysisSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.FirmwareAnalysis
         fields = ['firmware', 'version', 'device', 'notes', 'firmware_Architecture', 'user_emulation_test', 'system_emulation_test', 'sbom_only_test', 'scan_modules']
-
-    

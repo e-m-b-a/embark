@@ -3,8 +3,8 @@ __author__ = 'Benedikt Kuehne, Maximilian Wagner, p4cx, Ashutosh Singh, VAISHNAV
 __license__ = 'MIT'
 
 from django.urls import path
-from .views import UploaderView
 from uploader import views
+from .views import UploaderView
 
 # view routing
 urlpatterns = [
