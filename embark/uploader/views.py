@@ -11,7 +11,9 @@ from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbid
 from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
-from django.shortcuts import redirect
+from django.shortcuts import redirect,render
+from rest_framework.views import APIView  
+from rest_framework.response import Response
 
 from uploader.boundedexecutor import BoundedExecutor
 from uploader.forms import DeviceForm, FirmwareAnalysisForm, DeleteFirmwareForm, LabelForm, VendorForm
@@ -119,6 +121,10 @@ def label(request):
     else:
         messages.error(request, 'creation failed.')
     return redirect('..')
+
+class UploaderView(APIView):
+    def get(self, request, *args, **kwargs):  
+        return Response({'status': 'success'}, status=200) 
 
 
 @permission_required("users.uploader_permission_advanced", login_url='/')
