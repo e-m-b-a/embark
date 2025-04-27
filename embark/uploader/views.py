@@ -14,10 +14,13 @@ from django.contrib import messages
 from django.shortcuts import redirect,render
 from rest_framework.views import APIView  
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser
 
 from uploader.boundedexecutor import BoundedExecutor
 from uploader.forms import DeviceForm, FirmwareAnalysisForm, DeleteFirmwareForm, LabelForm, VendorForm
 from uploader.models import FirmwareFile
+from users.models import User
+from uploader.serializers import FirmwareAnalysisSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +64,87 @@ def save_file(request):
         firmware_file.save()
     messages.info(request, 'upload successful.')
     return HttpResponse("successful upload")
+
+class BufferFullException(Exception):
+    pass
+
+class UploaderView(APIView):
+    parser_classes = [MultiPartParser]
+
+    #TODO: to be deleted
+    def get(self, request, *args, **kwargs):  
+        return Response({'status': 'success'}, status=200)
+
+    def post(self, request, *args, **kwargs):
+        """
+        file saving on POST requests with attached file
+
+        :params request: HTTP request
+
+        :return: HttpResponse including the status
+        """
+        if not 'file' in request.data:
+            return Response({'status': 'error', 'message': 'No file provided or wrong key'}, status=400)
+
+        file_obj = request.data['file']
+
+        if not file_obj:
+            return Response({'status': 'error', 'message': 'Invalid file provided'}, status=400) 
+
+        firmware_file = FirmwareFile.objects.create(file=file_obj)
+        firmware_file.user = User.objects.get(username='admin') # TODO: Changes based on api after api logic is implemented -> currently hardcoded to admin
+        firmware_file.save()
+        messages.info(request, 'upload successful.')
+
+        # Assign firmware to analysis
+        request.data.firmware = firmware_file
+        
+        try:
+            id = start_analysis_serialized(request.data)
+            return Response({'status': 'success_api', 'id': id}, status=201)
+        except BufferFullException:
+            return Response({'status': 'Error: Buffer full'}, status=503)
+        except Exception as e:
+            logger.info(e)
+            return Response({'status': 'Error: Form invalid'}, status=400)
+        
+
+        
+def start_analysis_serialized(data):
+    serializer = FirmwareAnalysisSerializer(data = data)
+
+    if not serializer.is_valid():
+        logger.info(serializer.errors)
+        req_logger.info(serializer.errors)
+        return -1
+
+    new_analysis = serializer.save()
+
+    logger.info("Starting analysis with %s", serializer.Meta.model.id)
+
+    # get the id of the firmware-file to submit
+    #TODO: this is the issue 
+    new_firmware_file = FirmwareFile.objects.get(id=new_analysis.firmware.id)
+    logger.debug("Firmware file: %s", new_firmware_file)
+        
+    new_analysis.user = new_firmware_file.user
+    logger.debug(" FILE_NAME is %s", new_analysis.firmware.file.name)
+    new_analysis.firmware_name = os.path.basename(new_analysis.firmware.file.name)
+    
+    # add labels from devices FIXME what if device has no label
+    devices = serializer.cleaned_data["device"]
+    logger.debug("Got %d devices in this analysis", devices.count())
+    for device in devices:
+        if device.device_label:
+            logger.debug(" Adding Label=%s", device.device_label.label_name)
+            new_analysis.label.add(device.device_label)
+    new_analysis.save()
+    logger.debug("new_analysis %s has label: %s", new_analysis, new_analysis.label)
+    # inject into bounded Executor
+    # if not BoundedExecutor.submit_firmware(firmware_flags=new_analysis, firmware_file=new_firmware_file):
+    #    raise BufferFullException
+    
+    return new_analysis.id
 
 
 @permission_required("users.uploader_permission_advanced", login_url='/')
@@ -122,11 +206,6 @@ def label(request):
         messages.error(request, 'creation failed.')
     return redirect('..')
 
-class UploaderView(APIView):
-    def get(self, request, *args, **kwargs):  
-        return Response({'status': 'success'}, status=200) 
-
-
 @permission_required("users.uploader_permission_advanced", login_url='/')
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["GET", "POST"])
@@ -184,6 +263,7 @@ def start_analysis(request):
     label_form = LabelForm()
     vendor_form = VendorForm()
     return render(request, 'uploader/index.html', {'analysis_form': analysis_form, 'device_form': device_form, 'vendor_form': vendor_form, 'label_form': label_form})
+
 
 
 @permission_required("users.uploader_permission_advanced", login_url='/')
