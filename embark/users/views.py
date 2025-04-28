@@ -23,9 +23,11 @@ from django.utils import timezone
 from django.urls import reverse
 from django.core.mail import send_mail
 from django.db.models import Q
+from django.http import JsonResponse
 
 from users.forms import LoginForm, SignUpForm, ResetForm
 from users.models import User
+from users.decorators import require_api_key
 
 logger = logging.getLogger(__name__)
 
@@ -335,3 +337,8 @@ def generate_api_key(request):
     user.save()
     messages.success(request, f"Your new API key: {new_api_key}")
     return redirect("..")
+
+@require_api_key
+def api_test(request):
+    api_user = request.api_user
+    return JsonResponse({'message': f'Hello, {api_user.username}!'})

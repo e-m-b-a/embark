@@ -20,5 +20,6 @@ urlpatterns = [
     path('user/<int:user_id>/deactivate', views.deactivate, name='embark-deactivate-user'),
     path('user/set_timezone/', views.set_timezone, name='embark-acc-timezone'),
     path("user/generate_api_key/", views.generate_api_key, name="embark-acc-apikey"),
+    path("user/api_test/", views.api_test, name="embark-api-test"),
     path('log/<int:log_type>/<int:lines>/', views.get_log, name='log'),     # TODO move to admin
 ]
