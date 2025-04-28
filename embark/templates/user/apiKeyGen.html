@@ -1,0 +1,41 @@
+<div class="container-fluid">
+  <form action="{% url 'embark-acc-apikey' %}" method="get">
+    {% csrf_token %}
+    <label for="apikey">API Key:</label>
+    <input type="text" id="apikey" name="apikey" value="" readonly />
+    <input type="submit" class="solid btn-login" value="Generate API Key" />
+    <input type="button" class="solid btn-login" value="Copy to Clipboard" onclick="copyToClipboard()" />
+  </form>
+
+  <!-- Hidden place to render Django messages -->
+  <div id="messages" style="display: none;">
+    {% for message in messages %}
+    <div class="django-message">
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+
+  <script>
+    function extractApiKey() {
+      var messages = document.getElementsByClassName('django-message');
+      for (var i = 0; i < messages.length; i++) {
+        var text = messages[i].innerText || messages[i].textContent;
+        if (text.startsWith('Your new API key:')) {
+          var apiKey = text.replace('Your new API key:', '').trim();
+          document.getElementById('apikey').value = apiKey;
+          break;
+        }
+      }
+    }
+
+    function copyToClipboard() {
+      var copyText = document.getElementById("apikey");
+      copyText.select();
+      document.execCommand("copy");
+      alert("API Key copied to clipboard.");
+    }
+
+    window.onload = extractApiKey;
+  </script>
+</div>
