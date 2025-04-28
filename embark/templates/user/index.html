@@ -1,23 +1,22 @@
 {% extends "base.html" %}
 {% load static %}
-{% block style %}
-<link rel="stylesheet" type="text/css" href="{% static 'content/css/menu.css' %}" />{% endblock style %}
+{% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/menu.css' %}"/>{% endblock style %}
 {% block title %}EMBArk User-menue{% endblock title %}
 
 {% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
 {% block maincontent %}
 {% if user.is_staff %}
 <div class="d-flex justify-content-center">
-  <h3><span class="badge bg-secondary"><a href="{% url 'admin:index' %}">
+    <h3><span class="badge bg-secondary"><a href="{% url 'admin:index' %}">
         <input class="solid btn-login" type="submit" value="Admin-page" />
-      </a></span></h3>
-
+    </a></span></h3>
+    
 </div>
 {% endif %}
-<div class="container-fluid">
-  {% block timezone %}{% include "user/timezone.html" %}{% endblock timezone %}
-</div>
-<div class="container-fluid">
-  {% block usermenu %}{% include "user/apiKeyGen.html" %}{% endblock usermenu %}
-</div>
+    <div class="container-fluid">
+        {% block timezone %}{% include "user/timezone.html" %}{% endblock timezone %}
+    </div>
+    <div class="container-fluid">
+  	{% block usermenu %}{% include "user/apiKeyGen.html" %}{% endblock usermenu %}
+    </div>
 {% endblock maincontent %}
