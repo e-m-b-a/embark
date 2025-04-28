@@ -14,24 +14,6 @@ from uploader import models
 logger = logging.getLogger(__name__)
 
 
-# class FirmwareAnalysisForm(forms.ModelForm):
-#     MODULE_CHOICES = settings.EMBA_MODULE_DICT['F_Modules'] + settings.EMBA_MODULE_DICT['L_Modules'] + settings.EMBA_MODULE_DICT['P_Modules'] + settings.EMBA_MODULE_DICT['S_Modules'] + settings.EMBA_MODULE_DICT['Q_Modules']
-#     scan_modules = forms.MultipleChoiceField(choices=MODULE_CHOICES, help_text='Enable/disable specific scan-modules for your analysis', widget=forms.CheckboxSelectMultiple, required=False)
-
-#     class Meta:
-#         model = models.FirmwareAnalysis
-
-#         fields = ['firmware', 'version', 'device', 'notes', 'firmware_Architecture', 'user_emulation_test', 'system_emulation_test', 'sbom_only_test', 'scan_modules']
-#         widgets = {
-#             "device": forms.CheckboxSelectMultiple,
-#         }
-
-#     def clean_scan_modules(self):
-#         logger.debug("starting the cleaning")
-#         _scan_modules = self.cleaned_data.get('scan_modules') or None
-#         logger.debug("got modules : %s", _scan_modules)
-#         return _scan_modules
-
 class FirmwareAnalysisSerializer(serializers.ModelSerializer):
     MODULE_CHOICES = settings.EMBA_MODULE_DICT['F_Modules'] + settings.EMBA_MODULE_DICT['L_Modules'] + settings.EMBA_MODULE_DICT['P_Modules'] + settings.EMBA_MODULE_DICT['S_Modules'] + settings.EMBA_MODULE_DICT['Q_Modules']
     scan_modules = forms.MultipleChoiceField(choices=MODULE_CHOICES, help_text='Enable/disable specific scan-modules for your analysis', widget=forms.CheckboxSelectMultiple, required=False)
@@ -39,3 +21,9 @@ class FirmwareAnalysisSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.FirmwareAnalysis
         fields = ['firmware', 'version', 'device', 'notes', 'firmware_Architecture', 'user_emulation_test', 'system_emulation_test', 'sbom_only_test', 'scan_modules']
+
+    def validate_scan_modules(self, value):
+        logger.debug("starting the cleaning")
+        _scan_modules = value or None
+        logger.debug("got modules : %s", _scan_modules)
+        return _scan_modules

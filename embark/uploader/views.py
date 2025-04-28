@@ -95,12 +95,16 @@ class UploaderView(APIView):
         firmware_file.save()
         messages.info(request, 'upload successful.')
 
-        # Note: request.data is immutable
+        # request.data is immutable
         request_data_copy = dict(request.data)
         request_data_copy["firmware"] = firmware_file.id
         del request_data_copy["file"]
 
-        # Note: create queryDict, otherwise defaults are not set
+        # serializer.validate_scan_modules is only executed if scan_modules is set
+        if "scan_modules" not in request_data_copy:
+            request_data_copy["scan_modules"] = []
+
+        # create QueryDict, otherwise defaults are not set
         query_dict = QueryDict('', mutable=True)
         query_dict.update(request_data_copy)
 
