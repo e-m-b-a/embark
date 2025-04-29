@@ -417,7 +417,7 @@ class BoundedExecutor:
         Args:
             option 1/2
         """
-        logger.debug("Checking EMBA with: %d", option)
+        logger.debug("Checking EMBA with: %s", option)
         try:
             cmd = f"cd {settings.EMBA_ROOT} && {EMBA_BASE_CMD} -d{option}"
 
@@ -458,7 +458,7 @@ class BoundedExecutor:
         # 3. re-install emba through script + docker pull
         # 4. sync server dir
         """
-        logger.debug("Update EMBA with: %d", option)
+        logger.debug("Update EMBA with: %s", option)
         # git update
         try:
             cmd = f"cd {settings.EMBA_ROOT} && git pull origin master"

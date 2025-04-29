@@ -409,7 +409,7 @@ def delete_analysis_pre_delete(sender, instance, **kwargs):
     try:
         if sender.archived is False:
             if sender.path_to_logs != "/" and settings.EMBA_LOG_ROOT in sender.path_to_logs:
-                shutil.rmtree(instance.path_to_logs, ignore_errors=False, onexc=logger.error("Error when trying to delete %s", instance.path_to_logs))
+                shutil.rmtree(instance.path_to_logs, ignore_errors=False)
             logger.error("Can't delete log directory of: %s since it's %s", str(sender), instance.path_to_logs)
         elif sender.archived is True:
             # delete zip file
