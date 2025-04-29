@@ -40,11 +40,11 @@
       <div class="row justify-content-md-center" id="progress">
         {% block progress %}{% include "updater/progress.html" %}{% endblock progress %}
       </div>
-      <div class="row">
-        <div class="col" id="check">
+      <div class="row justify-content-md-center">
+        <div class="col col-lg-2" id="check">
           {% block check %}{% include "updater/check.html" %}{% endblock check %}
         </div>
-        <div class="col" id="update">
+        <div class="col col-lg-2" id="update">
           {% block update %}{% include "updater/update.html" %}{% endblock update %}
         </div>
       </div>
