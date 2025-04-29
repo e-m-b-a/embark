@@ -1,3 +1,4 @@
+# pylint: disable=W4903
 __copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2021 The AMOS Projects'
 __author__ = 'Benedikt Kuehne, Maximilian Wagner, Mani Kumar, m-1-k-3, Ashutosh Singh, Garima Chauhan, diegiesskanne, VAISHNAVI UMESH, Vaish1795'
 __license__ = 'MIT'
@@ -155,7 +156,7 @@ def delete_fw_pre_delete_post(sender, instance, **kwargs):
     delete the firmwarefile and folder structure in storage on recieve
     """
     if sender.file:
-        shutil.rmtree(instance.get_abs_folder_path(), ignore_errors=False, onerror=logger.error("Error when trying to delete %s", instance.get_abs_folder_path()))
+        shutil.rmtree(instance.get_abs_folder_path(), ignore_errors=False, onexc=logger.error("Error when trying to delete %s", instance.get_abs_folder_path()))
     else:
         logger.error("No related FW found for delete request: %s", str(sender))
 
@@ -409,7 +410,7 @@ def delete_analysis_pre_delete(sender, instance, **kwargs):
     try:
         if sender.archived is False:
             if sender.path_to_logs != "/" and settings.EMBA_LOG_ROOT in sender.path_to_logs:
-                shutil.rmtree(instance.path_to_logs, ignore_errors=False, onerror=logger.error("Error when trying to delete %s", instance.path_to_logs))
+                shutil.rmtree(instance.path_to_logs, ignore_errors=False)
             logger.error("Can't delete log directory of: %s since it's %s", str(sender), instance.path_to_logs)
         elif sender.archived is True:
             # delete zip file
