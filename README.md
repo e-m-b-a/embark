@@ -50,6 +50,7 @@ To start the server on the host with the ipv4 192.168.126.123 and get management
 4. Further details are available in the wiki (See [installation](https://github.com/e-m-b-a/embark/wiki/Installation))
 
 *EMBArk* is using the firmware security scanner *EMBA* as backend. You can take a look at the [*EMBA*](https://github.com/e-m-b-a/emba) repository and get more [information about usage of *EMBA* in the wiki](https://github.com/e-m-b-a/emba/wiki/Usage). Additionally you should check the [*EMBArk* wiki](https://github.com/e-m-b-a/embark/wiki).
+</details>
 
 ## Start Server
 To start the EMBArk-Server simply run `$ sudo ./run-server.sh`.
