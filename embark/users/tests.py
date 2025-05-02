@@ -7,6 +7,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.http import HttpResponseRedirect
+from django.conf import settings
 
 from django.test import TestCase
 from django.test import Client
@@ -29,7 +30,7 @@ class SeleniumTests(StaticLiveServerTestCase):
         super().tearDownClass()
 
     def test_register(self):
-        self.driver.get(f'{self.live_server_url}/register')
+        self.driver.get(f'{self.live_server_url}/user/register/')
         username_input = self.driver.find_element(By.NAME, "name")
         username_input.send_keys('tester')
         password_input = self.driver.find_element(By.NAME, "password")
@@ -60,7 +61,7 @@ class TestUsers(TestCase):
         Returns:
 
         """
-        response = self.client.post('/signup', {'username': 'testuser1', 'password': '12345', 'confirm_password': '12345'})
+        response = self.client.post('/user/register/', {'username': 'testuser1', 'password': '12345', 'confirm_password': '12345'})
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_signin(self):
@@ -69,16 +70,16 @@ class TestUsers(TestCase):
         Returns: redirect (302) to mainDashboard
 
         """
-        response = self.client.post('/signin', {'username': 'testuser1', 'password': '12345'})
-        self.assertEqual(response.status_code, HttpResponseRedirect)
+        response = self.client.post(settings.LOGIN_URL, {'username': 'testuser', 'password': '12345'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
 
     def test_signin_wrong_password(self):
         """
-        Wrongcd  password would render the same page again with 200 status code.
+        Wrong password would render the same page again with 200 status code.
         Returns:
 
         """
-        response = self.client.post('/signin', {'username': 'testuser', 'password': '1234'})
+        response = self.client.post(settings.LOGIN_URL, {'username': 'testuser', 'password': '1234'})
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_signin_wrong_body(self):
@@ -89,5 +90,5 @@ class TestUsers(TestCase):
         Returns:
 
         """
-        response = self.client.post('/signin', {'email': 'testuser', 'password': '12345'})
+        response = self.client.post(settings.LOGIN_URL, {'email': 'testuser', 'password': '12345'})
         self.assertEqual(response.status_code, HTTPStatus.OK)
