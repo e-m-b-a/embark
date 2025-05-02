@@ -3,8 +3,8 @@
     {% csrf_token %}
     <label for="apikey">API Key:</label>
     <input type="text" id="apikey" name="apikey" value="" readonly />
-    <input type="submit" class="solid btn-login" value="Generate API Key" />
-    <input type="button" class="solid btn-login" value="Copy to Clipboard" onclick="copyToClipboard()" />
+    <input type="submit" class="solid btn-login" value="Generate" />
+    <input type="button" class="solid btn-login" value="Copy" onclick="copyToClipboard()" />
   </form>
 
   <!-- Hidden place to render Django messages -->
@@ -21,7 +21,7 @@
       var messages = document.getElementsByClassName('django-message');
       for (var i = 0; i < messages.length; i++) {
         var text = messages[i].innerText || messages[i].textContent;
-        if (text.startsWith('Your new API key:')) {
+        if (text.trim().startsWith('Your new API key:')) {
           var apiKey = text.replace('Your new API key:', '').trim();
           document.getElementById('apikey').value = apiKey;
           break;
