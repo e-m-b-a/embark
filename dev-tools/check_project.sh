@@ -20,7 +20,7 @@ export PYTHONPATH="${PYTHONPATH}:${PWD}/embark/embark/:${PWD}/embark/"
 export PIPENV_VENV_IN_PROJECT="True"
 
 cd "$(dirname "${0}")" || exit 1
-cd .. || exit 1 
+cd .. || exit 1
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -36,7 +36,7 @@ fi
 check_tools(){
   TOOLS=("jshint" "shellcheck" "pylint" "yamllint")
   for TOOL in "${TOOLS[@]}";do
-    if ! command -v "${TOOL}" > /dev/null ; then 
+    if ! command -v "${TOOL}" > /dev/null ; then
       echo -e "\\n""${RED}""${TOOL} is not installed correctly""${NC}""\\n"
       exit 1
     fi
@@ -79,9 +79,9 @@ jscheck(){
       echo -e "\\n""${ORANGE}${BOLD}==> FIX WARNINGS""${NC}""\\n"
       ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
       MODULES_TO_CHECK_ARR+=( "${JS_SCRIPT}" )
-    elif [[ ${RES} -eq 0 ]]; then 
+    elif [[ ${RES} -eq 0 ]]; then
       echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
-    else 
+    else
       echo -e "\\n""${RED}${BOLD}""[jshint]ERRORS in SCRIPT""${NC}""\\n"
     fi
   done
@@ -100,9 +100,9 @@ templatechecker(){
       echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
       ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
       MODULES_TO_CHECK_ARR+=( "${HTML_FILE}" )
-    elif [[ ${RES} -eq 0 ]]; then 
+    elif [[ ${RES} -eq 0 ]]; then
       echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
-    else 
+    else
       echo -e "\\n""${RED}${BOLD}""[html-check(tidy)]ERRORS in SCRIPT""${NC}""\\n"
     fi
   done
@@ -183,7 +183,7 @@ banditer() {
     echo -e "\\n""${ORANGE}""bandit not found!""${NC}""\\n""${ORANGE}""Install bandit via 'apt-get install bandit'!""${NC}\\n"
     exit 1
   fi
-  
+
   mapfile -t PY_SCRIPTS < <(find . -type d -name migrations -prune -false -o -iname "*.py" -not -path "./.venv/*" -not -path "./emba/*" -not -path "./emba_logs/*")
 
   for PY_SCRIPT in "${PY_SCRIPTS[@]}"; do
@@ -208,7 +208,7 @@ pylinter(){
     echo -e "\\n""${GREEN}""Run pylint on ${PY_SCRIPT}:""${NC}""\\n"
     mapfile -t PY_RESULT < <(pipenv run pylint --load-plugins pylint_django --rcfile=../.pylintrc "${PY_SCRIPT}" 2> >(grep -v "Courtesy Notice\|Loading .env" >&2) )
     local RATING_10=0
-    if [[ "${#PY_RESULT[@]}" -gt 0 ]]; then 
+    if [[ "${#PY_RESULT[@]}" -gt 0 ]]; then
       if ! printf '%s\n' "${PY_RESULT[@]}" | grep -q -P '^Your code has been rated at 10'; then
         for LINE in "${PY_RESULT[@]}"; do
           echo "${LINE}"
@@ -249,7 +249,7 @@ dockerchecker(){
     else
       echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
       ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
-      MODULES_TO_CHECK_ARR+=( "${DOCKER_COMP}" )    
+      MODULES_TO_CHECK_ARR+=( "${DOCKER_COMP}" )
     fi
   done
   #TODO dockerlinter -f ./Dockerfile
@@ -268,13 +268,24 @@ yamlchecker(){
     else
       echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
       ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
-      MODULES_TO_CHECK_ARR+=( "${YAML_COMP_}" )    
+      MODULES_TO_CHECK_ARR+=( "${YAML_COMP_}" )
     fi
   done
 }
 
+openapichecker(){
+  echo -e "\\n""${ORANGE}""${BOLD}""EMBArk openapi spec check""${NC}""\\n""${BOLD}""=================================================================""${NC}"
+  if spectral lint ./Documentation/openapi.yaml ; then
+    echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
+  else
+    echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
+      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+      MODULES_TO_CHECK_ARR+=( "./Documentation/openapi.yaml" )
+  fi
+}
+
 list_linter_exceptions(){
-  # lists all linter exceptions for a given toolname inside a directory 
+  # lists all linter exceptions for a given toolname inside a directory
   # $1 tool name
   # $2 directory
   # $3 excluded dir for find
@@ -318,7 +329,7 @@ list_linter_exceptions(){
 }
 
 copy_right_check(){
-  # checks all Copyright occurences for supplied end-year 
+  # checks all Copyright occurences for supplied end-year
   # $1 end-year
   # $2 dir to look in
   # $3 excluded dir for find
@@ -331,7 +342,7 @@ copy_right_check(){
     for LINE_ in "${COPYRIGHT_LINE_[@]}"; do
       if ! grep -q "${YEAR_}.*Siemens Energy AG" "${LINE_%%:*}" && ! grep -q "Siemens AG" "${LINE_%%:*}"; then
         ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
-        MODULES_TO_CHECK_ARR+=( "${LINE_%%:*}" )  
+        MODULES_TO_CHECK_ARR+=( "${LINE_%%:*}" )
         echo -e "Found problem with Copyright in ${LINE_%%:*}: ${ORANGE}${LINE_##*:}""${NC}""\\n"
         echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
       fi
@@ -360,6 +371,7 @@ pylinter
 list_linter_exceptions "pylint" "$PWD/embark"
 check_django
 yamlchecker
+openapichecker
 copy_right_check 2025 "${PWD}" "${PWD}/emba_logs"
 
 if [[ "${#MODULES_TO_CHECK_ARR[@]}" -gt 0 ]]; then
