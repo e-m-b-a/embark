@@ -9,8 +9,7 @@ from uploader.models import FirmwareAnalysis, FirmwareFile
 
 class TestModels(TestCase):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(self, *args, **kwargs)
+    def setUp(self):
         self.fw_file = FirmwareFile.objects.create()
         self.fw_file.save()
 

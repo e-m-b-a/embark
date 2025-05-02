@@ -48,8 +48,7 @@ class SeleniumTests(StaticLiveServerTestCase):
 
 
 class TestUsers(TestCase):
-    def __init__(self):
-        super().__init__(self)
+    def setUp(self):
         user = User.objects.create(username='testuser')
         user.set_password('12345')
         user.save()
