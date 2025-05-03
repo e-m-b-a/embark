@@ -20,6 +20,7 @@ class User(AbstractUser):
     team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, editable=True, related_name='member_of_team')
     is_active_member = models.BooleanField(default=True, help_text='Whether this team member is active or not')
     api_key = models.CharField(max_length=64, blank=True, null=True, help_text="API key of the user")
+    config_id = models.CharField(max_length=64, blank=True, null=True, help_text="Configuration ID of the user")
 
     class Meta:
         default_permissions = ()    # disable "add", "change", "delete" and "view" default permissions
@@ -34,3 +35,8 @@ class User(AbstractUser):
             ("dashboard_permission_minimal", "Can access dashboard functionalities of embark"),
             ("dashboard_permission_advanced", "Can access all dashboard functionalities of embark"),
         )
+
+class Configuration(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='configuration', help_text="User who created this configuration")
+    ssh_private_key = models.TextField(blank=True, null=True, help_text="SSH private key to access worker nodes")
+    ip_range = models.TextField(blank=True, null=True, help_text="IP range of the worker nodes")

@@ -26,7 +26,7 @@ from django.db.models import Q
 from django.http import JsonResponse
 
 from users.forms import LoginForm, SignUpForm, ResetForm
-from users.models import User
+from users.models import User, Configuration
 from users.decorators import require_api_key
 
 logger = logging.getLogger(__name__)
@@ -342,3 +342,31 @@ def generate_api_key(request):
 def api_test(request):
     api_user = request.api_user
     return JsonResponse({'message': f'Hello, {api_user.username}!'})
+
+def set_config(request):
+    if request.method == "POST":
+        user = get_user(request)
+        new_config_id = request.POST["configuration"]
+        user.config_id = new_config_id
+        user.save()
+        messages.success(request, str(user.username) + ' config set to : Configuration ' + str(new_config_id))
+        return redirect("..")
+    else:
+        messages.error(request, 'Config could not be set')
+        return redirect("..")
+
+def create_config(request):
+    if request.method == "POST":
+        user = get_user(request)
+        ssh_private_key = request.POST.get("ssh_private_key")
+        ip_range = request.POST.get("ip_range")
+        Configuration.objects.create(
+            user=user,
+            ssh_private_key=ssh_private_key,
+            ip_range=ip_range
+        )
+        messages.success(request, 'Config created successfully.')
+        return redirect("..")
+    else:
+        messages.error(request, 'Config could not be created')
+        return redirect("..")

@@ -1,0 +1,25 @@
+<form action="{% url 'embark-acc-configuration' %}" method="post">
+    {% csrf_token %}
+    <label for="configuration">Configuration:</label>
+    <select name="configuration">
+        {% for config in user.configuration.all %}
+            <option value="{{config.id}}" 
+                {% if config.id|stringformat:"s" == user.config_id %}selected{% endif %}>
+                Configuration {{config.id}} - {{config.ip_range|default:"N/A"}} 
+            </option>
+        {% endfor %}
+    </select>
+    <input type="submit" value="Set">
+</form>
+
+<form action="{% url 'embark-acc-create-configuration' %}" method="post">
+    {% csrf_token %}
+
+    <label for="ssh_private_key">SSH Private Key:</label><br>
+    <textarea name="ssh_private_key" id="ssh_private_key" rows="5" cols="60"></textarea><br><br>
+
+    <label for="ip_range">IP Range:</label><br>
+    <input type="text" name="ip_range" id="ip_range"><br><br>
+
+    <input type="submit" value="Create Configuration">
+</form>
