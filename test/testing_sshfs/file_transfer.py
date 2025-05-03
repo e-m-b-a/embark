@@ -10,7 +10,7 @@
 from sshfs import SSHFileSystem
 
 # Connect to the VM using SSHFS
-fs = SSHFileSystem(host='ip/localhost', username='name', password='password', port='the port that is opened')
+fs = SSHFileSystem(host='PLACEHOLDER', username='PLACEHOLDER', password='PLACEHOLDER', port='PLACEHOLDER') #nosec
 
 # Specify the remote file path and the local destination path
 remote_path = 'test'        # Path to the remote file on the VM
