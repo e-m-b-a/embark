@@ -350,8 +350,11 @@ def api_test(request):
 def set_or_delete_config(request):
     if request.method == "POST":
         user = get_user(request)
-        selected_config_id = request.POST["configuration"]
-        action = request.POST["action"]
+        selected_config_id = request.POST.get("configuration")
+        action = request.POST.get("action")
+        if not selected_config_id or not action:
+            messages.error(request, 'No configuration selected')
+            return redirect("..")
 
         if action == "Set":
             user.config_id = selected_config_id
