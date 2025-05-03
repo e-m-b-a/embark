@@ -344,18 +344,34 @@ def api_test(request):
     api_user = request.api_user
     return JsonResponse({'message': f'Hello, {api_user.username}!'})
 
-def set_config(request):
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.user_permission", login_url='/')
+def set_or_delete_config(request):
     if request.method == "POST":
         user = get_user(request)
-        new_config_id = request.POST["configuration"]
-        user.config_id = new_config_id
-        user.save()
-        messages.success(request, str(user.username) + ' config set to : Configuration ' + str(new_config_id))
-        return redirect("..")
+        selected_config_id = request.POST["configuration"]
+        action = request.POST["action"]
+
+        if action == "Set":
+            user.config_id = selected_config_id
+            user.save()
+            messages.success(request, str(user.username) + ' config set to : Configuration ' + str(selected_config_id))
+            return redirect("..")
+        elif action == "Delete":
+            user.config_id = None if user.config_id == selected_config_id else user.config_id
+            user.save()
+            config = Configuration.objects.get(id=selected_config_id)
+            config.delete()
+            messages.success(request, str(user.username) + ' config: Configuration ' + str(selected_config_id) + ' deleted')
+            return redirect("..")
     else:
-        messages.error(request, 'Config could not be set')
+        messages.error(request, 'Config could not be adjusted')
         return redirect("..")
 
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.user_permission", login_url='/')
 def create_config(request):
     if request.method == "POST":
         user = get_user(request)
