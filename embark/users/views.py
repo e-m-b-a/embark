@@ -327,7 +327,7 @@ def reset_password(request):
     reset_form = ResetForm()
     admin_email = User.objects.get(username='admin').email
     return render(request, 'user/lostPassword.html', {'form': reset_form, 'email_setting': settings.EMAIL_ACTIVE, 'admin_email': admin_email})
-    
+
 @require_http_methods(["GET"])
 @login_required(login_url="/" + settings.LOGIN_URL)
 @permission_required("users.user_permission", login_url="/")
