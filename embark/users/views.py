@@ -1,35 +1,34 @@
 # pylint: disable=R1705
-__copyright__ = "Copyright 2021-2025 Siemens Energy AG, Copyright 2021 The AMOS Projects, Copyright 2021 Siemens AG"
-__author__ = (
-    "YulianaPoliakova, Garima Chauhan, p4cx, Benedikt Kuehne, VAISHNAVI UMESH, m-1-k-3"
-)
+__copyright__ = "Copyright 2021-2025 Siemens Energy AG, \
+        Copyright 2021 The AMOS Projects, Copyright 2021 Siemens AG"
+__author__ = "YulianaPoliakova, Garima Chauhan, p4cx, \
+        Benedikt Kuehne, VAISHNAVI UMESH, m-1-k-3"
 __license__ = "MIT"
 
 import builtins
 import logging
 import secrets
 
-from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.auth import authenticate, login, logout, get_user
-from django.contrib.auth.tokens import default_token_generator
-from django.contrib.auth.models import Permission, Group
-from django.contrib.sites.shortcuts import get_current_site
-from django.contrib import messages
-from django.forms import ValidationError
-from django.shortcuts import render, redirect
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-from django.template.loader import render_to_string
 from django.conf import settings
-from django.utils import timezone
-from django.urls import reverse
+from django.contrib import messages
+from django.contrib.auth import authenticate, get_user, login, logout
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.tokens import default_token_generator
+from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import send_mail
 from django.db.models import Q
+from django.forms import ValidationError
 from django.http import JsonResponse
-
-from users.forms import LoginForm, SignUpForm, ResetForm
-from users.models import User
+from django.shortcuts import redirect, render
+from django.template.loader import render_to_string
+from django.urls import reverse
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 from users.decorators import require_api_key
+from users.forms import LoginForm, ResetForm, SignUpForm
+from users.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +38,8 @@ logger = logging.getLogger(__name__)
 def user_main(request):
     user = get_user(request)
     logger.debug("Account settings for %s", user)
-    #   return render(request, 'user/index.html', {"timezones": settings.TIMEZONES, "server_tz": settings.TIME_ZONE, 'user': user})
+    #   return render(request, 'user/index.html', {"timezones": \
+    # settings.TIMEZONES, "server_tz": settings.TIME_ZONE, 'user': user})
     return render(
         request,
         "user/index.html",
@@ -80,11 +80,15 @@ def register(request):
                 )
                 if settings.EMAIL_ACTIVE is True:
                     send_mail(
-                        mail_subject, message, "system@" + settings.DOMAIN, [email]
+                        mail_subject,
+                        message,
+                        "system@" + settings.DOMAIN,
+                        [email],
                     )
                     messages.success(
                         request,
-                        "Registration successful. Please check your email to activate",
+                        "Registration successful. Please check your \
+                                email to activate",
                     )
                     return redirect(reverse("embark-login"))
                 else:
@@ -96,7 +100,9 @@ def register(request):
                         raise ValidationError("Activation Error")
         except builtins.Exception as error:
             logger.exception("Wide exception in Signup: %s", error)
-            messages.error(request, "Something went wrong when signing up the user.")
+            messages.error(
+                request, "Something went wrong when signing up the user."
+            )
     else:
         signup_form = SignUpForm()
     return render(request, "user/register.html", {"form": signup_form})
@@ -116,7 +122,8 @@ def embark_login(request):
                     login(request, user)
                     logger.debug("User logged in")
                     request.session["django_timezone"] = user.timezone
-                    # messages.success(request, str(user.username) + ' timezone set to : ' + str(user.timezone))
+                    # messages.success(request, str(user.username) + \
+                    # ' timezone set to : ' + str(user.timezone))
                     return redirect("embark-uploader-home")
                 logger.debug("User could not be authenticated")
             logger.debug("Form errors: %s", str(login_form.errors))
@@ -125,7 +132,9 @@ def embark_login(request):
             messages.error(request, "User is deactivated")
         except builtins.Exception as error:
             logger.exception("Wide exception in Signup: %s", error)
-            messages.error(request, "Something went wrong when logging in the user.")
+            messages.error(
+                request, "Something went wrong when logging in the user."
+            )
     login_form = LoginForm()
     return render(request, "user/login.html", {"form": login_form})
 
@@ -157,17 +166,23 @@ def password_change(request):  # TODO adapt t
                 if user.check_password(old_password):
                     if old_password == new_password:
                         logger.debug("New password = old password")
-                        messages.error(request, "New password matches the old password")
+                        messages.error(
+                            request, "New password matches the old password"
+                        )
                         return render(request, "user/passwordChange.html")
                     if new_password == confirm_password:
                         user.set_password(new_password)
                         user.save()
                         authenticate(
-                            request, username=user.username, password=new_password
+                            request,
+                            username=user.username,
+                            password=new_password,
                         )
                         login(request, user)
                         logger.debug("New password set, user authenticated")
-                        messages.success(request, "Password change successful.")
+                        messages.success(
+                            request, "Password change successful."
+                        )
                         return render(request, "user/passwordChangeDone.html")
                     else:
                         logger.debug("Passwords do not match")
@@ -184,7 +199,9 @@ def password_change(request):  # TODO adapt t
         except builtins.Exception as error:
             logger.exception("Wide exception in Password Change: %s", error)
             messages.error(
-                request, "Something went wrong when changing the password for the user."
+                request,
+                "Something went wrong when changing the password \
+                        for the user.",
             )
             return render(request, "user/passwordChange.html")
     return render(request, "user/passwordChange.html")
@@ -212,12 +229,20 @@ def acc_delete(request):
             },
         )
         if settings.EMAIL_ACTIVE is True:
-            send_mail(mail_subject, message, "system@" + settings.DOMAIN, [email])
-            messages.success(request, "Please check your email to confirm deletion")
-            return redirect(reverse("embark-deactivate-user", kwargs={"uuid": user.id}))
+            send_mail(
+                mail_subject, message, "system@" + settings.DOMAIN, [email]
+            )
+            messages.success(
+                request, "Please check your email to confirm deletion"
+            )
+            return redirect(
+                reverse("embark-deactivate-user", kwargs={"uuid": user.id})
+            )
         else:
             logger.debug(
-                " %s Account: %s disabled", timezone.now().strftime("%H:%M:%S"), user
+                " %s Account: %s disabled",
+                timezone.now().strftime("%H:%M:%S"),
+                user,
             )
             user.username = (
                 user.get_username()
@@ -243,7 +268,8 @@ def deactivate(request, user_id):  # TODO
 def get_log(request, log_type, lines):  # FIXME move to admin
     """
     View takes a get request with following params:
-    1. log_type: selector of log file (daphne, migration, mysql_db, redis_db, uwsgi, web)
+    1. log_type: selector of log file (daphne, migration, mysql_db,
+      redis_db, uwsgi, web)
     2. lines: lines in log file
     Args:
         request: HTTPRequest instance
@@ -251,7 +277,14 @@ def get_log(request, log_type, lines):  # FIXME move to admin
     Returns:
 
     """
-    log_file_list = ["daphne", "migration", "mysql_db", "redis_db", "uwsgi", "web"]
+    log_file_list = [
+        "daphne",
+        "migration",
+        "mysql_db",
+        "redis_db",
+        "uwsgi",
+        "web",
+    ]
     log_file = log_file_list[int(log_type)]
     file_path = f"{settings.BASE_DIR}/logs/{log_file}.log"
     logger.info("Load log file: %s", file_path)
@@ -273,7 +306,7 @@ def get_log(request, log_type, lines):  # FIXME move to admin
                     lines_found = file_.readlines()
                     block_counter -= 1
 
-                result = lines_found[-(lines + 1) :]
+                result = lines_found[-(lines + 1):]
             except builtins.Exception as error:
                 logger.exception("Wide exception in logstreamer: %s", error)
 
@@ -309,7 +342,8 @@ def set_timezone(request):
         user.timezone = new_timezone
         user.save()
         messages.success(
-            request, str(user.username) + " timezone set to : " + str(new_timezone)
+            request,
+            str(user.username) + " timezone set to : " + str(new_timezone),
         )
         return redirect("..")
     else:

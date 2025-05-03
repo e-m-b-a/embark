@@ -20,7 +20,7 @@
             <input type="submit" class="solid btn-generate" value="Generate" />
         </form>
         <!-- Hidden place to render Django messages -->
-        <div id="messages" style="display: none;">
+        <div id="messages">
             {% for message in messages %}<div class="django-message">{{ message }}</div>{% endfor %}
         </div>
         <script>

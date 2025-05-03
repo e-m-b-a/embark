@@ -57,3 +57,8 @@ form[action="/user/set_timezone/"] {
     margin: 2rem auto;
     text-align: center;
 }
+
+#messages {
+    display: none; 
+}
+

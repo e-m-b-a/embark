@@ -1,5 +1,6 @@
-from django.http import JsonResponse
 from functools import wraps
+
+from django.http import JsonResponse
 from users.models import User
 
 
