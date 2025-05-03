@@ -6,6 +6,7 @@ __license__ = 'MIT'
 import builtins
 import logging
 import secrets
+import re
 
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import authenticate, login, logout, get_user
@@ -360,6 +361,20 @@ def create_config(request):
         user = get_user(request)
         ssh_private_key = request.POST.get("ssh_private_key")
         ip_range = request.POST.get("ip_range")
+        # check if ssh_private_key and ip_range are provided
+        if not ssh_private_key or not ip_range:
+            messages.error(request, 'SSH private key and IP range are required.')
+            return redirect("..")
+        # check ssh key format
+        if not ssh_private_key.startswith("-----BEGIN OPENSSH PRIVATE KEY-----") or not ssh_private_key.endswith("-----END OPENSSH PRIVATE KEY-----"):
+            messages.error(request, 'Invalid SSH private key format.')
+            return redirect("..")
+        # check ip range format
+        ip_range_regex = r"^(\d{1,3}\.){3}\d{1,3}/\d{1,2}$"
+        if not re.match(ip_range_regex, ip_range):
+            messages.error(request, 'Invalid IP range format. Use CIDR notation')
+            return redirect("..")
+
         Configuration.objects.create(
             user=user,
             ssh_private_key=ssh_private_key,
