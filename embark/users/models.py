@@ -36,6 +36,7 @@ class User(AbstractUser):
             ("dashboard_permission_advanced", "Can access all dashboard functionalities of embark"),
         )
 
+
 class Configuration(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='configuration', help_text="User who created this configuration")
     ssh_private_key = models.TextField(blank=True, null=True, help_text="SSH private key to access worker nodes")

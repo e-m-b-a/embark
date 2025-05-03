@@ -2,6 +2,7 @@ from functools import wraps
 from django.http import JsonResponse
 from users.models import User
 
+
 def require_api_key(view_func):
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):

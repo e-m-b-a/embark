@@ -328,6 +328,7 @@ def reset_password(request):
     admin_email = User.objects.get(username='admin').email
     return render(request, 'user/lostPassword.html', {'form': reset_form, 'email_setting': settings.EMAIL_ACTIVE, 'admin_email': admin_email})
 
+
 @require_http_methods(["GET"])
 @login_required(login_url="/" + settings.LOGIN_URL)
 @permission_required("users.user_permission", login_url="/")
@@ -339,10 +340,12 @@ def generate_api_key(request):
     messages.success(request, f"Your new API key: {new_api_key}")
     return redirect("..")
 
+
 @require_api_key
 def api_test(request):
     api_user = request.api_user
     return JsonResponse({'message': f'Hello, {api_user.username}!'})
+
 
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -360,17 +363,17 @@ def set_or_delete_config(request):
             user.config_id = selected_config_id
             user.save()
             messages.success(request, str(user.username) + ' config set to : Configuration ' + str(selected_config_id))
-            return redirect("..")
         elif action == "Delete":
             user.config_id = None if user.config_id == selected_config_id else user.config_id
             user.save()
             config = Configuration.objects.get(id=selected_config_id)
             config.delete()
             messages.success(request, str(user.username) + ' config: Configuration ' + str(selected_config_id) + ' deleted')
-            return redirect("..")
+        return redirect("..")
     else:
         messages.error(request, 'Config could not be adjusted')
         return redirect("..")
+
 
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
