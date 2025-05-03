@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from functools import wraps
 from users.models import User
 
+
 def require_api_key(view_func):
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
@@ -13,8 +14,8 @@ def require_api_key(view_func):
             user = User.objects.get(api_key=api_key)
             request.api_user = user
         except User.DoesNotExist:
-            return JsonResponse({'error': 'Invalid API key'}, status=401)
-        
+            return JsonResponse({"error": "Invalid API key"}, status=401)
+
         return view_func(request, *args, **kwargs)
-    
+
     return _wrapped_view
