@@ -434,6 +434,7 @@ install_embark_dev(){
   fi
   # npm packages
   npm install -g jshint
+  npm install -g @stoplight/spectral-cli
   # npm install -g dockerlinter
 
   # Add user nosudo
