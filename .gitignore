@@ -7,7 +7,6 @@ cert/
 emba_logs/
 logs/
 embark/static/external/
-documentation/
 embark_db/
 .vscode/
 www/
