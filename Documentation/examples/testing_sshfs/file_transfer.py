@@ -1,9 +1,12 @@
 # On the VM we need to use:
 
-# sudo apt update (optinoal)
+# sudo apt update (optional)
 # sudo apt install openssh-server
 # sudo systemctl enable ssh
 # sudo systemctl start ssh
+
+
+# On the local machine we need to install sshfs and the sshfs library for Python:
 # sudo apt install sshfs
 # pip install sshfs
 
