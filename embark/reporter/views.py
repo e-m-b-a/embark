@@ -379,3 +379,17 @@ def get_load(request):
     except ResourceTimestamp.DoesNotExist:
         logger.error('ResourceTimestamps not found in database')
         return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)
+
+@require_api_key
+@require_http_methods(["GET"])
+@login_required(login_url="/" + settings.LOGIN_URL)
+@permission_required("users.reporter_permission", login_url="/")
+def status_report(request):
+    """
+    Gets the status of the analysis of UUID.
+    If the analysis has not finished yet, returns status code xxx
+    Otherwise sends back a zip file of the analysis
+    """
+    try:
+        if os.path.exists("" + request.id)
+    except
