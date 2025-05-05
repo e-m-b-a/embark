@@ -1,6 +1,6 @@
-__copyright__ = 'Copyright 2021-2025 Siemens Energy AG'
-__author__ = 'Benedikt Kuehne'
-__license__ = 'MIT'
+__copyright__ = "Copyright 2021-2025 Siemens Energy AG"
+__author__ = "Benedikt Kuehne"
+__license__ = "MIT"
 
 from http import HTTPStatus
 from selenium import webdriver
@@ -15,7 +15,7 @@ from users.models import User
 
 
 class SeleniumTests(StaticLiveServerTestCase):
-    fixtures = ['user-data.json']
+    fixtures = ["user-data.json"]
 
     @classmethod
     def setUpClass(cls):
@@ -29,29 +29,29 @@ class SeleniumTests(StaticLiveServerTestCase):
         super().tearDownClass()
 
     def test_register(self):
-        self.driver.get(f'{self.live_server_url}/register')
+        self.driver.get(f"{self.live_server_url}/register")
         username_input = self.driver.find_element(By.NAME, "name")
-        username_input.send_keys('tester')
+        username_input.send_keys("tester")
         password_input = self.driver.find_element(By.NAME, "password")
-        password_input.send_keys('tester')
+        password_input.send_keys("tester")
         confirm_password_input = self.driver.find_element(By.NAME, "confirm_password")
-        confirm_password_input.send_keys('tester')
+        confirm_password_input.send_keys("tester")
         self.driver.find_element(By.XPATH, '//input[@value="Register"]').click()
 
     def test_login(self):
-        self.driver.get(f'{self.live_server_url}/')
+        self.driver.get(f"{self.live_server_url}/")
         username_input = self.driver.find_element(By.NAME, "username")
-        username_input.send_keys('tester')
+        username_input.send_keys("tester")
         password_input = self.driver.find_element(By.NAME, "password")
-        password_input.send_keys('tester')
+        password_input.send_keys("tester")
         self.driver.find_element(By.XPATH, '//input[@value="Login"]').click()
 
 
 class TestUsers(TestCase):
     def __init__(self):
         super().__init__(self)
-        user = User.objects.create(username='testuser')
-        user.set_password('12345')
+        user = User.objects.create(username="testuser")
+        user.set_password("12345")
         user.save()
         self.client = Client()
 
@@ -61,7 +61,10 @@ class TestUsers(TestCase):
         Returns:
 
         """
-        response = self.client.post('/signup', {'username': 'testuser1', 'password': '12345', 'confirm_password': '12345'})
+        response = self.client.post(
+            "/signup",
+            {"username": "testuser1", "password": "12345", "confirm_password": "12345"},
+        )
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_signin(self):
@@ -70,7 +73,9 @@ class TestUsers(TestCase):
         Returns: redirect (302) to mainDashboard
 
         """
-        response = self.client.post('/signin', {'username': 'testuser1', 'password': '12345'})
+        response = self.client.post(
+            "/signin", {"username": "testuser1", "password": "12345"}
+        )
         self.assertEqual(response.status_code, HttpResponseRedirect)
 
     def test_signin_wrong_password(self):
@@ -79,7 +84,9 @@ class TestUsers(TestCase):
         Returns:
 
         """
-        response = self.client.post('/signin', {'username': 'testuser', 'password': '1234'})
+        response = self.client.post(
+            "/signin", {"username": "testuser", "password": "1234"}
+        )
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_signin_wrong_body(self):
@@ -90,5 +97,7 @@ class TestUsers(TestCase):
         Returns:
 
         """
-        response = self.client.post('/signin', {'email': 'testuser', 'password': '12345'})
+        response = self.client.post(
+            "/signin", {"email": "testuser", "password": "12345"}
+        )
         self.assertEqual(response.status_code, HTTPStatus.OK)
