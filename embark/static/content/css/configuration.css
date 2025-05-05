@@ -19,6 +19,15 @@ html, body {
     margin-right: auto;
 }
 
+.configuration-create-container {
+    width: 100%;
+    max-width: 400px;
+    padding: 2rem;
+    border-radius: 10px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 form {
     display: flex;
     flex-direction: column;
@@ -30,4 +39,39 @@ label {
     font-size: 1rem;
     margin-bottom: 0.5rem;
     text-align: center;
+}
+
+.configuration-textbox-row {
+    display: flex;
+    gap: 0.5rem;
+}
+
+#name {
+    width: 100%;
+    max-width: 400px;
+    padding: 0 1rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #f0f0f0;
+}
+
+#ssh_private_key {
+    width: 100%;
+    max-width: 400px;
+    padding: 0 1rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #f0f0f0;
+}
+
+#ip_range {
+    width: 100%;
+    max-width: 400px;
+    padding: 0 1rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #f0f0f0;
 }

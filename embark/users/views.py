@@ -362,13 +362,13 @@ def set_or_delete_config(request):
         if action == "Set":
             user.config_id = selected_config_id
             user.save()
-            messages.success(request, str(user.username) + ' config set to : Configuration ' + str(selected_config_id))
+            messages.success(request, str(user.username) + ' configuration set successfully')
         elif action == "Delete":
             user.config_id = None if user.config_id == selected_config_id else user.config_id
             user.save()
             config = Configuration.objects.get(id=selected_config_id)
             config.delete()
-            messages.success(request, str(user.username) + ' config: Configuration ' + str(selected_config_id) + ' deleted')
+            messages.success(request, str(user.username) + ' configuration deleted successfully')
         return redirect("..")
     else:
         messages.error(request, 'Config could not be adjusted')
