@@ -20,6 +20,7 @@ from uploader.boundedexecutor import BoundedExecutor
 from uploader.forms import DeviceForm, FirmwareAnalysisForm, DeleteFirmwareForm, LabelForm, VendorForm
 from uploader.models import FirmwareFile
 from uploader.serializers import FirmwareAnalysisSerializer
+from users.decorators import require_api_key
 from users.models import User
 
 
@@ -74,6 +75,7 @@ class BufferFullException(Exception):
 class UploaderView(APIView):
     parser_classes = [MultiPartParser]
 
+    @require_api_key
     def post(self, request, *args, **kwargs):
         """
         file saving on POST requests with attached file
