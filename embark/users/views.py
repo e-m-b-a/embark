@@ -381,11 +381,12 @@ def set_or_delete_config(request):
 def create_config(request):
     if request.method == "POST":
         user = get_user(request)
+        name = request.POST.get("name")
         ssh_private_key = request.POST.get("ssh_private_key")
         ip_range = request.POST.get("ip_range")
         # check if ssh_private_key and ip_range are provided
-        if not ssh_private_key or not ip_range:
-            messages.error(request, 'SSH private key and IP range are required.')
+        if not ssh_private_key or not ip_range or not name:
+            messages.error(request, 'Name, SSH private key and IP range are required.')
             return redirect("..")
         # check ssh key format
         if not ssh_private_key.startswith("-----BEGIN OPENSSH PRIVATE KEY-----") or not ssh_private_key.endswith("-----END OPENSSH PRIVATE KEY-----"):
@@ -398,6 +399,7 @@ def create_config(request):
             return redirect("..")
 
         Configuration.objects.create(
+            name=name,
             user=user,
             ssh_private_key=ssh_private_key,
             ip_range=ip_range
