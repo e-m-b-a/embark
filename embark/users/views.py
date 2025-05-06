@@ -5,6 +5,7 @@ __license__ = 'MIT'
 
 import builtins
 import logging
+import secrets
 
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import authenticate, login, logout, get_user
@@ -22,9 +23,11 @@ from django.utils import timezone
 from django.urls import reverse
 from django.core.mail import send_mail
 from django.db.models import Q
+from django.http import JsonResponse
 
 from users.forms import LoginForm, SignUpForm, ResetForm
 from users.models import User
+from users.decorators import require_api_key
 
 logger = logging.getLogger(__name__)
 
@@ -323,3 +326,21 @@ def reset_password(request):
     reset_form = ResetForm()
     admin_email = User.objects.get(username='admin').email
     return render(request, 'user/lostPassword.html', {'form': reset_form, 'email_setting': settings.EMAIL_ACTIVE, 'admin_email': admin_email})
+
+
+@require_http_methods(["GET"])
+@login_required(login_url="/" + settings.LOGIN_URL)
+@permission_required("users.user_permission", login_url="/")
+def generate_api_key(request):
+    user = get_user(request)
+    new_api_key = secrets.token_urlsafe(32)
+    user.api_key = new_api_key
+    user.save()
+    messages.success(request, f"Your new API key: {new_api_key}")
+    return redirect("..")
+
+
+@require_api_key
+def api_test(request):
+    api_user = request.api_user
+    return JsonResponse({'message': f'Hello, {api_user.username}!'})

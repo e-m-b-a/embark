@@ -1,0 +1,17 @@
+Title	URL	Assignees	Status	Estimated size	Real size
+Configuration scripts for worker node | Kali Linux latest	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/19	ClProsser	Product Backlog		
+Configuration scripts for worker node | Ubuntu 24.04 LTS	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/21	SirGankalot	Product Backlog		
+Configuration scripts for worker node | Ubuntu 22.04 LTS	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/20	SirGankalot	Product Backlog		
+EMBArk view: All reachable worker nodes	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/17		Product Backlog		
+Connect to worker node	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/15	SirGankalot	Product Backlog		
+Configure worker node	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/18		Product Backlog		
+EMBA offline worker configuration	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/12	ClProsser, SirGankalot	In Progress	3	
+Integration testing	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/23	ClProsser	In Progress	2	
+Run example firmware analysis	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/13	ashiven, ClProsser, GeliFx, LukaDeka, SirGankalot	In Progress	2	
+Configure worker nodes in EMBArk	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/14	ashiven	In Progress	3	
+API | Upload firmware and add to queue	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/5	ClProsser, SirGankalot	In Progress	3	
+API | Familiarize with API	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/10	ashiven, ClProsser, LukaDeka, SirGankalot	In Progress	2	
+API | Get status report	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/6	LukaDeka	In Progress	3	
+API | Documentation tooling	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/22	ClProsser	Awaiting Review	1	
+Mount file system via SSHfs in Python	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/16	SirGankalot	Awaiting Review	2	
+API | Generate API-Key in user interface	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/4	ashiven, LukaDeka	Awaiting Review	3	

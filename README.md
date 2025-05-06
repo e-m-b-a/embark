@@ -27,7 +27,7 @@ Furthermore, *EMBArk* improves the data provision by aggregating the various sca
 
 * The new Tracking application currently doesn't work offline.
 * The device, Vendor and version tracking aren't fully integrated into all dashboards yet.
-* the only supported OS at this time is Ubuntu LTS (22.04)
+* the only supported OS at this time is Ubuntu LTS (24)
 
 ## Quick-Start
 `git clone https://github.com/e-m-b-a/embark.git; cd embark; sudo ./installer.sh -d`
@@ -41,7 +41,7 @@ To start the server on the host with the ipv4 192.168.126.123 and get management
 `sudo ./run-server.sh -a 192.168.126.123 -b 192.168.126.1/24`
 
 
-## Automated setup on Ubuntu 22.04 LTS
+## Automated setup on Ubuntu 24 LTS
 <details>
 
 1. Checkout the repository (e.g. `git clone https://github.com/e-m-b-a/embark.git`)
@@ -50,6 +50,7 @@ To start the server on the host with the ipv4 192.168.126.123 and get management
 4. Further details are available in the wiki (See [installation](https://github.com/e-m-b-a/embark/wiki/Installation))
 
 *EMBArk* is using the firmware security scanner *EMBA* as backend. You can take a look at the [*EMBA*](https://github.com/e-m-b-a/emba) repository and get more [information about usage of *EMBA* in the wiki](https://github.com/e-m-b-a/emba/wiki/Usage). Additionally you should check the [*EMBArk* wiki](https://github.com/e-m-b-a/embark/wiki).
+</details>
 
 ## Start Server
 To start the EMBArk-Server simply run `$ sudo ./run-server.sh`.

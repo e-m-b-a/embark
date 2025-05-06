@@ -26,24 +26,29 @@
         <a href="https://github.com/e-m-b-a/embark/releases/latest">Release-Notes</a>
     </div>
     <hr>
+    <p class="mainText"><span class="badge bg-danger-subtle">EMBA Configuration</span></p>
     <div class="update-check d-flex justify-content-center">
-      <h3><span class="badge bg-secondary">EMBA version</span>  {{ EMBA_VERSION }}</h3>
+      <h3>
+        <span class="badge bg-primary">EMBA version</span>  {{ emba_version }}
+        <br>
+        <span class="badge bg-secondary">Container version</span>  {{ container_version }}
+        <br>
+        <span class="badge bg-secondary">Github hash</span>  {{ github_emba_version }}
+      </h3>
     </div>
-    <div id="progress">
-      {% block progress %}{% include "updater/progress.html" %}{% endblock progress %}
+    <div class="container-fluid">
+      <div class="row justify-content-md-center" id="progress">
+        {% block progress %}{% include "updater/progress.html" %}{% endblock progress %}
+      </div>
+      <div class="row justify-content-md-center">
+        <div class="col col-lg-2" id="check">
+          {% block check %}{% include "updater/check.html" %}{% endblock check %}
+        </div>
+        <div class="col col-lg-2" id="update">
+          {% block update %}{% include "updater/update.html" %}{% endblock update %}
+        </div>
+      </div>
     </div>
-    <div id="check">
-      {% block check %}{% include "updater/check.html" %}{% endblock check %}
-    </div>
-    <div id="update">
-          <p>
-            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEMBA" aria-expanded="false" aria-controls="collapseEMBA" title="Update EMBA">
-              Update EMBA
-            </button>
-          </p>
-        {% block update %}{% include "updater/update.html" %}{% endblock update %}
-    </div>
-   
 </div>
 
 {% endtimezone %}

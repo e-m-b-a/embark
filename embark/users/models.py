@@ -19,6 +19,7 @@ class User(AbstractUser):
     email = models.EmailField(verbose_name="email address", blank=True, unique=True)
     team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, editable=True, related_name='member_of_team')
     is_active_member = models.BooleanField(default=True, help_text='Whether this team member is active or not')
+    api_key = models.CharField(max_length=64, blank=True, null=True, help_text="API key of the user")
 
     class Meta:
         default_permissions = ()    # disable "add", "change", "delete" and "view" default permissions
