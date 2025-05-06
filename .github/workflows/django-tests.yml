@@ -1,0 +1,23 @@
+name: EMBArk Django tests
+
+on: [push]
+
+jobs:
+  run-django-tests:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Install python libs
+        uses: Wandalen/wretry.action@master
+        with:
+          command: sudo apt-get update; sudo apt-get install -y libpython3.10-dev
+      - name: EMBArk default install
+        uses: Wandalen/wretry.action@master
+        with:
+          command: sudo ./installer.sh -sF
+      - name: Run tests
+        uses: Wandalen/wretry.action@master
+        with:
+          command: sudo pipenv run python manage.py test
