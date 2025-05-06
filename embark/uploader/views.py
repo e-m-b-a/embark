@@ -21,7 +21,6 @@ from uploader.forms import DeviceForm, FirmwareAnalysisForm, DeleteFirmwareForm,
 from uploader.models import FirmwareFile
 from uploader.serializers import FirmwareAnalysisSerializer
 from users.decorators import require_api_key
-from users.models import User
 
 
 logger = logging.getLogger(__name__)
@@ -93,7 +92,7 @@ class UploaderView(APIView):
             return Response({'status': 'error', 'message': 'Invalid file provided'}, status=400)
 
         firmware_file = FirmwareFile.objects.create(file=file_obj)
-        firmware_file.user = User.objects.get(username='admin')  # TODO: Changes based on api after api logic is implemented -> currently hardcoded to admin
+        firmware_file.user = request.api_user
         firmware_file.save()
         messages.info(request, 'upload successful.')
 
