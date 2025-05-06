@@ -3,8 +3,6 @@ __author__ = 'Benedikt Kuehne'
 __license__ = 'MIT'
 
 from http import HTTPStatus
-from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from django.http import HttpResponseRedirect
 from django.conf import settings
 
 from django.test import TestCase
@@ -12,13 +10,45 @@ from django.test import Client
 
 from users.models import User
 
+# class SeleniumTests(StaticLiveServerTestCase):
+#     fixtures = ['user-data.json']
+#
+#     @classmethod
+#     def setUpClass(cls):
+#         super().setUpClass()
+#         cls.driver = webdriver.Firefox()
+#         cls.driver.implicitly_wait(10)
+#
+#     @classmethod
+#     def tearDownClass(cls):
+#         cls.driver.quit()
+#         super().tearDownClass()
+#
+#     def test_register(self):
+#         self.driver.get(f'{self.live_server_url}/register')
+#         username_input = self.driver.find_element(By.NAME, "name")
+#         username_input.send_keys('tester')
+#         password_input = self.driver.find_element(By.NAME, "password")
+#         password_input.send_keys('tester')
+#         confirm_password_input = self.driver.find_element(By.NAME, "confirm_password")
+#         confirm_password_input.send_keys('tester')
+#         self.driver.find_element(By.XPATH, '//input[@value="Register"]').click()
+#
+#     def test_login(self):
+#         self.driver.get(f'{self.live_server_url}/')
+#         username_input = self.driver.find_element(By.NAME, "username")
+#         username_input.send_keys('tester')
+#         password_input = self.driver.find_element(By.NAME, "password")
+#         password_input.send_keys('tester')
+#         self.driver.find_element(By.XPATH, '//input[@value="Login"]').click()
+
 
 class TestUsers(TestCase):
     def setUp(self):
         user = User.objects.create(username='testuser')
         user.set_password('12345')
         user.save()
-        self.client = Client()
+        self.client = Client()  # pylint: disable=attribute-defined-outside-init
 
     def test_register(self):
         """
