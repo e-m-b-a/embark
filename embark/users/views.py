@@ -351,61 +351,53 @@ def api_test(request):
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.user_permission", login_url='/')
 def set_or_delete_config(request):
-    if request.method == "POST":
-        user = get_user(request)
-        selected_config_id = request.POST.get("configuration")
-        action = request.POST.get("action")
-        if not selected_config_id or not action:
-            messages.error(request, 'No configuration selected')
-            return redirect("..")
+    user = get_user(request)
+    selected_config_id = request.POST.get("configuration")
+    action = request.POST.get("action")
+    if not selected_config_id or not action:
+        messages.error(request, 'No configuration selected')
+        return redirect("..")
 
-        if action == "Set":
-            user.config_id = selected_config_id
-            user.save()
-            messages.success(request, str(user.username) + ' configuration set successfully')
-        elif action == "Delete":
-            user.config_id = None if user.config_id == selected_config_id else user.config_id
-            user.save()
-            config = Configuration.objects.get(id=selected_config_id)
-            config.delete()
-            messages.success(request, str(user.username) + ' configuration deleted successfully')
-        return redirect("..")
-    else:
-        messages.error(request, 'Config could not be adjusted')
-        return redirect("..")
+    if action == "Set":
+        user.config_id = selected_config_id
+        user.save()
+        messages.success(request, 'Configuration set successfully')
+    elif action == "Delete":
+        user.config_id = None if user.config_id == selected_config_id else user.config_id
+        user.save()
+        config = Configuration.objects.get(id=selected_config_id)
+        config.delete()
+        messages.success(request, 'Configuration deleted successfully')
+    return redirect("..")
 
 
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.user_permission", login_url='/')
 def create_config(request):
-    if request.method == "POST":
-        user = get_user(request)
-        name = request.POST.get("name")
-        ssh_private_key = request.POST.get("ssh_private_key")
-        ip_range = request.POST.get("ip_range")
-        # check if ssh_private_key and ip_range are provided
-        if not ssh_private_key or not ip_range or not name:
-            messages.error(request, 'Name, SSH private key and IP range are required.')
-            return redirect("..")
-        # check ssh key format
-        if not ssh_private_key.startswith("-----BEGIN OPENSSH PRIVATE KEY-----") or not ssh_private_key.endswith("-----END OPENSSH PRIVATE KEY-----"):
-            messages.error(request, 'Invalid SSH private key format.')
-            return redirect("..")
-        # check ip range format
-        ip_range_regex = r"^(\d{1,3}\.){3}\d{1,3}/\d{1,2}$"
-        if not re.match(ip_range_regex, ip_range):
-            messages.error(request, 'Invalid IP range format. Use CIDR notation')
-            return redirect("..")
+    user = get_user(request)
+    name = request.POST.get("name")
+    ssh_user = request.POST.get("ssh_user")
+    ssh_password = request.POST.get("ssh_password")
+    ip_range = request.POST.get("ip_range")
 
-        Configuration.objects.create(
-            name=name,
-            user=user,
-            ssh_private_key=ssh_private_key,
-            ip_range=ip_range
-        )
-        messages.success(request, 'Config created successfully.')
+    # check if ssh_private_key and ip_range are provided
+    if not ssh_user or not ssh_password or not ip_range or not name:
+        messages.error(request, 'Name, SSH user, SSH password, and IP range are required.')
         return redirect("..")
-    else:
-        messages.error(request, 'Config could not be created')
+    # check ip range format
+    ip_range_regex = r"^(\d{1,3}\.){3}\d{1,3}/\d{1,2}$"
+    if not re.match(ip_range_regex, ip_range):
+        messages.error(request, 'Invalid IP range format. Use CIDR notation')
         return redirect("..")
+
+    Configuration.objects.create(
+        name=name,
+        user=user,
+        ssh_user=ssh_user,
+        ssh_password=ssh_password,
+        ip_range=ip_range
+    )
+    messages.success(request, 'Config created successfully.')
+    return redirect("..")
+

@@ -38,7 +38,8 @@ class User(AbstractUser):
 
 
 class Configuration(models.Model):
-    name = models.CharField(max_length=150, blank=True, null=True, help_text="Name of the configuration")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='configuration', help_text="User who created this configuration")
-    ssh_private_key = models.TextField(blank=True, null=True, help_text="SSH private key to access worker nodes")
+    name = models.CharField(max_length=150, blank=True, null=True, help_text="Name of the configuration")
+    ssh_user = models.CharField(max_length=150, blank=True, null=True, help_text="SSH user of the worker nodes")
+    ssh_password = models.CharField(max_length=150, blank=True, null=True, help_text="SSH password of the worker nodes")
     ip_range = models.TextField(blank=True, null=True, help_text="IP range of the worker nodes")

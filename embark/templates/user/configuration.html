@@ -29,12 +29,17 @@
     <input type="text" name="name" id="name">
     </div>
 
-    <label for="ssh_private_key">SSH Private Key:</label>
+    <label for="ssh_user">SSH Username:</label>
     <div class="configuration-textbox-row">
-    <textarea name="ssh_private_key" id="ssh_private_key" rows="5" cols="60"></textarea>
+    <input type="text" name="ssh_user" id="ssh_user">
     </div>
 
-    <label for="ip_range">IP Range:</label>
+    <label for="ssh_password">SSH Password:</label>
+    <div class="configuration-textbox-row">
+    <input type="password" name="ssh_password" id="ssh_password">
+    </div>
+
+    <label for="ip_range">IP Range (CIDR):</label>
     <div class="configuration-textbox-row">
     <input type="text" name="ip_range" id="ip_range">
     </div>

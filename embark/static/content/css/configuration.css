@@ -56,7 +56,17 @@ label {
     background-color: #f0f0f0;
 }
 
-#ssh_private_key {
+#ssh_user {
+    width: 100%;
+    max-width: 400px;
+    padding: 0 1rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #f0f0f0;
+}
+
+#ssh_password {
     width: 100%;
     max-width: 400px;
     padding: 0 1rem;
