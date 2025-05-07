@@ -407,4 +407,3 @@ def create_config(request):
     )
     messages.success(request, 'Config created successfully.')
     return redirect("..")
-
