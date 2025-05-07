@@ -363,11 +363,18 @@ def set_or_delete_config(request):
         user.save()
         messages.success(request, 'Configuration set successfully')
     elif action == "Delete":
-        user.config_id = None if user.config_id == selected_config_id else user.config_id
-        user.save()
-        config = Configuration.objects.get(id=selected_config_id)
-        config.delete()
-        messages.success(request, 'Configuration deleted successfully')
+        try:
+            config = Configuration.objects.get(id=selected_config_id)
+            if config.user != user:
+                messages.error(request, 'You are not allowed to delete this configuration')
+                return redirect("..")
+            user.config_id = None if user.config_id == selected_config_id else user.config_id
+            user.save()
+            config.delete()
+            messages.success(request, 'Configuration deleted successfully')
+        except Configuration.DoesNotExist:
+            messages.error(request, 'Configuration not found')
+
     return redirect("..")
 
 
