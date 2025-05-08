@@ -1,11 +1,14 @@
 from functools import wraps
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpRequest
 from users.models import User
 
 
 def require_api_key(view_func):
     @wraps(view_func)
-    def _wrapped_view(request, *args, **kwargs):
+    def _wrapped_view(*args, **kwargs):
+        # Django REST Framework prepends the argument *self*, while Django does not
+        request = args[0] if isinstance(args[0], HttpRequest) else args[1]
+
         api_key = request.headers.get("Authorization") or request.GET.get("api_key")
         if not api_key:
             return JsonResponse({"error": "Missing API key"}, status=401)
@@ -16,6 +19,6 @@ def require_api_key(view_func):
         except User.DoesNotExist:
             return JsonResponse({'error': 'Invalid API key'}, status=401)
 
-        return view_func(request, *args, **kwargs)
+        return view_func(*args, **kwargs)
 
     return _wrapped_view
