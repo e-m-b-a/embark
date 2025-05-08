@@ -10,10 +10,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Install python libs
-        run: sudo apt-get update; sudo apt-get install -y libpython3.10-dev
+        run: >
+          sudo apt-get update
+          sudo apt-get install -y libpython3.10-dev
+          sudo pip install --upgrade pipenv
       - name: EMBArk default install
         run: sudo ./installer.sh -sF
       - name: Start DB
-        run: docker compose up -d
+        run: >
+          docker compose up -d
+          cd embark
+          python3 ./manage.py makemigrations users uploader reporter dashboard porter | tee -a ../logs/migration.log
+          python3 ./manage.py migrate | tee -a ../logs/migration.log
       - name: Run tests
-        run: cd embark; sudo pipenv run python manage.py test
+        run: >
+          cd embark
+          sudo pipenv run python manage.py test
