@@ -9,6 +9,7 @@ import time
 import re
 import uuid
 
+from unittest import skipIf
 from django.conf import settings
 from django.test import TestCase
 from uploader.models import FirmwareAnalysis
@@ -22,14 +23,14 @@ STATUS_PATTERN = r"\[\*\]*"
 PHASE_PATTERN = r"\[\!\]*"
 COLOR_PATTERN = '\033\\[([0-9]+)(;[0-9]+)*m'
 
-EMBA_MODULE_DICT = get_emba_modules(settings.EMBA_ROOT)
-S_MODULE_CNT, P_MODULE_CNT, Q_MODULE_CNT_, L_MODULE_CNT, F_MODULE_CNT, D_MODULE_CNT_ = count_emba_modules(EMBA_MODULE_DICT)
+S_MODULE_CNT = P_MODULE_CNT = Q_MODULE_CNT_ = L_MODULE_CNT = F_MODULE_CNT = D_MODULE_CNT_ = None
 
 
 class LogreaderException(Exception):
     pass
 
 
+@skipIf(os.environ.get('EMBA_INSTALL') == "no", "Skip tests depending on EMBA if not installed")
 class TestLogreader(TestCase):
 
     def __init__(self, methodName: str = "runTest") -> None:
@@ -37,6 +38,11 @@ class TestLogreader(TestCase):
         self.test_file_good = os.path.join(settings.BASE_DIR.parent, "test/logreader/good-log")
         self.test_file_bad = os.path.join(settings.BASE_DIR.parent, "test/logreader/fail-log")
         self.analysis_id = uuid.uuid4()
+
+        emba_module_dict = get_emba_modules(settings.EMBA_ROOT)
+
+        global S_MODULE_CNT, P_MODULE_CNT, Q_MODULE_CNT_, L_MODULE_CNT, F_MODULE_CNT, D_MODULE_CNT_
+        S_MODULE_CNT, P_MODULE_CNT, Q_MODULE_CNT_, L_MODULE_CNT, F_MODULE_CNT, D_MODULE_CNT_ = count_emba_modules(emba_module_dict)
 
     def setUp(self):
         super().setUp()
