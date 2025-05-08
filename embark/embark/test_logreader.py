@@ -39,11 +39,6 @@ class TestLogreader(TestCase):
         self.test_file_bad = os.path.join(settings.BASE_DIR.parent, "test/logreader/fail-log")
         self.analysis_id = uuid.uuid4()
 
-        emba_module_dict = get_emba_modules(settings.EMBA_ROOT)
-
-        global S_MODULE_CNT, P_MODULE_CNT, Q_MODULE_CNT_, L_MODULE_CNT, F_MODULE_CNT, D_MODULE_CNT_
-        S_MODULE_CNT, P_MODULE_CNT, Q_MODULE_CNT_, L_MODULE_CNT, F_MODULE_CNT, D_MODULE_CNT_ = count_emba_modules(emba_module_dict)
-
     def setUp(self):
         super().setUp()
         analysis = FirmwareAnalysis.objects.create(id=self.analysis_id)
@@ -60,6 +55,11 @@ class TestLogreader(TestCase):
         if not os.path.isfile(self.test_file_good) or not os.path.isfile(self.test_file_bad):
             logger.error("test_files not accessible")
             raise FileNotFoundError("Files for testing not found")
+
+        emba_module_dict = get_emba_modules(settings.EMBA_ROOT)
+
+        global S_MODULE_CNT, P_MODULE_CNT, Q_MODULE_CNT_, L_MODULE_CNT, F_MODULE_CNT, D_MODULE_CNT_
+        S_MODULE_CNT, P_MODULE_CNT, Q_MODULE_CNT_, L_MODULE_CNT, F_MODULE_CNT, D_MODULE_CNT_ = count_emba_modules(emba_module_dict)
 
     @staticmethod
     def logreader_status_calc(phase_nmbr, max_module, module_cnt):
