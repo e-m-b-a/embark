@@ -9,6 +9,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pipenv'
       - name: Install python libs
         run: |
           sudo apt-get update
