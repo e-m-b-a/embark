@@ -20,4 +20,4 @@ jobs:
       - name: Run tests
         uses: Wandalen/wretry.action@master
         with:
-          command: sudo pipenv run python manage.py test
+          command: cd embark; sudo pipenv run python manage.py test
