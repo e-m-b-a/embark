@@ -401,67 +401,88 @@ def status_report(request, analysis_id):
         if analysis.failed:
             if not analysis.zip_file:
                 make_zip(request, analysis_id)
-                return JsonResponse({
-                    "status": "failed",
-                    "error": (
-                        "Analysis failed. The logs are being zipped "
-                        "and soon will be ready for download."
-                    ),
-                }, status=HTTPStatus.OK)
+                return JsonResponse(
+                    {
+                        "status": "failed",
+                        "error": (
+                            "Analysis failed. The logs are being zipped "
+                            "and soon will be ready for download."
+                        ),
+                    },
+                    status=HTTPStatus.OK
+                )
 
             download_url = request.build_absolute_uri(
                 reverse("embark-download",
                         kwargs={"analysis_id": analysis_id})
             )
-            return JsonResponse({
-                "status": "failed",
-                "error": "Analysis failed, but logs are available.",
-                "download_url": download_url,
-            }, status=HTTPStatus.OK)
+            return JsonResponse(
+                {
+                    "status": "failed",
+                    "error": "Analysis failed, but logs are available.",
+                    "download_url": download_url,
+                },
+                status=HTTPStatus.OK
+            )
 
         if not analysis.finished:
-            return JsonResponse({
-                "status": "running",
-                "completion":
-                    f"{analysis.status.get('percentage', 0)}% finished",
-                "message": (
-                    f"Analysis has been running "
-                    f"since {analysis.start_date}."
-                ),
-            }, status=HTTPStatus.ACCEPTED)
+            return JsonResponse(
+                {
+                    "status": "running",
+                    "completion":
+                        f"{analysis.status.get('percentage', 0)}% finished",
+                    "message": (
+                        f"Analysis has been running "
+                        f"since {analysis.start_date}."
+                    ),
+                },
+                status=HTTPStatus.ACCEPTED
+            )
 
         # Analysis finished and didn't fail
         if not analysis.zip_file:
             make_zip(request, analysis_id)
-            return JsonResponse({
-                "status": "finished",
-                "message": (
-                    "Analysis finished successfully. "
-                    "The logs are being zipped "
-                    "and will soon be ready for download."
-                ),
-            }, status=HTTPStatus.OK)
+            return JsonResponse(
+                {
+                    "status": "finished",
+                    "message": (
+                        "Analysis finished successfully. "
+                        "The logs are being zipped "
+                        "and will soon be ready for download."
+                    ),
+                },
+                status=HTTPStatus.OK
+            )
 
         download_url = request.build_absolute_uri(
             reverse("embark-download",
                     kwargs={"analysis_id": analysis_id})
         )
-        return JsonResponse({
-            "status": "finished",
-            "message": (
-                f"Analysis finished successfully "
-                f"in {analysis.duration}."
-            ),
-            "download_url": download_url,
-        }, status=HTTPStatus.OK)
+        return JsonResponse(
+            {
+                "status": "finished",
+                "message": (
+                    f"Analysis finished successfully "
+                    f"in {analysis.duration}."
+                ),
+                "download_url": download_url,
+            },
+            status=HTTPStatus.OK
+        )
     except FirmwareAnalysis.DoesNotExist:
-        return JsonResponse({
-            "status": "error",
-            "error": "The analysis with the provided UUID doesn't exist."
-        }, status=HTTPStatus.BAD_REQUEST)
-    except Exception as ex:
-        logger.error(f"Error: {ex}")
-        return JsonResponse({
-            "status": "error",
-            "error": "Internal server error",
-        }, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+        return JsonResponse(
+            {
+                "status": "error",
+                "error": "The analysis with the provided UUID doesn't exist."
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    except Exception as exception:
+        logger.error("Error: %s", exception)
+        return JsonResponse(
+            {
+                "status": "error",
+                "error": "Internal server error",
+            },
+            status=HTTPStatus.INTERNAL_SERVER_ERROR
+        )
