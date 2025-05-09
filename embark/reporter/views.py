@@ -460,7 +460,8 @@ def status_report(request, analysis_id):
             "error": "The analysis with the provided UUID doesn't exist."
         }, status=HTTPStatus.BAD_REQUEST)
     except Exception as ex:
+        logger.error(f"Error: {ex}")
         return JsonResponse({
             "status": "error",
-            "error": str(ex)
+            "error": "Internal server error",
         }, status=HTTPStatus.INTERNAL_SERVER_ERROR)
