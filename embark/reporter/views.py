@@ -31,6 +31,7 @@ from uploader.boundedexecutor import BoundedExecutor
 from uploader.models import FirmwareAnalysis, ResourceTimestamp
 from dashboard.models import Result
 
+from users.decorators import require_api_key
 
 BLOCKSIZE = 1048576     # for codec change
 
@@ -51,7 +52,7 @@ def reports(request):
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report(request, analysis_id, html_file):
     """
-    Let's the user request any html in the html-report
+    Lets the user request any html in the html-report
     Checks: valid filename
     TODO test traversal
     """
@@ -330,6 +331,8 @@ def download_zipped(request, analysis_id):
                 response = HttpResponse(requested_log_dir.read(), content_type="application/zip")
                 response['Content-Disposition'] = 'inline; filename=' + str(firmware.id) + '.zip'
                 return response
+
+        make_zip(request, analysis_id)
         logger.error("FirmwareAnalysis with ID: %s does exist, but doesn't have a valid zip in its directory", analysis_id)
         messages.error(request, "Logs couldn't be downloaded")
         return redirect('..')
@@ -380,16 +383,84 @@ def get_load(request):
         logger.error('ResourceTimestamps not found in database')
         return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)
 
+
 @require_api_key
 @require_http_methods(["GET"])
 @login_required(login_url="/" + settings.LOGIN_URL)
 @permission_required("users.reporter_permission", login_url="/")
-def status_report(request):
+def status_report(request, analysis_id):
     """
-    Gets the status of the analysis of UUID.
-    If the analysis has not finished yet, returns status code xxx
-    Otherwise sends back a zip file of the analysis
+    Gets the status of the analysis.
+    If the analysis is not yet finished, returns progress.
+    Otherwise triggers the generation of a zip file containing the
+    status report. Returns a link to the zip file upon a subsequent refresh.
     """
     try:
-        if os.path.exists("" + request.id)
-    except
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+
+        if analysis.failed:
+            if not analysis.zip_file:
+                make_zip(request, analysis_id)
+                return JsonResponse({
+                    "status": "failed",
+                    "error": (
+                        "Analysis failed. The logs are being zipped "
+                        "and soon will be ready for download."
+                    ),
+                }, status=HTTPStatus.OK)
+
+            download_url = request.build_absolute_uri(
+                reverse("embark-download",
+                        kwargs={"analysis_id": analysis_id})
+            )
+            return JsonResponse({
+                "status": "failed",
+                "error": "Analysis failed, but logs are available.",
+                "download_url": download_url,
+            }, status=HTTPStatus.OK)
+
+        if not analysis.finished:
+            return JsonResponse({
+                "status": "running",
+                "completion":
+                    f"{analysis.status.get('percentage', 0)}% finished",
+                "message": (
+                    f"Analysis has been running "
+                    f"since {analysis.start_date}."
+                ),
+            }, status=HTTPStatus.ACCEPTED)
+
+        # Analysis finished and didn't fail
+        if not analysis.zip_file:
+            make_zip(request, analysis_id)
+            return JsonResponse({
+                "status": "finished",
+                "message": (
+                    "Analysis finished successfully. "
+                    "The logs are being zipped "
+                    "and will soon be ready for download."
+                ),
+            }, status=HTTPStatus.OK)
+
+        download_url = request.build_absolute_uri(
+            reverse("embark-download",
+                    kwargs={"analysis_id": analysis_id})
+        )
+        return JsonResponse({
+            "status": "finished",
+            "message": (
+                f"Analysis finished successfully "
+                f"in {analysis.duration}."
+            ),
+            "download_url": download_url,
+        }, status=HTTPStatus.OK)
+    except FirmwareAnalysis.DoesNotExist:
+        return JsonResponse({
+            "status": "error",
+            "error": "The analysis with the provided UUID doesn't exist."
+        }, status=HTTPStatus.BAD_REQUEST)
+    except Exception as ex:
+        return JsonResponse({
+            "status": "error",
+            "error": str(ex)
+        }, status=HTTPStatus.INTERNAL_SERVER_ERROR)
