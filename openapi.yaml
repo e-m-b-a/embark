@@ -10,4 +10,96 @@ info:
     name: EMBA - The security analyzer for firmware of embedded devices
     url: https://github.com/e-m-b-a
 
-paths: {}
+tags:
+  - name: uploader
+    description: Uploader API
+
+paths:
+  /api/uploader:
+    post:
+      tags:
+        - uploader
+      summary: Firmware upload and analysis
+      description: Stores the provided firmware, queues a firmware analysis process with provided firmware and parameters
+      operationId: uploadFirmware
+      security:
+        - ApiKeyAuth: []
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploaderResult"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/UploaderResult"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/Error"
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  description: The firmware to be analyzed
+                  type: string
+                  format: binary
+                version:
+                  type: string
+                device:
+                  type: array
+                  items:
+                    type: string
+                notes:
+                  type: string
+                firmware_Architecture:
+                  type: string
+                user_emulation_test:
+                  type: boolean
+                system_emulation_test:
+                  type: boolean
+                sbom_only_test:
+                  type: boolean
+                scan_modules:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - file
+
+components:
+  schemas:
+    UploaderResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+            - success
+    Error:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - error
+        message:
+          type: string
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+
