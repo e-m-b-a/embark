@@ -13,6 +13,7 @@ www/
 .venv/
 safe/
 .embark_db_backup
+.last_checked
 
 # temp dirs/files
 .tmp/
