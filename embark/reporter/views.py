@@ -431,10 +431,11 @@ def status_report(request, analysis_id):
                     "status": "running",
                     "completion":
                         f"{analysis.status.get('percentage', 0)}% finished",
-                    "message": (
-                        f"Analysis has been running "
-                        f"since {analysis.start_date}."
-                    ),
+                    "message":
+                        (
+                            f"Analysis has been running "
+                            f"since {analysis.start_date}."
+                        ),
                 },
                 status=HTTPStatus.ACCEPTED
             )
