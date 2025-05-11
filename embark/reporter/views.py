@@ -31,6 +31,7 @@ from uploader.boundedexecutor import BoundedExecutor
 from uploader.models import FirmwareAnalysis, ResourceTimestamp
 from dashboard.models import Result
 
+from users.decorators import require_api_key
 
 BLOCKSIZE = 1048576     # for codec change
 
@@ -51,7 +52,7 @@ def reports(request):
 @login_required(login_url='/' + settings.LOGIN_URL)
 def html_report(request, analysis_id, html_file):
     """
-    Let's the user request any html in the html-report
+    Lets the user request any html in the html-report
     Checks: valid filename
     TODO test traversal
     """
@@ -379,3 +380,100 @@ def get_load(request):
     except ResourceTimestamp.DoesNotExist:
         logger.error('ResourceTimestamps not found in database')
         return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)
+
+
+@require_api_key
+@require_http_methods(["GET"])
+def status_report(request, analysis_id):
+    """
+    Gets the status of the analysis.
+    If the analysis is not yet finished, returns progress.
+    Otherwise triggers the generation of a zip file containing the
+    status report. Returns a link to the zip file upon a subsequent refresh.
+    """
+
+    def build_download_url():
+        return request.build_absolute_uri(
+            reverse("embark-download", kwargs={"analysis_id": analysis_id}))
+
+    try:
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+
+        # Unauthorized
+        if not analysis.user.id == request.api_user.id and not request.api_user.is_superuser:
+            response_data = {
+                "status": "forbidden",
+                "error": "You're not allowed to access this resource.",
+            }
+            response_status = HTTPStatus.FORBIDDEN
+
+        # Failed
+        elif analysis.failed:
+            # Queue zip generation
+            if not analysis.zip_file:
+                make_zip(request, analysis_id)
+                response_data = {
+                    "status": "failed",
+                    "error": (
+                        "Analysis failed. The logs are being zipped "
+                        "and will soon be ready for download."
+                    ),
+                }
+                response_status = HTTPStatus.CREATED
+            else:
+                response_data = {
+                    "status": "failed",
+                    "error": "Analysis failed, but logs are available.",
+                    "download_url": build_download_url(),
+                }
+                response_status = HTTPStatus.OK
+
+        # Running
+        elif not analysis.finished:
+            response_data = {
+                "status": "running",
+                "message": f"Analysis has been running since {analysis.start_date}.",
+                "completion": f"{analysis.status.get('percentage', 0)}% finished",
+            }
+            response_status = HTTPStatus.ACCEPTED
+
+        # Finished and succeeded, no zip generated
+        elif not analysis.zip_file:
+            make_zip(request, analysis_id)
+            response_data = {
+                "status": "finished",
+                "message": (
+                    "Analysis finished successfully. "
+                    "The logs are being zipped "
+                    "and will soon be ready for download."
+                ),
+            }
+            response_status = HTTPStatus.CREATED
+
+        # Zip is generated
+        else:
+            formatted_time = analysis.duration.split(".")[0]
+            response_data = {
+                "status": "finished",
+                "message": f"Analysis finished successfully in {formatted_time}.",
+                "download_url": build_download_url(),
+            }
+            response_status = HTTPStatus.OK
+
+    except FirmwareAnalysis.DoesNotExist:
+        response_data = {
+            "status": "error",
+            "error": "The analysis with the provided UUID doesn't exist."
+        }
+        response_status = HTTPStatus.NOT_FOUND
+
+    except Exception as exception:
+        logger.error("Error: %s", exception)
+        response_data = {
+            "status": "error",
+            "error": "Internal server error",
+        }
+        response_status = HTTPStatus.INTERNAL_SERVER_ERROR
+
+    # Return the selected message
+    return JsonResponse(response_data, status=response_status)

@@ -18,4 +18,5 @@ urlpatterns = [
     path('get_individual_report/<uuid:analysis_id>/', views.get_individual_report, name='embark-get-individual-report'),
     path('get_accumulated_reports/', views.get_accumulated_reports, name='embark-get-accumulated-reports'),
     path('download_zipped/<uuid:analysis_id>/', views.download_zipped, name='embark-download'),
+    path('status_report/<uuid:analysis_id>', views.status_report, name='embark-status-report'),
 ]
