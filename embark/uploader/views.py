@@ -91,7 +91,7 @@ class UploaderView(APIView):
 
         if not file_obj or not isinstance(file_obj, UploadedFile):
             return Response({'status': 'error', 'message': 'Invalid file provided'}, status=400)
-        
+
         firmware_file = FirmwareFile.objects.create(file=file_obj)
         firmware_file.user = request.api_user
         firmware_file.save()
