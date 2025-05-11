@@ -100,12 +100,8 @@ paths:
           schema:
             type: string
             format: uuid
-        - name: api_key
-          in: query
-          required: true
-          description: API key for authentication
-          schema:
-            type: string
+      security:
+        - ApiKeyAuth: []
       responses:
         '200':
           description: Zip ready for download
@@ -159,19 +155,6 @@ paths:
                   message:
                     type: string
                     example: "Analysis has been running since 2025-05-11 19:42:28.986026+00:00"
-        '403':
-          description: User doesn't match
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "forbidden"
-                  error:
-                    type: string
-                    example: "You're not allowed to access this resource."
         '404':
           description: UUID not found
           content:
@@ -185,19 +168,6 @@ paths:
                   error:
                     type: string
                     example: "The analysis with the provided UUID doesn't exist."
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "error"
-                  error:
-                    type: string
-                    example: "Internal server error"
 
 components:
   schemas:
