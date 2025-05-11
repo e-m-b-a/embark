@@ -9,8 +9,9 @@ rm -rf "${INSTALLPATH}/emba-master"
 
 docker system prune -af
 
-pkglist=("docker-compose-plugin" "docker-ce" "docker-ce-cli" "docker-buildx-plugin" "containered" "iptables" "libnetfilter" "libnfnetlink" "libip4" "libip6")
+pkglist=("docker-compose-plugin" "docker-ce" "docker-ce-cli" "docker-buildx-plugin" "containered" "iptables" "libnetfilter" "libnfnetlink" "libip4" "libip6" "python-pip" "python-wheel" "python-packaging")
 for package in "${pkglist[@]}"
 do
 	dpkg -r $(dpkg -f "${PKGPATH}/${package}.deb" Package)
 done
+

@@ -2,6 +2,7 @@
 
 FILEPATH="/mnt/VM/home/clprosser/WORKER_SETUP"
 PKGPATH="${FILEPATH}/pkg"
+EXTERNAL="${FILEPATH}/external"
 
 ### Download EMBA
 curl -L --url https://github.com/e-m-b-a/emba/archive/refs/heads/master.tar.gz --output "${FILEPATH}/emba.tar.gz"
@@ -23,6 +24,18 @@ curl -L --url https://download.docker.com/linux/debian/dists/trixie/pool/stable/
 curl -L --url https://download.docker.com/linux/debian/dists/trixie/pool/stable/amd64/docker-ce_28.1.1-1~debian.13~trixie_amd64.deb --output "${PKGPATH}/docker-ce.deb"
 curl -L --url https://download.docker.com/linux/debian/dists/trixie/pool/stable/amd64/docker-compose-plugin_2.35.1-1~debian.13~trixie_amd64.deb --output "${PKGPATH}/docker-compose-plugin.deb"
 
+curl -L --url http://ftp.de.debian.org/debian/pool/main/p/python-pip/python3-pip_25.1.1+dfsg-1_all.deb --output "${PKGPATH}/python-pip.deb"
+curl -L --url http://ftp.de.debian.org/debian/pool/main/w/wheel/python3-wheel_0.46.1-2_all.deb --output "${PKGPATH}/python-wheel.deb"
+curl -L --url http://ftp.de.debian.org/debian/pool/main/p/python-packaging/python3-packaging_25.0-1_all.deb --output "${PKGPATH}/python-packaging.deb"
+
 ### Export EMBA image
 # docker save -o "${FILEPATH}/emba-docker-image.tar" embeddedanalyzer/emba
+
+mkdir -p "${EXTERNAL}"
+if [ ! -d "${EXTERNAL}/nvd-json-data-feeds" ]; then
+	git clone --depth 1 -b main https://github.com/EMBA-support-repos/nvd-json-data-feeds.git "${EXTERNAL}/nvd-json-data-feeds"
+fi
+if [ ! -d "${EXTERNAL}/EPSS-data" ]; then
+	git clone --depth 1 -b main https://github.com/EMBA-support-repos/EPSS-data.git "${EXTERNAL}/EPSS-data"
+fi
 
