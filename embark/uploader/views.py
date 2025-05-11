@@ -11,6 +11,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.shortcuts import redirect, render
+from django.core.files.uploadedfile import UploadedFile
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
@@ -88,9 +89,9 @@ class UploaderView(APIView):
 
         file_obj = request.data['file']
 
-        if not file_obj:
+        if not file_obj or not isinstance(file_obj, UploadedFile):
             return Response({'status': 'error', 'message': 'Invalid file provided'}, status=400)
-
+        
         firmware_file = FirmwareFile.objects.create(file=file_obj)
         firmware_file.user = request.api_user
         firmware_file.save()
