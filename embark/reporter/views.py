@@ -384,7 +384,6 @@ def get_load(request):
 
 @require_api_key
 @require_http_methods(["GET"])
-@permission_required("users.reporter_permission", login_url="/")
 def status_report(request, analysis_id):
     """
     Gets the status of the analysis.
