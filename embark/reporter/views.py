@@ -416,10 +416,10 @@ def status_report(request, analysis_id):
                     "status": "failed",
                     "error": (
                         "Analysis failed. The logs are being zipped "
-                        "and soon will be ready for download."
+                        "and will soon be ready for download."
                     ),
                 }
-                response_status = HTTPStatus.OK
+                response_status = HTTPStatus.CREATED
             else:
                 response_data = {
                     "status": "failed",
@@ -432,8 +432,8 @@ def status_report(request, analysis_id):
         elif not analysis.finished:
             response_data = {
                 "status": "running",
+                "message": f"Analysis has been running since {analysis.start_date}.",
                 "completion": f"{analysis.status.get('percentage', 0)}% finished",
-                "message": f"Analysis has been running since {analysis.start_date}."
             }
             response_status = HTTPStatus.ACCEPTED
 
@@ -448,7 +448,7 @@ def status_report(request, analysis_id):
                     "and will soon be ready for download."
                 ),
             }
-            response_status = HTTPStatus.OK
+            response_status = HTTPStatus.CREATED
 
         # Zip is generated
         else:
@@ -465,7 +465,7 @@ def status_report(request, analysis_id):
             "status": "error",
             "error": "The analysis with the provided UUID doesn't exist."
         }
-        response_status = HTTPStatus.BAD_REQUEST
+        response_status = HTTPStatus.NOT_FOUND
 
     except Exception as exception:
         logger.error("Error: %s", exception)
