@@ -46,7 +46,7 @@ class TestUploader(APITestCase):
 
     def test_uploader__invalid_file(self):
         """
-        Test that the API returns 400 when nothing a non file object is provided.:
+        Test that the API returns 400 when a non file object is provided.:
 
         """
         response = self.client.post(BASE_URL, {"file": "abc"})
