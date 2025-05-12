@@ -6,6 +6,7 @@ __license__ = 'MIT'
 import builtins
 import logging
 import secrets
+import re
 
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import authenticate, login, logout, get_user
@@ -26,7 +27,7 @@ from django.db.models import Q
 from django.http import JsonResponse
 
 from users.forms import LoginForm, SignUpForm, ResetForm
-from users.models import User
+from users.models import User, Configuration
 from users.decorators import require_api_key
 
 logger = logging.getLogger(__name__)
@@ -344,3 +345,65 @@ def generate_api_key(request):
 def api_test(request):
     api_user = request.api_user
     return JsonResponse({'message': f'Hello, {api_user.username}!'})
+
+
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.user_permission", login_url='/')
+def set_or_delete_config(request):
+    user = get_user(request)
+    selected_config_id = request.POST.get("configuration")
+    action = request.POST.get("action")
+    if not selected_config_id or not action:
+        messages.error(request, 'No configuration selected')
+        return redirect("..")
+
+    if action == "Set":
+        user.config_id = selected_config_id
+        user.save()
+        messages.success(request, 'Configuration set successfully')
+    elif action == "Delete":
+        try:
+            config = Configuration.objects.get(id=selected_config_id)
+            if config.user != user:
+                messages.error(request, 'You are not allowed to delete this configuration')
+                return redirect("..")
+            user.config_id = None if user.config_id == selected_config_id else user.config_id
+            user.save()
+            config.delete()
+            messages.success(request, 'Configuration deleted successfully')
+        except Configuration.DoesNotExist:
+            messages.error(request, 'Configuration not found')
+
+    return redirect("..")
+
+
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.user_permission", login_url='/')
+def create_config(request):
+    user = get_user(request)
+    name = request.POST.get("name")
+    ssh_user = request.POST.get("ssh_user")
+    ssh_password = request.POST.get("ssh_password")
+    ip_range = request.POST.get("ip_range")
+
+    # check if ssh credentials, config name, and ip_range are provided
+    if not ssh_user or not ssh_password or not ip_range or not name:
+        messages.error(request, 'Name, SSH user, SSH password, and IP range are required.')
+        return redirect("..")
+    # check ip range format
+    ip_range_regex = r"^(\d{1,3}\.){3}\d{1,3}/\d{1,2}$"
+    if not re.match(ip_range_regex, ip_range):
+        messages.error(request, 'Invalid IP range format. Use CIDR notation')
+        return redirect("..")
+
+    Configuration.objects.create(
+        name=name,
+        user=user,
+        ssh_user=ssh_user,
+        ssh_password=ssh_password,
+        ip_range=ip_range
+    )
+    messages.success(request, 'Config created successfully.')
+    return redirect("..")

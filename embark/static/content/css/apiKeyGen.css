@@ -58,7 +58,6 @@ form[action="/user/set_timezone/"] {
     text-align: center;
 }
 
-#messages {
-    display: none; 
+.django-messages {
+    display: none;
 }
-
