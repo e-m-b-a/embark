@@ -388,7 +388,7 @@ def create_config(request):
     ssh_password = request.POST.get("ssh_password")
     ip_range = request.POST.get("ip_range")
 
-    # check if ssh_private_key and ip_range are provided
+    # check if ssh credentials, config name, and ip_range are provided
     if not ssh_user or not ssh_password or not ip_range or not name:
         messages.error(request, 'Name, SSH user, SSH password, and IP range are required.')
         return redirect("..")
