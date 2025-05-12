@@ -1,0 +1,28 @@
+name: EMBArk Django tests
+
+on: [push]
+
+jobs:
+  run-django-tests:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Install python libs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-dev
+          sudo pip install --upgrade pipenv
+      - name: EMBArk default install
+        run: sudo ./installer.sh -sF
+      - name: Start DB
+        run: |
+          docker compose up -d
+          cd embark
+          sudo pipenv run python manage.py makemigrations users uploader reporter dashboard porter
+          sudo pipenv run python manage.py migrate
+      - name: Run tests
+        run: |
+          cd embark
+          sudo pipenv run python manage.py test

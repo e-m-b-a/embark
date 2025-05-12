@@ -9,8 +9,7 @@
 #
 # EMBArk is licensed under MIT
 #
-# Author(s): Michael Messner, Pascal Eckmann
-# Contributor(s): Benedikt Kuehne
+# Author(s): Michael Messner, Pascal Eckmann, Benedikt Kuehne
 
 # Description: Installer for EMBArk
 
@@ -244,17 +243,12 @@ install_debs(){
     apt-get install -y build-essential
   fi
   # Pip
-  if ! command -v pip3 > /dev/null ; then
+  if ! command -v pip > /dev/null ; then
     apt-get install -y python3-pip
   fi
   # install pipenv
   if ! command -v pipenv > /dev/null ; then
     apt-get install -y pipenv
-  fi
-
-  # Gcc
-  if ! command -v gcc > /dev/null ; then
-    apt-get install -y build-essential
   fi
   # Docker + docker compose
   if [[ "${WSL}" -eq 1 ]]; then
@@ -294,6 +288,10 @@ install_debs(){
   # ansifilter
   if ! command -v ansifilter > /dev/null ; then
     apt-get install -y ansifilter
+  fi
+  # in Ubuntu 22 the apt package is broken
+  if ! pipenv --version ; then
+    pip install --upgrade pipenv
   fi
 }
 
@@ -373,7 +371,7 @@ install_embark_default(){
   dns_resolve
 
   #install packages
-  echo -e "\n${GREEN}""${BOLD}""Install embark python envirnment""${NC}"
+  echo -e "\n${GREEN}""${BOLD}""Install embark python environment""${NC}"
   cp ./Pipfile* /var/www/
   (cd /var/www && MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv install)
 
@@ -434,6 +432,7 @@ install_embark_dev(){
   fi
   # npm packages
   npm install -g jshint
+  npm install -g @stoplight/spectral-cli
   # npm install -g dockerlinter
 
   # Add user nosudo
@@ -446,6 +445,7 @@ install_embark_dev(){
   echo "NO_UPDATE_CHECK=1" >> /etc/environment
 
   # pipenv
+  echo -e "\n${GREEN}""${BOLD}""Install embark python environment""${NC}"
   MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
 
   # Server-Dir

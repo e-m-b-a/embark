@@ -6,16 +6,23 @@ import logging
 import os
 
 from django.conf import settings
-from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError, QueryDict
 from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
+from django.core.files.uploadedfile import UploadedFile
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser
+from rest_framework import serializers
 
 from uploader.boundedexecutor import BoundedExecutor
 from uploader.forms import DeviceForm, FirmwareAnalysisForm, DeleteFirmwareForm, LabelForm, VendorForm
 from uploader.models import FirmwareFile
+from uploader.serializers import FirmwareAnalysisSerializer
+from users.decorators import require_api_key
+
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +66,89 @@ def save_file(request):
         firmware_file.save()
     messages.info(request, 'upload successful.')
     return HttpResponse("successful upload")
+
+
+class BufferFullException(Exception):
+    pass
+
+
+class UploaderView(APIView):
+    parser_classes = [MultiPartParser]
+
+    @require_api_key
+    def post(self, request, *args, **kwargs):
+        """
+        file saving on POST requests with attached file
+
+        :params request: HTTP request
+
+        :return: HttpResponse including the status
+        """
+        if 'file' not in request.data:
+            return Response({'status': 'error', 'message': 'No file provided or wrong key'}, status=400)
+
+        file_obj = request.data['file']
+
+        if not file_obj or not isinstance(file_obj, UploadedFile):
+            return Response({'status': 'error', 'message': 'Invalid file provided'}, status=400)
+
+        firmware_file = FirmwareFile.objects.create(file=file_obj)
+        firmware_file.user = request.api_user
+        firmware_file.save()
+        messages.info(request, 'upload successful.')
+
+        # request.data is immutable
+        request_data_copy = dict(request.data)
+        request_data_copy["firmware"] = firmware_file.id
+        del request_data_copy["file"]
+
+        # serializer.validate_scan_modules is only executed if scan_modules is set
+        if "scan_modules" not in request_data_copy:
+            request_data_copy["scan_modules"] = []
+
+        # create QueryDict, otherwise defaults are not set
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(request_data_copy)
+
+        try:
+            analysis_id = start_analysis_serialized(query_dict)
+            return Response({'status': 'success', 'id': analysis_id}, status=201)
+        except BufferFullException:
+            return Response({'status': 'Error: Buffer full'}, status=503)
+        except serializers.ValidationError as exception:
+            return Response({'status': 'Error: Form invalid', 'errors': exception.detail}, status=400)
+
+
+def start_analysis_serialized(data):
+    serializer = FirmwareAnalysisSerializer(data=data)
+    serializer.is_valid(raise_exception=True)
+    new_analysis = serializer.save()
+
+    logger.info("Starting analysis with %s", serializer.Meta.model.id)
+
+    new_firmware_file = FirmwareFile.objects.get(id=new_analysis.firmware.id)
+    logger.debug("Firmware file: %s", new_firmware_file)
+
+    new_analysis.user = new_firmware_file.user
+    logger.debug("FILE_NAME is %s", new_analysis.firmware.file.name)
+    new_analysis.firmware_name = os.path.basename(new_analysis.firmware.file.name)
+
+    # add labels from devices FIXME what if device has no label
+    devices = serializer.validated_data["device"]
+    logger.debug("Got %d devices in this analysis", len(devices))
+    for device in devices:
+        if device.device_label:
+            logger.debug(" Adding Label=%s", device.device_label.label_name)
+            new_analysis.label.add(device.device_label)
+
+    new_analysis.save()
+    logger.debug("new_analysis %s has label: %s", new_analysis, new_analysis.label)
+
+    # inject into bounded Executor
+    if not BoundedExecutor.submit_firmware(firmware_flags=new_analysis, firmware_file=new_firmware_file):
+        raise BufferFullException
+
+    return new_analysis.id
 
 
 @permission_required("users.uploader_permission_advanced", login_url='/')

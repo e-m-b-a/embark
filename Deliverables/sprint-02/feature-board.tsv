@@ -1,0 +1,17 @@
+Title	URL	Assignees	Status
+API | Documentation tooling	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/22		Product Backlog
+Run example firmware analysis	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/13		Product Backlog
+EMBA offline worker configuration	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/12		Product Backlog
+Configuration scripts for worker node | Kali Linux latest	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/19		Product Backlog
+Configuration scripts for worker node | Ubuntu 22.04 LTS	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/20		Product Backlog
+Configuration scripts for worker node | Ubuntu 24.04 LTS	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/21		Product Backlog
+Configure worker nodes in EMBArk	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/14		Product Backlog
+Connect to worker node	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/15		Product Backlog
+Mount file system via SSHfs in Python	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/16		Product Backlog
+EMBArk view: All reachable worker nodes	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/17		Product Backlog
+Configure worker node	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/18		Product Backlog
+Integration testing	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/23		Product Backlog
+API | Generate API-Key in user interface	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/4	ashiven, LukaDeka	Sprint Backlog
+API | Upload firmware and add to queue	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/5	ClProsser, SirGankalot	In Progress
+API | Familiarize with API	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/10	ashiven, ClProsser, GeliFx, LukaDeka, SirGankalot, SvenLobbes	In Progress
+API | Get status report	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/6	GeliFx, SvenLobbes	In Progress

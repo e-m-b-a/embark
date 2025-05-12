@@ -1,72 +1,75 @@
-__copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2021 The AMOS Projects'
-__author__ = 'Benedikt Kuehne, Maximilian Wagner, diegiesskanne'
+__copyright__ = 'Copyright 2021-2025 Siemens Energy AG'
+__author__ = 'Benedikt Kuehne'
 __license__ = 'MIT'
 
-from django.test import TestCase
+import secrets
+import os
 
-from uploader.models import FirmwareAnalysis, FirmwareFile
+from unittest.mock import patch
+
+from rest_framework.test import APIClient
+from rest_framework.test import APITestCase
+from rest_framework import status
+
+from users.models import User
 
 
-class TestModels(TestCase):
+BASE_URL = "/api/uploader/"
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(self, *args, **kwargs)
-        self.fw_file = FirmwareFile.objects.create()
-        self.fw_file.save()
 
-    # TODO: add timeout
-    def test_get_flags_all_true(self):
+class TestUploader(APITestCase):
+    def setUp(self):
+        user = User.objects.create(username='testuser')
+        user.api_key = secrets.token_urlsafe(32)
+        user.save()
+
+        self.client = APIClient()
+        self.client.credentials(HTTP_AUTHORIZATION=user.api_key)
+
+    def test_uploader__not_authenticated(self):
         """
-        test get_flags() if all flags set to String/True
+        Test that the API returns 401 when not authenticated.:
+
         """
+        client = APIClient()
+        response = client.post(BASE_URL, {})
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-        firmware = FirmwareAnalysis(firmware=self.fw_file)
-
-        firmware.version = "version"
-        firmware.vendor = "vendor"
-        firmware.device = "device"
-        firmware.notes = "notes"
-        firmware.firmware_Architecture = "x64"
-        firmware.cwe_checker = True
-        firmware.dev_mode = True
-        firmware.deep_extraction = True
-        firmware.log_path = True
-        firmware.grep_able_log = True
-        firmware.relative_paths = True
-        firmware.ANSI_color = True
-        firmware.web_reporter = True
-        firmware.emulation_test = True
-        firmware.dependency_check = True
-        firmware.multi_threaded = True
-        firmware.firmware_remove = True
-
-        expected_string = " -X version -Y vendor -Z device -N notes -a x64 -c -D -x -i -g -s -z -W -E -F -t -r"
-        self.assertEqual(firmware.get_flags(), expected_string)
-
-    def test_get_flags_all_false(self):
+    def test_uploader__invalid_parameters(self):
         """
-        test get_flags() if all flags set to None/False
+        Test that the API returns 400 when nothing is provided.:
+
         """
+        response = self.client.post(BASE_URL, {})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {'status': 'error', 'message': 'No file provided or wrong key'})
 
-        firmware = FirmwareAnalysis(firmware=self.fw_file)
+    def test_uploader__invalid_file(self):
+        """
+        Test that the API returns 400 when a non file object is provided.:
 
-        firmware.version = None
-        firmware.vendor = None
-        firmware.device = None
-        firmware.notes = None
-        firmware.firmware_Architecture = None
-        firmware.cwe_checker = False
-        firmware.dev_mode = False
-        firmware.deep_extraction = False
-        firmware.log_path = False
-        firmware.grep_able_log = False
-        firmware.relative_paths = False
-        firmware.ANSI_color = False
-        firmware.web_reporter = False
-        firmware.emulation_test = False
-        firmware.dependency_check = False
-        firmware.multi_threaded = False
-        firmware.firmware_remove = False
+        """
+        response = self.client.post(BASE_URL, {"file": "abc"})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {'status': 'error', 'message': 'Invalid file provided'})
 
-        expected_string = ""
-        self.assertEqual(firmware.get_flags(), expected_string)
+    @patch("uploader.boundedexecutor.BoundedExecutor.submit_firmware")
+    def test_uploader__successful_queue(self, mock):
+        """
+        Test that the API returns 200 when a file and valid api key is provided.:
+
+        """
+        mock.return_value = True
+
+        file_name = "dummy.txt"
+        with open(file_name, 'w+', encoding='utf-8') as file:
+            pass
+
+        with open(file_name, 'r', encoding='utf-8') as file:
+            response = self.client.post(BASE_URL, {"file": file})
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["status"], 'success')
+        self.assertEqual(len(str(response.data["id"])), 36)
+
+        os.remove(file_name)

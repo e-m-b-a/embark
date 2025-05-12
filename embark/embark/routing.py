@@ -6,10 +6,11 @@ from django.urls import path
 from channels.routing import URLRouter
 
 from embark.consumers import ProgressConsumer
-from embark.logviewer import LogConsumer
+from embark.logviewer import AnalysisLogConsumer, UpdateLogConsumer
 
 # url patterns for websocket communication -> equivalent to urls.py
 ws_urlpatterns = URLRouter([
     path('ws/progress', ProgressConsumer.as_asgi(), name="websocket-progress"),
-    path('ws/logs/<uuid:analysis_id>', LogConsumer.as_asgi(), name="websocket-logviewer")
+    path('ws/logs/<uuid:analysis_id>', AnalysisLogConsumer.as_asgi(), name="websocket-analysis-logviewer"),
+    path('ws/logs/update', UpdateLogConsumer.as_asgi(), name="websocket-update-logviewer")
 ])
