@@ -1,0 +1,26 @@
+Title	URL	Assignees	Status	Estimated size	Real size
+EMBArk worker UI	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/30		Product Backlog	3	
+Configure worker node	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/18		Product Backlog		
+Scheduler | Receive new workers	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/31		Product Backlog		
+Prepare upstream pull request	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/32		Product Backlog		
+Caching in Github actions pipeline	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/33		Product Backlog		
+Reduce check_project.sh execution time	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/34		Product Backlog		
+API | Integration test Status report	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/29	LukaDeka	Sprint Backlog	2	
+Connect to worker node	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/15	ashiven	Sprint Backlog	2	
+API | Document API-Key generation	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/25	ashiven	In Progress	1	
+API | Integration test API-Key generation	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/28	ashiven	In Progress	2	
+EMBA offline worker configuration	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/12	ClProsser, SirGankalot	In Progress	3	
+Configuration scripts for worker node | Kali Linux latest	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/19	ClProsser, SirGankalot	In Progress	3	
+Configuration scripts for worker node | Ubuntu	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/21	ClProsser, SirGankalot	In Progress	3	
+Integration testing	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/23	ClProsser	Awaiting Review	2	
+API | Documentation Upload firmware	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/24	ClProsser	Awaiting Review	1	
+API | Get status report	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/6	LukaDeka	Awaiting Review	3	
+API | Documentation Status report	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/26	LukaDeka	Awaiting Review	1	
+API | Integration test Upload firmware	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/27	ClProsser, SirGankalot	Awaiting Review	2	
+Configure worker nodes in EMBArk	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/14	ashiven	Awaiting Review	3	
+API | Documentation tooling	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/22	ClProsser	Feature Archive	1	1
+Mount file system via SSHfs in Python	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/16	SirGankalot	Feature Archive	2	2
+API | Generate API-Key in user interface	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/4	ashiven, LukaDeka	Feature Archive	3	3
+API | Upload firmware and add to queue	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/5	ClProsser, SirGankalot	Feature Archive	3	3
+API | Familiarize with API	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/10	ashiven, ClProsser, LukaDeka, SirGankalot	Feature Archive	2	
+Run example firmware analysis	https://github.com/amosproj/amos2025ss01-embark-orchestration-framework/issues/13	ashiven, ClProsser, LukaDeka, SirGankalot	Feature Archive	2	
