@@ -3,10 +3,13 @@ __author__ = 'Benedikt Kuehne'
 __license__ = 'MIT'
 
 from http import HTTPStatus
+import secrets
 from django.conf import settings
 
 from django.test import TestCase
 from django.test import Client
+
+from rest_framework import status
 
 from users.models import User
 
@@ -41,6 +44,30 @@ from users.models import User
 #         password_input = self.driver.find_element(By.NAME, "password")
 #         password_input.send_keys('tester')
 #         self.driver.find_element(By.XPATH, '//input[@value="Login"]').click()
+
+class TestAPIAuth(TestCase):
+    def setUp(self):
+        user = User.objects.create(username='testuser')
+        user.api_key = secrets.token_urlsafe(32)
+        user.save()
+        self.user = user
+        self.client = Client()
+
+    def test_unauthenticated(self):
+        """
+        Test that the API testing endpoint returns 401 when not authenticated.
+        """
+        client = Client()
+        response = client.get('/user/api_test/', {})
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_authenticated(self):
+        """
+        Test that the API testing endpoint returns 200 when authenticated.
+        """
+        response = self.client.get('/user/api_test/', headers={'Authorization': self.user.api_key})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.content, b'{"message": "Hello, testuser!"}')
 
 
 class TestUsers(TestCase):
