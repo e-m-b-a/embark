@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd "/root/emba"
+cd "/root/emba" || exit
 
 FIRMWARE_PATH="./firmware.zip"
 
