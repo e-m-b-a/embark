@@ -1,3 +1,7 @@
+# Project Mission
+The mission of this project is to develop a functional orchestration component for EMBArk that enables scalable and automated execution of firmware analysis tasks using the existing EMBA tooling. The MVP will support managing distributed workers (Kali/Ubuntu) via SSH, provide an API interface for job creation, and enable testers to manage worker nodes through a web-based dashboard. Key deliverables include job scheduling, worker management, result collection, and system monitoring features.
+
+---
 # EMBArk - The firmware security scanning environment <br>
 
 
