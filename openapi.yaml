@@ -15,6 +15,8 @@ tags:
     description: Uploader API
   - name: Status report
     description: Status report API
+  - name: API Test
+    description: Test API Authentication
 
 paths:
   /api/uploader:
@@ -168,6 +170,46 @@ paths:
                   error:
                     type: string
                     example: "The analysis with the provided UUID doesn't exist."
+  /user/api_test/:
+    get:
+      tags: 
+        - API Test
+      summary: Greet the API user
+      description: >
+        Returns a JSON greeting message to the authenticated API user.
+        API key must be passed in either the `Authorization` header or the `api_key` query parameter.
+      operationId: apiTest
+      parameters:
+        - in: query
+          name: api_key
+          schema:
+            type: string
+          required: false
+          description: API key passed as a query parameter (alternative to Authorization header).
+      security:
+        - ApiKeyAuth: []
+        - ApiKeyAuthQuery: []
+      responses:
+        '200':
+          description: A successful response with a greeting message.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Hello, johndoe!
+        '401':
+          description: Unauthorized - API key is missing or invalid.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Missing API key
 
 components:
   schemas:
@@ -195,4 +237,8 @@ components:
       type: apiKey
       in: header
       name: Authorization
+    ApiKeyAuthQuery:
+      type: apiKey
+      in: query
+      name: api_key
 
