@@ -4,6 +4,10 @@ FILEPATH="/mnt/VM/home/root/WORKER_SETUP"
 PKGPATH="${FILEPATH}/pkg"
 EXTERNAL="${FILEPATH}/external"
 
+# Works with Kali Linux 2025.1c: https://cdimage.kali.org/kali-2025.1c/kali-linux-2025.1c-installer-amd64.iso
+
+mkdir -p "${FILEPATH}"
+
 ### Download EMBA
 curl -L --url https://github.com/e-m-b-a/emba/archive/refs/heads/master.tar.gz --output "${FILEPATH}/emba.tar.gz"
 

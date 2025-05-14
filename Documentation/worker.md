@@ -12,7 +12,7 @@ The dependencies are:
 
 Note: While EMBA uses a virtual environment for execution, no additional python packages are needed. Thus, the virutal environment is faked to minimize dependencies. To send desktop notifications, the dependency `libnotify-bin` would be needed. However, as this is not required for a worker node, the dependency is mocked.
 
-# Dependencies: Kali latest example
+### Dependencies: Kali latest example
 
 Using a Kali linux minimal installation, the required dependencies are:
 
@@ -35,14 +35,14 @@ Using a Kali linux minimal installation, the required dependencies are:
 +- external/
 |  +- nvd-json-data-feeds
 |  +- EPSS-data
-+- emba_venv
++- emba_venv/
    +- bin/
       +- activate                 # empty file, fakes unused virtual environment
 ```
 
 An automated example, which fetches the dependencies, can be found in `./examples/setup_worker/host.sh`.
 
-# Automated installation
+## Automated installation
 
 Once all dependencies are fetched, the installer can be executed (Example in `./examples/setup_worker/installer.sh`). It installs all the provided dependencies, and creates files where needed.
 
@@ -50,7 +50,7 @@ The result is a working EMBA installation in `/root/emba`, ready for use.
 
 If the installation should be removed, an example of an uninstaller can be found in `./examples/setup_worker/uninstaller.sh`.
 
-# Testing EMBA
+## Testing EMBA
 
 An exemplary invocation of EMBA by EMBArk can be found in `./examples/setup_worker/run_emba_test.sh`.
 

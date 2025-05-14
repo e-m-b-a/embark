@@ -15,6 +15,6 @@ do
 	dpkg -r "$(dpkg -f "${PKGPATH}/${package}.deb" Package)"
 done
 
-if [ ! -s "/bin/notify-send" ] ; then
+if [ -s "/bin/notify-send" ] ; then
 	rm "/bin/notify-send"
 fi
