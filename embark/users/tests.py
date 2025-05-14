@@ -45,13 +45,29 @@ from users.models import User
 #         self.driver.find_element(By.XPATH, '//input[@value="Login"]').click()
 
 
-class TestAPIAuth(TestCase):
+class TestAPI(TestCase):
     def setUp(self):
-        user = User.objects.create(username='testuser')
+        user = User.objects.create(username='test123')
+        user.set_password('12345')
         user.api_key = secrets.token_urlsafe(32)
         user.save()
         self.user = user
         self.client = Client()
+
+    def test_api_key_generation(self):
+        """
+        Test that the API key is generated and saved correctly.
+        """
+        self.client.login(username='test123', password='12345')
+        response = self.client.get('/user/generate_api_key/', {})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+
+        user = User.objects.get(username='test123')
+        self.user = user
+
+        self.assertNotEqual(user.api_key, '')
+        self.assertNotEqual(user.api_key, None)
+        self.assertEqual(len(user.api_key), 43)  # 32 bytes + 11 for the URL-safe base64 encoding
 
     def test_unauthenticated(self):
         """
@@ -67,7 +83,7 @@ class TestAPIAuth(TestCase):
         """
         response = self.client.get('/user/api_test/', headers={'Authorization': self.user.api_key})
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertEqual(response.content, b'{"message": "Hello, testuser!"}')
+        self.assertEqual(response.content, b'{"message": "Hello, test123!"}')
 
 
 class TestUsers(TestCase):
