@@ -30,4 +30,5 @@ urlpatterns = [
     path('', include('reporter.urls')),
     path('', include('tracker.urls')),
     path('', include('porter.urls')),
+    path('', include('workers.urls')),
 ] + staticfiles_urlpatterns()

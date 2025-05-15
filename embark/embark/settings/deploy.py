@@ -59,7 +59,8 @@ INSTALLED_APPS = [
     'tracker',
     'porter',
     'updater',
-    'rest_framework'
+    'rest_framework',
+    'workers'
 ]
 
 AUTH_USER_MODEL = 'users.User'
