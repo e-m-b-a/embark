@@ -11,7 +11,7 @@ The dependencies are:
 - Exported EMBA docker image (`embeddedanalyzer/emba`)
 - External data (NVD Json data feeds, EPSS data)
 
-Note: While EMBA uses a virtual environment for execution, no additional python packages are needed. Thus, the virutal environment is faked to minimize dependencies.
+Note: While EMBA uses a virtual environment for execution, no additional python packages are needed. Thus, the virtual environment is faked to minimize dependencies.
 
 ## Dependencies
 

@@ -11,6 +11,7 @@ FILEPATH="./WORKER_SETUP"
 PKGPATH="${FILEPATH}/pkg"
 EXTERNALPATH="${FILEPATH}/external"
 TESTPATH="${FILEPATH}/test"
+EMBAVERSION="1.5.2c"
 
 function downloadPackage() {
 	( cd "$PKGPATH" && apt-get download $(apt-cache depends --recurse --no-recommends --no-suggests \
@@ -65,8 +66,8 @@ apt-get install -y dpkg-dev
 ### Export EMBA image
 apt install -y docker-ce
 systemctl start docker
-docker pull embeddedanalyzer/emba:latest
-docker save -o "${FILEPATH}/emba-docker-image.tar" embeddedanalyzer/emba:latest
+docker pull "embeddedanalyzer/emba:${EMBAVERSION}"
+docker save -o "${FILEPATH}/emba-docker-image.tar" "embeddedanalyzer/emba:${EMBAVERSION}"
 chmod 755 "${FILEPATH}/emba-docker-image.tar"
 
 ### Download external data
