@@ -1,25 +1,34 @@
 #!/bin/bash
 
-FILEPATH="/home/root/WORKER_SETUP"
+if [[ $EUID -ne 0 ]]; then
+	echo "This script has to be run as root"
+	exit 1
+fi
+
+FILEPATH="."
 PKGPATH="${FILEPATH}/pkg"
 EXTERNALPATH="${FILEPATH}/external"
 INSTALLPATH="/root"
+EMBAPACKAGEPATH="/usr/local/EMBA_PACKAGES"
 
-# Install iptables (needed by docker)
-dpkg -i "${PKGPATH}/libip4.deb"
-dpkg -i "${PKGPATH}/libip6.deb"
-dpkg -i "${PKGPATH}/libnfnetlink.deb"
-dpkg -i "${PKGPATH}/libnetfilter.deb"
-dpkg -i "${PKGPATH}/iptables.deb"
+# Remove online sources as machine is offline
+sed -i 's|^deb http|# deb http|' /etc/apt/sources.list
+sed -i 's|^deb https|# deb https|' /etc/apt/sources.list
 
-# Install docker
-dpkg -i "${PKGPATH}/containered.deb" "${PKGPATH}/docker-buildx-plugin.deb" "${PKGPATH}/docker-ce-cli.deb" "${PKGPATH}/docker-ce.deb" "${PKGPATH}/docker-compose-plugin.deb"
+# Register index
+cp -r "${PKGPATH}" "${EMBAPACKAGEPATH}"
+chown -R _apt:root "${EMBAPACKAGEPATH}"
+echo "deb [trusted=yes] file:${EMBAPACKAGEPATH} ./" | tee -a /etc/apt/sources.list
+apt-get update -y
 
-# Install inotify
-dpkg -i "${PKGPATH}/libinotify.deb"
-dpkg -i "${PKGPATH}/inotify.deb"
+apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+apt-get install -y inotify-tools
+apt-get install -y libnotify-bin
 
 # Load EMBA image
+systemctl enable docker
+systemctl start docker
 docker image load -i "${FILEPATH}/emba-docker-image.tar"
 
 # Install EMBA
@@ -29,8 +38,5 @@ mv "${INSTALLPATH}/emba-master/" "${INSTALLPATH}/emba"
 # Setup external
 cp -r "${EXTERNALPATH}" "${INSTALLPATH}/emba"
 
-# Fake notify-send (not used by EMBArk)
-if [ ! -f "/bin/notify-send" ] ; then
-	touch "/bin/notify-send"
-	chmod +x "/bin/notify-send"
-fi
+echo "Installation done"
+echo "Run the test scan: ./test/run_emba_test.sh"

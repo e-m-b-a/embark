@@ -1,20 +1,20 @@
 #!/bin/bash
 
-FILEPATH="/home/root/WORKER_SETUP"
+FILEPATH="."
 PKGPATH="${FILEPATH}/pkg"
 INSTALLPATH="/root"
+EMBAPACKAGEPATH="/usr/local/EMBA_PACKAGES"
 
 rm -rf "${INSTALLPATH}/emba"
 rm -rf "${INSTALLPATH}/emba-master"
 
 docker system prune -af
 
-pkglist=("docker-compose-plugin" "docker-ce" "docker-ce-cli" "docker-buildx-plugin" "containered" "iptables" "libnetfilter" "libnfnetlink" "libip4" "libip6" "inotify" "libinotify" )
-for package in "${pkglist[@]}"
-do
-	dpkg -r "$(dpkg -f "${PKGPATH}/${package}.deb" Package)"
-done
+apt-get autoremove --purge -y libnotify-bin
+apt-get autoremove --purge -y inotify-tools
+apt-get autoremove --purge -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-if [ -s "/bin/notify-send" ] ; then
-	rm "/bin/notify-send"
-fi
+rm -rf "${EMBAPACKAGEPATH}"
+
+sed -i 's|^# deb http|deb http|' /etc/apt/sources.list
+sed -i 's|^# deb https|deb https|' /etc/apt/sources.list

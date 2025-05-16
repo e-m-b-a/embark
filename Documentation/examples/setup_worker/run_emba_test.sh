@@ -1,7 +1,6 @@
 #!/bin/bash
 
-cd "/root/emba" || exit
+FIRMWARE_PATH="./test/firmware.zip"
+EMBA_PATH="/root/emba"
 
-FIRMWARE_PATH="./firmware.zip"
-
-sudo DISABLE_STATUS_BAR=1 DISABLE_NOTIFICATIONS=1 HTML=1 FORMAT_LOG=1 ./emba -f "${FIRMWARE_PATH}" -l ./emba_logs -p ./scan-profiles/default-scan-no-notify.emba  -Z "" -Y ""
+sudo DISABLE_STATUS_BAR=1 DISABLE_NOTIFICATIONS=1 HTML=1 FORMAT_LOG=1 "${EMBA_PATH}/emba" -f "${FIRMWARE_PATH}" -l ./emba_logs -p "${EMBA_PATH}/scan-profiles/default-scan-no-notify.emba" -Z "" -Y ""

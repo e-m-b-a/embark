@@ -1,49 +1,85 @@
 #!/bin/bash
 
-FILEPATH="/mnt/VM/home/root/WORKER_SETUP"
-PKGPATH="${FILEPATH}/pkg"
-EXTERNAL="${FILEPATH}/external"
-
 # Works with Kali Linux 2025.1c: https://cdimage.kali.org/kali-2025.1c/kali-linux-2025.1c-installer-amd64.iso
+
+if [[ $EUID -ne 0 ]]; then
+	echo "This script has to be run as root"
+	exit 1
+fi
+
+FILEPATH="./WORKER_SETUP"
+PKGPATH="${FILEPATH}/pkg"
+EXTERNALPATH="${FILEPATH}/external"
+TESTPATH="${FILEPATH}/test"
+
+function downloadPackage() {
+	( cd "$PKGPATH" && apt-get download $(apt-cache depends --recurse --no-recommends --no-suggests \
+	  --no-conflicts --no-breaks --no-replaces --no-enhances \
+	  --no-pre-depends "$@" | grep "^\w") )
+}
+
+### Enable SSH to access data via sshfs
+systemctl enable ssh
+systemctl start ssh
 
 mkdir -p "${FILEPATH}"
 
+### Copy scripts
+cp "installer.sh" "${FILEPATH}"
+cp "uninstaller.sh" "${FILEPATH}"
+
+mkdir "${TESTPATH}"
+cp "firmware.zip" "${TESTPATH}"
+cp "run_emba_test.sh" "${TESTPATH}"
+
 ### Download EMBA
+apt-get update -y
+apt-get install -y curl
 curl -L --url https://github.com/e-m-b-a/emba/archive/refs/heads/master.tar.gz --output "${FILEPATH}/emba.tar.gz"
+
+### Install docker apt repository
+apt-get install -y ca-certificates
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+chmod a+r /etc/apt/keyrings/docker.asc
+
+echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian bookworm stable" | \
+  tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+apt-get update -y
 
 ### Download debs from https://packages.debian.org/sid/amd64/<packagename>/download
 mkdir -p "${PKGPATH}"
 
-# docker-ce needs iptables
-curl -L --url http://ftp.de.debian.org/debian/pool/main/i/iptables/libip4tc2_1.8.11-2_amd64.deb --output "${PKGPATH}/libip4.deb"
-curl -L --url http://ftp.de.debian.org/debian/pool/main/i/iptables/libip6tc2_1.8.11-2_amd64.deb --output "${PKGPATH}/libip6.deb"
-curl -L --url http://ftp.de.debian.org/debian/pool/main/libn/libnetfilter-conntrack/libnetfilter-conntrack3_1.1.0-1_amd64.deb --output "${PKGPATH}/libnetfilter.deb"
-curl -L --url http://ftp.de.debian.org/debian/pool/main/libn/libnfnetlink/libnfnetlink0_1.0.2-3_amd64.deb --output "${PKGPATH}/libnfnetlink.deb"
-curl -L --url http://ftp.de.debian.org/debian/pool/main/i/iptables/iptables_1.8.11-2_amd64.deb --output "${PKGPATH}/iptables.deb"
+# Needed to run EMBA:
+downloadPackage docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-# docker-ce, docker-ce-cli, containered.io, docker-buildx-plugin, docker-compose-plugin
-curl -L --url https://download.docker.com/linux/debian/dists/trixie/pool/stable/amd64/containerd.io_1.7.27-1_amd64.deb --output "${PKGPATH}/containered.deb"
-curl -L --url https://download.docker.com/linux/debian/dists/trixie/pool/stable/amd64/docker-buildx-plugin_0.23.0-1~debian.13~trixie_amd64.deb --output "${PKGPATH}/docker-buildx-plugin.deb"
-curl -L --url https://download.docker.com/linux/debian/dists/trixie/pool/stable/amd64/docker-ce-cli_28.1.1-1~debian.13~trixie_amd64.deb --output "${PKGPATH}/docker-ce-cli.deb"
-curl -L --url https://download.docker.com/linux/debian/dists/trixie/pool/stable/amd64/docker-ce_28.1.1-1~debian.13~trixie_amd64.deb --output "${PKGPATH}/docker-ce.deb"
-curl -L --url https://download.docker.com/linux/debian/dists/trixie/pool/stable/amd64/docker-compose-plugin_2.35.1-1~debian.13~trixie_amd64.deb --output "${PKGPATH}/docker-compose-plugin.deb"
+# Needed for EMBA:
+downloadPackage inotify-tools
+downloadPackage libnotify-bin
 
-# Needed for EMBA (inotify):
-curl -L --url http://ftp.de.debian.org/debian/pool/main/i/inotify-tools/inotify-tools_4.23.9.0-2+b1_amd64.deb --output "${PKGPATH}/inotify.deb"
-curl -L --url http://ftp.de.debian.org/debian/pool/main/i/inotify-tools/libinotifytools0_4.23.9.0-2+b1_amd64.deb --output "${PKGPATH}/libinotify.deb"
+# Build index (for dependency tree)
+apt-get install -y dpkg-dev
+( cd "${PKGPATH}" && dpkg-scanpackages . ) | gzip -9c > "${PKGPATH}/Packages.gz"
 
 ### Export EMBA image
-# docker save -o "${FILEPATH}/emba-docker-image.tar" embeddedanalyzer/emba
+apt install -y docker-ce
+systemctl start docker
+docker pull embeddedanalyzer/emba:latest
+docker save -o "${FILEPATH}/emba-docker-image.tar" embeddedanalyzer/emba:latest
+chmod 755 "${FILEPATH}/emba-docker-image.tar"
 
 ### Download external data
-mkdir -p "${EXTERNAL}"
-if [ ! -d "${EXTERNAL}/nvd-json-data-feeds" ]; then
-	git clone --depth 1 -b main https://github.com/EMBA-support-repos/nvd-json-data-feeds.git "${EXTERNAL}/nvd-json-data-feeds"
+mkdir -p "${EXTERNALPATH}"
+if [ ! -d "${EXTERNALPATH}/nvd-json-data-feeds" ]; then
+	git clone --depth 1 -b main https://github.com/EMBA-support-repos/nvd-json-data-feeds.git "${EXTERNALPATH}/nvd-json-data-feeds"
 fi
-if [ ! -d "${EXTERNAL}/EPSS-data" ]; then
-	git clone --depth 1 -b main https://github.com/EMBA-support-repos/EPSS-data.git "${EXTERNAL}/EPSS-data"
+if [ ! -d "${EXTERNALPATH}/EPSS-data" ]; then
+	git clone --depth 1 -b main https://github.com/EMBA-support-repos/EPSS-data.git "${EXTERNALPATH}/EPSS-data"
 fi
 
-### Fake venv (no packages have to be installed)
-mkdir -p "${EXTERNAL}/emba_venv/bin"
-touch "${EXTERNAL}/emba_venv/bin/activate"
+### Fake venv (packages are broken)
+mkdir -p "${EXTERNALPATH}/emba_venv/bin"
+touch "${EXTERNALPATH}/emba_venv/bin/activate"
+
+echo "Preparation done"
