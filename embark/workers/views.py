@@ -1,21 +1,53 @@
 from django.http import JsonResponse
 
 from workers.models import Worker
+from users.models import Configuration
 
-# TODO: add dependency to SBOM and elsewhere
+# TODO: add dependencies to SBOM and elsewhere
 import paramiko
+import ipaddress
+import socket
+from concurrent.futures import ThreadPoolExecutor
 
 
-def register_new_worker(request):
+def config_worker_scan_and_registration(request, configuration_id):
     """
-    Register a new worker. The configurations of the user are fetched and the 
-    worker automatically gets assigned the configuration whose IP range matches its
-    IP address. The worker is then added to the database and we return the ID assigned to the worker.
+    For a given configuration scan its IP range and register all workers found in the range.
+    For this, we create a worker object for each detected worker and
+    assign each worker a name, its IP, and the given configuration.
     """
-    # TODO: implement
-    # we may alternatively implement it so that there is a worker scan for each
-    # configuration of the user and all detected workers are registered using 
-    # something like this endpoint
+    configuration = Configuration.objects.get(id=configuration_id)
+    ip_range = configuration.ip_range
+    ip_network = ipaddress.ip_network(ip_range, strict=False)
+
+    def connect_ssh(ip, port=22, timeout=1):
+        try:
+            with socket.create_connection((str(ip), port), timeout):
+                new_worker = Worker(
+                    configuration=configuration,
+                    name=f"worker-{str(ip)}",
+                    ip_address=str(ip),
+                    system_info={}
+                )
+                new_worker.save()
+                return str(ip)
+        except:
+            return None
+
+    with ThreadPoolExecutor(max_workers=50) as executor:
+        reachable_hosts = list(filter(None, executor.map(connect_ssh, list(ip_network.hosts()))))
+
+    return JsonResponse({'status': 'scan_complete', 'reachable_hosts': reachable_hosts})
+
+
+def registered_workers(request, configuration_id):
+    """
+    Get all registered workers for a given configuration.
+    """
+    configuration = Configuration.objects.get(id=configuration_id)
+    workers = Worker.objects.filter(configuration=configuration)
+    worker_list = [{'id': worker.id, 'name': worker.name, 'ip_address': worker.ip_address, 'system_info': worker.system_info} for worker in workers]
+    return JsonResponse({'status': 'success', 'configuration': configuration.name, 'workers': worker_list})
 
 
 def connect_worker(request, worker_id):
@@ -23,7 +55,7 @@ def connect_worker(request, worker_id):
     Connect to the worker with the given ID and gather system information.
     This information is comprised of OS type and version, CPU count, RAM size, Disk size,
     """
-    worker = Worker.objects.get(worker_id=worker_id)
+    worker = Worker.objects.get(id=worker_id)
     worker_name = worker.name
     worker_ip = worker.ip_address
     configuration = worker.configuration
@@ -41,7 +73,7 @@ def connect_worker(request, worker_id):
     cpu_info = stdout.read().decode().strip() + " cores"
 
     _stdin, stdout, _stderr = ssh_client.exec_command("free -h | grep Mem")
-    ram_info = stdout.read().decode().strip()[len('Mem:'):].strip().split()[1]
+    ram_info = stdout.read().decode().strip().split()[1]
     ram_info = ram_info.replace('Gi', 'GB').replace('Mi', 'MB')
 
     _stdin, stdout, _stderr = ssh_client.exec_command("df -h | grep '^/'")
@@ -61,4 +93,10 @@ def connect_worker(request, worker_id):
     worker.system_info = system_info
     worker.save()
 
-    return JsonResponse({'worker_id': worker_id, 'worker_name': worker_name, 'system_info': worker.system_info})
+    return JsonResponse({
+        'status': 'success',
+        'worker_id': worker_id,
+        'worker_name': worker_name,
+        'worker_ip': worker_ip,
+        'system_info': system_info
+    })
