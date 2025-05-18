@@ -8,6 +8,6 @@ fi
 FIRMWARE_PATH="$(realpath ./firmware.zip)"
 EMBA_PATH="/root/emba"
 
-cd "${EMBA_PATH}"
+cd "${EMBA_PATH}" || exit 1
 
 sudo DISABLE_STATUS_BAR=1 DISABLE_NOTIFICATIONS=1 HTML=1 FORMAT_LOG=1 ./emba -f "${FIRMWARE_PATH}" -l ./emba_logs -p "./scan-profiles/default-scan-no-notify.emba" -Z "" -Y ""

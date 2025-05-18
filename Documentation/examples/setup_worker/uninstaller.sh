@@ -1,7 +1,6 @@
 #!/bin/bash
 
 FILEPATH="."
-PKGPATH="${FILEPATH}/pkg"
 INSTALLPATH="/root"
 EMBAPACKAGEPATH="/usr/local/EMBA_PACKAGES"
 

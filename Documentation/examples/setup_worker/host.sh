@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# Works with Kali Linux 2025.1c: https://cdimage.kali.org/kali-2025.1c/kali-linux-2025.1c-installer-amd64.iso
-
 if [[ $EUID -ne 0 ]]; then
 	echo "This script has to be run as root"
 	exit 1
@@ -12,8 +10,11 @@ PKGPATH="${FILEPATH}/pkg"
 EXTERNALPATH="${FILEPATH}/external"
 TESTPATH="${FILEPATH}/test"
 EMBAVERSION="1.5.2c"
+IS_UBUNTU=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
+[[ $IS_UBUNTU == "Ubuntu" ]] && IS_UBUNTU=true || IS_UBUNTU=false
 
 function downloadPackage() {
+	# shellcheck disable=SC2046
 	( cd "$PKGPATH" && apt-get download $(apt-cache depends --recurse --no-recommends --no-suggests \
 	  --no-conflicts --no-breaks --no-replaces --no-enhances \
 	  --no-pre-depends "$@" | grep "^\w") )
@@ -29,9 +30,11 @@ mkdir -p "${FILEPATH}"
 cp "installer.sh" "${FILEPATH}"
 cp "uninstaller.sh" "${FILEPATH}"
 
-mkdir "${TESTPATH}"
-cp "firmware.zip" "${TESTPATH}"
-cp "run_emba_test.sh" "${TESTPATH}"
+if [[ -f "firmware.zip" && -f "run_emba_test.sh" ]] ; then
+	mkdir "${TESTPATH}"
+	cp "firmware.zip" "${TESTPATH}"
+	cp "run_emba_test.sh" "${TESTPATH}"
+fi
 
 ### Download EMBA
 apt-get update -y
@@ -41,12 +44,19 @@ curl -L --url https://github.com/e-m-b-a/emba/archive/refs/heads/master.tar.gz -
 ### Install docker apt repository
 apt-get install -y ca-certificates
 install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+
+if [ "$IS_UBUNTU" = true ] ; then
+	curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+	echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+	  $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
+	  tee /etc/apt/sources.list.d/docker.list > /dev/null
+else
+	curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+	echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian bookworm stable" | \
+	  tee /etc/apt/sources.list.d/docker.list > /dev/null
+fi
+
 chmod a+r /etc/apt/keyrings/docker.asc
-
-echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian bookworm stable" | \
-  tee /etc/apt/sources.list.d/docker.list > /dev/null
-
 apt-get update -y
 
 ### Download debs from https://packages.debian.org/sid/amd64/<packagename>/download

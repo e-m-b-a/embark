@@ -39,4 +39,3 @@ mv "${INSTALLPATH}/emba-master/" "${INSTALLPATH}/emba"
 cp -r "${EXTERNALPATH}" "${INSTALLPATH}/emba"
 
 echo "Installation done"
-echo "Run the test scan: ./test/run_emba_test.sh"
