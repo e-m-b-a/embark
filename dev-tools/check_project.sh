@@ -269,8 +269,6 @@ pylinter(){
     fi
   done
 
-  echo -e "\\n""${GREEN}""Run pylint on all scripts:""${NC}""\\n"
-  pipenv run pylint --load-plugins pylint_django --rcfile=../.pylintrc ./*  2> >(grep -v "Courtesy Notice\|Loading .env" >&2) | grep "Your code has been rated"
   cd .. || exit 1
 }
 
