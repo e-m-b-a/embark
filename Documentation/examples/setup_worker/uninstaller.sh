@@ -1,6 +1,5 @@
 #!/bin/bash
 
-FILEPATH="."
 INSTALLPATH="/root"
 EMBAPACKAGEPATH="/usr/local/EMBA_PACKAGES"
 
