@@ -9,7 +9,6 @@ FILEPATH="./WORKER_SETUP"
 PKGPATH="${FILEPATH}/pkg"
 EXTERNALPATH="${FILEPATH}/external"
 TESTPATH="${FILEPATH}/test"
-EMBAVERSION="1.5.2c"
 IS_UBUNTU=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
 [[ $IS_UBUNTU == "Ubuntu" ]] && IS_UBUNTU=true || IS_UBUNTU=false
 
@@ -77,6 +76,10 @@ apt-get install -y dpkg-dev
 ### Export EMBA image
 apt install -y docker-ce
 systemctl start docker
+
+EMBAVERSION=$(curl -sL https://raw.githubusercontent.com/e-m-b-a/emba/refs/heads/master/docker-compose.yml \
+  | awk -F: '/image:/ {print $NF; exit}')
+
 docker pull "embeddedanalyzer/emba:${EMBAVERSION}"
 docker save -o "${FILEPATH}/emba-docker-image.tar" "embeddedanalyzer/emba:${EMBAVERSION}"
 chmod 755 "${FILEPATH}/emba-docker-image.tar"
