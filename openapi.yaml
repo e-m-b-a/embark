@@ -170,7 +170,7 @@ paths:
                   error:
                     type: string
                     example: "The analysis with the provided UUID doesn't exist."
-  /user/api_test/:
+  /user/api_test:
     get:
       tags: 
         - API Test
