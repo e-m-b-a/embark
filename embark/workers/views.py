@@ -89,7 +89,7 @@ def registered_workers(request, configuration_id):
 @permission_required("users.worker_permission", login_url='/')
 def connect_worker(request, configuration_id, worker_id):
     """
-    Connect to the worker with the given ID and gather system information.
+    Connect to the worker with the given worker ID using SSH credentials from the given config ID and gather system information.
     This information is comprised of OS type and version, CPU count, RAM size, and Disk size
     """
     try:
@@ -108,25 +108,30 @@ def connect_worker(request, configuration_id, worker_id):
     ssh_client = paramiko.SSHClient()
     ssh_client.load_system_host_keys()
     ssh_client.set_missing_host_key_policy(paramiko.RejectPolicy())
-    ssh_client.connect(worker_ip, username=ssh_user, password=ssh_password)
 
-    _stdin, stdout, _stderr = ssh_client.exec_command("grep PRETTY_NAME /etc/os-release")
-    os_info = stdout.read().decode().strip()[len('PRETTY_NAME='):-1].strip('"')
+    try:
+        ssh_client.connect(worker_ip, username=ssh_user, password=ssh_password)
 
-    _stdin, stdout, _stderr = ssh_client.exec_command("nproc")
-    cpu_info = stdout.read().decode().strip() + " cores"
+        _stdin, stdout, _stderr = ssh_client.exec_command("grep PRETTY_NAME /etc/os-release")
+        os_info = stdout.read().decode().strip()[len('PRETTY_NAME='):-1].strip('"')
 
-    _stdin, stdout, _stderr = ssh_client.exec_command("free -h | grep Mem")
-    ram_info = stdout.read().decode().strip().split()[1]
-    ram_info = ram_info.replace('Gi', 'GB').replace('Mi', 'MB')
+        _stdin, stdout, _stderr = ssh_client.exec_command("nproc")
+        cpu_info = stdout.read().decode().strip() + " cores"
 
-    _stdin, stdout, _stderr = ssh_client.exec_command("df -h | grep '^/'")
-    disk_str = stdout.read().decode().strip().split('\n')[0].split()
-    disk_total = disk_str[1].replace('G', 'GB').replace('M', 'MB')
-    disk_free = disk_str[3].replace('G', 'GB').replace('M', 'MB')
-    disk_info = f"Total: {disk_total}, Free: {disk_free}"
+        _stdin, stdout, _stderr = ssh_client.exec_command("free -h | grep Mem")
+        ram_info = stdout.read().decode().strip().split()[1]
+        ram_info = ram_info.replace('Gi', 'GB').replace('Mi', 'MB')
 
-    ssh_client.close()
+        _stdin, stdout, _stderr = ssh_client.exec_command("df -h | grep '^/'")
+        disk_str = stdout.read().decode().strip().split('\n')[0].split()
+        disk_total = disk_str[1].replace('G', 'GB').replace('M', 'MB')
+        disk_free = disk_str[3].replace('G', 'GB').replace('M', 'MB')
+        disk_info = f"Total: {disk_total}, Free: {disk_free}"
+
+        ssh_client.close()
+    except paramiko.SSHException as ssh_error:
+        ssh_client.close()
+        return JsonResponse({'status': 'error', 'message': f'SSH connection failed: {ssh_error}'})
 
     system_info = {
         'os_info': os_info,
