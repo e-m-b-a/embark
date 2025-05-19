@@ -130,8 +130,9 @@ def connect_worker(request, configuration_id, worker_id):
 
         ssh_client.close()
     except paramiko.SSHException as ssh_error:
+        print(f"SSH connection failed: {ssh_error}")
         ssh_client.close()
-        return JsonResponse({'status': 'error', 'message': f'SSH connection failed: {ssh_error}'})
+        return JsonResponse({'status': 'error', 'message': 'SSH connection failed.'})
 
     system_info = {
         'os_info': os_info,
