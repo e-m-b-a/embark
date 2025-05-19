@@ -5,8 +5,6 @@ from django.core.exceptions import ValidationError
 from users.models import Configuration
 
 
-# TODO: add explicit makemigrations command for workers models in scripts i.e. debug-server-start.sh etc.
-
 class Worker(models.Model):
     configurations = models.ManyToManyField(Configuration, related_name='workers', blank=True)
     name = models.CharField(max_length=100)

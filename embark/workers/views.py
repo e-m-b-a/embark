@@ -1,4 +1,3 @@
-# TODO: add dependencies to SBOM and elsewhere
 import paramiko
 import ipaddress
 import socket
@@ -23,6 +22,9 @@ def config_worker_scan_and_registration(request, configuration_id):
     For a given configuration scan its IP range and register all workers found in the range.
     For this, we create a worker object for each detected worker and
     assign each worker a name, its IP, and the given configuration.
+
+    If a worker registration has already been processed for the configuration,
+    gives information about the number of reachable workers out of the registered ones.
     """
     try:
         user = get_user(request)
@@ -56,9 +58,10 @@ def config_worker_scan_and_registration(request, configuration_id):
             return None
 
     with ThreadPoolExecutor(max_workers=50) as executor:
-        reachable_hosts = list(filter(None, executor.map(connect_ssh, list(ip_network.hosts()))))
+        reachable_workers = list(filter(None, executor.map(connect_ssh, list(ip_network.hosts()))))
 
-    return JsonResponse({'status': 'scan_complete', 'reachable_hosts': reachable_hosts})
+    registered_workers = [worker.ip_address for worker in configuration.workers.all()]
+    return JsonResponse({'status': 'scan_complete', 'configuration': configuration.name, 'registered_workers': registered_workers, 'reachable_workers': reachable_workers})
 
 
 @require_http_methods(["GET"])
@@ -66,7 +69,7 @@ def config_worker_scan_and_registration(request, configuration_id):
 @permission_required("users.worker_permission", login_url='/')
 def registered_workers(request, configuration_id):
     """
-    Get all registered workers for a given configuration.
+    Get detailed information about all registered workers for a given configuration.
     """
     try:
         user = get_user(request)
