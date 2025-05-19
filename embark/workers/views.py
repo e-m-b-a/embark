@@ -106,7 +106,8 @@ def connect_worker(request, configuration_id, worker_id):
         return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
 
     ssh_client = paramiko.SSHClient()
-    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh_client.load_system_host_keys()
+    ssh_client.set_missing_host_key_policy(paramiko.RejectPolicy())
     ssh_client.connect(worker_ip, username=ssh_user, password=ssh_password)
 
     _stdin, stdout, _stderr = ssh_client.exec_command("grep PRETTY_NAME /etc/os-release")
