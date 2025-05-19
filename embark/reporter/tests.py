@@ -8,6 +8,17 @@ from uploader.models import FirmwareAnalysis, LogZipFile
 
 
 class TestAPI(TestCase):
+    def __init__(self):
+        super().__init__()
+        self.client = Client()
+        self.user = None
+        self.superuser = None
+
+        self.analysis1 = None
+        self.analysis2 = None
+        self.analysis3 = None
+        self.analysis4 = None
+
     def setUp(self):
         self.client = Client()
 
