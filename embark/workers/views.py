@@ -1,6 +1,8 @@
-import paramiko
 import ipaddress
 import socket
+from concurrent.futures import ThreadPoolExecutor
+
+import paramiko
 
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import get_user
@@ -11,13 +13,11 @@ from django.http import JsonResponse
 from workers.models import Worker
 from users.models import Configuration
 
-from concurrent.futures import ThreadPoolExecutor
-
 
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
-def config_worker_scan_and_registration(request, configuration_id):
+def config_worker_scan(request, configuration_id):
     """
     For a given configuration scan its IP range and register all workers found in the range.
     For this, we create a worker object for each detected worker and
@@ -37,31 +37,31 @@ def config_worker_scan_and_registration(request, configuration_id):
     ip_range = configuration.ip_range
     ip_network = ipaddress.ip_network(ip_range, strict=False)
 
-    def connect_ssh(ip, port=22, timeout=1):
+    def connect_ssh(ip_address, port=22, timeout=1):
         try:
-            with socket.create_connection((str(ip), port), timeout):
+            with socket.create_connection((str(ip_address), port), timeout):
                 try:
-                    existing_worker = Worker.objects.get(ip_address=str(ip))
+                    existing_worker = Worker.objects.get(ip_address=str(ip_address))
                     if configuration not in existing_worker.configurations.all():
                         existing_worker.configurations.add(configuration)
                         existing_worker.save()
                 except Worker.DoesNotExist:
                     new_worker = Worker(
                         configurations=[configuration],
-                        name=f"worker-{str(ip)}",
-                        ip_address=str(ip),
+                        name=f"worker-{str(ip_address)}",
+                        ip_address=str(ip_address),
                         system_info={}
                     )
                     new_worker.save()
-                return str(ip)
-        except:
+                return str(ip_address)
+        except socket.timeout:
             return None
 
     with ThreadPoolExecutor(max_workers=50) as executor:
-        reachable_workers = list(filter(None, executor.map(connect_ssh, list(ip_network.hosts()))))
+        reachable = list(filter(None, executor.map(connect_ssh, list(ip_network.hosts()))))
 
-    registered_workers = [worker.ip_address for worker in configuration.workers.all()]
-    return JsonResponse({'status': 'scan_complete', 'configuration': configuration.name, 'registered_workers': registered_workers, 'reachable_workers': reachable_workers})
+    registered = [worker.ip_address for worker in configuration.workers.all()]
+    return JsonResponse({'status': 'scan_complete', 'configuration': configuration.name, 'registered_workers': registered, 'reachable_workers': reachable})
 
 
 @require_http_methods(["GET"])

@@ -1,5 +1,6 @@
-from django.db import models
 import ipaddress
+
+from django.db import models
 from django.core.exceptions import ValidationError
 
 from users.models import Configuration
@@ -18,10 +19,10 @@ class Worker(models.Model):
                 if config.ip_range:
                     try:
                         network = ipaddress.ip_network(config.ip_range, strict=False)
-                        ip = ipaddress.ip_address(self.ip_address)
-                        if ip not in network:
+                        ip_address = ipaddress.ip_address(self.ip_address)
+                        if ip_address not in network:
                             raise ValidationError(
                                 {"ip_address": "IP address is not within the configuration's IP range."}
                             )
-                    except ValueError as e:
-                        raise ValidationError({"configuration": f"Invalid IP range: {e}"})
+                    except ValueError as value_error:
+                        raise ValidationError({"configuration": f"Invalid IP range: {value_error}"}) from value_error
