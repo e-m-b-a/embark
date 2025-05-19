@@ -8,6 +8,6 @@ from workers import views
 
 urlpatterns = [
     path('worker/scan/<int:configuration_id>/', views.config_worker_scan_and_registration, name='embark-worker-scan'),
-    path('worker/connect/<int:worker_id>/', views.connect_worker, name='embark-worker'),
+    path('worker/connect/<int:configuration_id>/<int:worker_id>/', views.connect_worker, name='embark-worker-connect'),
     path('worker/registered/<int:configuration_id>/', views.registered_workers, name='embark-worker-registered'),
 ]

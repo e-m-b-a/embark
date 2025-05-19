@@ -1,35 +1,56 @@
+# TODO: add dependencies to SBOM and elsewhere
+import paramiko
+import ipaddress
+import socket
+
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth import get_user
+from django.views.decorators.http import require_http_methods
+from django.conf import settings
 from django.http import JsonResponse
 
 from workers.models import Worker
 from users.models import Configuration
 
-# TODO: add dependencies to SBOM and elsewhere
-import paramiko
-import ipaddress
-import socket
 from concurrent.futures import ThreadPoolExecutor
 
 
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
 def config_worker_scan_and_registration(request, configuration_id):
     """
     For a given configuration scan its IP range and register all workers found in the range.
     For this, we create a worker object for each detected worker and
     assign each worker a name, its IP, and the given configuration.
     """
-    configuration = Configuration.objects.get(id=configuration_id)
+    try:
+        user = get_user(request)
+        configuration = Configuration.objects.get(id=configuration_id)
+        if user != configuration.user:
+            return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this configuration.'})
+    except Configuration.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Configuration not found.'})
+
     ip_range = configuration.ip_range
     ip_network = ipaddress.ip_network(ip_range, strict=False)
 
     def connect_ssh(ip, port=22, timeout=1):
         try:
             with socket.create_connection((str(ip), port), timeout):
-                new_worker = Worker(
-                    configuration=configuration,
-                    name=f"worker-{str(ip)}",
-                    ip_address=str(ip),
-                    system_info={}
-                )
-                new_worker.save()
+                try:
+                    existing_worker = Worker.objects.get(ip_address=str(ip))
+                    if configuration not in existing_worker.configurations.all():
+                        existing_worker.configurations.add(configuration)
+                        existing_worker.save()
+                except Worker.DoesNotExist:
+                    new_worker = Worker(
+                        configurations=[configuration],
+                        name=f"worker-{str(ip)}",
+                        ip_address=str(ip),
+                        system_info={}
+                    )
+                    new_worker.save()
                 return str(ip)
         except:
             return None
@@ -40,27 +61,46 @@ def config_worker_scan_and_registration(request, configuration_id):
     return JsonResponse({'status': 'scan_complete', 'reachable_hosts': reachable_hosts})
 
 
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
 def registered_workers(request, configuration_id):
     """
     Get all registered workers for a given configuration.
     """
-    configuration = Configuration.objects.get(id=configuration_id)
-    workers = Worker.objects.filter(configuration=configuration)
+    try:
+        user = get_user(request)
+        configuration = Configuration.objects.get(id=configuration_id)
+        if user != configuration.user:
+            return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this configuration.'})
+    except Configuration.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Configuration not found.'})
+
+    workers = configuration.workers.all()
     worker_list = [{'id': worker.id, 'name': worker.name, 'ip_address': worker.ip_address, 'system_info': worker.system_info} for worker in workers]
     return JsonResponse({'status': 'success', 'configuration': configuration.name, 'workers': worker_list})
 
 
-def connect_worker(request, worker_id):
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def connect_worker(request, configuration_id, worker_id):
     """
     Connect to the worker with the given ID and gather system information.
-    This information is comprised of OS type and version, CPU count, RAM size, Disk size,
+    This information is comprised of OS type and version, CPU count, RAM size, and Disk size
     """
-    worker = Worker.objects.get(id=worker_id)
-    worker_name = worker.name
-    worker_ip = worker.ip_address
-    configuration = worker.configuration
-    ssh_user = configuration.ssh_user
-    ssh_password = configuration.ssh_password
+    try:
+        user = get_user(request)
+        worker = Worker.objects.get(id=worker_id)
+        worker_name = worker.name
+        worker_ip = worker.ip_address
+        configuration = worker.configurations.get(id=configuration_id)
+        if user != configuration.user:
+            return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this configuration.'})
+        ssh_user = configuration.ssh_user
+        ssh_password = configuration.ssh_password
+    except (Worker.DoesNotExist, Configuration.DoesNotExist):
+        return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
 
     ssh_client = paramiko.SSHClient()
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
