@@ -112,17 +112,17 @@ def connect_worker(request, configuration_id, worker_id):
     try:
         ssh_client.connect(worker_ip, username=ssh_user, password=ssh_password)
 
-        _stdin, stdout, _stderr = ssh_client.exec_command("grep PRETTY_NAME /etc/os-release")
+        _stdin, stdout, _stderr = ssh_client.exec_command('grep PRETTY_NAME /etc/os-release')  # nosec B601: No user input
         os_info = stdout.read().decode().strip()[len('PRETTY_NAME='):-1].strip('"')
 
-        _stdin, stdout, _stderr = ssh_client.exec_command("nproc")
+        _stdin, stdout, _stderr = ssh_client.exec_command('nproc')  # nosec B601: No user input
         cpu_info = stdout.read().decode().strip() + " cores"
 
-        _stdin, stdout, _stderr = ssh_client.exec_command("free -h | grep Mem")
+        _stdin, stdout, _stderr = ssh_client.exec_command('free -h | grep Mem')  # nosec B601: No user input
         ram_info = stdout.read().decode().strip().split()[1]
         ram_info = ram_info.replace('Gi', 'GB').replace('Mi', 'MB')
 
-        _stdin, stdout, _stderr = ssh_client.exec_command("df -h | grep '^/'")
+        _stdin, stdout, _stderr = ssh_client.exec_command("df -h | grep '^/'")  # nosec B601: No user input
         disk_str = stdout.read().decode().strip().split('\n')[0].split()
         disk_total = disk_str[1].replace('G', 'GB').replace('M', 'MB')
         disk_free = disk_str[3].replace('G', 'GB').replace('M', 'MB')
