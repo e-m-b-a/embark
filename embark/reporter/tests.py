@@ -7,10 +7,11 @@ from users.models import User
 from uploader.models import FirmwareAnalysis, LogZipFile
 
 
-class TestAPI(TestCase):
+class TestReporter(TestCase):
     def __init__(self, methodName='runTest'):
         super().__init__(methodName)
-        self.client = Client()
+        self.regular_client = None
+        self.super_client = None
         self.user = None
         self.superuser = None
 
@@ -20,8 +21,6 @@ class TestAPI(TestCase):
         self.analysis4 = None
 
     def setUp(self):
-        self.client = Client()
-
         # Create regular user
         self.user = User.objects.create(username='bob', email='bob@example.com')
         self.user.set_password('bob-is-the-greatest')
@@ -35,15 +34,16 @@ class TestAPI(TestCase):
         self.superuser.is_superuser = True
         self.superuser.save()
 
+        # Create clients
+        self.regular_client = Client(headers={"Authorization": self.user.api_key})
+        self.super_client = Client(headers={"Authorization": self.superuser.api_key})
+
         # Create running report
         self.analysis1 = FirmwareAnalysis.objects.create(user=self.user)
 
-        # Create successful report without zip (regular user's)
-        self.analysis2 = FirmwareAnalysis.objects.create(user=self.user, finished=True)
-
         # Create successful report with zip (regular user's)
         zip_file = LogZipFile.objects.create(user=self.user, file='/tmp/testfile')
-        self.analysis3 = FirmwareAnalysis.objects.create(
+        self.analysis2 = FirmwareAnalysis.objects.create(
             user=self.user,
             finished=True,
             zip_file=zip_file,
@@ -51,32 +51,32 @@ class TestAPI(TestCase):
         )
 
         # Create failed report (superuser's)
-        self.analysis4 = FirmwareAnalysis.objects.create(
+        self.analysis3 = FirmwareAnalysis.objects.create(
             user=self.superuser,
             finished=True,
             failed=True
         )
 
     def test_running_report(self):
-        response = self.client.get(
+        response = self.regular_client.get(
             f'/status_report/{self.analysis1.id}',
-            {'api_key': self.user.api_key}
         )
         self.assertEqual(response.status_code, HTTPStatus.ACCEPTED)
         self.assertEqual(response.json()['status'], 'running')
 
     def test_successful_report_no_zip(self):
-        response = self.client.get(
-            f'/status_report/{self.analysis2.id}',
-            {'api_key': self.user.api_key}
+        # Create successful report without zip (regular user's)
+        analysis = FirmwareAnalysis.objects.create(user=self.user, finished=True)
+
+        response = self.regular_client.get(
+            f'/status_report/{analysis.id}',
         )
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertEqual(response.json()['status'], 'finished')
 
     def test_successful_report_with_zip(self):
-        response = self.client.get(
-            f'/status_report/{self.analysis3.id}',
-            {'api_key': self.user.api_key}
+        response = self.regular_client.get(
+            f'/status_report/{self.analysis2.id}',
         )
         response_json = response.json()
 
@@ -85,9 +85,9 @@ class TestAPI(TestCase):
         self.assertIn('download_url', response_json)
 
     def test_failed_report(self):
-        response = self.client.get(
-            f'/status_report/{self.analysis4.id}',
-            {'api_key': self.superuser.api_key}
+        client = Client(headers={"Authorization": self.superuser.api_key})
+        response = client.get(
+            f'/status_report/{self.analysis3.id}',
         )
         self.assertEqual(response.json()['status'], 'failed')
 
@@ -95,9 +95,8 @@ class TestAPI(TestCase):
         """
         Access to different user's analysis should be granted to the superuser
         """
-        response = self.client.get(
-            f'/status_report/{self.analysis3.id}',
-            {'api_key': self.superuser.api_key}
+        response = self.super_client.get(
+            f'/status_report/{self.analysis2.id}',
         )
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
@@ -105,23 +104,21 @@ class TestAPI(TestCase):
         """
         Access to a different user's analysis should be denied
         """
-        response = self.client.get(
-            f'/status_report/{self.analysis4.id}',
-            {'api_key': self.user.api_key}
+        response = self.regular_client.get(
+            f'/status_report/{self.analysis3.id}',
         )
         self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
         self.assertEqual(response.json()['status'], 'forbidden')
 
     def test_invalid_api_key(self):
-        response = self.client.get(
+        client = Client(headers={"Authorization": 'invalid_key'})
+        response = client.get(
             f'/status_report/{self.analysis1.id}',
-            {'api_key': 'wrong'}
         )
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
     def test_invalid_analysis_id(self):
-        response = self.client.get(
-            '/status_report/invalid',
-            {'api_key': self.user.api_key}
+        response = self.super_client.get(
+            '/status_report/invalid_uuid',
         )
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
