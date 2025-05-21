@@ -106,6 +106,9 @@ def connect_worker(request, configuration_id, worker_id):
         return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
 
     ssh_client = paramiko.SSHClient()
+    # TODO: We may want to use paramiko.AutoAddPolicy() instead of paramiko.RejectPolicy()
+    # to automatically add the host key to known hosts even though it is flagged as insecure by CodeQL.
+    # With the RejectPolicy, we will not be able to connect to the worker if the host key is not already in known hosts
     ssh_client.load_system_host_keys()
     ssh_client.set_missing_host_key_policy(paramiko.RejectPolicy())
 
