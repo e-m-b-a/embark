@@ -20,7 +20,7 @@ jobs:
         run: |
           docker compose up -d
           cd embark
-          sudo pipenv run python manage.py makemigrations users uploader reporter dashboard porter
+          sudo pipenv run python manage.py makemigrations users uploader reporter dashboard porter workers
           sudo pipenv run python manage.py migrate
       - name: Run tests
         run: |
