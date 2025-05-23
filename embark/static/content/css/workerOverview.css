@@ -29,3 +29,62 @@ th {
   border-radius: 8px;
   background-color: rgb(91, 25, 166);
 }
+
+input[type="submit"] {
+  background-color: #4CAF50; /* Green */
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 8px;
+  /* add rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  /* add a shadow effect */
+  transition: background-color 0.3s, transform 0.3s;
+  /* add a transition effect */
+}
+input[type="submit"]:hover {
+  background-color: #45a049; /* Darker green */
+}
+
+button {
+  background-color: #4CAF50; /* Green */
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  /* add more space around the top and bottom */
+  border-radius: 8px;
+  /* add rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  /* add a shadow effect */
+  transition: background-color 0.3s, transform 0.3s;
+  /* add a transition effect */
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+button:hover {
+  background-color: #45a049; /* Darker green */
+}
+
+.configuration-create-container {
+    display: none;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem; /* space between the form elements */
+  max-width: 400px; /* limit the width of the form */
+}

@@ -7,7 +7,9 @@
     <h2>Configurations</h2>
     <table>
     <tr>
+        <th>ID</th>
         <th>Name</th>
+        <th>Created</th>
         <th>IP Range</th>
         <th>SSH Username</th>
         <th>#Reachable / #Total</th>
@@ -15,29 +17,55 @@
     </tr>
     {% for config in configs %}
     <tr>
+        <td>{{ config.id }}</td>
         <td>{{ config.name }}</td>
+        <td>{{ config.created_at }}</td>
         <td>{{ config.ip_range }}</td>
         <td>{{ config.ssh_user }}</td>
         <td>{{ config.total_workers }} / {{ config.reachable_workers }}</td>
         <td>
-        <form action="/" method="post">
+        <form action="{% url 'embark-worker-scan' config.id %}" method="get">
             {% csrf_token %}
-            <button type="submit">Delete</button>
+            <input type="submit" name="action" value="Scan">
+        </form>
+        <form action="{% url 'embark-acc-configuration' %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="configuration" value="{{ config.id }}">
+            <input type="submit" name="action" value="Delete" onclick="return confirm('Are you sure you want to delete this configuration?');">
         </form>
         </td>
     </tr>
     {% endfor %}
     </table>
 
-    <a href="/" class="btn btn-primary">Add Configuration</a>
+    <button id="toggle-create-form">Add Configuration</button>
+        <div class="configuration-create-container">
+            <form action="{% url 'embark-acc-create-configuration' %}" method="post">
+                {% csrf_token %}
+                <label for="name">Configuration Name:</label>
+                <input type="text" name="name" id="name">
+
+                <label for="ssh_user">SSH Username:</label>
+                <input type="text" name="ssh_user" id="ssh_user">
+
+                <label for="ssh_password">SSH Password:</label>
+                <input type="password" name="ssh_password" id="ssh_password">
+
+                <label for="ip_range">IP Range (CIDR):</label>
+                <input type="text" name="ip_range" id="ip_range">
+
+                <input type="submit" value="Create">
+            </form>
+        </div>
     </div>
 
     <div class="worker-container">
     <h2>Worker Nodes</h2>
     <table>
     <tr>
+        <th>ID</th>
         <th>IP Address</th>
-        <th>Reachable</th>
+        <th>Status</th>
         <th>OS Version</th>
         <th>CPU</th>
         <th>Memory</th>
@@ -45,9 +73,9 @@
         <th>EMBA Version</th>
         <th>Last Sync</th>
     </tr>
-    {% for config in user.configuration.all %}
-    {% for worker in config.workers.all %}
+    {% for worker in workers %}
     <tr>
+        <td>{{ worker.id }}</td>
         <td>{{ worker.ip_address }}</td>
         <td>{% if worker.reachable %}🟢{% else %}🔴{% endif %}</td>
         {% if worker.system_info %}
@@ -60,7 +88,23 @@
         {% endif %}
     </tr>
     {% endfor %}
-    {% endfor %}
     </table>
     </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const toggleButton = document.getElementById("toggle-create-form");
+    const createContainer = document.querySelector(".configuration-create-container");
+
+    toggleButton.addEventListener("click", function () {
+        if (createContainer.style.display === "none" || !createContainer.style.display) {
+            createContainer.style.display = "block";
+        } else {
+            createContainer.style.display = "none";
+        }
+    });
+
+    createContainer.style.display = "none";
+});
+</script>

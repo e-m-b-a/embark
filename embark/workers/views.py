@@ -18,20 +18,31 @@ from users.models import Configuration
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
-def workers_main(request):
+def worker_main(request):
     """
     Main view for the workers page.
     """
     user = get_user(request)
     configs = Configuration.objects.prefetch_related('workers').all()
     configs = configs.filter(user=user)
+    configs = sorted(configs, key=lambda x: x.created_at, reverse=True)
+
     for config in configs:
         config.total_workers = config.workers.count()
         config.reachable_workers = config.workers.filter(reachable=True).count()
 
+    reachable_workers = Worker.objects.filter(configurations__in=configs, reachable=True).distinct()
+    unreachable_workers = Worker.objects.filter(configurations__in=configs, reachable=False).distinct()
+
+    reachable_workers = sorted(reachable_workers, key=lambda x: x.ip_address)
+    unreachable_workers = sorted(unreachable_workers, key=lambda x: x.ip_address)
+
+    workers = reachable_workers + unreachable_workers
+
     return render(request, 'workers/index.html', {
         'user': user,
-        'configs': configs
+        'configs': configs,
+        'workers': workers,
     })
 
 
