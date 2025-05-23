@@ -1,0 +1,49 @@
+<div class="configuration-container">
+<h2>Existing Configurations</h2>
+<table>
+  <tr>
+    <th>IP Range</th>
+    <th>#Reachable / #Total</th>
+    <th>Actions</th>
+  </tr>
+  {% for config in user.configuration.all %}
+  <tr>
+    <td>{{ config.ip_range }}</td>
+    {# <td>{{ config.workers.filter(reachable=True).count }} / {{ config.workers.count }} #}
+    <td>
+      <form action="/" method="post">
+        {% csrf_token %}
+        <button type="submit">Delete</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+<a href="/" class="btn btn-primary">Add Configuration</a>
+</div>
+
+
+<div class="worker-container">
+<h2>Worker Nodes</h2>
+<table>
+  <tr>
+    <th>IP Address</th>
+    <th>Reachable</th>
+    <th>OS Version</th>
+    <th>EMBA Version</th>
+    <th>Last Sync</th>
+    <th>Hardware Info</th>
+  </tr>
+  {% for worker in workers %}
+  <tr>
+    <td>{{ worker.ip_address }}</td>
+    {# <td>{% if worker.reachable %}🟢{% else %}🔴{% endif %}</td> #}
+    {# <td>{{ worker.system_info.os }}</td> #}
+    {# <td>{{ worker.system_info.emba_version }}</td> #}
+    {# <td>{{ worker.system_info.last_sync }}</td> #}
+    {# <td>{{ worker.system_info.hw }}</td> #}
+  </tr>
+  {% endfor %}
+</table>
+</div>

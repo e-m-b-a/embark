@@ -2,6 +2,7 @@ import ipaddress
 import socket
 from concurrent.futures import ThreadPoolExecutor
 
+from django.shortcuts import render
 import paramiko
 
 from django.contrib.auth.decorators import login_required, permission_required
@@ -12,6 +13,19 @@ from django.http import JsonResponse
 
 from workers.models import Worker
 from users.models import Configuration
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def workers_main(request):
+    """
+    Main view for the workers page.
+    """
+    user = get_user(request)
+    return render(request, 'workers/index.html', {
+        'user': user
+    })
 
 
 @require_http_methods(["GET"])

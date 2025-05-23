@@ -11,6 +11,7 @@ class Worker(models.Model):
     name = models.CharField(max_length=100)
     ip_address = models.GenericIPAddressField(unique=True)
     system_info = models.JSONField()
+    reachable = models.BooleanField(default=False)
 
     def clean(self):
         super().clean()
