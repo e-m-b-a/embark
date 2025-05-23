@@ -1,49 +1,66 @@
-<div class="configuration-container">
-<h2>Existing Configurations</h2>
-<table>
-  <tr>
-    <th>IP Range</th>
-    <th>#Reachable / #Total</th>
-    <th>Actions</th>
-  </tr>
-  {% for config in user.configuration.all %}
-  <tr>
-    <td>{{ config.ip_range }}</td>
-    {# <td>{{ config.workers.filter(reachable=True).count }} / {{ config.workers.count }} #}
-    <td>
-      <form action="/" method="post">
-        {% csrf_token %}
-        <button type="submit">Delete</button>
-      </form>
-    </td>
-  </tr>
-  {% endfor %}
-</table>
+{% load static %}
+{% block style %}
+<link rel="stylesheet" type="text/css" href="{% static 'content/css/workerOverview.css' %}" />
+{% endblock style %}
+<div class="overview-container">
+    <div class="configuration-container">
+    <h2>Configurations</h2>
+    <table>
+    <tr>
+        <th>Name</th>
+        <th>IP Range</th>
+        <th>SSH Username</th>
+        <th>#Reachable / #Total</th>
+        <th>Actions</th>
+    </tr>
+    {% for config in configs %}
+    <tr>
+        <td>{{ config.name }}</td>
+        <td>{{ config.ip_range }}</td>
+        <td>{{ config.ssh_user }}</td>
+        <td>{{ config.total_workers }} / {{ config.reachable_workers }}</td>
+        <td>
+        <form action="/" method="post">
+            {% csrf_token %}
+            <button type="submit">Delete</button>
+        </form>
+        </td>
+    </tr>
+    {% endfor %}
+    </table>
 
-<a href="/" class="btn btn-primary">Add Configuration</a>
-</div>
+    <a href="/" class="btn btn-primary">Add Configuration</a>
+    </div>
 
-
-<div class="worker-container">
-<h2>Worker Nodes</h2>
-<table>
-  <tr>
-    <th>IP Address</th>
-    <th>Reachable</th>
-    <th>OS Version</th>
-    <th>EMBA Version</th>
-    <th>Last Sync</th>
-    <th>Hardware Info</th>
-  </tr>
-  {% for worker in workers %}
-  <tr>
-    <td>{{ worker.ip_address }}</td>
-    {# <td>{% if worker.reachable %}🟢{% else %}🔴{% endif %}</td> #}
-    {# <td>{{ worker.system_info.os }}</td> #}
-    {# <td>{{ worker.system_info.emba_version }}</td> #}
-    {# <td>{{ worker.system_info.last_sync }}</td> #}
-    {# <td>{{ worker.system_info.hw }}</td> #}
-  </tr>
-  {% endfor %}
-</table>
+    <div class="worker-container">
+    <h2>Worker Nodes</h2>
+    <table>
+    <tr>
+        <th>IP Address</th>
+        <th>Reachable</th>
+        <th>OS Version</th>
+        <th>CPU</th>
+        <th>Memory</th>
+        <th>Disk</th>
+        <th>EMBA Version</th>
+        <th>Last Sync</th>
+    </tr>
+    {% for config in user.configuration.all %}
+    {% for worker in config.workers.all %}
+    <tr>
+        <td>{{ worker.ip_address }}</td>
+        <td>{% if worker.reachable %}🟢{% else %}🔴{% endif %}</td>
+        {% if worker.system_info %}
+        <td>{{ worker.system_info.os_info }}</td>
+        <td>{{ worker.system_info.cpu_info }}</td>
+        <td>{{ worker.system_info.ram_info }}</td>
+        <td>{{ worker.system_info.disk_info }}</td>
+        <td>{{ worker.system_info.emba_version }}</td>
+        <td>{{ worker.system_info.last_sync }}</td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+    {% endfor %}
+    </table>
+    </div>
 </div>

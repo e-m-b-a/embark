@@ -1,0 +1,31 @@
+.overview-container {
+  display: flex;
+  gap: 2rem; /* space between the columns */
+  align-items: flex-start;
+}
+
+.configuration-container, .worker-container {
+  flex: 1; /* Take equal width or adjust as needed */
+  padding: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color:rgb(91, 25, 166);
+}
+
+td {
+  /* center the text in the table */
+  text-align: center;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: rgb(91, 25, 166);
+}
+
+th {
+  /* center the text in the table */
+  text-align: center;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: rgb(91, 25, 166);
+}

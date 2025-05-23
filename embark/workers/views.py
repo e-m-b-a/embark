@@ -2,9 +2,9 @@ import ipaddress
 import socket
 from concurrent.futures import ThreadPoolExecutor
 
-from django.shortcuts import render
 import paramiko
 
+from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import get_user
 from django.views.decorators.http import require_http_methods
@@ -23,8 +23,15 @@ def workers_main(request):
     Main view for the workers page.
     """
     user = get_user(request)
+    configs = Configuration.objects.prefetch_related('workers').all()
+    configs = configs.filter(user=user)
+    for config in configs:
+        config.total_workers = config.workers.count()
+        config.reachable_workers = config.workers.filter(reachable=True).count()
+
     return render(request, 'workers/index.html', {
-        'user': user
+        'user': user,
+        'configs': configs
     })
 
 
@@ -56,25 +63,35 @@ def config_worker_scan(request, configuration_id):
             with socket.create_connection((str(ip_address), port), timeout):
                 try:
                     existing_worker = Worker.objects.get(ip_address=str(ip_address))
+                    existing_worker.reachable = True
+                    existing_worker.save()
                     if configuration not in existing_worker.configurations.all():
                         existing_worker.configurations.add(configuration)
                         existing_worker.save()
                 except Worker.DoesNotExist:
                     new_worker = Worker(
-                        configurations=[configuration],
                         name=f"worker-{str(ip_address)}",
                         ip_address=str(ip_address),
-                        system_info={}
+                        system_info={},
+                        reachable=True
                     )
                     new_worker.save()
+                    new_worker.configurations.set([configuration])
                 return str(ip_address)
-        except socket.timeout:
+        except Exception:
             return None
 
     with ThreadPoolExecutor(max_workers=50) as executor:
         reachable = list(filter(None, executor.map(connect_ssh, list(ip_network.hosts()))))
 
-    registered = [worker.ip_address for worker in configuration.workers.all()]
+    # all registered workers that are not reachable should have their reachable flag set to False
+    registered = []
+    for worker in configuration.workers.all():
+        registered.append(worker.ip_address)
+        if worker.ip_address not in reachable:
+            worker.reachable = False
+            worker.save()
+
     return JsonResponse({'status': 'scan_complete', 'configuration': configuration.name, 'registered_workers': registered, 'reachable_workers': reachable})
 
 
@@ -124,7 +141,7 @@ def connect_worker(request, configuration_id, worker_id):
     # to automatically add the host key to known hosts even though it is flagged as insecure by CodeQL.
     # With the RejectPolicy, we will not be able to connect to the worker if the host key is not already in known hosts
     ssh_client.load_system_host_keys()
-    ssh_client.set_missing_host_key_policy(paramiko.RejectPolicy())
+    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
     try:
         ssh_client.connect(worker_ip, username=ssh_user, password=ssh_password)
