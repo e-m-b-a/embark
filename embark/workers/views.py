@@ -9,7 +9,8 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import get_user
 from django.views.decorators.http import require_http_methods
 from django.conf import settings
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
+from django.contrib import messages
 
 from workers.models import Worker
 from users.models import Configuration
@@ -38,6 +39,8 @@ def worker_main(request):
     unreachable_workers = sorted(unreachable_workers, key=lambda x: x.ip_address)
 
     workers = reachable_workers + unreachable_workers
+    for worker in workers:
+        worker.config_ids = ', '.join([str(config.id) for config in worker.configurations.all()])
 
     return render(request, 'workers/index.html', {
         'user': user,
@@ -72,6 +75,8 @@ def config_worker_scan(request, configuration_id):
     def connect_ssh(ip_address, port=22, timeout=1):
         try:
             with socket.create_connection((str(ip_address), port), timeout):
+                # TODO: maybe we can already gather the system info for each worker here
+                # rather than doing so manually in the connect_worker function
                 try:
                     existing_worker = Worker.objects.get(ip_address=str(ip_address))
                     existing_worker.reachable = True
@@ -102,6 +107,11 @@ def config_worker_scan(request, configuration_id):
         if worker.ip_address not in reachable:
             worker.reachable = False
             worker.save()
+
+    view_access = request.GET.get('view_access')
+    if view_access == "True":
+        messages.success(request, f"Scan complete. {len(reachable)} reachable workers out of {len(registered)} registered workers.")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/worker/'))
 
     return JsonResponse({'status': 'scan_complete', 'configuration': configuration.name, 'registered_workers': registered, 'reachable_workers': reachable})
 

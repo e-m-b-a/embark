@@ -88,3 +88,13 @@ form {
   gap: 1rem; /* space between the form elements */
   max-width: 400px; /* limit the width of the form */
 }
+
+.actions-container {
+  /* align the two forms horizontally */
+  display: flex;
+  justify-content: space-between;
+  gap: 2px; /* space between the forms */
+  margin-top: 2px; /* space above the forms */
+  margin-bottom: 2px; /* space below the forms */
+  flex-wrap: wrap; /* allow wrapping to the next line if needed */  
+}
