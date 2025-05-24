@@ -29,6 +29,7 @@ safe/
 *.sql
 
 # migrations
-media/**/*
 **/migrations/*.py
 !**/migrations/__init__.py
+
+media/**/*

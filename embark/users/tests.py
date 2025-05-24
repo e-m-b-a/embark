@@ -51,7 +51,7 @@ class TestAPI(TestCase):
         user.set_password('12345')
         user.api_key = secrets.token_urlsafe(32)
         user.save()
-        self.client = Client()
+        self.client = Client()  # pylint: disable=attribute-defined-outside-init
 
     def test_api_key_generation(self):
         """

@@ -23,7 +23,7 @@ class TestUploader(APITestCase):
         user.api_key = secrets.token_urlsafe(32)
         user.save()
 
-        self.client = APIClient()
+        self.client = APIClient()  # pylint: disable=attribute-defined-outside-init
         self.client.credentials(HTTP_AUTHORIZATION=user.api_key)
 
     def test_uploader__not_authenticated(self):
