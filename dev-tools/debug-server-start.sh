@@ -120,7 +120,7 @@ cd ./embark || exit 1
 
 # db_init
 echo -e "[*] Starting migrations - log to embark/logs/migration.log"
-python3 ./manage.py makemigrations users uploader reporter dashboard porter workers | tee -a ../logs/migration.log
+python3 ./manage.py makemigrations users uploader reporter dashboard porter | tee -a ../logs/migration.log
 python3 ./manage.py migrate | tee -a ../logs/migration.log
 
 # superuser

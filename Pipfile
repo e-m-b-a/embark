@@ -24,7 +24,6 @@ mod-wsgi-standalone = "*"
 django-bootstrap5 = "*"
 pytz = "*"
 typing-extensions = "*"
-paramiko = "*"
 
 [dev-packages]
 pycodestyle = "*"

@@ -1,31 +1,20 @@
 ---
 name: Feature request
-about: Suggest new feature (using user story)
+about: Suggest an idea for this project
 title: ''
 labels: ''
 assignees: ''
 
 ---
 
-## User story
-1. As a {}
-2. I want / need {}
-3. So that {}
+**Is your feature request related to a problem? Please describe.**
+A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
 
-## Acceptance criteria
-* Criterion 1
-* Criterion 2
-* ...
+**Describe the solution you'd like**
+A clear and concise description of what you want to happen.
 
-## Definition of done (DoD)
-* Added only after week 5
-* The same for all features
-* Here goes the project specific part
+**Describe alternatives you've considered**
+A clear and concise description of any alternative solutions or features you've considered.
 
-## DoD general criteria
-* Feature has been fully implemented
-* Feature has been merged into the mainline
-* All acceptance criteria were met
-* Product owner approved features
-* All tests are passing
-* Developers agreed to release
+**Additional context**
+Add any other context or screenshots about the feature request here.
