@@ -82,7 +82,6 @@
         <td>{{ worker.id }}</td>
         <td>{{ worker.ip_address }}</td>
         <td>{% if worker.reachable %}🟢{% else %}🔴{% endif %}</td>
-        {% if worker.system_info %}
         <td>{{ worker.system_info.os_info }}</td>
         <td>{{ worker.system_info.cpu_info }}</td>
         <td>{{ worker.system_info.ram_info }}</td>
@@ -90,7 +89,6 @@
         <td>{{ worker.system_info.emba_version }}</td>
         <td>{{ worker.system_info.last_sync }}</td>
         <td>{{ worker.config_ids }}</td>
-        {% endif %}
     </tr>
     {% endfor %}
     </table>
