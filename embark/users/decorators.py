@@ -1,3 +1,7 @@
+__copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2021 The AMOS Projects'
+__author__ = 'ashiven, SirGankalot, ClProsser'
+__license__ = 'MIT'
+
 from functools import wraps
 from django.http import JsonResponse, HttpRequest
 from users.models import User

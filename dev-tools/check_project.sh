@@ -10,7 +10,7 @@
 # EMBArk is licensed under MIT
 #
 # Author(s): Michael Messner, Pascal Eckmann
-# Contributer(s): Benedikt Kuehne
+# Contributor(s): Benedikt Kuehne, ClProsser
 
 # Description:  Check all scripts and templates(Django gets its own unit-tests)
 #               And check Django if its deployable
