@@ -18,9 +18,14 @@ assignees: ''
 * ...
 
 ## Definition of done (DoD)
-* Added only after week 5
-* The same for all features
-* Here goes the project specific part
+* Github actions pipeline runs without errors
+* If changes are visible to users, documentation is added
+* Code review passed
+* Code merged to main branch
+* Testable code has appropriate unit tests (Unfortunately the nature of the product forbids general statements for code coverage)
+* SBOM updated: Added new dependencies to SBOM, removed removed dependencies
+* Changes added to change log
+* All added dependencies follow an open source license compatible with the project
 
 ## DoD general criteria
 * Feature has been fully implemented
