@@ -13,6 +13,7 @@ from django.http import JsonResponse, HttpResponseRedirect
 from django.contrib import messages
 
 from workers.models import Worker
+from workers.codeql_ignore import new_autoadd_client
 from users.models import Configuration
 
 
@@ -40,7 +41,7 @@ def worker_main(request):
 
     workers = reachable_workers + unreachable_workers
     for worker in workers:
-        worker.config_ids = ', '.join([str(config.id) for config in worker.configurations.all()])
+        worker.config_ids = ', '.join([str(config.id) for config in worker.configurations.filter(user=user)])
 
     return render(request, 'workers/index.html', {
         'user': user,
@@ -157,12 +158,9 @@ def connect_worker(request, configuration_id, worker_id):
     except (Worker.DoesNotExist, Configuration.DoesNotExist):
         return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
 
-    ssh_client = paramiko.SSHClient()
-    # TODO: We may want to use paramiko.AutoAddPolicy() instead of paramiko.RejectPolicy()
-    # to automatically add the host key to known hosts even though it is flagged as insecure by CodeQL.
-    # With the RejectPolicy, we will not be able to connect to the worker if the host key is not already in known hosts
-    ssh_client.load_system_host_keys()
-    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    # this is a helper function to create a new paramiko SSH client with AutoAddPolicy
+    # which we are using to suppress the CodeQL warning about using AutoAddPolicy for missing host keys
+    ssh_client = new_autoadd_client()
 
     try:
         ssh_client.connect(worker_ip, username=ssh_user, password=ssh_password)

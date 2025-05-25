@@ -66,7 +66,7 @@
     <h2>Worker Nodes</h2>
     <table>
     <tr>
-        <th>ID</th>
+        <th class="id-header">ID</th>
         <th>IP Address</th>
         <th>Status</th>
         <th>OS Version</th>
@@ -79,7 +79,7 @@
     </tr>
     {% for worker in workers %}
     <tr>
-        <td>{{ worker.id }}</td>
+        <td class="id-column">{{ worker.id }}</td>
         <td>{{ worker.ip_address }}</td>
         <td>{% if worker.reachable %}🟢{% else %}🔴{% endif %}</td>
         <td>{{ worker.system_info.os_info }}</td>
