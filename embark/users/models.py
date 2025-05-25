@@ -20,7 +20,6 @@ class User(AbstractUser):
     team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, editable=True, related_name='member_of_team')
     is_active_member = models.BooleanField(default=True, help_text='Whether this team member is active or not')
     api_key = models.CharField(max_length=64, blank=True, null=True, help_text="API key of the user")
-    config_id = models.CharField(max_length=64, blank=True, null=True, help_text="Configuration ID of the user")
 
     class Meta:
         default_permissions = ()    # disable "add", "change", "delete" and "view" default permissions
@@ -36,12 +35,3 @@ class User(AbstractUser):
             ("dashboard_permission_advanced", "Can access all dashboard functionalities of embark"),
             ("worker_permission", "Can access worker functionalities of embark"),
         )
-
-
-class Configuration(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='configuration', help_text="User who created this configuration")
-    name = models.CharField(max_length=150, blank=True, null=True, help_text="Name of the configuration")
-    ssh_user = models.CharField(max_length=150, blank=True, null=True, help_text="SSH user of the worker nodes")
-    ssh_password = models.CharField(max_length=150, blank=True, null=True, help_text="SSH password of the worker nodes")
-    ip_range = models.TextField(blank=True, null=True, help_text="IP range of the worker nodes")
-    created_at = models.DateTimeField(auto_now_add=True, help_text="Date time when this entry was created")

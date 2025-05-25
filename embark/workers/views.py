@@ -1,5 +1,6 @@
 import ipaddress
 import socket
+import re
 from concurrent.futures import ThreadPoolExecutor
 
 import paramiko
@@ -11,10 +12,10 @@ from django.views.decorators.http import require_http_methods
 from django.conf import settings
 from django.http import JsonResponse, HttpResponseRedirect
 from django.contrib import messages
+from django.utils.http import url_has_allowed_host_and_scheme
 
-from workers.models import Worker
+from workers.models import Worker, Configuration
 from workers.codeql_ignore import new_autoadd_client
-from users.models import Configuration
 
 
 @require_http_methods(["GET"])
@@ -48,6 +49,61 @@ def worker_main(request):
         'configs': configs,
         'workers': workers,
     })
+
+
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def delete_config(request):
+    user = get_user(request)
+    selected_config_id = request.POST.get("configuration")
+    if not selected_config_id:
+        messages.error(request, 'No configuration selected')
+        return safe_redirect(request, '/worker/')
+
+    try:
+        config = Configuration.objects.get(id=selected_config_id)
+        if config.user != user:
+            messages.error(request, 'You are not allowed to delete this configuration')
+            return safe_redirect(request, '/worker/')
+        config.delete()
+        messages.success(request, 'Configuration deleted successfully')
+    except Configuration.DoesNotExist:
+        messages.error(request, 'Configuration not found')
+
+    return safe_redirect(request, '/worker/')
+
+
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def create_config(request):
+    user = get_user(request)
+    name = request.POST.get("name")
+    ssh_user = request.POST.get("ssh_user")
+    ssh_password = request.POST.get("ssh_password")
+    ip_range = request.POST.get("ip_range")
+
+    # check if ssh credentials, config name, and ip_range are provided
+    if not ssh_user or not ssh_password or not ip_range or not name:
+        messages.error(request, 'Name, SSH user, SSH password, and IP range are required.')
+        return safe_redirect(request, '/worker/')
+
+    # check ip range format
+    ip_range_regex = r"^(\d{1,3}\.){3}\d{1,3}/\d{1,2}$"
+    if not re.match(ip_range_regex, ip_range):
+        messages.error(request, 'Invalid IP range format. Use CIDR notation')
+        return safe_redirect(request, '/worker/')
+
+    Configuration.objects.create(
+        name=name,
+        user=user,
+        ssh_user=ssh_user,
+        ssh_password=ssh_password,
+        ip_range=ip_range
+    )
+    messages.success(request, 'Configuration created successfully.')
+    return safe_redirect(request, '/worker/')
 
 
 @require_http_methods(["GET"])
@@ -112,7 +168,7 @@ def config_worker_scan(request, configuration_id):
     view_access = request.GET.get('view_access')
     if view_access == "True":
         messages.success(request, f"Scan complete. {len(reachable)} reachable workers out of {len(registered)} registered workers.")
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/worker/'))
+        return safe_redirect(request, '/worker/')
 
     return JsonResponse({'status': 'scan_complete', 'configuration': configuration.name, 'registered_workers': registered, 'reachable_workers': reachable})
 
@@ -203,3 +259,10 @@ def connect_worker(request, configuration_id, worker_id):
         'worker_ip': worker_ip,
         'system_info': system_info
     })
+
+
+def safe_redirect(request, default):
+    referer = request.META.get('HTTP_REFERER', default)
+    if not url_has_allowed_host_and_scheme(referer, allowed_hosts={request.get_host()}):
+        referer = default
+    return HttpResponseRedirect(referer)

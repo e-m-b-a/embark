@@ -3,7 +3,16 @@ import ipaddress
 from django.db import models
 from django.core.exceptions import ValidationError
 
-from users.models import Configuration
+from users.models import User
+
+
+class Configuration(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='configuration', help_text="User who created this configuration")
+    name = models.CharField(max_length=150, blank=True, null=True, help_text="Name of the configuration")
+    ssh_user = models.CharField(max_length=150, blank=True, null=True, help_text="SSH user of the worker nodes")
+    ssh_password = models.CharField(max_length=150, blank=True, null=True, help_text="SSH password of the worker nodes")
+    ip_range = models.TextField(blank=True, null=True, help_text="IP range of the worker nodes")
+    created_at = models.DateTimeField(auto_now_add=True, help_text="Date time when this entry was created")
 
 
 class Worker(models.Model):

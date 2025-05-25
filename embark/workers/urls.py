@@ -8,6 +8,8 @@ from workers import views
 
 urlpatterns = [
     path('worker/', views.worker_main, name='embark-worker-main'),
+    path("worker/delete_config/", views.delete_config, name="embark-delete-configuration"),
+    path("worker/create_config/", views.create_config, name="embark-create-configuration"),
     path('worker/scan/<int:configuration_id>/', views.config_worker_scan, name='embark-worker-scan'),
     path('worker/connect/<int:configuration_id>/<int:worker_id>/', views.connect_worker, name='embark-worker-connect'),
     path('worker/registered/<int:configuration_id>/', views.registered_workers, name='embark-worker-registered'),     # TODO: convert to API endpoints after development complete
