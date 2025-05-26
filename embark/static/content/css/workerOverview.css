@@ -98,13 +98,3 @@ form {
   margin-bottom: 2px; /* space below the forms */
   flex-wrap: wrap; /* allow wrapping to the next line if needed */  
 }
-
-th.id-header {
-  /* make this hidden */
-  display: none;
-}
-
-td.id-column {
-  /* make this hidden */
-  display: none;
-}
