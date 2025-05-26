@@ -33,12 +33,44 @@ class Worker:
 class WorkerOrchestrator:
     def __init__(self):
         self.workers: Dict[str, Worker] = {}
+        self.list_free_workers: Dict[str, Worker] = {}
+        self.list_busy_workers: Dict[str, Worker] = {}
 
     def register_worker(self, ip_address: str):
         if ip_address not in self.workers:
             self.workers[ip_address] = Worker(ip_address)
         else:
             raise ValueError(f"Worker with IP {ip_address} already registered.")
+    
+    def get_busy_workers(self) -> Dict[str, Worker]:
+        return self.list_busy_workers
+    
+    def get_free_workers(self) -> Dict[str, Worker]:
+        return self.list_free_workers
+        
+    def assign_worker(self, ip_address: str, job_id: str):
+        if ip_address not in self.workers:
+            raise ValueError(f"No worker found with IP {ip_address}")
+        worker = self.workers[ip_address]
+        if worker.is_free():
+            worker.assign_job(job_id)
+            self.list_busy_workers[ip_address] = worker
+            if ip_address in self.list_free_workers:
+                del self.list_free_workers[ip_address]
+        else:
+            raise ValueError(f"Worker with IP {ip_address} is already busy.")
+    
+    def release_worker(self, ip_address: str):
+        if ip_address not in self.workers:
+            raise ValueError(f"No worker found with IP {ip_address}")
+        worker = self.workers[ip_address]
+        if not worker.is_free():
+            worker.release()
+            self.list_free_workers[ip_address] = worker
+            if ip_address in self.list_busy_workers:
+                del self.list_busy_workers[ip_address]
+        else:
+            raise ValueError(f"Worker with IP {ip_address} is already free.")
 
     def get_worker_info(self, ip_address: str) -> Optional[Dict]:
         worker = self.workers.get(ip_address)
