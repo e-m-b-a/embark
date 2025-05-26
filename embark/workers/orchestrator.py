@@ -1,8 +1,7 @@
 from typing import Dict
 from workers.models import Worker
-from users.models import Configuration
 
-    
+
 class WorkerOrchestrator:
     def __init__(self):
         self.dict_free_workers: Dict[str, Worker] = {}
