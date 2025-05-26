@@ -21,7 +21,5 @@ urlpatterns = [
     path('user/set_timezone/', views.set_timezone, name='embark-acc-timezone'),
     path("user/generate_api_key/", views.generate_api_key, name="embark-acc-apikey"),
     path("user/api_test/", views.api_test, name="embark-api-test"),
-    path("user/set_or_del_config/", views.set_or_delete_config, name="embark-acc-configuration"),
-    path("user/create_config/", views.create_config, name="embark-acc-create-configuration"),
     path('log/<int:log_type>/<int:lines>/', views.get_log, name='log'),     # TODO move to admin
 ]

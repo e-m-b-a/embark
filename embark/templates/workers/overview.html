@@ -1,0 +1,111 @@
+{% load static %}
+{% block style %}
+<link rel="stylesheet" type="text/css" href="{% static 'content/css/workerOverview.css' %}" />
+{% endblock style %}
+<div class="overview-container">
+    <div class="configuration-container">
+    <h2>Configurations</h2>
+    <table>
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Created</th>
+        <th>IP Range</th>
+        <th>SSH Username</th>
+        <th>#Reachable / #Total</th>
+        <th>Actions</th>
+    </tr>
+    {% for config in configs %}
+    <tr>
+        <td>{{ config.id }}</td>
+        <td>{{ config.name }}</td>
+        <td>{{ config.created_at }}</td>
+        <td>{{ config.ip_range }}</td>
+        <td>{{ config.ssh_user }}</td>
+        <td>{{ config.reachable_workers }} / {{ config.total_workers }}</td>
+        <td>
+            <div class="actions-container">
+                <form action="{% url 'embark-worker-scan' config.id %}" method="get">
+                    {% csrf_token %}
+                    <input type="hidden" name="view_access" value="True">
+                    <input type="submit" name="action" value="Scan">
+                </form>
+                <form action="{% url 'embark-delete-configuration' %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="configuration" value="{{ config.id }}">
+                    <input type="submit" name="action" value="Delete" onclick="return confirm('Are you sure you want to delete this configuration?');">
+                </form>
+            </div>
+        </td>
+    </tr>
+    {% endfor %}
+    </table>
+
+    <button id="toggle-create-form">Add Configuration</button>
+        <div class="configuration-create-container">
+            <form action="{% url 'embark-create-configuration' %}" method="post">
+                {% csrf_token %}
+                <label for="name">Configuration Name:</label>
+                <input type="text" name="name" id="name">
+
+                <label for="ssh_user">SSH Username:</label>
+                <input type="text" name="ssh_user" id="ssh_user">
+
+                <label for="ssh_password">SSH Password:</label>
+                <input type="password" name="ssh_password" id="ssh_password">
+
+                <label for="ip_range">IP Range (CIDR):</label>
+                <input type="text" name="ip_range" id="ip_range">
+
+                <input type="submit" value="Create">
+            </form>
+        </div>
+    </div>
+
+    <div class="worker-container">
+    <h2>Worker Nodes</h2>
+    <table>
+    <tr>
+        <th>IP Address</th>
+        <th>Status</th>
+        <th>OS Version</th>
+        <th>CPU</th>
+        <th>Memory</th>
+        <th>Disk</th>
+        <th>EMBA Version</th>
+        <th>Last Sync</th>
+        <th>Config ID's</th>
+    </tr>
+    {% for worker in workers %}
+    <tr>
+        <td>{{ worker.ip_address }}</td>
+        <td>{% if worker.reachable %}🟢{% else %}🔴{% endif %}</td>
+        <td>{{ worker.system_info.os_info }}</td>
+        <td>{{ worker.system_info.cpu_info }}</td>
+        <td>{{ worker.system_info.ram_info }}</td>
+        <td>{{ worker.system_info.disk_info }}</td>
+        <td>{{ worker.system_info.emba_version }}</td>
+        <td>{{ worker.system_info.last_sync }}</td>
+        <td>{{ worker.config_ids }}</td>
+    </tr>
+    {% endfor %}
+    </table>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const toggleButton = document.getElementById("toggle-create-form");
+    const createContainer = document.querySelector(".configuration-create-container");
+
+    toggleButton.addEventListener("click", function () {
+        if (createContainer.style.display === "none" || !createContainer.style.display) {
+            createContainer.style.display = "block";
+        } else {
+            createContainer.style.display = "none";
+        }
+    });
+
+    createContainer.style.display = "none";
+});
+</script>
