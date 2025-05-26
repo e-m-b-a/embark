@@ -2,6 +2,7 @@ import ipaddress
 
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 from users.models import User
 
@@ -16,11 +17,17 @@ class Configuration(models.Model):
 
 
 class Worker(models.Model):
+    class ConfigStatus(models.TextChoices):  # pylint: disable=too-many-ancestors
+        UNCONFIGURED = "U", _("Unconfigured")
+        CONFIGURED = "C", _("Configured")
+        ERROR = "E", _("Error")
+
     configurations = models.ManyToManyField(Configuration, related_name='workers', blank=True)
     name = models.CharField(max_length=100)
     ip_address = models.GenericIPAddressField(unique=True)
     system_info = models.JSONField()
     reachable = models.BooleanField(default=False)
+    status = models.CharField(max_length=1, choices=ConfigStatus, default=ConfigStatus.UNCONFIGURED)
 
     def clean(self):
         super().clean()
