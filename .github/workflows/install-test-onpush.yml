@@ -42,20 +42,21 @@ jobs:
         with:
           python-version: 3.12
 
+      - name: Set env for .venv in project
+        run: echo "PIPENV_VENV_IN_PROJECT=1" >> $GITHUB_ENV
+
       - name: Install Pipenv
         run: pip install --upgrade pipenv
 
-      - name: Restore Pipenv virtualenv cache
+      - name: Restore Pipenv cache
         id: pipenv-cache
         uses: actions/cache@v3
         with:
-          path: ~/.local/share/virtualenvs
+          path: .venv
           key: pipenv-${{ hashFiles('**/Pipfile.lock') }}
-          restore-keys: |
-            pipenv-
 
-      - name: Install Pipenv virtualeenv
-        run: pipenv install
+      - name: Install dependencies
+        run: pipenv install --deploy --ignore-pipfile
 
       - name: EMBArk dev install
         uses: Wandalen/wretry.action@master
