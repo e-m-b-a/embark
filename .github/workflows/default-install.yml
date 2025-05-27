@@ -36,7 +36,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: docker-cache/db-images.tar
-          key: embark-db-images-v1
+          key: embark-db-images-${{ hashFiles('docker-compose.yml') }}
 
       - name: Load Docker image from cache
         if: steps.docker-cache-restore.outputs.cache-hit == 'true'
