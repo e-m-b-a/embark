@@ -46,6 +46,7 @@ jobs:
         if: steps.docker-cache-restore.outputs.cache-hit != 'true'
         run: |
           mkdir -p docker-cache
+          docker tag embeddedanalyzer/emba:1.5.2c embeddedanalyzer/emba:latest || true
           docker save embeddedanalyzer/emba:latest -o docker-cache/emba-image.tar
 
       # - name: Start Debug-server-conf
