@@ -19,7 +19,7 @@ sed -i 's|^deb http|# deb http|' /etc/apt/sources.list
 sed -i 's|^deb https|# deb https|' /etc/apt/sources.list
 
 # Remove ubuntu 24.04 sources
-rm /etc/apt/soruces.list.d/ubuntu.sources
+rm -f /etc/apt/sources.list.d/ubuntu.sources
 
 # Register index
 cp -r "${PKGPATH}" "${EMBAPACKAGEPATH}"
