@@ -16,7 +16,7 @@ def setup_dependencies():
     """
     Sets up all dependencies required for offline workers
     """
-    if not os.path.isdir(settings.WORKER_SETUP_PATH):
+    if not os.path.isdir(settings.WORKER_SETUP_PATH) or not os.path.exists(settings.WORKER_SETUP_ZIP_PATH):
         try:
             file = os.path.join(os.path.dirname(__file__), "host.sh")
             cmd = f"sudo {file} '{settings.WORKER_SETUP_PATH}' '{settings.WORKER_SETUP_ZIP_PATH}'"
@@ -33,15 +33,12 @@ def exec_blocking_ssh(client, command):
     """
     Executes ssh command blocking, as exec_command is non-blocking
 
+    Warning: This command might block forever, if the output is too large (based on recv_exit_status)
+
     :params client: paramiko ssh client
     :params command: command string
     """
     _, stdout, _ = client.exec_command(command)  # nosec B601: No user input
-
-    # Wait until command is done (recv_exit_status does not work for large output)
-    while not stdout.channel.closed and not stdout.channel.exit_status_ready():
-        if stdout.channel.recv_ready():
-            stdout.readlines()
 
     status = stdout.channel.recv_exit_status()
     if status != 0:
@@ -69,8 +66,8 @@ def setup_worker(worker: Worker):
         sftp_client.put(settings.WORKER_SETUP_ZIP_PATH, "/root/WORKER_SETUP.tar.gz")
         sftp_client.close()
 
-        exec_blocking_ssh(ssh_client, 'tar xvzf /root/WORKER_SETUP.tar.gz')
-        exec_blocking_ssh(ssh_client, 'sudo /root/WORKER_SETUP/installer.sh')
+        exec_blocking_ssh(ssh_client, 'tar xvzf /root/WORKER_SETUP.tar.gz >untar.log 2>&1')
+        exec_blocking_ssh(ssh_client, 'sudo /root/WORKER_SETUP/installer.sh >installer.log 2>&1')
 
         worker.status = Worker.ConfigStatus.CONFIGURED
         logger.info("Setup done")
