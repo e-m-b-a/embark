@@ -13,6 +13,9 @@ logger = logging.getLogger(__name__)
 
 
 def setup_dependencies():
+    """
+    Sets up all dependencies required for offline workers
+    """
     if not os.path.isdir(settings.WORKER_SETUP_PATH):
         try:
             file = os.path.join(os.path.dirname(__file__), "host.sh")
@@ -29,6 +32,9 @@ def setup_dependencies():
 def exec_blocking_ssh(client, command):
     """
     Executes ssh command blocking, as exec_command is non-blocking
+
+    :params client: paramiko ssh client
+    :params command: command string
     """
     _, stdout, _ = client.exec_command(command)  # nosec B601: No user input
 
@@ -43,6 +49,11 @@ def exec_blocking_ssh(client, command):
 
 
 def setup_worker(worker: Worker):
+    """
+    Transfers dependencies to offline worker and executes script
+
+    :params worker: Worker instance
+    """
     # TODO: Move to better place (e.g. if workers are enabled in config)
     setup_dependencies()
 
