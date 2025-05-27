@@ -10,7 +10,7 @@
 # EMBArk is licensed under MIT
 #
 # Author(s): Michael Messner, Pascal Eckmann
-# Contributer(s): Benedikt Kuehne
+# Contributor(s): Benedikt Kuehne, ClProsser
 
 # Description:  Check all scripts and templates(Django gets its own unit-tests)
 #               And check Django if its deployable
@@ -273,6 +273,17 @@ yamlchecker(){
   done
 }
 
+openapichecker(){
+  echo -e "\\n""${ORANGE}""${BOLD}""EMBArk openapi spec check""${NC}""\\n""${BOLD}""=================================================================""${NC}"
+  if spectral lint ./openapi.yaml ; then
+    echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
+  else
+    echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
+      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+      MODULES_TO_CHECK_ARR+=( "./openapi.yaml" )
+  fi
+}
+
 list_linter_exceptions(){
   # lists all linter exceptions for a given toolname inside a directory 
   # $1 tool name
@@ -360,6 +371,7 @@ pylinter
 list_linter_exceptions "pylint" "$PWD/embark"
 check_django
 yamlchecker
+openapichecker
 copy_right_check 2025 "${PWD}" "${PWD}/emba_logs"
 
 if [[ "${#MODULES_TO_CHECK_ARR[@]}" -gt 0 ]]; then
