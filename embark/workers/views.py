@@ -66,6 +66,10 @@ def delete_config(request):
         if config.user != user:
             messages.error(request, 'You are not allowed to delete this configuration')
             return safe_redirect(request, '/worker/')
+
+        workers = Worker.objects.annotate(config_count=Count('configurations')).filter(configurations__id=selected_config_id, config_count=1)
+        workers.delete()
+
         config.delete()
         messages.success(request, 'Configuration deleted successfully')
     except Configuration.DoesNotExist:
