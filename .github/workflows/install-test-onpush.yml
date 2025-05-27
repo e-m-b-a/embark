@@ -24,17 +24,38 @@ jobs:
           large-packages: false
           swap-storage: true
 
-      - name: Restore cached Docker image
+      - name: Restore cached Docker images
         id: docker-cache-restore
         uses: actions/cache@v3
         with:
-          path: docker-cache/emba-image.tar
-          key: emba-docker-image-v1
+          path: docker-cache/db-images.tar
+          key: embark-db-images-v1
 
       - name: Load Docker image from cache
         if: steps.docker-cache-restore.outputs.cache-hit == 'true'
         run: |
-          docker load -i docker-cache/emba-image.tar
+          docker load -i docker-cache/db-images.tar
+
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+
+      - name: Install Pipenv
+        run: pip install --upgrade pipenv
+
+      - name: Restore Pipenv virtualenv cache
+        id: pipenv-cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.local/share/virtualenvs
+          key: pipenv-${{ hashFiles('**/Pipfile.lock') }}
+          restore-keys: |
+            pipenv-
+
+      - name: Install Pipenv virtualeenv
+        run: pipenv install
 
       - name: EMBArk dev install
         uses: Wandalen/wretry.action@master
@@ -42,12 +63,15 @@ jobs:
           command: sudo ./installer.sh -sF
           attempt_limit: 3
 
+      - name: List Docker images for debugging
+        run: docker images
+
       - name: Save Docker image to cache
         if: steps.docker-cache-restore.outputs.cache-hit != 'true'
         run: |
           mkdir -p docker-cache
-          docker tag embeddedanalyzer/emba:1.5.2c embeddedanalyzer/emba:latest || true
-          docker save embeddedanalyzer/emba:latest -o docker-cache/emba-image.tar
+          docker save mysql:latest redis:5 -o docker-cache/db-images.tar
+          # docker save embeddedanalyzer/emba -o docker-cache/emba-image.tar
 
       # - name: Start Debug-server-conf
       #   run: |
