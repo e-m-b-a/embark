@@ -36,7 +36,6 @@ jobs:
         run: |
           docker load -i docker-cache/db-images.tar
 
-
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -64,10 +63,7 @@ jobs:
           command: sudo ./installer.sh -sF
           attempt_limit: 3
 
-      - name: List Docker images for debugging
-        run: docker images
-
-      - name: Save Docker image to cache
+      - name: Save Docker images to cache
         if: steps.docker-cache-restore.outputs.cache-hit != 'true'
         run: |
           mkdir -p docker-cache
