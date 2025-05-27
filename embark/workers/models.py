@@ -2,8 +2,10 @@ import ipaddress
 
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 from users.models import User
+from workers.codeql_ignore import new_autoadd_client
 
 
 class Configuration(models.Model):
@@ -16,11 +18,18 @@ class Configuration(models.Model):
 
 
 class Worker(models.Model):
+    class ConfigStatus(models.TextChoices):  # pylint: disable=too-many-ancestors
+        UNCONFIGURED = "U", _("Unconfigured")
+        CONFIGURING = "I", _("Configuring")
+        CONFIGURED = "C", _("Configured")
+        ERROR = "E", _("Error")
+
     configurations = models.ManyToManyField(Configuration, related_name='workers', blank=True)
     name = models.CharField(max_length=100)
     ip_address = models.GenericIPAddressField(unique=True)
     system_info = models.JSONField()
     reachable = models.BooleanField(default=False)
+    status = models.CharField(max_length=1, choices=ConfigStatus, default=ConfigStatus.UNCONFIGURED)
 
     def clean(self):
         super().clean()
@@ -36,3 +45,11 @@ class Worker(models.Model):
                             )
                     except ValueError as value_error:
                         raise ValidationError({"configuration": f"Invalid IP range: {value_error}"}) from value_error
+
+    def ssh_connect(self, configuration_id=None):
+        ssh_client = new_autoadd_client()
+        configuration = self.configurations.first() if configuration_id is None else self.configurations.get(id=configuration_id)
+
+        ssh_client.connect(self.ip_address, username=configuration.ssh_user, password=configuration.ssh_password)
+
+        return ssh_client

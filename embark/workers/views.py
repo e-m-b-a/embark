@@ -1,6 +1,7 @@
 import ipaddress
 import socket
 import re
+import threading
 from concurrent.futures import ThreadPoolExecutor
 
 import paramiko
@@ -13,9 +14,10 @@ from django.conf import settings
 from django.http import JsonResponse, HttpResponseRedirect
 from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.db.models import Count
 
 from workers.models import Worker, Configuration
-from workers.codeql_ignore import new_autoadd_client
+from workers.setup.setup import setup_worker
 
 
 @require_http_methods(["GET"])
@@ -43,6 +45,7 @@ def worker_main(request):
     workers = reachable_workers + unreachable_workers
     for worker in workers:
         worker.config_ids = ', '.join([str(config.id) for config in worker.configurations.filter(user=user)])
+        worker.status = worker.get_status_display()
 
     return render(request, 'workers/index.html', {
         'user': user,
@@ -66,6 +69,10 @@ def delete_config(request):
         if config.user != user:
             messages.error(request, 'You are not allowed to delete this configuration')
             return safe_redirect(request, '/worker/')
+
+        workers = Worker.objects.annotate(config_count=Count('configurations')).filter(configurations__id=selected_config_id, config_count=1)
+        workers.delete()
+
         config.delete()
         messages.success(request, 'Configuration deleted successfully')
     except Configuration.DoesNotExist:
@@ -103,6 +110,19 @@ def create_config(request):
         ip_range=ip_range
     )
     messages.success(request, 'Configuration created successfully.')
+    return safe_redirect(request, '/worker/')
+
+
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def configure_worker(request, configuration_id):
+    workers = Worker.objects.filter(configurations__id=configuration_id, status=Worker.ConfigStatus.UNCONFIGURED)
+
+    for worker in workers:
+        # TODO: Replace with something better for production use
+        threading.Thread(target=setup_worker, args=(worker,)).start()
+
     return safe_redirect(request, '/worker/')
 
 
@@ -204,22 +224,14 @@ def connect_worker(request, configuration_id, worker_id):
     try:
         user = get_user(request)
         worker = Worker.objects.get(id=worker_id)
-        worker_name = worker.name
-        worker_ip = worker.ip_address
         configuration = worker.configurations.get(id=configuration_id)
         if user != configuration.user:
             return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this configuration.'})
-        ssh_user = configuration.ssh_user
-        ssh_password = configuration.ssh_password
     except (Worker.DoesNotExist, Configuration.DoesNotExist):
         return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
 
-    # this is a helper function to create a new paramiko SSH client with AutoAddPolicy
-    # which we are using to suppress the CodeQL warning about using AutoAddPolicy for missing host keys
-    ssh_client = new_autoadd_client()
-
     try:
-        ssh_client.connect(worker_ip, username=ssh_user, password=ssh_password)
+        ssh_client = worker.ssh_connect(configuration_id)
 
         _stdin, stdout, _stderr = ssh_client.exec_command('grep PRETTY_NAME /etc/os-release')  # nosec B601: No user input
         os_info = stdout.read().decode().strip()[len('PRETTY_NAME='):-1].strip('"')
@@ -255,8 +267,8 @@ def connect_worker(request, configuration_id, worker_id):
     return JsonResponse({
         'status': 'success',
         'worker_id': worker_id,
-        'worker_name': worker_name,
-        'worker_ip': worker_ip,
+        'worker_name': worker.name,
+        'worker_ip': worker.ip_address,
         'system_info': system_info
     })
 
