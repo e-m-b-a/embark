@@ -13,6 +13,7 @@ from django.conf import settings
 from django.http import JsonResponse, HttpResponseRedirect
 from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.db.models import Count
 
 from workers.models import Worker, Configuration
 from workers.codeql_ignore import new_autoadd_client
@@ -209,22 +210,14 @@ def connect_worker(request, configuration_id, worker_id):
     try:
         user = get_user(request)
         worker = Worker.objects.get(id=worker_id)
-        worker_name = worker.name
-        worker_ip = worker.ip_address
         configuration = worker.configurations.get(id=configuration_id)
         if user != configuration.user:
             return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this configuration.'})
-        ssh_user = configuration.ssh_user
-        ssh_password = configuration.ssh_password
     except (Worker.DoesNotExist, Configuration.DoesNotExist):
         return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
 
-    # this is a helper function to create a new paramiko SSH client with AutoAddPolicy
-    # which we are using to suppress the CodeQL warning about using AutoAddPolicy for missing host keys
-    ssh_client = new_autoadd_client()
-
     try:
-        ssh_client.connect(worker_ip, username=ssh_user, password=ssh_password)
+        ssh_client = worker.ssh_connect(configuration_id)
 
         _stdin, stdout, _stderr = ssh_client.exec_command('grep PRETTY_NAME /etc/os-release')  # nosec B601: No user input
         os_info = stdout.read().decode().strip()[len('PRETTY_NAME='):-1].strip('"')
@@ -260,8 +253,8 @@ def connect_worker(request, configuration_id, worker_id):
     return JsonResponse({
         'status': 'success',
         'worker_id': worker_id,
-        'worker_name': worker_name,
-        'worker_ip': worker_ip,
+        'worker_name': worker.name,
+        'worker_ip': worker.ip_address,
         'system_info': system_info
     })
 
