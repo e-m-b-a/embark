@@ -43,6 +43,7 @@ def worker_main(request):
     workers = reachable_workers + unreachable_workers
     for worker in workers:
         worker.config_ids = ', '.join([str(config.id) for config in worker.configurations.filter(user=user)])
+        worker.status = worker.get_status_display()
 
     return render(request, 'workers/index.html', {
         'user': user,
