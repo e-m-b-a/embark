@@ -1,6 +1,7 @@
 import ipaddress
 import socket
 import re
+import threading
 from concurrent.futures import ThreadPoolExecutor
 
 import paramiko
@@ -116,11 +117,11 @@ def create_config(request):
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
 def configure_worker(request, configuration_id):
-    workers = Worker.objects.filter(configurations__id=configuration_id, status=Worker.ConfigStatus.UNCONFIGURED).distinct()
+    workers = Worker.objects.filter(configurations__id=configuration_id, status=Worker.ConfigStatus.UNCONFIGURED)
 
     for worker in workers:
-        # TODO: Call async
-        setup_worker(worker)
+        # TODO: Replace with something better for production use
+        threading.Thread(target=setup_worker, args=(worker,)).start()
 
     return safe_redirect(request, '/worker/')
 
