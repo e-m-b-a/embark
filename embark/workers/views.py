@@ -16,7 +16,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
 
 from workers.models import Worker, Configuration
-from workers.codeql_ignore import new_autoadd_client
+from workers.setup.setup import setup_worker
 
 
 @require_http_methods(["GET"])
@@ -109,6 +109,19 @@ def create_config(request):
         ip_range=ip_range
     )
     messages.success(request, 'Configuration created successfully.')
+    return safe_redirect(request, '/worker/')
+
+
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def configure_worker(request, configuration_id):
+    workers = Worker.objects.filter(configurations__id=configuration_id, status=Worker.ConfigStatus.UNCONFIGURED).distinct()
+
+    for worker in workers:
+        # TODO: Call async
+        setup_worker(worker)
+
     return safe_redirect(request, '/worker/')
 
 
