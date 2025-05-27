@@ -50,7 +50,7 @@ jobs:
         run: pipenv install --deploy --ignore-pipfile
 
       - name: EMBArk default install
-        run: sudo ./installer.sh -sF
+        run: ./installer.sh -sF
 
       - name: Save Docker images to cache
         if: steps.docker-cache-restore.outputs.cache-hit != 'true'
@@ -62,10 +62,10 @@ jobs:
         run: |
           docker compose up -d
           cd embark
-          sudo pipenv run python manage.py makemigrations users uploader reporter dashboard porter workers
-          sudo pipenv run python manage.py migrate
+          pipenv run python manage.py makemigrations users uploader reporter dashboard porter workers
+          pipenv run python manage.py migrate
 
       - name: Run tests
         run: |
           cd embark
-          sudo pipenv run python manage.py test
+          pipenv run python manage.py test

@@ -67,7 +67,7 @@ jobs:
       - name: EMBArk default install
         uses: Wandalen/wretry.action@master
         with:
-          command: sudo ./installer.sh -sd
+          command: ./installer.sh -sd
           attempt_limit: 3
 
       - name: Save Docker images to cache
