@@ -50,7 +50,7 @@ jobs:
         run: pipenv install --deploy --ignore-pipfile
 
       - name: EMBArk default install
-        run: ./installer.sh -sF
+        run: sudo ./installer.sh -sF
 
       - name: Save Docker images to cache
         if: steps.docker-cache-restore.outputs.cache-hit != 'true'
