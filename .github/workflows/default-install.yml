@@ -73,9 +73,8 @@ jobs:
 
       - name: Save Docker images to cache
         if: steps.docker-cache-restore.outputs.cache-hit != 'true'
+        # Requires docker-compose's "images: example:latest" to be on one line
         run: |
-          # Following command requires docker-compose's
-          # "images: example:latest" to be on one line
           images=$(grep 'image:' docker-compose.yml | awk '{ print $2 }')
           mkdir -p docker-cache
           docker save $images -o docker-cache/images.tar
