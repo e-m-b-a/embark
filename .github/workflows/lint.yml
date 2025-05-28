@@ -74,7 +74,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.pipenv-cache.outputs.cache-hit != 'true'
-        run: pipenv install --deploy --ignore-pipfile --dev # TODO: is the --dev necessary?
+        run: pipenv install --deploy --ignore-pipfile --dev
 
       - name: Run check_project.sh
         run: |

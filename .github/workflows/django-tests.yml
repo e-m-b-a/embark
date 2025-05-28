@@ -10,12 +10,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # - name: Install python libs
-      #  run: |
-      #    sudo apt-get update
-      #    sudo apt-get install -y python3-dev
-      #    sudo pip install --upgrade pipenv
-
       - name: Restore cached Docker images
         id: docker-cache-restore
         uses: actions/cache@v3
