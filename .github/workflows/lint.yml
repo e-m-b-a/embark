@@ -6,9 +6,11 @@ on:
   push:
     branches:
       - '**'        # matches every branch
-  pull_request:
-    branches:
-      - '**'
+
+  # pull_request:
+  #   branches:
+  #     - '**'
+
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -57,6 +59,11 @@ jobs:
           key: last-checked-${{ hashFiles('.last_checked') }}
           restore-keys: |
             last-checked-
+
+      - name: Debug last_checked
+        run: |
+          ls -l .last_checked
+          ls -la
 
       - name: Set env for .venv in project
         run: echo "PIPENV_VENV_IN_PROJECT=1" >> $GITHUB_ENV
