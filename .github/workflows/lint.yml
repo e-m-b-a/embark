@@ -35,7 +35,7 @@ jobs:
       - name: Make directories
         run: |
           mkdir -p embark/logs embark/uploadFirmwareImages
-          touch embark/logs/web.log .last_checked
+          touch embark/logs/web.log
 
       - name: Restore cached Docker images
         id: docker-cache-restore
@@ -54,7 +54,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: .last_checked
-          key: last-checked-${{ hashFiles('.lastchecked') }}
+          key: last-checked-${{ hashFiles('.last_checked') }}
           restore-keys: |
             last-checked-
 
@@ -110,4 +110,4 @@ jobs:
         uses: actions/cache/save@v3
         with:
           path: .last_checked
-          key: last-checked-${{ hashFiles('.lastchecked') }}
+          key: last-checked-${{ hashFiles('.last_checked') }}
