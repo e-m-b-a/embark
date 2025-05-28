@@ -6,10 +6,9 @@ on:
   push:
     branches:
       - '**'        # matches every branch
-
-  # pull_request:
-  #   branches:
-  #     - '**'
+  pull_request:
+    branches:
+      - '**'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -60,11 +59,6 @@ jobs:
           restore-keys: |
             last-checked-
 
-      - name: Debug last_checked
-        run: |
-          ls -l .last_checked
-          ls -la
-
       - name: Set env for .venv in project
         run: echo "PIPENV_VENV_IN_PROJECT=1" >> $GITHUB_ENV
 
@@ -113,7 +107,7 @@ jobs:
           docker save $images -o docker-cache/images.tar
 
       - name: Save last checked files list
-        # if: github.ref == 'refs/heads/main' # Uncommented for testing purposes
+        if: github.ref == 'refs/heads/main'
         uses: actions/cache/save@v3
         with:
           path: .last_checked

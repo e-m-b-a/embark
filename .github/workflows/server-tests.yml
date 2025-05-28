@@ -7,7 +7,7 @@ on:
 
 jobs:
   default-install:
-    # if: github.repository_owner == 'e-m-b-a' # TODO: Commented out for testing
+    if: github.repository_owner == 'e-m-b-a'
     runs-on: ubuntu-latest
 
     steps:
