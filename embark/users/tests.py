@@ -1,5 +1,5 @@
-__copyright__ = 'Copyright 2021-2025 Siemens Energy AG'
-__author__ = 'Benedikt Kuehne'
+__copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2021-2025 The AMOS Projects'
+__author__ = 'Benedikt Kuehne, ashiven'
 __license__ = 'MIT'
 
 from http import HTTPStatus
@@ -51,7 +51,7 @@ class TestAPI(TestCase):
         user.set_password('12345')
         user.api_key = secrets.token_urlsafe(32)
         user.save()
-        self.client = Client()
+        self.client = Client()  # pylint: disable=attribute-defined-outside-init
 
     def test_api_key_generation(self):
         """

@@ -1,5 +1,5 @@
-__copyright__ = 'Copyright 2021-2025 Siemens Energy AG'
-__author__ = 'Benedikt Kuehne'
+__copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2025 The AMOS Projects'
+__author__ = 'SirGankalot, ClProsser'
 __license__ = 'MIT'
 
 import secrets
@@ -23,7 +23,7 @@ class TestUploader(APITestCase):
         user.api_key = secrets.token_urlsafe(32)
         user.save()
 
-        self.client = APIClient()
+        self.client = APIClient()  # pylint: disable=attribute-defined-outside-init
         self.client.credentials(HTTP_AUTHORIZATION=user.api_key)
 
     def test_uploader__not_authenticated(self):

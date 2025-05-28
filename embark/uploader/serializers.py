@@ -1,6 +1,6 @@
 # pylint: disable=E1101
-__copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2021 The AMOS Projects'
-__author__ = 'Benedikt Kuehne, Maximilian Wagner, m-1-k-3, VAISHNAVI UMESH, diegiesskanne'
+__copyright__ = 'Copyright 2025 The AMOS Projects'
+__author__ = 'SirGankalot, ClProsser'
 __license__ = 'MIT'
 
 import logging

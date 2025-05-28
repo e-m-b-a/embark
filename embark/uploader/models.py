@@ -156,8 +156,7 @@ def delete_fw_pre_delete_post(sender, instance, **kwargs):
     delete the firmwarefile and folder structure in storage on recieve
     """
     if sender.file:
-        # Parameter onerror is deprecated, but onexc is unsupported in Python 3.10
-        shutil.rmtree(instance.get_abs_folder_path(), ignore_errors=False, onerror=logger.error("Error when trying to delete %s", instance.get_abs_folder_path()))
+        shutil.rmtree(instance.get_abs_folder_path(), ignore_errors=False, onexc=logger.error("Error when trying to delete %s", instance.get_abs_folder_path()))
     else:
         logger.error("No related FW found for delete request: %s", str(sender))
 

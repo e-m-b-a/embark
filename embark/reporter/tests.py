@@ -1,3 +1,7 @@
+__copyright__ = 'Copyright 2025 The AMOS Projects'
+__author__ = 'Luka Dekanozishvili'
+__license__ = 'MIT'
+
 import secrets
 from http import HTTPStatus
 from django.test import TestCase
