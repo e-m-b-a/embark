@@ -27,20 +27,15 @@ jobs:
           sudo npm install -g jshint
           sudo npm install -g @stoplight/spectral-cli
 
-      # - name: Install Python, pipenv and Pipfile packages
-      #   uses: palewire/install-python-pipenv-pipfile@v4
-      #   with:
-      #     python-version: '3.10'
-
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: 3.12
 
-      - name: Make dirs
+      - name: Make directories
         run: |
           mkdir -p embark/logs embark/uploadFirmwareImages
-          touch embark/logs/web.log
+          touch embark/logs/web.log .last_checked
 
       - name: Restore cached Docker images
         id: docker-cache-restore
@@ -80,7 +75,7 @@ jobs:
         if: steps.pipenv-cache.outputs.cache-hit != 'true'
         run: pipenv install --deploy --ignore-pipfile --dev # TODO: is the --dev necessary?
 
-      - name: Run checkproject
+      - name: Run check_project.sh
         run: |
           ./dev-tools/check_project.sh --fast
         env:
