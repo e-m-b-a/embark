@@ -20,13 +20,13 @@ jobs:
         id: docker-cache-restore
         uses: actions/cache@v3
         with:
-          path: docker-cache/db-images.tar
-          key: embark-db-images-${{ hashFiles('docker-compose.yml') }}
+          path: docker-cache/images.tar
+          key: embark-docker-images-${{ hashFiles('docker-compose.yml') }}
 
-      - name: Load Docker image from cache
+      - name: Load Docker images from cache
         if: steps.docker-cache-restore.outputs.cache-hit == 'true'
         run: |
-          docker load -i docker-cache/db-images.tar
+          docker load -i docker-cache/images.tar
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -47,6 +47,7 @@ jobs:
           key: pipenv-${{ hashFiles('Pipfile.lock') }}
 
       - name: Install dependencies
+        if: steps.pipenv-cache.outputs.cache-hit != 'true'
         run: pipenv install --deploy --ignore-pipfile
 
       - name: EMBArk default install
@@ -55,8 +56,11 @@ jobs:
       - name: Save Docker images to cache
         if: steps.docker-cache-restore.outputs.cache-hit != 'true'
         run: |
+          # Following command requires docker-compose's
+          # "images: example:latest" to be on one line
+          images=$(grep 'image:' docker-compose.yml | awk '{ print $2 }')
           mkdir -p docker-cache
-          docker save mysql:latest redis:5 -o docker-cache/db-images.tar
+          docker save $images -o docker-cache/images.tar
 
       - name: Start DB
         run: |
