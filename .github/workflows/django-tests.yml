@@ -9,19 +9,59 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      - name: Install python libs
+
+      - name: Restore cached Docker images
+        id: docker-cache-restore
+        uses: actions/cache@v3
+        with:
+          path: docker-cache/images.tar
+          key: embark-docker-images-${{ hashFiles('docker-compose.yml') }}
+
+      - name: Load Docker images from cache
+        if: steps.docker-cache-restore.outputs.cache-hit == 'true'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-dev
-          sudo pip install --upgrade pipenv
+          docker load -i docker-cache/images.tar
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+
+      - name: Set env for .venv in project
+        run: echo "PIPENV_VENV_IN_PROJECT=1" >> $GITHUB_ENV
+
+      - name: Install Pipenv
+        run: pip install --upgrade pipenv
+
+      - name: Restore Pipenv cache
+        id: pipenv-cache
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: pipenv-${{ hashFiles('Pipfile.lock') }}
+
+      - name: Install dependencies
+        if: steps.pipenv-cache.outputs.cache-hit != 'true'
+        run: pipenv install --deploy --ignore-pipfile
+
       - name: EMBArk default install
         run: sudo ./installer.sh -sF
+
+      - name: Save Docker images to cache
+        if: steps.docker-cache-restore.outputs.cache-hit != 'true'
+        # Requires docker-compose's "images: example:latest" to be on one line
+        run: |
+          images=$(grep 'image:' docker-compose.yml | awk '{ print $2 }')
+          mkdir -p docker-cache
+          docker save $images -o docker-cache/images.tar
+
       - name: Start DB
         run: |
           docker compose up -d
           cd embark
-          sudo pipenv run python manage.py makemigrations users uploader reporter dashboard porter workers
-          sudo pipenv run python manage.py migrate
+          pipenv run python manage.py makemigrations users uploader reporter dashboard porter workers
+          pipenv run python manage.py migrate
+
       - name: Run tests
         run: |
           cd embark

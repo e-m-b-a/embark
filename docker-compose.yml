@@ -27,7 +27,7 @@ services:
 
   embark_redis:
     container_name: embark_redis
-    image: "redis:5"
+    image: redis:5
     labels:
       flag: "EMBArk_server_redis_container"
     env_file:

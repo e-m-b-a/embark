@@ -13,6 +13,7 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
         with:
@@ -22,11 +23,55 @@ jobs:
           haskell: true
           large-packages: false
           swap-storage: true
+
+      - name: Restore cached Docker images
+        id: docker-cache-restore
+        uses: actions/cache@v3
+        with:
+          path: docker-cache/images.tar
+          key: embark-docker-images-${{ hashFiles('docker-compose.yml') }}
+
+      - name: Load Docker images from cache
+        if: steps.docker-cache-restore.outputs.cache-hit == 'true'
+        run: |
+          docker load -i docker-cache/images.tar
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+
+      - name: Set env for .venv in project
+        run: echo "PIPENV_VENV_IN_PROJECT=1" >> $GITHUB_ENV
+
+      - name: Install Pipenv
+        run: pip install --upgrade pipenv
+
+      - name: Restore Pipenv cache
+        id: pipenv-cache
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: pipenv-${{ hashFiles('Pipfile.lock') }}
+
+      - name: Install dependencies
+        if: steps.pipenv-cache.outputs.cache-hit != 'true'
+        run: pipenv install --deploy --ignore-pipfile
+
       - name: EMBArk dev install
         uses: Wandalen/wretry.action@master
         with:
           command: sudo ./installer.sh -sF
           attempt_limit: 3
+
+      - name: Save Docker images to cache
+        if: steps.docker-cache-restore.outputs.cache-hit != 'true'
+        # Requires docker-compose's "images: example:latest" to be on one line
+        run: |
+          images=$(grep 'image:' docker-compose.yml | awk '{ print $2 }')
+          mkdir -p docker-cache
+          docker save $images -o docker-cache/images.tar
+
       # - name: Start Debug-server-conf
       #   run: |
       #      sudo ./dev-tools/debug-server-start.sh &
