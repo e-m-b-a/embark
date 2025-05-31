@@ -22,6 +22,10 @@ function downloadPackage() {
 	  --no-pre-depends "$@" | grep "^\w") )
 }
 
+
+### Reset
+rm -rf "${FILEPATH}"
+rm -f "${ZIPPATH}"
 mkdir -p "${FILEPATH}"
 
 ### Copy scripts

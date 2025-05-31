@@ -1,32 +1,13 @@
 import logging
-import os
-
-from subprocess import Popen, PIPE
 
 import paramiko
 
 from django.conf import settings
 
 from workers.models import Worker
+from workers.setup.dependencies import setup_full_dependencies
 
 logger = logging.getLogger(__name__)
-
-
-def setup_dependencies():
-    """
-    Sets up all dependencies required for offline workers
-    """
-    if not os.path.isdir(settings.WORKER_SETUP_PATH) or not os.path.exists(settings.WORKER_SETUP_ZIP_PATH):
-        try:
-            file = os.path.join(os.path.dirname(__file__), "host.sh")
-            cmd = f"sudo {file} '{settings.WORKER_SETUP_PATH}' '{settings.WORKER_SETUP_ZIP_PATH}'"
-            with open(f"{settings.WORKER_SETUP_LOGS}", "w+", encoding="utf-8") as file:
-                with Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True) as proc:  # nosec
-                    proc.communicate()
-
-                logger.info("Worker depenendencies setup successful")
-        except BaseException as exception:
-            logger.error("Error setting up worker dependencies: %s", exception)
 
 
 def exec_blocking_ssh(client, command):
@@ -52,7 +33,7 @@ def setup_worker(worker: Worker):
     :params worker: Worker instance
     """
     # TODO: Move to better place (e.g. if workers are enabled in config)
-    setup_dependencies()
+    setup_full_dependencies()
 
     logger.info("Setup started")
 
