@@ -17,7 +17,8 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
 
 from workers.models import Worker, Configuration
-from workers.setup.setup import setup_worker
+from workers.update.update import update_worker
+from workers.update.dependencies import DependencyType
 
 
 @require_http_methods(["GET"])
@@ -121,7 +122,7 @@ def configure_worker(request, configuration_id):
 
     for worker in workers:
         # TODO: Replace with something better for production use
-        threading.Thread(target=setup_worker, args=(worker,)).start()
+        threading.Thread(target=update_worker, args=(worker, DependencyType.ALL)).start()
 
     return safe_redirect(request, '/worker/')
 
