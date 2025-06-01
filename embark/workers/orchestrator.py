@@ -1,6 +1,5 @@
-from typing import Dict, Tuple
+from typing import Dict
 from workers.models import Worker
-from collections import deque
 
 
 class WorkerOrchestrator:
