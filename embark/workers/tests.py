@@ -18,7 +18,7 @@ class TestOrchestrator(TestCase):
         user.api_key = secrets.token_urlsafe(32)
         user.save()
         self.client = Client()
-        Configuration.objects.create(user=user, name='test_config', ssh_user='test_user', ssh_password='test_password', ip_range='192.111.111/32') #nosec
+        Configuration.objects.create(user=user, name='test_config', ssh_user='test_user', ssh_password='test_password', ip_range='192.111.111/32')  # nosec
         test_worker1 = Worker.objects.create(name='test_worker1', ip_address='192.111.111', system_info={}, reachable=True)
         test_worker2 = Worker.objects.create(name='test_worker2', ip_address='192.111.112', system_info={}, reachable=True)
         test_worker1.configurations.add(Configuration.objects.first())
