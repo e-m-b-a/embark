@@ -50,15 +50,6 @@ jobs:
         run: |
           docker load -i docker-cache/images.tar
 
-      - name: Load last checked files list
-        id: load-last-checked
-        uses: actions/cache@v3
-        with:
-          path: .last_checked
-          key: last-checked-${{ hashFiles('.last_checked') }}
-          restore-keys: |
-            last-checked-
-
       - name: Set env for .venv in project
         run: echo "PIPENV_VENV_IN_PROJECT=1" >> $GITHUB_ENV
 
@@ -78,7 +69,7 @@ jobs:
 
       - name: Run check_project.sh
         run: |
-          ./dev-tools/check_project.sh --fast
+          ./dev-tools/check_project.sh
         env:
           PIPENV_VENV_IN_PROJECT: "True"
           DJANGO_SECRET_KEY: $(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
@@ -105,10 +96,3 @@ jobs:
           images=$(grep 'image:' docker-compose.yml | awk '{ print $2 }')
           mkdir -p docker-cache
           docker save $images -o docker-cache/images.tar
-
-      - name: Save last checked files list
-        if: github.ref == 'refs/heads/main'
-        uses: actions/cache/save@v3
-        with:
-          path: .last_checked
-          key: last-checked-${{ hashFiles('.last_checked') }}
