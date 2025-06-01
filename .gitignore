@@ -29,8 +29,7 @@ safe/
 *.sql
 
 media/**/*
-WORKER_SETUP
-WORKER_SETUP.tar.gz
+WORKER_FILES
 
 # migrations
 **/migrations/*.py
