@@ -63,4 +63,3 @@ chmod 755 "${FILEPATH}/emba-docker-image.tar"
 docker image rm "embeddedanalyzer/emba:${EMBAVERSION}"
 
 tar czf "${ZIPPATH}" "${FILEPATH}"
-
