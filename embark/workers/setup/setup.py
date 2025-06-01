@@ -5,12 +5,12 @@ import paramiko
 from django.conf import settings
 
 from workers.models import Worker
-from workers.setup.dependencies import setup_full_dependencies
+from workers.setup.dependencies import setup_dependencies, DependencyType
 
 logger = logging.getLogger(__name__)
 
 
-def exec_blocking_ssh(client, command):
+def _exec_blocking_ssh(client, command):
     """
     Executes ssh command blocking, as exec_command is non-blocking
 
@@ -33,7 +33,7 @@ def setup_worker(worker: Worker):
     :params worker: Worker instance
     """
     # TODO: Move to better place (e.g. if workers are enabled in config)
-    setup_full_dependencies()
+    setup_dependencies(DependencyType.ALL, False)
 
     logger.info("Setup started")
 
@@ -47,8 +47,8 @@ def setup_worker(worker: Worker):
         sftp_client.put(settings.WORKER_SETUP_ZIP_PATH, "/root/WORKER_SETUP.tar.gz")
         sftp_client.close()
 
-        exec_blocking_ssh(ssh_client, 'tar xvzf /root/WORKER_SETUP.tar.gz >untar.log 2>&1')
-        exec_blocking_ssh(ssh_client, 'sudo /root/WORKER_SETUP/installer.sh >installer.log 2>&1')
+        _exec_blocking_ssh(ssh_client, 'tar xvzf /root/WORKER_SETUP.tar.gz >untar.log 2>&1')
+        _exec_blocking_ssh(ssh_client, 'sudo /root/WORKER_SETUP/installer.sh >installer.log 2>&1')
 
         worker.status = Worker.ConfigStatus.CONFIGURED
         logger.info("Setup done")

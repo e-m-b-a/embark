@@ -1,6 +1,7 @@
 import os
 import logging
 import time
+from enum import Enum
 
 from subprocess import Popen, PIPE
 from pathlib import Path
@@ -10,15 +11,36 @@ from django.conf import settings
 logger = logging.getLogger(__name__)
 
 
-def _run_script(script):
+class DependencyType(Enum):
+    ALL = ""
+    DEPS = "deps_host.sh"
+    REPO = "emba_repo_host.sh"
+    EXTERNAL = "external_host.sh"
+    DOCKERIMAGE = "emba_docker_host.sh"
+
+
+def _run_script(script, folder, update=True):
+    """
+    Runs script
+
+    :params script: the script to be executed
+    :params folder: dependency location
+    :params update: if false, aborts if files already present
+    """
     Path(settings.WORKER_FILES_PATH).mkdir(parents=True, exist_ok=True)
+
+    script_path = os.path.join(os.path.dirname(__file__), script)
+    folder_path = os.path.join(settings.WORKER_FILES_PATH, folder)
+    zip_path = folder_path + ".tar.gz"
+
+    if not update and os.path.exists(folder_path) and os.path.exists(zip_path):
+        return
 
     log_file = settings.WORKER_SETUP_LOGS.format(timestamp=int(time.time()))
 
     logger.info("Worker depenendencies setup started with script %s. Logs: %s", script, log_file)
     try:
-        file = os.path.join(os.path.dirname(__file__), script)
-        cmd = f"sudo {file} '{settings.WORKER_SETUP_PATH}' '{settings.WORKER_SETUP_ZIP_PATH}'"
+        cmd = f"sudo {script_path} '{folder_path}' '{zip_path}'"
         with open(f"{log_file}", "w+", encoding="utf-8") as file:
             with Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True) as proc:  # nosec
                 proc.communicate()
@@ -28,39 +50,14 @@ def _run_script(script):
         logger.error("Error setting up worker dependencies: %s. Logs: %s", exception, log_file)
 
 
-def setup_full_dependencies():
+def setup_dependencies(dependency_type: DependencyType, update=True):
     """
-    Sets up all dependencies required for offline workers
+    Sets up `dependency_type` dependencies required for offline workers
     """
-    setup_deps()
-    setup_emba_repo()
-    setup_emba_docker_image()
-    setup_external_dir()
-
-
-def setup_emba_repo():
-    """
-    Sets up the EMBA repo repository
-    """
-    _run_script("emba_repo_host.sh")
-
-
-def setup_emba_docker_image():
-    """
-    Sets up the EMBA docker image to be imported
-    """
-    _run_script("emba_docker_host.sh")
-
-
-def setup_external_dir():
-    """
-    Sets up the external directory
-    """
-    _run_script("external_host.sh")
-
-
-def setup_deps():
-    """
-    Sets up all the required apt dependencies
-    """
-    _run_script("deps_host.sh")
+    if dependency_type == DependencyType.ALL:
+        _run_script(DependencyType.DEPS.value, DependencyType.DEPS.name, update)
+        _run_script(DependencyType.REPO.value, DependencyType.REPO.name, update)
+        _run_script(DependencyType.EXTERNAL.value, DependencyType.EXTERNAL.name, update)
+        _run_script(DependencyType.DOCKERIMAGE.value, DependencyType.DOCKERIMAGE.name, update)
+    else:
+        _run_script(dependency_type.value, dependency_type.name, update)
