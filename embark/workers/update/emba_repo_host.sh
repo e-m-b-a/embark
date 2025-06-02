@@ -29,4 +29,4 @@ fi
 ### Download EMBA
 curl -L --url https://github.com/e-m-b-a/emba/archive/refs/heads/master.tar.gz --output "${FILEPATH}/emba.tar.gz"
 
-tar czf "${ZIPPATH}" "${FILEPATH}"
+tar czf "${ZIPPATH}" -C "${FILEPATH}" .

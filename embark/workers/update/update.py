@@ -35,28 +35,30 @@ def _copy_files(client: SSHClient, dependency: DependencyType):
     if dependency == DependencyType.ALL:
         raise ValueError("DependencyType.ALL can't be copied")
 
-    zip_path = f"/root/{dependency.name}.tar.gz"
+    folder_path = f"/root/{dependency.name}"
+    zip_path = f"{folder_path}.tar.gz"
+
+    _exec_blocking_ssh(client, f"rm -f {zip_path}; rm -rf {folder_path}")
 
     sftp_client = client.open_sftp()
-    sftp_client.remove(zip_path)
-    sftp_client.rmdir(f"/root/{dependency.name}")
-
     sftp_client.put(get_dependency_zip_path(dependency), zip_path)
-
     sftp_client.close()
 
 
 def _perform_update(client: SSHClient, dependency: DependencyType):
     """
-    Trigger file copy and installation.zip
+    Trigger file copy and installer.sh
 
     :params client: paramiko ssh client
     :params dependency: Dependency type
     """
+    folder_path = f"/root/{dependency.name}"
+    zip_path = f"{folder_path}.tar.gz"
+
     _copy_files(client, dependency)
 
-    _exec_blocking_ssh(client, f"tar xvzf /root/{dependency.name}.tar.gz >/dev/null 2>&1")
-    _exec_blocking_ssh(client, f"sudo /root/{dependency.name}/installer.sh >/root/{dependency.name}/installer.log 2>&1")
+    _exec_blocking_ssh(client, f"mkdir {folder_path} && tar xvzf {folder_path}.tar.gz -C {folder_path} >/dev/null 2>&1")
+    _exec_blocking_ssh(client, f"sudo {folder_path}/installer.sh >{folder_path}/installer.log 2>&1")
 
 
 def update_worker(worker: Worker, dependency: DependencyType):

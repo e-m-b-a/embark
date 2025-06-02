@@ -62,4 +62,4 @@ docker save -o "${FILEPATH}/emba-docker-image.tar" "embeddedanalyzer/emba:${EMBA
 chmod 755 "${FILEPATH}/emba-docker-image.tar"
 docker image rm "embeddedanalyzer/emba:${EMBAVERSION}"
 
-tar czf "${ZIPPATH}" "${FILEPATH}"
+tar czf "${ZIPPATH}" -C "${FILEPATH}" .

@@ -35,6 +35,7 @@ def _run_script(dependency: DependencyType, update=True):
     :params update: if false, aborts if files already present
     """
     Path(settings.WORKER_FILES_PATH).mkdir(parents=True, exist_ok=True)
+    Path(os.path.join(settings.WORKER_FILES_PATH, "logs")).mkdir(parents=True, exist_ok=True)
 
     script_path = os.path.join(os.path.dirname(__file__), dependency.value)
     folder_path = get_dependency_path(dependency)

@@ -77,4 +77,4 @@ downloadPackage libnotify-bin
 # Build index (for dependency tree)
 ( cd "${PKGPATH}" && dpkg-scanpackages . ) | gzip -9c > "${PKGPATH}/Packages.gz"
 
-tar czf "${ZIPPATH}" "${FILEPATH}"
+tar czf "${ZIPPATH}" -C "${FILEPATH}" .

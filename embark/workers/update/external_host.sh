@@ -33,4 +33,4 @@ fi
 mkdir -p "${EXTERNALPATH}/emba_venv/bin"
 touch "${EXTERNALPATH}/emba_venv/bin/activate"
 
-tar czf "${ZIPPATH}" "${FILEPATH}"
+tar czf "${ZIPPATH}" -C "${FILEPATH}" .
