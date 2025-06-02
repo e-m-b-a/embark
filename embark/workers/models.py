@@ -30,6 +30,7 @@ class Worker(models.Model):
     system_info = models.JSONField()
     reachable = models.BooleanField(default=False)
     status = models.CharField(max_length=1, choices=ConfigStatus, default=ConfigStatus.UNCONFIGURED)
+    job_id = models.CharField(max_length=100, blank=True, null=True, help_text="ID of the job currently running on this worker")
 
     def clean(self):
         super().clean()
