@@ -1,11 +1,13 @@
 from typing import Dict
 from workers.models import Worker
+from collections import deque
 
 
 class WorkerOrchestrator:
     def __init__(self):
         self.dict_free_workers: Dict[str, Worker] = {}
         self.dict_busy_workers: Dict[str, Worker] = {}
+        self.queue_tasks = deque()
 
     def get_busy_workers(self) -> Dict[str, Worker]:
         return self.dict_busy_workers
@@ -24,6 +26,19 @@ class WorkerOrchestrator:
             else:
                 raise ValueError(f"Worker with IP {worker_ip} does not exist.")
         return map_worker_array
+
+    def assign_task(self, task: str):
+        if not self.dict_free_workers:
+            self.queue_tasks.append(task)
+            raise ValueError("No free workers available. Task has been queued.")
+        else:
+            free_worker = next(iter(self.dict_free_workers.values()))
+            if not self.queue_tasks:
+                self.assign_worker(free_worker, task)
+            else:
+                queued_task = self.queue_tasks.popleft()
+                self.assign_worker(free_worker, queued_task)
+                self.assign_task(free_worker, task)
 
     def assign_worker(self, worker: Worker, task: str):
         if worker.ip_address in self.dict_free_workers:
