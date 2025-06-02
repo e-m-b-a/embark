@@ -51,8 +51,12 @@ class WorkerOrchestrator:
 
     def release_worker(self, worker: Worker):
         if worker.ip_address in self.dict_busy_workers:
-            self.dict_free_workers[worker.ip_address] = worker
-            del self.dict_busy_workers[worker.ip_address]
+            if self.queue_tasks:
+                next_task = self.queue_tasks.popleft()
+                self.assign_worker(worker, next_task)
+            else:
+                self.dict_free_workers[worker.ip_address] = worker
+                del self.dict_busy_workers[worker.ip_address]
         else:
             raise ValueError(f"Worker with IP {worker.ip_address} is not busy.")
 
