@@ -249,6 +249,15 @@ def connect_worker(request, configuration_id, worker_id):
         disk_free = disk_str[3].replace('G', 'GB').replace('M', 'MB')
         disk_info = f"Total: {disk_total}, Free: {disk_free}"
 
+        stdin, stdout, _stderr = ssh_client.exec_command("sudo -S -p '' cat /root/emba/docker-compose.yml | awk -F: '/image:/ {print $NF; exit}'")  # nosec B601: No user input
+        stdin.write(f"{configuration.ssh_password}\n")
+        stdin.flush()
+        emba_version = stdout.read().decode().strip()
+
+        # TODO: get info about last sync with embark (external directory)
+        _stdin, stdout, _stderr = ssh_client.exec_command('todo')  # nosec B601: No user input
+        last_sync = stdout.read().decode().strip()
+
         ssh_client.close()
     except paramiko.SSHException as ssh_error:
         print(f"SSH connection failed: {ssh_error}")
@@ -259,7 +268,9 @@ def connect_worker(request, configuration_id, worker_id):
         'os_info': os_info,
         'cpu_info': cpu_info,
         'ram_info': ram_info,
-        'disk_info': disk_info
+        'disk_info': disk_info,
+        'emba_version': emba_version,
+        'last_sync': last_sync
     }
     worker.system_info = system_info
     worker.save()
