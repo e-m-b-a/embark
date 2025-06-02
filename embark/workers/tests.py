@@ -18,11 +18,11 @@ class TestOrchestrator(TestCase):
         user.api_key = secrets.token_urlsafe(32)
         user.save()
         test_config = Configuration.objects.create(user=user, name='test_config', ssh_user='test_user', ssh_password='test_password', ip_range='192.111.111.1/24')  # nosec
-        self.test_worker1 = Worker.objects.create(name='test_worker1', ip_address='192.111.111.1', system_info={}, reachable=True)
-        self.test_worker2 = Worker.objects.create(name='test_worker2', ip_address='192.111.111.2', system_info={}, reachable=True)
+        self.test_worker1 = Worker.objects.create(name='test_worker1', ip_address='192.111.111.1', system_info={}, reachable=True)  # pylint: disable=W0201
+        self.test_worker2 = Worker.objects.create(name='test_worker2', ip_address='192.111.111.2', system_info={}, reachable=True)  # pylint: disable=W0201
         self.test_worker1.configurations.add(test_config)
         self.test_worker2.configurations.add(test_config)
-        self.orchestrator = WorkerOrchestrator()
+        self.orchestrator = WorkerOrchestrator()  # pylint: disable=W0201
 
     def test_orchestrator_add_worker(self):
         """
