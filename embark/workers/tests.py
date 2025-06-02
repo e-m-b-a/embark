@@ -76,7 +76,6 @@ class TestOrchestrator(TestCase):
         orchestrator.release_worker(worker2)
         self.assertIn(worker2.ip_address, orchestrator.get_free_workers())
 
-
     def test_fifo_assign_task(self):
         """
         Test that tasks are assigned in FIFO order.
@@ -103,4 +102,3 @@ class TestOrchestrator(TestCase):
         orchestrator.release_worker(worker1)
         orchestrator.assign_task(task2)
         self.assertEqual(orchestrator.get_busy_workers()[worker1.ip_address].job_id, task2)
-

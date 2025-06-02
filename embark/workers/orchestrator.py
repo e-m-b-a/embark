@@ -1,6 +1,6 @@
 from typing import Dict
-from workers.models import Worker
 from collections import deque
+from workers.models import Worker
 
 
 class WorkerOrchestrator:
@@ -30,7 +30,6 @@ class WorkerOrchestrator:
     def assign_task(self, task: str):
         if not self.dict_free_workers:
             self.queue_tasks.append(task)
-            raise ValueError("No free workers available. Task has been queued.")
         else:
             free_worker = next(iter(self.dict_free_workers.values()))
             if not self.queue_tasks:
@@ -38,7 +37,7 @@ class WorkerOrchestrator:
             else:
                 queued_task = self.queue_tasks.popleft()
                 self.assign_worker(free_worker, queued_task)
-                self.assign_task(free_worker, task)
+                self.assign_task(task)
 
     def assign_worker(self, worker: Worker, task: str):
         if worker.ip_address in self.dict_free_workers:
@@ -53,6 +52,8 @@ class WorkerOrchestrator:
         if worker.ip_address in self.dict_busy_workers:
             if self.queue_tasks:
                 next_task = self.queue_tasks.popleft()
+                self.dict_free_workers[worker.ip_address] = worker
+                del self.dict_busy_workers[worker.ip_address]
                 self.assign_worker(worker, next_task)
             else:
                 self.dict_free_workers[worker.ip_address] = worker
