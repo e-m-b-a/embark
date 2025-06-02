@@ -4,7 +4,7 @@ __author__ = 'Benedikt Kuehne, ashiven'
 __license__ = 'MIT'
 
 import secrets
-from django.test import TestCase, Client
+from django.test import TestCase
 
 from workers.models import Worker, Configuration
 from workers.orchestrator import WorkerOrchestrator
@@ -17,61 +17,65 @@ class TestOrchestrator(TestCase):
         user.set_password('12345')
         user.api_key = secrets.token_urlsafe(32)
         user.save()
-        self.client = Client()
-        Configuration.objects.create(user=user, name='test_config', ssh_user='test_user', ssh_password='test_password', ip_range='192.111.111/32')  # nosec
-        test_worker1 = Worker.objects.create(name='test_worker1', ip_address='192.111.111', system_info={}, reachable=True)
-        test_worker2 = Worker.objects.create(name='test_worker2', ip_address='192.111.112', system_info={}, reachable=True)
-        test_worker1.configurations.add(Configuration.objects.first())
-        test_worker2.configurations.add(Configuration.objects.first())
-
-    def test_worker_creation(self):
-        """
-        Test that a worker can be created and saved correctly.
-        """
-        worker = Worker.objects.get(name='test_worker1')
-        self.assertEqual(worker.name, 'test_worker1')
-        self.assertEqual(worker.ip_address, '192.111.111')
-        self.assertTrue(worker.reachable)
+        test_config = Configuration.objects.create(user=user, name='test_config', ssh_user='test_user', ssh_password='test_password', ip_range='192.111.111.1/24')  # nosec
+        self.test_worker1 = Worker.objects.create(name='test_worker1', ip_address='192.111.111.1', system_info={}, reachable=True)
+        self.test_worker2 = Worker.objects.create(name='test_worker2', ip_address='192.111.111.2', system_info={}, reachable=True)
+        self.test_worker1.configurations.add(test_config)
+        self.test_worker2.configurations.add(test_config)
+        self.orchestrator = WorkerOrchestrator()
 
     def test_orchestrator_add_worker(self):
         """
         Test that a worker can be added to the orchestrator.
         """
-        orchestrator = WorkerOrchestrator()
-        worker = Worker.objects.get(name='test_worker1')
-        orchestrator.add_worker(worker)
-        self.assertIn(worker.ip_address, orchestrator.get_free_workers())
+        self.orchestrator.add_worker(self.test_worker1)
+        self.assertIn(self.test_worker1.ip_address, self.orchestrator.get_free_workers())
+
+    def test_orchestrator_remove_worker(self):
+        """
+        Test that a worker can be removed from the orchestrator.
+        """
+        self.orchestrator.add_worker(self.test_worker1)
+        self.orchestrator.remove_worker(self.test_worker1)
+        self.assertNotIn(self.test_worker1.ip_address, self.orchestrator.get_free_workers())
+        self.assertNotIn(self.test_worker1.ip_address, self.orchestrator.get_busy_workers())
 
     def test_orchestrator_assign_worker(self):
         """
         Test that a worker can be assigned a task in the orchestrator.
         """
-        orchestrator = WorkerOrchestrator()
-        worker = Worker.objects.get(name='test_worker1')
-        orchestrator.add_worker(worker)
         task = 'test_task1'
-        orchestrator.assign_worker(worker, task)
-        self.assertIn(worker.ip_address, orchestrator.get_busy_workers())
-        self.assertEqual(orchestrator.get_busy_workers()[worker.ip_address].job_id, task)
+        self.orchestrator.add_worker(self.test_worker1)
+        self.orchestrator.assign_worker(self.test_worker1, task)
+        self.assertIn(self.test_worker1.ip_address, self.orchestrator.get_busy_workers())
+        self.assertEqual(self.orchestrator.get_busy_workers()[self.test_worker1.ip_address].job_id, task)
 
-    def test_orchestrator_basic_logic(self):
+    def test_orchestrator_release_worker(self):
         """
-        Test the basic logic of the orchestrator.
+        Test that a worker can be released from a task in the orchestrator.
         """
-        orchestrator = WorkerOrchestrator()
-        worker1 = Worker.objects.get(name="test_worker1")
-        worker2 = Worker.objects.get(name="test_worker2")
-        orchestrator.add_worker(worker1)
-        orchestrator.add_worker(worker2)
+        task = 'test_task1'
+        self.orchestrator.add_worker(self.test_worker1)
+        self.orchestrator.assign_worker(self.test_worker1, task)
+        self.orchestrator.release_worker(self.test_worker1)
+        self.assertIn(self.test_worker1.ip_address, self.orchestrator.get_free_workers())
+        self.assertNotIn(self.test_worker1.ip_address, self.orchestrator.get_busy_workers())
+
+    def test_orchestrator_complex(self):
+        """
+        Test the orchestrator with a more complex sequence of operations.
+        """
         task1 = "test_task_1"
         task2 = "test_task_2"
-        orchestrator.assign_worker(worker1, task1)
-        orchestrator.assign_worker(worker2, task2)
-        orchestrator.release_worker(worker1)
-        orchestrator.release_worker(worker2)
-        orchestrator.assign_worker(worker2, task1)
-        orchestrator.remove_worker(worker1)
-        self.assertIn(worker2.ip_address, orchestrator.get_busy_workers())
-        self.assertNotIn(worker1.ip_address, orchestrator.get_free_workers())
-        orchestrator.release_worker(worker2)
-        self.assertIn(worker2.ip_address, orchestrator.get_free_workers())
+        self.orchestrator.add_worker(self.test_worker1)
+        self.orchestrator.add_worker(self.test_worker2)
+        self.orchestrator.assign_worker(self.test_worker1, task1)
+        self.orchestrator.assign_worker(self.test_worker2, task2)
+        self.orchestrator.release_worker(self.test_worker1)
+        self.orchestrator.release_worker(self.test_worker2)
+        self.orchestrator.assign_worker(self.test_worker2, task1)
+        self.orchestrator.remove_worker(self.test_worker1)
+        self.assertIn(self.test_worker2.ip_address, self.orchestrator.get_busy_workers())
+        self.assertNotIn(self.test_worker1.ip_address, self.orchestrator.get_free_workers())
+        self.orchestrator.release_worker(self.test_worker2)
+        self.assertIn(self.test_worker2.ip_address, self.orchestrator.get_free_workers())
