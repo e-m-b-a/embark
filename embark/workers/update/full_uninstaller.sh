@@ -25,5 +25,5 @@ rm -rf "${EMBAPACKAGEPATH}"
 sed -i 's|^# deb http|deb http|' /etc/apt/sources.list
 sed -i 's|^# deb https|deb https|' /etc/apt/sources.list
 
-grep -v "${EMBAPACKAGEPATH}" /etc/apt/sources.list > temp
-mv temp /etc/apt/sources.list
+grep -v "${EMBAPACKAGEPATH}" /etc/apt/sources.list > "${INSTALLPATH}/temp"
+mv "${INSTALLPATH}/temp" /etc/apt/sources.list
