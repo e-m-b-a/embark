@@ -13,6 +13,9 @@ logger = logging.getLogger(__name__)
 
 
 class DependencyType(Enum):
+    """
+    Maps dependency type to host script file
+    """
     ALL = ""
     DEPS = "deps_host.sh"
     REPO = "emba_repo_host.sh"
@@ -21,6 +24,15 @@ class DependencyType(Enum):
 
 
 def get_dependency_path(dependency: DependencyType):
+    """
+    Constructs all relevant paths related to a dependency (folder, zip, done file)
+
+    :params dependency: Dependency type
+
+    :return: folder_path path to folder
+    :return: zip_path path to zip
+    :return: done_path path to done file (to check if zip generation is actually done)
+    """
     if dependency == DependencyType.ALL:
         raise ValueError("DependencyType.ALL can't be copied")
 
@@ -32,6 +44,9 @@ def get_dependency_path(dependency: DependencyType):
 
 
 class DependencyState:
+    """
+    Captures full dependency state (mainly used for synchronization)
+    """
     class AvailabilityType(Enum):
         UNAVAILABLE = "UNAVAILABLE"
         IN_PROGRESS = "IN_PROGRESS"
@@ -50,6 +65,9 @@ class DependencyState:
         self.dependency = dependency
 
     def use_dependency(self):
+        """
+        Increases in use counter by 1
+        """
         while True:
             with self.lock:
                 if self.available == self.AvailabilityType.AVAILABLE:
@@ -61,13 +79,26 @@ class DependencyState:
                     Thread(target=setup_dependency, args=(self.dependency,)).start()
 
     def release_dependency(self):
+        """
+        Decreases in use counter by 1
+        """
         with self.lock:
             self.in_use = self.in_use - 1
 
     def is_not_in_use(self):
+        """
+        Checks if dependency is unused (no worker setup/update is currently performed with this dependency)
+        """
         return self.in_use == 0
 
     def update_dependency(self, available: bool):
+        """
+        Sets availability for dependencies
+        If the dependency is not setup, the state is UNAVAILABLE.
+        If it is currently updated, the state is IN_PROGRESS. Else it is AVAILABLE.
+
+        :params available: true if AVAILABLE, else IN_PROGRESS
+        """
         while True:
             with self.lock:
                 if self.is_not_in_use():
@@ -84,6 +115,9 @@ locks_dict: dict[DependencyType, Lock] = {
 
 
 def use_dependency(dependency: DependencyType):
+    """
+    Increases in use counter by 1
+    """
     if dependency == DependencyType.ALL:
         raise ValueError("DependencyType.ALL can't be copied")
 
@@ -91,6 +125,9 @@ def use_dependency(dependency: DependencyType):
 
 
 def release_dependency(dependency: DependencyType):
+    """
+    Decreases in use counter by 1
+    """
     if dependency == DependencyType.ALL:
         raise ValueError("DependencyType.ALL can't be copied")
 
