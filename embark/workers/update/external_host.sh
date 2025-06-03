@@ -10,11 +10,13 @@ fi
 
 FILEPATH="$1"
 ZIPPATH="$2"
+DONEPATH="$3"
 EXTERNALPATH="${FILEPATH}/external"
 
 ### Reset
 rm -rf "${FILEPATH}"
 rm -f "${ZIPPATH}"
+rm -rf "${DONEPATH}"
 mkdir -p "${FILEPATH}"
 
 ### Copy scripts
@@ -34,3 +36,4 @@ mkdir -p "${EXTERNALPATH}/emba_venv/bin"
 touch "${EXTERNALPATH}/emba_venv/bin/activate"
 
 tar czf "${ZIPPATH}" -C "${FILEPATH}" .
+touch "${DONEPATH}"

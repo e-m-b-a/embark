@@ -4,7 +4,7 @@ import paramiko
 from paramiko.client import SSHClient
 
 from workers.models import Worker
-from workers.update.dependencies import use_dependency, release_dependency, DependencyType, get_dependency_zip_path
+from workers.update.dependencies import use_dependency, release_dependency, DependencyType, get_dependency_path
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ def _copy_files(client: SSHClient, dependency: DependencyType):
     _exec_blocking_ssh(client, f"rm -f {zip_path}; rm -rf {folder_path}")
 
     sftp_client = client.open_sftp()
-    sftp_client.put(get_dependency_zip_path(dependency), zip_path)
+    sftp_client.put(get_dependency_path(dependency)[1], zip_path)
     sftp_client.close()
 
 

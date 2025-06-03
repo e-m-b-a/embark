@@ -24,14 +24,11 @@ def get_dependency_path(dependency: DependencyType):
     if dependency == DependencyType.ALL:
         raise ValueError("DependencyType.ALL can't be copied")
 
-    return os.path.join(settings.WORKER_FILES_PATH, dependency.name)
+    folder_path = os.path.join(settings.WORKER_FILES_PATH, dependency.name)
+    zip_path = folder_path + ".tar.gz"
+    done_path = folder_path + ".done"
 
-
-def get_dependency_zip_path(dependency: DependencyType):
-    if dependency == DependencyType.ALL:
-        raise ValueError("DependencyType.ALL can't be copied")
-
-    return get_dependency_path(dependency) + ".tar.gz"
+    return folder_path, zip_path, done_path
 
 
 class DependencyState:
@@ -42,13 +39,14 @@ class DependencyState:
 
     lock = Lock()
     available = AvailabilityType.UNAVAILABLE
-    in_use = 0  # n times currently used to setup offline workers
+    in_use = 0
 
     def __init__(self, dependency: DependencyType):
         if dependency == DependencyType.ALL:
             raise ValueError("DependencyType.ALL can't be copied")
 
-        self.available = self.AvailabilityType.UNAVAILABLE  # TODO
+        done_path = get_dependency_path(dependency)[2]
+        self.available = self.AvailabilityType.AVAILABLE if os.path.exists(done_path) else self.AvailabilityType.UNAVAILABLE
         self.dependency = dependency
 
     def use_dependency(self):
@@ -112,8 +110,7 @@ def setup_dependency(dependency: DependencyType):
     Path(os.path.join(settings.WORKER_FILES_PATH, "logs")).mkdir(parents=True, exist_ok=True)
 
     script_path = os.path.join(os.path.dirname(__file__), dependency.value)
-    folder_path = get_dependency_path(dependency)
-    zip_path = get_dependency_zip_path(dependency)
+    folder_path, zip_path, done_path = get_dependency_path(dependency)
 
     locks_dict[dependency].update_dependency(False)
 
@@ -121,7 +118,7 @@ def setup_dependency(dependency: DependencyType):
 
     logger.info("Worker dependencies setup started with script %s. Logs: %s", dependency.value, log_file)
     try:
-        cmd = f"sudo {script_path} '{folder_path}' '{zip_path}'"
+        cmd = f"sudo {script_path} '{folder_path}' '{zip_path}' '{done_path}'"
         with open(f"{log_file}", "w+", encoding="utf-8") as file:
             with Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True) as proc:  # nosec
                 proc.communicate()

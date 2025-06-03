@@ -10,10 +10,12 @@ fi
 
 FILEPATH="$1"
 ZIPPATH="$2"
+DONEPATH="$3"
 
 ### Reset
 rm -rf "${FILEPATH}"
 rm -f "${ZIPPATH}"
+rm -rf "${DONEPATH}"
 mkdir -p "${FILEPATH}"
 
 ### Copy scripts
@@ -30,3 +32,4 @@ fi
 curl -L --url https://github.com/e-m-b-a/emba/archive/refs/heads/master.tar.gz --output "${FILEPATH}/emba.tar.gz"
 
 tar czf "${ZIPPATH}" -C "${FILEPATH}" .
+touch "${DONEPATH}"

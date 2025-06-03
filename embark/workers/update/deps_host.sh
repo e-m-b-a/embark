@@ -10,6 +10,7 @@ fi
 
 FILEPATH="$1"
 ZIPPATH="$2"
+DONEPATH="$3"
 PKGPATH="${FILEPATH}/pkg"
 IS_UBUNTU=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
 [[ ${IS_UBUNTU} == "Ubuntu" ]] && IS_UBUNTU=true || IS_UBUNTU=false
@@ -24,6 +25,7 @@ function downloadPackage() {
 ### Reset
 rm -rf "${FILEPATH}"
 rm -f "${ZIPPATH}"
+rm -rf "${DONEPATH}"
 mkdir -p "${FILEPATH}"
 
 ### Copy scripts
@@ -78,3 +80,4 @@ downloadPackage libnotify-bin
 ( cd "${PKGPATH}" && dpkg-scanpackages . ) | gzip -9c > "${PKGPATH}/Packages.gz"
 
 tar czf "${ZIPPATH}" -C "${FILEPATH}" .
+touch "${DONEPATH}"
