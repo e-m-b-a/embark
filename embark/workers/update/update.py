@@ -4,7 +4,7 @@ import paramiko
 from paramiko.client import SSHClient
 
 from workers.models import Worker
-from workers.update.dependencies import DependencyType, get_dependency_zip_path
+from workers.update.dependencies import use_dependency, release_dependency, DependencyType, get_dependency_zip_path
 
 logger = logging.getLogger(__name__)
 
@@ -58,10 +58,14 @@ def _perform_update(client: SSHClient, dependency: DependencyType):
     folder_path = f"/root/{dependency.name}"
     zip_path = f"{folder_path}.tar.gz"
 
+    use_dependency(dependency)
+
     _copy_files(client, dependency)
 
     _exec_blocking_ssh(client, f"mkdir {folder_path} && tar xvzf {zip_path} -C {folder_path} >/dev/null 2>&1")
     _exec_blocking_ssh(client, f"sudo {folder_path}/installer.sh >{folder_path}/installer.log 2>&1")
+
+    release_dependency(dependency)
 
 
 def update_worker(worker: Worker, dependency: DependencyType):
@@ -73,9 +77,6 @@ def update_worker(worker: Worker, dependency: DependencyType):
     :params worker: Worker instance
     :params dependency: Dependency type
     """
-    # TODO: Move to better place (e.g. if workers are enabled in config)
-    # setup_dependencies(dependency, false)
-
     logger.info("Worker update started (Dependency: %s)", dependency)
 
     worker.status = Worker.ConfigStatus.CONFIGURING
