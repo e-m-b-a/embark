@@ -58,6 +58,8 @@ class WorkerOrchestrator:
             else:
                 self.dict_free_workers[worker.ip_address] = worker
                 del self.dict_busy_workers[worker.ip_address]
+                worker.job_id = None
+                worker.save()
         else:
             raise ValueError(f"Worker with IP {worker.ip_address} is not busy.")
 
