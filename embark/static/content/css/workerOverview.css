@@ -79,7 +79,7 @@ button:hover {
 }
 
 .configuration-create-container {
-    display: none;
+  display: none;
 }
 
 form {
@@ -98,3 +98,27 @@ form {
   margin-bottom: 2px; /* space below the forms */
   flex-wrap: wrap; /* allow wrapping to the next line if needed */  
 }
+
+.dropdown:hover .dropdown-content {
+  display: none;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  right: 0;
+  width: 300px;
+  min-width: 200px;
+  z-index: 1000;
+  background-color: white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.dropdown-content button {
+  display: block;
+  width: 100%;
+}
+
