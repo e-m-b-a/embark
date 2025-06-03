@@ -79,3 +79,30 @@ class TestOrchestrator(TestCase):
         self.assertNotIn(self.test_worker1.ip_address, self.orchestrator.get_free_workers())
         self.orchestrator.release_worker(self.test_worker2)
         self.assertIn(self.test_worker2.ip_address, self.orchestrator.get_free_workers())
+
+    def test_fifo_assign_task(self):
+        """
+        Test that tasks are assigned in FIFO order.
+        """
+        orchestrator = WorkerOrchestrator()
+        worker1 = Worker.objects.get(name="test_worker1")
+        worker2 = Worker.objects.get(name="test_worker2")
+        orchestrator.add_worker(worker1)
+        orchestrator.add_worker(worker2)
+
+        task1 = "task_1"
+        task2 = "task_2"
+        task3 = "task_3"
+
+        orchestrator.assign_task(task1)
+        orchestrator.assign_task(task2)
+        orchestrator.assign_task(task3)
+
+        self.assertEqual(orchestrator.get_busy_workers()[worker1.ip_address].job_id, task1)
+        self.assertEqual(orchestrator.get_busy_workers()[worker2.ip_address].job_id, task2)
+        self.assertEqual(orchestrator.queue_tasks[0], task3)
+        orchestrator.release_worker(worker1)
+        self.assertEqual(orchestrator.get_busy_workers()[worker1.ip_address].job_id, task3)
+        orchestrator.release_worker(worker1)
+        orchestrator.assign_task(task2)
+        self.assertEqual(orchestrator.get_busy_workers()[worker1.ip_address].job_id, task2)
