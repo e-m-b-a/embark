@@ -73,6 +73,7 @@
     <tr>
         <th>IP Address</th>
         <th>Status</th>
+        <th>Job ID</th>
         <th>OS Version</th>
         <th>CPU</th>
         <th>Memory</th>
@@ -87,6 +88,7 @@
     <tr>
         <td>{{ worker.ip_address }}</td>
         <td>{% if worker.reachable %}🟢{% else %}🔴{% endif %}</td>
+        <td>{{ worker.job_id|default_if_none:""|slice:"-5:" }}</td>
         <td>{{ worker.system_info.os_info }}</td>
         <td>{{ worker.system_info.cpu_info }}</td>
         <td>{{ worker.system_info.ram_info }}</td>
