@@ -22,7 +22,7 @@ def _exec_blocking_ssh(client: SSHClient, command):
 
     status = stdout.channel.recv_exit_status()
     if status != 0:
-        raise paramiko.SSHException(f"Command failed with status {status}: {command}")
+        raise paramiko.ssh_exception.SSHException(f"Command failed with status {status}: {command}")
 
 
 def _copy_files(client: SSHClient, dependency: DependencyType):
@@ -52,12 +52,15 @@ def _perform_update(client: SSHClient, dependency: DependencyType):
     :params client: paramiko ssh client
     :params dependency: Dependency type
     """
+    if dependency == DependencyType.ALL:
+        raise ValueError("DependencyType.ALL can't be copied")
+
     folder_path = f"/root/{dependency.name}"
     zip_path = f"{folder_path}.tar.gz"
 
     _copy_files(client, dependency)
 
-    _exec_blocking_ssh(client, f"mkdir {folder_path} && tar xvzf {folder_path}.tar.gz -C {folder_path} >/dev/null 2>&1")
+    _exec_blocking_ssh(client, f"mkdir {folder_path} && tar xvzf {zip_path} -C {folder_path} >/dev/null 2>&1")
     _exec_blocking_ssh(client, f"sudo {folder_path}/installer.sh >{folder_path}/installer.log 2>&1")
 
 
@@ -71,16 +74,17 @@ def update_worker(worker: Worker, dependency: DependencyType):
     :params dependency: Dependency type
     """
     # TODO: Move to better place (e.g. if workers are enabled in config)
-    # setup_dependencies(DependencyType.ALL, False)
+    # setup_dependencies(dependency, false)
 
     logger.info("Worker update started (Dependency: %s)", dependency)
 
     worker.status = Worker.ConfigStatus.CONFIGURING
     worker.save()
 
-    client = worker.ssh_connect()
+    client = None
 
     try:
+        client = worker.ssh_connect()
         if dependency == DependencyType.ALL:
             _perform_update(client, DependencyType.DEPS)
             _perform_update(client, DependencyType.REPO)
@@ -91,9 +95,10 @@ def update_worker(worker: Worker, dependency: DependencyType):
 
         worker.status = Worker.ConfigStatus.CONFIGURED
         logger.info("Setup done")
-    except paramiko.SSHException as ssh_error:
+    except Exception as ssh_error:
         logger.error("SSH connection failed: %s", ssh_error)
         worker.status = Worker.ConfigStatus.ERROR
     finally:
-        client.close()
+        if client is not None:
+            client.close()
         worker.save()

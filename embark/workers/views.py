@@ -118,7 +118,7 @@ def create_config(request):
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
 def configure_worker(request, configuration_id):
-    workers = Worker.objects.filter(configurations__id=configuration_id, status=Worker.ConfigStatus.UNCONFIGURED)
+    workers = Worker.objects.filter(configurations__id=configuration_id, status__in=[Worker.ConfigStatus.UNCONFIGURED, Worker.ConfigStatus.ERROR])
 
     for worker in workers:
         # TODO: Replace with something better for production use
