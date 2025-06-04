@@ -224,8 +224,6 @@ def config_soft_reset(request, worker_id):
         return JsonResponse({'status': 'success', 'message': 'Worker soft reset completed.'})
     except Worker.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Worker not found.'})
-    except Exception as errormsg:
-        return JsonResponse({'status': 'error', 'message': 'Unexpected error'})
 
 
 @require_http_methods(["GET"])
