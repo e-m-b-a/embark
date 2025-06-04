@@ -213,16 +213,19 @@ def config_soft_reset(request, worker_id):
         configuration = worker.configurations
         ssh_client.connect(worker.ip_address, username=configuration.ssh_user, password=configuration.ssh_password)
         # TODO placeholder until we have a path for the firmware (it is the regular path for the api/uploader method)
-        command = f"""
+        command = """
             docker stop $(docker ps -aq) && \
             docker rm $(docker ps -aq) && \
             rm -rf /root/emba/emba_logs && \
             rm -rf /root/amos2025ss01-embark/media/*
-            """
+        """
         exec_blocking_ssh(ssh_client, command)
         ssh_client.close()
-    except:
-        return JsonResponse({'status': 'error', 'message': 'Worker not found or SSH connection failed.'})
+        return JsonResponse({'status': 'success', 'message': 'Worker soft reset completed.'})
+    except Worker.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Worker not found.'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': f'Unexpected error: {str(e)}'})
 
 
 @require_http_methods(["GET"])
