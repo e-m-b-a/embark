@@ -18,7 +18,6 @@ from django.db.models import Count
 
 from workers.models import Worker, Configuration
 from workers.setup.setup import setup_worker, exec_blocking_ssh
-from workers.codeql_ignore import new_autoadd_client
 
 
 @require_http_methods(["GET"])
@@ -197,7 +196,7 @@ def config_worker_scan(request, configuration_id):
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
-def config_soft_reset(request, worker_id, configuration_id = None):
+def config_soft_reset(request, worker_id, configuration_id=None):
     """
     Soft reset the worker with the given worker ID.
     This will remove the worker from the configuration and mark it as unconfigured.
@@ -212,11 +211,11 @@ def config_soft_reset(request, worker_id, configuration_id = None):
         if configuration.user != user:
             return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
         ssh_client = worker.ssh_connect(configuration_id)
-        exec_blocking_ssh(ssh_client,"""docker stop $(docker ps -aq)""")
-        exec_blocking_ssh(ssh_client,"""docker rm $(docker ps -aq)""")
-        exec_blocking_ssh(ssh_client,"""rm -rf /root/emba/emba_logs""")
+        exec_blocking_ssh(ssh_client, """docker stop $(docker ps -aq)""")
+        exec_blocking_ssh(ssh_client, """docker rm $(docker ps -aq)""")
+        exec_blocking_ssh(ssh_client, """rm -rf /root/emba/emba_logs""")
         # TODO placeholder until we have a path for the firmware (it is the regular path for the api/uploader method)
-        exec_blocking_ssh(ssh_client,"""rm -rf /root/amos2025ss01-embark/media/*""")
+        exec_blocking_ssh(ssh_client, """rm -rf /root/amos2025ss01-embark/media/*""")
         return JsonResponse({'status': 'success', 'message': 'Worker soft reset completed.'})
     except (Worker.DoesNotExist, Configuration.DoesNotExist):
         return JsonResponse({'status': 'error', 'message': 'Worker or Config not found.'})
