@@ -197,7 +197,7 @@ def config_worker_scan(request, configuration_id):
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
-def config_soft_reset(request, worker_id):
+def config_soft_reset(request, worker_id, configuration_id = None):
     """
     Soft reset the worker with the given worker ID.
     This will remove the worker from the configuration and mark it as unconfigured.
@@ -205,25 +205,21 @@ def config_soft_reset(request, worker_id):
     try:
         user = get_user(request)
         worker = Worker.objects.get(id=worker_id)
-        configurations = worker.configurations.all()
-        if not configurations.exists() or user != configurations.first().user:
+        configuration = worker.configurations.filter(user=user).first()
+        if not configuration_id:
+            configuration_id = configuration.id
+        configuration = worker.configurations.get(id=configuration_id)
+        if configuration.user != user:
             return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
-
-        ssh_client = new_autoadd_client()
-        configuration = worker.configurations
-        ssh_client.connect(worker.ip_address, username=configuration.ssh_user, password=configuration.ssh_password)
+        ssh_client = worker.ssh_connect(configuration_id)
+        exec_blocking_ssh(ssh_client,"""docker stop $(docker ps -aq)""")
+        exec_blocking_ssh(ssh_client,"""docker rm $(docker ps -aq)""")
+        exec_blocking_ssh(ssh_client,"""rm -rf /root/emba/emba_logs""")
         # TODO placeholder until we have a path for the firmware (it is the regular path for the api/uploader method)
-        command = """
-            docker stop $(docker ps -aq) && \
-            docker rm $(docker ps -aq) && \
-            rm -rf /root/emba/emba_logs && \
-            rm -rf /root/amos2025ss01-embark/media/*
-        """
-        exec_blocking_ssh(ssh_client, command)
-        ssh_client.close()
+        exec_blocking_ssh(ssh_client,"""rm -rf /root/amos2025ss01-embark/media/*""")
         return JsonResponse({'status': 'success', 'message': 'Worker soft reset completed.'})
-    except Worker.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Worker not found.'})
+    except (Worker.DoesNotExist, Configuration.DoesNotExist):
+        return JsonResponse({'status': 'error', 'message': 'Worker or Config not found.'})
 
 
 @require_http_methods(["GET"])
