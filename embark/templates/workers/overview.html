@@ -40,9 +40,9 @@
                     <input type="hidden" name="configuration" value="{{ config.id }}">
                     <input type="submit" name="action" value="Install">
                 </form>
-                <div class="dropdown">
+                <div class="actions-dropdown">
                     <button class="toggle-actions-menu" data-id="{{ worker.ip_address }}">...</button>
-                    <div class="dropdown-content" id="menu-{{ worker.ip_address }}">
+                    <div class="actions-dropdown-content" id="menu-{{ worker.ip_address }}">
                         <button onclick="stubCall('{{ worker.ip_address }}', 'config_update_emba')">Update EMBA repository</button>
                         <button onclick="stubCall('{{ worker.ip_address }}', 'config_update_docker')">Update Docker container</button>
                         <button onclick="stubCall('{{ worker.ip_address }}', 'config_update_externals')">Update externals directory</button>
@@ -109,9 +109,9 @@
         <td>{{ worker.config_ids }}</td>
 
         <td>
-            <div class="dropdown">
+            <div class="actions-dropdown">
                 <button class="toggle-actions-menu" data-id="{{ worker.ip_address }}">...</button>
-                <div class="dropdown-content" id="menu-{{ worker.ip_address }}">
+                <div class="actions-dropdown-content" id="menu-{{ worker.ip_address }}">
                     <button onclick="stubCall('{{ worker.ip_address }}', 'worker_update_emba')">Update EMBA repository</button>
                     <button onclick="stubCall('{{ worker.ip_address }}', 'worker_update_docker')">Update Docker container</button>
                     <button onclick="stubCall('{{ worker.ip_address }}', 'worker_update_externals')">Update externals directory</button>
@@ -143,7 +143,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     createContainer.style.display = "none";
 
-    // Open the Actions dropdown menu on "..." clicked
+    // Open the actions-dropdown menu on "..." clicked
     document.querySelectorAll(".toggle-actions-menu").forEach(button => {
         button.addEventListener("click", function () {
             const id = this.dataset.id;
@@ -154,9 +154,9 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // Close the Actions dropdown menu if clicked outside of it
+    // Close the actions-dropdown menu if clicked outside of it
     document.addEventListener("click", function (event) {
-        document.querySelectorAll(".dropdown-content").forEach(menu => {
+        document.querySelectorAll(".actions-dropdown-content").forEach(menu => {
             if (!menu.contains(event.target) && !menu.previousElementSibling.contains(event.target)) {
                 menu.style.display = "none";
             }
