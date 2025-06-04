@@ -15,7 +15,7 @@
 td {
   /* center the text in the table */
   text-align: center;
-  padding: 0.5rem;
+  padding: 0.25rem;
   border: 1px solid #ccc;
   border-radius: 8px;
   background-color: rgb(91, 25, 166);
@@ -63,7 +63,6 @@ button {
   font-size: 16px;
   margin: 4px 2px;
   cursor: pointer;
-  /* add more space around the top and bottom */
   border-radius: 8px;
   /* add rounded corners */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -92,11 +91,9 @@ form {
 .actions-container {
   /* align the two forms horizontally */
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 2px; /* space between the forms */
-  margin-top: 2px; /* space above the forms */
-  margin-bottom: 2px; /* space below the forms */
-  flex-wrap: wrap; /* allow wrapping to the next line if needed */  
 }
 
 .dropdown:hover .dropdown-content {

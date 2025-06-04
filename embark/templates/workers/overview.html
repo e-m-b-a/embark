@@ -40,6 +40,16 @@
                     <input type="hidden" name="configuration" value="{{ config.id }}">
                     <input type="submit" name="action" value="Install">
                 </form>
+                <div class="dropdown">
+                    <button class="toggle-actions-menu" data-id="{{ worker.ip_address }}">...</button>
+                    <div class="dropdown-content" id="menu-{{ worker.ip_address }}">
+                        <button onclick="stubCall('{{ worker.ip_address }}', 'config_update_emba')">Update EMBA repository</button>
+                        <button onclick="stubCall('{{ worker.ip_address }}', 'config_update_docker')">Update Docker container</button>
+                        <button onclick="stubCall('{{ worker.ip_address }}', 'config_update_externals')">Update externals directory</button>
+                        <button onclick="stubCall('{{ worker.ip_address }}', 'config_soft_reset')">Soft reset</button>
+                        <button onclick="stubCall('{{ worker.ip_address }}', 'config_hard_reset')">Hard reset</button>
+                    </div>
+                </div>
             </div>
         </td>
     </tr>
@@ -102,11 +112,11 @@
             <div class="dropdown">
                 <button class="toggle-actions-menu" data-id="{{ worker.ip_address }}">...</button>
                 <div class="dropdown-content" id="menu-{{ worker.ip_address }}">
-                    <button onclick="stubCall('{{ worker.ip_address }}', 'update_emba')">Update EMBA repository</button>
-                    <button onclick="stubCall('{{ worker.ip_address }}', 'update_docker')">Update Docker container</button>
-                    <button onclick="stubCall('{{ worker.ip_address }}', 'update_externals')">Update externals directory</button>
-                    <button onclick="stubCall('{{ worker.ip_address }}', 'soft_reset')">Soft reset</button>
-                    <button onclick="stubCall('{{ worker.ip_address }}', 'hard_reset')">Hard reset</button>
+                    <button onclick="stubCall('{{ worker.ip_address }}', 'worker_update_emba')">Update EMBA repository</button>
+                    <button onclick="stubCall('{{ worker.ip_address }}', 'worker_update_docker')">Update Docker container</button>
+                    <button onclick="stubCall('{{ worker.ip_address }}', 'worker_update_externals')">Update externals directory</button>
+                    <button onclick="stubCall('{{ worker.ip_address }}', 'worker_soft_reset')">Soft reset</button>
+                    <button onclick="stubCall('{{ worker.ip_address }}', 'worker_hard_reset')">Hard reset</button>
                 </div>
             </div>
         </td>
