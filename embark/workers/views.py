@@ -166,7 +166,10 @@ def config_worker_scan(request, configuration_id):
                     if configuration not in existing_worker.configurations.all():
                         existing_worker.configurations.add(configuration)
                         existing_worker.save()
-                    update_system_info(configuration, existing_worker)
+                    try:
+                        update_system_info(configuration, existing_worker)
+                    except ConnectionError:
+                        pass
                 except Worker.DoesNotExist:
                     new_worker = Worker(
                         name=f"worker-{str(ip_address)}",
@@ -176,7 +179,10 @@ def config_worker_scan(request, configuration_id):
                     )
                     new_worker.save()
                     new_worker.configurations.set([configuration])
-                    update_system_info(configuration, new_worker)
+                    try:
+                        update_system_info(configuration, new_worker)
+                    except ConnectionError:
+                        pass
                 return str(ip_address)
         except Exception:
             return None
@@ -237,7 +243,10 @@ def connect_worker(request, configuration_id, worker_id):
     except (Worker.DoesNotExist, Configuration.DoesNotExist):
         return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
 
-    system_info = update_system_info(configuration, worker)
+    try:
+        system_info = update_system_info(configuration, worker)
+    except ConnectionError:
+        return JsonResponse({'status': 'error', 'message': 'Failed to retrieve system_info.'})
 
     return JsonResponse({
         'status': 'success',
@@ -263,6 +272,8 @@ def update_system_info(configuration, worker):
     :param worker: Worker object to update
 
     :return: Dictionary containing system information
+
+    :raises ConnectionError: If the SSH connection fails or if any command execution fails
     """
     configuration_id = configuration.id
     ssh_pw = configuration.ssh_password
@@ -326,9 +337,8 @@ def update_system_info(configuration, worker):
         ssh_client.close()
 
     except paramiko.SSHException as ssh_error:
-        print(f"SSH connection failed: {ssh_error}")
         ssh_client.close()
-        return JsonResponse({'status': 'error', 'message': 'SSH connection failed.'})
+        raise ConnectionError("Getting system_info failed.") from ssh_error
 
     system_info = {
         'os_info': os_info,
