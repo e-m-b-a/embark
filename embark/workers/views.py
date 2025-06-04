@@ -17,7 +17,8 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
 
 from workers.models import Worker, Configuration
-from workers.setup.setup import setup_worker
+from workers.setup.setup import setup_worker, exec_blocking_ssh
+from workers.codeql_ignore import new_autoadd_client
 
 
 @require_http_methods(["GET"])
@@ -191,6 +192,37 @@ def config_worker_scan(request, configuration_id):
         return safe_redirect(request, '/worker/')
 
     return JsonResponse({'status': 'scan_complete', 'configuration': configuration.name, 'registered_workers': registered, 'reachable_workers': reachable})
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def config_soft_reset(request, worker_id):
+    """
+    Soft reset the worker with the given worker ID.
+    This will remove the worker from the configuration and mark it as unconfigured.
+    """
+    try:
+        user = get_user(request)
+        worker = Worker.objects.get(id=worker_id)
+        configurations = worker.configurations.all()
+        if not configurations.exists() or user != configurations.first().user:
+            return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
+
+        ssh_client = new_autoadd_client()
+        configuration = worker.configurations
+        ssh_client.connect(worker.ip_address, username=configuration.ssh_user, password=configuration.ssh_password)
+        # TODO placeholder until we have a path for the firmware (it is the regular path for the api/uploader method)
+        command = f"""
+            docker stop $(docker ps -aq) && \
+            docker rm $(docker ps -aq) && \
+            rm -rf /root/emba/emba_logs && \
+            rm -rf /root/amos2025ss01-embark/media/*
+            """
+        exec_blocking_ssh(ssh_client, command)
+        ssh_client.close()
+    except:
+        return JsonResponse({'status': 'error', 'message': 'Worker not found or SSH connection failed.'})
 
 
 @require_http_methods(["GET"])
