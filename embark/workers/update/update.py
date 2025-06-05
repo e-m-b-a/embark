@@ -9,7 +9,7 @@ from workers.update.dependencies import use_dependency, release_dependency, Depe
 logger = logging.getLogger(__name__)
 
 
-def _exec_blocking_ssh(client: SSHClient, command):
+def exec_blocking_ssh(client: SSHClient, command):
     """
     Executes ssh command blocking, as exec_command is non-blocking
 
@@ -38,7 +38,7 @@ def _copy_files(client: SSHClient, dependency: DependencyType):
     folder_path = f"/root/{dependency.name}"
     zip_path = f"{folder_path}.tar.gz"
 
-    _exec_blocking_ssh(client, f"rm -f {zip_path}; rm -rf {folder_path}")
+    exec_blocking_ssh(client, f"rm -f {zip_path}; rm -rf {folder_path}")
 
     sftp_client = client.open_sftp()
     sftp_client.put(get_dependency_path(dependency)[1], zip_path)
@@ -62,8 +62,8 @@ def _perform_update(client: SSHClient, dependency: DependencyType):
 
     _copy_files(client, dependency)
 
-    _exec_blocking_ssh(client, f"mkdir {folder_path} && tar xvzf {zip_path} -C {folder_path} >/dev/null 2>&1")
-    _exec_blocking_ssh(client, f"sudo {folder_path}/installer.sh >{folder_path}/installer.log 2>&1")
+    exec_blocking_ssh(client, f"mkdir {folder_path} && tar xvzf {zip_path} -C {folder_path} >/dev/null 2>&1")
+    exec_blocking_ssh(client, f"sudo {folder_path}/installer.sh >{folder_path}/installer.log 2>&1")
 
     release_dependency(dependency)
 

@@ -17,7 +17,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
 
 from workers.models import Worker, Configuration
-from workers.update.update import update_worker
+from workers.update.update import update_worker, exec_blocking_ssh
 from workers.update.dependencies import DependencyType
 
 
@@ -59,6 +59,9 @@ def worker_main(request):
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
 def delete_config(request):
+    """
+    Delete a worker configuration and all workers associated with it. (If there are no other configs associated with the worker)
+    """
     user = get_user(request)
     selected_config_id = request.POST.get("configuration")
     if not selected_config_id:
@@ -86,18 +89,19 @@ def delete_config(request):
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
 def create_config(request):
+    """
+    Create a new configuration for workers.
+    """
     user = get_user(request)
     name = request.POST.get("name")
     ssh_user = request.POST.get("ssh_user")
     ssh_password = request.POST.get("ssh_password")
     ip_range = request.POST.get("ip_range")
 
-    # check if ssh credentials, config name, and ip_range are provided
     if not ssh_user or not ssh_password or not ip_range or not name:
         messages.error(request, 'Name, SSH user, SSH password, and IP range are required.')
         return safe_redirect(request, '/worker/')
 
-    # check ip range format
     ip_range_regex = r"^(\d{1,3}\.){3}\d{1,3}/\d{1,2}$"
     if not re.match(ip_range_regex, ip_range):
         messages.error(request, 'Invalid IP range format. Use CIDR notation')
@@ -118,7 +122,14 @@ def create_config(request):
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
 def configure_worker(request, configuration_id):
+<<<<<<< HEAD
     workers = Worker.objects.filter(configurations__id=configuration_id, status__in=[Worker.ConfigStatus.UNCONFIGURED, Worker.ConfigStatus.ERROR])
+=======
+    """
+    Configure all workers that are in the given configuration and have not been configured yet.
+    """
+    workers = Worker.objects.filter(configurations__id=configuration_id, status=Worker.ConfigStatus.UNCONFIGURED)
+>>>>>>> main
 
     for worker in workers:
         # TODO: Replace with something better for production use
@@ -153,8 +164,6 @@ def config_worker_scan(request, configuration_id):
     def connect_ssh(ip_address, port=22, timeout=1):
         try:
             with socket.create_connection((str(ip_address), port), timeout):
-                # TODO: maybe we can already gather the system info for each worker here
-                # rather than doing so manually in the connect_worker function
                 try:
                     existing_worker = Worker.objects.get(ip_address=str(ip_address))
                     existing_worker.reachable = True
@@ -162,6 +171,10 @@ def config_worker_scan(request, configuration_id):
                     if configuration not in existing_worker.configurations.all():
                         existing_worker.configurations.add(configuration)
                         existing_worker.save()
+                    try:
+                        update_system_info(configuration, existing_worker)
+                    except ConnectionError:
+                        pass
                 except Worker.DoesNotExist:
                     new_worker = Worker(
                         name=f"worker-{str(ip_address)}",
@@ -171,6 +184,10 @@ def config_worker_scan(request, configuration_id):
                     )
                     new_worker.save()
                     new_worker.configurations.set([configuration])
+                    try:
+                        update_system_info(configuration, new_worker)
+                    except ConnectionError:
+                        pass
                 return str(ip_address)
         except Exception:
             return None
@@ -192,6 +209,33 @@ def config_worker_scan(request, configuration_id):
         return safe_redirect(request, '/worker/')
 
     return JsonResponse({'status': 'scan_complete', 'configuration': configuration.name, 'registered_workers': registered, 'reachable_workers': reachable})
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def worker_soft_reset(request, worker_id, configuration_id=None):
+    """
+    Soft reset the worker with the given worker ID.
+    """
+    try:
+        user = get_user(request)
+        worker = Worker.objects.get(id=worker_id)
+        configuration = worker.configurations.filter(user=user).first()
+        if not configuration_id:
+            configuration_id = configuration.id
+        configuration = worker.configurations.get(id=configuration_id)
+        if configuration.user != user:
+            return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
+        ssh_client = worker.ssh_connect(configuration_id)
+        exec_blocking_ssh(ssh_client, """docker stop $(docker ps -aq)""")
+        exec_blocking_ssh(ssh_client, """docker rm $(docker ps -aq)""")
+        exec_blocking_ssh(ssh_client, """rm -rf /root/emba/emba_logs""")
+        # TODO placeholder until we have a path for the firmware (it is the regular path for the api/uploader method)
+        exec_blocking_ssh(ssh_client, """rm -rf /root/amos2025ss01-embark/media/*""")
+        return JsonResponse({'status': 'success', 'message': 'Worker soft reset completed.'})
+    except (Worker.DoesNotExist, Configuration.DoesNotExist):
+        return JsonResponse({'status': 'error', 'message': 'Worker or Config not found.'})
 
 
 @require_http_methods(["GET"])
@@ -232,6 +276,41 @@ def connect_worker(request, configuration_id, worker_id):
         return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
 
     try:
+        system_info = update_system_info(configuration, worker)
+    except ConnectionError:
+        return JsonResponse({'status': 'error', 'message': 'Failed to retrieve system_info.'})
+
+    return JsonResponse({
+        'status': 'success',
+        'worker_id': worker_id,
+        'worker_name': worker.name,
+        'worker_ip': worker.ip_address,
+        'system_info': system_info
+    })
+
+
+def safe_redirect(request, default):
+    referer = request.META.get('HTTP_REFERER', default)
+    if not url_has_allowed_host_and_scheme(referer, allowed_hosts={request.get_host()}):
+        referer = default
+    return HttpResponseRedirect(referer)
+
+
+def update_system_info(configuration, worker):
+    """
+    Update the system_info of a worker using the SSH credentials of the provided configuration to connect to the worker.
+
+    :param configuration: Configuration object containing SSH credentials
+    :param worker: Worker object to update
+
+    :return: Dictionary containing system information
+
+    :raises ConnectionError: If the SSH connection fails or if any command execution fails
+    """
+    configuration_id = configuration.id
+    ssh_pw = configuration.ssh_password
+
+    try:
         ssh_client = worker.ssh_connect(configuration_id)
 
         _stdin, stdout, _stderr = ssh_client.exec_command('grep PRETTY_NAME /etc/os-release')  # nosec B601: No user input
@@ -250,32 +329,58 @@ def connect_worker(request, configuration_id, worker_id):
         disk_free = disk_str[3].replace('G', 'GB').replace('M', 'MB')
         disk_info = f"Total: {disk_total}, Free: {disk_free}"
 
+        stdin, stdout, _stderr = ssh_client.exec_command("sudo -S -p '' cat /root/emba/docker-compose.yml | awk -F: '/image:/ {print $NF; exit}'", get_pty=True)  # nosec B601: No user input
+        stdin.write(f"{ssh_pw}\n")
+        stdin.flush()
+        emba_version = stdout.read().decode().strip().replace('\r', '').replace('\n', '')[len(ssh_pw):]
+        emba_version = "N/A" if emba_version.startswith("cat: /root") else emba_version
+
+        # Get the timestamp when the nvd feed was last pulled or fetched via .git/FETCH_HEAD
+        stdin, stdout, _stderr = ssh_client.exec_command("sudo -S -p '' ls -l /root/emba/external/nvd-json-data-feeds/.git/FETCH_HEAD | awk '{print $6 \" \" $7 \" \" $8}'", get_pty=True)  # nosec B601: No user input
+        stdin.write(f"{ssh_pw}\n")
+        stdin.flush()
+        last_sync_nvd = stdout.read().decode().strip().replace('\r', '').replace('\n', '')[len(ssh_pw):]
+
+        # FETCH_HEAD only gets created after git pull or git fetch, not after the initial clone (HEAD exists after the initial clone)
+        if last_sync_nvd.startswith("ls: cannot access"):
+            stdin, stdout, _stderr = ssh_client.exec_command("sudo -S -p '' ls -l /root/emba/external/nvd-json-data-feeds/.git/HEAD | awk '{print $6 \" \" $7 \" \" $8}'", get_pty=True)  # nosec B601: No user input
+            stdin.write(f"{ssh_pw}\n")
+            stdin.flush()
+            last_sync_nvd = stdout.read().decode().strip().replace('\r', '').replace('\n', '')[len(ssh_pw):]
+
+        # neither FETCH_HEAD nor HEAD exist, so we assume the feed has never been pulled
+        last_sync_nvd = "N/A" if last_sync_nvd.startswith("ls: cannot access") else last_sync_nvd
+
+        stdin, stdout, _stderr = ssh_client.exec_command("sudo -S -p '' ls -l /root/emba/external/EPSS-data/.git/FETCH_HEAD | awk '{print $6 \" \" $7 \" \" $8}'", get_pty=True)  # nosec B601: No user input
+        stdin.write(f"{ssh_pw}\n")
+        stdin.flush()
+        last_sync_epss = stdout.read().decode().strip().replace('\r', '').replace('\n', '')[len(ssh_pw):]
+
+        if last_sync_epss.startswith("ls: cannot access"):
+            stdin, stdout, _stderr = ssh_client.exec_command("sudo -S -p '' ls -l /root/emba/external/EPSS-data/.git/HEAD | awk '{print $6 \" \" $7 \" \" $8}'", get_pty=True)  # nosec B601: No user input
+            stdin.write(f"{ssh_pw}\n")
+            stdin.flush()
+            last_sync_epss = stdout.read().decode().strip().replace('\r', '').replace('\n', '')[len(ssh_pw):]
+
+        last_sync_epss = "N/A" if last_sync_epss.startswith("ls: cannot access") else last_sync_epss
+
+        last_sync = f"NVD feed: {last_sync_nvd}, EPSS: {last_sync_epss}"
+
         ssh_client.close()
+
     except paramiko.SSHException as ssh_error:
-        print(f"SSH connection failed: {ssh_error}")
         ssh_client.close()
-        return JsonResponse({'status': 'error', 'message': 'SSH connection failed.'})
+        raise ConnectionError("Getting system_info failed.") from ssh_error
 
     system_info = {
         'os_info': os_info,
         'cpu_info': cpu_info,
         'ram_info': ram_info,
-        'disk_info': disk_info
+        'disk_info': disk_info,
+        'emba_version': emba_version,
+        'last_sync': last_sync
     }
     worker.system_info = system_info
     worker.save()
 
-    return JsonResponse({
-        'status': 'success',
-        'worker_id': worker_id,
-        'worker_name': worker.name,
-        'worker_ip': worker.ip_address,
-        'system_info': system_info
-    })
-
-
-def safe_redirect(request, default):
-    referer = request.META.get('HTTP_REFERER', default)
-    if not url_has_allowed_host_and_scheme(referer, allowed_hosts={request.get_host()}):
-        referer = default
-    return HttpResponseRedirect(referer)
+    return system_info
