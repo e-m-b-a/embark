@@ -17,7 +17,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
 
 from workers.models import Worker, Configuration
-from workers.setup.setup import setup_worker
+from workers.setup.setup import setup_worker, exec_blocking_ssh
 
 
 @require_http_methods(["GET"])
@@ -204,6 +204,33 @@ def config_worker_scan(request, configuration_id):
         return safe_redirect(request, '/worker/')
 
     return JsonResponse({'status': 'scan_complete', 'configuration': configuration.name, 'registered_workers': registered, 'reachable_workers': reachable})
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def worker_soft_reset(request, worker_id, configuration_id=None):
+    """
+    Soft reset the worker with the given worker ID.
+    """
+    try:
+        user = get_user(request)
+        worker = Worker.objects.get(id=worker_id)
+        configuration = worker.configurations.filter(user=user).first()
+        if not configuration_id:
+            configuration_id = configuration.id
+        configuration = worker.configurations.get(id=configuration_id)
+        if configuration.user != user:
+            return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
+        ssh_client = worker.ssh_connect(configuration_id)
+        exec_blocking_ssh(ssh_client, """docker stop $(docker ps -aq)""")
+        exec_blocking_ssh(ssh_client, """docker rm $(docker ps -aq)""")
+        exec_blocking_ssh(ssh_client, """rm -rf /root/emba/emba_logs""")
+        # TODO placeholder until we have a path for the firmware (it is the regular path for the api/uploader method)
+        exec_blocking_ssh(ssh_client, """rm -rf /root/amos2025ss01-embark/media/*""")
+        return JsonResponse({'status': 'success', 'message': 'Worker soft reset completed.'})
+    except (Worker.DoesNotExist, Configuration.DoesNotExist):
+        return JsonResponse({'status': 'error', 'message': 'Worker or Config not found.'})
 
 
 @require_http_methods(["GET"])
