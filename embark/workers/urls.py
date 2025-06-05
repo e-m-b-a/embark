@@ -15,5 +15,5 @@ urlpatterns = [
     path('worker/connect/<int:configuration_id>/<int:worker_id>/', views.connect_worker, name='embark-worker-connect'),
     path('worker/registered/<int:configuration_id>/', views.registered_workers, name='embark-worker-registered'),     # TODO: convert to API endpoints after development complete
     path('worker/soft_reset/<int:worker_id>/', views.worker_soft_reset, name='embark-worker-soft-reset'),     # TODO: add HTML context for this
-    path('worker/soft_reset/<int:worker_id>/<int:configuration_id/', views.worker_soft_reset, name='embark-worker-soft-reset'),     # TODO: add HTML context for this
+    path('worker/soft_reset/<int:worker_id>/<int:configuration_id/>', views.worker_soft_reset, name='embark-worker-soft-reset'),     # TODO: add HTML context for this
 ]
