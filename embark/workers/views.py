@@ -196,7 +196,7 @@ def config_worker_scan(request, configuration_id):
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
-def config_soft_reset(request, worker_id, configuration_id=None):
+def worker_soft_reset(request, worker_id, configuration_id=None):
     """
     Soft reset the worker with the given worker ID.
     """
