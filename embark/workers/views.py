@@ -199,7 +199,6 @@ def config_worker_scan(request, configuration_id):
 def config_soft_reset(request, worker_id, configuration_id=None):
     """
     Soft reset the worker with the given worker ID.
-    This will remove the worker from the configuration and mark it as unconfigured.
     """
     try:
         user = get_user(request)
