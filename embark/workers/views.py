@@ -134,6 +134,69 @@ def configure_worker(request, configuration_id):
     return safe_redirect(request, '/worker/')
 
 
+def _trigger_worker_update(worker, dependency: str):
+    """
+    Parses dependency and starts update thread
+    :params worker: the worker to update
+    :params dependency: the dependency as string
+    :returns: true on success
+    """
+    parsed_dependency = None
+    match dependency:
+        case "repo":
+            parsed_dependency = DependencyType.REPO
+        case "docker":
+            parsed_dependency = DependencyType.DOCKERIMAGE
+        case "external":
+            parsed_dependency = DependencyType.EXTERNAL
+        case "deps":
+            parsed_dependency = DependencyType.DEPS
+        case _:
+            return False
+
+    # TODO: Replace with something better for production use
+    threading.Thread(target=update_worker, args=(worker, parsed_dependency)).start()
+
+    return True
+
+
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def update_worker_dependency(request, worker_id):
+    """
+    Update specific worker dependency
+    """
+    dependency = request.POST.get("update")
+    worker = Worker.objects.get(id=worker_id)
+
+    if not _trigger_worker_update(worker, dependency):
+        messages.error(request, 'Invalid dependency provided')
+        return safe_redirect(request, '/worker/')
+
+    messages.success(request, 'Update queued')
+    return safe_redirect(request, '/worker/')
+
+
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def update_configuration_dependency(request, configuration_id):
+    """
+    Update specific configuration dependency
+    """
+    dependency = request.POST.get("update")
+    workers = Worker.objects.filter(configurations__id=configuration_id, status__in=[Worker.ConfigStatus.CONFIGURED])
+
+    for worker in workers:
+        if not _trigger_worker_update(worker, dependency):
+            messages.error(request, 'Invalid dependency provided')
+            return safe_redirect(request, '/worker/')
+
+    messages.success(request, 'Update queued')
+    return safe_redirect(request, '/worker/')
+
+
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
