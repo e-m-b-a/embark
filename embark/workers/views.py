@@ -18,7 +18,7 @@ from django.db.models import Count
 
 from workers.models import Worker, Configuration
 from workers.update.update import update_worker, exec_blocking_ssh
-from workers.update.dependencies import DependencyType
+from workers.update.dependencies import DependencyType, uses_dependency
 
 
 @require_http_methods(["GET"])
@@ -154,6 +154,9 @@ def _trigger_worker_update(worker, dependency: str):
         case _:
             return False
 
+    if uses_dependency(parsed_dependency, worker):
+        return False
+
     # TODO: Replace with something better for production use
     threading.Thread(target=update_worker, args=(worker, parsed_dependency)).start()
 
@@ -171,7 +174,7 @@ def update_worker_dependency(request, worker_id):
     worker = Worker.objects.get(id=worker_id)
 
     if not _trigger_worker_update(worker, dependency):
-        messages.error(request, 'Invalid dependency provided')
+        messages.error(request, 'Worker update already queued')
         return safe_redirect(request, '/worker/')
 
     messages.success(request, 'Update queued')
@@ -188,12 +191,16 @@ def update_configuration_dependency(request, configuration_id):
     dependency = request.POST.get("update")
     workers = Worker.objects.filter(configurations__id=configuration_id, status__in=[Worker.ConfigStatus.CONFIGURED])
 
+    count = 0
     for worker in workers:
         if not _trigger_worker_update(worker, dependency):
-            messages.error(request, 'Invalid dependency provided')
-            return safe_redirect(request, '/worker/')
+            continue
+        count = count + 1
 
-    messages.success(request, 'Update queued')
+    if count > 0:
+        messages.success(request, 'Update queued')
+    else:
+        messages.error(request, 'Configuration update already queued')
     return safe_redirect(request, '/worker/')
 
 

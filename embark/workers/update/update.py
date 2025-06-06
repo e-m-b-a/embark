@@ -45,7 +45,7 @@ def _copy_files(client: SSHClient, dependency: DependencyType):
     sftp_client.close()
 
 
-def _perform_update(client: SSHClient, dependency: DependencyType):
+def _perform_update(worker: Worker, client: SSHClient, dependency: DependencyType):
     """
     Trigger file copy and installer.sh
 
@@ -58,7 +58,7 @@ def _perform_update(client: SSHClient, dependency: DependencyType):
     folder_path = f"/root/{dependency.name}"
     zip_path = f"{folder_path}.tar.gz"
 
-    use_dependency(dependency)
+    use_dependency(dependency, worker)
 
     try:
         _copy_files(client, dependency)
@@ -68,7 +68,7 @@ def _perform_update(client: SSHClient, dependency: DependencyType):
     except Exception as ssh_error:
         raise ssh_error
     finally:
-        release_dependency(dependency)
+        release_dependency(dependency, worker)
 
 
 def update_worker(worker: Worker, dependency: DependencyType):
@@ -90,12 +90,12 @@ def update_worker(worker: Worker, dependency: DependencyType):
     try:
         client = worker.ssh_connect()
         if dependency == DependencyType.ALL:
-            _perform_update(client, DependencyType.DEPS)
-            _perform_update(client, DependencyType.REPO)
-            _perform_update(client, DependencyType.EXTERNAL)
-            _perform_update(client, DependencyType.DOCKERIMAGE)
+            _perform_update(worker, client, DependencyType.DEPS)
+            _perform_update(worker, client, DependencyType.REPO)
+            _perform_update(worker, client, DependencyType.EXTERNAL)
+            _perform_update(worker, client, DependencyType.DOCKERIMAGE)
         else:
-            _perform_update(client, dependency)
+            _perform_update(worker, client, dependency)
 
         worker.status = Worker.ConfigStatus.CONFIGURED
         logger.info("Setup done")

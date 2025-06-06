@@ -8,6 +8,7 @@ from subprocess import Popen, PIPE
 from pathlib import Path
 
 from django.conf import settings
+from workers.models import Worker
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +55,7 @@ class DependencyState:
 
     lock = Lock()
     available = AvailabilityType.UNAVAILABLE
-    in_use = 0
+    used_by = []
 
     def __init__(self, dependency: DependencyType):
         if dependency == DependencyType.ALL:
@@ -64,32 +65,43 @@ class DependencyState:
         self.available = self.AvailabilityType.AVAILABLE if os.path.exists(done_path) else self.AvailabilityType.UNAVAILABLE
         self.dependency = dependency
 
-    def use_dependency(self):
+    def use_dependency(self, worker: Worker):
         """
-        Increases in use counter by 1
+        Use lock (worker uses dependency)
+        :params worker: the worker who uses the dependency
         """
         while True:
             with self.lock:
                 if self.available == self.AvailabilityType.AVAILABLE:
-                    self.in_use = self.in_use + 1
+                    if worker.ip_address in self.used_by:
+                        raise ValueError(f"Worker {worker.ip_address} already uses dependency {self.dependency}")
+
+                    self.used_by.append(worker.ip_address)
                     break
                 if self.available == self.AvailabilityType.UNAVAILABLE:
                     # Trigger update
                     self.available = self.AvailabilityType.IN_PROGRESS
                     Thread(target=setup_dependency, args=(self.dependency,)).start()
 
-    def release_dependency(self):
+    def release_dependency(self, worker: Worker, force: bool):
         """
-        Decreases in use counter by 1
+        Releases lock (worker does not use dependency anymore)
+        :params worker: the worker who does not use the dependency anymore
+        :params force: force release (no error if unused)
         """
         with self.lock:
-            self.in_use = self.in_use - 1
+            if worker.ip_address not in self.used_by and not force:
+                raise ValueError(f"Worker {worker.ip_address} does not use dependency {self.dependency}")
+
+            self.used_by.remove(worker.ip_address)
 
     def is_not_in_use(self):
         """
         Checks if dependency is unused (no worker setup/update is currently performed with this dependency)
+
+        Warning: Assumes thread has the lock
         """
-        return self.in_use == 0
+        return len(self.used_by) == 0
 
     def update_dependency(self, available: bool):
         """
@@ -105,6 +117,14 @@ class DependencyState:
                     self.available = self.AvailabilityType.AVAILABLE if available else self.AvailabilityType.IN_PROGRESS
                     break
 
+    def uses_dependency(self, worker: Worker):
+        """
+        Checks if dependency is in use by provided worker
+        :params worker: worker to be checked
+        :returns: true if dependency is in use
+        """
+        return worker.ip_address in self.used_by
+
 
 locks_dict: dict[DependencyType, Lock] = {
     DependencyType.DEPS: DependencyState(DependencyType.DEPS),
@@ -114,24 +134,42 @@ locks_dict: dict[DependencyType, Lock] = {
 }
 
 
-def use_dependency(dependency: DependencyType):
+def use_dependency(dependency: DependencyType, worker: Worker):
     """
-    Increases in use counter by 1
-    """
-    if dependency == DependencyType.ALL:
-        raise ValueError("DependencyType.ALL can't be copied")
-
-    locks_dict[dependency].use_dependency()
-
-
-def release_dependency(dependency: DependencyType):
-    """
-    Decreases in use counter by 1
+    Use lock (worker uses dependency)
+    :params worker: the worker who uses the dependency
     """
     if dependency == DependencyType.ALL:
         raise ValueError("DependencyType.ALL can't be copied")
 
-    locks_dict[dependency].release_dependency()
+    locks_dict[dependency].use_dependency(worker)
+
+
+def release_dependency(dependency: DependencyType, worker: Worker, force=False):
+    """
+    Releases lock (worker does not use dependency anymore)
+    :params dependency: the dependency to release
+    :params worker: the worker who does not use the dependency anymore
+    :params force: force release (no error if unused)
+    """
+    if dependency == DependencyType.ALL:
+        raise ValueError("DependencyType.ALL can't be copied")
+
+    locks_dict[dependency].release_dependency(worker, force)
+
+
+def uses_dependency(dependency: DependencyType, worker: Worker):
+    """
+    Checks if dependency is in use by provided worker
+    :params dependency: the dependency to check
+    :params worker: worker to be checked
+    :returns: true if dependency is in use
+    """
+    if dependency == DependencyType.ALL:
+        raise ValueError("DependencyType.ALL can't be copied")
+
+    # Note: No lock is required, as python has GIL
+    return locks_dict[dependency].uses_dependency(worker)
 
 
 def setup_dependency(dependency: DependencyType):
