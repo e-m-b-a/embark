@@ -60,12 +60,15 @@ def _perform_update(client: SSHClient, dependency: DependencyType):
 
     use_dependency(dependency)
 
-    _copy_files(client, dependency)
+    try:
+        _copy_files(client, dependency)
 
-    exec_blocking_ssh(client, f"mkdir {folder_path} && tar xvzf {zip_path} -C {folder_path} >/dev/null 2>&1")
-    exec_blocking_ssh(client, f"sudo {folder_path}/installer.sh >{folder_path}/installer.log 2>&1")
-
-    release_dependency(dependency)
+        exec_blocking_ssh(client, f"mkdir {folder_path} && tar xvzf {zip_path} -C {folder_path} >/dev/null 2>&1")
+        exec_blocking_ssh(client, f"sudo {folder_path}/installer.sh >{folder_path}/installer.log 2>&1")
+    except Exception as ssh_error:
+        raise ssh_error
+    finally:
+        release_dependency(dependency)
 
 
 def update_worker(worker: Worker, dependency: DependencyType):
