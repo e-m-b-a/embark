@@ -9,8 +9,7 @@
 #
 # EMBArk is licensed under MIT
 #
-# Author(s): Michael Messner, Pascal Eckmann
-# Contributor(s): Benedikt Kuehne
+# Author(s): Michael Messner, Pascal Eckmann, Benedikt Kuehne
 
 # Description: Installer for EMBArk
 
@@ -323,7 +322,7 @@ install_embark_default(){
   fi
 
   #debs
-  apt-get install -y -q default-libmysqlclient-dev build-essential mysql-client-core-8.0
+  apt-get install -y -q default-libmysqlclient-dev build-essential mysql-client-core-8.0 apache2
 
   #Add user for server
   if ! cut -d: -f1 /etc/passwd | grep -E www-embark ; then

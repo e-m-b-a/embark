@@ -20,7 +20,6 @@ djangorestframework = "*"
 watchdog = "*"
 channels = "*"
 channels-redis = "*"
-mod-wsgi-standalone = "*"
 django-bootstrap5 = "*"
 pytz = "*"
 
