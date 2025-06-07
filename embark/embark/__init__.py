@@ -7,7 +7,7 @@ import logging
 
 from django.utils import timezone
 
-from .celery import app as celery_app
+from .celery_dtq import app as celery_app
 
 logger = logging.getLogger(__name__)
 
