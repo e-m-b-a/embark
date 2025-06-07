@@ -152,7 +152,7 @@ def _trigger_worker_update(worker, dependency: str):
         case "deps":
             parsed_dependency = DependencyType.DEPS
         case _:
-            return False
+            raise ValueError("Invalid dependency: Dependency could not be parsed.")
 
     if uses_dependency(parsed_dependency, worker):
         return False
@@ -171,10 +171,14 @@ def update_worker_dependency(request, worker_id):
     Update specific worker dependency
     """
     dependency = request.POST.get("update")
-    worker = Worker.objects.get(id=worker_id)
+    try:
+        worker = Worker.objects.get(id=worker_id)
 
-    if not _trigger_worker_update(worker, dependency):
-        messages.error(request, 'Worker update already queued')
+        if not _trigger_worker_update(worker, dependency):
+            messages.error(request, 'Worker update already queued')
+            return safe_redirect(request, '/worker/')
+    except Worker.DoesNotExist:
+        messages.error(request, 'Worker does not exist')
         return safe_redirect(request, '/worker/')
 
     messages.success(request, 'Update queued')

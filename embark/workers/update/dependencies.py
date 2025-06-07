@@ -68,6 +68,7 @@ class DependencyState:
     def use_dependency(self, worker: Worker):
         """
         Use lock (worker uses dependency)
+        If the required files are unavailable, worker setup is delayed and the files are downloaded.
         :params worker: the worker who uses the dependency
         """
         while True:
@@ -79,7 +80,7 @@ class DependencyState:
                     self.used_by.append(worker.ip_address)
                     break
                 if self.available == self.AvailabilityType.UNAVAILABLE:
-                    # Trigger update
+                    # Trigger dependency setup
                     self.available = self.AvailabilityType.IN_PROGRESS
                     Thread(target=setup_dependency, args=(self.dependency,)).start()
 
@@ -89,10 +90,10 @@ class DependencyState:
         :params worker: the worker who does not use the dependency anymore
         :params force: force release (no error if unused)
         """
-        with self.lock:
-            if worker.ip_address not in self.used_by and not force:
-                raise ValueError(f"Worker {worker.ip_address} does not use dependency {self.dependency}")
+        if worker.ip_address not in self.used_by and not force:
+            raise ValueError(f"Worker {worker.ip_address} does not use dependency {self.dependency}")
 
+        if worker.ip_address in self.used_by:
             self.used_by.remove(worker.ip_address)
 
     def is_not_in_use(self):
@@ -168,7 +169,6 @@ def uses_dependency(dependency: DependencyType, worker: Worker):
     if dependency == DependencyType.ALL:
         raise ValueError("DependencyType.ALL can't be copied")
 
-    # Note: No lock is required, as python has GIL
     return locks_dict[dependency].uses_dependency(worker)
 
 
