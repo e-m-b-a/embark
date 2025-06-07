@@ -25,6 +25,7 @@ django-bootstrap5 = "*"
 pytz = "*"
 typing-extensions = "*"
 paramiko = "*"
+celery = {extras = ["redis"], version = "*"}
 
 [dev-packages]
 pycodestyle = "*"

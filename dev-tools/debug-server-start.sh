@@ -108,10 +108,10 @@ if ! [[ -d "${PWD}"/logs ]]; then
   mkdir logs
 fi
 
-echo -e "\n[""${BLUE} JOB""${NC}""] Redis logs are copied to ./logs/redis_dev.log""${NC}" 
+echo -e "\n[""${BLUE} JOB""${NC}""] Redis logs are copied to ./logs/redis_dev.log""${NC}"
 docker container logs embark_redis -f > ./logs/redis_dev.log &
 echo -e "\n[""${BLUE} JOB""${NC}""] DB logs are copied to ./logs/mysql_dev.log""${NC}"
-docker container logs embark_db -f > ./logs/mysql_dev.log & 
+docker container logs embark_db -f > ./logs/mysql_dev.log &
 
 # shellcheck disable=SC1091
 source ./.venv/bin/activate || exit 1
@@ -135,6 +135,9 @@ python3 ./manage.py runapscheduler | tee -a ../logs/scheduler.log &
 
 # start embark
 # systemctl start embark.service
+
+# Start celery worker
+celery -A embark worker -l DEBUG --logfile=../logs/celery.log --detach
 
 echo -e "${ORANGE}""${BOLD}""start EMBArk server(ASGI only) on port ${PORT}""${NC}"
 python3 ./manage.py runserver "${IP}":"${PORT}" |& tee -a ../logs/debug-server.log
