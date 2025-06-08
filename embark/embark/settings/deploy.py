@@ -311,9 +311,8 @@ SECURE_SSL_REDIRECT = False
 VERSION = get_version_strings()
 
 # Worker setup
-WORKER_SETUP_PATH = os.path.join(BASE_DIR.parent, "WORKER_SETUP")
-WORKER_SETUP_ZIP_PATH = os.path.join(BASE_DIR.parent, "WORKER_SETUP.tar.gz")
-WORKER_SETUP_LOGS = os.path.join(BASE_DIR, "worker_setup.log")
+WORKER_FILES_PATH = os.path.join(BASE_DIR.parent, "WORKER_FILES")
+WORKER_SETUP_LOGS = os.path.join(WORKER_FILES_PATH, "logs/worker_setup_{timestamp}.log")
 
 # Celery task queue
 CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
