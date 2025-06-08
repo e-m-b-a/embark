@@ -180,6 +180,9 @@ def update_worker_dependency(request, worker_id):
     except Worker.DoesNotExist:
         messages.error(request, 'Worker does not exist')
         return safe_redirect(request, '/worker/')
+    except ValueError as exception:
+        messages.error(request, str(exception))
+        return safe_redirect(request, '/worker/')
 
     messages.success(request, 'Update queued')
     return safe_redirect(request, '/worker/')
@@ -196,10 +199,14 @@ def update_configuration_dependency(request, configuration_id):
     workers = Worker.objects.filter(configurations__id=configuration_id, status__in=[Worker.ConfigStatus.CONFIGURED])
 
     count = 0
-    for worker in workers:
-        if not _trigger_worker_update(worker, dependency):
-            continue
-        count = count + 1
+    try:
+        for worker in workers:
+            if not _trigger_worker_update(worker, dependency):
+                continue
+            count = count + 1
+    except ValueError as exception:
+        messages.error(request, str(exception))
+        return safe_redirect(request, '/worker/')
 
     if count > 0:
         messages.success(request, 'Update queued')
