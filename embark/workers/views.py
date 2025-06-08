@@ -17,7 +17,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
 
 from workers.models import Worker, Configuration
-from workers.setup.setup import setup_worker, exec_blocking_ssh
+from workers.setup.setup import setup_worker
 
 
 @require_http_methods(["GET"])
@@ -222,12 +222,44 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
         configuration = worker.configurations.get(id=configuration_id)
         if configuration.user != user:
             return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
+
         ssh_client = worker.ssh_connect(configuration_id)
-        exec_blocking_ssh(ssh_client, """docker stop $(docker ps -aq)""")
-        exec_blocking_ssh(ssh_client, """docker rm $(docker ps -aq)""")
-        exec_blocking_ssh(ssh_client, """rm -rf /root/emba/emba_logs""")
+        stdin, stdout, _stderr = ssh_client.exec_command("sudo -S -p '' docker stop $(sudo -S -p '' docker ps -aq)", get_pty=True)  # nosec B601: No user input
+        stdin.write(f"{configuration.ssh_password}\n")
+        stdin.flush()
+        status = stdout.channel.recv_exit_status()
+        if status != 0:
+            ssh_client.close()
+            return JsonResponse({'status': 'error', 'message': 'Failed to stop Docker containers.'})
+        
+        stdin, stdout, _stderr = ssh_client.exec_command("sudo -S -p '' docker rm $(sudo -S -p '' docker ps -aq)", get_pty=True)  # nosec B601: No user input
+        stdin.write(f"{configuration.ssh_password}\n")
+        stdin.flush()
+        status = stdout.channel.recv_exit_status()
+        if status != 0:
+            ssh_client.close()
+            return JsonResponse({'status': 'error', 'message': 'Failed to remove Docker containers.'})
+
+        stdin, stdout, _stderr = ssh_client.exec_command("sudo -S -p '' rm -rf /root/emba/emba_logs", get_pty=True)  # nosec B601: No user input
+        stdin.write(f"{configuration.ssh_password}\n")
+        stdin.flush()
+        status = stdout.channel.recv_exit_status()
+        if status != 0:
+            ssh_client.close()
+            return JsonResponse({'status': 'error', 'message': 'Failed to delete logs.'})
+
         # TODO placeholder until we have a path for the firmware (it is the regular path for the api/uploader method)
-        exec_blocking_ssh(ssh_client, """rm -rf /root/amos2025ss01-embark/media/*""")
+        stdin, stdout, _stderr = ssh_client.exec_command("sudo -S -p '' rm -rf /root/amos2025ss01-embark/media/*", get_pty=True)  # nosec B601: No user input
+        stdin.write(f"{configuration.ssh_password}\n")
+        stdin.flush()
+        status = stdout.channel.recv_exit_status()
+        if status != 0:
+            ssh_client.close()
+            return JsonResponse({'status': 'error', 'message': 'Failed to delete media files.'})
+        # exec_blocking_ssh(ssh_client, """docker stop $(docker ps -aq)""")
+        # exec_blocking_ssh(ssh_client, """docker rm $(docker ps -aq)""")
+        # exec_blocking_ssh(ssh_client, """rm -rf /root/emba/emba_logs""")
+        # exec_blocking_ssh(ssh_client, """rm -rf /root/amos2025ss01-embark/media/*""")
         return JsonResponse({'status': 'success', 'message': 'Worker soft reset completed.'})
     except (Worker.DoesNotExist, Configuration.DoesNotExist):
         return JsonResponse({'status': 'error', 'message': 'Worker or Config not found.'})

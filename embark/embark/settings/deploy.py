@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'django_apscheduler',
     'django_bootstrap5',
     'django_tables2',
+    'django_celery_beat',
     'mod_wsgi.server',
     'uploader',
     'users',
@@ -314,8 +315,3 @@ VERSION = get_version_strings()
 WORKER_SETUP_PATH = os.path.join(BASE_DIR.parent, "WORKER_SETUP")
 WORKER_SETUP_ZIP_PATH = os.path.join(BASE_DIR.parent, "WORKER_SETUP.tar.gz")
 WORKER_SETUP_LOGS = os.path.join(BASE_DIR, "worker_setup.log")
-
-# Celery task queue
-CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
-CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
-CELERY_TASK_TRACK_STARTED = True
