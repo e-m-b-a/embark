@@ -7,7 +7,12 @@
 - Update/Reset buttons for configurations ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=112359403&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C42))
 - Additional worker information query ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=111222216&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C40))
 - Worker soft reset functionality ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=112364355&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C43))
+- Worker update functionality ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=112364538&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C45))
 - Celery setup ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=113497561&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C55))
+
+### FIXED
+
+- workflow caching (docker reference not found) ([Issue](https://github.com/orgs/amosproj/projects/79?pane=issue&itemId=110335090&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C33))
 
 ## [sprint-07](https://github.com/amosproj/amos2025ss01-embark/releases/tag/sprint-07-release) - 2025-06-04
 

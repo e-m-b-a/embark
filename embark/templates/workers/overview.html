@@ -41,13 +41,25 @@
                     <input type="submit" name="action" value="Install">
                 </form>
                 <div class="actions-dropdown">
-                    <button class="toggle-actions-menu" data-id="{{ worker.ip_address }}">...</button>
-                    <div class="actions-dropdown-content" id="menu-{{ worker.ip_address }}">
-                        <button onclick="stubCall('{{ worker.ip_address }}', 'config_update_emba')">Update EMBA repository</button>
-                        <button onclick="stubCall('{{ worker.ip_address }}', 'config_update_docker')">Update Docker container</button>
-                        <button onclick="stubCall('{{ worker.ip_address }}', 'config_update_externals')">Update externals directory</button>
-                        <button onclick="stubCall('{{ worker.ip_address }}', 'config_soft_reset')">Soft reset</button>
-                        <button onclick="stubCall('{{ worker.ip_address }}', 'config_hard_reset')">Hard reset</button>
+                    <button class="toggle-actions-menu" data-id="{{ config.id }}">...</button>
+                    <div class="actions-dropdown-content" id="menu-{{ config.id }}">
+                        <form action="{% url 'embark-configuration-update' config.id %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="update" value="repo">
+                            <input type="submit" name="action" value="Update EMBA repository">
+                        </form>
+                        <form action="{% url 'embark-configuration-update' config.id %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="update" value="docker">
+                            <input type="submit" name="action" value="Update Docker container">
+                        </form>
+                        <form action="{% url 'embark-configuration-update' config.id %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="update" value="external">
+                            <input type="submit" name="action" value="Update external directory">
+                        </form>
+                        <button onclick="stubCall('{{ config.id }}', 'config_soft_reset')">Soft reset</button>
+                        <button onclick="stubCall('{{ config.id }}', 'config_hard_reset')">Hard reset</button>
                     </div>
                 </div>
             </div>
@@ -109,16 +121,30 @@
         <td>{{ worker.config_ids }}</td>
 
         <td>
-            <div class="actions-dropdown">
-                <button class="toggle-actions-menu" data-id="{{ worker.ip_address }}">...</button>
-                <div class="actions-dropdown-content" id="menu-{{ worker.ip_address }}">
-                    <button onclick="stubCall('{{ worker.ip_address }}', 'worker_update_emba')">Update EMBA repository</button>
-                    <button onclick="stubCall('{{ worker.ip_address }}', 'worker_update_docker')">Update Docker container</button>
-                    <button onclick="stubCall('{{ worker.ip_address }}', 'worker_update_externals')">Update externals directory</button>
-                    <button onclick="stubCall('{{ worker.ip_address }}', 'worker_soft_reset')">Soft reset</button>
-                    <button onclick="stubCall('{{ worker.ip_address }}', 'worker_hard_reset')">Hard reset</button>
+            {% if worker.status != "Unconfigured" %}
+                <div class="actions-dropdown">
+                    <button class="toggle-actions-menu" data-id="{{ worker.ip_address }}">...</button>
+                    <div class="actions-dropdown-content" id="menu-{{ worker.ip_address }}">
+                        <form action="{% url 'embark-worker-update' worker.id %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="update" value="repo">
+                            <input type="submit" name="action" value="Update EMBA repository">
+                        </form>
+                        <form action="{% url 'embark-worker-update' worker.id %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="update" value="docker">
+                            <input type="submit" name="action" value="Update Docker container">
+                        </form>
+                        <form action="{% url 'embark-worker-update' worker.id %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="update" value="external">
+                            <input type="submit" name="action" value="Update external directory">
+                        </form>
+                        <button onclick="stubCall('{{ worker.ip_address }}', 'worker_soft_reset')">Soft reset</button>
+                        <button onclick="stubCall('{{ worker.ip_address }}', 'worker_hard_reset')">Hard reset</button>
+                    </div>
                 </div>
-            </div>
+            {% endif %}
         </td>
 
     </tr>

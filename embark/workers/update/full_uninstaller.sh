@@ -1,5 +1,13 @@
 #!/bin/bash
 
+set -e
+cd "$(dirname "$0")"
+
+if [[ ${EUID} -ne 0 ]]; then
+	echo "This script has to be run as root"
+	exit 1
+fi
+
 INSTALLPATH="/root"
 EMBAPACKAGEPATH="/usr/local/EMBA_PACKAGES"
 
@@ -16,3 +24,6 @@ rm -rf "${EMBAPACKAGEPATH}"
 
 sed -i 's|^# deb http|deb http|' /etc/apt/sources.list
 sed -i 's|^# deb https|deb https|' /etc/apt/sources.list
+
+grep -v "${EMBAPACKAGEPATH}" /etc/apt/sources.list > "${INSTALLPATH}/temp"
+mv "${INSTALLPATH}/temp" /etc/apt/sources.list
