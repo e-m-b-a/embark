@@ -137,7 +137,9 @@ python3 ./manage.py runapscheduler | tee -a ../logs/scheduler.log &
 # systemctl start embark.service
 
 # Start celery worker
-celery -A embark worker -l DEBUG --logfile=../logs/celery.log --detach
+celery -A embark worker -l DEBUG --logfile=../logs/celery.log &
+CELERY_PID=$!
+trap "kill ${CELERY_PID} 2>/dev/null; exit" SIGINT SIGTERM EXIT
 
 echo -e "${ORANGE}""${BOLD}""start EMBArk server(ASGI only) on port ${PORT}""${NC}"
 python3 ./manage.py runserver "${IP}":"${PORT}" |& tee -a ../logs/debug-server.log
