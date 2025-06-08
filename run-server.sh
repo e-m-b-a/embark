@@ -130,7 +130,7 @@ if ! [[ ${EUID} -eq 0 ]] ; then
 fi
 
 # start container first (speedup?)
-docker compose -f ./docker-compose.yml up -d 
+docker compose -f ./docker-compose.yml up -d
 
 # check emba
 echo -e "${BLUE}""${BOLD}""checking EMBA""${NC}"
@@ -142,7 +142,7 @@ if ! (cd "${EMBARK_BASEDIR:-${PWD}}"/emba && ./emba -d 1); then
   exit 1
 fi
 
-# check venv 
+# check venv
 if ! [[ -d /var/www/.venv ]]; then
   echo -e "${RED}""${BOLD}""Pip-enviroment not found!""${NC}"
   exit 1
@@ -175,8 +175,8 @@ if ! [[ -d ./docker_logs ]]; then
 fi
 
 # container-logs (2 jobs)
-echo -e "\n[""${BLUE} JOB""${NC}""] Redis logs are copied to ./docker_logs/redis.log" 
-docker container logs embark_redis -f &> ./docker_logs/redis.log & 
+echo -e "\n[""${BLUE} JOB""${NC}""] Redis logs are copied to ./docker_logs/redis.log"
+docker container logs embark_redis -f &> ./docker_logs/redis.log &
 echo -e "\n[""${BLUE} JOB""${NC}""] DB logs are copied to ./embark/logs/mysql.log"
 docker container logs embark_db -f &> ./docker_logs/mysql.log &
 
@@ -274,6 +274,8 @@ echo -e "\n[""${BLUE} JOB""${NC}""] Starting daphne(ASGI) - log to /embark/logs/
 cd /var/www/embark && pipenv run daphne --access-log /var/www/logs/daphne.log -e ssl:8000:privateKey=/var/www/conf/cert/embark-ws.local.key:certKey=/var/www/conf/cert/embark-ws.local.crt -b "${BIND_IP}" -p 8001 -s embark-ws.local embark.asgi:application &
 sleep 5
 
+# Start celery worker
+celery -A embark worker -l INFO --logfile=../logs/celery.log --detach
 
 echo -e "\n""${ORANGE}${BOLD}""=============================================================""${NC}"
 echo -e "\n""${ORANGE}${BOLD}""EMBA logs are under /var/www/emba_logs/<id> ""${NC}"
