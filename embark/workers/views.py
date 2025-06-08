@@ -224,6 +224,7 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
             return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
 
         ssh_client = worker.ssh_connect(configuration_id)
+
         stdin, stdout, _stderr = ssh_client.exec_command("sudo -S -p '' docker stop $(sudo -S -p '' docker ps -aq)", get_pty=True)  # nosec B601: No user input
         stdin.write(f"{configuration.ssh_password}\n")
         stdin.flush()
@@ -231,7 +232,7 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
         if status != 0:
             ssh_client.close()
             return JsonResponse({'status': 'error', 'message': 'Failed to stop Docker containers.'})
-        
+
         stdin, stdout, _stderr = ssh_client.exec_command("sudo -S -p '' docker rm $(sudo -S -p '' docker ps -aq)", get_pty=True)  # nosec B601: No user input
         stdin.write(f"{configuration.ssh_password}\n")
         stdin.flush()
@@ -260,9 +261,10 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
         # exec_blocking_ssh(ssh_client, """docker rm $(docker ps -aq)""")
         # exec_blocking_ssh(ssh_client, """rm -rf /root/emba/emba_logs""")
         # exec_blocking_ssh(ssh_client, """rm -rf /root/amos2025ss01-embark/media/*""")
+        ssh_client.close()
         return JsonResponse({'status': 'success', 'message': 'Worker soft reset completed.'})
-    except (Worker.DoesNotExist, Configuration.DoesNotExist):
-        return JsonResponse({'status': 'error', 'message': 'Worker or Config not found.'})
+    except (Worker.DoesNotExist, Configuration.DoesNotExist, paramiko.SSHException):
+        return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found. Or SSH connection failed.'})
 
 
 @require_http_methods(["GET"])
