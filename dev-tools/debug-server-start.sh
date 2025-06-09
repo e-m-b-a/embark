@@ -138,7 +138,6 @@ python3 ./manage.py runapscheduler | tee -a ../logs/scheduler.log &
 
 # Start celery worker
 celery -A embark worker --beat --scheduler django -l DEBUG --logfile=../logs/celery.log &
-celery -A embark worker -l DEBUG --logfile=../logs/celery.log &
 CELERY_PID=$!
 trap 'kill ${CELERY_PID} 2>/dev/null; exit' SIGINT SIGTERM EXIT
 
