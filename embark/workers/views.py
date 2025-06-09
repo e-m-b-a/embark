@@ -454,10 +454,10 @@ def update_system_info(configuration, worker):
 
         ssh_client.close()
 
-    except (paramiko.SSHException, socket.error):
+    except (paramiko.SSHException, socket.error) as ssh_error:
         if ssh_client:
             ssh_client.close()
-        raise paramiko.SSHException("SSH connection failed")
+        raise paramiko.SSHException("SSH connection failed") from ssh_error
 
     system_info = {
         'os_info': os_info,
