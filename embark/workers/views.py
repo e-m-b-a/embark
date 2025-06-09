@@ -250,7 +250,7 @@ def config_worker_scan(request, configuration_id):
                         existing_worker.save()
                     try:
                         update_system_info(configuration, existing_worker)
-                    except paramiko.SSHException:
+                    except BaseException:
                         pass
                 except Worker.DoesNotExist:
                     new_worker = Worker(
@@ -263,7 +263,7 @@ def config_worker_scan(request, configuration_id):
                     new_worker.configurations.set([configuration])
                     try:
                         update_system_info(configuration, new_worker)
-                    except paramiko.SSHException:
+                    except BaseException:
                         pass
                 return str(ip_address)
         except Exception:
@@ -304,7 +304,8 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
         configuration = worker.configurations.get(id=configuration_id)
         if configuration.user != user:
             return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
-
+        
+        ssh_client = None
         try:
             ssh_client = worker.ssh_connect(configuration_id)
             exec_blocking_ssh(ssh_client, "sudo -S -p '' docker stop $(sudo -S -p '' docker ps -aq)", configuration.ssh_password)
@@ -315,8 +316,9 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
             ssh_client.close()
             return JsonResponse({'status': 'success', 'message': 'Worker soft reset completed.'})
 
-        except paramiko.SSHException:
-            ssh_client.close()
+        except (paramiko.SSHException, socket.error):
+            if ssh_client:
+                ssh_client.close()
             return JsonResponse({'status': 'error', 'message': 'SSH connection failed or command execution failed.'})
 
     except (Worker.DoesNotExist, Configuration.DoesNotExist):
