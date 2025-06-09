@@ -304,7 +304,7 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
         configuration = worker.configurations.get(id=configuration_id)
         if configuration.user != user:
             return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
-        
+
         ssh_client = None
         try:
             ssh_client = worker.ssh_connect(configuration_id)
