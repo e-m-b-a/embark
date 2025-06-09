@@ -17,7 +17,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
 
 from workers.models import Worker, Configuration
-from workers.update.update import update_worker
+from workers.update.update import update_worker, exec_blocking_ssh
 from workers.update.dependencies import DependencyType, uses_dependency
 
 
@@ -250,7 +250,7 @@ def config_worker_scan(request, configuration_id):
                         existing_worker.save()
                     try:
                         update_system_info(configuration, existing_worker)
-                    except ConnectionError:
+                    except paramiko.SSHException:
                         pass
                 except Worker.DoesNotExist:
                     new_worker = Worker(
@@ -263,7 +263,7 @@ def config_worker_scan(request, configuration_id):
                     new_worker.configurations.set([configuration])
                     try:
                         update_system_info(configuration, new_worker)
-                    except ConnectionError:
+                    except paramiko.SSHException:
                         pass
                 return str(ip_address)
         except Exception:
@@ -305,48 +305,22 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
         if configuration.user != user:
             return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
 
-        ssh_client = worker.ssh_connect(configuration_id)
-
-        stdin, stdout, _stderr = ssh_client.exec_command("sudo -S -p '' docker stop $(sudo -S -p '' docker ps -aq)", get_pty=True)  # nosec B601: No user input
-        stdin.write(f"{configuration.ssh_password}\n")
-        stdin.flush()
-        status = stdout.channel.recv_exit_status()
-        if status != 0:
+        try:
+            ssh_client = worker.ssh_connect(configuration_id)
+            exec_blocking_ssh(ssh_client, "sudo -S -p '' docker stop $(sudo -S -p '' docker ps -aq)", configuration.ssh_password)
+            exec_blocking_ssh(ssh_client, "sudo -S -p '' docker rm $(sudo -S -p '' docker ps -aq)", configuration.ssh_password)
+            exec_blocking_ssh(ssh_client, "sudo -S -p '' rm -rf /root/emba/emba_logs", configuration.ssh_password)
+            # TODO: change this path to the actual firmware file location
+            exec_blocking_ssh(ssh_client, "sudo -S -p '' rm -rf /root/amos2025ss01-embark/media/*", configuration.ssh_password)
             ssh_client.close()
-            return JsonResponse({'status': 'error', 'message': 'Failed to stop Docker containers.'})
+            return JsonResponse({'status': 'success', 'message': 'Worker soft reset completed.'})
 
-        stdin, stdout, _stderr = ssh_client.exec_command("sudo -S -p '' docker rm $(sudo -S -p '' docker ps -aq)", get_pty=True)  # nosec B601: No user input
-        stdin.write(f"{configuration.ssh_password}\n")
-        stdin.flush()
-        status = stdout.channel.recv_exit_status()
-        if status != 0:
+        except paramiko.SSHException:
             ssh_client.close()
-            return JsonResponse({'status': 'error', 'message': 'Failed to remove Docker containers.'})
+            return JsonResponse({'status': 'error', 'message': 'SSH connection failed or command execution failed.'})
 
-        stdin, stdout, _stderr = ssh_client.exec_command("sudo -S -p '' rm -rf /root/emba/emba_logs", get_pty=True)  # nosec B601: No user input
-        stdin.write(f"{configuration.ssh_password}\n")
-        stdin.flush()
-        status = stdout.channel.recv_exit_status()
-        if status != 0:
-            ssh_client.close()
-            return JsonResponse({'status': 'error', 'message': 'Failed to delete logs.'})
-
-        # TODO placeholder until we have a path for the firmware (it is the regular path for the api/uploader method)
-        stdin, stdout, _stderr = ssh_client.exec_command("sudo -S -p '' rm -rf /root/amos2025ss01-embark/media/*", get_pty=True)  # nosec B601: No user input
-        stdin.write(f"{configuration.ssh_password}\n")
-        stdin.flush()
-        status = stdout.channel.recv_exit_status()
-        if status != 0:
-            ssh_client.close()
-            return JsonResponse({'status': 'error', 'message': 'Failed to delete media files.'})
-        # exec_blocking_ssh(ssh_client, """docker stop $(docker ps -aq)""")
-        # exec_blocking_ssh(ssh_client, """docker rm $(docker ps -aq)""")
-        # exec_blocking_ssh(ssh_client, """rm -rf /root/emba/emba_logs""")
-        # exec_blocking_ssh(ssh_client, """rm -rf /root/amos2025ss01-embark/media/*""")
-        ssh_client.close()
-        return JsonResponse({'status': 'success', 'message': 'Worker soft reset completed.'})
-    except (Worker.DoesNotExist, Configuration.DoesNotExist, paramiko.SSHException):
-        return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found. Or SSH connection failed.'})
+    except (Worker.DoesNotExist, Configuration.DoesNotExist):
+        return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
 
 
 @require_http_methods(["GET"])
@@ -416,10 +390,11 @@ def update_system_info(configuration, worker):
 
     :return: Dictionary containing system information
 
-    :raises ConnectionError: If the SSH connection fails or if any command execution fails
+    :raises paramiko.SSHException: If the SSH connection fails or if any command execution fails
     """
     configuration_id = configuration.id
     ssh_pw = configuration.ssh_password
+    ssh_client = None
 
     try:
         ssh_client = worker.ssh_connect(configuration_id)
@@ -479,9 +454,10 @@ def update_system_info(configuration, worker):
 
         ssh_client.close()
 
-    except paramiko.SSHException as ssh_error:
-        ssh_client.close()
-        raise ConnectionError("Getting system_info failed.") from ssh_error
+    except (paramiko.SSHException, socket.error):
+        if ssh_client:
+            ssh_client.close()
+        raise paramiko.SSHException("SSH connection failed")
 
     system_info = {
         'os_info': os_info,
