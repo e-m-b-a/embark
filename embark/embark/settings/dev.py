@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_bootstrap5',
     'django_tables2',
+    'django_celery_beat',
     'mod_wsgi.server',
     'django_apscheduler',
     'uploader',
