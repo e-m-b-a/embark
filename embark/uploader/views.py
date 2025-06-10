@@ -145,7 +145,7 @@ def start_analysis_serialized(data):
     logger.debug("new_analysis %s has label: %s", new_analysis, new_analysis.label)
 
     # inject into bounded Executor
-    if not BoundedExecutor.submit_firmware(firmware_flags=new_analysis, firmware_file=new_firmware_file):
+    if not BoundedExecutor.submit_firmware(firmware_analysis=new_analysis, firmware_file=new_firmware_file):
         raise BufferFullException
 
     return new_analysis.id
@@ -254,7 +254,7 @@ def start_analysis(request):
             new_analysis.save()
             logger.debug("new_analysis %s has label: %s", new_analysis, new_analysis.label)
             # inject into bounded Executor
-            if BoundedExecutor.submit_firmware(firmware_flags=new_analysis, firmware_file=new_firmware_file):
+            if BoundedExecutor.submit_firmware(firmware_analysis=new_analysis, firmware_file=new_firmware_file):
                 return redirect('embark-dashboard-service')
             logger.error("Server Queue full, or other boundenexec error")
             return HttpResponseServerError("Queue full")

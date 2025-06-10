@@ -9,6 +9,7 @@ import os
 import shutil
 import uuid
 import re
+from pathlib import Path
 
 from django.conf import settings
 from django.db import models
@@ -19,6 +20,7 @@ from django.utils import timezone
 
 from porter.models import LogZipFile
 from users.models import User as Userclass
+from uploader.executor import get_emba_root, get_emba_base_cmd
 
 logger = logging.getLogger(__name__)
 
@@ -398,6 +400,49 @@ class FirmwareAnalysis(models.Model):
                 shutil.rmtree(os.path.join(log_path, _content), ignore_errors=False, onerror=logger.error("Error when trying to delete %s", os.path.join(log_path, _content)))
         logger.debug("Reduced the size to. stat=%s", os.stat(log_path))
         logger.debug("Archived %s", self.id)
+
+    def create_log_dir(self):
+        """
+        Creates firmware log directory
+        """
+        emba_log_location = f"{settings.EMBA_LOG_ROOT}/{self.id}/emba_logs"
+        log_path = Path(emba_log_location).parent
+        log_path.mkdir(parents=True, exist_ok=True)
+
+        self.path_to_logs = emba_log_location
+        self.save(update_fields=["path_to_logs"])
+
+    def set_meta_info(self):
+        """
+        Sets meta information
+        """
+        self.status["analysis"] = str(self.id)
+        self.status["firmware_name"] = self.firmware_name
+        self.save(update_fields=["status"])
+
+    def construct_emba_command(self, image_file_location: str):
+        """
+        Constructs EMBA command
+        :param image_file_location: String to the image file
+        :returns: emba command as string
+        """
+        emba_flags = self.get_flags()
+
+        if self.sbom_only_test is True:
+            scan_profile = "./scan-profiles/default-sbom.emba"
+        elif self.system_emulation_test is True or self.user_emulation_test is True:  # if any expert fields are active
+            scan_profile = None
+        else:
+            scan_profile = "./scan-profiles/default-scan-no-notify.emba"
+
+        emba_cmd = f"cd {get_emba_root()} && {get_emba_base_cmd()} -f {image_file_location} -l {self.path_to_logs} "
+
+        if scan_profile:
+            emba_cmd += f"-p {scan_profile} "
+
+        emba_cmd += f"{emba_flags}"
+
+        return emba_cmd
 
 
 @receiver(pre_delete, sender=FirmwareAnalysis)
