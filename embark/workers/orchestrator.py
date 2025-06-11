@@ -1,5 +1,7 @@
 from typing import Dict
 from collections import deque
+from django.db.models import Q
+
 from workers.models import Worker
 
 
@@ -16,7 +18,7 @@ class Orchestrator:
         and busy if it has a job assigned.
         """
         self.free_workers = {worker.ip_address: worker for worker in Worker.objects.filter(job_id=None, status=Worker.ConfigStatus.CONFIGURED)}
-        self.busy_workers = {worker.ip_address: worker for worker in Worker.objects.exclude(job_id=None, status=Worker.ConfigStatus.CONFIGURED)}
+        self.busy_workers = {worker.ip_address: worker for worker in Worker.objects.filter(~Q(job_id=None), status=Worker.ConfigStatus.CONFIGURED)}
         self.running = True
 
     def get_busy_workers(self) -> Dict[str, Worker]:
