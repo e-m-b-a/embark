@@ -4,10 +4,13 @@ from workers.models import Worker
 
 
 class WorkerOrchestrator:
-    def __init__(self):
-        self.dict_free_workers: Dict[str, Worker] = {}
-        self.dict_busy_workers: Dict[str, Worker] = {}
-        self.queue_tasks = deque()
+    queue_tasks = deque()
+    dict_free_workers: Dict[str, Worker] = {}
+    dict_busy_workers: Dict[str, Worker] = {}
+
+    def start(self):
+        self.dict_free_workers = {worker.ip_address: worker for worker in Worker.objects.filter(job_id=None)}
+        self.dict_busy_workers = {worker.ip_address: worker for worker in Worker.objects.exclude(job_id=None)}
 
     def get_busy_workers(self) -> Dict[str, Worker]:
         return self.dict_busy_workers
@@ -76,3 +79,13 @@ class WorkerOrchestrator:
             del self.dict_busy_workers[worker.ip_address]
         else:
             raise ValueError(f"Worker with IP {worker.ip_address} does not exist.")
+
+
+orchestrator = WorkerOrchestrator()
+
+
+def get_orchestrator():
+    """
+    Returns the global singleton instance of the Orchestrator.
+    """
+    return orchestrator

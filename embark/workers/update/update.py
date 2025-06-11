@@ -5,6 +5,7 @@ from paramiko.client import SSHClient
 
 from workers.models import Worker
 from workers.update.dependencies import use_dependency, release_dependency, DependencyType, get_dependency_path
+from workers.orchestrator import get_orchestrator
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +18,11 @@ def exec_blocking_ssh(client: SSHClient, command, sudo_pw=None):
 
     :params client: paramiko ssh client
     :params command: command string
+    :params sudo_pw: sudo password, if needed
+
+    :raises SSHException: if command fails
+
+    :return: command output
     """
     stdin, stdout, _ = client.exec_command(command, get_pty=bool(sudo_pw))  # nosec B601: No user input
     if sudo_pw:
@@ -26,6 +32,8 @@ def exec_blocking_ssh(client: SSHClient, command, sudo_pw=None):
     status = stdout.channel.recv_exit_status()
     if status != 0:
         raise paramiko.ssh_exception.SSHException(f"Command failed with status {status}: {command}")
+
+    return stdout.read().decode().strip()
 
 
 def _copy_files(client: SSHClient, dependency: DependencyType):
@@ -76,7 +84,7 @@ def _perform_update(worker: Worker, client: SSHClient, dependency: DependencyTyp
 
 def update_worker(worker: Worker, dependency: DependencyType):
     """
-    Setup/Update an offline worker
+    Setup/Update an offline worker and add it to the orchestrator.
 
     DependencyType.ALL equals a full setup (e.g. new worker), all other DependencyType values are for specific dependencies (e.g. the external directory)
 
@@ -109,3 +117,11 @@ def update_worker(worker: Worker, dependency: DependencyType):
         if client is not None:
             client.close()
         worker.save()
+
+    orchestrator = get_orchestrator()
+    if worker.status == Worker.ConfigStatus.CONFIGURED:
+        try:
+            orchestrator.add_worker(worker)
+            logger.info("Worker: %s added to orchestrator", worker.name)
+        except ValueError:
+            logger.error("Worker: %s already exists in orchestrator", worker.name)
