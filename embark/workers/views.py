@@ -460,3 +460,17 @@ def update_system_info(configuration, worker):
     worker.save()
 
     return system_info
+
+
+def test_orchestrator(request):
+    """
+    Test the orchestrator by starting it and returning its status.
+    """
+
+    from workers.orchestrator import get_orchestrator  # pylint: disable=import-outside-toplevel
+
+    orchestrator = get_orchestrator()
+    free_workers = list(orchestrator.get_free_workers().keys())
+    busy_workers = list(orchestrator.get_busy_workers().keys())
+
+    return JsonResponse({'status': 'success', 'message': 'Orchestrator accessed successfully.', 'free_workers': free_workers, 'busy_workers': busy_workers, 'object id': id(orchestrator)})

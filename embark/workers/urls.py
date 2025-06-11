@@ -18,4 +18,5 @@ urlpatterns = [
     path('worker/soft_reset/<int:worker_id>/<int:configuration_id>/', views.worker_soft_reset, name='embark-worker-soft-reset'),     # TODO: add HTML context for this
     path('worker/update/<int:worker_id>/', views.update_worker_dependency, name='embark-worker-update'),
     path('worker/update/configuration/<int:configuration_id>/', views.update_configuration_dependency, name='embark-configuration-update'),
+    path('worker/test_orchestrator', views.test_orchestrator, name='embark-worker-test-orchestrator'),
 ]
