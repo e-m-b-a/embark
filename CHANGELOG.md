@@ -2,6 +2,8 @@
 
 ## UNRELEASED
 
+## [sprint-08](https://github.com/amosproj/amos2025ss01-embark/releases/tag/sprint-08-release) - 2025-06-11
+
 ### ADDED
 
 - Update/Reset buttons for configurations ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=112359403&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C42))
