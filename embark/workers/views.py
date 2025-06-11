@@ -429,12 +429,14 @@ def update_system_info(configuration, worker):
         last_sync_nvd = last_sync_nvd.replace('\r', '').replace('\n', '')[len(ssh_pw):]
         if last_sync_nvd.startswith("ls: cannot access"):
             last_sync_nvd = exec_blocking_ssh(ssh_client, "sudo -S -p '' ls -l /root/emba/external/nvd-json-data-feeds/.git/HEAD | awk '{print $6 \" \" $7 \" \" $8}'", ssh_pw)
+            last_sync_nvd = last_sync_nvd.replace('\r', '').replace('\n', '')[len(ssh_pw):]
         last_sync_nvd = "N/A" if last_sync_nvd.startswith("ls: cannot access") else last_sync_nvd
 
         last_sync_epss = exec_blocking_ssh(ssh_client, "sudo -S -p '' ls -l /root/emba/external/EPSS-data/.git/FETCH_HEAD | awk '{print $6 \" \" $7 \" \" $8}'", ssh_pw)
         last_sync_epss = last_sync_epss.replace('\r', '').replace('\n', '')[len(ssh_pw):]
         if last_sync_epss.startswith("ls: cannot access"):
             last_sync_epss = exec_blocking_ssh(ssh_client, "sudo -S -p '' ls -l /root/emba/external/EPSS-data/.git/HEAD | awk '{print $6 \" \" $7 \" \" $8}'", ssh_pw)
+            last_sync_epss = last_sync_epss.replace('\r', '').replace('\n', '')[len(ssh_pw):]
         last_sync_epss = "N/A" if last_sync_epss.startswith("ls: cannot access") else last_sync_epss
 
         last_sync = f"NVD feed: {last_sync_nvd}, EPSS: {last_sync_epss}"
