@@ -33,7 +33,7 @@ def exec_blocking_ssh(client: SSHClient, command: str):
 
     status = stdout.channel.recv_exit_status()
     if status != 0:
-        raise paramiko.ssh_exception.SSHException(f"Command failed with status {status}: {command}, stdout: {stdout.read().decode().strip()}, stderr: {stdout.channel.recv_stderr(1024).decode().strip()}")
+        raise paramiko.ssh_exception.SSHException(f"Command failed with status {status}: {command}")
 
     return stdout.read().decode().strip()
 
@@ -50,7 +50,7 @@ def _copy_files(client: SSHClient, dependency: DependencyType):
 
     folder_path = f"/root/{dependency.name}"
     zip_path = f"{folder_path}.tar.gz"
-    zip_path_user = f"/home/{client.ssh_user}/{dependency.name}.tar.gz"
+    zip_path_user = zip_path if client.ssh_user == "root" else f"/home/{client.ssh_user}/{dependency.name}.tar.gz"
 
     exec_blocking_ssh(client, f"sudo rm -f {zip_path}; sudo rm -rf {folder_path}")
 
@@ -58,7 +58,8 @@ def _copy_files(client: SSHClient, dependency: DependencyType):
     sftp_client.put(get_dependency_path(dependency)[1], zip_path_user)
     sftp_client.close()
 
-    exec_blocking_ssh(client, f"sudo mv {zip_path_user} {zip_path}")
+    if client.ssh_user != "root":
+        exec_blocking_ssh(client, f"sudo mv {zip_path_user} {zip_path}")
 
 
 def _perform_update(worker: Worker, client: SSHClient, dependency: DependencyType):
