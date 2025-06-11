@@ -10,28 +10,30 @@ from workers.orchestrator import get_orchestrator
 logger = logging.getLogger(__name__)
 
 
-def exec_blocking_ssh(client: SSHClient, command, sudo_pw=None):
+def exec_blocking_ssh(client: SSHClient, command: str):
     """
     Executes ssh command blocking, as exec_command is non-blocking
 
     Warning: This command might block forever, if the output is too large (based on recv_exit_status). Thus redirect to file
 
-    :params client: paramiko ssh client
+    :params client: modified paramiko ssh client (see: workers.models.Worker.ssh_connect)
     :params command: command string
-    :params sudo_pw: sudo password, if needed
 
     :raises SSHException: if command fails
 
     :return: command output
     """
-    stdin, stdout, _ = client.exec_command(command, get_pty=bool(sudo_pw))  # nosec B601: No user input
-    if sudo_pw:
-        stdin.write(f"{sudo_pw}\n")
+    sudo = 'sudo' in command
+    command = command.replace('sudo', 'sudo -S -p ""') if sudo else command
+
+    stdin, stdout, _ = client.exec_command(command, get_pty=sudo)  # nosec B601: No user input
+    if sudo:
+        stdin.write(f"{client.ssh_pw}\n")
         stdin.flush()
 
     status = stdout.channel.recv_exit_status()
     if status != 0:
-        raise paramiko.ssh_exception.SSHException(f"Command failed with status {status}: {command}")
+        raise paramiko.ssh_exception.SSHException(f"Command failed with status {status}: {command}, stdout: {stdout.read().decode().strip()}, stderr: {stdout.channel.recv_stderr(1024).decode().strip()}")
 
     return stdout.read().decode().strip()
 
@@ -48,12 +50,15 @@ def _copy_files(client: SSHClient, dependency: DependencyType):
 
     folder_path = f"/root/{dependency.name}"
     zip_path = f"{folder_path}.tar.gz"
+    zip_path_user = f"/home/{client.ssh_user}/{dependency.name}.tar.gz"
 
-    exec_blocking_ssh(client, f"rm -f {zip_path}; rm -rf {folder_path}")
+    exec_blocking_ssh(client, f"sudo rm -f {zip_path}; sudo rm -rf {folder_path}")
 
     sftp_client = client.open_sftp()
-    sftp_client.put(get_dependency_path(dependency)[1], zip_path)
+    sftp_client.put(get_dependency_path(dependency)[1], zip_path_user)
     sftp_client.close()
+
+    exec_blocking_ssh(client, f"sudo mv {zip_path_user} {zip_path}")
 
 
 def _perform_update(worker: Worker, client: SSHClient, dependency: DependencyType):
@@ -74,8 +79,8 @@ def _perform_update(worker: Worker, client: SSHClient, dependency: DependencyTyp
     try:
         _copy_files(client, dependency)
 
-        exec_blocking_ssh(client, f"mkdir {folder_path} && tar xvzf {zip_path} -C {folder_path} >/dev/null 2>&1")
-        exec_blocking_ssh(client, f"sudo {folder_path}/installer.sh >{folder_path}/installer.log 2>&1")
+        exec_blocking_ssh(client, f"sudo mkdir {folder_path} && sudo tar xvzf {zip_path} -C {folder_path} >/dev/null 2>&1")
+        exec_blocking_ssh(client, f"sudo bash -c '{folder_path}/installer.sh >{folder_path}/installer.log 2>&1'")
     except Exception as ssh_error:
         raise ssh_error
     finally:

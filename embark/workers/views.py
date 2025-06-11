@@ -309,11 +309,11 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
         ssh_client = None
         try:
             ssh_client = worker.ssh_connect(configuration_id)
-            exec_blocking_ssh(ssh_client, "sudo -S -p '' docker stop $(sudo -S -p '' docker ps -aq)", configuration.ssh_password)
-            exec_blocking_ssh(ssh_client, "sudo -S -p '' docker rm $(sudo -S -p '' docker ps -aq)", configuration.ssh_password)
-            exec_blocking_ssh(ssh_client, "sudo -S -p '' rm -rf /root/emba/emba_logs", configuration.ssh_password)
+            exec_blocking_ssh(ssh_client, "sudo docker stop $(sudo docker ps -aq)")
+            exec_blocking_ssh(ssh_client, "sudo docker rm $(sudo docker ps -aq)")
+            exec_blocking_ssh(ssh_client, "sudo rm -rf /root/emba/emba_logs")
             # TODO: change this path to the actual firmware file location
-            exec_blocking_ssh(ssh_client, "sudo -S -p '' rm -rf /root/amos2025ss01-embark/media/*", configuration.ssh_password)
+            exec_blocking_ssh(ssh_client, "sudo rm -rf /root/amos2025ss01-embark/media/*")
             ssh_client.close()
             return JsonResponse({'status': 'success', 'message': 'Worker soft reset completed.'})
 
@@ -395,12 +395,10 @@ def update_system_info(configuration, worker):
 
     :raises paramiko.SSHException: If the SSH connection fails or if any command execution fails
     """
-    configuration_id = configuration.id
-    ssh_pw = configuration.ssh_password
     ssh_client = None
 
     try:
-        ssh_client = worker.ssh_connect(configuration_id)
+        ssh_client = worker.ssh_connect(configuration.id)
 
         os_info = exec_blocking_ssh(ssh_client, 'grep PRETTY_NAME /etc/os-release')
         os_info = os_info[len('PRETTY_NAME='):-1].strip('"')
@@ -418,26 +416,28 @@ def update_system_info(configuration, worker):
         disk_free = disk_str[3].replace('G', 'GB').replace('M', 'MB')
         disk_info = f"Total: {disk_total}, Free: {disk_free}"
 
-        emba_version = exec_blocking_ssh(ssh_client, "sudo -S -p '' cat /root/emba/docker-compose.yml | awk -F: '/image:/ {print $NF; exit}'", ssh_pw)
-        emba_version = emba_version.replace('\r', '').replace('\n', '')[len(ssh_pw):]
-        emba_version = "N/A" if emba_version.startswith("cat: /root") else emba_version
+        version_regex = r"\d+\.\d+\.\d+[a-z]?"
+        emba_version = exec_blocking_ssh(ssh_client, "sudo cat /root/emba/docker-compose.yml | awk -F: '/image:/ {print $NF; exit}'")
+        emba_version = emba_version.replace('\r', '').replace('\n', '')[len(ssh_client.ssh_pw):]
+        emba_version = "N/A" if not re.match(version_regex, emba_version) else emba_version
 
         # 1) Try to access .git/HEAD which gets created after the initial clone
         # 2) If it does not exist, try to access FETCH_HEAD which only gets created after git pull or git fetch
         # 3) If neither FETCH_HEAD nor HEAD exist, we assume the feed has never been pulled
-        last_sync_nvd = exec_blocking_ssh(ssh_client, "sudo -S -p '' ls -l /root/emba/external/nvd-json-data-feeds/.git/FETCH_HEAD | awk '{print $6 \" \" $7 \" \" $8}'", ssh_pw)
-        last_sync_nvd = last_sync_nvd.replace('\r', '').replace('\n', '')[len(ssh_pw):]
-        if last_sync_nvd.startswith("ls: cannot access"):
-            last_sync_nvd = exec_blocking_ssh(ssh_client, "sudo -S -p '' ls -l /root/emba/external/nvd-json-data-feeds/.git/HEAD | awk '{print $6 \" \" $7 \" \" $8}'", ssh_pw)
-            last_sync_nvd = last_sync_nvd.replace('\r', '').replace('\n', '')[len(ssh_pw):]
-        last_sync_nvd = "N/A" if last_sync_nvd.startswith("ls: cannot access") else last_sync_nvd
+        date_regex = r"^\w{3} \d{1,2} \d{1,2}:\d{2}$"
+        last_sync_nvd = exec_blocking_ssh(ssh_client, "sudo ls -l /root/emba/external/nvd-json-data-feeds/.git/FETCH_HEAD | awk '{print $6 \" \" $7 \" \" $8}'")
+        last_sync_nvd = last_sync_nvd.replace('\r', '').replace('\n', '')[len(ssh_client.ssh_pw):]
+        if not re.match(date_regex, last_sync_nvd):
+            last_sync_nvd = exec_blocking_ssh(ssh_client, "sudo ls -l /root/emba/external/nvd-json-data-feeds/.git/HEAD | awk '{print $6 \" \" $7 \" \" $8}'")
+            last_sync_nvd = last_sync_nvd.replace('\r', '').replace('\n', '')[len(ssh_client.ssh_pw):]
+        last_sync_nvd = "N/A" if not re.match(date_regex, last_sync_nvd) else last_sync_nvd
 
-        last_sync_epss = exec_blocking_ssh(ssh_client, "sudo -S -p '' ls -l /root/emba/external/EPSS-data/.git/FETCH_HEAD | awk '{print $6 \" \" $7 \" \" $8}'", ssh_pw)
-        last_sync_epss = last_sync_epss.replace('\r', '').replace('\n', '')[len(ssh_pw):]
-        if last_sync_epss.startswith("ls: cannot access"):
-            last_sync_epss = exec_blocking_ssh(ssh_client, "sudo -S -p '' ls -l /root/emba/external/EPSS-data/.git/HEAD | awk '{print $6 \" \" $7 \" \" $8}'", ssh_pw)
-            last_sync_epss = last_sync_epss.replace('\r', '').replace('\n', '')[len(ssh_pw):]
-        last_sync_epss = "N/A" if last_sync_epss.startswith("ls: cannot access") else last_sync_epss
+        last_sync_epss = exec_blocking_ssh(ssh_client, "sudo ls -l /root/emba/external/EPSS-data/.git/FETCH_HEAD | awk '{print $6 \" \" $7 \" \" $8}'")
+        last_sync_epss = last_sync_epss.replace('\r', '').replace('\n', '')[len(ssh_client.ssh_pw):]
+        if not re.match(date_regex, last_sync_epss):
+            last_sync_epss = exec_blocking_ssh(ssh_client, "sudo ls -l /root/emba/external/EPSS-data/.git/HEAD | awk '{print $6 \" \" $7 \" \" $8}'")
+            last_sync_epss = last_sync_epss.replace('\r', '').replace('\n', '')[len(ssh_client.ssh_pw):]
+        last_sync_epss = "N/A" if not re.match(date_regex, last_sync_epss) else last_sync_epss
 
         last_sync = f"NVD feed: {last_sync_nvd}, EPSS: {last_sync_epss}"
 
