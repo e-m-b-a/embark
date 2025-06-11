@@ -23,6 +23,8 @@ class TestOrchestrator(TestCase):
         self.test_worker1.configurations.add(test_config)
         self.test_worker2.configurations.add(test_config)
         self.orchestrator = Orchestrator()  # pylint: disable=W0201
+        self.orchestrator.free_workers = {}
+        self.orchestrator.busy_workers = {}
 
     def test_orchestrator_add_worker(self):
         """
