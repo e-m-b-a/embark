@@ -4,7 +4,7 @@
 
 ### FIXED
 
-- workflow caching (wrong python version)
+- Various workflow errors
 
 ## [sprint-08](https://github.com/amosproj/amos2025ss01-embark/releases/tag/sprint-08-release) - 2025-06-11
 
