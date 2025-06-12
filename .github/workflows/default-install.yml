@@ -61,9 +61,13 @@ jobs:
           path: .venv
           key: pipenv-${{ hashFiles('Pipfile.lock') }}
 
+      # Note: This has to be executed with retries, as network errors might occur (e.g. the github runner being rate limitted)
       - name: Install cacheable dependencies
         if: steps.pipenv-cache.outputs.cache-hit != 'true'
-        run: pipenv install --deploy --ignore-pipfile
+        uses: Wandalen/wretry.action@master
+        with:
+          command: pipenv install --deploy --ignore-pipfile --dev
+          attempt_limit: 3
 
       # Note: Needed for e.g. secret generation
       - name: Install non-cacheable dependencies
