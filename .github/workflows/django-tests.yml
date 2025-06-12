@@ -40,7 +40,7 @@ jobs:
           path: .venv
           key: pipenv-${{ hashFiles('Pipfile.lock') }}
 
-      # Note: This has to be executed with retries, as network errors might occur (e.g. the github runner being rate limitted)
+      # Note: This has to be executed with retries, as network errors might occur (e.g. the github runner being rate limited)
       - name: Install cacheable dependencies
         if: steps.pipenv-cache.outputs.cache-hit != 'true'
         uses: Wandalen/wretry.action@master
