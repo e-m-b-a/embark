@@ -54,19 +54,27 @@ jobs:
           path: .venv
           key: pipenv-${{ hashFiles('Pipfile.lock') }}
 
-      - name: Install dependencies
+      - name: Install cacheable dependencies
         if: steps.pipenv-cache.outputs.cache-hit != 'true'
         run: pipenv install --deploy --ignore-pipfile
 
-      - name: EMBArk dev install
-        uses: Wandalen/wretry.action@master
-        with:
-          command: sudo ./installer.sh -sF
-          attempt_limit: 3
+      # Note: Needed for e.g. secret generation
+      - name: Install non-cacheable dependencies
+        run: pip install django
+
+      # Note: Needed as otherwise sudo might use a different python version (new tty -> fresh PATH variable)
+      - name: Point sudo python/pip to installed version
+        run: |
+          sudo ln -sf $(which python) /usr/local/bin/python
+          sudo ln -sf $(which python) /usr/local/bin/python3
+          sudo ln -sf $(which pip) /usr/local/bin/pip
+          sudo ln -sf $(which pipenv) /usr/local/bin/pipenv
+
+      - name: EMBArk default install
+        run: sudo ./installer.sh -sF
 
       - name: Save Docker images to cache
         if: steps.docker-cache-restore.outputs.cache-hit != 'true'
-        # Requires docker-compose's "images: example:latest" to be on one line
         run: |
           images=$(grep 'image:' docker-compose.yml | awk '{ print $2 }')
           mkdir -p docker-cache

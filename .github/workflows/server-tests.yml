@@ -1,13 +1,13 @@
 name: EMBArk default tests on Ubuntu
 
-on:
-  pull_request:
-    branches:    
-      - main
+on: [push]
+  # pull_request:
+  #   branches:
+  #     - main
 
 jobs:
   default-install:
-    if: github.repository_owner == 'e-m-b-a'
+    # if: github.repository_owner == 'e-m-b-a'
     runs-on: ubuntu-latest
 
     steps:
@@ -35,6 +35,11 @@ jobs:
         run: |
           docker load -i docker-cache/images.tar
 
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+
       - name: Set env for .venv in project
         run: echo "PIPENV_VENV_IN_PROJECT=1" >> $GITHUB_ENV
 
@@ -48,19 +53,27 @@ jobs:
           path: .venv
           key: pipenv-${{ hashFiles('Pipfile.lock') }}
 
-      - name: Install dependencies
+      - name: Install cacheable dependencies
         if: steps.pipenv-cache.outputs.cache-hit != 'true'
         run: pipenv install --deploy --ignore-pipfile
 
+      # Note: Needed for e.g. secret generation
+      - name: Install non-cacheable dependencies
+        run: pip install django
+
+      # Note: Needed as otherwise sudo might use a different python version (new tty -> fresh PATH variable)
+      - name: Point sudo python/pip to installed version
+        run: |
+          sudo ln -sf $(which python) /usr/local/bin/python
+          sudo ln -sf $(which python) /usr/local/bin/python3
+          sudo ln -sf $(which pip) /usr/local/bin/pip
+          sudo ln -sf $(which pipenv) /usr/local/bin/pipenv
+
       - name: EMBArk default install
-        uses: Wandalen/wretry.action@master
-        with:
-          command: sudo ./installer.sh -sF
-          attempt_limit: 3
+        run: sudo ./installer.sh -sF
 
       - name: Save Docker images to cache
         if: steps.docker-cache-restore.outputs.cache-hit != 'true'
-        # Requires docker-compose's "images: example:latest" to be on one line
         run: |
           images=$(grep 'image:' docker-compose.yml | awk '{ print $2 }')
           mkdir -p docker-cache
