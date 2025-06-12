@@ -40,13 +40,15 @@ jobs:
           path: .venv
           key: pipenv-${{ hashFiles('Pipfile.lock') }}
 
-      - name: Install dependencies
+      - name: Install cachable dependencies
         if: steps.pipenv-cache.outputs.cache-hit != 'true'
-        run: |
-          pipenv install --deploy --ignore-pipfile
-          pip install django
+        run: pipenv install --deploy --ignore-pipfile
 
-      # Note: This is needed, as otherwise sudo might use a different python version (new tty -> fresh PATH variable)
+      # Note: Needed for e.g. secret generation
+      - name: Install non-cachable dependencies
+        run: pip install django
+
+      # Note: Needed as otherwise sudo might use a different python version (new tty -> fresh PATH variable)
       - name: Point sudo python/pip to installed version
         run: |
           sudo ln -sf $(which python) /usr/local/bin/python
