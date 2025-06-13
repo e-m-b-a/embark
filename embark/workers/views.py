@@ -324,6 +324,39 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
     except (Worker.DoesNotExist, Configuration.DoesNotExist):
         return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
 
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def worker_hard_reset(request, worker_id, configuration_id=None):
+    """
+    Hard reset the worker with the given worker ID.
+    """
+    try:
+        user = get_user(request)
+        worker = Worker.objects.get(id=worker_id)
+        configuration = worker.configurations.filter(user=user).first()
+        if not configuration_id:
+            configuration_id = configuration.id
+        configuration = worker.configurations.get(id=configuration_id)
+        if configuration.user != user:
+            return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
+
+        ssh_client = None
+        try:
+            worker_soft_reset(request, worker_id, configuration_id)
+            ssh_client = worker.ssh_connect(configuration_id)
+            emba_path = "/root/emba/full_uninstaller.sh"
+            exec_blocking_ssh(ssh_client, "sudo -S -p '' bash " + str(emba_path), configuration.ssh_password)
+            ssh_client.close()
+            return JsonResponse({'status': 'success', 'message': 'Worker soft reset completed.'})
+
+        except (paramiko.SSHException, socket.error):
+            if ssh_client:
+                ssh_client.close()
+            return JsonResponse({'status': 'error', 'message': 'SSH connection failed or command execution failed.'})
+
+    except (Worker.DoesNotExist, Configuration.DoesNotExist):
+        return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
 
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
