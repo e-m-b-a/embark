@@ -51,4 +51,4 @@ def submit_firmware(firmware_analysis: FirmwareAnalysis, firmware_file: Firmware
         emba_fut = BoundedExecutor.submit(BoundedExecutor.run_emba_cmd, emba_cmd, firmware_analysis.id, active_analyzer_dir)
         BoundedExecutor.submit(LogReader, firmware_analysis.id)
 
-        return emba_fut
+        return bool(emba_fut)
