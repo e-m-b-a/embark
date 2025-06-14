@@ -1,27 +1,30 @@
 __copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2021-2025 The AMOS Projects, Copyright 2021 Siemens AG'
-__author__ = 'Benedikt Kuehne, Maximilian Wagner, p4cx, Garima Chauhan, VAISHNAVI UMESH, m-1-k-3, Ashutosh Singh, RaviChandra, diegiesskanne, Vaish1795, ravichandraachanta, uk61elac, YulianaPoliakova, SirGankalot, ClProsser'
+__author__ = 'Benedikt Kuehne, Maximilian Wagner, p4cx, Garima Chauhan, VAISHNAVI UMESH, m-1-k-3, Ashutosh Singh, RaviChandra, diegiesskanne, Vaish1795, ravichandraachanta, uk61elac, YulianaPoliakova, SirGankalot, ClProsser, Luka Dekanozishvili'
 __license__ = 'MIT'
 
 import logging
 import os
+import json
 
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError, QueryDict
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError, QueryDict, JsonResponse
 from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.core.files.uploadedfile import UploadedFile
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
-from rest_framework import serializers
+from rest_framework import serializers, status
 
 from uploader.boundedexecutor import BoundedExecutor
 from uploader.forms import DeviceForm, FirmwareAnalysisForm, DeleteFirmwareForm, LabelForm, VendorForm
-from uploader.models import FirmwareFile
+from uploader.models import FirmwareFile, FirmwareAnalysis
 from uploader.serializers import FirmwareAnalysisSerializer
 from users.decorators import require_api_key
+
 
 
 logger = logging.getLogger(__name__)
@@ -59,12 +62,12 @@ def save_file(request):
     :return: HttpResponse including the status
     """
     req_logger.info("User %s called save_file", request.user.username)
-    logger.info("User %s tryied to upload %s", request.user.username, request.FILES.getlist('file'))
+    logger.info("User %s tried to upload %s", request.user.username, request.FILES.getlist('file'))
     for file in request.FILES.getlist('file'):      # FIXME determin usecase for multi-file-upload in one request
         firmware_file = FirmwareFile.objects.create(file=file)
         firmware_file.user = request.user
         firmware_file.save()
-    messages.info(request, 'upload successful.')
+    messages.info(request, 'Upload successful.')
     return HttpResponse("successful upload")
 
 
@@ -95,7 +98,7 @@ class UploaderView(APIView):
         firmware_file = FirmwareFile.objects.create(file=file_obj)
         firmware_file.user = request.api_user
         firmware_file.save()
-        messages.info(request, 'upload successful.')
+        messages.info(request, 'Upload successful.')
 
         # request.data is immutable
         request_data_copy = dict(request.data)
@@ -138,7 +141,7 @@ def start_analysis_serialized(data):
     logger.debug("Got %d devices in this analysis", len(devices))
     for device in devices:
         if device.device_label:
-            logger.debug(" Adding Label=%s", device.device_label.label_name)
+            logger.debug("Adding Label=%s", device.device_label.label_name)
             new_analysis.label.add(device.device_label)
 
     new_analysis.save()
@@ -163,13 +166,13 @@ def device_setup(request):
         new_device = form.save(commit=False)
         new_device.device_user = request.user
         new_device = form.save()
-        messages.info(request, 'creation successful of ' + str(new_device))
+        messages.info(request, 'Creation successful of ' + str(new_device))
         return redirect('..')
-    logger.error("device form invalid %s ", request.POST)
+    logger.error("Device form invalid %s ", request.POST)
     if 'device_name' in form.errors:
         messages.error(request, 'Device already exists')
     else:
-        messages.error(request, 'creation failed.')
+        messages.error(request, 'Creation failed.')
     return redirect('..')
 
 
@@ -180,11 +183,11 @@ def vendor(request):
     req_logger.info("User %s called vendor", request.user.username)
     form = VendorForm(request.POST)
     if form.is_valid():
-        logger.info("User %s tryied to create vendor %s", request.user.username, request.POST['vendor_name'])
+        logger.info("User %s tried to create vendor %s", request.user.username, request.POST['vendor_name'])
         new_vendor = form.save()
-        messages.info(request, 'creation successful of ' + str(new_vendor))
+        messages.info(request, 'Creation successful of ' + str(new_vendor))
         return redirect('..')
-    logger.error("vendor form invalid %s ", request.POST)
+    logger.error("Vendor form invalid %s ", request.POST)
     if 'vendor_name' in form.errors:
         messages.error(request, 'Vendor already exists')
     else:
@@ -199,15 +202,15 @@ def label(request):
     req_logger.info("User %s called label", request.user.username)
     form = LabelForm(request.POST)
     if form.is_valid():
-        logger.info("User %s tryied to create label %s", request.user.username, request.POST['label_name'])
+        logger.info("User %s tried to create label %s", request.user.username, request.POST['label_name'])
         new_label = form.save()
-        messages.info(request, 'creation successful of ' + str(new_label))
+        messages.info(request, 'Creation successful of ' + str(new_label))
         return redirect('..')
-    logger.error("label form invalid %s ", request.POST)
+    logger.error("Label form invalid %s ", request.POST)
     if 'label_name' in form.errors:
         messages.error(request, 'Label already exists')
     else:
-        messages.error(request, 'creation failed.')
+        messages.error(request, 'Creation failed.')
     return redirect('..')
 
 
@@ -249,14 +252,14 @@ def start_analysis(request):
             logger.debug("Got %d devices in this analysis", devices.count())
             for device in devices:
                 if device.device_label:
-                    logger.debug(" Adding Label=%s", device.device_label.label_name)
+                    logger.debug("Adding Label=%s", device.device_label.label_name)
                     new_analysis.label.add(device.device_label)
             new_analysis.save()
             logger.debug("new_analysis %s has label: %s", new_analysis, new_analysis.label)
             # inject into bounded Executor
             if BoundedExecutor.submit_firmware(firmware_flags=new_analysis, firmware_file=new_firmware_file):
                 return redirect('embark-dashboard-service')
-            logger.error("Server Queue full, or other boundenexec error")
+            logger.error("Server Queue full, or other boundedexec error")
             return HttpResponseServerError("Queue full")
         logger.error("Form invalid %s", request.POST)
         return HttpResponseBadRequest("Bad Request")
@@ -304,7 +307,7 @@ def delete_fw_file(request):
         if request.user != firmware_file.user and not request.user.is_superuser:
             return HttpResponseForbidden("You are not authorized!")
         firmware_file.delete()
-        messages.info(request, 'delete successful.')
+        messages.info(request, 'Delete successful.')
         return redirect('..')
 
     logger.error("Form %s is invalid", form)
@@ -325,3 +328,42 @@ def uploader_home_minimal(request):
     analysis_form = FirmwareAnalysisForm()
     analysis_form.fields.pop('device')
     return render(request, 'uploader/minimal.html', {'analysis_form': analysis_form})
+
+
+
+# FIXME: Make this endpoint not publically accessible (via ssh_password?)
+@csrf_exempt
+@require_http_methods(["POST"])
+def queue_zip(request):
+    '''
+    Endpoint to queue the generation of the zip file of html_report.
+    Used for transferring the logs from the emba worker to the orchestrator
+    '''
+    data = json.loads(request.body)
+    analysis_id = data.get("analysis_id")
+    if not analysis_id:
+        return JsonResponse({'status': 'error', 'message': 'Please provide a valid analysis_id'}, status=status.HTTP_400_BAD_REQUEST)
+
+    analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    if not analysis:
+        return JsonResponse({'status': 'error', 'message': 'Analysis does not exist!'}, status=status.HTTP_404_NOT_FOUND)
+
+    file_path = f"{settings.MEDIA_ROOT}/log_zip/{analysis_id}.zip"
+
+    # Ensure log_zip/ exists
+    os.makedirs(f"{settings.MEDIA_ROOT}/log_zip/", exist_ok=True)
+
+    # Remove zip
+    if os.path.isfile(file_path):
+        os.remove(file_path)
+        logger.info("Replacing zip..")
+    else:
+        logger.info("Creating zip...")
+
+    future = BoundedExecutor.submit_zip(analysis_id)
+
+    if future is None:
+        return JsonResponse({"error": "Executor queue full"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    return JsonResponse({"status": "Queued zipping"}, status=status.HTTP_202_ACCEPTED)
+
