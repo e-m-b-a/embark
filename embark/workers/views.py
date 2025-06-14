@@ -16,6 +16,7 @@ from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
 
+from uploader.models import FirmwareAnalysis
 from workers.models import Worker, Configuration
 from workers.update.update import update_worker, exec_blocking_ssh
 from workers.update.dependencies import DependencyType, uses_dependency
@@ -324,6 +325,111 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
     except (Worker.DoesNotExist, Configuration.DoesNotExist):
         return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
 
+
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def enable_sync(request, worker_id):
+    """
+    Enable the syncronisation every 5 minutes of emba logs
+    """
+    try:
+        # Enable Celery heartbeat
+
+        worker = Worker.objects.get(id=worker_id)
+        
+        if not worker.job_id:
+            messages.error(request, f"[Worker {worker.id}] Error: No analysis is running!")
+            return safe_redirect(request, '/worker/')
+
+        if worker.sync_enabled:
+            messages.error(request, f"[Worker {worker.id}] Error: Sync is already enabled!")
+            return safe_redirect(request, '/worker/')
+
+        worker.sync_enabled = True
+        worker.save()
+
+        analysis = FirmwareAnalysis.objects.get(id=worker.job_id)
+
+        messages.success(request, f"[Worker {worker.id}] Sync of analysis {worker.job_id} enabled successfully.")
+        return safe_redirect(request, '/worker/')
+
+    except FirmwareAnalysis.DoesNotExist as ex:
+            messages.error(request, f"[Worker {worker.id}] Error: Such an analysis does not exist!")
+            return safe_redirect(request, '/worker/')
+    except Exception as ex:
+        messages.error(request, f"[Worker {worker.id}] Unexpected exception: {ex}")
+        return safe_redirect(request, '/worker/')
+
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def disable_sync(request, worker_id):
+    """
+    Disable the syncronisation every 5 minutes of emba logs
+    """
+    try:
+        # Disable Celery heartbeat
+
+        worker = Worker.objects.get(id=worker_id)
+
+        if not worker.job_id:
+            messages.error(request, f"[Worker {worker.id}] Error: No analysis is running! Disabling sync.")
+            worker.sync_enabled = False
+            worker.save()
+            return safe_redirect(request, '/worker/')
+
+        if not worker.sync_enabled:
+            messages.error(request, f"[Worker {worker.id}] Error: Sync is already disabled!")
+            return safe_redirect(request, '/worker/')
+
+        worker.sync_enabled = False
+        worker.save()
+
+        analysis = FirmwareAnalysis.objects.get(id=worker.job_id)
+
+        messages.success(request, f"[Worker {worker.id}] Sync of analysis {worker.job_id} disabled successfully.")
+        return safe_redirect(request, '/worker/')
+
+    except FirmwareAnalysis.DoesNotExist as ex:
+            messages.error(request, f"[Worker {worker.id}] Error: Such an analysis does not exist! Disabling sync.")
+            worker.sync_enabled = False
+            worker.save()
+            return safe_redirect(request, '/worker/')
+    except Exception as ex:
+        messages.error(request, f"[Worker {worker.id}] Unexpected exception: {ex}")
+        return safe_redirect(request, '/worker/')
+
+
+
+""" This is not intended to be part of the pull request. Delete me
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def show_live_log(request, worker_id):
+    try:
+
+        worker = Worker.objects.get(id=worker_id)
+        #worker.job_id = FirmwareAnalysis.objects.get(finished=False, failed=False).id
+
+        analysis_qs = FirmwareAnalysis.objects.filter(finished=False, failed=False)
+
+        if not analysis_qs.exists():
+            return HttpResponse("<pre>No running analysis found for this worker.</pre>", status=404)
+
+        analysis = analysis_qs.first()
+        worker.job_id = analysis.id
+        worker.save()
+
+        log_output = get_emba_log_output(worker)
+
+        return HttpResponse(f"<pre>{log_output}</pre>")
+                                    
+    except Worker.DoesNotExist:
+        return HttpResponse(f"<pre>Worker not found.</pre>")
+    except Exception as ex:
+        return HttpResponse(f"<pre>Error: {str(ex)}</pre>")
+"""
 
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)

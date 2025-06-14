@@ -5,8 +5,12 @@ from workers.models import Worker
 
 class WorkerOrchestrator:
     def __init__(self):
-        self.dict_free_workers: Dict[str, Worker] = {}
-        self.dict_busy_workers: Dict[str, Worker] = {}
+        self.dict_free_workers: Dict[str, Worker] = {
+            w.ip_address: w for w in Worker.objects.filter(job_id__isnull=True)
+        }
+        self.dict_busy_workers: Dict[str, Worker] = {
+            w.ip_address: w for w in Worker.objects.exclude(job_id__isnull=True)
+        }
         self.queue_tasks = deque()
 
     def get_busy_workers(self) -> Dict[str, Worker]:
@@ -14,6 +18,9 @@ class WorkerOrchestrator:
 
     def get_free_workers(self) -> Dict[str, Worker]:
         return self.dict_free_workers
+
+    def get_all_workers(self) -> Dict[str, Worker]:
+        return self.dict_busy_workers | self.dict_free_workers
 
     def get_specific_workers(self, worker_ips) -> Worker:
         map_worker_array = {}

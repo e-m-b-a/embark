@@ -20,6 +20,7 @@
 ### FIXED
 
 - workflow caching (docker reference not found) ([Issue](https://github.com/orgs/amosproj/projects/79?pane=issue&itemId=110335090&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C33))
+- Fix SVG highlighting in navigation bar([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114355887&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C60)
 
 ## [sprint-07](https://github.com/amosproj/amos2025ss01-embark/releases/tag/sprint-07-release) - 2025-06-04
 

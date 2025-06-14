@@ -24,6 +24,10 @@ class Worker(models.Model):
         CONFIGURED = "C", _("Configured")
         ERROR = "E", _("Error")
 
+        RUNNING = "R", _("Running")
+        FAILED = "F", _("Analysis failed")
+        FINISHED = "N", _("Analysis finished")
+
     configurations = models.ManyToManyField(Configuration, related_name='workers', blank=True)
     name = models.CharField(max_length=100)
     ip_address = models.GenericIPAddressField(unique=True)
@@ -31,6 +35,7 @@ class Worker(models.Model):
     reachable = models.BooleanField(default=False)
     status = models.CharField(max_length=1, choices=ConfigStatus, default=ConfigStatus.UNCONFIGURED)
     job_id = models.CharField(max_length=100, blank=True, null=True, help_text="ID of the job currently running on this worker")
+    sync_enabled = models.BooleanField(default=False)
 
     def clean(self):
         super().clean()

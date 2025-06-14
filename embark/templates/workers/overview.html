@@ -58,8 +58,16 @@
                             <input type="hidden" name="update" value="external">
                             <input type="submit" name="action" value="Update external directory">
                         </form>
-                        <button onclick="stubCall('{{ config.id }}', 'config_soft_reset')">Soft reset</button>
-                        <button onclick="stubCall('{{ config.id }}', 'config_hard_reset')">Hard reset</button>
+                        <form action="{% url 'embark-configuration-update' config.id %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="update" value="config_soft_reset">
+                            <input type="submit" name="action" value="Soft reset">
+                        </form>
+                        <form action="{% url 'embark-configuration-update' config.id %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="update" value="config_hard_reset">
+                            <input type="submit" name="action" value="Hard reset">
+                        </form>
                     </div>
                 </div>
             </div>
@@ -140,8 +148,22 @@
                             <input type="hidden" name="update" value="external">
                             <input type="submit" name="action" value="Update external directory">
                         </form>
-                        <button onclick="stubCall('{{ worker.ip_address }}', 'worker_soft_reset')">Soft reset</button>
-                        <button onclick="stubCall('{{ worker.ip_address }}', 'worker_hard_reset')">Hard reset</button>
+                        <form action="{% url 'embark-worker-soft-reset' worker.id %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="update" value="worker_soft_reset">
+                            <input type="submit" name="action" value="Soft reset">
+                        </form>
+                        {% if worker.sync_enabled %}
+                            <form action="{% url 'embark-worker-disable-sync' worker.id %}" method="post">
+                                {% csrf_token %}
+                                <input type="submit" name="action" value="Disable sync">
+                            </form>
+                        {% else %}
+                            <form action="{% url 'embark-worker-enable-sync' worker.id %}" method="post">
+                                {% csrf_token %}
+                                <input type="submit" name="action" value="Enable sync">
+	                    </form>  
+                        {% endif %}
                     </div>
                 </div>
             {% endif %}
