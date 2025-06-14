@@ -9,7 +9,7 @@ from workers.update.dependencies import use_dependency, release_dependency, Depe
 logger = logging.getLogger(__name__)
 
 
-def exec_blocking_ssh(client: SSHClient, command):
+def exec_blocking_ssh(client: SSHClient, command, sudo_pw=None):
     """
     Executes ssh command blocking, as exec_command is non-blocking
 
@@ -18,7 +18,10 @@ def exec_blocking_ssh(client: SSHClient, command):
     :params client: paramiko ssh client
     :params command: command string
     """
-    _, stdout, _ = client.exec_command(command)  # nosec B601: No user input
+    stdin, stdout, _ = client.exec_command(command, get_pty=bool(sudo_pw))  # nosec B601: No user input
+    if sudo_pw:
+        stdin.write(f"{sudo_pw}\n")
+        stdin.flush()
 
     status = stdout.channel.recv_exit_status()
     if status != 0:

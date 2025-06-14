@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'django_apscheduler',
     'django_bootstrap5',
     'django_tables2',
+    'django_celery_beat',
     'mod_wsgi.server',
     'uploader',
     'users',

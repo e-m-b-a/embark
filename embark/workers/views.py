@@ -250,7 +250,7 @@ def config_worker_scan(request, configuration_id):
                         existing_worker.save()
                     try:
                         update_system_info(configuration, existing_worker)
-                    except ConnectionError:
+                    except BaseException:
                         pass
                 except Worker.DoesNotExist:
                     new_worker = Worker(
@@ -263,7 +263,7 @@ def config_worker_scan(request, configuration_id):
                     new_worker.configurations.set([configuration])
                     try:
                         update_system_info(configuration, new_worker)
-                    except ConnectionError:
+                    except BaseException:
                         pass
                 return str(ip_address)
         except Exception:
@@ -304,15 +304,25 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
         configuration = worker.configurations.get(id=configuration_id)
         if configuration.user != user:
             return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
-        ssh_client = worker.ssh_connect(configuration_id)
-        exec_blocking_ssh(ssh_client, """docker stop $(docker ps -aq)""")
-        exec_blocking_ssh(ssh_client, """docker rm $(docker ps -aq)""")
-        exec_blocking_ssh(ssh_client, """rm -rf /root/emba/emba_logs""")
-        # TODO placeholder until we have a path for the firmware (it is the regular path for the api/uploader method)
-        exec_blocking_ssh(ssh_client, """rm -rf /root/amos2025ss01-embark/media/*""")
-        return JsonResponse({'status': 'success', 'message': 'Worker soft reset completed.'})
+
+        ssh_client = None
+        try:
+            ssh_client = worker.ssh_connect(configuration_id)
+            exec_blocking_ssh(ssh_client, "sudo -S -p '' docker stop $(sudo -S -p '' docker ps -aq)", configuration.ssh_password)
+            exec_blocking_ssh(ssh_client, "sudo -S -p '' docker rm $(sudo -S -p '' docker ps -aq)", configuration.ssh_password)
+            exec_blocking_ssh(ssh_client, "sudo -S -p '' rm -rf /root/emba/emba_logs", configuration.ssh_password)
+            # TODO: change this path to the actual firmware file location
+            exec_blocking_ssh(ssh_client, "sudo -S -p '' rm -rf /root/amos2025ss01-embark/media/*", configuration.ssh_password)
+            ssh_client.close()
+            return JsonResponse({'status': 'success', 'message': 'Worker soft reset completed.'})
+
+        except (paramiko.SSHException, socket.error):
+            if ssh_client:
+                ssh_client.close()
+            return JsonResponse({'status': 'error', 'message': 'SSH connection failed or command execution failed.'})
+
     except (Worker.DoesNotExist, Configuration.DoesNotExist):
-        return JsonResponse({'status': 'error', 'message': 'Worker or Config not found.'})
+        return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
 
 
 @require_http_methods(["GET"])
@@ -382,10 +392,11 @@ def update_system_info(configuration, worker):
 
     :return: Dictionary containing system information
 
-    :raises ConnectionError: If the SSH connection fails or if any command execution fails
+    :raises paramiko.SSHException: If the SSH connection fails or if any command execution fails
     """
     configuration_id = configuration.id
     ssh_pw = configuration.ssh_password
+    ssh_client = None
 
     try:
         ssh_client = worker.ssh_connect(configuration_id)
@@ -445,9 +456,10 @@ def update_system_info(configuration, worker):
 
         ssh_client.close()
 
-    except paramiko.SSHException as ssh_error:
-        ssh_client.close()
-        raise ConnectionError("Getting system_info failed.") from ssh_error
+    except (paramiko.SSHException, socket.error) as ssh_error:
+        if ssh_client:
+            ssh_client.close()
+        raise paramiko.SSHException("SSH connection failed") from ssh_error
 
     system_info = {
         'os_info': os_info,

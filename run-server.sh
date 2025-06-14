@@ -275,7 +275,9 @@ cd /var/www/embark && pipenv run daphne --access-log /var/www/logs/daphne.log -e
 sleep 5
 
 # Start celery worker
-celery -A embark worker -l INFO --logfile=../logs/celery.log --detach
+celery -A embark worker --beat --scheduler django -l INFO --logfile=./logs/celery.log &
+CELERY_PID=$!
+trap 'kill ${CELERY_PID} 2>/dev/null; exit' SIGINT SIGTERM EXIT
 
 echo -e "\n""${ORANGE}${BOLD}""=============================================================""${NC}"
 echo -e "\n""${ORANGE}${BOLD}""EMBA logs are under /var/www/emba_logs/<id> ""${NC}"
