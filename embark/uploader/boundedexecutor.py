@@ -25,9 +25,8 @@ from django.template.loader import render_to_string
 
 from uploader import finish_execution
 from uploader.archiver import Archiver
-from uploader.models import FirmwareAnalysis, FirmwareFile
-from uploader.executor import get_emba_base_cmd
-from embark.logreader import LogReader
+from uploader.models import FirmwareAnalysis
+from uploader.settings import get_emba_base_cmd
 from embark.helper import get_size, zip_check
 from porter.models import LogZipFile
 from porter.importer import result_read_in
@@ -192,46 +191,6 @@ class BoundedExecutor:
         analysis.failed = True
         analysis.finished = True
         analysis.save(update_fields=["status", "finished", "failed"])
-        return emba_fut
-
-    @classmethod
-    def submit_firmware(cls, firmware_analysis: FirmwareAnalysis, firmware_file: FirmwareFile):
-        """
-        submit firmware + metadata for emba execution
-
-        params firmware_analysis: firmware model with flags and metadata
-        params firmware_file: firmware file model to be analyzed
-
-        return: emba process future on success, None on failure
-        """
-        active_analyzer_dir = f"{settings.ACTIVE_FW}/{firmware_analysis.id}/"
-        logger.info("submitting firmware %s to emba", active_analyzer_dir)
-
-        Archiver.copy(src=firmware_file.file.path, dst=active_analyzer_dir)
-
-        # copy success
-        emba_startfile = os.listdir(active_analyzer_dir)
-        logger.debug("active dir contents %s", emba_startfile)
-        if len(emba_startfile) == 1:
-            image_file_location = f"{active_analyzer_dir}{emba_startfile.pop()}"
-        else:
-            logger.error("Uploaded file: %s doesnt comply with processable files.", firmware_file)
-            logger.error("Zip folder with no extra directory in between.")
-            shutil.rmtree(active_analyzer_dir)
-            return None
-
-        firmware_analysis.create_log_dir()
-        firmware_analysis.set_meta_info()
-
-        emba_cmd = firmware_analysis.construct_emba_command(image_file_location)
-
-        # submit command to executor threadpool
-        emba_fut = BoundedExecutor.submit(cls.run_emba_cmd, emba_cmd, firmware_analysis.id, active_analyzer_dir)
-
-        # start log_reader TODO: cancel future and return future
-        # log_read_fut = BoundedExecutor.submit(LogReader, firmware_analysis.pk)
-        BoundedExecutor.submit(LogReader, firmware_analysis.id)
-
         return emba_fut
 
     @classmethod
