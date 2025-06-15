@@ -1,13 +1,22 @@
 from typing import Dict
 from collections import deque
 from workers.models import Worker
+from uploader.models import FirmwareAnalysis
+
+
+class OrchestratorTask:
+    def __init__(self, firmware_analysis: FirmwareAnalysis, emba_cmd: str, src_path: str, target_path: str):
+        self.firmware_analysis = firmware_analysis
+        self.emba_cmd = emba_cmd
+        self.src_path = src_path
+        self.target_path = target_path
 
 
 class WorkerOrchestrator:
     def __init__(self):
         self.dict_free_workers: Dict[str, Worker] = {}
         self.dict_busy_workers: Dict[str, Worker] = {}
-        self.queue_tasks = deque()
+        self.task_queue = deque()
 
     def get_busy_workers(self) -> Dict[str, Worker]:
         return self.dict_busy_workers
@@ -22,52 +31,53 @@ class WorkerOrchestrator:
                 map_worker_array[worker_ip] = "free"
             elif worker_ip in self.dict_busy_workers:
                 worker = self.dict_busy_workers[worker_ip]
-                map_worker_array[worker_ip] = f"job: {worker.job_id}"
+                map_worker_array[worker_ip] = f"analysis: {worker.analysis_id}"
             else:
                 raise ValueError(f"Worker with IP {worker_ip} does not exist.")
         return map_worker_array
 
-    def assign_task(self, task: str):
+    def assign_task(self, task: OrchestratorTask):
         if not self.dict_free_workers:
-            self.queue_tasks.append(task)
+            self.task_queue.append(task)
         else:
             free_worker = next(iter(self.dict_free_workers.values()))
-            if not self.queue_tasks:
+            if not self.task_queue:
                 self.assign_worker(free_worker, task)
             else:
-                queued_task = self.queue_tasks.popleft()
+                queued_task = self.task_queue.popleft()
                 self.assign_worker(free_worker, queued_task)
                 self.assign_task(task)
 
-    def assign_worker(self, worker: Worker, task: str):
-        if worker.ip_address in self.dict_free_workers:
-            worker.job_id = task
-            worker.save()
-            self.dict_busy_workers[worker.ip_address] = worker
-            del self.dict_free_workers[worker.ip_address]
-        else:
+    def assign_worker(self, worker: Worker, task: OrchestratorTask):
+        if worker.ip_address not in self.dict_free_workers:
             raise ValueError(f"Worker with IP {worker.ip_address} is already busy.")
 
+        worker.analysis_id = task.firmware_analysis.id
+        worker.save()
+
+        self.dict_busy_workers[worker.ip_address] = worker
+        del self.dict_free_workers[worker.ip_address]
+
     def release_worker(self, worker: Worker):
-        if worker.ip_address in self.dict_busy_workers:
-            if self.queue_tasks:
-                next_task = self.queue_tasks.popleft()
-                self.dict_free_workers[worker.ip_address] = worker
-                del self.dict_busy_workers[worker.ip_address]
-                self.assign_worker(worker, next_task)
-            else:
-                self.dict_free_workers[worker.ip_address] = worker
-                del self.dict_busy_workers[worker.ip_address]
-                worker.job_id = None
-                worker.save()
-        else:
+        if worker.ip_address not in self.dict_busy_workers:
             raise ValueError(f"Worker with IP {worker.ip_address} is not busy.")
 
-    def add_worker(self, worker: Worker):
-        if worker.ip_address not in self.dict_free_workers and worker.ip_address not in self.dict_busy_workers:
+        if self.task_queue:
+            next_task = self.task_queue.popleft()
             self.dict_free_workers[worker.ip_address] = worker
+            del self.dict_busy_workers[worker.ip_address]
+            self.assign_worker(worker, next_task)
         else:
+            self.dict_free_workers[worker.ip_address] = worker
+            del self.dict_busy_workers[worker.ip_address]
+            worker.analysis_id = None
+            worker.save()
+
+    def add_worker(self, worker: Worker):
+        if worker.ip_address in self.dict_free_workers or worker.ip_address in self.dict_busy_workers:
             raise ValueError(f"Worker with IP {worker.ip_address} already exists.")
+
+        self.dict_free_workers[worker.ip_address] = worker
 
     def remove_worker(self, worker: Worker):
         if worker.ip_address in self.dict_free_workers:

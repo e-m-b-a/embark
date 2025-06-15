@@ -7,7 +7,8 @@ import secrets
 from django.test import TestCase
 
 from workers.models import Worker, Configuration
-from workers.orchestrator import WorkerOrchestrator
+from workers.orchestrator import WorkerOrchestrator, OrchestratorTask
+from uploader.models import FirmwareAnalysis
 from users.models import User
 
 
@@ -44,17 +45,17 @@ class TestOrchestrator(TestCase):
         """
         Test that a worker can be assigned a task in the orchestrator.
         """
-        task = 'test_task1'
+        task = OrchestratorTask(FirmwareAnalysis.objects.create(), None, None, None)
         self.orchestrator.add_worker(self.test_worker1)
         self.orchestrator.assign_worker(self.test_worker1, task)
         self.assertIn(self.test_worker1.ip_address, self.orchestrator.get_busy_workers())
-        self.assertEqual(self.orchestrator.get_busy_workers()[self.test_worker1.ip_address].job_id, task)
+        self.assertEqual(self.orchestrator.get_busy_workers()[self.test_worker1.ip_address].analysis_id, task.firmware_analysis.id)
 
     def test_orchestrator_release_worker(self):
         """
         Test that a worker can be released from a task in the orchestrator.
         """
-        task = 'test_task1'
+        task = OrchestratorTask(FirmwareAnalysis.objects.create(), None, None, None)
         self.orchestrator.add_worker(self.test_worker1)
         self.orchestrator.assign_worker(self.test_worker1, task)
         self.orchestrator.release_worker(self.test_worker1)
@@ -65,8 +66,8 @@ class TestOrchestrator(TestCase):
         """
         Test the orchestrator with a more complex sequence of operations.
         """
-        task1 = "test_task_1"
-        task2 = "test_task_2"
+        task1 = OrchestratorTask(FirmwareAnalysis.objects.create(), None, None, None)
+        task2 = OrchestratorTask(FirmwareAnalysis.objects.create(), None, None, None)
         self.orchestrator.add_worker(self.test_worker1)
         self.orchestrator.add_worker(self.test_worker2)
         self.orchestrator.assign_worker(self.test_worker1, task1)
@@ -90,19 +91,19 @@ class TestOrchestrator(TestCase):
         orchestrator.add_worker(worker1)
         orchestrator.add_worker(worker2)
 
-        task1 = "task_1"
-        task2 = "task_2"
-        task3 = "task_3"
+        task1 = OrchestratorTask(FirmwareAnalysis.objects.create(), None, None, None)
+        task2 = OrchestratorTask(FirmwareAnalysis.objects.create(), None, None, None)
+        task3 = OrchestratorTask(FirmwareAnalysis.objects.create(), None, None, None)
 
         orchestrator.assign_task(task1)
         orchestrator.assign_task(task2)
         orchestrator.assign_task(task3)
 
-        self.assertEqual(orchestrator.get_busy_workers()[worker1.ip_address].job_id, task1)
-        self.assertEqual(orchestrator.get_busy_workers()[worker2.ip_address].job_id, task2)
-        self.assertEqual(orchestrator.queue_tasks[0], task3)
+        self.assertEqual(orchestrator.get_busy_workers()[worker1.ip_address].analysis_id, task1.firmware_analysis.id)
+        self.assertEqual(orchestrator.get_busy_workers()[worker2.ip_address].analysis_id, task2.firmware_analysis.id)
+        self.assertEqual(orchestrator.task_queue[0], task3)
         orchestrator.release_worker(worker1)
-        self.assertEqual(orchestrator.get_busy_workers()[worker1.ip_address].job_id, task3)
+        self.assertEqual(orchestrator.get_busy_workers()[worker1.ip_address].analysis_id, task3.firmware_analysis.id)
         orchestrator.release_worker(worker1)
         orchestrator.assign_task(task2)
-        self.assertEqual(orchestrator.get_busy_workers()[worker1.ip_address].job_id, task2)
+        self.assertEqual(orchestrator.get_busy_workers()[worker1.ip_address].analysis_id, task2.firmware_analysis.id)
