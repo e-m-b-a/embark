@@ -109,7 +109,7 @@ def update_worker(worker: Worker, dependency: DependencyType):
 
     orchestrator = get_orchestrator()
     try:
-        # TODO: if the the worker is currently processing a job, this job should be cancelled here
+        # TODO: if the the worker is currently processing a job, this job should be cancelled here (or implicitly via remove_worker)
         orchestrator.remove_worker(worker)
         logger.info("Worker: %s removed from orchestrator", worker.name)
     except ValueError:
