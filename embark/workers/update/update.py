@@ -107,6 +107,14 @@ def update_worker(worker: Worker, dependency: DependencyType):
 
     client = None
 
+    orchestrator = get_orchestrator()
+    try:
+        # TODO: if the the worker is currently processing a job, this job should be cancelled here
+        orchestrator.remove_worker(worker)
+        logger.info("Worker: %s removed from orchestrator", worker.name)
+    except ValueError:
+        logger.error("Worker: %s not found in orchestrator", worker.name)
+
     try:
         client = worker.ssh_connect()
         if dependency == DependencyType.ALL:
@@ -127,7 +135,6 @@ def update_worker(worker: Worker, dependency: DependencyType):
             client.close()
         worker.save()
 
-    orchestrator = get_orchestrator()
     if worker.status == Worker.ConfigStatus.CONFIGURED:
         try:
             orchestrator.add_worker(worker)
