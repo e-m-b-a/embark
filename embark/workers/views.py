@@ -296,14 +296,18 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
     Soft reset the worker with the given worker ID.
     """
     try:
-        user = get_user(request)
-        worker = Worker.objects.get(id=worker_id)
-        configuration = worker.configurations.filter(user=user).first()
-        if not configuration_id:
+        if not configuration_id and not worker:
+            return JsonResponse({'status': 'error', 'message': 'No worker id and no config id given'})
+        if not configuration_id and worker:
+            user = get_user(request)
+            worker = Worker.objects.get(id=worker_id)
+            configuration = worker.configurations.filter(user=user).first()
             configuration_id = configuration.id
-        configuration = worker.configurations.get(id=configuration_id)
-        if configuration.user != user:
-            return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
+            configuration = worker.configurations.get(id=configuration_id)
+            if configuration.user != user:
+                return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
+        if configuration_id:
+            configuration = Configuration.objects.get(id=configuration_id)
 
         ssh_client = None
         try:
@@ -332,14 +336,18 @@ def worker_hard_reset(request, worker_id, configuration_id=None):
     Hard reset the worker with the given worker ID.
     """
     try:
-        user = get_user(request)
-        worker = Worker.objects.get(id=worker_id)
-        configuration = worker.configurations.filter(user=user).first()
-        if not configuration_id:
+        if not configuration_id and not worker:
+            return JsonResponse({'status': 'error', 'message': 'No worker id and no config id given'})
+        if not configuration_id and worker:
+            user = get_user(request)
+            worker = Worker.objects.get(id=worker_id)
+            configuration = worker.configurations.filter(user=user).first()
             configuration_id = configuration.id
-        configuration = worker.configurations.get(id=configuration_id)
-        if configuration.user != user:
-            return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
+            configuration = worker.configurations.get(id=configuration_id)
+            if configuration.user != user:
+                return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
+        if configuration_id:
+            configuration = Configuration.objects.get(id=configuration_id)
 
         ssh_client = None
         try:
