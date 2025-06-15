@@ -1,7 +1,8 @@
 from typing import Dict
 from collections import deque
-from django.db.models import Q
 from threading import Lock
+
+from django.db.models import Q
 
 from workers.models import Worker
 
