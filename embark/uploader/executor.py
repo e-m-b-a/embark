@@ -28,7 +28,6 @@ def submit_firmware(firmware_analysis: FirmwareAnalysis, firmware_file: Firmware
 
     Archiver.copy(src=firmware_file.file.path, dst=active_analyzer_dir)
 
-    # copy success
     emba_startfile = os.listdir(active_analyzer_dir)
     logger.debug("active dir contents %s", emba_startfile)
     if len(emba_startfile) == 1:
@@ -48,7 +47,7 @@ def submit_firmware(firmware_analysis: FirmwareAnalysis, firmware_file: Firmware
 
         # TODO: Replace with actual Orchestrator instance
         orchestrator = WorkerOrchestrator()
-        orchestrator.assign_task(OrchestratorTask(firmware_analysis, emba_cmd, image_file_location, target))
+        orchestrator.assign_task(OrchestratorTask(firmware_analysis.id, emba_cmd, image_file_location, target))
 
         return True
     else:

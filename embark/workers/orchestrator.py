@@ -1,12 +1,12 @@
 from typing import Dict
 from collections import deque
 from workers.models import Worker
-from uploader.models import FirmwareAnalysis
+from workers.tasks import start_analysis
 
 
 class OrchestratorTask:
-    def __init__(self, firmware_analysis: FirmwareAnalysis, emba_cmd: str, src_path: str, target_path: str):
-        self.firmware_analysis = firmware_analysis
+    def __init__(self, firmware_analysis_id: str, emba_cmd: str, src_path: str, target_path: str):
+        self.firmware_analysis_id = firmware_analysis_id
         self.emba_cmd = emba_cmd
         self.src_path = src_path
         self.target_path = target_path
@@ -52,8 +52,9 @@ class WorkerOrchestrator:
         if worker.ip_address not in self.dict_free_workers:
             raise ValueError(f"Worker with IP {worker.ip_address} is already busy.")
 
-        worker.analysis_id = task.firmware_analysis.id
+        worker.analysis_id = task.firmware_analysis_id
         worker.save()
+        start_analysis.delay(worker.id, task.emba_cmd, task.src_path, task.target_path)
 
         self.dict_busy_workers[worker.ip_address] = worker
         del self.dict_free_workers[worker.ip_address]
