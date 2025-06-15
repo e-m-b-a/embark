@@ -2,6 +2,10 @@
 
 ## UNRELEASED
 
+### ADDED
+
+- Firmware analysis start on worker node ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=113296109&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C51))
+
 ### FIXED
 
 - Various workflow errors
