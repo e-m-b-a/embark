@@ -39,6 +39,7 @@ def submit_firmware(firmware_analysis: FirmwareAnalysis, firmware_file: Firmware
         shutil.rmtree(active_analyzer_dir)
         return None
 
+    firmware_analysis.create_log_dir()
     firmware_analysis.set_meta_info()
 
     emba_cmd = firmware_analysis.construct_emba_command(image_file_location)
@@ -49,8 +50,6 @@ def submit_firmware(firmware_analysis: FirmwareAnalysis, firmware_file: Firmware
 
         return True
     else:
-        firmware_analysis.create_log_dir()
-
         emba_fut = BoundedExecutor.submit(BoundedExecutor.run_emba_cmd, emba_cmd, firmware_analysis.id, active_analyzer_dir)
         BoundedExecutor.submit(LogReader, firmware_analysis.id)
 
