@@ -297,18 +297,21 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
     Soft reset the worker with the given worker ID.
     """
     try:
-        user = get_user(request)
-        worker = Worker.objects.get(id=worker_id)
-        configuration = worker.configurations.filter(user=user).first()
-        if not configuration_id:
-            configuration_id = configuration.id
-        configuration = worker.configurations.get(id=configuration_id)
-        if configuration.user != user:
-            return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
+        if not configuration_id and not worker_id:
+            return JsonResponse({'status': 'error', 'message': 'No worker id and no config id given'})
+        if worker_id:
+            user = get_user(request)
+            worker = Worker.objects.get(id=worker_id)
+            if not configuration_id:
+                configuration = worker.configurations.filter(user=user).first()
+            else:
+                configuration = Configuration.objects.get(id=configuration_id)
+            if configuration.user != user:
+                return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
 
         ssh_client = None
         try:
-            ssh_client = worker.ssh_connect(configuration_id)
+            ssh_client = worker.ssh_connect(configuration.id)
             exec_blocking_ssh(ssh_client, "sudo docker stop $(sudo docker ps -aq)")
             exec_blocking_ssh(ssh_client, "sudo docker rm $(sudo docker ps -aq)")
             exec_blocking_ssh(ssh_client, "sudo rm -rf /root/emba/emba_logs")
@@ -316,6 +319,44 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
             exec_blocking_ssh(ssh_client, "sudo rm -rf /root/amos2025ss01-embark/media/*")
             ssh_client.close()
             return JsonResponse({'status': 'success', 'message': 'Worker soft reset completed.'})
+
+        except (paramiko.SSHException, socket.error):
+            if ssh_client:
+                ssh_client.close()
+            return JsonResponse({'status': 'error', 'message': 'SSH connection failed or command execution failed.'})
+
+    except (Worker.DoesNotExist, Configuration.DoesNotExist):
+        return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def worker_hard_reset(request, worker_id, configuration_id=None):
+    """
+    Hard reset the worker with the given worker ID.
+    """
+    try:
+        if not configuration_id and not worker_id:
+            return JsonResponse({'status': 'error', 'message': 'No worker id and no config id given'})
+        if worker_id:
+            user = get_user(request)
+            worker = Worker.objects.get(id=worker_id)
+            if not configuration_id:
+                configuration = worker.configurations.filter(user=user).first()
+            else:
+                configuration = Configuration.objects.get(id=configuration_id)
+            if configuration.user != user:
+                return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
+
+        ssh_client = None
+        try:
+            worker_soft_reset(request, worker_id, configuration.id)
+            ssh_client = worker.ssh_connect(configuration.id)
+            emba_path = "/root/emba/full_uninstaller.sh"
+            exec_blocking_ssh(ssh_client, "sudo bash " + emba_path)
+            ssh_client.close()
+            return JsonResponse({'status': 'success', 'message': 'Worker hard reset completed.'})
 
         except (paramiko.SSHException, socket.error):
             if ssh_client:
