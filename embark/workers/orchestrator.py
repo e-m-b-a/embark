@@ -1,15 +1,17 @@
-from typing import Dict
 from collections import deque
+from dataclasses import dataclass
+from typing import Dict
+
 from workers.models import Worker
 from workers.tasks import start_analysis
 
 
+@dataclass
 class OrchestratorTask:
-    def __init__(self, firmware_analysis_id: str, emba_cmd: str, src_path: str, target_path: str):
-        self.firmware_analysis_id = firmware_analysis_id
-        self.emba_cmd = emba_cmd
-        self.src_path = src_path
-        self.target_path = target_path
+    firmware_analysis_id: str
+    emba_cmd: str
+    src_path: str
+    target_path: str
 
 
 class WorkerOrchestrator:

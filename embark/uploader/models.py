@@ -20,7 +20,7 @@ from django.utils import timezone
 
 from porter.models import LogZipFile
 from users.models import User as Userclass
-from uploader.settings import get_emba_root, get_emba_base_cmd
+from uploader.settings import get_emba_root, get_emba_base_cmd, workers_enabled
 
 logger = logging.getLogger(__name__)
 
@@ -424,6 +424,7 @@ class FirmwareAnalysis(models.Model):
         """
         Constructs EMBA command
         :param image_file_location: String to the image file
+        :param log_path: Path to emba logs
         :returns: emba command as string
         """
         emba_flags = self.get_flags()
@@ -435,7 +436,8 @@ class FirmwareAnalysis(models.Model):
         else:
             scan_profile = "./scan-profiles/default-scan-no-notify.emba"
 
-        emba_cmd = f"cd {get_emba_root()} && {get_emba_base_cmd()} -f {image_file_location} -l {self.path_to_logs} "
+        log_path = settings.WORKER_EMBA_LOGS if workers_enabled() else self.path_to_logs
+        emba_cmd = f"cd {get_emba_root()} && {get_emba_base_cmd()} -f {image_file_location} -l {log_path} "
 
         if scan_profile:
             emba_cmd += f"-p {scan_profile} "

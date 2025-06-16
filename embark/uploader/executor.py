@@ -31,27 +31,27 @@ def submit_firmware(firmware_analysis: FirmwareAnalysis, firmware_file: Firmware
     emba_startfile = os.listdir(active_analyzer_dir)
     logger.debug("active dir contents %s", emba_startfile)
     if len(emba_startfile) == 1:
-        image_file_location = f"{active_analyzer_dir}{emba_startfile.pop()}"
+        base = settings.WORKER_FIRMWARE_DIR if workers_enabled() else active_analyzer_dir
+        image_file_location = f"{base}{emba_startfile.pop()}"
     else:
         logger.error("Uploaded file: %s doesnt comply with processable files.", firmware_file)
         logger.error("Zip folder with no extra directory in between.")
         shutil.rmtree(active_analyzer_dir)
         return None
 
-    firmware_analysis.create_log_dir()
     firmware_analysis.set_meta_info()
 
-    if workers_enabled():
-        target = f"{settings.WORKER_FIRMWARE_DIR}{emba_startfile.pop()}"
-        emba_cmd = firmware_analysis.construct_emba_command(target)
+    emba_cmd = firmware_analysis.construct_emba_command(image_file_location)
 
+    if workers_enabled():
         # TODO: Replace with actual Orchestrator instance
         orchestrator = WorkerOrchestrator()
-        orchestrator.assign_task(OrchestratorTask(firmware_analysis.id, emba_cmd, image_file_location, target))
+        orchestrator.assign_task(OrchestratorTask(firmware_analysis.id, emba_cmd, firmware_file.file.path, image_file_location))
 
         return True
     else:
-        emba_cmd = firmware_analysis.construct_emba_command(image_file_location)
+        firmware_analysis.create_log_dir()
+
         emba_fut = BoundedExecutor.submit(BoundedExecutor.run_emba_cmd, emba_cmd, firmware_analysis.id, active_analyzer_dir)
         BoundedExecutor.submit(LogReader, firmware_analysis.id)
 

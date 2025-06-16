@@ -2,6 +2,8 @@ import paramiko
 from celery import shared_task
 from celery.utils.log import get_task_logger
 
+from django.conf import settings
+
 from workers.views import update_system_info
 from workers.models import Worker
 from workers.update.update import exec_blocking_ssh
@@ -64,8 +66,11 @@ def start_analysis(worker_id, emba_cmd, src_path, target_path):
 
     client = worker.ssh_connect()
 
+    exec_blocking_ssh(client, f"sudo mkdir {settings.WORKER_FIRMWARE_DIR}")
+
     sftp_client = client.open_sftp()
     sftp_client.put(src_path, target_path)
     sftp_client.close()
 
-    exec_blocking_ssh(client, emba_cmd)
+    exec_blocking_ssh(client, f"sudo mkdir {settings.WORKER_EMBA_LOGS}")
+    exec_blocking_ssh(client, f"sudo sh -c {emba_cmd} >./terminal.log 2>&1")
