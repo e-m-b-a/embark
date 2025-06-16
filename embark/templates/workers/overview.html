@@ -58,8 +58,16 @@
                             <input type="hidden" name="update" value="external">
                             <input type="submit" name="action" value="Update external directory">
                         </form>
-                        <button onclick="stubCall('{{ config.id }}', 'worker_soft_reset')">Soft reset</button>
-                        <button onclick="stubCall('{{ config.id }}', 'worker_hard_reset')">Hard reset</button>
+                        <form action="{% url 'embark-worker-hard-reset' worker.ip_address %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="hard_reset">
+                            <button type="submit">Hard reset</button>
+                        </form>
+                        <form action="{% url 'embark-worker-soft-reset' worker.ip_address %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="soft_reset">
+                            <button type="submit">Soft reset</button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -140,8 +148,21 @@
                             <input type="hidden" name="update" value="external">
                             <input type="submit" name="action" value="Update external directory">
                         </form>
-                        <button onclick="stubCall('{{ worker.ip_address }}', 'worker_soft_reset')">Soft reset</button>
-                        <button onclick="stubCall('{{ worker.ip_address }}', 'worker_hard_reset')">Hard reset</button>
+                        <form action="{% url 'embark-worker-update' worker.id %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="update" value="external">
+                            <input type="submit" name="action" value="Update external directory">
+                        </form>
+                        <form action="{% url 'embark-worker-hard-reset' worker.ip_address %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="hard_reset">
+                            <button type="submit">Hard reset</button>
+                        </form>
+                        <form action="{% url 'embark-worker-soft-reset' worker.ip_address %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="soft_reset">
+                            <button type="submit">Soft reset</button>
+                        </form>
                     </div>
                 </div>
             {% endif %}
