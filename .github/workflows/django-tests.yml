@@ -80,4 +80,4 @@ jobs:
       - name: Run tests
         run: |
           cd embark
-          sudo pipenv run python manage.py test
+          sudo pipenv run python manage.py test --verbosity=2
