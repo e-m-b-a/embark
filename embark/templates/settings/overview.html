@@ -1,0 +1,27 @@
+{% load static %}
+{% block style %}
+<link rel="stylesheet" type="text/css" href="{% static 'content/css/settings.css' %}" />
+{% endblock style %}
+
+<div class="overview-container">
+  <div class="configuration-container">
+    <h2>Global Settings</h2>
+      <div class="setting-row">
+        <label for="orchestrator-toggle" class="setting-label">Enable Orchestrator</label>
+        <label class="switch">
+            <input type="checkbox" id="orchestrator-toggle" {% if user_settings.orchestrator %}checked{% endif %}/>
+            <span class="slider round"></span>
+        </label>
+      </div>
+  </div>
+</div>
+
+<script>
+    document.getElementById("orchestrator-toggle").addEventListener("change", async (e) => {
+      try {
+        await fetch("toggle-orchestrator/");
+      } catch (error) {
+        console.error("Error saving orchestrator setting:", error);
+      }
+    });
+</script>
