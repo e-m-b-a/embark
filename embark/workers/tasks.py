@@ -50,7 +50,7 @@ def update_worker_info():
 
 
 @shared_task
-def start_analysis(worker_id, emba_cmd, src_path, target_path):
+def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
     """
     Copies the firmware image and triggers analysis start
     :params worker_id: the worker to use
@@ -66,11 +66,13 @@ def start_analysis(worker_id, emba_cmd, src_path, target_path):
 
     client = worker.ssh_connect()
 
-    exec_blocking_ssh(client, f"sudo mkdir {settings.WORKER_FIRMWARE_DIR}")
+    exec_blocking_ssh(client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
+    exec_blocking_ssh(client, f"sudo mkdir -p {settings.WORKER_FIRMWARE_DIR}")
 
     sftp_client = client.open_sftp()
     sftp_client.put(src_path, target_path)
     sftp_client.close()
 
-    exec_blocking_ssh(client, f"sudo mkdir {settings.WORKER_EMBA_LOGS}")
-    exec_blocking_ssh(client, f"sudo sh -c {emba_cmd} >./terminal.log 2>&1")
+    exec_blocking_ssh(client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
+    exec_blocking_ssh(client, "sudo rm -rf ./terminal.log")
+    exec_blocking_ssh(client, f"sudo sh -c '{emba_cmd}' >./terminal.log 2>&1")
