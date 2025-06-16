@@ -44,7 +44,6 @@ def submit_firmware(firmware_analysis: FirmwareAnalysis, firmware_file: Firmware
     emba_cmd = firmware_analysis.construct_emba_command(image_file_location)
 
     if workers_enabled():
-        # TODO: Replace with actual Orchestrator instance
         orchestrator = get_orchestrator()
         orchestrator.assign_task(OrchestratorTask(firmware_analysis.id, emba_cmd, firmware_file.file.path, image_file_location))
 
