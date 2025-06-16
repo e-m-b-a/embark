@@ -58,8 +58,14 @@
                             <input type="hidden" name="update" value="external">
                             <input type="submit" name="action" value="Update external directory">
                         </form>
-                        <button onclick="stubCall('{{ config.id }}', 'config_soft_reset')">Soft reset</button>
-                        <button onclick="stubCall('{{ config.id }}', 'config_hard_reset')">Hard reset</button>
+                        <form action="{% url 'embark-worker-hard-reset' config.id %}" method="get">
+                            {% csrf_token %}
+                            <input type="submit" value="Hard Reset">
+                        </form>
+                        <form action="{% url 'embark-worker-soft-reset' config.id %}" method="get">
+                            {% csrf_token %}
+                            <input type="submit" value="Soft Reset">
+                        </form>
                     </div>
                 </div>
             </div>
@@ -140,8 +146,14 @@
                             <input type="hidden" name="update" value="external">
                             <input type="submit" name="action" value="Update external directory">
                         </form>
-                        <button onclick="stubCall('{{ worker.ip_address }}', 'worker_soft_reset')">Soft reset</button>
-                        <button onclick="stubCall('{{ worker.ip_address }}', 'worker_hard_reset')">Hard reset</button>
+                        <form action="{% url 'embark-worker-hard-reset' worker.id %}" method="get">
+                            {% csrf_token %}
+                            <input type="submit" value="Hard Reset">
+                        </form>
+                        <form action="{% url 'embark-worker-soft-reset' worker.id %}" method="get">
+                            {% csrf_token %}
+                            <input type="submit" value="Soft Reset">
+                        </form>
                     </div>
                 </div>
             {% endif %}
