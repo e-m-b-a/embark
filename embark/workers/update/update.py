@@ -113,7 +113,7 @@ def update_worker(worker: Worker, dependency: DependencyType):
         orchestrator.remove_worker(worker)
         logger.info("Worker: %s removed from orchestrator", worker.name)
     except ValueError:
-        logger.error("Worker: %s not found in orchestrator", worker.name)
+        pass
 
     try:
         client = worker.ssh_connect()
