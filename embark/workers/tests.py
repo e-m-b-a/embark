@@ -7,7 +7,7 @@ import secrets
 from django.test import TestCase
 
 from workers.models import Worker, Configuration
-from workers.orchestrator import WorkerOrchestrator, OrchestratorTask
+from workers.orchestrator import Orchestrator, OrchestratorTask
 from uploader.models import FirmwareAnalysis
 from users.models import User
 
@@ -23,7 +23,9 @@ class TestOrchestrator(TestCase):
         self.test_worker2 = Worker.objects.create(name='test_worker2', ip_address='192.111.111.2', system_info={}, reachable=True)  # pylint: disable=W0201
         self.test_worker1.configurations.add(test_config)
         self.test_worker2.configurations.add(test_config)
-        self.orchestrator = WorkerOrchestrator()  # pylint: disable=W0201
+        self.orchestrator = Orchestrator()  # pylint: disable=W0201
+        self.orchestrator.free_workers = {}
+        self.orchestrator.busy_workers = {}
 
     def test_orchestrator_add_worker(self):
         """
@@ -85,7 +87,7 @@ class TestOrchestrator(TestCase):
         """
         Test that tasks are assigned in FIFO order.
         """
-        orchestrator = WorkerOrchestrator()
+        orchestrator = Orchestrator()
         worker1 = Worker.objects.get(name="test_worker1")
         worker2 = Worker.objects.get(name="test_worker2")
         orchestrator.add_worker(worker1)
@@ -101,7 +103,7 @@ class TestOrchestrator(TestCase):
 
         self.assertEqual(orchestrator.get_busy_workers()[worker1.ip_address].analysis_id, task1.firmware_analysis_id)
         self.assertEqual(orchestrator.get_busy_workers()[worker2.ip_address].analysis_id, task2.firmware_analysis_id)
-        self.assertEqual(orchestrator.task_queue[0], task3)
+        self.assertEqual(orchestrator.tasks[0], task3)
         orchestrator.release_worker(worker1)
         self.assertEqual(orchestrator.get_busy_workers()[worker1.ip_address].analysis_id, task3.firmware_analysis_id)
         orchestrator.release_worker(worker1)

@@ -7,7 +7,7 @@ from uploader.models import FirmwareAnalysis, FirmwareFile
 from uploader.archiver import Archiver
 from uploader.boundedexecutor import BoundedExecutor
 from uploader.settings import workers_enabled
-from workers.orchestrator import WorkerOrchestrator, OrchestratorTask
+from workers.orchestrator import OrchestratorTask, get_orchestrator
 from embark.logreader import LogReader
 
 
@@ -45,7 +45,7 @@ def submit_firmware(firmware_analysis: FirmwareAnalysis, firmware_file: Firmware
 
     if workers_enabled():
         # TODO: Replace with actual Orchestrator instance
-        orchestrator = WorkerOrchestrator()
+        orchestrator = get_orchestrator()
         orchestrator.assign_task(OrchestratorTask(firmware_analysis.id, emba_cmd, firmware_file.file.path, image_file_location))
 
         return True
