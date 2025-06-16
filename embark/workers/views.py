@@ -369,6 +369,7 @@ def worker_hard_reset(request, worker_id, configuration_id=None):
     except (Worker.DoesNotExist, Configuration.DoesNotExist):
         return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
 
+
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
