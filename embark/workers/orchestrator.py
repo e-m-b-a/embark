@@ -90,7 +90,6 @@ class Orchestrator:
 
         :param worker: The worker to assign the task to
         :param task: The task to be assigned
-
         :raises ValueError: If the worker is already busy
         """
         if worker.ip_address in self.free_workers:
@@ -107,7 +106,6 @@ class Orchestrator:
 
         :param worker: The worker to assign the task to
         :param task: The task to be assigned
-
         :raises ValueError: If the worker is already busy
         """
         with self.lock:
@@ -119,7 +117,6 @@ class Orchestrator:
         the next task is assigned to the worker. If no tasks are queued, the worker is marked as free.
 
         :param worker: The worker to be released
-
         :raises ValueError: If the worker is not busy
         """
         with self.lock:
@@ -142,7 +139,6 @@ class Orchestrator:
         Add a new worker to the orchestrator. The worker is added to the free workers list.
 
         :param worker: The worker to be added
-
         :raises ValueError: If the worker already exists in the orchestrator
         """
         with self.lock:
@@ -156,7 +152,6 @@ class Orchestrator:
         Remove a worker from the orchestrator.
 
         :param worker: The worker to be removed
-
         :raises ValueError: If the worker does not exist in the orchestrator
         """
         with self.lock:
