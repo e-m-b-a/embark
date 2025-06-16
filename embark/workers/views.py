@@ -303,8 +303,6 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
             worker = Worker.objects.get(id=worker_id)
             if not configuration_id:
                 configuration = worker.configurations.filter(user=user).first()
-                configuration_id = configuration.id
-                configuration = worker.configurations.get(id=configuration_id)
             else:
                 configuration = Configuration.objects.get(id=configuration_id)
             if configuration.user != user:
@@ -312,12 +310,12 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
 
         ssh_client = None
         try:
-            ssh_client = worker.ssh_connect(configuration_id)
-            exec_blocking_ssh(ssh_client, "sudo -S -p '' docker stop $(sudo -S -p '' docker ps -aq)", configuration.ssh_password)
-            exec_blocking_ssh(ssh_client, "sudo -S -p '' docker rm $(sudo -S -p '' docker ps -aq)", configuration.ssh_password)
-            exec_blocking_ssh(ssh_client, "sudo -S -p '' rm -rf /root/emba/emba_logs", configuration.ssh_password)
+            ssh_client = worker.ssh_connect(configuration.id)
+            exec_blocking_ssh(ssh_client, "sudo docker stop $(sudo docker ps -aq)")
+            exec_blocking_ssh(ssh_client, "sudo docker rm $(sudo docker ps -aq)")
+            exec_blocking_ssh(ssh_client, "sudo rm -rf /root/emba/emba_logs")
             # TODO: change this path to the actual firmware file location
-            exec_blocking_ssh(ssh_client, "sudo -S -p '' rm -rf /root/amos2025ss01-embark/media/*", configuration.ssh_password)
+            exec_blocking_ssh(ssh_client, "sudo rm -rf /root/amos2025ss01-embark/media/*")
             ssh_client.close()
             return JsonResponse({'status': 'success', 'message': 'Worker soft reset completed.'})
 
@@ -345,8 +343,6 @@ def worker_hard_reset(request, worker_id, configuration_id=None):
             worker = Worker.objects.get(id=worker_id)
             if not configuration_id:
                 configuration = worker.configurations.filter(user=user).first()
-                configuration_id = configuration.id
-                configuration = worker.configurations.get(id=configuration_id)
             else:
                 configuration = Configuration.objects.get(id=configuration_id)
             if configuration.user != user:
@@ -354,10 +350,10 @@ def worker_hard_reset(request, worker_id, configuration_id=None):
 
         ssh_client = None
         try:
-            worker_soft_reset(request, worker_id, configuration_id)
-            ssh_client = worker.ssh_connect(configuration_id)
+            worker_soft_reset(request, worker_id, configuration.id)
+            ssh_client = worker.ssh_connect(configuration.id)
             emba_path = "/root/emba/full_uninstaller.sh"
-            exec_blocking_ssh(ssh_client, "sudo -S -p '' bash " + str(emba_path), configuration.ssh_password)
+            exec_blocking_ssh(ssh_client, "sudo bash " + emba_path)
             ssh_client.close()
             return JsonResponse({'status': 'success', 'message': 'Worker hard reset completed.'})
 
