@@ -69,9 +69,14 @@ def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
     exec_blocking_ssh(client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
     exec_blocking_ssh(client, f"sudo mkdir -p {settings.WORKER_FIRMWARE_DIR}")
 
+    target_path_user = target_path if client.ssh_user == "root" else f"/home/{client.ssh_user}/temp"
+
     sftp_client = client.open_sftp()
-    sftp_client.put(src_path, target_path)
+    sftp_client.put(src_path, target_path_user)
     sftp_client.close()
+
+    if client.ssh_user != "root":
+        exec_blocking_ssh(client, f"sudo mv {target_path_user} {target_path}")
 
     exec_blocking_ssh(client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
     exec_blocking_ssh(client, "sudo rm -rf ./terminal.log")
