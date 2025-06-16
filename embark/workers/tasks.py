@@ -125,15 +125,27 @@ def update_worker_info():
 
 
 @shared_task
-def update_worker(worker: Worker, dependency: DependencyType):
+def update_worker(worker_id, dependency_idx):
     """
     Setup/Update an offline worker and add it to the orchestrator.
 
     DependencyType.ALL equals a full setup (e.g. new worker), all other DependencyType values are for specific dependencies (e.g. the external directory)
 
-    :params worker: Worker instance
-    :params dependency: Dependency type
+    :params worker_id: The worker to update
+    :params dependency_idx: Dependency type as index
     """
+    try:
+        worker = Worker.objects.get(id=worker_id)
+    except Worker.DoesNotExist:
+        logger.error("start_analysis: Invalid worker id")
+        return
+
+    if dependency_idx not in DependencyType.__members__:
+        logger.error("start_analysis: Invalid dependency type")
+        return
+
+    dependency = DependencyType[dependency_idx]
+
     logger.info("Worker update started (Dependency: %s)", dependency)
 
     worker.status = Worker.ConfigStatus.CONFIGURING

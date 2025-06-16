@@ -128,7 +128,7 @@ def configure_worker(request, configuration_id):
     workers = Worker.objects.filter(configurations__id=configuration_id, status__in=[Worker.ConfigStatus.UNCONFIGURED, Worker.ConfigStatus.ERROR])
 
     for worker in workers:
-        update_worker.delay(worker, DependencyType.ALL)
+        update_worker.delay(worker.id, DependencyType.ALL.name)
 
     return safe_redirect(request, '/worker/')
 
@@ -156,7 +156,7 @@ def _trigger_worker_update(worker, dependency: str):
     if uses_dependency(parsed_dependency, worker):
         return False
 
-    update_worker.delay(worker, parsed_dependency)
+    update_worker.delay(worker.id, parsed_dependency.name)
 
     return True
 
