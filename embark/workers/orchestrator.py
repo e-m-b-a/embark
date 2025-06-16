@@ -52,29 +52,58 @@ class Orchestrator:
                     raise ValueError(f"Worker with IP {worker_ip} does not exist.")
             return worker_info
 
-    def assign_task(self, task: str):
+    def _assign_task(self, task: str):
         """
         Assign a task to a worker. If no workers are free, the task is queued.
         If there are free workers and no tasks in the queue, the task is assigned immediately.
         Otherwise, assigns queued tasks to free workers until no more free workers are available.
 
+        Note: This function is for internal use only! Call `assign_task` instead
+
+        :param task: The task to be assigned
+        """
+        if not self.free_workers:
+            self.tasks.append(task)
+        else:
+            free_worker = next(iter(self.free_workers.values()))
+            if not self.tasks:
+                self._assign_worker(free_worker, task)
+            else:
+                queued_task = self.tasks.popleft()
+                self._assign_worker(free_worker, queued_task)
+                self._assign_task(task)
+
+    def assign_task(self, task: str):
+        """
+        Checks the lock and calls `_assign_task`
+
         :param task: The task to be assigned
         """
         with self.lock:
-            if not self.free_workers:
-                self.tasks.append(task)
-            else:
-                free_worker = next(iter(self.free_workers.values()))
-                if not self.tasks:
-                    self.assign_worker(free_worker, task)
-                else:
-                    queued_task = self.tasks.popleft()
-                    self.assign_worker(free_worker, queued_task)
-                    self.assign_task(task)
+            self._assign_task(task)
+
+    def _assign_worker(self, worker: Worker, task: str):
+        """
+        Assign a task to a free worker and mark it as busy.
+
+        Note: This function is for internal use only! Call `assign_worker` instead
+
+        :param worker: The worker to assign the task to
+        :param task: The task to be assigned
+
+        :raises ValueError: If the worker is already busy
+        """
+        if worker.ip_address in self.free_workers:
+            worker.job_id = task
+            worker.save()
+            self.busy_workers[worker.ip_address] = worker
+            del self.free_workers[worker.ip_address]
+        else:
+            raise ValueError(f"Worker with IP {worker.ip_address} is already busy.")
 
     def assign_worker(self, worker: Worker, task: str):
         """
-        Assign a task to a free worker and mark it as busy.
+        Checks the lock and calls `_assign_worker`
 
         :param worker: The worker to assign the task to
         :param task: The task to be assigned
@@ -82,13 +111,7 @@ class Orchestrator:
         :raises ValueError: If the worker is already busy
         """
         with self.lock:
-            if worker.ip_address in self.free_workers:
-                worker.job_id = task
-                worker.save()
-                self.busy_workers[worker.ip_address] = worker
-                del self.free_workers[worker.ip_address]
-            else:
-                raise ValueError(f"Worker with IP {worker.ip_address} is already busy.")
+            self._assign_worker(worker, task)
 
     def release_worker(self, worker: Worker):
         """
@@ -105,7 +128,7 @@ class Orchestrator:
                     next_task = self.tasks.popleft()
                     self.free_workers[worker.ip_address] = worker
                     del self.busy_workers[worker.ip_address]
-                    self.assign_worker(worker, next_task)
+                    self._assign_worker(worker, next_task)
                 else:
                     self.free_workers[worker.ip_address] = worker
                     del self.busy_workers[worker.ip_address]
