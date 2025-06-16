@@ -296,9 +296,9 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
     Soft reset the worker with the given worker ID.
     """
     try:
-        if not configuration_id and not worker:
+        if not configuration_id and not worker_id:
             return JsonResponse({'status': 'error', 'message': 'No worker id and no config id given'})
-        if not configuration_id and worker:
+        if not configuration_id and worker_id:
             user = get_user(request)
             worker = Worker.objects.get(id=worker_id)
             configuration = worker.configurations.filter(user=user).first()
@@ -336,9 +336,9 @@ def worker_hard_reset(request, worker_id, configuration_id=None):
     Hard reset the worker with the given worker ID.
     """
     try:
-        if not configuration_id and not worker:
+        if not configuration_id and not worker_id:
             return JsonResponse({'status': 'error', 'message': 'No worker id and no config id given'})
-        if not configuration_id and worker:
+        if not configuration_id and worker_id:
             user = get_user(request)
             worker = Worker.objects.get(id=worker_id)
             configuration = worker.configurations.filter(user=user).first()

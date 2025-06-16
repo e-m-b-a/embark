@@ -60,13 +60,13 @@
                         </form>
                         <form action="{% url 'embark-worker-hard-reset' config.id %}" method="get">
                             {% csrf_token %}
-                            <input type="hidden" name="action" value="hard_reset">
+                            <input type="hidden" name="action" value="Hard Reset">
                             <input type="submit" value="hard_reset">
                         </form>
                         <form action="{% url 'embark-worker-soft-reset' config.id %}" method="get">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="soft_reset">
-                            <input type="submit" value="soft_reset">
+                            <input type="submit" value="Soft Reset">
                         </form>
                     </div>
                 </div>
@@ -151,12 +151,12 @@
                         <form action="{% url 'embark-worker-hard-reset' worker.id %}" method="get">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="hard_reset">
-                            <input type="submit" value="hard_reset">
+                            <input type="submit" value="Hard Reset">
                         </form>
                         <form action="{% url 'embark-worker-soft-reset' worker.id %}" method="get">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="soft_reset">
-                            <input type="submit" value="soft_reset">
+                            <input type="submit" value="Soft Reset">
                         </form>
                     </div>
                 </div>
