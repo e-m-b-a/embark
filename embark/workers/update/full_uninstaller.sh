@@ -13,12 +13,13 @@ EMBAPACKAGEPATH="/usr/local/EMBA_PACKAGES"
 
 rm -rf "${INSTALLPATH}/emba"
 rm -rf "${INSTALLPATH}/emba-master"
+if command -v docker >/dev/null 2>&1; then
+	docker system prune -af
 
-docker system prune -af
-
-apt-get autoremove --purge -y libnotify-bin
-apt-get autoremove --purge -y inotify-tools
-apt-get autoremove --purge -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+	apt-get autoremove --purge -y libnotify-bin
+	apt-get autoremove --purge -y inotify-tools
+	apt-get autoremove --purge -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+fi
 
 rm -rf "${EMBAPACKAGEPATH}"
 
