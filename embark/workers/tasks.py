@@ -7,7 +7,8 @@ from celery.utils.log import get_task_logger
 
 from workers.models import Worker, Configuration
 from workers.update.dependencies import DependencyType
-from workers.update.update import update_worker, exec_blocking_ssh
+from workers.update.update import exec_blocking_ssh, perform_update
+from workers.orchestrator import get_orchestrator
 
 logger = get_task_logger(__name__)
 
@@ -124,7 +125,7 @@ def update_worker_info():
 
 
 @shared_task
-def update_worker_task(worker: Worker, dependency: DependencyType):
+def update_worker(worker: Worker, dependency: DependencyType):
     """
     Setup/Update an offline worker and add it to the orchestrator.
 
@@ -133,4 +134,44 @@ def update_worker_task(worker: Worker, dependency: DependencyType):
     :params worker: Worker instance
     :params dependency: Dependency type
     """
-    update_worker(worker, dependency)
+    logger.info("Worker update started (Dependency: %s)", dependency)
+
+    worker.status = Worker.ConfigStatus.CONFIGURING
+    worker.save()
+
+    client = None
+
+    orchestrator = get_orchestrator()
+    try:
+        # TODO: if the the worker is currently processing a job, this job should be cancelled here (or implicitly via remove_worker)
+        orchestrator.remove_worker(worker)
+        logger.info("Worker: %s removed from orchestrator", worker.name)
+    except ValueError:
+        pass
+
+    try:
+        client = worker.ssh_connect()
+        if dependency == DependencyType.ALL:
+            perform_update(worker, client, DependencyType.DEPS)
+            perform_update(worker, client, DependencyType.REPO)
+            perform_update(worker, client, DependencyType.EXTERNAL)
+            perform_update(worker, client, DependencyType.DOCKERIMAGE)
+        else:
+            perform_update(worker, client, dependency)
+
+        worker.status = Worker.ConfigStatus.CONFIGURED
+        logger.info("Setup done")
+    except Exception as ssh_error:
+        logger.error("SSH connection failed: %s", ssh_error)
+        worker.status = Worker.ConfigStatus.ERROR
+    finally:
+        if client is not None:
+            client.close()
+        worker.save()
+
+    if worker.status == Worker.ConfigStatus.CONFIGURED:
+        try:
+            orchestrator.add_worker(worker)
+            logger.info("Worker: %s added to orchestrator", worker.name)
+        except ValueError:
+            logger.error("Worker: %s already exists in orchestrator", worker.name)

@@ -18,7 +18,7 @@ from django.db.models import Count
 from workers.models import Worker, Configuration
 from workers.update.update import exec_blocking_ssh
 from workers.update.dependencies import DependencyType, uses_dependency
-from workers.tasks import update_worker_task, update_system_info
+from workers.tasks import update_worker, update_system_info
 
 
 @require_http_methods(["GET"])
@@ -128,7 +128,7 @@ def configure_worker(request, configuration_id):
     workers = Worker.objects.filter(configurations__id=configuration_id, status__in=[Worker.ConfigStatus.UNCONFIGURED, Worker.ConfigStatus.ERROR])
 
     for worker in workers:
-        update_worker_task.delay(worker, DependencyType.ALL)
+        update_worker.delay(worker, DependencyType.ALL)
 
     return safe_redirect(request, '/worker/')
 
@@ -156,7 +156,7 @@ def _trigger_worker_update(worker, dependency: str):
     if uses_dependency(parsed_dependency, worker):
         return False
 
-    update_worker_task.delay(worker, parsed_dependency)
+    update_worker.delay(worker, parsed_dependency)
 
     return True
 
