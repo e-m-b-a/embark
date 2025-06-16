@@ -298,16 +298,17 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
     try:
         if not configuration_id and not worker_id:
             return JsonResponse({'status': 'error', 'message': 'No worker id and no config id given'})
-        if not configuration_id and worker_id:
+        if worker_id:
             user = get_user(request)
             worker = Worker.objects.get(id=worker_id)
-            configuration = worker.configurations.filter(user=user).first()
-            configuration_id = configuration.id
-            configuration = worker.configurations.get(id=configuration_id)
+            if not configuration_id:
+                configuration = worker.configurations.filter(user=user).first()
+                configuration_id = configuration.id
+                configuration = worker.configurations.get(id=configuration_id)
+            else:
+                configuration = Configuration.objects.get(id=configuration_id)
             if configuration.user != user:
                 return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
-        if configuration_id:
-            configuration = Configuration.objects.get(id=configuration_id)
 
         ssh_client = None
         try:
@@ -328,6 +329,7 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
     except (Worker.DoesNotExist, Configuration.DoesNotExist):
         return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
 
+
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
@@ -338,16 +340,17 @@ def worker_hard_reset(request, worker_id, configuration_id=None):
     try:
         if not configuration_id and not worker_id:
             return JsonResponse({'status': 'error', 'message': 'No worker id and no config id given'})
-        if not configuration_id and worker_id:
+        if worker_id:
             user = get_user(request)
             worker = Worker.objects.get(id=worker_id)
-            configuration = worker.configurations.filter(user=user).first()
-            configuration_id = configuration.id
-            configuration = worker.configurations.get(id=configuration_id)
+            if not configuration_id:
+                configuration = worker.configurations.filter(user=user).first()
+                configuration_id = configuration.id
+                configuration = worker.configurations.get(id=configuration_id)
+            else:
+                configuration = Configuration.objects.get(id=configuration_id)
             if configuration.user != user:
                 return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
-        if configuration_id:
-            configuration = Configuration.objects.get(id=configuration_id)
 
         ssh_client = None
         try:
@@ -356,7 +359,7 @@ def worker_hard_reset(request, worker_id, configuration_id=None):
             emba_path = "/root/emba/full_uninstaller.sh"
             exec_blocking_ssh(ssh_client, "sudo -S -p '' bash " + str(emba_path), configuration.ssh_password)
             ssh_client.close()
-            return JsonResponse({'status': 'success', 'message': 'Worker soft reset completed.'})
+            return JsonResponse({'status': 'success', 'message': 'Worker hard reset completed.'})
 
         except (paramiko.SSHException, socket.error):
             if ssh_client:
