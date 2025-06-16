@@ -53,4 +53,8 @@ class Worker(models.Model):
 
         ssh_client.connect(self.ip_address, username=configuration.ssh_user, password=configuration.ssh_password)
 
+        # save the ssh user and password so they can later be used in commands
+        ssh_client.ssh_user = configuration.ssh_user
+        ssh_client.ssh_pw = configuration.ssh_password
+
         return ssh_client
