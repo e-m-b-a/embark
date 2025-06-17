@@ -10,7 +10,7 @@
 
 ### FIXED
 
-- Various workflow errors
+- Various workflow errors ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=115336615&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C75))
 
 ## [sprint-08](https://github.com/amosproj/amos2025ss01-embark/releases/tag/sprint-08-release) - 2025-06-11
 
