@@ -16,8 +16,6 @@ from django.conf import settings
 from uploader.models import FirmwareAnalysis
 from uploader.boundedexecutor import BoundedExecutor
 
-from workers.views import update_system_info
-from workers.orchestrator import WorkerOrchestrator
 from workers.models import Worker, Configuration
 from workers.update.dependencies import DependencyType
 from workers.update.update import exec_blocking_ssh, perform_update
