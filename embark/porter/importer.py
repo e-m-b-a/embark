@@ -32,6 +32,7 @@ def result_read_in(analysis_id):
     csv_list = [os.path.join(csv_directory, file_) for file_ in os.listdir(csv_directory)]
     for file_ in csv_list:
         logger.debug("trying to read: %s", file_)
+        res = True # Read something
         if os.path.isfile(file_):      # TODO change check. > if valid EMBA csv file
             logger.debug("File %s found and attempting to read", file_)
             if file_.endswith('f50_base_aggregator.csv'):

@@ -342,20 +342,20 @@ def queue_zip(request):
     data = json.loads(request.body)
     analysis_id = data.get("analysis_id")
     if not analysis_id:
-        return JsonResponse({'status': 'error', 'message': 'Please provide a valid analysis_id'}, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"status": "error", "message": "Please provide a valid analysis_id."}, status=status.HTTP_400_BAD_REQUEST)
 
     analysis = FirmwareAnalysis.objects.get(id=analysis_id)
     if not analysis:
-        return JsonResponse({'status': 'error', 'message': 'Analysis does not exist!'}, status=status.HTTP_404_NOT_FOUND)
+        return JsonResponse({"status": "error", "message": "Analysis does not exist!"}, status=status.HTTP_404_NOT_FOUND)
 
-    file_path = f"{settings.MEDIA_ROOT}/log_zip/{analysis_id}.zip"
+    zipfile_path = f"{settings.MEDIA_ROOT}/log_zip/{analysis_id}.zip"
 
     # Ensure log_zip/ exists
     os.makedirs(f"{settings.MEDIA_ROOT}/log_zip/", exist_ok=True)
 
     # Remove zip
-    if os.path.isfile(file_path):
-        os.remove(file_path)
+    if os.path.isfile(zipfile_path):
+        os.remove(zipfile_path)
         logger.info("Replacing zip..")
     else:
         logger.info("Creating zip...")
@@ -363,7 +363,8 @@ def queue_zip(request):
     future = BoundedExecutor.submit_zip(analysis_id)
 
     if future is None:
-        return JsonResponse({"error": "Executor queue full"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        return JsonResponse({"status": "error", "message": "Executor queue full."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-    return JsonResponse({"status": "Queued zipping"}, status=status.HTTP_202_ACCEPTED)
+    # TODO: FIXME: analysis.finished is set by BoundedExecutor. After calling this endpoint for the second time, it'll always return true
+    return JsonResponse({"status": "success",  "message": "Queued zipping", "analysis_finished": analysis.finished}, status=status.HTTP_202_ACCEPTED)
 

@@ -363,49 +363,29 @@ class BoundedExecutor:
             current location
             object with needed pk
         """
-        logger.debug("Zipping ID: %s", analysis_id)
-        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
-        analysis.finished = False
-        analysis.save(update_fields=["finished"])
+        logger.debug(f"Zipping ID: {analysis_id}")
         try:
             with zipfile.ZipFile(file_loc, 'r') as zip_:
-                # 1.check archive contents (security)
-                zip_contents = zip_.namelist()
-                if zip_check(zip_contents):
-                    # 2.extract blindly
-                    logger.debug("extracting....")
-                    zip_.extractall(path=Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/"))
-                    logger.debug("finished unzipping....")
-                else:
-                    logger.info("There are inconsistencies with the zip file, extracting.....")
-                    zip_.extractall(path=Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/tmp/"))
-                    logger.debug("finished unzipping, now renaming")
-                    # renaming and moving
-                    # 1. find toplevel in tmp (takes first find)
-                    for root_, dir_ in os.walk(Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/tmp/")):
-                        if os.path.dirname(dir_) == "html-report":
-                            top_level = os.path.abspath(root_)
-                            break
-                    # 2. move dirs and file from there into emba_logs
-                    shutil.move(top_level, f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs")
-                # 3. sanity check (conformity)
-                # TODO check the files
-        except builtins.Exception as exce:
-            logger.error("Unzipping failed: %s", exce)
+                logs_dir = Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/")
+                zip_.extractall(path=logs_dir)
+                print(f"Extracted to {logs_dir}")
 
-        result_obj = result_read_in(analysis_id)
-        if result_obj is None:
-            logger.error("Readin failed: %s", exce)
-            return
+                result_obj = result_read_in(analysis_id)
+                if result_obj is None:
+                    logger.error("Readin failed.")
+                    return
+                logger.debug(f"Got {result_obj} from zip")
 
-        logger.debug("Got %s from zip", result_obj)
+                analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+                analysis.log_size = get_size(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/")
+                analysis.save(update_fields=["log_size"])
 
-        analysis.end_date = timezone.now()
-        analysis.scan_time = timezone.now() - analysis.start_date
-        analysis.duration = str(analysis.scan_time)
-        analysis.finished = True
-        analysis.log_size = get_size(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/")
-        analysis.save(update_fields=["log_size", "end_date", "scan_time", "duration", "finished"])
+                return;
+
+        except Exception as ex:
+            logger.error("Unzipping failed: %s", ex)
+
+
 
     @classmethod
     def emba_check(cls, option):

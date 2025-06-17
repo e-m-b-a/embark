@@ -2,10 +2,11 @@ import ipaddress
 import socket
 import re
 import threading
-from concurrent.futures import ThreadPoolExecutor
-
 import paramiko
+import json
 
+from concurrent.futures import ThreadPoolExecutor
+from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import get_user
@@ -15,6 +16,7 @@ from django.http import JsonResponse, HttpResponseRedirect
 from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
+from django.utils import timezone
 
 from uploader.models import FirmwareAnalysis
 from workers.models import Worker, Configuration
@@ -334,102 +336,78 @@ def enable_sync(request, worker_id):
     Enable the syncronisation every 5 minutes of emba logs
     """
     try:
-        # Enable Celery heartbeat
-
         worker = Worker.objects.get(id=worker_id)
-        
+
         if not worker.job_id:
             messages.error(request, f"[Worker {worker.id}] Error: No analysis is running!")
-            return safe_redirect(request, '/worker/')
+            return # Overriden by the return in "finally"
 
         if worker.sync_enabled:
             messages.error(request, f"[Worker {worker.id}] Error: Sync is already enabled!")
-            return safe_redirect(request, '/worker/')
+            return
 
-        worker.sync_enabled = True
-        worker.save()
+        schedule, _ = IntervalSchedule.objects.get_or_create(
+            every=5,
+            period=IntervalSchedule.MINUTES
+        )
 
-        analysis = FirmwareAnalysis.objects.get(id=worker.job_id)
+        PeriodicTask.objects.update_or_create(
+            name=f"sync_worker_{worker.id}",
+            defaults={
+                "interval": schedule,
+                "task": "workers.tasks.sync_worker_analysis",
+                "args": json.dumps([worker.id]),
+            }
+        )
+
+        FirmwareAnalysis.objects.create(id=worker.job_id, start_date=timezone.now()) # TODO: Replace start_date with value from worker
 
         messages.success(request, f"[Worker {worker.id}] Sync of analysis {worker.job_id} enabled successfully.")
-        return safe_redirect(request, '/worker/')
 
     except FirmwareAnalysis.DoesNotExist as ex:
-            messages.error(request, f"[Worker {worker.id}] Error: Such an analysis does not exist!")
-            return safe_redirect(request, '/worker/')
+        messages.error(request, f"[Worker {worker.id}] Error: Such an analysis does not exist!")
     except Exception as ex:
         messages.error(request, f"[Worker {worker.id}] Unexpected exception: {ex}")
+    else:
+        worker.sync_enabled = True
+    finally:
+        worker.save()
         return safe_redirect(request, '/worker/')
+
 
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
 def disable_sync(request, worker_id):
     """
-    Disable the syncronisation every 5 minutes of emba logs
+    Disable the syncronisation of emba logs
     """
     try:
-        # Disable Celery heartbeat
-
         worker = Worker.objects.get(id=worker_id)
 
         if not worker.job_id:
             messages.error(request, f"[Worker {worker.id}] Error: No analysis is running! Disabling sync.")
-            worker.sync_enabled = False
-            worker.save()
-            return safe_redirect(request, '/worker/')
+            return # Overriden by the return in "finally"
 
         if not worker.sync_enabled:
             messages.error(request, f"[Worker {worker.id}] Error: Sync is already disabled!")
-            return safe_redirect(request, '/worker/')
+            return
 
-        worker.sync_enabled = False
-        worker.save()
+        PeriodicTask.objects.filter(name=f"sync_worker_{worker.id}").delete()
 
-        analysis = FirmwareAnalysis.objects.get(id=worker.job_id)
+        FirmwareAnalysis.objects.delete(id=worker.job_id)
 
         messages.success(request, f"[Worker {worker.id}] Sync of analysis {worker.job_id} disabled successfully.")
-        return safe_redirect(request, '/worker/')
 
     except FirmwareAnalysis.DoesNotExist as ex:
-            messages.error(request, f"[Worker {worker.id}] Error: Such an analysis does not exist! Disabling sync.")
-            worker.sync_enabled = False
-            worker.save()
-            return safe_redirect(request, '/worker/')
+        messages.error(request, f"[Worker {worker.id}] Error: Such an analysis does not exist! Disabling sync.")
     except Exception as ex:
         messages.error(request, f"[Worker {worker.id}] Unexpected exception: {ex}")
+    finally:
+        worker.sync_enabled = False
+        worker.save()
         return safe_redirect(request, '/worker/')
 
-
-
-""" This is not intended to be part of the pull request. Delete me
-@require_http_methods(["POST"])
-@login_required(login_url='/' + settings.LOGIN_URL)
-@permission_required("users.worker_permission", login_url='/')
-def show_live_log(request, worker_id):
-    try:
-
-        worker = Worker.objects.get(id=worker_id)
-        #worker.job_id = FirmwareAnalysis.objects.get(finished=False, failed=False).id
-
-        analysis_qs = FirmwareAnalysis.objects.filter(finished=False, failed=False)
-
-        if not analysis_qs.exists():
-            return HttpResponse("<pre>No running analysis found for this worker.</pre>", status=404)
-
-        analysis = analysis_qs.first()
-        worker.job_id = analysis.id
-        worker.save()
-
-        log_output = get_emba_log_output(worker)
-
-        return HttpResponse(f"<pre>{log_output}</pre>")
-                                    
-    except Worker.DoesNotExist:
-        return HttpResponse(f"<pre>Worker not found.</pre>")
-    except Exception as ex:
-        return HttpResponse(f"<pre>Error: {str(ex)}</pre>")
-"""
 
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -559,6 +537,17 @@ def update_system_info(configuration, worker):
         last_sync_epss = "N/A" if last_sync_epss.startswith("ls: cannot access") else last_sync_epss
 
         last_sync = f"NVD feed: {last_sync_nvd}, EPSS: {last_sync_epss}"
+
+        # Check if analysis finished using emba.log
+        emba_log_path = f"{analysis.path_to_logs}/emba.log"
+        stdin, stdout, _stderr = ssh_client.exec_command(f"tail -n 10 {emba_log_path}", get_pty=True)  # nosec B601: No user input
+
+        if "Test ended on" in stdout:
+            logger.info(f"[Worker {worker.id}] Analysis finished: {output}")
+            return Worker.ConfigStatus.FINISHED
+        else:
+            logger.info(f"[Worker {worker.id}] Analysis is still running: {output}")
+            return Worker.ConfigStatus.RUNNING
 
         ssh_client.close()
 

@@ -24,9 +24,10 @@ class Worker(models.Model):
         CONFIGURED = "C", _("Configured")
         ERROR = "E", _("Error")
 
+    class JobStatus(models.TextChoices): # pylint: disable=too-many-ancestors
         RUNNING = "R", _("Running")
         FAILED = "F", _("Analysis failed")
-        FINISHED = "N", _("Analysis finished")
+        UNASSIGNED = "U", _("Job unassigned")
 
     configurations = models.ManyToManyField(Configuration, related_name='workers', blank=True)
     name = models.CharField(max_length=100)
