@@ -5,7 +5,6 @@ from paramiko.client import SSHClient
 
 from workers.models import Worker
 from workers.update.dependencies import use_dependency, release_dependency, DependencyType, get_dependency_path
-from workers.orchestrator import get_orchestrator
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +64,7 @@ def _copy_files(client: SSHClient, dependency: DependencyType):
         exec_blocking_ssh(client, f"sudo mv {zip_path_user} {zip_path}")
 
 
-def _perform_update(worker: Worker, client: SSHClient, dependency: DependencyType):
+def perform_update(worker: Worker, client: SSHClient, dependency: DependencyType):
     """
     Trigger file copy and installer.sh
 
@@ -89,55 +88,3 @@ def _perform_update(worker: Worker, client: SSHClient, dependency: DependencyTyp
         raise ssh_error
     finally:
         release_dependency(dependency, worker)
-
-
-def update_worker(worker: Worker, dependency: DependencyType):
-    """
-    Setup/Update an offline worker and add it to the orchestrator.
-
-    DependencyType.ALL equals a full setup (e.g. new worker), all other DependencyType values are for specific dependencies (e.g. the external directory)
-
-    :params worker: Worker instance
-    :params dependency: Dependency type
-    """
-    logger.info("Worker update started (Dependency: %s)", dependency)
-
-    worker.status = Worker.ConfigStatus.CONFIGURING
-    worker.save()
-
-    client = None
-
-    orchestrator = get_orchestrator()
-    try:
-        # TODO: if the the worker is currently processing a job, this job should be cancelled here (or implicitly via remove_worker)
-        orchestrator.remove_worker(worker)
-        logger.info("Worker: %s removed from orchestrator", worker.name)
-    except ValueError:
-        logger.error("Worker: %s not found in orchestrator", worker.name)
-
-    try:
-        client = worker.ssh_connect()
-        if dependency == DependencyType.ALL:
-            _perform_update(worker, client, DependencyType.DEPS)
-            _perform_update(worker, client, DependencyType.REPO)
-            _perform_update(worker, client, DependencyType.EXTERNAL)
-            _perform_update(worker, client, DependencyType.DOCKERIMAGE)
-        else:
-            _perform_update(worker, client, dependency)
-
-        worker.status = Worker.ConfigStatus.CONFIGURED
-        logger.info("Setup done")
-    except Exception as ssh_error:
-        logger.error("SSH connection failed: %s", ssh_error)
-        worker.status = Worker.ConfigStatus.ERROR
-    finally:
-        if client is not None:
-            client.close()
-        worker.save()
-
-    if worker.status == Worker.ConfigStatus.CONFIGURED:
-        try:
-            orchestrator.add_worker(worker)
-            logger.info("Worker: %s added to orchestrator", worker.name)
-        except ValueError:
-            logger.error("Worker: %s already exists in orchestrator", worker.name)

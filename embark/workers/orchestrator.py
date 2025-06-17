@@ -1,10 +1,19 @@
 from typing import Dict, List
 from collections import deque
 from threading import Lock
+from dataclasses import dataclass
 
 from django.db.models import Q
 
 from workers.models import Worker
+
+
+@dataclass
+class OrchestratorTask:
+    firmware_analysis_id: str
+    emba_cmd: str
+    src_path: str
+    target_path: str
 
 
 class Orchestrator:
@@ -22,8 +31,8 @@ class Orchestrator:
         """
         with self.lock:
             if not self.running:
-                self.free_workers = {worker.ip_address: worker for worker in Worker.objects.filter(job_id=None, status=Worker.ConfigStatus.CONFIGURED)}
-                self.busy_workers = {worker.ip_address: worker for worker in Worker.objects.filter(~Q(job_id=None), status=Worker.ConfigStatus.CONFIGURED)}
+                self.free_workers = {worker.ip_address: worker for worker in Worker.objects.filter(analysis_id=None, status=Worker.ConfigStatus.CONFIGURED)}
+                self.busy_workers = {worker.ip_address: worker for worker in Worker.objects.filter(~Q(analysis_id=None), status=Worker.ConfigStatus.CONFIGURED)}
                 self.running = True
 
     def get_busy_workers(self) -> Dict[str, Worker]:
@@ -47,12 +56,12 @@ class Orchestrator:
                     worker_info[worker_ip] = "-1"
                 elif worker_ip in self.busy_workers:
                     worker = self.busy_workers[worker_ip]
-                    worker_info[worker_ip] = f"{worker.job_id}"
+                    worker_info[worker_ip] = f"{worker.analysis_id}"
                 else:
                     raise ValueError(f"Worker with IP {worker_ip} does not exist.")
             return worker_info
 
-    def _assign_task(self, task: str):
+    def _assign_task(self, task: OrchestratorTask):
         """
         Assign a task to a worker. If no workers are free, the task is queued.
         If there are free workers and no tasks in the queue, the task is assigned immediately.
@@ -73,7 +82,7 @@ class Orchestrator:
                 self._assign_worker(free_worker, queued_task)
                 self._assign_task(task)
 
-    def assign_task(self, task: str):
+    def assign_task(self, task: OrchestratorTask):
         """
         Checks the lock and calls `_assign_task`
 
@@ -82,7 +91,7 @@ class Orchestrator:
         with self.lock:
             self._assign_task(task)
 
-    def _assign_worker(self, worker: Worker, task: str):
+    def _assign_worker(self, worker: Worker, task: OrchestratorTask):
         """
         Assign a task to a free worker and mark it as busy.
 
@@ -90,24 +99,28 @@ class Orchestrator:
 
         :param worker: The worker to assign the task to
         :param task: The task to be assigned
-
         :raises ValueError: If the worker is already busy
         """
+        # pylint: disable=import-outside-toplevel
+        from workers.tasks import start_analysis
+
         if worker.ip_address in self.free_workers:
-            worker.job_id = task
+            worker.analysis_id = task.firmware_analysis_id
             worker.save()
+
+            start_analysis.delay(worker.id, task.emba_cmd, task.src_path, task.target_path)
+
             self.busy_workers[worker.ip_address] = worker
             del self.free_workers[worker.ip_address]
         else:
             raise ValueError(f"Worker with IP {worker.ip_address} is already busy.")
 
-    def assign_worker(self, worker: Worker, task: str):
+    def assign_worker(self, worker: Worker, task: OrchestratorTask):
         """
         Checks the lock and calls `_assign_worker`
 
         :param worker: The worker to assign the task to
         :param task: The task to be assigned
-
         :raises ValueError: If the worker is already busy
         """
         with self.lock:
@@ -119,44 +132,41 @@ class Orchestrator:
         the next task is assigned to the worker. If no tasks are queued, the worker is marked as free.
 
         :param worker: The worker to be released
-
         :raises ValueError: If the worker is not busy
         """
         with self.lock:
-            if worker.ip_address in self.busy_workers:
-                if self.tasks:
-                    next_task = self.tasks.popleft()
-                    self.free_workers[worker.ip_address] = worker
-                    del self.busy_workers[worker.ip_address]
-                    self._assign_worker(worker, next_task)
-                else:
-                    self.free_workers[worker.ip_address] = worker
-                    del self.busy_workers[worker.ip_address]
-                    worker.job_id = None
-                    worker.save()
-            else:
+            if worker.ip_address not in self.busy_workers:
                 raise ValueError(f"Worker with IP {worker.ip_address} is not busy.")
+
+            if self.tasks:
+                next_task = self.tasks.popleft()
+                self.free_workers[worker.ip_address] = worker
+                del self.busy_workers[worker.ip_address]
+                self._assign_worker(worker, next_task)
+            else:
+                self.free_workers[worker.ip_address] = worker
+                del self.busy_workers[worker.ip_address]
+                worker.analysis_id = None
+                worker.save()
 
     def add_worker(self, worker: Worker):
         """
         Add a new worker to the orchestrator. The worker is added to the free workers list.
 
         :param worker: The worker to be added
-
         :raises ValueError: If the worker already exists in the orchestrator
         """
         with self.lock:
-            if worker.ip_address not in self.free_workers and worker.ip_address not in self.busy_workers:
-                self.free_workers[worker.ip_address] = worker
-            else:
+            if worker.ip_address in self.free_workers or worker.ip_address in self.busy_workers:
                 raise ValueError(f"Worker with IP {worker.ip_address} already exists.")
+
+            self.free_workers[worker.ip_address] = worker
 
     def remove_worker(self, worker: Worker):
         """
         Remove a worker from the orchestrator.
 
         :param worker: The worker to be removed
-
         :raises ValueError: If the worker does not exist in the orchestrator
         """
         with self.lock:

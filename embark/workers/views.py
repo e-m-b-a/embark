@@ -1,7 +1,6 @@
 import ipaddress
 import socket
 import re
-import threading
 from concurrent.futures import ThreadPoolExecutor
 
 import paramiko
@@ -17,8 +16,9 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
 
 from workers.models import Worker, Configuration
-from workers.update.update import update_worker, exec_blocking_ssh
+from workers.update.update import exec_blocking_ssh
 from workers.update.dependencies import DependencyType, uses_dependency
+from workers.tasks import update_worker, update_system_info
 
 
 @require_http_methods(["GET"])
@@ -128,8 +128,7 @@ def configure_worker(request, configuration_id):
     workers = Worker.objects.filter(configurations__id=configuration_id, status__in=[Worker.ConfigStatus.UNCONFIGURED, Worker.ConfigStatus.ERROR])
 
     for worker in workers:
-        # TODO: Replace with something better for production use
-        threading.Thread(target=update_worker, args=(worker, DependencyType.ALL)).start()
+        update_worker.delay(worker.id, DependencyType.ALL.name)
 
     return safe_redirect(request, '/worker/')
 
@@ -157,8 +156,7 @@ def _trigger_worker_update(worker, dependency: str):
     if uses_dependency(parsed_dependency, worker):
         return False
 
-    # TODO: Replace with something better for production use
-    threading.Thread(target=update_worker, args=(worker, parsed_dependency)).start()
+    update_worker.delay(worker.id, parsed_dependency.name)
 
     return True
 
@@ -297,18 +295,21 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
     Soft reset the worker with the given worker ID.
     """
     try:
-        user = get_user(request)
-        worker = Worker.objects.get(id=worker_id)
-        configuration = worker.configurations.filter(user=user).first()
-        if not configuration_id:
-            configuration_id = configuration.id
-        configuration = worker.configurations.get(id=configuration_id)
-        if configuration.user != user:
-            return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
+        if not configuration_id and not worker_id:
+            return JsonResponse({'status': 'error', 'message': 'No worker id and no config id given'})
+        if worker_id:
+            user = get_user(request)
+            worker = Worker.objects.get(id=worker_id)
+            if not configuration_id:
+                configuration = worker.configurations.filter(user=user).first()
+            else:
+                configuration = Configuration.objects.get(id=configuration_id)
+            if configuration.user != user:
+                return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
 
         ssh_client = None
         try:
-            ssh_client = worker.ssh_connect(configuration_id)
+            ssh_client = worker.ssh_connect(configuration.id)
             exec_blocking_ssh(ssh_client, "sudo docker stop $(sudo docker ps -aq)")
             exec_blocking_ssh(ssh_client, "sudo docker rm $(sudo docker ps -aq)")
             exec_blocking_ssh(ssh_client, "sudo rm -rf /root/emba/emba_logs")
@@ -316,6 +317,44 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
             exec_blocking_ssh(ssh_client, "sudo rm -rf /root/amos2025ss01-embark/media/*")
             ssh_client.close()
             return JsonResponse({'status': 'success', 'message': 'Worker soft reset completed.'})
+
+        except (paramiko.SSHException, socket.error):
+            if ssh_client:
+                ssh_client.close()
+            return JsonResponse({'status': 'error', 'message': 'SSH connection failed or command execution failed.'})
+
+    except (Worker.DoesNotExist, Configuration.DoesNotExist):
+        return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def worker_hard_reset(request, worker_id, configuration_id=None):
+    """
+    Hard reset the worker with the given worker ID.
+    """
+    try:
+        if not configuration_id and not worker_id:
+            return JsonResponse({'status': 'error', 'message': 'No worker id and no config id given'})
+        if worker_id:
+            user = get_user(request)
+            worker = Worker.objects.get(id=worker_id)
+            if not configuration_id:
+                configuration = worker.configurations.filter(user=user).first()
+            else:
+                configuration = Configuration.objects.get(id=configuration_id)
+            if configuration.user != user:
+                return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
+
+        ssh_client = None
+        try:
+            worker_soft_reset(request, worker_id, configuration.id)
+            ssh_client = worker.ssh_connect(configuration.id)
+            emba_path = "/root/emba/full_uninstaller.sh"
+            exec_blocking_ssh(ssh_client, "sudo bash " + emba_path)
+            ssh_client.close()
+            return JsonResponse({'status': 'success', 'message': 'Worker hard reset completed.'})
 
         except (paramiko.SSHException, socket.error):
             if ssh_client:
@@ -382,76 +421,3 @@ def safe_redirect(request, default):
     if not url_has_allowed_host_and_scheme(referer, allowed_hosts={request.get_host()}):
         referer = default
     return HttpResponseRedirect(referer)
-
-
-def update_system_info(configuration, worker):
-    """
-    Update the system_info of a worker using the SSH credentials of the provided configuration to connect to the worker.
-
-    :param configuration: Configuration object containing SSH credentials
-    :param worker: Worker object to update
-
-    :return: Dictionary containing system information
-
-    :raises paramiko.SSHException: If the SSH connection fails or if any command execution fails
-    """
-    ssh_client = None
-
-    try:
-        ssh_client = worker.ssh_connect(configuration.id)
-
-        os_info = exec_blocking_ssh(ssh_client, 'grep PRETTY_NAME /etc/os-release')
-        os_info = os_info[len('PRETTY_NAME='):-1].strip('"')
-
-        cpu_info = exec_blocking_ssh(ssh_client, 'nproc')
-        cpu_info = cpu_info + " cores"
-
-        ram_info = exec_blocking_ssh(ssh_client, 'free -h | grep Mem')
-        ram_info = ram_info.split()[1]
-        ram_info = ram_info.replace('Gi', 'GB').replace('Mi', 'MB')
-
-        disk_str = exec_blocking_ssh(ssh_client, "df -h | grep '^/'")
-        disk_str = disk_str.split('\n')[0].split()
-        disk_total = disk_str[1].replace('G', 'GB').replace('M', 'MB')
-        disk_free = disk_str[3].replace('G', 'GB').replace('M', 'MB')
-        disk_info = f"Total: {disk_total}, Free: {disk_free}"
-
-        version_regex = r"\d+\.\d+\.\d+[a-z]?"
-        emba_version = exec_blocking_ssh(ssh_client, "sudo cat /root/emba/docker-compose.yml | awk -F: '/image:/ {print $NF; exit}'")
-        emba_version = "N/A" if not re.match(version_regex, emba_version) else emba_version
-
-        # 1) Try to access .git/HEAD which gets created after the initial clone
-        # 2) If it does not exist, try to access FETCH_HEAD which only gets created after git pull or git fetch
-        # 3) If neither FETCH_HEAD nor HEAD exist, we assume the feed has never been pulled
-        date_regex = r"^\w{3} \d{1,2} \d{1,2}:\d{2}$"
-        last_sync_nvd = exec_blocking_ssh(ssh_client, "sudo ls -l /root/emba/external/nvd-json-data-feeds/.git/FETCH_HEAD | awk '{print $6 \" \" $7 \" \" $8}'")
-        if not re.match(date_regex, last_sync_nvd):
-            last_sync_nvd = exec_blocking_ssh(ssh_client, "sudo ls -l /root/emba/external/nvd-json-data-feeds/.git/HEAD | awk '{print $6 \" \" $7 \" \" $8}'")
-        last_sync_nvd = "N/A" if not re.match(date_regex, last_sync_nvd) else last_sync_nvd
-
-        last_sync_epss = exec_blocking_ssh(ssh_client, "sudo ls -l /root/emba/external/EPSS-data/.git/FETCH_HEAD | awk '{print $6 \" \" $7 \" \" $8}'")
-        if not re.match(date_regex, last_sync_epss):
-            last_sync_epss = exec_blocking_ssh(ssh_client, "sudo ls -l /root/emba/external/EPSS-data/.git/HEAD | awk '{print $6 \" \" $7 \" \" $8}'")
-        last_sync_epss = "N/A" if not re.match(date_regex, last_sync_epss) else last_sync_epss
-
-        last_sync = f"NVD feed: {last_sync_nvd}, EPSS: {last_sync_epss}"
-
-        ssh_client.close()
-
-    except (paramiko.SSHException, socket.error) as ssh_error:
-        if ssh_client:
-            ssh_client.close()
-        raise paramiko.SSHException("SSH connection failed") from ssh_error
-
-    system_info = {
-        'os_info': os_info,
-        'cpu_info': cpu_info,
-        'ram_info': ram_info,
-        'disk_info': disk_info,
-        'emba_version': emba_version,
-        'last_sync': last_sync
-    }
-    worker.system_info = system_info
-    worker.save()
-
-    return system_info
