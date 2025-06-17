@@ -24,7 +24,7 @@ from uploader.models import FirmwareAnalysis
 from workers.models import Worker, Configuration
 from workers.update.update import exec_blocking_ssh
 from workers.update.dependencies import DependencyType, uses_dependency
-from workers.tasks import update_worker, update_system_info
+from workers.tasks import update_worker, update_system_info, sync_worker_analysis
 
 
 @require_http_methods(["GET"])
@@ -343,7 +343,7 @@ def enable_sync(request, worker_id):
     try:
         worker = Worker.objects.get(id=worker_id)
 
-        if not worker.job_id:
+        if not worker.analysis_id:
             messages.error(request, f"[Worker {worker.id}] Error: No analysis is running!")
             return # Overriden by the return in "finally"
 
@@ -351,10 +351,14 @@ def enable_sync(request, worker_id):
             messages.error(request, f"[Worker {worker.id}] Error: Sync is already enabled!")
             return
 
+        # Execute the sync immediately
+        sync_worker_analysis.delay(worker_id)
+
         schedule, _ = IntervalSchedule.objects.get_or_create(
             every=5,
             period=IntervalSchedule.MINUTES
         )
+
 
         PeriodicTask.objects.update_or_create(
             name=f"sync_worker_{worker.id}",
@@ -365,9 +369,9 @@ def enable_sync(request, worker_id):
             }
         )
 
-        FirmwareAnalysis.objects.create(id=worker.job_id, start_date=timezone.now()) # TODO: Replace start_date with value from worker
+        FirmwareAnalysis.objects.get_or_create(id=worker.analysis_id, start_date=timezone.now()) # TODO: Replace start_date with value from worker
 
-        messages.success(request, f"[Worker {worker.id}] Sync of analysis {worker.job_id} enabled successfully.")
+        messages.success(request, f"[Worker {worker.id}] Sync of analysis {worker.analysis_id} enabled successfully.")
 
     except FirmwareAnalysis.DoesNotExist as ex:
         messages.error(request, f"[Worker {worker.id}] Error: Such an analysis does not exist!")
@@ -390,7 +394,7 @@ def disable_sync(request, worker_id):
     try:
         worker = Worker.objects.get(id=worker_id)
 
-        if not worker.job_id:
+        if not worker.analysis_id:
             messages.error(request, f"[Worker {worker.id}] Error: No analysis is running! Disabling sync.")
             return # Overriden by the return in "finally"
 
@@ -398,11 +402,11 @@ def disable_sync(request, worker_id):
             messages.error(request, f"[Worker {worker.id}] Error: Sync is already disabled!")
             return
 
+        # FirmwareAnalysis.objects.get(id=worker.analysis_id).delete()
+
         PeriodicTask.objects.filter(name=f"sync_worker_{worker.id}").delete()
 
-        FirmwareAnalysis.objects.delete(id=worker.job_id)
-
-        messages.success(request, f"[Worker {worker.id}] Sync of analysis {worker.job_id} disabled successfully.")
+        messages.success(request, f"[Worker {worker.id}] Sync of analysis {worker.analysis_id} disabled successfully.")
 
     except FirmwareAnalysis.DoesNotExist as ex:
         messages.error(request, f"[Worker {worker.id}] Error: Such an analysis does not exist! Disabling sync.")

@@ -145,11 +145,11 @@ def sync_worker_analysis(worker_id, schedule_minutes=5):
             return
 
         print(f"[Worker {worker.id}] Sync running...")
-        status = fetch_analysis_logs(worker.id, worker.job_id)
+        status = fetch_analysis_logs(worker.id, worker.analysis_id)
 
         if status == "finished":
             worker.sync_enabled = False
-            worker.job_id = None
+            worker.analysis_id = None
             worker.save()
             PeriodicTask.objects.filter(name=f"sync_worker_{worker.id}").delete()
             print(f"[Worker {worker.id}] Analysis finished. Turned off sync.")
@@ -168,14 +168,14 @@ def fetch_analysis_logs(worker_id, analysis_id):
         worker = Worker.objects.get(id=worker_id)
 
         # FIXME: This assumes the same emba directory for the worker as the orchestrator
-        remote_path = f"{settings.MEDIA_ROOT}/log_zip/{worker.job_id}.zip"
-        local_path =  f"{settings.MEDIA_ROOT}/log_zip/{worker.job_id}.zip"
+        remote_path = f"{settings.MEDIA_ROOT}/log_zip/{worker.analysis_id}.zip"
+        local_path =  f"{settings.MEDIA_ROOT}/log_zip/{worker.analysis_id}.zip"
 
         config = worker.configurations.first()
 
         # Queue zip generation
         url = f"http://{worker.ip_address}:8001/uploader/queue_zip/"
-        payload = { "analysis_id": worker.job_id }
+        payload = { "analysis_id": worker.analysis_id }
         response = requests.post(url, json=payload)
         json_format = json.loads(response.text)
 
@@ -193,7 +193,7 @@ def fetch_analysis_logs(worker_id, analysis_id):
         with SCPClient(ssh_client.get_transport()) as scp:
             scp.get(remote_path, local_path)
 
-        BoundedExecutor.unzip_log(worker.job_id, local_path) # Blocking
+        BoundedExecutor.unzip_log(worker.analysis_id, local_path) # Blocking
         print(f"[Worker {worker.id}] Unzipped {local_path}.")
 
         if json_format["analysis_finished"]:
