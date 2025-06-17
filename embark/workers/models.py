@@ -35,7 +35,7 @@ class Worker(models.Model):
     system_info = models.JSONField()
     reachable = models.BooleanField(default=False)
     status = models.CharField(max_length=1, choices=ConfigStatus, default=ConfigStatus.UNCONFIGURED)
-    job_id = models.CharField(max_length=100, blank=True, null=True, help_text="ID of the job currently running on this worker")
+    analysis_id = models.CharField(max_length=100, blank=True, null=True, help_text="ID of the analysis currently running on this worker")
     sync_enabled = models.BooleanField(default=False)
 
     def clean(self):
@@ -58,5 +58,9 @@ class Worker(models.Model):
         configuration = self.configurations.first() if configuration_id is None else self.configurations.get(id=configuration_id)
 
         ssh_client.connect(self.ip_address, username=configuration.ssh_user, password=configuration.ssh_password)
+
+        # save the ssh user and password so they can later be used in commands
+        ssh_client.ssh_user = configuration.ssh_user
+        ssh_client.ssh_pw = configuration.ssh_password
 
         return ssh_client

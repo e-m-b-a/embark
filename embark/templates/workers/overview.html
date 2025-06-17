@@ -58,15 +58,13 @@
                             <input type="hidden" name="update" value="external">
                             <input type="submit" name="action" value="Update external directory">
                         </form>
-                        <form action="{% url 'embark-configuration-update' config.id %}" method="post">
+                        <form action="{% url 'embark-worker-hard-reset' config.id %}" method="get">
                             {% csrf_token %}
-                            <input type="hidden" name="update" value="config_soft_reset">
-                            <input type="submit" name="action" value="Soft reset">
+                            <input type="submit" value="Hard Reset">
                         </form>
-                        <form action="{% url 'embark-configuration-update' config.id %}" method="post">
+                        <form action="{% url 'embark-worker-soft-reset' config.id %}" method="get">
                             {% csrf_token %}
-                            <input type="hidden" name="update" value="config_hard_reset">
-                            <input type="submit" name="action" value="Hard reset">
+                            <input type="submit" value="Soft Reset">
                         </form>
                     </div>
                 </div>
@@ -103,7 +101,7 @@
     <tr>
         <th>IP Address</th>
         <th>Status</th>
-        <th>Job ID</th>
+        <th>Analysis ID</th>
         <th>OS Version</th>
         <th>CPU</th>
         <th>Memory</th>
@@ -118,7 +116,7 @@
     <tr>
         <td>{{ worker.ip_address }}</td>
         <td>{% if worker.reachable %}🟢{% else %}🔴{% endif %}</td>
-        <td>{{ worker.job_id|default_if_none:""|slice:"-5:" }}</td>
+        <td>{{ worker.analysis_id|default_if_none:""|slice:"-5:" }}</td>
         <td>{{ worker.system_info.os_info }}</td>
         <td>{{ worker.system_info.cpu_info }}</td>
         <td>{{ worker.system_info.ram_info }}</td>
@@ -148,10 +146,13 @@
                             <input type="hidden" name="update" value="external">
                             <input type="submit" name="action" value="Update external directory">
                         </form>
-                        <form action="{% url 'embark-worker-soft-reset' worker.id %}" method="post">
+                        <form action="{% url 'embark-worker-hard-reset' worker.id %}" method="get">
                             {% csrf_token %}
-                            <input type="hidden" name="update" value="worker_soft_reset">
-                            <input type="submit" name="action" value="Soft reset">
+                            <input type="submit" value="Hard Reset">
+                        </form>
+                        <form action="{% url 'embark-worker-soft-reset' worker.id %}" method="get">
+                            {% csrf_token %}
+                            <input type="submit" value="Soft Reset">
                         </form>
                         {% if worker.sync_enabled %}
                             <form action="{% url 'embark-worker-disable-sync' worker.id %}" method="post">

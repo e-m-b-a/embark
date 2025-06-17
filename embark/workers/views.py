@@ -2,6 +2,8 @@ import ipaddress
 import socket
 import re
 import threading
+from concurrent.futures import ThreadPoolExecutor
+
 import paramiko
 import json
 
@@ -20,8 +22,9 @@ from django.utils import timezone
 
 from uploader.models import FirmwareAnalysis
 from workers.models import Worker, Configuration
-from workers.update.update import update_worker, exec_blocking_ssh
+from workers.update.update import exec_blocking_ssh
 from workers.update.dependencies import DependencyType, uses_dependency
+from workers.tasks import update_worker, update_system_info
 
 
 @require_http_methods(["GET"])
@@ -131,8 +134,7 @@ def configure_worker(request, configuration_id):
     workers = Worker.objects.filter(configurations__id=configuration_id, status__in=[Worker.ConfigStatus.UNCONFIGURED, Worker.ConfigStatus.ERROR])
 
     for worker in workers:
-        # TODO: Replace with something better for production use
-        threading.Thread(target=update_worker, args=(worker, DependencyType.ALL)).start()
+        update_worker.delay(worker.id, DependencyType.ALL.name)
 
     return safe_redirect(request, '/worker/')
 
@@ -160,8 +162,7 @@ def _trigger_worker_update(worker, dependency: str):
     if uses_dependency(parsed_dependency, worker):
         return False
 
-    # TODO: Replace with something better for production use
-    threading.Thread(target=update_worker, args=(worker, parsed_dependency)).start()
+    update_worker.delay(worker.id, parsed_dependency.name)
 
     return True
 
@@ -238,44 +239,45 @@ def config_worker_scan(request, configuration_id):
     except Configuration.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Configuration not found.'})
 
-    ip_range = configuration.ip_range
-    ip_network = ipaddress.ip_network(ip_range, strict=False)
+    def update_or_create_worker(ip_address):
+        try:
+            existing_worker = Worker.objects.get(ip_address=str(ip_address))
+            existing_worker.reachable = True
+            existing_worker.save()
+            if configuration not in existing_worker.configurations.all():
+                existing_worker.configurations.add(configuration)
+                existing_worker.save()
+            try:
+                update_system_info(configuration, existing_worker)
+            except BaseException:
+                pass
+        except Worker.DoesNotExist:
+            new_worker = Worker(
+                name=f"worker-{str(ip_address)}",
+                ip_address=str(ip_address),
+                system_info={},
+                reachable=True
+            )
+            new_worker.save()
+            new_worker.configurations.set([configuration])
+            try:
+                update_system_info(configuration, new_worker)
+            except BaseException:
+                pass
 
     def connect_ssh(ip_address, port=22, timeout=1):
         try:
             with socket.create_connection((str(ip_address), port), timeout):
-                try:
-                    existing_worker = Worker.objects.get(ip_address=str(ip_address))
-                    existing_worker.reachable = True
-                    existing_worker.save()
-                    if configuration not in existing_worker.configurations.all():
-                        existing_worker.configurations.add(configuration)
-                        existing_worker.save()
-                    try:
-                        update_system_info(configuration, existing_worker)
-                    except BaseException:
-                        pass
-                except Worker.DoesNotExist:
-                    new_worker = Worker(
-                        name=f"worker-{str(ip_address)}",
-                        ip_address=str(ip_address),
-                        system_info={},
-                        reachable=True
-                    )
-                    new_worker.save()
-                    new_worker.configurations.set([configuration])
-                    try:
-                        update_system_info(configuration, new_worker)
-                    except BaseException:
-                        pass
+                update_or_create_worker(ip_address)
                 return str(ip_address)
         except Exception:
             return None
 
+    ip_range = configuration.ip_range
+    ip_network = ipaddress.ip_network(ip_range, strict=False)
     with ThreadPoolExecutor(max_workers=50) as executor:
         reachable = list(filter(None, executor.map(connect_ssh, list(ip_network.hosts()))))
 
-    # all registered workers that are not reachable should have their reachable flag set to False
     registered = []
     for worker in configuration.workers.all():
         registered.append(worker.ip_address)
@@ -299,23 +301,26 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
     Soft reset the worker with the given worker ID.
     """
     try:
-        user = get_user(request)
-        worker = Worker.objects.get(id=worker_id)
-        configuration = worker.configurations.filter(user=user).first()
-        if not configuration_id:
-            configuration_id = configuration.id
-        configuration = worker.configurations.get(id=configuration_id)
-        if configuration.user != user:
-            return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
+        if not configuration_id and not worker_id:
+            return JsonResponse({'status': 'error', 'message': 'No worker id and no config id given'})
+        if worker_id:
+            user = get_user(request)
+            worker = Worker.objects.get(id=worker_id)
+            if not configuration_id:
+                configuration = worker.configurations.filter(user=user).first()
+            else:
+                configuration = Configuration.objects.get(id=configuration_id)
+            if configuration.user != user:
+                return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
 
         ssh_client = None
         try:
-            ssh_client = worker.ssh_connect(configuration_id)
-            exec_blocking_ssh(ssh_client, "sudo -S -p '' docker stop $(sudo -S -p '' docker ps -aq)", configuration.ssh_password)
-            exec_blocking_ssh(ssh_client, "sudo -S -p '' docker rm $(sudo -S -p '' docker ps -aq)", configuration.ssh_password)
-            exec_blocking_ssh(ssh_client, "sudo -S -p '' rm -rf /root/emba/emba_logs", configuration.ssh_password)
+            ssh_client = worker.ssh_connect(configuration.id)
+            exec_blocking_ssh(ssh_client, "sudo docker stop $(sudo docker ps -aq)")
+            exec_blocking_ssh(ssh_client, "sudo docker rm $(sudo docker ps -aq)")
+            exec_blocking_ssh(ssh_client, "sudo rm -rf /root/emba/emba_logs")
             # TODO: change this path to the actual firmware file location
-            exec_blocking_ssh(ssh_client, "sudo -S -p '' rm -rf /root/amos2025ss01-embark/media/*", configuration.ssh_password)
+            exec_blocking_ssh(ssh_client, "sudo rm -rf /root/amos2025ss01-embark/media/*")
             ssh_client.close()
             return JsonResponse({'status': 'success', 'message': 'Worker soft reset completed.'})
 
@@ -412,6 +417,44 @@ def disable_sync(request, worker_id):
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
+def worker_hard_reset(request, worker_id, configuration_id=None):
+    """
+    Hard reset the worker with the given worker ID.
+    """
+    try:
+        if not configuration_id and not worker_id:
+            return JsonResponse({'status': 'error', 'message': 'No worker id and no config id given'})
+        if worker_id:
+            user = get_user(request)
+            worker = Worker.objects.get(id=worker_id)
+            if not configuration_id:
+                configuration = worker.configurations.filter(user=user).first()
+            else:
+                configuration = Configuration.objects.get(id=configuration_id)
+            if configuration.user != user:
+                return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
+
+        ssh_client = None
+        try:
+            worker_soft_reset(request, worker_id, configuration.id)
+            ssh_client = worker.ssh_connect(configuration.id)
+            emba_path = "/root/emba/full_uninstaller.sh"
+            exec_blocking_ssh(ssh_client, "sudo bash " + emba_path)
+            ssh_client.close()
+            return JsonResponse({'status': 'success', 'message': 'Worker hard reset completed.'})
+
+        except (paramiko.SSHException, socket.error):
+            if ssh_client:
+                ssh_client.close()
+            return JsonResponse({'status': 'error', 'message': 'SSH connection failed or command execution failed.'})
+
+    except (Worker.DoesNotExist, Configuration.DoesNotExist):
+        return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
 def registered_workers(request, configuration_id):
     """
     Get detailed information about all registered workers for a given configuration.
@@ -448,7 +491,7 @@ def connect_worker(request, configuration_id, worker_id):
 
     try:
         system_info = update_system_info(configuration, worker)
-    except ConnectionError:
+    except paramiko.SSHException:
         return JsonResponse({'status': 'error', 'message': 'Failed to retrieve system_info.'})
 
     return JsonResponse({
