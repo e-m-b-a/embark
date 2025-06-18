@@ -3,7 +3,7 @@ Description=EMBArk supervisor daemon
 
 [Service]
 Type=simple
-ExecStart=/root/amos/supervisor.sh
+ExecStart={$EMBARK_ROOT_DIR}/supervisor.sh
 
 [Install]
 WantedBy=multi-user.target
