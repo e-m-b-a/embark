@@ -1,9 +1,13 @@
 from django.conf import settings
+from settings.models import Settings
 
 
 def workers_enabled():
-    # Todo: Replace with actual check whether workers are enabled
-    return False
+    app_settings = Settings.objects.first()
+    if app_settings:
+        return app_settings.orchestrator
+    else:
+        return False
 
 
 def get_emba_root():
