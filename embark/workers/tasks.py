@@ -33,7 +33,7 @@ def create_periodic_tasks(**kwargs):
 
 def _parse_deb_list(deb_list_str: str):
     """
-    Parse the the output of the 'sha256sum *.deb' command to extract package names and their checksums.
+    Parse the output of the 'sha256sum *.deb' command to extract package names and their checksums.
 
     :param deb_list_str: String containing the output of the 'sha256sum *.deb' command
     :return: List of dictionaries with package information
@@ -43,13 +43,12 @@ def _parse_deb_list(deb_list_str: str):
         try:
             checksum, package_name = line.split('  ')
             deb_info = re.match(r"(?P<name>[^_]+)_(?P<version>[^_]+)_(?P<architecture>[^.]+)\.deb", package_name)
-            if deb_info:
-                deb_list.append({
-                    "name": deb_info.group("name"),
-                    "version": deb_info.group("version"),
-                    "architecture": deb_info.group("architecture"),
-                    "checksum": checksum
-                })
+            deb_list.append({
+                "name": deb_info.group("name"),
+                "version": deb_info.group("version"),
+                "architecture": deb_info.group("architecture"),
+                "checksum": checksum
+            })
         except BaseException as error:
             if line:
                 logger.error("Error parsing deb list line '%s': %s", line, error)
