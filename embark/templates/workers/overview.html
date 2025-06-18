@@ -101,9 +101,9 @@
     <tr>
         <th>IP Address</th>
         <th>Node Status</th>
+        <th>Config IDs</th>
         <th>Analysis ID</th>
         <th>Config Status</th>
-        <th>Config IDs</th>
         <th>OS Version</th>
         <th>CPU</th>
         <th>Memory</th>
@@ -116,9 +116,9 @@
     <tr>
         <td>{{ worker.ip_address }}</td>
         <td>{% if worker.reachable %}🟢{% else %}🔴{% endif %}</td>
+        <td>{{ worker.config_ids }}</td>
         <td>{{ worker.analysis_id|default_if_none:""|slice:"-5:" }}</td>
         <td>{{ worker.status }}</td>
-        <td>{{ worker.config_ids }}</td>
         <td>{{ worker.system_info.os_info }}</td>
         <td>{{ worker.system_info.cpu_info }}</td>
         <td>{{ worker.system_info.ram_info }}</td>
