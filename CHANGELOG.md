@@ -7,6 +7,7 @@
 - Add configured workers to orchestrator ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114649534&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C69))
 - Firmware analysis start on worker node ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=113296109&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C51))
 - Celery task for worker update ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114647889&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C68))
+- Worker health check and analysis logs syng ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=112364687&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C46))
 
 ### FIXED
 
