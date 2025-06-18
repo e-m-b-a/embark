@@ -31,15 +31,39 @@ def create_periodic_tasks(**kwargs):
     )
 
 
+def _parse_deb_list(deb_list_str: str):
+    """
+    Parse the the output of the 'sha256sum *.deb' command to extract package names and their checksums.
+
+    :param deb_list_str: String containing the output of the 'sha256sum *.deb' command
+    :return: List of dictionaries with package information
+    """
+    deb_list = []
+    for line in deb_list_str.splitlines():
+        try:
+            checksum, package_name = line.split('  ')
+            deb_info = re.match(r"(?P<name>[^_]+)_(?P<version>[^_]+)_(?P<architecture>[^.]+)\.deb", package_name)
+            if deb_info:
+                deb_list.append({
+                    "name": deb_info.group("name"),
+                    "version": deb_info.group("version"),
+                    "architecture": deb_info.group("architecture"),
+                    "checksum": checksum
+                })
+        except BaseException as error:
+            if line:
+                logger.error("Error parsing deb list line '%s': %s", line, error)
+            continue
+    return deb_list
+
+
 def update_system_info(configuration: Configuration, worker: Worker):
     """
     Update the system_info of a worker using the SSH credentials of the provided configuration to connect to the worker.
 
     :param configuration: Configuration object containing SSH credentials
     :param worker: Worker object to update
-
     :return: Dictionary containing system information
-
     :raises paramiko.SSHException: If the SSH connection fails or if any command execution fails
     """
     ssh_client = None
@@ -58,7 +82,7 @@ def update_system_info(configuration: Configuration, worker: Worker):
         ram_info = ram_info.replace('Gi', 'GB').replace('Mi', 'MB')
 
         disk_str = exec_blocking_ssh(ssh_client, "df -h | grep '^/'")
-        disk_str = disk_str.split('\n')[0].split()
+        disk_str = disk_str.splitlines()[0].split()
         disk_total = disk_str[1].replace('G', 'GB').replace('M', 'MB')
         disk_free = disk_str[3].replace('G', 'GB').replace('M', 'MB')
         disk_info = f"Total: {disk_total}, Free: {disk_free}"
@@ -74,6 +98,9 @@ def update_system_info(configuration: Configuration, worker: Worker):
         last_sync_epss = "N/A" if not re.match(commit_regex, last_sync_epss) else last_sync_epss
         last_sync = f"NVD feed: {last_sync_nvd}  EPSS: {last_sync_epss}"
 
+        deb_list_str = exec_blocking_ssh(ssh_client, "sudo bash -c 'cd /root/DEPS/pkg && sha256sum *.deb'")
+        deb_list = _parse_deb_list(deb_list_str)
+
         ssh_client.close()
 
     except (paramiko.SSHException, socket.error) as ssh_error:
@@ -87,7 +114,8 @@ def update_system_info(configuration: Configuration, worker: Worker):
         'ram_info': ram_info,
         'disk_info': disk_info,
         'emba_version': emba_version,
-        'last_sync': last_sync
+        'last_sync': last_sync,
+        'deb_list': deb_list
     }
     worker.system_info = system_info
     worker.save()
