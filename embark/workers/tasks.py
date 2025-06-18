@@ -85,7 +85,7 @@ def update_system_info(configuration: Configuration, worker: Worker):
         disk_str = disk_str.splitlines()[0].split()
         disk_total = disk_str[1].replace('G', 'GB').replace('M', 'MB')
         disk_free = disk_str[3].replace('G', 'GB').replace('M', 'MB')
-        disk_info = f"Total: {disk_total}, Free: {disk_free}"
+        disk_info = f"Free: {disk_free}  Total: {disk_total}"
 
         version_regex = r"\d+\.\d+\.\d+[a-z]?"
         emba_version = exec_blocking_ssh(ssh_client, "sudo cat /root/emba/docker-compose.yml | awk -F: '/image:/ {print $NF; exit}'")
