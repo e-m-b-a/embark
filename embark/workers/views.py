@@ -2,6 +2,7 @@ import ipaddress
 import socket
 import re
 import json
+import logging
 from concurrent.futures import ThreadPoolExecutor
 import paramiko
 
@@ -21,6 +22,8 @@ from workers.models import Worker, Configuration
 from workers.update.update import exec_blocking_ssh
 from workers.update.dependencies import DependencyType, uses_dependency
 from workers.tasks import update_worker, sync_worker_analysis
+
+logger = logging.getLogger(__name__)
 
 
 @require_http_methods(["GET"])
@@ -316,7 +319,8 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
     except (Worker.DoesNotExist, Configuration.DoesNotExist):
         return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
     except Exception as exception:
-        return JsonResponse({'status': 'error', 'message': f'Unexpected exception: {exception}'})
+        logger.error("Unexpected exception: %s", exception)
+        return JsonResponse({'status': 'error', 'message': 'Unexpected exception. Please check logger.'})
 
 
 def exec_soft_reset_cleanup(worker, configuration_id=None):
