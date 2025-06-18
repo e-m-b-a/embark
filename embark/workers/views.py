@@ -354,7 +354,8 @@ def enable_sync(request, worker_id):
         else:
 
             # Execute the sync immediately
-            sync_worker_analysis.delay(worker_id)
+            # TODO: Test this more
+            sync_worker_analysis.delay(worker.id)
 
             schedule, _ = IntervalSchedule.objects.get_or_create(
                 every=5,

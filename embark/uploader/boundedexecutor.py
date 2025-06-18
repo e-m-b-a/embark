@@ -290,7 +290,7 @@ class BoundedExecutor:
             current location
             object with needed pk
         """
-        logger.debug("Zipping ID: %", analysis_id)
+        logger.debug("Zipping ID: %s", analysis_id)
         try:
             with zipfile.ZipFile(file_loc, 'r') as zip_:
                 logs_dir = Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/")
@@ -308,7 +308,7 @@ class BoundedExecutor:
                 logger.debug("Got %s from zip", result_obj)
 
         except Exception as exce:
-            logger.error("Unzipping failed: %s", exception)
+            logger.error("Unzipping failed: %s", exce)
 
     @classmethod
     def emba_check(cls, option):
