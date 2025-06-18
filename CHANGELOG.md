@@ -2,6 +2,10 @@
 
 ## UNRELEASED
 
+### ADDED
+
+- Settings App to EMBArk ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114643627&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C66))
+
 ## [sprint-09](https://github.com/amosproj/amos2025ss01-embark/releases/tag/sprint-09-release) - 2025-06-18
 
 ### ADDED
@@ -9,7 +13,6 @@
 - Add configured workers to orchestrator ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114649534&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C69))
 - Firmware analysis start on worker node ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=113296109&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C51))
 - Celery task for worker update ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114647889&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C68))
-- Settings App to EMBArk ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114643627&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C66))
 
 ### FIXED
 
