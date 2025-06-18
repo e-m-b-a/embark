@@ -21,7 +21,7 @@ from uploader.models import FirmwareAnalysis
 from workers.models import Worker, Configuration
 from workers.update.update import exec_blocking_ssh
 from workers.update.dependencies import DependencyType, uses_dependency
-from workers.tasks import update_worker, sync_worker_analysis
+from workers.tasks import update_worker, update_system_info, sync_worker_analysis
 
 logger = logging.getLogger(__name__)
 
@@ -517,95 +517,3 @@ def safe_redirect(request, default):
     if not url_has_allowed_host_and_scheme(referer, allowed_hosts={request.get_host()}):
         referer = default
     return HttpResponseRedirect(referer)
-
-
-def update_system_info(configuration, worker):
-    """
-    Update the system_info of a worker using the SSH credentials of the provided configuration to connect to the worker.
-
-    :param configuration: Configuration object containing SSH credentials
-    :param worker: Worker object to update
-
-    :return: Dictionary containing system information
-
-    :raises paramiko.SSHException: If the SSH connection fails or if any command execution fails
-    """
-    configuration_id = configuration.id
-    ssh_pw = configuration.ssh_password
-    ssh_client = None
-
-    try:
-        ssh_client = worker.ssh_connect(configuration_id)
-
-        _stdin, stdout, _stderr = ssh_client.exec_command('grep PRETTY_NAME /etc/os-release')  # nosec B601: No user input
-        os_info = stdout.read().decode().strip()[len('PRETTY_NAME='):-1].strip('"')
-
-        _stdin, stdout, _stderr = ssh_client.exec_command('nproc')  # nosec B601: No user input
-        cpu_info = stdout.read().decode().strip() + " cores"
-
-        _stdin, stdout, _stderr = ssh_client.exec_command('free -h | grep Mem')  # nosec B601: No user input
-        ram_info = stdout.read().decode().strip().split()[1]
-        ram_info = ram_info.replace('Gi', 'GB').replace('Mi', 'MB')
-
-        _stdin, stdout, _stderr = ssh_client.exec_command("df -h | grep '^/'")  # nosec B601: No user input
-        disk_str = stdout.read().decode().strip().split('\n')[0].split()
-        disk_total = disk_str[1].replace('G', 'GB').replace('M', 'MB')
-        disk_free = disk_str[3].replace('G', 'GB').replace('M', 'MB')
-        disk_info = f"Total: {disk_total}, Free: {disk_free}"
-
-        stdin, stdout, _stderr = ssh_client.exec_command("sudo -S -p '' cat /root/emba/docker-compose.yml | awk -F: '/image:/ {print $NF; exit}'", get_pty=True)  # nosec B601: No user input
-        stdin.write(f"{ssh_pw}\n")
-        stdin.flush()
-        emba_version = stdout.read().decode().strip().replace('\r', '').replace('\n', '')[len(ssh_pw):]
-        emba_version = "N/A" if emba_version.startswith("cat: /root") else emba_version
-
-        # Get the timestamp when the nvd feed was last pulled or fetched via .git/FETCH_HEAD
-        stdin, stdout, _stderr = ssh_client.exec_command("sudo -S -p '' ls -l /root/emba/external/nvd-json-data-feeds/.git/FETCH_HEAD | awk '{print $6 \" \" $7 \" \" $8}'", get_pty=True)  # nosec B601: No user input
-        stdin.write(f"{ssh_pw}\n")
-        stdin.flush()
-        last_sync_nvd = stdout.read().decode().strip().replace('\r', '').replace('\n', '')[len(ssh_pw):]
-
-        # FETCH_HEAD only gets created after git pull or git fetch, not after the initial clone (HEAD exists after the initial clone)
-        if last_sync_nvd.startswith("ls: cannot access"):
-            stdin, stdout, _stderr = ssh_client.exec_command("sudo -S -p '' ls -l /root/emba/external/nvd-json-data-feeds/.git/HEAD | awk '{print $6 \" \" $7 \" \" $8}'", get_pty=True)  # nosec B601: No user input
-            stdin.write(f"{ssh_pw}\n")
-            stdin.flush()
-            last_sync_nvd = stdout.read().decode().strip().replace('\r', '').replace('\n', '')[len(ssh_pw):]
-
-        # neither FETCH_HEAD nor HEAD exist, so we assume the feed has never been pulled
-        last_sync_nvd = "N/A" if last_sync_nvd.startswith("ls: cannot access") else last_sync_nvd
-
-        stdin, stdout, _stderr = ssh_client.exec_command("sudo -S -p '' ls -l /root/emba/external/EPSS-data/.git/FETCH_HEAD | awk '{print $6 \" \" $7 \" \" $8}'", get_pty=True)  # nosec B601: No user input
-        stdin.write(f"{ssh_pw}\n")
-        stdin.flush()
-        last_sync_epss = stdout.read().decode().strip().replace('\r', '').replace('\n', '')[len(ssh_pw):]
-
-        if last_sync_epss.startswith("ls: cannot access"):
-            stdin, stdout, _stderr = ssh_client.exec_command("sudo -S -p '' ls -l /root/emba/external/EPSS-data/.git/HEAD | awk '{print $6 \" \" $7 \" \" $8}'", get_pty=True)  # nosec B601: No user input
-            stdin.write(f"{ssh_pw}\n")
-            stdin.flush()
-            last_sync_epss = stdout.read().decode().strip().replace('\r', '').replace('\n', '')[len(ssh_pw):]
-
-        last_sync_epss = "N/A" if last_sync_epss.startswith("ls: cannot access") else last_sync_epss
-
-        last_sync = f"NVD feed: {last_sync_nvd}, EPSS: {last_sync_epss}"
-
-        ssh_client.close()
-
-    except (paramiko.SSHException, socket.error) as ssh_error:
-        if ssh_client:
-            ssh_client.close()
-        raise paramiko.SSHException("SSH connection failed") from ssh_error
-
-    system_info = {
-        'os_info': os_info,
-        'cpu_info': cpu_info,
-        'ram_info': ram_info,
-        'disk_info': disk_info,
-        'emba_version': emba_version,
-        'last_sync': last_sync
-    }
-    worker.system_info = system_info
-    worker.save()
-
-    return system_info
