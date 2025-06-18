@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load static %}
+{% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/menu.css' %}"/>{% endblock style %}
+{% block title %}EMBArk Settings{% endblock title %}
+
+{% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
+{% block maincontent %}
+
+<div class="container-fluid">
+  {% block overview %}{% include "settings/overview.html" %}{% endblock overview %}
+</div>
+
+{% endblock maincontent %}
