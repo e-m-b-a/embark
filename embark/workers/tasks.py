@@ -238,6 +238,8 @@ def update_worker(worker_id, dependency_idx):
 
     if worker.status == Worker.ConfigStatus.CONFIGURED:
         try:
+            config = worker.configurations.first()
+            update_system_info(config, worker)
             orchestrator.add_worker(worker)
             logger.info("Worker: %s added to orchestrator", worker.name)
         except ValueError:
