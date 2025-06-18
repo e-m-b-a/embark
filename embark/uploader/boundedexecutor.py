@@ -5,7 +5,6 @@ __license__ = 'MIT'
 
 import builtins
 import logging
-import os
 import shutil
 from subprocess import Popen, PIPE
 import zipfile
@@ -27,7 +26,7 @@ from uploader import finish_execution
 from uploader.archiver import Archiver
 from uploader.models import FirmwareAnalysis
 from uploader.settings import get_emba_base_cmd
-from embark.helper import get_size, zip_check
+from embark.helper import get_size
 from porter.models import LogZipFile
 from porter.importer import result_read_in
 from users.models import User
@@ -120,10 +119,10 @@ class BoundedExecutor:
             if active_analyzer_dir:
                 shutil.rmtree(active_analyzer_dir)
 
-        except builtins.Exception as execpt:
+        except builtins.Exception as exce:
             # fail
             logger.error("EMBA run was probably not successful!")
-            logger.error("run_emba_cmd error: %s", execpt)
+            logger.error("run_emba_cmd error: %s", exce)
             exit_fail = True
             logger.debug("sending email to admin")
             admin_email = User.objects.get(name="admin").email
@@ -213,10 +212,10 @@ class BoundedExecutor:
             return None
         try:
             future = executor.submit(function_cmd, *args, **kwargs)
-        except builtins.Exception as error:
+        except builtins.Exception as exce:
             logger.error("Executor task could not be submitted")
             semaphore.release()
-            raise error
+            raise exce  # FIXME: Block catches exception and raises it? Makes no sense
         future.add_done_callback(lambda x: semaphore.release())
         return future
 
@@ -291,7 +290,7 @@ class BoundedExecutor:
             current location
             object with needed pk
         """
-        logger.debug(f"Zipping ID: {analysis_id}")
+        logger.debug("Zipping ID: %", analysis_id)
         try:
             with zipfile.ZipFile(file_loc, 'r') as zip_:
                 logs_dir = Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/")
@@ -306,14 +305,10 @@ class BoundedExecutor:
                 if result_obj is None:
                     logger.error("Readin failed.")
                     return
-                logger.debug(f"Got {result_obj} from zip")
+                logger.debug("Got %s from zip", result_obj)
 
-                return;
-
-        except Exception as ex:
-            logger.error("Unzipping failed: %s", ex)
-
-
+        except Exception as exce:
+            logger.error("Unzipping failed: %s", exception)
 
     @classmethod
     def emba_check(cls, option):

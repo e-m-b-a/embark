@@ -157,10 +157,13 @@ def delete_fw_pre_delete_post(sender, instance, **kwargs):
     callback function
     delete the firmwarefile and folder structure in storage on recieve
     """
-    if sender.file:
-        shutil.rmtree(instance.get_abs_folder_path(), ignore_errors=False, onexc=logger.error("Error when trying to delete %s", instance.get_abs_folder_path()))
-    else:
-        logger.error("No related FW found for delete request: %s", str(sender))
+    try:
+        if sender.file:
+            shutil.rmtree(instance.get_abs_folder_path(), ignore_errors=False)
+        else:
+            logger.error("No related FW found for delete request: %s", str(sender))
+    except Exception as exception:
+        logger.error("Error when trying to delete %s: %s", instance.get_abs_folder_path(), exception)
 
 
 class Vendor (models.Model):

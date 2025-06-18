@@ -1,5 +1,6 @@
 __copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2021-2025 The AMOS Projects, Copyright 2021 Siemens AG'
-__author__ = 'Benedikt Kuehne, Maximilian Wagner, p4cx, Garima Chauhan, VAISHNAVI UMESH, m-1-k-3, Ashutosh Singh, RaviChandra, diegiesskanne, Vaish1795, ravichandraachanta, uk61elac, YulianaPoliakova, SirGankalot, ClProsser, Luka Dekanozishvili'
+__author__ = 'Benedikt Kuehne, Maximilian Wagner, p4cx, Garima Chauhan, VAISHNAVI UMESH, m-1-k-3, Ashutosh Singh, RaviChandra, diegiesskanne, \
+        Vaish1795, ravichandraachanta, uk61elac, YulianaPoliakova, SirGankalot, ClProsser, Luka Dekanozishvili'
 __license__ = 'MIT'
 
 import logging
@@ -25,7 +26,6 @@ from uploader.models import FirmwareFile, FirmwareAnalysis
 from uploader.serializers import FirmwareAnalysisSerializer
 from uploader.boundedexecutor import BoundedExecutor
 from users.decorators import require_api_key
-
 
 
 logger = logging.getLogger(__name__)
@@ -331,7 +331,6 @@ def uploader_home_minimal(request):
     return render(request, 'uploader/minimal.html', {'analysis_form': analysis_form})
 
 
-
 # FIXME: Make this endpoint not publically accessible (via ssh_password?)
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -366,5 +365,4 @@ def queue_zip(request):
     # if future is None:
     #     return JsonResponse({"status": "error", "message": "Executor queue full."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-    return JsonResponse({"status": "success",  "message": "Zip complete.", "analysis_finished": analysis.finished}, status=status.HTTP_202_ACCEPTED)
-
+    return JsonResponse({"status": "success", "message": "Zip complete.", "analysis_finished": analysis.finished}, status=status.HTTP_202_ACCEPTED)

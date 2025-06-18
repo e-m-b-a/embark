@@ -24,7 +24,7 @@ class Worker(models.Model):
         CONFIGURED = "C", _("Configured")
         ERROR = "E", _("Error")
 
-    class AnalysisStatus(models.TextChoices): # pylint: disable=too-many-ancestors
+    class AnalysisStatus(models.TextChoices):  # pylint: disable=too-many-ancestors
         RUNNING = "R", _("Running")
         UNASSIGNED = "U", _("Analysis unassigned")
 
