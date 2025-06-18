@@ -15,13 +15,15 @@ def settings_main(request):
     Render the main settings page.
     """
     user = get_user(request)
-    user_settings = Settings.objects.filter(user=user).first()
-    if not user_settings:
-        user_settings = Settings(user=user)
-        user_settings.save()
 
+    app_settings = Settings.objects.first()
+    if not app_settings:
+        app_settings = Settings()
+        app_settings.save()
+
+    # the template will only render the settings menu if the user has the is_staff flag set to True
     return render(request, 'settings/index.html', {
-        'user_settings': user_settings
+        'user': user, 'app_settings': app_settings
     })
 
 
@@ -33,11 +35,14 @@ def toggle_orchestrator(request):
     Toggle function for orchestrator
     """
     user = get_user(request)
-    user_settings = Settings.objects.filter(user=user).first()
-    if user_settings:
-        user_settings.orchestrator = not user_settings.orchestrator
-    else:
-        user_settings = Settings(user=user, orchestrator=True)
-    user_settings.save()
+    if not user.is_staff:
+        return JsonResponse({"status": "error", "message": "You do not have permission to perform this action."}, status=403)
 
-    return JsonResponse({"status": "success", "enabled": user_settings.orchestrator})
+    app_settings = Settings.objects.first()
+    if app_settings:
+        app_settings.orchestrator = not app_settings.orchestrator
+    else:
+        app_settings = Settings(orchestrator=True)
+    app_settings.save()
+
+    return JsonResponse({"status": "success", "enabled": app_settings.orchestrator})
