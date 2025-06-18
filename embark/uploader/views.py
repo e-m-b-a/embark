@@ -23,6 +23,7 @@ from uploader.executor import submit_firmware
 from uploader.forms import DeviceForm, FirmwareAnalysisForm, DeleteFirmwareForm, LabelForm, VendorForm
 from uploader.models import FirmwareFile, FirmwareAnalysis
 from uploader.serializers import FirmwareAnalysisSerializer
+from uploader.boundedexecutor import BoundedExecutor
 from users.decorators import require_api_key
 
 
@@ -360,11 +361,10 @@ def queue_zip(request):
     else:
         logger.info("Creating zip...")
 
-    future = BoundedExecutor.submit_zip(analysis_id)
+    BoundedExecutor.submit_zip(analysis_id)
 
-    if future is None:
-        return JsonResponse({"status": "error", "message": "Executor queue full."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+    # if future is None:
+    #     return JsonResponse({"status": "error", "message": "Executor queue full."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-    # TODO: FIXME: analysis.finished is set by BoundedExecutor. After calling this endpoint for the second time, it'll always return true
-    return JsonResponse({"status": "success",  "message": "Queued zipping", "analysis_finished": analysis.finished}, status=status.HTTP_202_ACCEPTED)
+    return JsonResponse({"status": "success",  "message": "Zip complete.", "analysis_finished": analysis.finished}, status=status.HTTP_202_ACCEPTED)
 

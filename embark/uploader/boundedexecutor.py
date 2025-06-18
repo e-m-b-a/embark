@@ -248,11 +248,9 @@ class BoundedExecutor:
         """
         logger.debug("Zipping ID: %s", analysis_id)
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
-        analysis.finished = False
-        analysis.status['finished'] = False
         analysis.status['work'] = True
         analysis.status['last_update'] = str(timezone.now())
-        analysis.status['last_phase'] = "Started Zipping"
+        analysis.status['last_phase'] = "Started zipping"
         analysis.save()
 
         room_group_name = f"services_{analysis.user}"
@@ -265,15 +263,12 @@ class BoundedExecutor:
             }
         )
         try:
-            # archive = Archiver.pack(f"{settings.MEDIA_ROOT}/log_zip/{analysis_id}", 'zip', analysis.path_to_logs, './*')
             archive = Archiver.make_zipfile(f"{settings.MEDIA_ROOT}/log_zip/{analysis_id}.zip", analysis.path_to_logs)
 
             # create a LogZipFile obj
             analysis.zip_file = LogZipFile.objects.create(file=archive, user=analysis.user)
         except builtins.Exception as exce:
             logger.error("Zipping failed: %s", exce)
-        analysis.finished = True
-        analysis.status['finished'] = True
         analysis.status['work'] = False
         analysis.status['last_update'] = str(timezone.now())
         analysis.status['last_phase'] = "Finished Zipping"
@@ -303,15 +298,15 @@ class BoundedExecutor:
                 zip_.extractall(path=logs_dir)
                 print(f"Extracted to {logs_dir}")
 
+                analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+                analysis.log_size = get_size(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/")
+                analysis.save(update_fields=["log_size"])
+
                 result_obj = result_read_in(analysis_id)
                 if result_obj is None:
                     logger.error("Readin failed.")
                     return
                 logger.debug(f"Got {result_obj} from zip")
-
-                analysis = FirmwareAnalysis.objects.get(id=analysis_id)
-                analysis.log_size = get_size(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/")
-                analysis.save(update_fields=["log_size"])
 
                 return;
 

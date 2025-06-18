@@ -359,7 +359,6 @@ def enable_sync(request, worker_id):
             period=IntervalSchedule.MINUTES
         )
 
-
         PeriodicTask.objects.update_or_create(
             name=f"sync_worker_{worker.id}",
             defaults={
@@ -369,14 +368,14 @@ def enable_sync(request, worker_id):
             }
         )
 
-        FirmwareAnalysis.objects.get_or_create(id=worker.analysis_id, start_date=timezone.now()) # TODO: Replace start_date with value from worker
+        FirmwareAnalysis.objects.get_or_create(id=worker.analysis_id)
 
         messages.success(request, f"[Worker {worker.id}] Sync of analysis {worker.analysis_id} enabled successfully.")
 
     except FirmwareAnalysis.DoesNotExist as ex:
         messages.error(request, f"[Worker {worker.id}] Error: Such an analysis does not exist!")
     except Exception as ex:
-        messages.error(request, f"[Worker {worker.id}] Unexpected exception: {ex}")
+        messages.error(request, f"[Worker {worker.id}] Error: {ex}")
     else:
         worker.sync_enabled = True
     finally:
