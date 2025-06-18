@@ -20,6 +20,7 @@ def require_api_key(view_func):
         try:
             user = User.objects.get(api_key=api_key)
             request.api_user = user
+            request.user = user  # For compatibility with Django's request.user
         except User.DoesNotExist:
             return JsonResponse({'error': 'Invalid API key'}, status=401)
 
