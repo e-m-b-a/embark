@@ -67,21 +67,12 @@ def update_system_info(configuration: Configuration, worker: Worker):
         emba_version = exec_blocking_ssh(ssh_client, "sudo cat /root/emba/docker-compose.yml | awk -F: '/image:/ {print $NF; exit}'")
         emba_version = "N/A" if not re.match(version_regex, emba_version) else emba_version
 
-        # 1) Try to access .git/HEAD which gets created after the initial clone
-        # 2) If it does not exist, try to access FETCH_HEAD which only gets created after git pull or git fetch
-        # 3) If neither FETCH_HEAD nor HEAD exist, we assume the feed has never been pulled
-        date_regex = r"^\w{3} \d{1,2} \d{1,2}:\d{2}$"
-        last_sync_nvd = exec_blocking_ssh(ssh_client, "sudo ls -l /root/emba/external/nvd-json-data-feeds/.git/FETCH_HEAD | awk '{print $6 \" \" $7 \" \" $8}'")
-        if not re.match(date_regex, last_sync_nvd):
-            last_sync_nvd = exec_blocking_ssh(ssh_client, "sudo ls -l /root/emba/external/nvd-json-data-feeds/.git/HEAD | awk '{print $6 \" \" $7 \" \" $8}'")
-        last_sync_nvd = "N/A" if not re.match(date_regex, last_sync_nvd) else last_sync_nvd
-
-        last_sync_epss = exec_blocking_ssh(ssh_client, "sudo ls -l /root/emba/external/EPSS-data/.git/FETCH_HEAD | awk '{print $6 \" \" $7 \" \" $8}'")
-        if not re.match(date_regex, last_sync_epss):
-            last_sync_epss = exec_blocking_ssh(ssh_client, "sudo ls -l /root/emba/external/EPSS-data/.git/HEAD | awk '{print $6 \" \" $7 \" \" $8}'")
-        last_sync_epss = "N/A" if not re.match(date_regex, last_sync_epss) else last_sync_epss
-
-        last_sync = f"NVD feed: {last_sync_nvd}, EPSS: {last_sync_epss}"
+        commit_regex = r"[0-9a-f]{7,40}"
+        last_sync_nvd = exec_blocking_ssh(ssh_client, "sudo bash -c 'cd /root/emba/external/nvd-json-data-feeds && git rev-parse --short HEAD'")
+        last_sync_nvd = "N/A" if not re.match(commit_regex, last_sync_nvd) else last_sync_nvd
+        last_sync_epss = exec_blocking_ssh(ssh_client, "sudo bash -c 'cd /root/emba/external/EPSS-data && git rev-parse --short HEAD'")
+        last_sync_epss = "N/A" if not re.match(commit_regex, last_sync_epss) else last_sync_epss
+        last_sync = f"NVD feed: {last_sync_nvd}  EPSS: {last_sync_epss}"
 
         ssh_client.close()
 
