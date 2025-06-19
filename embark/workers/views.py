@@ -288,7 +288,49 @@ def config_worker_scan(request, configuration_id):
     return JsonResponse({'status': 'scan_complete', 'configuration': configuration.name, 'registered_workers': registered, 'reachable_workers': reachable})
 
 
-@require_http_methods(["GET"])
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def configuration_soft_reset(request, configuration_id):
+    try:
+        user = get_user(request)
+        configuration = Configuration.objects.get(id=configuration_id)
+
+        if configuration.user != user:
+            return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this configuration.'})
+    except Configuration.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Configuration not found.'})
+
+    workers = Worker.objects.filter(configurations__id=configuration_id)
+
+    for worker in workers:
+        return worker_soft_reset(request, worker.id, configuration_id)
+
+    return JsonResponse({'status': 'success', 'message': 'Worker soft reset completed.'})
+
+
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def configuration_hard_reset(request, configuration_id):
+    try:
+        user = get_user(request)
+        configuration = Configuration.objects.get(id=configuration_id)
+
+        if configuration.user != user:
+            return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this configuration.'})
+    except Configuration.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Configuration not found.'})
+
+    workers = Worker.objects.filter(configurations__id=configuration_id)
+
+    for worker in workers:
+        worker_hard_reset(request, worker.id, configuration_id)
+
+    return JsonResponse({'status': 'success', 'message': 'Worker hard reset completed.'})
+
+
+@require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
 def worker_soft_reset(request, worker_id, configuration_id=None):
@@ -327,7 +369,7 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
         return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
 
 
-@require_http_methods(["GET"])
+@require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
 def worker_hard_reset(request, worker_id, configuration_id=None):

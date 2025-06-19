@@ -58,11 +58,11 @@
                             <input type="hidden" name="update" value="external">
                             <input type="submit" name="action" value="Update external directory">
                         </form>
-                        <form action="{% url 'embark-worker-hard-reset' config.id %}" method="get">
+                        <form action="{% url 'embark-configuration-hard-reset' config.id %}" method="post">
                             {% csrf_token %}
                             <input type="submit" value="Hard Reset">
                         </form>
-                        <form action="{% url 'embark-worker-soft-reset' config.id %}" method="get">
+                        <form action="{% url 'embark-configuration-soft-reset' config.id %}" method="post">
                             {% csrf_token %}
                             <input type="submit" value="Soft Reset">
                         </form>
@@ -146,11 +146,11 @@
                             <input type="hidden" name="update" value="external">
                             <input type="submit" name="action" value="Update external directory">
                         </form>
-                        <form action="{% url 'embark-worker-hard-reset' worker.id %}" method="get">
+                        <form action="{% url 'embark-worker-hard-reset' worker.id %}" method="post">
                             {% csrf_token %}
                             <input type="submit" value="Hard Reset">
                         </form>
-                        <form action="{% url 'embark-worker-soft-reset' worker.id %}" method="get">
+                        <form action="{% url 'embark-worker-soft-reset' worker.id %}" method="post">
                             {% csrf_token %}
                             <input type="submit" value="Soft Reset">
                         </form>
