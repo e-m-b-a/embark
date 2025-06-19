@@ -36,7 +36,7 @@ def exec_blocking_ssh(client: SSHClient, command: str):
 
     output = stdout.read().decode().strip()
     # somehow the ssh pw and line endings end up in stdout so we have to remove them
-    output = output.replace('\r', '').replace('\n', '')[len(client.ssh_pw):] if sudo else output
+    output = output[len(client.ssh_pw):].strip() if sudo else output
     return output
 
 
