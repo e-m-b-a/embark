@@ -6,9 +6,9 @@ from django.conf import settings
 from uploader.models import FirmwareAnalysis, FirmwareFile
 from uploader.archiver import Archiver
 from uploader.boundedexecutor import BoundedExecutor
-from uploader.settings import workers_enabled
 from workers.orchestrator import OrchestratorTask, get_orchestrator
 from embark.logreader import LogReader
+from settings.helper import workers_enabled
 
 
 logger = logging.getLogger(__name__)

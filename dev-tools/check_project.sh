@@ -377,7 +377,7 @@ list_linter_exceptions(){
 }
 
 copy_right_check(){
-  # checks all Copyright occurences for supplied end-year
+  # checks all Copyright occurrences for supplied end-year
   # $1 end-year
   # $2 dir to look in
   # $3 excluded dir for find

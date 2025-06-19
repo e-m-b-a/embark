@@ -12,14 +12,14 @@
         <th>Created</th>
         <th>IP Range</th>
         <th>SSH Username</th>
-        <th>#Reachable / #Total</th>
+        <th>Reachable / Total</th>
         <th>Actions</th>
     </tr>
     {% for config in configs %}
     <tr>
         <td>{{ config.id }}</td>
         <td>{{ config.name }}</td>
-        <td>{{ config.created_at }}</td>
+        <td>{{ config.created_at|date:"Y-m-d H:i" }}</td>
         <td>{{ config.ip_range }}</td>
         <td>{{ config.ssh_user }}</td>
         <td>{{ config.reachable_workers }} / {{ config.total_workers }}</td>
@@ -100,31 +100,31 @@
     <table>
     <tr>
         <th>IP Address</th>
-        <th>Status</th>
+        <th>Node Status</th>
+        <th>Config IDs</th>
         <th>Analysis ID</th>
+        <th>Config Status</th>
         <th>OS Version</th>
         <th>CPU</th>
         <th>Memory</th>
         <th>Disk</th>
         <th>EMBA Version</th>
         <th>Last Sync</th>
-        <th>Status</th>
-        <th>Config IDs</th>
         <th>Actions</th>
     </tr>
     {% for worker in workers %}
     <tr>
         <td>{{ worker.ip_address }}</td>
         <td>{% if worker.reachable %}🟢{% else %}🔴{% endif %}</td>
+        <td>{{ worker.config_ids }}</td>
         <td>{{ worker.analysis_id|default_if_none:""|slice:"-5:" }}</td>
+        <td>{{ worker.status }}</td>
         <td>{{ worker.system_info.os_info }}</td>
         <td>{{ worker.system_info.cpu_info }}</td>
         <td>{{ worker.system_info.ram_info }}</td>
         <td>{{ worker.system_info.disk_info }}</td>
         <td>{{ worker.system_info.emba_version }}</td>
         <td>{{ worker.system_info.last_sync }}</td>
-        <td>{{ worker.status }}</td>
-        <td>{{ worker.config_ids }}</td>
 
         <td>
             {% if worker.status != "Unconfigured" %}
