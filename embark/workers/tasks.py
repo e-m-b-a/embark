@@ -32,15 +32,38 @@ def create_periodic_tasks(**kwargs):
     )
 
 
+def _parse_deb_list(deb_list_str: str):
+    """
+    Parse the output of the 'sha256sum *.deb' command to extract package names and their checksums.
+
+    :param deb_list_str: String containing the output of the 'sha256sum *.deb' command
+    :return: List of dictionaries with package information
+    """
+    deb_list = []
+    for line in deb_list_str.splitlines():
+        try:
+            checksum, package_name = line.split('  ')
+            deb_info = re.match(r"(?P<name>[^_]+)_(?P<version>[^_]+)_(?P<architecture>[^.]+)\.deb", package_name)
+            deb_list.append({
+                "name": deb_info.group("name"),
+                "version": deb_info.group("version"),
+                "architecture": deb_info.group("architecture"),
+                "checksum": checksum
+            })
+        except BaseException as error:
+            if line:
+                logger.error("Error parsing deb list line '%s': %s", line, error)
+            continue
+    return deb_list
+
+
 def update_system_info(configuration: Configuration, worker: Worker):
     """
     Update the system_info of a worker using the SSH credentials of the provided configuration to connect to the worker.
 
     :param configuration: Configuration object containing SSH credentials
     :param worker: Worker object to update
-
     :return: Dictionary containing system information
-
     :raises paramiko.SSHException: If the SSH connection fails or if any command execution fails
     """
     ssh_client = None
@@ -59,30 +82,24 @@ def update_system_info(configuration: Configuration, worker: Worker):
         ram_info = ram_info.replace('Gi', 'GB').replace('Mi', 'MB')
 
         disk_str = exec_blocking_ssh(ssh_client, "df -h | grep '^/'")
-        disk_str = disk_str.split('\n')[0].split()
+        disk_str = disk_str.splitlines()[0].split()
         disk_total = disk_str[1].replace('G', 'GB').replace('M', 'MB')
         disk_free = disk_str[3].replace('G', 'GB').replace('M', 'MB')
-        disk_info = f"Total: {disk_total}, Free: {disk_free}"
+        disk_info = f"Free: {disk_free}  Total: {disk_total}"
 
         version_regex = r"\d+\.\d+\.\d+[a-z]?"
         emba_version = exec_blocking_ssh(ssh_client, f"sudo cat {os.path.join(settings.WORKER_EMBA_ROOT, "docker-compose.yml")} | awk -F: '/image:/ {{print $NF; exit}}'")
         emba_version = "N/A" if not re.match(version_regex, emba_version) else emba_version
 
-        # 1) Try to access .git/HEAD which gets created after the initial clone
-        # 2) If it does not exist, try to access FETCH_HEAD which only gets created after git pull or git fetch
-        # 3) If neither FETCH_HEAD nor HEAD exist, we assume the feed has never been pulled
-        date_regex = r"^\w{3} \d{1,2} \d{1,2}:\d{2}$"
-        last_sync_nvd = exec_blocking_ssh(ssh_client, f"sudo ls -l {os.path.join(settings.WORKER_EMBA_ROOT, "external/nvd-json-data-feeds/.git/FETCH_HEAD")} | awk '{{print $6 \" \" $7 \" \" $8}}'")
-        if not re.match(date_regex, last_sync_nvd):
-            last_sync_nvd = exec_blocking_ssh(ssh_client, f"sudo ls -l {os.path.join(settings.WORKER_EMBA_ROOT, "external/nvd-json-data-feeds/.git/HEAD")} | awk '{{print $6 \" \" $7 \" \" $8}}'")
-        last_sync_nvd = "N/A" if not re.match(date_regex, last_sync_nvd) else last_sync_nvd
+        commit_regex = r"[0-9a-f]{7,40}"
+        last_sync_nvd = exec_blocking_ssh(ssh_client, f"sudo bash -c 'cd {os.path.join(settings.WORKER_EMBA_ROOT, "external/nvd-json-data-feeds")} && git rev-parse --short HEAD'")
+        last_sync_nvd = "N/A" if not re.match(commit_regex, last_sync_nvd) else last_sync_nvd
+        last_sync_epss = exec_blocking_ssh(ssh_client, f"sudo bash -c 'cd {os.path.join(settings.WORKER_EMBA_ROOT, "external/EPSS-data")} && git rev-parse --short HEAD'")
+        last_sync_epss = "N/A" if not re.match(commit_regex, last_sync_epss) else last_sync_epss
+        last_sync = f"NVD feed: {last_sync_nvd}  EPSS: {last_sync_epss}"
 
-        last_sync_epss = exec_blocking_ssh(ssh_client, f"sudo ls -l {os.path.join(settings.WORKER_EMBA_ROOT, "external/EPSS-data/.git/FETCH_HEAD")} | awk '{{print $6 \" \" $7 \" \" $8}}'")
-        if not re.match(date_regex, last_sync_epss):
-            last_sync_epss = exec_blocking_ssh(ssh_client, f"sudo ls -l {os.path.join(settings.WORKER_EMBA_ROOT, "external/EPSS-data/.git/HEAD")} | awk '{{print $6 \" \" $7 \" \" $8}}'")
-        last_sync_epss = "N/A" if not re.match(date_regex, last_sync_epss) else last_sync_epss
-
-        last_sync = f"NVD feed: {last_sync_nvd}, EPSS: {last_sync_epss}"
+        deb_list_str = exec_blocking_ssh(ssh_client, "sudo bash -c 'cd /root/DEPS/pkg && sha256sum *.deb'")
+        deb_list = _parse_deb_list(deb_list_str)
 
         ssh_client.close()
 
@@ -97,7 +114,8 @@ def update_system_info(configuration: Configuration, worker: Worker):
         'ram_info': ram_info,
         'disk_info': disk_info,
         'emba_version': emba_version,
-        'last_sync': last_sync
+        'last_sync': last_sync,
+        'deb_list': deb_list
     }
     worker.system_info = system_info
     worker.save()
@@ -220,6 +238,8 @@ def update_worker(worker_id, dependency_idx):
 
     if worker.status == Worker.ConfigStatus.CONFIGURED:
         try:
+            config = worker.configurations.first()
+            update_system_info(config, worker)
             orchestrator.add_worker(worker)
             logger.info("Worker: %s added to orchestrator", worker.name)
         except ValueError:

@@ -30,6 +30,7 @@ safe/
 
 media/**/*
 WORKER_FILES
+active
 
 # migrations
 **/migrations/*.py

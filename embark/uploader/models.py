@@ -20,7 +20,8 @@ from django.utils import timezone
 
 from porter.models import LogZipFile
 from users.models import User as Userclass
-from uploader.settings import get_emba_root, get_emba_base_cmd, workers_enabled
+from uploader.settings import get_emba_root, get_emba_base_cmd
+from settings.helper import workers_enabled
 
 logger = logging.getLogger(__name__)
 
