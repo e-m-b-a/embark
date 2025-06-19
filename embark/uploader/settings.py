@@ -1,13 +1,5 @@
 from django.conf import settings
-from settings.models import Settings
-
-
-def workers_enabled():
-    app_settings = Settings.objects.first()
-    if app_settings:
-        return app_settings.orchestrator
-    else:
-        return False
+from settings.helper import workers_enabled
 
 
 def get_emba_root():

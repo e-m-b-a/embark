@@ -4,7 +4,7 @@ from django.contrib.auth import get_user
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required, permission_required
 from django.conf import settings
-from settings.models import Settings
+from settings.helper import get_settings
 
 
 @require_http_methods(["GET"])
@@ -14,16 +14,10 @@ def settings_main(request):
     """
     Render the main settings page.
     """
-    user = get_user(request)
-
-    app_settings = Settings.objects.first()
-    if not app_settings:
-        app_settings = Settings()
-        app_settings.save()
-
     # the template will only render the settings menu if the user has the is_staff flag set to True
     return render(request, 'settings/index.html', {
-        'user': user, 'app_settings': app_settings
+        'user': get_user(request),
+        'app_settings': get_settings()
     })
 
 
@@ -38,11 +32,8 @@ def toggle_orchestrator(request):
     if not user.is_staff:
         return JsonResponse({"status": "error", "message": "You do not have permission to perform this action."}, status=403)
 
-    app_settings = Settings.objects.first()
-    if app_settings:
-        app_settings.orchestrator = not app_settings.orchestrator
-    else:
-        app_settings = Settings(orchestrator=True)
+    app_settings = get_settings()
+    app_settings.orchestrator = not app_settings.orchestrator
     app_settings.save()
 
     return JsonResponse({"status": "success", "enabled": app_settings.orchestrator})
