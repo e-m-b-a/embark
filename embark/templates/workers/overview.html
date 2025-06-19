@@ -154,17 +154,6 @@
                             {% csrf_token %}
                             <input type="submit" value="Soft Reset">
                         </form>
-                        {% if worker.sync_enabled %}
-                            <form action="{% url 'embark-worker-disable-sync' worker.id %}" method="post">
-                                {% csrf_token %}
-                                <input type="submit" name="action" value="Disable sync">
-                            </form>
-                        {% else %}
-                            <form action="{% url 'embark-worker-enable-sync' worker.id %}" method="post">
-                                {% csrf_token %}
-                                <input type="submit" name="action" value="Enable sync">
-	                    </form>  
-                        {% endif %}
                     </div>
                 </div>
             {% endif %}

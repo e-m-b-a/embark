@@ -295,7 +295,7 @@ class BoundedExecutor:
             with zipfile.ZipFile(file_loc, 'r') as zip_:
                 logs_dir = Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/")
                 zip_.extractall(path=logs_dir)
-                print(f"Extracted to {logs_dir}")
+                logger.info("Extracted to %s", logs_dir)
 
                 analysis = FirmwareAnalysis.objects.get(id=analysis_id)
                 analysis.log_size = get_size(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/")

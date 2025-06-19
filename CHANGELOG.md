@@ -2,6 +2,10 @@
 
 ## UNRELEASED
 
+### ADDED
+
+- Worker health check and analysis logs sync ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=112364687&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C46))
+
 ## [sprint-09](https://github.com/amosproj/amos2025ss01-embark/releases/tag/sprint-09-release) - 2025-06-18
 
 ### ADDED
@@ -9,7 +13,6 @@
 - Add configured workers to orchestrator ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114649534&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C69))
 - Firmware analysis start on worker node ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=113296109&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C51))
 - Celery task for worker update ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114647889&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C68))
-- Worker health check and analysis logs syng ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=112364687&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C46))
 
 ### FIXED
 
@@ -30,7 +33,6 @@
 ### FIXED
 
 - workflow caching (docker reference not found) ([Issue](https://github.com/orgs/amosproj/projects/79?pane=issue&itemId=110335090&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C33))
-- Fix SVG highlighting in navigation bar([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114355887&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C60)
 
 ## [sprint-07](https://github.com/amosproj/amos2025ss01-embark/releases/tag/sprint-07-release) - 2025-06-04
 

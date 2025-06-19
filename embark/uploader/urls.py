@@ -24,6 +24,4 @@ urlpatterns = [
     path('uploader/label/', views.label, name='embark-uploader-label'),
 
     path('uploader-minimal/', views.uploader_home_minimal, name='embark-uploader-home-minimal'),
-
-    path('uploader/queue_zip/', views.queue_zip, name='embark-queue-zip'),
 ]

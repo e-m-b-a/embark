@@ -148,7 +148,7 @@ class FirmwareFile(models.Model):
         return f"{settings.MEDIA_ROOT}/{self.pk}"
 
     def __str__(self):
-        return f"{self.file.name.replace('/', ' - ')}"  # this the only sanitizing we do?
+        return f"{self.file.name.replace('/', ' - ')}"
 
 
 @receiver(pre_delete, sender=FirmwareFile)

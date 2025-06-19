@@ -26,7 +26,7 @@ class Worker(models.Model):
 
     class AnalysisStatus(models.TextChoices):  # pylint: disable=too-many-ancestors
         RUNNING = "R", _("Running")
-        UNASSIGNED = "U", _("Analysis unassigned")
+        FREE = "F", _("Free")
 
     configurations = models.ManyToManyField(Configuration, related_name='workers', blank=True)
     name = models.CharField(max_length=100)
@@ -35,7 +35,6 @@ class Worker(models.Model):
     reachable = models.BooleanField(default=False)
     status = models.CharField(max_length=1, choices=ConfigStatus, default=ConfigStatus.UNCONFIGURED)
     analysis_id = models.CharField(max_length=100, blank=True, null=True, help_text="ID of the analysis currently running on this worker")
-    sync_enabled = models.BooleanField(default=False)
 
     def clean(self):
         super().clean()

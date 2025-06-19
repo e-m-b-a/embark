@@ -1,14 +1,12 @@
 __copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2021-2025 The AMOS Projects, Copyright 2021 Siemens AG'
-__author__ = 'Benedikt Kuehne, Maximilian Wagner, p4cx, Garima Chauhan, VAISHNAVI UMESH, m-1-k-3, Ashutosh Singh, RaviChandra, diegiesskanne, \
-        Vaish1795, ravichandraachanta, uk61elac, YulianaPoliakova, SirGankalot, ClProsser, Luka Dekanozishvili'
+__author__ = 'Benedikt Kuehne, Maximilian Wagner, p4cx, Garima Chauhan, VAISHNAVI UMESH, m-1-k-3, Ashutosh Singh, RaviChandra, diegiesskanne, Vaish1795, ravichandraachanta, uk61elac, YulianaPoliakova, SirGankalot, ClProsser'
 __license__ = 'MIT'
 
 import logging
 import os
-import json
 
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError, QueryDict, JsonResponse
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError, QueryDict
 from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
@@ -18,11 +16,11 @@ from django.core.files.uploadedfile import UploadedFile
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
-from rest_framework import serializers, status
+from rest_framework import serializers
 
 from uploader.executor import submit_firmware
 from uploader.forms import DeviceForm, FirmwareAnalysisForm, DeleteFirmwareForm, LabelForm, VendorForm
-from uploader.models import FirmwareFile, FirmwareAnalysis
+from uploader.models import FirmwareFile
 from uploader.serializers import FirmwareAnalysisSerializer
 from uploader.boundedexecutor import BoundedExecutor
 from users.decorators import require_api_key
@@ -329,40 +327,3 @@ def uploader_home_minimal(request):
     analysis_form = FirmwareAnalysisForm()
     analysis_form.fields.pop('device')
     return render(request, 'uploader/minimal.html', {'analysis_form': analysis_form})
-
-
-# FIXME: Make this endpoint not publically accessible (via ssh_password?)
-@csrf_exempt
-@require_http_methods(["POST"])
-def queue_zip(request):
-    '''
-    Endpoint to queue the generation of the zip file of html_report.
-    Used for transferring the logs from the emba worker to the orchestrator
-    '''
-    data = json.loads(request.body)
-    analysis_id = data.get("analysis_id")
-    if not analysis_id:
-        return JsonResponse({"status": "error", "message": "Please provide a valid analysis_id."}, status=status.HTTP_400_BAD_REQUEST)
-
-    analysis = FirmwareAnalysis.objects.get(id=analysis_id)
-    if not analysis:
-        return JsonResponse({"status": "error", "message": "Analysis does not exist!"}, status=status.HTTP_404_NOT_FOUND)
-
-    zipfile_path = f"{settings.MEDIA_ROOT}/log_zip/{analysis_id}.zip"
-
-    # Ensure log_zip/ exists
-    os.makedirs(f"{settings.MEDIA_ROOT}/log_zip/", exist_ok=True)
-
-    # Remove zip
-    if os.path.isfile(zipfile_path):
-        os.remove(zipfile_path)
-        logger.info("Replacing zip..")
-    else:
-        logger.info("Creating zip...")
-
-    BoundedExecutor.submit_zip(analysis_id)
-
-    # if future is None:
-    #     return JsonResponse({"status": "error", "message": "Executor queue full."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-    return JsonResponse({"status": "success", "message": "Zip complete.", "analysis_finished": analysis.finished}, status=status.HTTP_202_ACCEPTED)

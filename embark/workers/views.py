@@ -21,7 +21,7 @@ from uploader.models import FirmwareAnalysis
 from workers.models import Worker, Configuration
 from workers.update.update import exec_blocking_ssh
 from workers.update.dependencies import DependencyType, uses_dependency
-from workers.tasks import update_worker, update_system_info, sync_worker_analysis
+from workers.tasks import update_worker, update_system_info
 
 logger = logging.getLogger(__name__)
 
@@ -326,6 +326,8 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
 def exec_soft_reset_cleanup(worker, configuration_id=None):
     """
     Connects via SSH to the worker and performs the soft reset
+    Params: worker object,
+            configuration_id of the worker based on which the worker needs to be reset
     """
     try:
         ssh_client = worker.ssh_connect(configuration_id)

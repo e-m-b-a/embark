@@ -1,17 +1,20 @@
 import os
 import re
 import json
+import time
 import socket
+import subprocess
 import paramiko
 import requests
 
-from scp import SCPClient
 from celery import shared_task
 from celery.utils.log import get_task_logger
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from django.conf import settings
+from django.core.files import File
 
 from uploader.boundedexecutor import BoundedExecutor
+from uploader.models import FirmwareFile, FirmwareAnalysis
 from workers.models import Worker, Configuration
 from workers.update.dependencies import DependencyType
 from workers.update.update import exec_blocking_ssh, perform_update
@@ -24,14 +27,29 @@ def create_periodic_tasks(**kwargs):
     """
     Create periodic tasks with the start of the application. (called in ready() method of the app config)
     """
-    schedule, _created = IntervalSchedule.objects.get_or_create(
+    schedule_2m, _ = IntervalSchedule.objects.get_or_create(
         every=2,
         period=IntervalSchedule.MINUTES
     )
+    schedule_10m, _ = IntervalSchedule.objects.get_or_create(
+        every=10,
+        period=IntervalSchedule.MINUTES
+    )
+
     PeriodicTask.objects.get_or_create(
-        interval=schedule,
+        interval=schedule_2m,
         name='Update Worker Information',
         task='workers.tasks.update_worker_info',
+    )
+    PeriodicTask.objects.get_or_create(
+        interval=schedule_2m,
+        name='Monitor running workers',
+        task='workers.tasks.monitor_workers',
+    )
+    PeriodicTask.objects.get_or_create(
+        interval=schedule_10m,
+        name='Fetch worker analysis logs',
+        task='workers.tasks.fetch_running_analysis_logs',
     )
 
 
@@ -122,15 +140,6 @@ def update_worker_info():
 
             update_system_info(config, worker)
 
-            if worker.analysis_id:  # Check if analysis is truly running
-                status = check_with_emba_log(worker)
-                if status == Worker.AnalysisStatus.UNASSIGNED:
-                    worker.analysis_id = None
-                    worker.sync_enabled = False
-
-                    exec_soft_reset_cleanup(worker, config.id)
-                    # TODO: Set as free in orchestrator
-
             worker.reachable = True
         except paramiko.SSHException:
             logger.info("Worker %s is unreachable, setting status to offline.", worker.name)
@@ -143,124 +152,135 @@ def update_worker_info():
 
 
 @shared_task
-def sync_worker_analysis(worker_id):
-    from workers.views import exec_soft_reset_cleanup  # pylint: disable=import-outside-toplevel
+def fetch_running_analysis_logs():
+    """
+    Iterates through the busy workers, zips the analysis log
+    files on remote workers, fetches them, extracts them to emba_logs.
+    """
+    orchestrator = get_orchestrator()
+    busy_workers = orchestrator.get_busy_workers()
+    for worker in busy_workers.values():
+        try:
+            if not worker.analysis_id:
+                raise AttributeError(f"analysis_id is not set.")
+
+            _fetch_analysis_logs(worker)
+
+        except Exception as exception:
+            logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
+        finally:
+            time.sleep(2)  # Spread out workload
+
+
+def _fetch_analysis_logs(worker) -> None:
+    """
+    Zips the analysis log files on remote worker, fetches it, extracts it.
+
+    :param worker_id: ID of worker object whose analysis_id logs to process.
+    :raises OSError: If extracting the zipfile fails.
+    """
+    client = None
+    sftp_client = None
     try:
-        worker = Worker.objects.get(id=worker_id)
+        local_zip_path = f"{settings.MEDIA_ROOT}/log_zip/{worker.analysis_id}.zip"
+        local_log_path = f"{settings.EMBA_LOG_ROOT}/{worker.analysis_id}/"
 
-        if not worker.sync_enabled:
-            PeriodicTask.objects.filter(name=f"sync_worker_{worker.id}").delete()
-            raise RuntimeError("Sync is disabled. Removed the scheduled task.")
+        # SSH and zip the logs
+        client = worker.ssh_connect()
 
-        logger.info("[Worker %s] Sync running...", worker.id)
+        logger.info("[Worker %s] Zipping logs on remote...", worker.id)
 
-        status = fetch_analysis_logs(worker)
+        zip_cmd = f"cd {settings.WORKER_ROOT} && 7z u -tzip emba_logs.zip emba_logs/"
+        exec_blocking_ssh(client, zip_cmd)
 
-        if status == Worker.AnalysisStatus.UNASSIGNED:
-            worker.sync_enabled = False
-            worker.analysis_id = None
-            worker.save()
+        logger.info("[Worker %s] Zipping logs on remote complete.", worker.id)
 
-            PeriodicTask.objects.filter(name=f"sync_worker_{worker.id}").delete()
+        # Ensure log_zip/ exists
+        os.makedirs(f"{settings.MEDIA_ROOT}/log_zip/", exist_ok=True)
 
-            exec_soft_reset_cleanup(worker)
+        # Fetch zip file
+        sftp_client = client.open_sftp()
+        sftp_client.get(f"{settings.WORKER_ROOT}/emba_logs.zip", local_zip_path)
+        sftp_client.close()
+        client.close()
 
-            # TODO: Set as free in orchestrator
-            logger.info("[Worker %s] Analysis finished. Turned off sync.", worker.id)
+        logger.info("[Worker %s] Downloaded the log zip.", worker.id)
 
-    except requests.ReadTimeout as exception:
-        logger.error("[Worker %s] Took too long to generate zip. %s", worker.id, exception)
-    except Worker.DoesNotExist as exception:
-        logger.error("[Worker %s] Worker does not exist: %s", worker.id, exception)
-    except Exception as exception:
-        logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
+        cmd = ["unzip", "-u", "-o", local_zip_path, "-d", local_log_path]
+        proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        if proc.returncode:
+            raise OSError(f"Unzip failed with exit code {proc.returncode}: {proc.stdout.decode()}")
 
+        logger.info("[Worker %s] Finished syncing to to %semba_logs.", worker.id, local_log_path)
 
-# pylint: disable=R1710
-def fetch_analysis_logs(worker):
-    """
-    Queues zip creation on remote worker, fetches it, extracts it and updates the database.
-    It is a blocking function.
-    Returns "finished" if the analysis completed and the scheduled task can be deleted.
-    """
-    # FIXME: This assumes the same emba directory for the worker as the orchestrator
-    remote_path = f"{settings.MEDIA_ROOT}/log_zip/{worker.analysis_id}.zip"
-    local_path = f"{settings.MEDIA_ROOT}/log_zip/{worker.analysis_id}.zip"
-
-    # Queue zip generation
-    url = f"http://{worker.ip_address}:8001/uploader/queue_zip/"
-    payload = {"analysis_id": worker.analysis_id}
-    response = requests.post(url, json=payload, timeout=300)  # 5 min
-    json_format = json.loads(response.text)
-
-    if json_format["status"] == "error":
-        msg = json_format["message"]
-        raise ConnectionError(f"Could not queue zip generation on remote machine: {msg}")
-
-    # Ensure log_zip/ exists
-    os.makedirs(f"{settings.MEDIA_ROOT}/log_zip/", exist_ok=True)
-
-    ssh_client = worker.ssh_connect()
-    with SCPClient(ssh_client.get_transport()) as scp:
-        scp.get(remote_path, local_path)
-
-    BoundedExecutor.unzip_log(worker.analysis_id, local_path)  # Blocking
-    logger.info("[Worker %s] Unzipped to %s.", worker.id, local_path)
-
-    if json_format["analysis_finished"]:
-        return Worker.AnalysisStatus.UNASSIGNED
-
-    return Worker.AnalysisStatus.RUNNING
+    finally:
+        if client is not None:
+            client.close()
+        if sftp_client is not None:
+            sftp_client.close()
 
 
-# TODO Schedule this task after a worker starts an analysis
 @shared_task
+def monitor_workers():
+    """
+    Periodically checks on the busy workers if the analysis
+    is running the Docker conainer and emba.log.
+
+    If the analysis is finished, sets the worker's status
+    as free, and performs a soft reset.
+    """
+    from workers.views import exec_soft_reset_cleanup  # pylint: disable=import-outside-toplevel
+
+    logger.debug("Busy worker health check is running...")
+
+    orchestrator = get_orchestrator()
+    busy_workers = list(orchestrator.get_busy_workers().values())
+    for worker in busy_workers:
+        try:
+            status = check_with_emba_log(worker)
+
+            if status == Worker.AnalysisStatus.FREE:
+                # Fetch logs for the last time
+                _fetch_analysis_logs(worker)
+
+                orchestrator.release_worker(worker)
+
+                exec_soft_reset_cleanup(worker)
+
+                logger.info("[Worker %s] Analysis finished.", worker.id)
+        except Exception as exception:
+            logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
+            # TODO: Better handle an exception
+            continue
+    logger.debug("Worker health-check complete.")
+
+
 def check_with_emba_log(worker) -> Worker.AnalysisStatus:
     """
-    Checks emba.log and infers the status of the analysis.
-    Returns Worker.AnalysisStatus.UNASSIGNED or
-            Worker.AnalysisStatus.RUNNING
+    Checks if the Docker container is running on the worker and
+    the contents of emba.log and infers the status of the analysis.
+    :params worker: The worker to check.
+
+    :return: Worker.AnalysisStatus.FREE or
+             Worker.AnalysisStatus.RUNNING
     """
     try:
         client = worker.ssh_connect()
 
-        cmd = (
-            f"cd {settings.BASE_DIR} && "
-            f"pipenv run python manage.py shell -c "  # --quiet flag is not quiet enough
-            f"'from uploader.models import FirmwareAnalysis; "
-            f"print(FirmwareAnalysis.objects.get(id=\"{worker.analysis_id}\").pid)' | "
-            f"tail -n 1"
-        )
-        _, stdout, stderr = client.exec_command(cmd)  # nosec
-        pid = stdout.read().decode().strip()
-
-        path = f"{settings.EMBA_LOG_ROOT}/{worker.analysis_id}/emba_logs/emba.log"
-
-        _, stdout, stderr = client.exec_command(f"tail -n 10 {path}")  # nosec
-        output = stdout.read().decode().strip()
-        error = stderr.read().decode().strip()
-
-        if error:
-            # logger.error("[Worker %s] Error calling '$ tail %s': %s", worker.id, path, error)
-            raise paramiko.SSHException(f"[Worker {worker.id}] Error calling '$ tail {path}': {error}")
-
-        if "Test ended on" in output:
-            logger.info("[Worker %s] Analysis finished: %s", worker.id, output)
-            # Kill emba Docker container if it's running
-            client.exec_command(f"sudo kill {pid}")  # nosec
-            return Worker.AnalysisStatus.UNASSIGNED
-
-        _, _, stderr = client.exec_command(f"kill -0 {pid}")  # nosec
-
-        error = stderr.read().decode().strip()
-
-        if error:  # ==  no running process
+        cmd = f"sudo docker ps -q"
+        docker_output = exec_blocking_ssh(client, cmd)
+        if docker_output is None:
             logger.info("[Worker %s] EMBA container is no longer running.", worker.id)
-            return Worker.AnalysisStatus.UNASSIGNED
+            return Worker.AnalysisStatus.FREE
 
-        # FIXME: It's possible a different process gets the same pid after emba
+        path = f"{settings.WORKER_EMBA_LOGS}emba.log"
+        cmd = f"tail -n 10 {path}"
+        log_output = exec_blocking_ssh(client, cmd)
+        if "Test ended on" in log_output:
+            logger.info("[Worker %s] Analysis finished: %s", worker.id, log_output)
+            return Worker.AnalysisStatus.FREE
 
-        logger.info("[Worker %s] Analysis is still running: %s", worker.id, output)
+        logger.info("[Worker %s] Analysis is still running: %s", worker.id, docker_output)
         return Worker.AnalysisStatus.RUNNING
 
     except Exception as exception:
@@ -282,6 +302,11 @@ def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
         logger.error("start_analysis: Invalid worker id")
         return
 
+    filename = os.path.basename(src_path)
+    analysis = FirmwareAnalysis.objects.create(firmware_name=filename)
+    worker.analysis_id = analysis.id
+    worker.save()
+
     client = worker.ssh_connect()
 
     exec_blocking_ssh(client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
@@ -298,7 +323,7 @@ def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
 
     exec_blocking_ssh(client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
     exec_blocking_ssh(client, "sudo rm -rf ./terminal.log")
-    exec_blocking_ssh(client, f"sudo sh -c '{emba_cmd}' >./terminal.log 2>&1")
+    client.exec_command(f"sudo sh -c '{emba_cmd}' >./terminal.log 2>&1")
 
 
 @shared_task

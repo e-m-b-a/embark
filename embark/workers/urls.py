@@ -18,8 +18,6 @@ urlpatterns = [
     path('worker/soft_reset/<int:worker_id>/<int:configuration_id>/', views.worker_soft_reset, name='embark-worker-soft-reset'),
     path('worker/hard_reset/<int:worker_id>/', views.worker_hard_reset, name='embark-worker-hard-reset'),
     path('worker/hard_reset/<int:worker_id>/<int:configuration_id>/', views.worker_hard_reset, name='embark-worker-hard-reset'),
-    path('worker/enable_sync/<int:worker_id>/', views.enable_sync, name='embark-worker-enable-sync'),
-    path('worker/disable_sync/<int:worker_id>/', views.disable_sync, name='embark-worker-disable-sync'),
     path('worker/update/<int:worker_id>/', views.update_worker_dependency, name='embark-worker-update'),
     path('worker/update/configuration/<int:configuration_id>/', views.update_configuration_dependency, name='embark-configuration-update'),
 ]
