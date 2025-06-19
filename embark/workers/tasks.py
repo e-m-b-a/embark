@@ -97,7 +97,8 @@ def update_system_info(configuration: Configuration, worker: Worker):
         last_sync_epss = "N/A" if not re.match(commit_regex, last_sync_epss) else last_sync_epss
         last_sync = f"NVD feed: {last_sync_nvd}  EPSS: {last_sync_epss}"
 
-        deb_list_str = exec_blocking_ssh(ssh_client, "sudo bash -c 'cd /root/DEPS/pkg && sha256sum *.deb'")
+        deb_check = exec_blocking_ssh(ssh_client, "sudo bash -c 'if test -d /root/DEPS/pkg; then echo 'success'; fi'")
+        deb_list_str = exec_blocking_ssh(ssh_client, "sudo bash -c 'cd /root/DEPS/pkg && sha256sum *.deb'") if deb_check == 'success' else ""
         deb_list = _parse_deb_list(deb_list_str)
 
         ssh_client.close()
@@ -138,7 +139,7 @@ def update_worker_info():
             logger.info("Worker %s is unreachable, setting status to offline.", worker.name)
             worker.reachable = False
         except BaseException as error:
-            logger.info("An error occurred while updating worker %s: %s", worker.name, error)
+            logger.error("An error occurred while updating worker %s: %s", worker.name, error)
             continue
         finally:
             worker.save()
