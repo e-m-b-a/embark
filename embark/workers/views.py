@@ -333,96 +333,13 @@ def exec_soft_reset_cleanup(worker, configuration_id=None):
         ssh_client = worker.ssh_connect(configuration_id)
         exec_blocking_ssh(ssh_client, "sudo docker stop $(sudo docker ps -aq)")
         exec_blocking_ssh(ssh_client, "sudo docker rm $(sudo docker ps -aq)")
-        exec_blocking_ssh(ssh_client, "sudo rm -rf /root/emba/emba_logs")
-        # TODO: change this path to the actual firmware file location
-        exec_blocking_ssh(ssh_client, "sudo rm -rf /root/amos2025ss01-embark/media/*")
+        exec_blocking_ssh(ssh_client, "sudo rm -rf {settings.WORKER_EMBA_LOGS}")
+        exec_blocking_ssh(ssh_client, "sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
         return {'status': 'success', 'message': 'Worker soft reset completed.'}
     except (paramiko.SSHException, socket.error):
         return {'status': 'error', 'message': 'SSH connection failed or command execution failed.'}
     finally:
         ssh_client.close()
-
-
-@require_http_methods(["POST"])
-@login_required(login_url='/' + settings.LOGIN_URL)
-@permission_required("users.worker_permission", login_url='/')
-def enable_sync(request, worker_id):
-    """
-    Enable the syncronisation every 5 minutes of emba logs
-    """
-    try:
-        worker = Worker.objects.get(id=worker_id)
-
-        if not worker.analysis_id:
-            messages.error(request, f"[Worker {worker.id}] Error: No analysis is running!")
-        elif worker.sync_enabled:
-            messages.error(request, f"[Worker {worker.id}] Error: Sync is already enabled!")
-        else:
-
-            # Execute the sync immediately
-            # TODO: Test this more
-            sync_worker_analysis.delay(worker.id)
-
-            schedule, _ = IntervalSchedule.objects.get_or_create(
-                every=5,
-                period=IntervalSchedule.MINUTES
-            )
-
-            PeriodicTask.objects.update_or_create(
-                name=f"sync_worker_{worker.id}",
-                defaults={
-                    "interval": schedule,
-                    "task": "workers.tasks.sync_worker_analysis",
-                    "args": json.dumps([worker.id]),
-                }
-            )
-
-            FirmwareAnalysis.objects.get_or_create(id=worker.analysis_id)
-
-            messages.success(request, f"[Worker {worker.id}] Sync of analysis {worker.analysis_id} enabled successfully.")
-
-    except FirmwareAnalysis.DoesNotExist:
-        messages.error(request, "[Worker %s] Error: Such an analysis does not exist!", worker.id)
-    except Exception as exception:
-        messages.error(request, "[Worker %s] Error: %s", worker.id, exception)
-    else:
-        worker.sync_enabled = True
-    finally:
-        worker.save()
-
-    return safe_redirect(request, '/worker/')
-
-
-@require_http_methods(["POST"])
-@login_required(login_url='/' + settings.LOGIN_URL)
-@permission_required("users.worker_permission", login_url='/')
-def disable_sync(request, worker_id):
-    """
-    Disable the syncronisation of emba logs
-    """
-    try:
-        worker = Worker.objects.get(id=worker_id)
-
-        if not worker.analysis_id:
-            messages.error(request, f"[Worker {worker.id}] Error: No analysis is running! Disabling sync.")
-        elif not worker.sync_enabled:
-            messages.error(request, f"[Worker {worker.id}] Error: Sync is already disabled!")
-        else:
-            # FirmwareAnalysis.objects.get(id=worker.analysis_id).delete()
-
-            PeriodicTask.objects.filter(name=f"sync_worker_{worker.id}").delete()
-
-            messages.success(request, f"[Worker {worker.id}] Sync of analysis {worker.analysis_id} disabled successfully.")
-
-    except FirmwareAnalysis.DoesNotExist:
-        messages.error(request, "[Worker %s] Error: Such an analysis does not exist! Disabling sync.", worker.id)
-    except Exception as exception:
-        messages.error(request, "[Worker %s] Unexpected exception: %s", worker.id, exception)
-    finally:
-        worker.sync_enabled = False
-        worker.save()
-
-    return safe_redirect(request, '/worker/')
 
 
 @require_http_methods(["GET"])

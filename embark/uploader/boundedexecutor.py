@@ -5,6 +5,7 @@ __license__ = 'MIT'
 
 import builtins
 import logging
+import os
 import shutil
 from subprocess import Popen, PIPE
 import zipfile
@@ -26,7 +27,7 @@ from uploader import finish_execution
 from uploader.archiver import Archiver
 from uploader.models import FirmwareAnalysis
 from uploader.settings import get_emba_base_cmd
-from embark.helper import get_size
+from embark.helper import get_size, zip_check
 from porter.models import LogZipFile
 from porter.importer import result_read_in
 from users.models import User
@@ -215,7 +216,7 @@ class BoundedExecutor:
         except builtins.Exception as exce:
             logger.error("Executor task could not be submitted")
             semaphore.release()
-            raise exce  # FIXME: Block catches exception and raises it? Makes no sense
+            raise exce
         future.add_done_callback(lambda x: semaphore.release())
         return future
 
@@ -247,6 +248,8 @@ class BoundedExecutor:
         """
         logger.debug("Zipping ID: %s", analysis_id)
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        analysis.finished = False
+        analysis.status['finished'] = False
         analysis.status['work'] = True
         analysis.status['last_update'] = str(timezone.now())
         analysis.status['last_phase'] = "Started zipping"
@@ -271,6 +274,8 @@ class BoundedExecutor:
         analysis.status['work'] = False
         analysis.status['last_update'] = str(timezone.now())
         analysis.status['last_phase'] = "Finished Zipping"
+        analysis.finished = True
+        analysis.status['finished'] = True
         analysis.save()
         # send ws message
         async_to_sync(channel_layer.group_send)(
@@ -291,9 +296,14 @@ class BoundedExecutor:
             object with needed pk
         """
         logger.debug("Zipping ID: %s", analysis_id)
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        analysis.finished = False
+        analysis.save(update_fields=["finished"])
         try:
             with zipfile.ZipFile(file_loc, 'r') as zip_:
+                # 1. Check archive contents (security)
                 logs_dir = Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/")
+                zip_contents = zip_.namelist()
                 zip_.extractall(path=logs_dir)
                 logger.info("Extracted to %s", logs_dir)
 

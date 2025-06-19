@@ -9,7 +9,6 @@ from django.conf import settings
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError, QueryDict
 from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.core.files.uploadedfile import UploadedFile
@@ -22,7 +21,6 @@ from uploader.executor import submit_firmware
 from uploader.forms import DeviceForm, FirmwareAnalysisForm, DeleteFirmwareForm, LabelForm, VendorForm
 from uploader.models import FirmwareFile
 from uploader.serializers import FirmwareAnalysisSerializer
-from uploader.boundedexecutor import BoundedExecutor
 from users.decorators import require_api_key
 
 

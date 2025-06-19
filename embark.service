@@ -7,4 +7,3 @@ ExecStart={$EMBARK_ROOT_DIR}/supervisor.sh
 
 [Install]
 WantedBy=multi-user.target
-
