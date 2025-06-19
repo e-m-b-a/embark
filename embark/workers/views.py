@@ -304,7 +304,7 @@ def configuration_soft_reset(request, configuration_id):
     workers = Worker.objects.filter(configurations__id=configuration_id)
 
     for worker in workers:
-        return worker_soft_reset(request, worker.id, configuration_id)
+        worker_soft_reset(request, worker.id, configuration_id)
 
     return JsonResponse({'status': 'success', 'message': 'Worker soft reset completed.'})
 
@@ -353,8 +353,7 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
         ssh_client = None
         try:
             ssh_client = worker.ssh_connect(configuration.id)
-            exec_blocking_ssh(ssh_client, "sudo docker stop $(sudo docker ps -aq)")
-            exec_blocking_ssh(ssh_client, "sudo docker rm $(sudo docker ps -aq)")
+            exec_blocking_ssh(ssh_client, "sudo docker ps -aq | xargs -r docker stop | xargs -r docker rm || true")
             exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
             exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
             ssh_client.close()
