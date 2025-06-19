@@ -1,6 +1,7 @@
 import ipaddress
 import socket
 import re
+import os
 from concurrent.futures import ThreadPoolExecutor
 
 import paramiko
@@ -312,9 +313,8 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
             ssh_client = worker.ssh_connect(configuration.id)
             exec_blocking_ssh(ssh_client, "sudo docker stop $(sudo docker ps -aq)")
             exec_blocking_ssh(ssh_client, "sudo docker rm $(sudo docker ps -aq)")
-            exec_blocking_ssh(ssh_client, "sudo rm -rf /root/emba/emba_logs")
-            # TODO: change this path to the actual firmware file location
-            exec_blocking_ssh(ssh_client, "sudo rm -rf /root/amos2025ss01-embark/media/*")
+            exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
+            exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
             ssh_client.close()
             return JsonResponse({'status': 'success', 'message': 'Worker soft reset completed.'})
 
@@ -351,7 +351,7 @@ def worker_hard_reset(request, worker_id, configuration_id=None):
         try:
             worker_soft_reset(request, worker_id, configuration.id)
             ssh_client = worker.ssh_connect(configuration.id)
-            emba_path = "/root/emba/full_uninstaller.sh"
+            emba_path = os.path.join(settings.WORKER_EMBA_ROOT, "full_uninstaller.sh")
             exec_blocking_ssh(ssh_client, "sudo bash " + emba_path)
             ssh_client.close()
             return JsonResponse({'status': 'success', 'message': 'Worker hard reset completed.'})
