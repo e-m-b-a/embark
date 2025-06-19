@@ -274,8 +274,8 @@ echo -e "\n[""${BLUE} JOB""${NC}""] Starting daphne(ASGI) - log to /embark/logs/
 cd /var/www/embark && pipenv run daphne --access-log /var/www/logs/daphne.log -e ssl:8000:privateKey=/var/www/conf/cert/embark-ws.local.key:certKey=/var/www/conf/cert/embark-ws.local.crt -b "${BIND_IP}" -p 8001 -s embark-ws.local embark.asgi:application &
 sleep 5
 
-# Start celery worker
-celery -A embark worker --beat --scheduler django -l INFO --logfile=./logs/celery.log &
+# Start celery worker (note that we are in /var/www/embark now and the logs are in /var/www/logs)
+pipenv run python -m celery -A embark worker --beat --scheduler django -l INFO --logfile=../logs/celery.log &
 CELERY_PID=$!
 trap 'kill ${CELERY_PID} 2>/dev/null; exit' SIGINT SIGTERM EXIT
 
