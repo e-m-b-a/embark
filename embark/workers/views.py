@@ -386,8 +386,9 @@ def exec_soft_reset_cleanup(worker, configuration_id=None):
     try:
         ssh_client = worker.ssh_connect(configuration_id)
         exec_blocking_ssh(ssh_client, "sudo docker ps -aq | xargs -r docker stop | xargs -r docker rm || true")
-        exec_blocking_ssh(ssh_client, "sudo rm -rf {settings.WORKER_EMBA_LOGS}")
-        exec_blocking_ssh(ssh_client, "sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
+        exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
+        exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
+        exec_blocking_ssh(ssh_client, f"sudo mkdir -p {settings.WORKER_FIRMWARE_DIR}")
         return {'status': 'success', 'message': 'Worker soft reset completed.'}
     except (paramiko.SSHException, socket.error):
         return {'status': 'error', 'message': 'SSH connection failed or command execution failed.'}

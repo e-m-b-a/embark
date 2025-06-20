@@ -11,11 +11,13 @@ from celery.utils.log import get_task_logger
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from django.conf import settings
 
-from uploader.models import FirmwareAnalysis
 from workers.models import Worker, Configuration
 from workers.update.dependencies import DependencyType
 from workers.update.update import exec_blocking_ssh, perform_update
 from workers.orchestrator import get_orchestrator
+from uploader.models import FirmwareAnalysis
+from uploader.boundedexecutor import BoundedExecutor
+from embark.logreader import LogReader
 
 logger = get_task_logger(__name__)
 
@@ -106,13 +108,13 @@ def update_system_info(configuration: Configuration, worker: Worker):
         disk_info = f"Free: {disk_free}  Total: {disk_total}"
 
         version_regex = r"\d+\.\d+\.\d+[a-z]?"
-        emba_version = exec_blocking_ssh(ssh_client, f"sudo cat {os.path.join(settings.WORKER_EMBA_ROOT, "docker-compose.yml")} | awk -F: '/image:/ {{print $NF; exit}}'")
+        emba_version = exec_blocking_ssh(ssh_client, f"sudo cat {os.path.join(settings.WORKER_EMBA_ROOT, 'docker-compose.yml')} | awk -F: '/image:/ {{print $NF; exit}}'")
         emba_version = "N/A" if not re.match(version_regex, emba_version) else emba_version
 
         commit_regex = r"[0-9a-f]{7,40}"
-        last_sync_nvd = exec_blocking_ssh(ssh_client, f"sudo bash -c 'cd {os.path.join(settings.WORKER_EMBA_ROOT, "external/nvd-json-data-feeds")} && git rev-parse --short HEAD'")
+        last_sync_nvd = exec_blocking_ssh(ssh_client, f"sudo bash -c 'cd {os.path.join(settings.WORKER_EMBA_ROOT, 'external/nvd-json-data-feeds')} && git rev-parse --short HEAD'")
         last_sync_nvd = "N/A" if not re.match(commit_regex, last_sync_nvd) else last_sync_nvd
-        last_sync_epss = exec_blocking_ssh(ssh_client, f"sudo bash -c 'cd {os.path.join(settings.WORKER_EMBA_ROOT, "external/EPSS-data")} && git rev-parse --short HEAD'")
+        last_sync_epss = exec_blocking_ssh(ssh_client, f"sudo bash -c 'cd {os.path.join(settings.WORKER_EMBA_ROOT, 'external/EPSS-data')} && git rev-parse --short HEAD'")
         last_sync_epss = "N/A" if not re.match(commit_regex, last_sync_epss) else last_sync_epss
         last_sync = f"NVD feed: {last_sync_nvd}  EPSS: {last_sync_epss}"
 
@@ -253,7 +255,9 @@ def monitor_workers():
         try:
             status = check_with_emba_log(worker)
 
-            if status == Worker.AnalysisStatus.FREE:
+            analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
+            if analysis.status["finished"] or \
+               status == Worker.AnalysisStatus.FREE:
                 # Fetch logs for the last time
                 _fetch_analysis_logs(worker)
 
@@ -264,8 +268,10 @@ def monitor_workers():
                 logger.info("[Worker %s] Analysis finished.", worker.id)
         except Exception as exception:
             logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
-            # TODO: Better handle an exception
-            continue
+            # TODO: Better handle exceptions
+            orchestrator.release_worker(worker)
+            exec_soft_reset_cleanup(worker)
+
     logger.debug("Worker health-check complete.")
 
 
@@ -318,15 +324,7 @@ def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
         logger.error("start_analysis: Invalid worker id")
         return
 
-    filename = os.path.basename(src_path)
-    analysis = FirmwareAnalysis.objects.create(firmware_name=filename)
-    worker.analysis_id = analysis.id
-    worker.save()
-
     client = worker.ssh_connect()
-
-    exec_blocking_ssh(client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
-    exec_blocking_ssh(client, f"sudo mkdir -p {settings.WORKER_FIRMWARE_DIR}")
 
     target_path_user = target_path if client.ssh_user == "root" else f"/home/{client.ssh_user}/temp"
 
@@ -340,6 +338,10 @@ def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
     exec_blocking_ssh(client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
     exec_blocking_ssh(client, "sudo rm -rf ./terminal.log")
     client.exec_command(f"sudo sh -c '{emba_cmd}' >./terminal.log 2>&1")  # nosec
+
+    future = BoundedExecutor.submit(LogReader, worker.analysis_id)
+    if future is None:
+        logger.error("start_analysis: Failed to start LogReader.")
 
 
 @shared_task
