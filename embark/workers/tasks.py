@@ -195,21 +195,22 @@ def _fetch_analysis_logs(worker) -> None:
     """
     Zips the analysis log files on remote worker, fetches it, extracts it.
 
-    :param worker_id: ID of worker object whose analysis_id logs to process.
+    :param worker: Worker object whose analysis_id logs to process.
     :raises OSError: If extracting the zipfile fails.
     """
     client = None
     sftp_client = None
     try:
         local_zip_path = f"{settings.MEDIA_ROOT}/log_zip/{worker.analysis_id}.zip"
-        local_log_path = f"{settings.EMBA_LOG_ROOT}/{worker.analysis_id}/"
+        local_log_path = f"{settings.EMBA_LOG_ROOT}/{worker.analysis_id}/emba_logs/"
 
         # SSH and zip the logs
         client = worker.ssh_connect()
 
         logger.info("[Worker %s] Zipping logs on remote...", worker.id)
 
-        zip_cmd = f"cd {settings.WORKER_ROOT} && 7z u -tzip emba_logs.zip emba_logs/"
+        zip_cmd = f"cd {settings.WORKER_ROOT} && \
+                    7z u -t7z -y emba_logs.zip emba_logs/ -uq3"
         exec_blocking_ssh(client, zip_cmd)
 
         logger.info("[Worker %s] Zipping logs on remote complete.", worker.id)
@@ -225,7 +226,7 @@ def _fetch_analysis_logs(worker) -> None:
 
         logger.info("[Worker %s] Downloaded the log zip.", worker.id)
 
-        cmd = ["unzip", "-u", "-o", local_zip_path, "-d", local_log_path]
+        cmd = ["7z", "x", "-y", local_zip_path, f"-o{local_log_path}"]
         proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         if proc.returncode:
             raise OSError(f"Unzip failed with exit code {proc.returncode}: {proc.stdout.decode()}")
@@ -310,10 +311,10 @@ def check_with_emba_log(worker) -> Worker.AnalysisStatus:
 def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
     """
     Copies the firmware image and triggers analysis start
-    :params worker_id: the worker to use
-    :params emba_cmd: The command to run
-    :params src_path: img source path
-    :params target_path: target path on worker
+    :param worker_id: the worker to use
+    :param emba_cmd: The command to run
+    :param src_path: img source path
+    :param target_path: target path on worker
     """
     try:
         worker = Worker.objects.get(id=worker_id)
