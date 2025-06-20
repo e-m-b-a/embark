@@ -1,12 +1,10 @@
 import ipaddress
 import socket
 import re
-import json
 import logging
 from concurrent.futures import ThreadPoolExecutor
 import paramiko
 
-from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import get_user
@@ -17,7 +15,6 @@ from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
 
-from uploader.models import FirmwareAnalysis
 from workers.models import Worker, Configuration
 from workers.update.update import exec_blocking_ssh
 from workers.update.dependencies import DependencyType, uses_dependency
@@ -184,10 +181,10 @@ def update_worker_dependency(request, worker_id):
 
     except Worker.DoesNotExist:
         messages.error(request, 'Worker does not exist')
-    except ValueError as exception:
+    except Exception as exception:
         messages.error(request, str(exception))
-    finally:
-        return safe_redirect(request, '/worker/')
+
+    return safe_redirect(request, '/worker/')
 
 
 @require_http_methods(["POST"])

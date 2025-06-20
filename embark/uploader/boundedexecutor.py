@@ -339,7 +339,6 @@ class BoundedExecutor:
         analysis.log_size = get_size(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/")
         analysis.save(update_fields=["log_size", "end_date", "scan_time", "duration", "finished"])
 
-
     @classmethod
     def emba_check(cls, option):
         """
