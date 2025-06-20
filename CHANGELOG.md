@@ -14,6 +14,10 @@
 - Settings App to EMBArk ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114643627&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C66))
 - Settings helper `workers_enabled` check
 
+### CHANGED
+
+- Use settings worker path variables
+
 ## [sprint-09](https://github.com/amosproj/amos2025ss01-embark/releases/tag/sprint-09-release) - 2025-06-18
 
 ### ADDED
