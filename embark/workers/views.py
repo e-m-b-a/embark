@@ -19,7 +19,7 @@ from django.db.models import Count
 from workers.models import Worker, Configuration
 from workers.update.update import exec_blocking_ssh
 from workers.update.dependencies import DependencyType, uses_dependency
-from workers.tasks import update_worker, update_system_info
+from workers.tasks import update_worker, update_system_info, worker_hard_reset_task, worker_soft_reset_task
 
 
 @require_http_methods(["GET"])
@@ -374,11 +374,7 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
 
         ssh_client = None
         try:
-            ssh_client = worker.ssh_connect(configuration.id)
-            exec_blocking_ssh(ssh_client, "sudo docker ps -aq | xargs -r docker stop | xargs -r docker rm || true")
-            exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
-            exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
-            ssh_client.close()
+            worker_soft_reset_task.delay(worker=worker, configuration=configuration)
             messages.success(request, f'Successfully soft reseted worker: {worker.ip_address} ({worker.name})')
             return safe_redirect(request, '/worker/')
 
@@ -420,10 +416,7 @@ def worker_hard_reset(request, worker_id, configuration_id=None):
         ssh_client = None
         try:
             worker_soft_reset(request, worker_id, configuration.id)
-            ssh_client = worker.ssh_connect(configuration.id)
-            emba_path = os.path.join(settings.WORKER_EMBA_ROOT, "full_uninstaller.sh")
-            exec_blocking_ssh(ssh_client, "sudo bash " + emba_path)
-            ssh_client.close()
+            worker_hard_reset_task.delay(worker=worker, configuration=configuration)
             messages.success(request, f'Successfully hard reseted worker: {worker.ip_address} ({worker.name})')
             return safe_redirect(request, '/worker/')
 

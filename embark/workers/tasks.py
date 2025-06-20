@@ -245,3 +245,20 @@ def update_worker(worker_id, dependency_idx):
             logger.info("Worker: %s added to orchestrator", worker.name)
         except ValueError:
             logger.error("Worker: %s already exists in orchestrator", worker.name)
+
+
+@shared_task
+def worker_soft_reset_task(worker, configuration):
+    ssh_client = worker.ssh_connect(configuration.id)
+    exec_blocking_ssh(ssh_client, "sudo docker ps -aq | xargs -r docker stop | xargs -r docker rm || true")
+    exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
+    exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
+    ssh_client.close()
+
+
+@shared_task
+def worker_hard_reset_task(worker, configuration):
+    ssh_client = worker.ssh_connect(configuration.id)
+    emba_path = os.path.join(settings.WORKER_EMBA_ROOT, "full_uninstaller.sh")
+    exec_blocking_ssh(ssh_client, "sudo bash " + emba_path)
+    ssh_client.close()
