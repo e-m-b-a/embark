@@ -271,11 +271,11 @@ class BoundedExecutor:
             analysis.zip_file = LogZipFile.objects.create(file=archive, user=analysis.user)
         except builtins.Exception as exce:
             logger.error("Zipping failed: %s", exce)
+        analysis.finished = True
+        analysis.status['finished'] = True
         analysis.status['work'] = False
         analysis.status['last_update'] = str(timezone.now())
         analysis.status['last_phase'] = "Finished Zipping"
-        analysis.finished = True
-        analysis.status['finished'] = True
         analysis.save()
         # send ws message
         async_to_sync(channel_layer.group_send)(
