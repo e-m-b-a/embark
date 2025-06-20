@@ -13,6 +13,9 @@ EMBAPACKAGEPATH="/usr/local/EMBA_PACKAGES"
 
 rm -rf "${INSTALLPATH}/emba"
 rm -rf "${INSTALLPATH}/emba-master"
+rm -rf "${INSTALLPATH}/firmware"
+rm -rf "${INSTALLPATH}/emba_logs"
+
 if command -v docker >/dev/null 2>&1; then
 	docker system prune -af
 
