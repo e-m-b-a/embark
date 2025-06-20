@@ -186,8 +186,8 @@ def update_worker_dependency(request, worker_id):
         messages.error(request, 'Worker does not exist')
     except ValueError as exception:
         messages.error(request, str(exception))
-
-    return safe_redirect(request, '/worker/')
+    finally:
+        return safe_redirect(request, '/worker/')
 
 
 @require_http_methods(["POST"])
@@ -326,8 +326,8 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
 def exec_soft_reset_cleanup(worker, configuration_id=None):
     """
     Connects via SSH to the worker and performs the soft reset
-    Params: worker object,
-            configuration_id of the worker based on which the worker needs to be reset
+    :param worker: Worker object to soft reset
+    :param configuration_id: config_id of the worker based on which the worker needs to be reset
     """
     try:
         ssh_client = worker.ssh_connect(configuration_id)
