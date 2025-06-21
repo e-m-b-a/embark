@@ -18,8 +18,8 @@ from django.db.models import Count
 
 from workers.models import Worker, Configuration
 from workers.update.update import exec_blocking_ssh
-from workers.update.dependencies import DependencyType, uses_dependency, fetch_dependency_updates
-from workers.tasks import update_worker, update_system_info
+from workers.update.dependencies import DependencyType, uses_dependency
+from workers.tasks import update_worker, update_system_info, fetch_dependency_updates
 
 
 @require_http_methods(["GET"])
@@ -490,8 +490,7 @@ def check_updates(request):
     """
     Checks if new updates are available
     """
-    fetch_dependency_updates()
+    fetch_dependency_updates.delay()
 
-    return JsonResponse({
-        'status': 'success',
-    })
+    messages.success(request, 'Update check queued!')
+    return safe_redirect(request, '/worker/')

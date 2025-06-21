@@ -1,17 +1,20 @@
 import socket
 import re
 import os
+import shutil
+import subprocess
+import time
 
 import paramiko
 from celery import shared_task
 from celery.utils.log import get_task_logger
 
+import requests
 from django.conf import settings
 
 from workers.models import Worker, Configuration
 from workers.update.dependencies import DependencyType
 from workers.update.update import exec_blocking_ssh, perform_update
-from workers.update.dependencies import parse_deb_list
 from workers.orchestrator import get_orchestrator
 
 logger = get_task_logger(__name__)
@@ -31,6 +34,31 @@ def create_periodic_tasks(**kwargs):
         name='Update Worker Information',
         task='workers.tasks.update_worker_info',
     )
+
+
+def _parse_deb_list(deb_list_str: str):
+    """
+    Parse the output of the 'sha256sum *.deb' command to extract package names and their checksums.
+
+    :param deb_list_str: String containing the output of the 'sha256sum *.deb' command
+    :return: List of dictionaries with package information
+    """
+    deb_list = []
+    for line in deb_list_str.splitlines():
+        try:
+            checksum, package_name = line.split('  ')
+            deb_info = re.match(r"(?P<name>[^_]+)_(?P<version>[^_]+)_(?P<architecture>[^.]+)\.deb", package_name)
+            deb_list.append({
+                "name": deb_info.group("name"),
+                "version": deb_info.group("version"),
+                "architecture": deb_info.group("architecture"),
+                "checksum": checksum
+            })
+        except BaseException as error:
+            if line:
+                logger.error("Error parsing deb list line '%s': %s", line, error)
+            continue
+    return deb_list
 
 
 def update_system_info(configuration: Configuration, worker: Worker):
@@ -76,7 +104,7 @@ def update_system_info(configuration: Configuration, worker: Worker):
 
         deb_check = exec_blocking_ssh(ssh_client, "sudo bash -c 'if test -d /root/DEPS/pkg; then echo 'success'; fi'")
         deb_list_str = exec_blocking_ssh(ssh_client, "sudo bash -c 'cd /root/DEPS/pkg && sha256sum *.deb'") if deb_check == 'success' else ""
-        deb_list = parse_deb_list(deb_list_str)
+        deb_list = _parse_deb_list(deb_list_str)
 
         ssh_client.close()
 
@@ -221,3 +249,59 @@ def update_worker(worker_id, dependency_idx):
             logger.info("Worker: %s added to orchestrator", worker.name)
         except ValueError:
             logger.error("Worker: %s already exists in orchestrator", worker.name)
+
+
+@shared_task
+def fetch_dependency_updates():
+    """
+    Checks if there are updates available
+    """
+    logger.info("Dependency update check started.")
+
+    # Fetch EMBA + docker image
+    response = requests.get("https://raw.githubusercontent.com/e-m-b-a/emba/refs/heads/master/docker-compose.yml", timeout=30)
+    match = re.search(r'image:\s?embeddedanalyzer\/emba:(.*?)\n', response.text)
+    emba_version = ""
+    if match is None:
+        logger.error("Update check: EMBA docker-compose.yml does not contain image version")
+        emba_version = "ERROR fetching EMBA"
+    else:
+        emba_version = match.group(1)
+
+    # Fetch external
+    def _get_head_time(repo):
+        response = requests.get(f"https://api.github.com/repos/EMBA-support-repos/{repo}/commits?per_page=1", timeout=30)
+        json_response = response.json()
+
+        return json_response[0]["sha"], json_response[0]["commit"]["author"]["date"]
+
+    nvd_head, nvd_time = _get_head_time("nvd-json-data-feeds")
+    epss_head, epss_time = _get_head_time("EPSS-data")
+
+    # Fetch APT
+    deb_list = ""
+    log_file = settings.WORKER_SETUP_LOGS.format(timestamp=int(time.time()))
+    logger.info("APT Dependency update check started. Logs: %s", log_file)
+    try:
+        script_path = os.path.join(os.path.dirname(__file__), DependencyType.DEPS.value)
+        cmd = f"sudo {script_path} '{settings.WORKER_UPDATE_CHECK}' '' ''"
+        with open(log_file, "w+", encoding="utf-8") as file:
+            with subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=file, stderr=file, shell=True) as proc:  # nosec
+                proc.communicate()
+
+            logger.info("APT Dependency update check successful. Logs: %s", log_file)
+
+        deb_list_str = subprocess.check_output(f"cd {os.path.join(settings.WORKER_UPDATE_CHECK, 'pkg')} && sha256sum *.deb", shell=True)  # nosec
+        deb_list = _parse_deb_list(deb_list_str.decode('utf-8'))
+    except BaseException as exception:
+        logger.error("Error APT Dependency update check: %s. Logs: %s", exception, log_file)
+
+    shutil.rmtree(settings.WORKER_UPDATE_CHECK, ignore_errors=True)
+
+    # TODO Store in DB
+    print(emba_version)
+    print(nvd_head)
+    print(nvd_time)
+    print(epss_head)
+    print(epss_time)
+    print(deb_list)
