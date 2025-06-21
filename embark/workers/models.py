@@ -24,10 +24,6 @@ class Worker(models.Model):
         CONFIGURED = "C", _("Configured")
         ERROR = "E", _("Error")
 
-    class AnalysisStatus(models.TextChoices):  # pylint: disable=too-many-ancestors
-        RUNNING = "R", _("Running")
-        FREE = "F", _("Free")
-
     configurations = models.ManyToManyField(Configuration, related_name='workers', blank=True)
     name = models.CharField(max_length=100)
     ip_address = models.GenericIPAddressField(unique=True)

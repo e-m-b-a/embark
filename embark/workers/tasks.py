@@ -1,6 +1,5 @@
 import os
 import re
-import time
 import socket
 import subprocess
 
@@ -178,15 +177,10 @@ def fetch_running_analysis_logs():
     busy_workers = orchestrator.get_busy_workers()
     for worker in busy_workers.values():
         try:
-            if not worker.analysis_id:
-                raise AttributeError("analysis_id is not set.")
-
             _fetch_analysis_logs(worker)
 
         except Exception as exception:
             logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
-        finally:
-            time.sleep(2)  # Spread out workload
 
 
 def _fetch_analysis_logs(worker) -> None:
@@ -207,8 +201,8 @@ def _fetch_analysis_logs(worker) -> None:
 
         logger.info("[Worker %s] Zipping logs on remote...", worker.id)
 
-        zip_cmd = f"cd {settings.WORKER_ROOT} && \
-                    7z u -t7z -y emba_logs.zip emba_logs/ -uq3"
+        zip_cmd = "cd /root && \
+                   7z u -t7z -y emba_logs.zip emba_logs/ -uq3"
         exec_blocking_ssh(client, zip_cmd)
 
         logger.info("[Worker %s] Zipping logs on remote complete.", worker.id)
@@ -218,7 +212,7 @@ def _fetch_analysis_logs(worker) -> None:
 
         # Fetch zip file
         sftp_client = client.open_sftp()
-        sftp_client.get(f"{settings.WORKER_ROOT}/emba_logs.zip", local_zip_path)
+        sftp_client.get("/root/emba_logs.zip", local_zip_path)
         sftp_client.close()
         client.close()
 
@@ -232,8 +226,6 @@ def _fetch_analysis_logs(worker) -> None:
     finally:
         if client is not None:
             client.close()
-        if sftp_client is not None:
-            sftp_client.close()
 
 
 @shared_task
@@ -253,11 +245,10 @@ def monitor_workers():
     busy_workers = list(orchestrator.get_busy_workers().values())
     for worker in busy_workers:
         try:
-            status = check_with_emba_log(worker)
+            is_running = is_emba_container_running(worker)
 
             analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
-            if analysis.status["finished"] or \
-               status == Worker.AnalysisStatus.FREE:
+            if analysis.status["finished"] or not is_running:
                 # Fetch logs for the last time
                 _fetch_analysis_logs(worker)
 
@@ -275,14 +266,13 @@ def monitor_workers():
     logger.debug("Worker health-check complete.")
 
 
-def check_with_emba_log(worker) -> Worker.AnalysisStatus:
+def is_emba_container_running(worker) -> bool:
     """
-    Checks if the Docker container is running on the worker and
-    the contents of emba.log and infers the status of the analysis.
-    :param worker: The worker to check.
+    Checks if the Docker container is running on the worker.
 
-    :return: Worker.AnalysisStatus.FREE or
-             Worker.AnalysisStatus.RUNNING
+    :param worker: The worker to check.
+    :return: True, if the Docker container is still running,
+             False, otherwise
     """
     try:
         client = worker.ssh_connect()
@@ -290,23 +280,18 @@ def check_with_emba_log(worker) -> Worker.AnalysisStatus:
         cmd = "sudo docker ps -q"
         docker_output = exec_blocking_ssh(client, cmd)
         if docker_output is None:
-            logger.info("[Worker %s] EMBA container is no longer running.", worker.id)
-            return Worker.AnalysisStatus.FREE
+            logger.info("[Worker %s] EMBA Docker container is no longer running.", worker.id)
+            return False
 
-        path = f"{settings.WORKER_EMBA_LOGS}emba.log"
-        cmd = f"tail -n 10 {path}"
-        log_output = exec_blocking_ssh(client, cmd)
-        if "Test ended on" in log_output:
-            logger.info("[Worker %s] Analysis finished: %s", worker.id, log_output)
-            return Worker.AnalysisStatus.FREE
-
-        logger.info("[Worker %s] Analysis is still running: %s", worker.id, docker_output)
-        return Worker.AnalysisStatus.RUNNING
+        logger.info("[Worker %s] EMBA Docker container is still running: %s", worker.id, docker_output)
+        return True
 
     except Exception as exception:
         logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
         logger.info("[Worker %s] Setting the worker as free.", worker.id)
-        return Worker.AnalysisStatus.FREE
+        return False
+    finally:
+        client.close()
 
 
 @shared_task
@@ -325,6 +310,10 @@ def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
         return
 
     client = worker.ssh_connect()
+
+    # TODO: Move this to worker cleanup logic (before calling start_analysis)
+    exec_blocking_ssh(client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
+    exec_blocking_ssh(client, f"sudo mkdir -p {settings.WORKER_FIRMWARE_DIR}")
 
     target_path_user = target_path if client.ssh_user == "root" else f"/home/{client.ssh_user}/temp"
 

@@ -361,11 +361,10 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
 
         if configuration_id:
             configuration = Configuration.objects.get(id=configuration_id)
+            if configuration.user != user:
+                return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
         else:
             configuration = worker.configurations.filter(user=user).first()
-
-        if configuration.user != user:
-            return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
 
         result = exec_soft_reset_cleanup(worker, configuration.id)
         return JsonResponse(result)
