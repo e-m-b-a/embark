@@ -12,7 +12,7 @@ from celery.utils.log import get_task_logger
 import requests
 from django.conf import settings
 
-from workers.models import Worker, Configuration
+from workers.models import Worker, Configuration, DependencyVersion
 from workers.update.dependencies import DependencyType
 from workers.update.update import exec_blocking_ssh, perform_update
 from workers.orchestrator import get_orchestrator
@@ -258,15 +258,18 @@ def fetch_dependency_updates():
     """
     logger.info("Dependency update check started.")
 
+    version = DependencyVersion.objects.first()
+    if not version:
+        version = DependencyVersion()
+
     # Fetch EMBA + docker image
     response = requests.get("https://raw.githubusercontent.com/e-m-b-a/emba/refs/heads/master/docker-compose.yml", timeout=30)
     match = re.search(r'image:\s?embeddedanalyzer\/emba:(.*?)\n', response.text)
-    emba_version = ""
     if match is None:
         logger.error("Update check: EMBA docker-compose.yml does not contain image version")
-        emba_version = "ERROR fetching EMBA"
+        version.emba = "ERROR fetching EMBA"
     else:
-        emba_version = match.group(1)
+        version.emba = match.group(1)
 
     # Fetch external
     def _get_head_time(repo):
@@ -275,15 +278,14 @@ def fetch_dependency_updates():
 
         return json_response[0]["sha"], json_response[0]["commit"]["author"]["date"]
 
-    nvd_head, nvd_time = _get_head_time("nvd-json-data-feeds")
-    epss_head, epss_time = _get_head_time("EPSS-data")
+    version.nvd_head, version.nvd_time = _get_head_time("nvd-json-data-feeds")
+    version.epss_head, version.epss_time = _get_head_time("EPSS-data")
 
     # Fetch APT
-    deb_list = ""
     log_file = settings.WORKER_SETUP_LOGS.format(timestamp=int(time.time()))
     logger.info("APT Dependency update check started. Logs: %s", log_file)
     try:
-        script_path = os.path.join(os.path.dirname(__file__), DependencyType.DEPS.value)
+        script_path = os.path.join(os.path.dirname(__file__), "update", DependencyType.DEPS.value)
         cmd = f"sudo {script_path} '{settings.WORKER_UPDATE_CHECK}' '' ''"
         with open(log_file, "w+", encoding="utf-8") as file:
             with subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=file, stderr=file, shell=True) as proc:  # nosec
@@ -292,16 +294,12 @@ def fetch_dependency_updates():
             logger.info("APT Dependency update check successful. Logs: %s", log_file)
 
         deb_list_str = subprocess.check_output(f"cd {os.path.join(settings.WORKER_UPDATE_CHECK, 'pkg')} && sha256sum *.deb", shell=True)  # nosec
-        deb_list = _parse_deb_list(deb_list_str.decode('utf-8'))
+        version.deb_list = _parse_deb_list(deb_list_str.decode('utf-8'))
     except BaseException as exception:
         logger.error("Error APT Dependency update check: %s. Logs: %s", exception, log_file)
+        version.deb_list = []
 
     shutil.rmtree(settings.WORKER_UPDATE_CHECK, ignore_errors=True)
 
-    # TODO Store in DB
-    print(emba_version)
-    print(nvd_head)
-    print(nvd_time)
-    print(epss_head)
-    print(epss_time)
-    print(deb_list)
+    # Store in DB
+    version.save()

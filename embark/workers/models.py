@@ -58,3 +58,12 @@ class Worker(models.Model):
         ssh_client.ssh_pw = configuration.ssh_password
 
         return ssh_client
+
+
+class DependencyVersion(models.Model):
+    emba = models.CharField(max_length=100)
+    nvd_head = models.CharField(max_length=100)
+    nvd_time = models.DateTimeField()
+    epss_head = models.CharField(max_length=100)
+    epss_time = models.DateTimeField()
+    deb_list = models.JSONField()
