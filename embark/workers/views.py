@@ -18,7 +18,7 @@ from django.db.models import Count
 
 from workers.models import Worker, Configuration
 from workers.update.update import exec_blocking_ssh
-from workers.update.dependencies import DependencyType, uses_dependency
+from workers.update.dependencies import DependencyType, uses_dependency, fetch_dependency_updates
 from workers.tasks import update_worker, update_system_info
 
 
@@ -481,3 +481,17 @@ def safe_redirect(request, default):
     if not url_has_allowed_host_and_scheme(referer, allowed_hosts={request.get_host()}):
         referer = default
     return HttpResponseRedirect(referer)
+
+
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def check_updates(request):
+    """
+    Checks if new updates are available
+    """
+    fetch_dependency_updates()
+
+    return JsonResponse({
+        'status': 'success',
+    })

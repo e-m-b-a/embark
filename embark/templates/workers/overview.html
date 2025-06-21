@@ -96,6 +96,11 @@
     </div>
 
     <div class="worker-container">
+        <form action="{% url 'embark-worker-check-updates' %}" method="post">
+            {% csrf_token %}
+            <input type="submit" value="Check updates">
+        </form>
+
     <h2>Worker Nodes</h2>
     <table>
     <tr>

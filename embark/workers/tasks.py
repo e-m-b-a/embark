@@ -11,6 +11,7 @@ from django.conf import settings
 from workers.models import Worker, Configuration
 from workers.update.dependencies import DependencyType
 from workers.update.update import exec_blocking_ssh, perform_update
+from workers.update.dependencies import parse_deb_list
 from workers.orchestrator import get_orchestrator
 
 logger = get_task_logger(__name__)
@@ -30,31 +31,6 @@ def create_periodic_tasks(**kwargs):
         name='Update Worker Information',
         task='workers.tasks.update_worker_info',
     )
-
-
-def _parse_deb_list(deb_list_str: str):
-    """
-    Parse the output of the 'sha256sum *.deb' command to extract package names and their checksums.
-
-    :param deb_list_str: String containing the output of the 'sha256sum *.deb' command
-    :return: List of dictionaries with package information
-    """
-    deb_list = []
-    for line in deb_list_str.splitlines():
-        try:
-            checksum, package_name = line.split('  ')
-            deb_info = re.match(r"(?P<name>[^_]+)_(?P<version>[^_]+)_(?P<architecture>[^.]+)\.deb", package_name)
-            deb_list.append({
-                "name": deb_info.group("name"),
-                "version": deb_info.group("version"),
-                "architecture": deb_info.group("architecture"),
-                "checksum": checksum
-            })
-        except BaseException as error:
-            if line:
-                logger.error("Error parsing deb list line '%s': %s", line, error)
-            continue
-    return deb_list
 
 
 def update_system_info(configuration: Configuration, worker: Worker):
@@ -100,7 +76,7 @@ def update_system_info(configuration: Configuration, worker: Worker):
 
         deb_check = exec_blocking_ssh(ssh_client, "sudo bash -c 'if test -d /root/DEPS/pkg; then echo 'success'; fi'")
         deb_list_str = exec_blocking_ssh(ssh_client, "sudo bash -c 'cd /root/DEPS/pkg && sha256sum *.deb'") if deb_check == 'success' else ""
-        deb_list = _parse_deb_list(deb_list_str)
+        deb_list = parse_deb_list(deb_list_str)
 
         ssh_client.close()
 

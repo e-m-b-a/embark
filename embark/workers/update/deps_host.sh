@@ -24,8 +24,15 @@ function downloadPackage() {
 
 ### Reset
 rm -rf "${FILEPATH}"
-rm -f "${ZIPPATH}"
-rm -rf "${DONEPATH}"
+
+if [ -n "${ZIPPATH}" ]; then
+  rm -f "${ZIPPATH}"
+fi
+
+if [ -n "${DONEPATH}" ]; then
+  rm -rf "${DONEPATH}"
+fi
+
 mkdir -p "${FILEPATH}"
 
 ### Copy scripts
@@ -79,5 +86,10 @@ downloadPackage libnotify-bin
 # Build index (for dependency tree)
 ( cd "${PKGPATH}" && dpkg-scanpackages . ) | gzip -9c > "${PKGPATH}/Packages.gz"
 
-tar czf "${ZIPPATH}" -C "${FILEPATH}" .
-touch "${DONEPATH}"
+if [ -n "${ZIPPATH}" ]; then
+  tar czf "${ZIPPATH}" -C "${FILEPATH}" .
+fi
+
+if [ -n "${DONEPATH}" ]; then
+  touch "${DONEPATH}"
+fi
