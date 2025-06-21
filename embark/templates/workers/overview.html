@@ -113,8 +113,8 @@
         <th>CPU</th>
         <th>Memory</th>
         <th>Disk</th>
-        <th>EMBA Version</th>
-        <th>Last Sync</th>
+        <th>EMBA version</th>
+        <th>External directory</th>
         <th>Actions</th>
     </tr>
     {% for worker in workers %}
@@ -128,8 +128,8 @@
         <td>{{ worker.system_info.cpu_info }}</td>
         <td>{{ worker.system_info.ram_info }}</td>
         <td>{{ worker.system_info.disk_info }}</td>
-        <td>{{ worker.system_info.emba_version }}</td>
-        <td>{{ worker.system_info.last_sync }}</td>
+        <td>{{ worker.dependency_version.emba }}</td>
+        <td>NVD: {{ worker.dependency_version.nvd_head|slice:"0:6" }}<br/>EPSS: {{ worker.dependency_version.epss_head|slice:"0:6" }}</td>
 
         <td>
             {% if worker.status != "Unconfigured" %}

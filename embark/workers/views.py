@@ -16,7 +16,7 @@ from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
 
-from workers.models import Worker, Configuration
+from workers.models import Worker, Configuration, WorkerDependencyVersion
 from workers.update.update import exec_blocking_ssh
 from workers.update.dependencies import DependencyType, uses_dependency
 from workers.tasks import update_worker, update_system_info, fetch_dependency_updates
@@ -251,7 +251,11 @@ def config_worker_scan(request, configuration_id):
             except BaseException:
                 pass
         except Worker.DoesNotExist:
+            version = WorkerDependencyVersion()
+            version.save()
+
             new_worker = Worker(
+                dependency_version=version,
                 name=f"worker-{str(ip_address)}",
                 ip_address=str(ip_address),
                 system_info={},
