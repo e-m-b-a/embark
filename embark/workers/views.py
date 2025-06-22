@@ -16,7 +16,7 @@ from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
 
-from workers.models import Worker, Configuration, WorkerDependencyVersion
+from workers.models import Worker, Configuration, WorkerDependencyVersion, DependencyVersion
 from workers.update.update import exec_blocking_ssh
 from workers.update.dependencies import DependencyType, uses_dependency
 from workers.tasks import update_worker, update_system_info, fetch_dependency_updates
@@ -44,15 +44,44 @@ def worker_main(request):
     reachable_workers = sorted(reachable_workers, key=lambda x: x.ip_address)
     unreachable_workers = sorted(unreachable_workers, key=lambda x: x.ip_address)
 
+    version = DependencyVersion.objects.first()
+    if not version:
+        version = DependencyVersion()
+
     workers = reachable_workers + unreachable_workers
     for worker in workers:
         worker.config_ids = ', '.join([str(config.id) for config in worker.configurations.filter(user=user)])
         worker.status = worker.get_status_display()
+        deb_list = worker.dependency_version.deb_list
+        worker.dependency_version.parsed_deb_list = {
+            "new": [],
+            "removed": [],
+            "updated": [],
+        }
+
+        for deb in worker.dependency_version.deb_list.keys():
+            if deb not in version.deb_list:
+                worker.dependency_version.parsed_deb_list["removed"].append(deb)
+                continue
+
+            if deb_list[deb] != version.deb_list[deb]:
+                worker.dependency_version.parsed_deb_list["updated"].append({
+                    "name": deb,
+                    "old": deb_list[deb]["version"],
+                    "new": version.deb_list[deb]["version"]
+                })
+
+        for deb in set(version.deb_list.keys()).difference(deb_list.keys()):
+            worker.dependency_version.parsed_deb_list["new"].append({
+                "name": deb,
+                "new": version.deb_list[deb]["version"]
+            })
 
     return render(request, 'workers/index.html', {
         'user': user,
         'configs': configs,
         'workers': workers,
+        'availableVersion': version
     })
 
 

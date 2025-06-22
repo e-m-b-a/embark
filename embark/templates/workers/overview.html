@@ -169,8 +169,8 @@
                                 <div class="modal-close">×</div>
                             </div>
                             <div class="modal-body">
-                                <p>Currently installed:</p>
-                                <p>Available:</p>
+                                <p><b>Installed:</b> EMBA {{ worker.dependency_version.emba }}</p>
+                                <p><b>Available:</b> EMBA {{ availableVersion.emba }}</p>
                             </div>
                             <div class="modal-action-buttons">
                                 <button class="modal-abort-button">Close</button>
@@ -191,8 +191,16 @@
                                 <div class="modal-close">×</div>
                             </div>
                             <div class="modal-body">
-                                <p>Currently installed:</p>
-                                <p>Available:</p>
+                                <p><b>Installed:</b></p>
+                                <ul>
+                                    <li>NVD: {{ worker.dependency_version.nvd_head }} (Timestamp: {{ worker.dependency_version.nvd_time }})</li>
+                                    <li>EPSS: {{ worker.dependency_version.epss_head }} (Timestamp: {{ worker.dependency_version.epss_time }})</li>
+                                </ul>
+                                <p><b>Available:</b></p>
+                                <ul>
+                                    <li>NVD: {{ availableVersion.nvd_head }} (Timestamp: {{ availableVersion.nvd_time }})</li>
+                                    <li>EPSS: {{ availableVersion.epss_head }} (Timestamp: {{ availableVersion.epss_time }})</li>
+                                </ul>
                             </div>
                             <div class="modal-action-buttons">
                                 <button class="modal-abort-button">Close</button>
@@ -213,8 +221,28 @@
                                 <div class="modal-close">×</div>
                             </div>
                             <div class="modal-body">
-                                <p>Currently installed:</p>
-                                <p>Available:</p>
+                                <p><b>Update available:</b></p>
+                                <ul>
+                                {% for deb in worker.dependency_version.parsed_deb_list.updated %}
+                                    <li>{{ deb.name }}: {{ deb.old }} → {{ deb.new }}</li>
+                                {% endfor %}
+                                </ul>
+                                {% if worker.dependency_version.parsed_deb_list.new|length != 0 %}
+                                    <p><b>New debs:</b></p>
+                                    <ul>
+                                    {% for deb in worker.dependency_version.parsed_deb_list.new %}
+                                        <li>{{ deb.name }}: {{ deb.new }}</li>
+                                    {% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if worker.dependency_version.parsed_deb_list.removed|length != 0 %}
+                                    <p><b>Removed debs:</b></p>
+                                    <ul>
+                                    {% for deb in worker.dependency_version.parsed_deb_list.removed %}
+                                        <li>{{ deb }}</li>
+                                    {% endfor %}
+                                    </ul>
+                                {% endif %}
                             </div>
                             <div class="modal-action-buttons">
                                 <button class="modal-abort-button">Close</button>
