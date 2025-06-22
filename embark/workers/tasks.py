@@ -87,15 +87,13 @@ def update_system_info(configuration: Configuration, worker: Worker):
         disk_free = disk_str[3].replace('G', 'GB').replace('M', 'MB')
         disk_info = f"Free: {disk_free}  Total: {disk_total}"
 
-        version_regex = r"\d+\.\d+\.\d+[a-z]?"
-        emba_version = exec_blocking_ssh(ssh_client, f"sudo cat {os.path.join(settings.WORKER_EMBA_ROOT, "docker-compose.yml")} | awk -F: '/image:/ {{print $NF; exit}}'")
-        emba_version = "N/A" if not re.match(version_regex, emba_version) else emba_version
+        emba_version_check = exec_blocking_ssh(ssh_client, f"sudo bash -c 'if test -f {os.path.join(settings.WORKER_EMBA_ROOT, 'docker-compose.yml')}; then echo success; fi'")
+        emba_version = exec_blocking_ssh(ssh_client, f"sudo cat {os.path.join(settings.WORKER_EMBA_ROOT, 'docker-compose.yml')} | awk -F: '/image:/ {{print $NF; exit}}'") if emba_version_check == 'success' else "N/A"
 
-        commit_regex = r"[0-9a-f]{7,40}"
-        last_sync_nvd = exec_blocking_ssh(ssh_client, f"sudo bash -c 'cd {os.path.join(settings.WORKER_EMBA_ROOT, "external/nvd-json-data-feeds")} && git rev-parse --short HEAD'")
-        last_sync_nvd = "N/A" if not re.match(commit_regex, last_sync_nvd) else last_sync_nvd
-        last_sync_epss = exec_blocking_ssh(ssh_client, f"sudo bash -c 'cd {os.path.join(settings.WORKER_EMBA_ROOT, "external/EPSS-data")} && git rev-parse --short HEAD'")
-        last_sync_epss = "N/A" if not re.match(commit_regex, last_sync_epss) else last_sync_epss
+        last_sync_nvd_check = exec_blocking_ssh(ssh_client, f"sudo bash -c 'if test -d {os.path.join(settings.WORKER_EMBA_ROOT, 'external/nvd-json-data-feeds')}; then echo success; fi'")
+        last_sync_nvd = exec_blocking_ssh(ssh_client, f"sudo bash -c 'cd {os.path.join(settings.WORKER_EMBA_ROOT, 'external/nvd-json-data-feeds')} && git rev-parse --short HEAD'") if last_sync_nvd_check == 'success' else "N/A"
+        last_sync_epss_check = exec_blocking_ssh(ssh_client, f"sudo bash -c 'if test -d {os.path.join(settings.WORKER_EMBA_ROOT, 'external/EPSS-data')}; then echo success; fi'")
+        last_sync_epss = exec_blocking_ssh(ssh_client, f"sudo bash -c 'cd {os.path.join(settings.WORKER_EMBA_ROOT, 'external/EPSS-data')} && git rev-parse --short HEAD'") if last_sync_epss_check == 'success' else "N/A"
         last_sync = f"NVD feed: {last_sync_nvd}  EPSS: {last_sync_epss}"
 
         deb_check = exec_blocking_ssh(ssh_client, "sudo bash -c 'if test -d /root/DEPS/pkg; then echo 'success'; fi'")
