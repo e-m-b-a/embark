@@ -370,16 +370,12 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
                 messages.error(request, 'You are not allowed to access this worker.')
                 return safe_redirect(request, '/worker/')
 
-        ssh_client = None
         try:
             worker_soft_reset_task.delay(worker.id, configuration.id)
             messages.success(request, f'Successfully soft reseted worker: {worker.ip_address} ({worker.name})')
             return safe_redirect(request, '/worker/')
-
-        except (paramiko.SSHException, socket.error):
-            if ssh_client:
-                ssh_client.close()
-            messages.error(request, 'SSH connection failed or command execution failed.')
+        except BaseException:
+            messages.error(request, 'Soft Reset failed.')
             return safe_redirect(request, '/worker/')
 
     except (Worker.DoesNotExist, Configuration.DoesNotExist):
@@ -411,17 +407,13 @@ def worker_hard_reset(request, worker_id, configuration_id=None):
                 messages.error(request, 'You are not allowed to access this worker.')
                 return safe_redirect(request, '/worker/')
 
-        ssh_client = None
         try:
             worker_soft_reset_task.delay(worker.id, configuration.id)
             worker_hard_reset_task.delay(worker.id, configuration.id)
             messages.success(request, f'Successfully hard reseted worker: {worker.ip_address} ({worker.name})')
             return safe_redirect(request, '/worker/')
-
-        except (paramiko.SSHException, socket.error):
-            if ssh_client:
-                ssh_client.close()
-            messages.error(request, 'SSH connection failed or command execution failed.')
+        except BaseException:
+            messages.error(request, 'Hard Reset failed.')
             return safe_redirect(request, '/worker/')
 
     except (Worker.DoesNotExist, Configuration.DoesNotExist):
