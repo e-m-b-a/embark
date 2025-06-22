@@ -137,28 +137,19 @@
                     <button class="toggle-actions-menu" data-id="{{ worker.ip_address }}">...</button>
                     <div class="actions-dropdown-content" id="menu-{{ worker.ip_address }}">
                         {% if worker.dependency_version.emba_outdated %}
-                            <form action="{% url 'embark-worker-update' worker.id %}" method="post" class="update-btn">
-                                {% csrf_token %}
-                                <input type="hidden" name="update" value="emba">
-                                <input type="submit" name="action" value="Update EMBA">
-                                <span class="update-dot"></span>
-                            </form>
+                            <button class="toggle-update-diff" dep-type="emba">Update EMBA
+                                <span class="update-dot"/>
+                            </button>
                         {% endif %}
                         {% if worker.dependency_version.deb_outdated %}
-                            <form action="{% url 'embark-worker-update' worker.id %}" method="post" class="update-btn">
-                                {% csrf_token %}
-                                <input type="hidden" name="update" value="deb">
-                                <input type="submit" name="action" value="Update APT dependencies">
-                                <span class="update-dot"></span>
-                            </form>
+                            <button class="toggle-update-diff" dep-type="deb">Update APT dependencies
+                                <span class="update-dot"/>
+                            </button>
                         {% endif %}
                         {% if worker.dependency_version.external_outdated %}
-                            <form action="{% url 'embark-worker-update' worker.id %}" method="post" class="update-btn">
-                                {% csrf_token %}
-                                <input type="hidden" name="update" value="external">
-                                <input type="submit" name="action" value="Update external directory">
-                                <span class="update-dot"></span>
-                            </form>
+                            <button class="toggle-update-diff" dep-type="external">Update external directory
+                                <span class="update-dot"/>
+                            </button>
                         {% endif %}
                         <form action="{% url 'embark-worker-hard-reset' worker.id %}" method="post">
                             {% csrf_token %}
@@ -170,6 +161,60 @@
                         </form>
                     </div>
                 </div>
+                {% if worker.dependency_version.emba_outdated %}
+                    <div class="update-modal" id="update-modal-emba">
+                        <div class="modal-content">
+                            <div class="modal-title">
+                                <p>Update diff - EMBA</p>
+                                <div class="modal-close">×</div>
+                            </div>
+                            <div class="modal-body">
+                                <p>Currently installed:</p>
+                                <p>Available:</p>
+                            </div>
+                            <div class="modal-action-buttons">
+                                <button class="modal-abort-button">Close</button>
+                                <button class="modal-success-button">Update</button>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                {% if worker.dependency_version.external_outdated %}
+                    <div class="update-modal" id="update-modal-external">
+                        <div class="modal-content">
+                            <div class="modal-title">
+                                <p>Update diff - external directory</p>
+                                <div class="modal-close">×</div>
+                            </div>
+                            <div class="modal-body">
+                                <p>Currently installed:</p>
+                                <p>Available:</p>
+                            </div>
+                            <div class="modal-action-buttons">
+                                <button class="modal-abort-button">Close</button>
+                                <button class="modal-success-button">Update</button>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                {% if worker.dependency_version.deb_outdated %}
+                    <div class="update-modal" id="update-modal-deb">
+                        <div class="modal-content">
+                            <div class="modal-title">
+                                <p>Update diff - APT dependencies</p>
+                                <div class="modal-close">×</div>
+                            </div>
+                            <div class="modal-body">
+                                <p>Currently installed:</p>
+                                <p>Available:</p>
+                            </div>
+                            <div class="modal-action-buttons">
+                                <button class="modal-abort-button">Close</button>
+                                <button class="modal-success-button">Update</button>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
             {% endif %}
         </td>
 
@@ -213,7 +258,44 @@ document.addEventListener("DOMContentLoaded", function () {
                 menu.style.display = "none";
             }
         });
+
+        document.querySelectorAll(".update-modal").forEach(modal => {
+            if (modal == event.target) {
+                modal.style.display = "none";
+            }
+        });
+    });
+
+    // Close dropdown and open modal
+    document.querySelectorAll(".toggle-update-diff").forEach(button => {
+        button.addEventListener("click", function () {
+            const type = button.getAttribute("dep-type");
+            const menu = document.getElementById("update-modal-" + type);
+            if (menu) {
+                menu.style.display = (menu.style.display === "none" || menu.style.display === "") ? "block" : "none";
+
+                // Close actions-dropdown
+                document.querySelectorAll(".actions-dropdown-content").forEach(dropdown => {
+                    dropdown.style.display = "none";
+                });
+            }
+        });
+    });
+
+    // Close modal if exit/abort button is pressed
+    document.querySelectorAll(".modal-close, .modal-abort-button").forEach(button => {
+        button.addEventListener("click", function () {
+            button.parentElement.parentElement.parentElement.style.display = "none"
+        });
+    });
+
+    // Close modal and fire request
+    document.querySelectorAll(".modal-success-button").forEach(button => {
+        button.addEventListener("click", function () {
+            button.parentElement.parentElement.parentElement.style.display = "none"
+
+            // TODO: Fire request
+        });
     });
 });
 </script>
-
