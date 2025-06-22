@@ -144,6 +144,10 @@ def _trigger_worker_update(worker, dependency: str):
     """
     parsed_dependency = None
     match dependency:
+        case "emba":
+            repo_res = _trigger_worker_update(worker, "repo")
+            docker_res = _trigger_worker_update(worker, "docker")
+            return repo_res and docker_res
         case "repo":
             parsed_dependency = DependencyType.REPO
         case "docker":
