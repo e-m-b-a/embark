@@ -86,7 +86,7 @@ def delete_config(request):
                 orchestrator.remove_worker(worker)
                 logger.info("Worker: %s removed from orchestrator", worker.name)
             except ValueError:
-                pass
+                logger.error("Worker: %s could not be removed from orchestrator", worker.name)
         workers.delete()
 
         config.delete()

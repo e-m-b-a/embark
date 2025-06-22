@@ -35,6 +35,19 @@ class Orchestrator:
                 self.busy_workers = {worker.ip_address: worker for worker in Worker.objects.filter(~Q(analysis_id=None), status=Worker.ConfigStatus.CONFIGURED)}
                 self.running = True
 
+    def trigger(self):
+        """
+        Trigger the orchestrator to assign tasks to free workers.
+        """
+        # TODO: this method should also be called after a worker finished an analysis job (probably implemented in the monitoring issue)
+        next_task = None
+        with self.lock:
+            if self.tasks:
+                next_task = self.tasks.popleft()
+
+        if next_task:
+            self.assign_task(next_task)
+
     def get_busy_workers(self) -> Dict[str, Worker]:
         return self.busy_workers
 
@@ -169,6 +182,7 @@ class Orchestrator:
         :param worker: The worker to be removed
         :raises ValueError: If the worker does not exist in the orchestrator
         """
+        # TODO: if the the worker is currently processing a job, this job should be cancelled here
         with self.lock:
             if worker.ip_address in self.free_workers:
                 del self.free_workers[worker.ip_address]
