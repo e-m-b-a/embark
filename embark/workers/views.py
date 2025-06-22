@@ -1,7 +1,6 @@
 import ipaddress
 import socket
 import re
-import os
 from concurrent.futures import ThreadPoolExecutor
 
 import paramiko
