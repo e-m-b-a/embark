@@ -88,13 +88,13 @@ def update_system_info(configuration: Configuration, worker: Worker):
         disk_info = f"Free: {disk_free}  Total: {disk_total}"
 
         version_regex = r"\d+\.\d+\.\d+[a-z]?"
-        emba_version = exec_blocking_ssh(ssh_client, f"sudo cat {os.path.join(settings.WORKER_EMBA_ROOT, "docker-compose.yml")} | awk -F: '/image:/ {{print $NF; exit}}'")
+        emba_version = exec_blocking_ssh(ssh_client, f"sudo cat {os.path.join(settings.WORKER_EMBA_ROOT, 'docker-compose.yml')} | awk -F: '/image:/ {{print $NF; exit}}'")
         emba_version = "N/A" if not re.match(version_regex, emba_version) else emba_version
 
         commit_regex = r"[0-9a-f]{7,40}"
-        last_sync_nvd = exec_blocking_ssh(ssh_client, f"sudo bash -c 'cd {os.path.join(settings.WORKER_EMBA_ROOT, "external/nvd-json-data-feeds")} && git rev-parse --short HEAD'")
+        last_sync_nvd = exec_blocking_ssh(ssh_client, f"sudo bash -c 'cd {os.path.join(settings.WORKER_EMBA_ROOT, 'external/nvd-json-data-feeds')} && git rev-parse --short HEAD'")
         last_sync_nvd = "N/A" if not re.match(commit_regex, last_sync_nvd) else last_sync_nvd
-        last_sync_epss = exec_blocking_ssh(ssh_client, f"sudo bash -c 'cd {os.path.join(settings.WORKER_EMBA_ROOT, "external/EPSS-data")} && git rev-parse --short HEAD'")
+        last_sync_epss = exec_blocking_ssh(ssh_client, f"sudo bash -c 'cd {os.path.join(settings.WORKER_EMBA_ROOT, 'external/EPSS-data')} && git rev-parse --short HEAD'")
         last_sync_epss = "N/A" if not re.match(commit_regex, last_sync_epss) else last_sync_epss
         last_sync = f"NVD feed: {last_sync_nvd}  EPSS: {last_sync_epss}"
 
@@ -264,6 +264,7 @@ def worker_soft_reset_task(worker_id, configuration_id):
     except (paramiko.SSHException, socket.error):
         if ssh_client:
             ssh_client.close()
+
 
 @shared_task
 def worker_hard_reset_task(worker_id, configuration_id):
