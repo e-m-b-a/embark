@@ -211,7 +211,7 @@ def update_worker(worker_id, dependency_idx):
     orchestrator = get_orchestrator()
     try:
         # TODO: if the the worker is currently processing a job, this job should be cancelled here (or implicitly via remove_worker)
-        orchestrator.remove_worker(worker)     
+        orchestrator.remove_worker(worker)
         if orchestrator.tasks:
             next_task = orchestrator.tasks.popleft()
             orchestrator.assign_task(next_task)
