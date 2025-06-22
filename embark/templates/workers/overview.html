@@ -136,20 +136,29 @@
                 <div class="actions-dropdown">
                     <button class="toggle-actions-menu" data-id="{{ worker.ip_address }}">...</button>
                     <div class="actions-dropdown-content" id="menu-{{ worker.ip_address }}">
-                        <form action="{% url 'embark-worker-update' worker.id %}" method="post">
+                        <form action="{% url 'embark-worker-update' worker.id %}" method="post" class="update-btn">
                             {% csrf_token %}
                             <input type="hidden" name="update" value="repo">
                             <input type="submit" name="action" value="Update EMBA repository">
+                            {% if worker.dependency_version.emba_outdated %}
+                                <span class="update-dot"></span>
+                            {% endif %}
                         </form>
-                        <form action="{% url 'embark-worker-update' worker.id %}" method="post">
+                        <form action="{% url 'embark-worker-update' worker.id %}" method="post" class="update-btn">
                             {% csrf_token %}
                             <input type="hidden" name="update" value="docker">
                             <input type="submit" name="action" value="Update Docker container">
+                            {% if worker.dependency_version.emba_outdated %}
+                                <span class="update-dot"></span>
+                            {% endif %}
                         </form>
-                        <form action="{% url 'embark-worker-update' worker.id %}" method="post">
+                        <form action="{% url 'embark-worker-update' worker.id %}" method="post" class="update-btn">
                             {% csrf_token %}
                             <input type="hidden" name="update" value="external">
                             <input type="submit" name="action" value="Update external directory">
+                            {% if worker.dependency_version.external_outdated %}
+                                <span class="update-dot"></span>
+                            {% endif %}
                         </form>
                         <form action="{% url 'embark-worker-hard-reset' worker.id %}" method="post">
                             {% csrf_token %}

@@ -120,3 +120,18 @@ form {
     width: 100%;
 }
 
+.update-btn {
+    position: relative;
+}
+
+.update-dot {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: red;
+    display: inline-block;
+    border: 3px solid white;
+}
