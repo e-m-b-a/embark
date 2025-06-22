@@ -319,6 +319,8 @@ WORKER_EMBA_ROOT = "/root/emba/"
 WORKER_FIRMWARE_DIR = "/root/firmware/"
 WORKER_EMBA_LOGS = "/root/emba_logs/"
 
+WORKER_FETCH_LOGS_EVERY_SECONDS = 30
+
 # Celery task queue
 CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
 CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"

@@ -29,9 +29,9 @@ def create_periodic_tasks(**kwargs):
         every=2,
         period=IntervalSchedule.MINUTES
     )
-    schedule_10m, _ = IntervalSchedule.objects.get_or_create(
-        every=10,
-        period=IntervalSchedule.MINUTES
+    schedule_fetch_logs, _ = IntervalSchedule.objects.get_or_create(
+        every=settings.WORKER_FETCH_LOGS_EVERY_SECONDS,
+        period=IntervalSchedule.SECONDS
     )
 
     PeriodicTask.objects.get_or_create(
@@ -40,12 +40,12 @@ def create_periodic_tasks(**kwargs):
         task='workers.tasks.update_worker_info',
     )
     PeriodicTask.objects.get_or_create(
-        interval=schedule_2m,
+        interval=schedule_fetch_logs,
         name='Monitor running workers',
         task='workers.tasks.monitor_workers',
     )
     PeriodicTask.objects.get_or_create(
-        interval=schedule_10m,
+        interval=schedule_fetch_logs,
         name='Fetch worker analysis logs',
         task='workers.tasks.fetch_running_analysis_logs',
     )
