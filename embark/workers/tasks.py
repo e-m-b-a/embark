@@ -174,8 +174,8 @@ def fetch_running_analysis_logs():
     files on remote workers, fetches them, extracts them to emba_logs.
     """
     orchestrator = get_orchestrator()
-    busy_workers = orchestrator.get_busy_workers()
-    for worker in busy_workers.values():
+    busy_workers = list(orchestrator.get_busy_workers().values())
+    for worker in busy_workers:
         try:
             _fetch_analysis_logs(worker)
 
@@ -311,7 +311,6 @@ def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
 
     client = worker.ssh_connect()
 
-    # TODO: Move this to worker cleanup logic (before calling start_analysis)
     exec_blocking_ssh(client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
     exec_blocking_ssh(client, f"sudo mkdir -p {settings.WORKER_FIRMWARE_DIR}")
 
