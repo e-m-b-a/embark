@@ -372,7 +372,7 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
 
         ssh_client = None
         try:
-            worker_soft_reset_task.delay(worker.id, configuration=configuration)
+            worker_soft_reset_task.delay(worker.id, configuration.id)
             messages.success(request, f'Successfully soft reseted worker: {worker.ip_address} ({worker.name})')
             return safe_redirect(request, '/worker/')
 
@@ -414,7 +414,7 @@ def worker_hard_reset(request, worker_id, configuration_id=None):
         ssh_client = None
         try:
             worker_soft_reset(request, worker.id, configuration.id)
-            worker_hard_reset_task.delay(worker.id, configuration=configuration)
+            worker_hard_reset_task.delay(worker.id, configuration.id)
             messages.success(request, f'Successfully hard reseted worker: {worker.ip_address} ({worker.name})')
             return safe_redirect(request, '/worker/')
 

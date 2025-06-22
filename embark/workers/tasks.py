@@ -248,13 +248,13 @@ def update_worker(worker_id, dependency_idx):
 
 
 @shared_task
-def worker_soft_reset_task(worker_id, configuration):
+def worker_soft_reset_task(worker_id, configuration_id):
     try:
         worker = Worker.objects.get(id=worker_id)
     except Worker.DoesNotExist:
         logger.error("start_analysis: Invalid worker id")
         return
-    ssh_client = worker.ssh_connect(configuration.id)
+    ssh_client = worker.ssh_connect(configuration_id)
     exec_blocking_ssh(ssh_client, "sudo docker ps -aq | xargs -r docker stop | xargs -r docker rm || true")
     exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
     exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
@@ -262,13 +262,13 @@ def worker_soft_reset_task(worker_id, configuration):
 
 
 @shared_task
-def worker_hard_reset_task(worker_id, configuration):
+def worker_hard_reset_task(worker_id, configuration_id):
     try:
         worker = Worker.objects.get(id=worker_id)
     except Worker.DoesNotExist:
         logger.error("start_analysis: Invalid worker id")
         return
-    ssh_client = worker.ssh_connect(configuration.id)
+    ssh_client = worker.ssh_connect(configuration_id)
     emba_path = os.path.join(settings.WORKER_EMBA_ROOT, "full_uninstaller.sh")
     exec_blocking_ssh(ssh_client, "sudo bash " + emba_path)
     ssh_client.close()
