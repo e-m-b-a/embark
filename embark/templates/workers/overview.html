@@ -174,7 +174,11 @@
                             </div>
                             <div class="modal-action-buttons">
                                 <button class="modal-abort-button">Close</button>
-                                <button class="modal-success-button">Update</button>
+                                <form action="{% url 'embark-worker-update' worker.id %}" method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="update" value="emba">
+                                    <input type="submit" name="action" value="Update">
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -192,7 +196,11 @@
                             </div>
                             <div class="modal-action-buttons">
                                 <button class="modal-abort-button">Close</button>
-                                <button class="modal-success-button">Update</button>
+                                <form action="{% url 'embark-worker-update' worker.id %}" method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="update" value="external">
+                                    <input type="submit" name="action" value="Update">
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -210,14 +218,17 @@
                             </div>
                             <div class="modal-action-buttons">
                                 <button class="modal-abort-button">Close</button>
-                                <button class="modal-success-button">Update</button>
+                                <form action="{% url 'embark-worker-update' worker.id %}" method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="update" value="deb">
+                                    <input type="submit" name="action" value="Update">
+                                </form>
                             </div>
                         </div>
                     </div>
                 {% endif %}
             {% endif %}
         </td>
-
     </tr>
     {% endfor %}
     </table>
@@ -286,15 +297,6 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".modal-close, .modal-abort-button").forEach(button => {
         button.addEventListener("click", function () {
             button.parentElement.parentElement.parentElement.style.display = "none"
-        });
-    });
-
-    // Close modal and fire request
-    document.querySelectorAll(".modal-success-button").forEach(button => {
-        button.addEventListener("click", function () {
-            button.parentElement.parentElement.parentElement.style.display = "none"
-
-            // TODO: Fire request
         });
     });
 });
