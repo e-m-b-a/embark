@@ -1,7 +1,10 @@
 import os
+import time
 import logging
 from enum import Enum
 
+from subprocess import Popen, PIPE
+from pathlib import Path
 from threading import Lock
 
 from django.conf import settings
@@ -77,11 +80,10 @@ class DependencyState:
                     self.used_by.append(worker.ip_address)
                     break
                 if self.available == self.AvailabilityType.UNAVAILABLE:
-                    from workers.tasks import setup_dependency  # pylint: disable=import-outside-toplevel
-
-                    # Trigger dependency setup
+                    # Trigger dependency setup (Blocking, as we are already in a celery task)
                     self.available = self.AvailabilityType.IN_PROGRESS
-                    setup_dependency.delay(self.dependency)
+                    setup_dependency(self.dependency)
+                    self.available = self.AvailabilityType.AVAILABLE
 
     def release_dependency(self, worker: Worker, force: bool):
         """
@@ -228,3 +230,36 @@ def eval_outdated_dependencies(worker: Worker):
 
     worker.dependency_version.save()
     logger.info("Oudated dependencies evaluated for worker %s", worker.ip_address)
+
+
+def setup_dependency(dependency):
+    """
+    Runs script to setup dependency
+
+    :params dependency: Dependency type
+    """
+    if dependency == DependencyType.ALL:
+        raise ValueError("DependencyType.ALL can't be copied")
+
+    Path(settings.WORKER_FILES_PATH).mkdir(parents=True, exist_ok=True)
+    Path(os.path.join(settings.WORKER_FILES_PATH, "logs")).mkdir(parents=True, exist_ok=True)
+
+    script_path = os.path.join(os.path.dirname(__file__), dependency.value)
+    folder_path, zip_path, done_path = get_dependency_path(dependency)
+
+    # update_dependency(dependency, False)
+
+    log_file = settings.WORKER_SETUP_LOGS.format(timestamp=int(time.time()))
+
+    logger.info("Worker dependencies setup started with script %s. Logs: %s", dependency.value, log_file)
+    try:
+        cmd = f"sudo {script_path} '{folder_path}' '{zip_path}' '{done_path}'"
+        with open(log_file, "w+", encoding="utf-8") as file:
+            with Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True) as proc:  # nosec
+                proc.communicate()
+
+            logger.info("Worker dependencies setup successful. Logs: %s", log_file)
+    except BaseException as exception:
+        logger.error("Error setting up worker dependencies: %s. Logs: %s", exception, log_file)
+
+    # update_dependency(dependency, True)
