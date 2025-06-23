@@ -252,7 +252,8 @@ def monitor_workers():
                 # Fetch logs for the last time
                 _fetch_analysis_logs(worker)
 
-                orchestrator.release_worker(worker)
+                # Only assign a new task after soft reset is done
+                orchestrator.free_worker(worker)
 
                 exec_soft_reset_cleanup(worker)
 
@@ -279,7 +280,7 @@ def is_emba_container_running(worker) -> bool:
 
         cmd = "sudo docker ps -q"
         docker_output = exec_blocking_ssh(client, cmd)
-        if docker_output is None:
+        if not docker_output:
             logger.info("[Worker %s] EMBA Docker container is no longer running.", worker.id)
             return False
 
@@ -291,7 +292,8 @@ def is_emba_container_running(worker) -> bool:
         logger.info("[Worker %s] Setting the worker as free.", worker.id)
         return False
     finally:
-        client.close()
+        if client is not None:
+            client.close()
 
 
 @shared_task
@@ -326,6 +328,11 @@ def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
     exec_blocking_ssh(client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
     exec_blocking_ssh(client, "sudo rm -rf ./terminal.log")
     client.exec_command(f"sudo sh -c '{emba_cmd}' >./terminal.log 2>&1")  # nosec
+    logger.info("Firmware analysis has been started on the worker.")
+
+    # Create file to supress errors
+    with open(f"{settings.EMBA_LOG_ROOT}/{worker.analysis_id}/emba_logs/emba.log", "w", encoding="utf-8"):
+        pass
 
     future = BoundedExecutor.submit(LogReader, worker.analysis_id)
     if future is None:

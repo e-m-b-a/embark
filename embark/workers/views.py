@@ -392,7 +392,8 @@ def exec_soft_reset_cleanup(worker, configuration_id=None):
     except (paramiko.SSHException, socket.error):
         return {'status': 'error', 'message': 'SSH connection failed or command execution failed.'}
     finally:
-        ssh_client.close()
+        if ssh_client:
+            ssh_client.close()
 
 
 @require_http_methods(["POST"])
