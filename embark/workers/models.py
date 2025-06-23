@@ -17,13 +17,18 @@ class Configuration(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, help_text="Date time when this entry was created")
 
 
+def default_deb_list():
+    return {}
+
+
 class WorkerDependencyVersion(models.Model):
     emba = models.CharField(max_length=100, null=True)
     nvd_head = models.CharField(max_length=40, null=True)
     nvd_time = models.DateTimeField(null=True)
     epss_head = models.CharField(max_length=40, null=True)
     epss_time = models.DateTimeField(null=True)
-    deb_list = models.JSONField(null=True)
+    deb_list = models.JSONField(default=default_deb_list)
+    sorted_deb_list = models.JSONField(default=default_deb_list)
 
     emba_outdated = models.BooleanField(default=True)
     external_outdated = models.BooleanField(default=True)

@@ -52,30 +52,6 @@ def worker_main(request):
     for worker in workers:
         worker.config_ids = ', '.join([str(config.id) for config in worker.configurations.filter(user=user)])
         worker.status = worker.get_status_display()
-        deb_list = worker.dependency_version.deb_list
-        worker.dependency_version.parsed_deb_list = {
-            "new": [],
-            "removed": [],
-            "updated": [],
-        }
-
-        for deb in worker.dependency_version.deb_list.keys():
-            if deb not in version.deb_list:
-                worker.dependency_version.parsed_deb_list["removed"].append(deb)
-                continue
-
-            if deb_list[deb] != version.deb_list[deb]:
-                worker.dependency_version.parsed_deb_list["updated"].append({
-                    "name": deb,
-                    "old": deb_list[deb]["version"],
-                    "new": version.deb_list[deb]["version"]
-                })
-
-        for deb in set(version.deb_list.keys()).difference(deb_list.keys()):
-            worker.dependency_version.parsed_deb_list["new"].append({
-                "name": deb,
-                "new": version.deb_list[deb]["version"]
-            })
 
     return render(request, 'workers/index.html', {
         'user': user,
