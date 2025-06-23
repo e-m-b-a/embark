@@ -91,4 +91,4 @@ class DependencyVersion(models.Model):
     nvd_time = models.DateTimeField()
     epss_head = models.CharField(max_length=40)
     epss_time = models.DateTimeField()
-    deb_list = models.JSONField()
+    deb_list = models.JSONField(default=default_deb_list)

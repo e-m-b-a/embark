@@ -16,7 +16,6 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
 
 from workers.models import Worker, Configuration, WorkerDependencyVersion, DependencyVersion
-from workers.update.update import exec_blocking_ssh
 from workers.update.dependencies import DependencyType, uses_dependency
 from workers.tasks import update_worker, update_system_info, fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task
 

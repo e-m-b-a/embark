@@ -8,7 +8,7 @@ from subprocess import Popen, PIPE
 from pathlib import Path
 
 from django.conf import settings
-from workers.models import Worker
+from workers.models import Worker, DependencyVersion
 
 logger = logging.getLogger(__name__)
 
@@ -203,3 +203,47 @@ def setup_dependency(dependency: DependencyType):
         logger.error("Error setting up worker dependencies: %s. Logs: %s", exception, log_file)
 
     locks_dict[dependency].update_dependency(True)
+
+
+def eval_outdated_dependencies(worker: Worker):
+    """
+    Evaluates if dependency version is outdated
+    :param worker: The related worker
+    """
+    version = DependencyVersion.objects.first()
+    if not version:
+        version = DependencyVersion()
+
+    worker.dependency_version.emba_outdated = version.emba != worker.dependency_version.emba
+
+    worker.dependency_version.external_outdated = version.nvd_head != worker.dependency_version.nvd_head or version.epss_head != worker.dependency_version.epss_head
+
+    # Eval deb list
+    worker.dependency_version.sorted_deb_list = {
+        "new": [],
+        "removed": [],
+        "updated": [],
+    }
+
+    for deb in worker.dependency_version.deb_list.keys():
+        if deb not in version.deb_list:
+            worker.dependency_version.sorted_deb_list["removed"].append(deb)
+            continue
+
+        if worker.dependency_version.deb_list[deb]["version"] != version.deb_list[deb]["version"]:
+            worker.dependency_version.sorted_deb_list["updated"].append({
+                "name": deb,
+                "old": worker.dependency_version.deb_list[deb]["version"],
+                "new": version.deb_list[deb]["version"]
+            })
+
+    for deb in set(version.deb_list.keys()).difference(worker.dependency_version.deb_list.keys()):
+        worker.dependency_version.sorted_deb_list["new"].append({
+            "name": deb,
+            "new": version.deb_list[deb]["version"]
+        })
+
+    worker.dependency_version.deb_outdated = bool(worker.dependency_version.sorted_deb_list["new"]) or bool(worker.dependency_version.sorted_deb_list["removed"]) or bool(worker.dependency_version.sorted_deb_list["updated"])
+
+    worker.dependency_version.save()
+    logger.info("Oudated dependencies evaluated for worker %s", worker.ip_address)

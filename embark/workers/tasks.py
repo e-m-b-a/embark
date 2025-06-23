@@ -12,9 +12,9 @@ from celery.utils.log import get_task_logger
 import requests
 from django.conf import settings
 
-from workers.models import Worker, Configuration, DependencyVersion, WorkerDependencyVersion
-from workers.update.dependencies import DependencyType
-from workers.update.update import exec_blocking_ssh, perform_update
+from workers.models import Worker, Configuration, DependencyVersion
+from workers.update.dependencies import DependencyType, eval_outdated_dependencies
+from workers.update.update import exec_blocking_ssh, perform_update, update_dependencies_info, parse_deb_list
 from workers.orchestrator import get_orchestrator
 
 logger = get_task_logger(__name__)
@@ -34,118 +34,6 @@ def create_periodic_tasks(**kwargs):
         name='Update Worker Information',
         task='workers.tasks.update_worker_info',
     )
-
-
-def _parse_deb_list(deb_list_str: str):
-    """
-    Parse the output of the 'sha256sum *.deb' command to extract package names and their checksums.
-
-    :param deb_list_str: String containing the output of the 'sha256sum *.deb' command
-    :return: List of dictionaries with package information
-    """
-    deb_list = {}
-    for line in deb_list_str.splitlines():
-        try:
-            checksum, package_name = line.split('  ')
-            deb_info = re.match(r"(?P<name>[^_]+)_(?P<version>[^_]+)_(?P<architecture>[^.]+)\.deb", package_name)
-            deb_list[deb_info.group("name")] = {
-                "version": deb_info.group("version"),
-                "architecture": deb_info.group("architecture"),
-                "checksum": checksum
-            }
-        except BaseException as error:
-            if line:
-                logger.error("Error parsing deb list line '%s': %s", line, error)
-            continue
-    return deb_list
-
-
-def _eval_outdated_dependencies(worker: Worker):
-    """
-    Evaluates if dependency version is outdated
-    :param worker: The related worker
-    """
-    version = DependencyVersion.objects.first()
-    if not version:
-        version = DependencyVersion()
-
-    worker.dependency_version.emba_outdated = version.emba != worker.dependency_version.emba
-
-    worker.dependency_version.external_outdated = version.nvd_head != worker.dependency_version.nvd_head or version.epss_head != worker.dependency_version.epss_head
-
-    # Eval deb list
-    worker.dependency_version.sorted_deb_list = {
-        "new": [],
-        "removed": [],
-        "updated": [],
-    }
-
-    for deb in worker.dependency_version.deb_list.keys():
-        if deb not in version.deb_list:
-            worker.dependency_version.sorted_deb_list["removed"].append(deb)
-            continue
-
-        if worker.dependency_version.deb_list[deb]["version"] != version.deb_list[deb]["version"]:
-            worker.dependency_version.sorted_deb_list["updated"].append({
-                "name": deb,
-                "old": worker.dependency_version.deb_list[deb]["version"],
-                "new": version.deb_list[deb]["version"]
-            })
-
-    for deb in set(version.deb_list.keys()).difference(worker.dependency_version.deb_list.keys()):
-        worker.dependency_version.sorted_deb_list["new"].append({
-            "name": deb,
-            "new": version.deb_list[deb]["version"]
-        })
-
-    worker.dependency_version.deb_outdated = bool(worker.dependency_version.sorted_deb_list["new"]) or bool(worker.dependency_version.sorted_deb_list["removed"]) or bool(worker.dependency_version.sorted_deb_list["updated"])
-
-    worker.dependency_version.save()
-
-
-def update_dependencies_info(worker: Worker):
-    """
-    Updates dependencies information on worker node
-    :param worker: The related worker
-    """
-    if worker.dependency_version is None:
-        worker.dependency_version = WorkerDependencyVersion()
-        worker.dependency_version.save()
-        worker.save()
-
-    ssh_client = None
-    try:
-        ssh_client = worker.ssh_connect()
-
-        docker_compose_path = os.path.join(settings.WORKER_EMBA_ROOT, 'docker-compose.yml')
-        emba_version_check = exec_blocking_ssh(ssh_client, f"sudo bash -c 'if test -f {docker_compose_path}; then echo success; fi'")
-        worker.dependency_version.emba = exec_blocking_ssh(ssh_client, f"sudo cat {docker_compose_path} | awk -F: '/image:/ {{print $NF; exit}}'") if emba_version_check == 'success' else "N/A"
-
-        def _fetch_external(external_type):
-            commit_regex = r".*([0-9a-f]{40})\s(.*\s\+[0-9]{4})"
-            path = os.path.join(settings.WORKER_EMBA_ROOT, external_type)
-            perform_check = exec_blocking_ssh(ssh_client, f"sudo bash -c 'if test -d {path}; then echo success; fi'")
-            if perform_check == 'success':
-                result = exec_blocking_ssh(ssh_client, f"sudo bash -c 'cd {path} && git show --no-patch --format=\"%H %ai\" HEAD'")
-                match = re.match(commit_regex, result)
-                if match:
-                    return match.group(1), match.group(2)
-            return "N/A", None
-
-        worker.dependency_version.nvd_head, worker.dependency_version.nvd_time = _fetch_external("external/nvd-json-data-feeds")
-        worker.dependency_version.epss_head, worker.dependency_version.epss_time = _fetch_external("external/EPSS-data")
-
-        deb_check = exec_blocking_ssh(ssh_client, "sudo bash -c 'if test -d /root/DEPS/pkg; then echo 'success'; fi'")
-        deb_list_str = exec_blocking_ssh(ssh_client, "sudo bash -c 'cd /root/DEPS/pkg && sha256sum *.deb'") if deb_check == 'success' else ""
-        worker.dependency_version.deb_list = _parse_deb_list(deb_list_str)
-    except (paramiko.SSHException) as ssh_error:
-        logger.info("SSH connection to worker %s failed: %s", worker.ip_address, ssh_error)
-    finally:
-        if ssh_client:
-            ssh_client.close()
-
-    worker.dependency_version.save()
-    _eval_outdated_dependencies(worker)
 
 
 def update_system_info(configuration: Configuration, worker: Worker):
@@ -193,8 +81,6 @@ def update_system_info(configuration: Configuration, worker: Worker):
     }
     worker.system_info = system_info
     worker.save()
-
-    update_dependencies_info(worker)
 
     return system_info
 
@@ -304,6 +190,8 @@ def update_worker(worker_id, dependency_idx):
 
         worker.status = Worker.ConfigStatus.CONFIGURED
         logger.info("Setup done")
+
+        update_dependencies_info(worker)
     except Exception as ssh_error:
         logger.error("SSH connection failed: %s", ssh_error)
         worker.status = Worker.ConfigStatus.ERROR
@@ -365,15 +253,20 @@ def fetch_dependency_updates():
             logger.info("APT dependency update check successful. Logs: %s", log_file)
 
         deb_list_str = subprocess.check_output(f"cd {os.path.join(settings.WORKER_UPDATE_CHECK, 'pkg')} && sha256sum *.deb", shell=True)  # nosec
-        version.deb_list = _parse_deb_list(deb_list_str.decode('utf-8'))
+        version.deb_list = parse_deb_list(deb_list_str.decode('utf-8'))
     except BaseException as exception:
         logger.error("Error APT dependency update check: %s. Logs: %s", exception, log_file)
-        version.deb_list = []
+        version.deb_list = {}
 
     shutil.rmtree(settings.WORKER_UPDATE_CHECK, ignore_errors=True)
 
     # Store in DB
     version.save()
+
+    # Evaluate for each worker
+    workers = Worker.objects.all()
+    for worker in workers:
+        eval_outdated_dependencies(worker)
 
 
 @shared_task
