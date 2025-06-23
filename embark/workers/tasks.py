@@ -105,16 +105,13 @@ def update_system_info(configuration: Configuration, worker: Worker):
         disk_total = disk_str[1].replace('G', 'GB').replace('M', 'MB')
         disk_free = disk_str[3].replace('G', 'GB').replace('M', 'MB')
         disk_info = f"Free: {disk_free}  Total: {disk_total}"
+        emba_version_check = exec_blocking_ssh(ssh_client, f"sudo bash -c 'if test -f {os.path.join(settings.WORKER_EMBA_ROOT, 'docker-compose.yml')}; then echo success; fi'")
+        emba_version = exec_blocking_ssh(ssh_client, f"sudo cat {os.path.join(settings.WORKER_EMBA_ROOT, 'docker-compose.yml')} | awk -F: '/image:/ {{print $NF; exit}}'") if emba_version_check == 'success' else "N/A"
 
-        version_regex = r"\d+\.\d+\.\d+[a-z]?"
-        emba_version = exec_blocking_ssh(ssh_client, f"sudo cat {os.path.join(settings.WORKER_EMBA_ROOT, 'docker-compose.yml')} | awk -F: '/image:/ {{print $NF; exit}}'")
-        emba_version = "N/A" if not re.match(version_regex, emba_version) else emba_version
-
-        commit_regex = r"[0-9a-f]{7,40}"
-        last_sync_nvd = exec_blocking_ssh(ssh_client, f"sudo bash -c 'cd {os.path.join(settings.WORKER_EMBA_ROOT, 'external/nvd-json-data-feeds')} && git rev-parse --short HEAD'")
-        last_sync_nvd = "N/A" if not re.match(commit_regex, last_sync_nvd) else last_sync_nvd
-        last_sync_epss = exec_blocking_ssh(ssh_client, f"sudo bash -c 'cd {os.path.join(settings.WORKER_EMBA_ROOT, 'external/EPSS-data')} && git rev-parse --short HEAD'")
-        last_sync_epss = "N/A" if not re.match(commit_regex, last_sync_epss) else last_sync_epss
+        last_sync_nvd_check = exec_blocking_ssh(ssh_client, f"sudo bash -c 'if test -d {os.path.join(settings.WORKER_EMBA_ROOT, 'external/nvd-json-data-feeds')}; then echo success; fi'")
+        last_sync_nvd = exec_blocking_ssh(ssh_client, f"sudo bash -c 'cd {os.path.join(settings.WORKER_EMBA_ROOT, 'external/nvd-json-data-feeds')} && git rev-parse --short HEAD'") if last_sync_nvd_check == 'success' else "N/A"
+        last_sync_epss_check = exec_blocking_ssh(ssh_client, f"sudo bash -c 'if test -d {os.path.join(settings.WORKER_EMBA_ROOT, 'external/EPSS-data')}; then echo success; fi'")
+        last_sync_epss = exec_blocking_ssh(ssh_client, f"sudo bash -c 'cd {os.path.join(settings.WORKER_EMBA_ROOT, 'external/EPSS-data')} && git rev-parse --short HEAD'") if last_sync_epss_check == 'success' else "N/A"
         last_sync = f"NVD feed: {last_sync_nvd}  EPSS: {last_sync_epss}"
 
         deb_check = exec_blocking_ssh(ssh_client, "sudo bash -c 'if test -d /root/DEPS/pkg; then echo 'success'; fi'")
@@ -237,8 +234,6 @@ def monitor_workers():
     If the analysis is finished, sets the worker's status
     as free, and performs a soft reset.
     """
-    from workers.views import exec_soft_reset_cleanup  # pylint: disable=import-outside-toplevel
-
     logger.debug("Busy worker health check is running...")
 
     orchestrator = get_orchestrator()
@@ -255,14 +250,14 @@ def monitor_workers():
                 # Only assign a new task after soft reset is done
                 orchestrator.free_worker(worker)
 
-                exec_soft_reset_cleanup(worker)
+                worker_soft_reset_task(worker, worker.configurations.first().id)
 
                 logger.info("[Worker %s] Analysis finished.", worker.id)
         except Exception as exception:
             logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
             # TODO: Better handle exceptions
-            orchestrator.release_worker(worker)
-            exec_soft_reset_cleanup(worker)
+            orchestrator.free_worker(worker)
+            worker_soft_reset_task(worker, worker.configurations.first().id)
 
     logger.debug("Worker health-check complete.")
 
@@ -404,3 +399,47 @@ def update_worker(worker_id, dependency_idx):
             logger.info("Worker: %s added to orchestrator", worker.name)
         except ValueError:
             logger.error("Worker: %s already exists in orchestrator", worker.name)
+
+
+@shared_task
+def worker_soft_reset_task(worker_id, configuration_id):
+    """
+    Connects via SSH to the worker and performs the soft reset
+    :param worker_id: ID of worker to soft reset
+    :param configuration_id: ID of the configuration based on which the worker needs to be reset
+    """
+    try:
+        worker = Worker.objects.get(id=worker_id)
+    except Worker.DoesNotExist:
+        logger.error("Worker Soft Reset: Invalid worker id")
+        return
+    ssh_client = None
+    try:
+        ssh_client = worker.ssh_connect(configuration_id)
+        exec_blocking_ssh(ssh_client, "sudo docker ps -aq | xargs -r docker stop | xargs -r docker rm || true")
+        exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
+        exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
+        ssh_client.close()
+    except (paramiko.SSHException, socket.error):
+        logger.error("SSH Connection didnt work for: %s", worker.name)
+        if ssh_client:
+            ssh_client.close()
+
+
+@shared_task
+def worker_hard_reset_task(worker_id, configuration_id):
+    try:
+        worker = Worker.objects.get(id=worker_id)
+    except Worker.DoesNotExist:
+        logger.error("Worker Hard Reset: Invalid worker id")
+        return
+    ssh_client = None
+    try:
+        ssh_client = worker.ssh_connect(configuration_id)
+        emba_path = os.path.join(settings.WORKER_EMBA_ROOT, "full_uninstaller.sh")
+        exec_blocking_ssh(ssh_client, "sudo bash " + emba_path)
+        ssh_client.close()
+    except (paramiko.SSHException, socket.error):
+        logger.error("SSH Connection didnt work for: %s", worker.name)
+        if ssh_client:
+            ssh_client.close()
