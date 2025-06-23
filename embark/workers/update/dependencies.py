@@ -1,11 +1,8 @@
 import os
 import logging
-import time
 from enum import Enum
 
-from threading import Lock, Thread
-from subprocess import Popen, PIPE
-from pathlib import Path
+from threading import Lock
 
 from django.conf import settings
 from workers.models import Worker, DependencyVersion
@@ -80,9 +77,11 @@ class DependencyState:
                     self.used_by.append(worker.ip_address)
                     break
                 if self.available == self.AvailabilityType.UNAVAILABLE:
+                    from workers.tasks import setup_dependency  # pylint: disable=import-outside-toplevel
+
                     # Trigger dependency setup
                     self.available = self.AvailabilityType.IN_PROGRESS
-                    Thread(target=setup_dependency, args=(self.dependency,)).start()
+                    setup_dependency.delay(self.dependency)
 
     def release_dependency(self, worker: Worker, force: bool):
         """
@@ -172,37 +171,19 @@ def uses_dependency(dependency: DependencyType, worker: Worker):
     return locks_dict[dependency].uses_dependency(worker)
 
 
-def setup_dependency(dependency: DependencyType):
+def update_dependency(dependency: DependencyType, available: bool):
     """
-    Runs script to setup dependency
+    Sets availability for dependencies
+    If the dependency is not setup, the state is UNAVAILABLE.
+    If it is currently updated, the state is IN_PROGRESS. Else it is AVAILABLE.
 
-    :params dependency: Dependency type
+    :params dependency: the dependency to check
+    :params available: true if AVAILABLE, else IN_PROGRESS
     """
     if dependency == DependencyType.ALL:
-        raise ValueError("DependencyType.ALL can't be copied")
+        raise ValueError("DependencyType.ALL can't be updated")
 
-    Path(settings.WORKER_FILES_PATH).mkdir(parents=True, exist_ok=True)
-    Path(os.path.join(settings.WORKER_FILES_PATH, "logs")).mkdir(parents=True, exist_ok=True)
-
-    script_path = os.path.join(os.path.dirname(__file__), dependency.value)
-    folder_path, zip_path, done_path = get_dependency_path(dependency)
-
-    locks_dict[dependency].update_dependency(False)
-
-    log_file = settings.WORKER_SETUP_LOGS.format(timestamp=int(time.time()))
-
-    logger.info("Worker dependencies setup started with script %s. Logs: %s", dependency.value, log_file)
-    try:
-        cmd = f"sudo {script_path} '{folder_path}' '{zip_path}' '{done_path}'"
-        with open(log_file, "w+", encoding="utf-8") as file:
-            with Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True) as proc:  # nosec
-                proc.communicate()
-
-            logger.info("Worker dependencies setup successful. Logs: %s", log_file)
-    except BaseException as exception:
-        logger.error("Error setting up worker dependencies: %s. Logs: %s", exception, log_file)
-
-    locks_dict[dependency].update_dependency(True)
+    locks_dict[dependency].update_dependency(available)
 
 
 def eval_outdated_dependencies(worker: Worker):
