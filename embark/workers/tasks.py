@@ -133,16 +133,18 @@ def update_system_info(configuration: Configuration, worker: Worker):
         disk_info = f"Free: {disk_free}  Total: {disk_total}"
 
         # Update version
-        version_regex = r"\d+\.\d+\.\d+[a-z]?"
-        emba_version = exec_blocking_ssh(ssh_client, f"sudo cat {os.path.join(settings.WORKER_EMBA_ROOT, "docker-compose.yml")} | awk -F: '/image:/ {{print $NF; exit}}'")
-        emba_version = "N/A" if not re.match(version_regex, emba_version) else emba_version
+        emba_version_check = exec_blocking_ssh(ssh_client, f"sudo bash -c 'if test -f {os.path.join(settings.WORKER_EMBA_ROOT, 'docker-compose.yml')}; then echo success; fi'")
+        emba_version = exec_blocking_ssh(ssh_client, f"sudo cat {os.path.join(settings.WORKER_EMBA_ROOT, 'docker-compose.yml')} | awk -F: '/image:/ {{print $NF; exit}}'") if emba_version_check == 'success' else "N/A"
 
         def _fetch_external(external_type):
             commit_regex = r".*([0-9a-f]{40})\s(.*\s\+[0-9]{4})"
-            result = exec_blocking_ssh(ssh_client, f"sudo bash -c 'cd {os.path.join(settings.WORKER_EMBA_ROOT, external_type)} && git show --no-patch --format=\"%H %ai\" HEAD'")
-            match = re.match(commit_regex, result)
-            if match:
-                return match.group(1), match.group(2)
+            path = os.path.join(settings.WORKER_EMBA_ROOT, external_type)
+            perform_check = exec_blocking_ssh(ssh_client, f"sudo bash -c 'if test -d {path}; then echo success; fi'")
+            if perform_check == 'success':
+                result = exec_blocking_ssh(ssh_client, f"sudo bash -c 'cd {path} && git show --no-patch --format=\"%H %ai\" HEAD'")
+                match = re.match(commit_regex, result)
+                if match:
+                    return match.group(1), match.group(2)
             return "N/A", None
 
         nvd_head, nvd_time = _fetch_external("external/nvd-json-data-feeds")
