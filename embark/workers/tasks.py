@@ -252,7 +252,7 @@ def worker_soft_reset_task(worker_id, configuration_id):
     try:
         worker = Worker.objects.get(id=worker_id)
     except Worker.DoesNotExist:
-        logger.error("start_analysis: Invalid worker id")
+        logger.error("Worker Soft Reset: Invalid worker id")
         return
     ssh_client = None
     try:
@@ -262,6 +262,7 @@ def worker_soft_reset_task(worker_id, configuration_id):
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
         ssh_client.close()
     except (paramiko.SSHException, socket.error):
+        logger.error("SSH Connection didnt work for: %s", worker.name)
         if ssh_client:
             ssh_client.close()
 
@@ -271,7 +272,7 @@ def worker_hard_reset_task(worker_id, configuration_id):
     try:
         worker = Worker.objects.get(id=worker_id)
     except Worker.DoesNotExist:
-        logger.error("start_analysis: Invalid worker id")
+        logger.error("Worker Hard Reset: Invalid worker id")
         return
     ssh_client = None
     try:
@@ -280,5 +281,6 @@ def worker_hard_reset_task(worker_id, configuration_id):
         exec_blocking_ssh(ssh_client, "sudo bash " + emba_path)
         ssh_client.close()
     except (paramiko.SSHException, socket.error):
+        logger.error("SSH Connection didnt work for: %s", worker.name)
         if ssh_client:
             ssh_client.close()

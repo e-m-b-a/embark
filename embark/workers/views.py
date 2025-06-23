@@ -356,23 +356,23 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
     :params configuration_id: The configuration id
     """
     try:
-        if not configuration_id and not worker_id:
-            messages.error(request, 'No worker id and no config id given')
+        if not worker_id:
+            messages.error(request, 'No worker id given')
             return safe_redirect(request, '/worker/')
-        if worker_id:
-            user = get_user(request)
-            worker = Worker.objects.get(id=worker_id)
-            if not configuration_id:
-                configuration = worker.configurations.filter(user=user).first()
-            else:
-                configuration = Configuration.objects.get(id=configuration_id)
-            if configuration.user != user:
-                messages.error(request, 'You are not allowed to access this worker.')
-                return safe_redirect(request, '/worker/')
+
+        user = get_user(request)
+        worker = Worker.objects.get(id=worker_id)
+        if not configuration_id:
+            configuration = worker.configurations.filter(user=user).first()
+        else:
+            configuration = Configuration.objects.get(id=configuration_id)
+        if configuration.user != user:
+            messages.error(request, 'You are not allowed to access this worker.')
+            return safe_redirect(request, '/worker/')
 
         try:
             worker_soft_reset_task.delay(worker.id, configuration.id)
-            messages.success(request, f'Successfully soft reseted worker: {worker.ip_address} ({worker.name})')
+            messages.success(request, f'Successfully soft reseted worker: ({worker.name})')
             return safe_redirect(request, '/worker/')
         except BaseException:
             messages.error(request, 'Soft Reset failed.')
@@ -410,7 +410,7 @@ def worker_hard_reset(request, worker_id, configuration_id=None):
         try:
             worker_soft_reset_task.delay(worker.id, configuration.id)
             worker_hard_reset_task.delay(worker.id, configuration.id)
-            messages.success(request, f'Successfully hard reseted worker: {worker.ip_address} ({worker.name})')
+            messages.success(request, f'Successfully hard reseted worker: ({worker.name})')
             return safe_redirect(request, '/worker/')
         except BaseException:
             messages.error(request, 'Hard Reset failed.')
