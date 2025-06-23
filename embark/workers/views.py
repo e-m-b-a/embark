@@ -393,8 +393,8 @@ def worker_hard_reset(request, worker_id, configuration_id=None):
     :params configuration_id: The configuration id
     """
     try:
-        if not configuration_id and not worker_id:
-            messages.error(request, 'No worker id and no config id given')
+        if not worker_id:
+            messages.error(request, 'No worker id given')
             return safe_redirect(request, '/worker/')
         if worker_id:
             user = get_user(request)
