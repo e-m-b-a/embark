@@ -1,7 +1,6 @@
 import ipaddress
 import socket
 import re
-import os
 from concurrent.futures import ThreadPoolExecutor
 
 import paramiko
@@ -19,7 +18,7 @@ from django.db.models import Count
 from workers.models import Worker, Configuration, WorkerDependencyVersion, DependencyVersion
 from workers.update.update import exec_blocking_ssh
 from workers.update.dependencies import DependencyType, uses_dependency
-from workers.tasks import update_worker, update_system_info, fetch_dependency_updates
+from workers.tasks import update_worker, update_system_info, fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task
 
 
 @require_http_methods(["GET"])
@@ -318,16 +317,19 @@ def configuration_soft_reset(request, configuration_id):
         configuration = Configuration.objects.get(id=configuration_id)
 
         if configuration.user != user:
-            return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this configuration.'})
+            messages.error(request, 'You are not allowed to access this configuration.')
+            return safe_redirect(request, '/worker/')
     except Configuration.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Configuration not found.'})
+        messages.error(request, 'Configuration not found.')
+        return safe_redirect(request, '/worker/')
 
     workers = Worker.objects.filter(configurations__id=configuration_id)
 
     for worker in workers:
         worker_soft_reset(request, worker.id, configuration_id)
 
-    return JsonResponse({'status': 'success', 'message': 'Worker soft reset completed.'})
+    messages.success(request, f'Successfully soft reseted configuration: {configuration_id} ({configuration.name})')
+    return safe_redirect(request, '/worker/')
 
 
 @require_http_methods(["POST"])
@@ -343,16 +345,19 @@ def configuration_hard_reset(request, configuration_id):
         configuration = Configuration.objects.get(id=configuration_id)
 
         if configuration.user != user:
-            return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this configuration.'})
+            messages.error(request, 'You are not allowed to access this configuration.')
+            return safe_redirect(request, '/worker/')
     except Configuration.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Configuration not found.'})
+        messages.error(request, 'Configuration not found.')
+        return safe_redirect(request, '/worker/')
 
     workers = Worker.objects.filter(configurations__id=configuration_id)
 
     for worker in workers:
         worker_hard_reset(request, worker.id, configuration_id)
 
-    return JsonResponse({'status': 'success', 'message': 'Worker hard reset completed.'})
+    messages.success(request, f'Successfully hard reseted configuration: {configuration_id} ({configuration.name})')
+    return safe_redirect(request, '/worker/')
 
 
 @require_http_methods(["POST"])
@@ -365,34 +370,31 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
     :params configuration_id: The configuration id
     """
     try:
-        if not configuration_id and not worker_id:
-            return JsonResponse({'status': 'error', 'message': 'No worker id and no config id given'})
-        if worker_id:
-            user = get_user(request)
-            worker = Worker.objects.get(id=worker_id)
-            if not configuration_id:
-                configuration = worker.configurations.filter(user=user).first()
-            else:
-                configuration = Configuration.objects.get(id=configuration_id)
-            if configuration.user != user:
-                return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
+        if not worker_id:
+            messages.error(request, 'No worker id given')
+            return safe_redirect(request, '/worker/')
 
-        ssh_client = None
+        user = get_user(request)
+        worker = Worker.objects.get(id=worker_id)
+        if not configuration_id:
+            configuration = worker.configurations.filter(user=user).first()
+        else:
+            configuration = Configuration.objects.get(id=configuration_id)
+        if configuration.user != user:
+            messages.error(request, 'You are not allowed to access this worker.')
+            return safe_redirect(request, '/worker/')
+
         try:
-            ssh_client = worker.ssh_connect(configuration.id)
-            exec_blocking_ssh(ssh_client, "sudo docker ps -aq | xargs -r docker stop | xargs -r docker rm || true")
-            exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
-            exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
-            ssh_client.close()
-            return JsonResponse({'status': 'success', 'message': 'Worker soft reset completed.'})
-
-        except (paramiko.SSHException, socket.error):
-            if ssh_client:
-                ssh_client.close()
-            return JsonResponse({'status': 'error', 'message': 'SSH connection failed or command execution failed.'})
+            worker_soft_reset_task.delay(worker.id, configuration.id)
+            messages.success(request, f'Successfully soft reseted worker: ({worker.name})')
+            return safe_redirect(request, '/worker/')
+        except BaseException:
+            messages.error(request, 'Soft Reset failed.')
+            return safe_redirect(request, '/worker/')
 
     except (Worker.DoesNotExist, Configuration.DoesNotExist):
-        return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
+        messages.error(request, 'Worker or configuration not found.')
+        return safe_redirect(request, '/worker/')
 
 
 @require_http_methods(["POST"])
@@ -405,8 +407,9 @@ def worker_hard_reset(request, worker_id, configuration_id=None):
     :params configuration_id: The configuration id
     """
     try:
-        if not configuration_id and not worker_id:
-            return JsonResponse({'status': 'error', 'message': 'No worker id and no config id given'})
+        if not worker_id:
+            messages.error(request, 'No worker id given')
+            return safe_redirect(request, '/worker/')
         if worker_id:
             user = get_user(request)
             worker = Worker.objects.get(id=worker_id)
@@ -415,24 +418,21 @@ def worker_hard_reset(request, worker_id, configuration_id=None):
             else:
                 configuration = Configuration.objects.get(id=configuration_id)
             if configuration.user != user:
-                return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
+                messages.error(request, 'You are not allowed to access this worker.')
+                return safe_redirect(request, '/worker/')
 
-        ssh_client = None
         try:
-            worker_soft_reset(request, worker_id, configuration.id)
-            ssh_client = worker.ssh_connect(configuration.id)
-            emba_path = os.path.join(settings.WORKER_EMBA_ROOT, "full_uninstaller.sh")
-            exec_blocking_ssh(ssh_client, "sudo bash " + emba_path)
-            ssh_client.close()
-            return JsonResponse({'status': 'success', 'message': 'Worker hard reset completed.'})
-
-        except (paramiko.SSHException, socket.error):
-            if ssh_client:
-                ssh_client.close()
-            return JsonResponse({'status': 'error', 'message': 'SSH connection failed or command execution failed.'})
+            worker_soft_reset_task.delay(worker.id, configuration.id)
+            worker_hard_reset_task.delay(worker.id, configuration.id)
+            messages.success(request, f'Successfully hard reseted worker: ({worker.name})')
+            return safe_redirect(request, '/worker/')
+        except BaseException:
+            messages.error(request, 'Hard Reset failed.')
+            return safe_redirect(request, '/worker/')
 
     except (Worker.DoesNotExist, Configuration.DoesNotExist):
-        return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
+        messages.error(request, 'Worker or configuration not found.')
+        return safe_redirect(request, '/worker/')
 
 
 @require_http_methods(["GET"])
