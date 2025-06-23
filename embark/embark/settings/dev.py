@@ -1,5 +1,5 @@
-__copyright__ = 'Copyright 2021-2025 Siemens Energy AG'
-__author__ = 'Benedikt Kuehne'
+__copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2025 The AMOS Projects'
+__author__ = 'Benedikt Kuehne, SirGankalot, ClProsser'
 __license__ = 'MIT'
 
 from pathlib import Path
@@ -46,7 +46,8 @@ INSTALLED_APPS = [
     'dashboard',
     'tracker',
     'porter',
-    'updater'
+    'updater',
+    'rest_framework'
 ]
 
 AUTH_USER_MODEL = 'users.User'
@@ -234,7 +235,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR.parent, 'media')
 MEDIA_URL = '/media/'
 
 # Active Firmware
-ACTIVE_FW = os.path.join(BASE_DIR.parent, 'uploadedFirmwareImages/active/')
+ACTIVE_FW = os.path.join(MEDIA_ROOT, 'active')
 
 REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
 REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))

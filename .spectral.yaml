@@ -1,0 +1,6 @@
+extends: ["spectral:oas"]
+
+overrides:
+  - files: ["*"]
+    rules:
+      oas3-api-servers: "off"

@@ -1,0 +1,55 @@
+{% load static %}
+{% block style %}
+    <link rel="stylesheet"
+          type="text/css"
+          href="{% static 'content/css/apiKeyGen.css' %}" />
+{% endblock style %}
+{% block maincontent %}
+<div class="apikey-container">
+  <form action="{% url 'embark-acc-apikey' %}" method="get">
+    {% csrf_token %}
+    <label for="apikey-textbox">API Key:</label>
+    <div class="apikey-textbox-row">
+      <input type="text" id="apikey-textbox" name="apikey" value="" readonly />
+      <input type="button" id="btn-copy" class="solid btn-copy" value="Copy" onclick="copyToClipboard()" />
+    </div>
+    <input type="submit" class="solid btn-generate" value="Generate" />
+  </form>
+
+<!-- Hidden place to render Django messages -->
+<div class="django-messages">
+  {% for message in messages %}
+  <div class="django-message">
+    {{ message }}
+  </div>
+  {% endfor %}
+</div>
+
+<script>
+    function extractApiKey() {
+      let messages = document.getElementsByClassName('django-message');
+      for (let i = 0; i < messages.length; i++) {
+        let text = messages[i].innerText || messages[i].textContent;
+        if (text.trim().startsWith('Your new API key:')) {
+          let apiKey = text.replace('Your new API key:', '').trim();
+          document.getElementById('apikey-textbox').value = apiKey;
+          break;
+        }
+      }
+    }
+
+    function copyToClipboard() {
+      let textbox = document.getElementById("apikey-textbox");
+      if (!textbox.value) {
+	      alert("Error, please generate a key first.");
+	      return;
+      }
+      textbox.select();
+      document.execCommand("copy");
+      document.getElementById("btn-copy").value = "Copied!";
+    }
+
+    window.onload = extractApiKey;
+</script>
+</div>
+{% endblock maincontent %}

@@ -1,15 +1,17 @@
 __copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2021 The AMOS Projects, Copyright 2021 Siemens AG'
-__author__ = 'Benedikt Kuehne, Maximilian Wagner, p4cx, Ashutosh Singh, VAISHNAVI UMESH, diegiesskanne, uk61elac, RaviChandra, Vaish1795, Garima Chauhan, m-1-k-3'
+__author__ = 'Benedikt Kuehne, Maximilian Wagner, p4cx, Ashutosh Singh, VAISHNAVI UMESH, diegiesskanne, uk61elac, RaviChandra, Vaish1795, Garima Chauhan, m-1-k-3, SirGankalot, ClProsser'
 __license__ = 'MIT'
 
 from django.urls import path
-
 from uploader import views
+from .views import UploaderView
 
 # view routing
 urlpatterns = [
 
     path('uploader/', views.uploader_home, name='embark-uploader-home'),
+
+    path('api/uploader/', UploaderView.as_view()),
 
     path('uploader/manage/', views.manage_file, name='embark-uploader-manage-file'),
     path('uploader/save/', views.save_file, name='embark-uploader-save'),

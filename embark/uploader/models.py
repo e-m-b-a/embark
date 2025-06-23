@@ -127,7 +127,6 @@ class FirmwareFile(models.Model):
     """
     MAX_LENGTH = 127
 
-    # id = HashidAutoField(primary_key=True, prefix='fw_')
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
 
     is_archive = models.BooleanField(default=False, blank=True)
@@ -145,10 +144,6 @@ class FirmwareFile(models.Model):
 
     def get_abs_folder_path(self):
         return f"{settings.MEDIA_ROOT}/{self.pk}"
-
-    # def __init__(self, *args, **kwargs):
-    #    super().__init__(*args, **kwargs)
-        # self.file_name = self.file.name
 
     def __str__(self):
         return f"{self.file.name.replace('/', ' - ')}"  # this the only sanitizing we do?
@@ -248,7 +243,7 @@ class FirmwareAnalysis(models.Model):
     # pid from within boundedexec
     pid = models.BigIntegerField(help_text='process id of subproc', verbose_name='PID', blank=True, null=True)
 
-    firmware = models.ForeignKey(FirmwareFile, on_delete=models.SET_NULL, help_text='', null=True, editable=True)
+    firmware = models.ForeignKey(FirmwareFile, on_delete=models.SET_NULL, help_text='Firmware File object', null=True, editable=True, blank=True)
     firmware_name = models.CharField(editable=True, default="File unknown", max_length=MAX_LENGTH)
 
     # emba basic flags
@@ -313,10 +308,10 @@ class FirmwareAnalysis(models.Model):
         expert_mode=True, blank=True)
     """
     # Zip file for porting and download
-    zip_file = models.ForeignKey(LogZipFile, on_delete=models.SET_NULL, help_text='', null=True, editable=True)
+    zip_file = models.ForeignKey(LogZipFile, on_delete=models.SET_NULL, help_text='Archive file', null=True, editable=True, blank=True)
 
     # embark meta data
-    path_to_logs = models.FilePathField(default=settings.EMBA_LOG_ROOT, editable=True)
+    path_to_logs = models.FilePathField(path=settings.EMBA_LOG_ROOT, editable=True, allow_folders=True)
     log_size = models.PositiveBigIntegerField(default=0, blank=True)
     start_date = models.DateTimeField(default=timezone.now, blank=True)
     end_date = models.DateTimeField(default=None, null=True)
@@ -394,10 +389,15 @@ class FirmwareAnalysis(models.Model):
     def do_archive(self):
         """
         cleans up the firmwareanalysis log_dir up to a point where it's minimal
-        TODO since it's only deletes we don't need it to be in boundedexec
         """
         logger.info("Archiving %s", self.id)
-        logger.debug("Function not implemented yet. %s stays the same", self.id)
+        needed_content_list = ["html_report", "SBOM", "csv_logs", "emba_error.log", "emba.log", "firmware_entropy.png", "json_logs", "pixd.png"]
+        log_path = f"{self.path_to_logs}/emba_logs/"
+        for _content in os.listdir(log_path):
+            if _content not in needed_content_list and os.path.exists(os.path.join(log_path, _content)):
+                shutil.rmtree(os.path.join(log_path, _content), ignore_errors=False, onerror=logger.error("Error when trying to delete %s", os.path.join(log_path, _content)))
+        logger.debug("Reduced the size to. stat=%s", os.stat(log_path))
+        logger.debug("Archived %s", self.id)
 
 
 @receiver(pre_delete, sender=FirmwareAnalysis)

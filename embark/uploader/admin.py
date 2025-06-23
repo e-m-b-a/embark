@@ -8,6 +8,6 @@ from uploader.models import FirmwareAnalysis, FirmwareFile, Device, Label, Vendo
 
 admin.site.register(FirmwareAnalysis)
 admin.site.register(Device)
-admin.site.register(FirmwareFile)
+admin.site.register(FirmwareFile)   # TODO write bulk download action
 admin.site.register(Label)
 admin.site.register(Vendor)

@@ -22,6 +22,7 @@ channels = "*"
 channels-redis = "*"
 django-bootstrap5 = "*"
 pytz = "*"
+typing-extensions = "*"
 
 [dev-packages]
 pycodestyle = "*"
