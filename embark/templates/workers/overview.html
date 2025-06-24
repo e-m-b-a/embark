@@ -50,7 +50,7 @@
                         </form>
                         <form action="{% url 'embark-configuration-update' config.id %}" method="post">
                             {% csrf_token %}
-                            <input type="hidden" name="update" value="deb">
+                            <input type="hidden" name="update" value="deps">
                             <input type="submit" name="action" value="Update APT dependencies">
                         </form>
                         <form action="{% url 'embark-configuration-update' config.id %}" method="post">
@@ -250,7 +250,7 @@
                                 <button class="modal-abort-button">Close</button>
                                 <form action="{% url 'embark-worker-update' worker.id %}" method="post">
                                     {% csrf_token %}
-                                    <input type="hidden" name="update" value="deb">
+                                    <input type="hidden" name="update" value="deps">
                                     <input type="submit" name="action" value="Update">
                                 </form>
                             </div>
