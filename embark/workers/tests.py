@@ -88,6 +88,7 @@ class TestOrchestrator(TestCase):
         Test that tasks are assigned in FIFO order.
         """
         orchestrator = Orchestrator()
+
         worker1 = Worker.objects.get(name="test_worker1")
         worker2 = Worker.objects.get(name="test_worker2")
         orchestrator.add_worker(worker1)
@@ -96,7 +97,6 @@ class TestOrchestrator(TestCase):
         task1 = OrchestratorTask(FirmwareAnalysis.objects.create().id, None, None, None)
         task2 = OrchestratorTask(FirmwareAnalysis.objects.create().id, None, None, None)
         task3 = OrchestratorTask(FirmwareAnalysis.objects.create().id, None, None, None)
-
         orchestrator.assign_task(task1)
         orchestrator.assign_task(task2)
         orchestrator.assign_task(task3)
@@ -104,8 +104,12 @@ class TestOrchestrator(TestCase):
         self.assertEqual(orchestrator.get_busy_workers()[worker1.ip_address].analysis_id, task1.firmware_analysis_id)
         self.assertEqual(orchestrator.get_busy_workers()[worker2.ip_address].analysis_id, task2.firmware_analysis_id)
         self.assertEqual(orchestrator.tasks[0], task3)
+
         orchestrator.release_worker(worker1)
+        orchestrator.assign_worker(worker1, task3)
         self.assertEqual(orchestrator.get_busy_workers()[worker1.ip_address].analysis_id, task3.firmware_analysis_id)
+
         orchestrator.release_worker(worker1)
-        orchestrator.assign_task(task2)
-        self.assertEqual(orchestrator.get_busy_workers()[worker1.ip_address].analysis_id, task2.firmware_analysis_id)
+        task4 = OrchestratorTask(FirmwareAnalysis.objects.create().id, None, None, None)
+        orchestrator.assign_worker(worker1, task4)
+        self.assertEqual(orchestrator.get_busy_workers()[worker1.ip_address].analysis_id, task4.firmware_analysis_id)
