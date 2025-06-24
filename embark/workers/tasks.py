@@ -330,7 +330,7 @@ def undo_sudoers_file(ip_address, ssh_user, ssh_password):
     Note: Once this task is called, the configuration is already deleted (and the worker might too)
 
     :params ip_address: The worker ip address
-    :params ssh_usr: The worker ssh_user
+    :params ssh_user: The worker ssh_user
     :params ssh_password: The worker ssh_password
     """
     client = None
