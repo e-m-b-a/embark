@@ -7,8 +7,8 @@ import paramiko
 from paramiko.client import SSHClient
 from django.conf import settings
 
-from workers.models import Worker
 from workers.update.dependencies import use_dependency, release_dependency, DependencyType, get_dependency_path, eval_outdated_dependencies
+from workers.models import Worker, Configuration
 
 logger = logging.getLogger(__name__)
 
@@ -26,22 +26,13 @@ def exec_blocking_ssh(client: SSHClient, command: str):
 
     :return: command output
     """
-    sudo = 'sudo' in command
-    command = command.replace('sudo', 'sudo -S -p ""') if sudo else command
-
-    stdin, stdout, _ = client.exec_command(command, get_pty=sudo)  # nosec B601: No user input
-    if sudo:
-        stdin.write(f"{client.ssh_pw}\n")
-        stdin.flush()
+    stdout = client.exec_command(command)[1]  # nosec B601: No user input
 
     status = stdout.channel.recv_exit_status()
     if status != 0:
         raise paramiko.ssh_exception.SSHException(f"Command failed with status {status}: {command}")
 
-    output = stdout.read().decode().strip()
-    # somehow the ssh pw and line endings end up in stdout so we have to remove them
-    output = output[len(client.ssh_pw):].strip() if sudo else output
-    return output
+    return stdout.read().decode().strip()
 
 
 def _copy_files(client: SSHClient, dependency: DependencyType):
@@ -92,6 +83,36 @@ def perform_update(worker: Worker, client: SSHClient, dependency: DependencyType
         raise ssh_error
     finally:
         release_dependency(dependency, worker)
+
+
+def init_sudoers_file(configuration: Configuration, worker: Worker):
+    """
+    Initializes the sudoers file if it does not exist.
+    After this is done, "sudo" can be executed without further password prompts.
+
+    :params configuration: The configuration with user credentials
+    :params worker: The worker to edit
+    """
+    client = None
+    sudoers_entry = f"{configuration.ssh_user} ALL=(ALL) NOPASSWD: ALL"
+    command = f'sudo -S -p "" bash -c "grep -qxF \'{sudoers_entry}\' /etc/sudoers.d/EMBArk || echo \'{sudoers_entry}\' >> /etc/sudoers.d/EMBArk"'
+
+    try:
+        client = worker.ssh_connect(configuration.id)
+        stdin, stdout, _ = client.exec_command(command, get_pty=True)  # nosec B601: No user input
+        stdin.write(f"{configuration.ssh_password}\n")
+        stdin.flush()
+
+        status = stdout.channel.recv_exit_status()
+        if status != 0:
+            raise paramiko.ssh_exception.SSHException(f"init sudoers file: Command failed with status {status}")
+
+        logger.info("init sudoers file: Added user %s to sudoers of worker %s", configuration.ssh_user, worker.ip_address)
+    except Exception as ssh_error:
+        logger.error("init sudoers file: Failed. SSH connection failed: %s", ssh_error)
+    finally:
+        if client is not None:
+            client.close()
 
 
 def update_dependencies_info(worker: Worker):
