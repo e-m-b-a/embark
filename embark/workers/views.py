@@ -17,7 +17,8 @@ from django.db.models import Count
 
 from workers.models import Worker, Configuration, WorkerDependencyVersion, DependencyVersion
 from workers.update.dependencies import DependencyType, uses_dependency
-from workers.tasks import update_worker, update_system_info, fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task
+from workers.update.update import init_sudoers_file
+from workers.tasks import update_worker, update_system_info, fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +80,10 @@ def delete_config(request):
         if config.user != user:
             messages.error(request, 'You are not allowed to delete this configuration')
             return safe_redirect(request, '/worker/')
+
+        config_workers = Worker.objects.filter(configurations__id=config.id)
+        for worker in config_workers:
+            undo_sudoers_file.delay(worker.ip_address, config.ssh_user, config.ssh_password)
 
         workers = Worker.objects.annotate(config_count=Count('configurations')).filter(configurations__id=selected_config_id, config_count=1)
         workers.delete()
@@ -255,6 +260,7 @@ def config_worker_scan(request, configuration_id):
                 existing_worker.configurations.add(configuration)
                 existing_worker.save()
             try:
+                init_sudoers_file(configuration, existing_worker)
                 update_system_info(configuration, existing_worker)
             except BaseException:
                 pass
@@ -272,6 +278,7 @@ def config_worker_scan(request, configuration_id):
             new_worker.save()
             new_worker.configurations.set([configuration])
             try:
+                init_sudoers_file(configuration, new_worker)
                 update_system_info(configuration, new_worker)
             except BaseException:
                 pass
@@ -328,7 +335,7 @@ def configuration_soft_reset(request, configuration_id):
     for worker in workers:
         worker_soft_reset(request, worker.id, configuration_id)
 
-    messages.success(request, f'Successfully soft reseted configuration: {configuration_id} ({configuration.name})')
+    messages.success(request, f'Successfully soft resetted configuration: {configuration_id} ({configuration.name})')
     return safe_redirect(request, '/worker/')
 
 
@@ -356,7 +363,7 @@ def configuration_hard_reset(request, configuration_id):
     for worker in workers:
         worker_hard_reset(request, worker.id, configuration_id)
 
-    messages.success(request, f'Successfully hard reseted configuration: {configuration_id} ({configuration.name})')
+    messages.success(request, f'Successfully hard resetted configuration: {configuration_id} ({configuration.name})')
     return safe_redirect(request, '/worker/')
 
 
@@ -386,7 +393,7 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
 
         try:
             worker_soft_reset_task.delay(worker.id, configuration.id)
-            messages.success(request, f'Successfully soft reseted worker: ({worker.name})')
+            messages.success(request, f'Successfully soft resetted worker: ({worker.name})')
             return safe_redirect(request, '/worker/')
         except BaseException:
             messages.error(request, 'Soft Reset failed.')
@@ -424,7 +431,7 @@ def worker_hard_reset(request, worker_id, configuration_id=None):
         try:
             worker_soft_reset_task.delay(worker.id, configuration.id)
             worker_hard_reset_task.delay(worker.id, configuration.id)
-            messages.success(request, f'Successfully hard reseted worker: ({worker.name})')
+            messages.success(request, f'Successfully hard resetted worker: ({worker.name})')
             return safe_redirect(request, '/worker/')
         except BaseException:
             messages.error(request, 'Hard Reset failed.')
