@@ -126,13 +126,17 @@ class Orchestrator:
         with self.lock:
             self._assign_worker(worker, task)
 
-    def free_worker(self, worker: Worker):
+    def release_worker(self, worker: Worker):
         """
-        Marks a busy worker as free.
+        Release a busy worker from its current task and mark it as free.
 
-        :param worker: The worker to be marked free
+        :param worker: The worker to be released
+        :raises ValueError: If the worker is not busy
         """
         with self.lock:
+            if worker.ip_address not in self.busy_workers:
+                raise ValueError(f"Worker with IP {worker.ip_address} is not busy.")
+
             del self.busy_workers[worker.ip_address]
             self.free_workers[worker.ip_address] = worker
             worker.analysis_id = None
