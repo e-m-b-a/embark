@@ -334,7 +334,7 @@ def configuration_soft_reset(request, configuration_id):
     for worker in workers:
         worker_soft_reset(request, worker.id, configuration_id)
 
-    messages.success(request, f'Successfully soft reseted configuration: {configuration_id} ({configuration.name})')
+    messages.success(request, f'Successfully soft resetted configuration: {configuration_id} ({configuration.name})')
     return safe_redirect(request, '/worker/')
 
 
@@ -362,7 +362,7 @@ def configuration_hard_reset(request, configuration_id):
     for worker in workers:
         worker_hard_reset(request, worker.id, configuration_id)
 
-    messages.success(request, f'Successfully hard reseted configuration: {configuration_id} ({configuration.name})')
+    messages.success(request, f'Successfully hard resetted configuration: {configuration_id} ({configuration.name})')
     return safe_redirect(request, '/worker/')
 
 
@@ -392,7 +392,7 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
 
         try:
             worker_soft_reset_task.delay(worker.id, configuration.id)
-            messages.success(request, f'Successfully soft reseted worker: ({worker.name})')
+            messages.success(request, f'Successfully soft resetted worker: ({worker.name})')
             return safe_redirect(request, '/worker/')
         except BaseException:
             messages.error(request, 'Soft Reset failed.')
@@ -430,7 +430,7 @@ def worker_hard_reset(request, worker_id, configuration_id=None):
         try:
             worker_soft_reset_task.delay(worker.id, configuration.id)
             worker_hard_reset_task.delay(worker.id, configuration.id)
-            messages.success(request, f'Successfully hard reseted worker: ({worker.name})')
+            messages.success(request, f'Successfully hard resetted worker: ({worker.name})')
             return safe_redirect(request, '/worker/')
         except BaseException:
             messages.error(request, 'Hard Reset failed.')
