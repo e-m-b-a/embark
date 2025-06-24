@@ -223,7 +223,7 @@ def monitor_workers():
         except Exception as exception:
             logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
             # TODO: Better handle exceptions
-            orchestrator.free_worker(worker)
+            orchestrator.release_worker(worker)
             worker_soft_reset_task(worker, worker.configurations.first().id)
 
     logger.debug("Worker health-check complete.")
