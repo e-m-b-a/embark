@@ -3,9 +3,9 @@ import re
 import time
 import socket
 import shutil
-import requests
 import subprocess
 
+import requests
 import paramiko
 
 from celery import shared_task
