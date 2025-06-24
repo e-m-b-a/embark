@@ -221,21 +221,34 @@ def fetch_dependency_updates():
     if not version:
         version = DependencyVersion()
 
+    DOCKER_COMPOSE_URL = "https://raw.githubusercontent.com/e-m-b-a/emba/refs/heads/master/docker-compose.yml"  # pylint: disable=invalid-name
+    EXTERNAL_URL = "https://api.github.com/repos/EMBA-support-repos/{}/commits?per_page=1"  # pylint: disable=invalid-name
+
     # Fetch EMBA + docker image
-    response = requests.get("https://raw.githubusercontent.com/e-m-b-a/emba/refs/heads/master/docker-compose.yml", timeout=30)
-    match = re.search(r'image:\s?embeddedanalyzer\/emba:(.*?)\n', response.text)
-    if match is None:
-        logger.error("Update check: EMBA docker-compose.yml does not contain image version")
-        version.emba = "ERROR fetching EMBA"
-    else:
-        version.emba = match.group(1)
+    try:
+        response = requests.get(DOCKER_COMPOSE_URL, timeout=30)
+        match = re.search(r'image:\s?embeddedanalyzer\/emba:(.*?)\n', response.text)
+
+        if match is None:
+            logger.error("Update check: Failed. EMBA docker-compose.yml does not contain image version")
+            version.emba = "ERROR fetching EMBA"
+        else:
+            version.emba = match.group(1)
+    except requests.exceptions.Timeout as exception:
+        logger.error("Update check: Failed. An error occured on contacting GH API for docker-compose.yml: %s", exception)
 
     # Fetch external
     def _get_head_time(repo):
-        response = requests.get(f"https://api.github.com/repos/EMBA-support-repos/{repo}/commits?per_page=1", timeout=30)
-        json_response = response.json()
+        try:
+            response = requests.get(EXTERNAL_URL.format(repo), timeout=30)
+            json_response = response.json()
 
-        return json_response[0]["sha"], json_response[0]["commit"]["author"]["date"]
+            return json_response[0]["sha"], json_response[0]["commit"]["author"]["date"]
+        except requests.exceptions.Timeout as exception:
+            logger.error("Update check: Failed. An error occured on contacting GH API: %s", exception)
+        except (requests.exceptions.JSONDecodeError, KeyError):
+            logger.error("Update check: Failed. GH API returned invalid or incomplete json: %s", response.text)
+        return "N/A", None
 
     version.nvd_head, version.nvd_time = _get_head_time("nvd-json-data-feeds")
     version.epss_head, version.epss_time = _get_head_time("EPSS-data")

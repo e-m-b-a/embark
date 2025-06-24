@@ -30,7 +30,7 @@ if [ -n "${ZIPPATH}" ]; then
 fi
 
 if [ -n "${DONEPATH}" ]; then
-  rm -rf "${DONEPATH}"
+  rm -f "${DONEPATH}"
 fi
 
 mkdir -p "${FILEPATH}"

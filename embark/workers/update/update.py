@@ -1,12 +1,13 @@
 import logging
 import re
 import os
+import socket
 
 import paramiko
 from paramiko.client import SSHClient
 from django.conf import settings
 
-from workers.models import Worker, WorkerDependencyVersion
+from workers.models import Worker
 from workers.update.dependencies import use_dependency, release_dependency, DependencyType, get_dependency_path, eval_outdated_dependencies
 
 logger = logging.getLogger(__name__)
@@ -98,11 +99,6 @@ def update_dependencies_info(worker: Worker):
     Updates dependencies information on worker node
     :param worker: The related worker
     """
-    if worker.dependency_version is None:
-        worker.dependency_version = WorkerDependencyVersion()
-        worker.dependency_version.save()
-        worker.save()
-
     ssh_client = None
     try:
         ssh_client = worker.ssh_connect()
@@ -126,9 +122,9 @@ def update_dependencies_info(worker: Worker):
         worker.dependency_version.epss_head, worker.dependency_version.epss_time = _fetch_external("external/EPSS-data")
 
         deb_check = exec_blocking_ssh(ssh_client, "sudo bash -c 'if test -d /root/DEPS/pkg; then echo 'success'; fi'")
-        deb_list_str = exec_blocking_ssh(ssh_client, "sudo bash -c 'cd /root/DEPS/pkg && sha256sum *.deb'") if deb_check == 'success' else {}
+        deb_list_str = exec_blocking_ssh(ssh_client, "sudo bash -c 'cd /root/DEPS/pkg && sha256sum *.deb'") if deb_check == 'success' else ""
         worker.dependency_version.deb_list = parse_deb_list(deb_list_str)
-    except (paramiko.SSHException) as ssh_error:
+    except (paramiko.SSHException, socket.error) as ssh_error:
         logger.info("SSH connection to worker %s failed: %s", worker.ip_address, ssh_error)
     finally:
         if ssh_client:
