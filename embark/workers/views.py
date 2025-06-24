@@ -17,6 +17,7 @@ from django.db.models import Count
 
 from workers.models import Worker, Configuration
 from workers.update.dependencies import DependencyType, uses_dependency
+from workers.update.update import init_sudoers_file
 from workers.tasks import update_worker, update_system_info, worker_hard_reset_task, worker_soft_reset_task
 
 
@@ -245,6 +246,7 @@ def config_worker_scan(request, configuration_id):
                 existing_worker.configurations.add(configuration)
                 existing_worker.save()
             try:
+                init_sudoers_file(configuration, existing_worker)
                 update_system_info(configuration, existing_worker)
             except BaseException:
                 pass
@@ -258,6 +260,7 @@ def config_worker_scan(request, configuration_id):
             new_worker.save()
             new_worker.configurations.set([configuration])
             try:
+                init_sudoers_file(configuration, new_worker)
                 update_system_info(configuration, new_worker)
             except BaseException:
                 pass
