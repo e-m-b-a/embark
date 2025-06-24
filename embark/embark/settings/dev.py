@@ -281,6 +281,7 @@ VERSION = get_version_strings()
 
 # Worker setup
 WORKER_FILES_PATH = os.path.join(BASE_DIR.parent, "WORKER_FILES")
+WORKER_UPDATE_CHECK = os.path.join(WORKER_FILES_PATH, "update_check")
 WORKER_SETUP_LOGS = os.path.join(WORKER_FILES_PATH, "logs/worker_setup_{timestamp}.log")
 WORKER_EMBA_ROOT = "/root/emba/"
 WORKER_FIRMWARE_DIR = "/root/firmware/"

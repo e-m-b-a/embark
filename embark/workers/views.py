@@ -15,9 +15,9 @@ from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
 
-from workers.models import Worker, Configuration
+from workers.models import Worker, Configuration, WorkerDependencyVersion, DependencyVersion
 from workers.update.dependencies import DependencyType, uses_dependency
-from workers.tasks import update_worker, update_system_info, worker_hard_reset_task, worker_soft_reset_task
+from workers.tasks import update_worker, update_system_info, fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +44,10 @@ def worker_main(request):
     reachable_workers = sorted(reachable_workers, key=lambda x: x.ip_address)
     unreachable_workers = sorted(unreachable_workers, key=lambda x: x.ip_address)
 
+    version = DependencyVersion.objects.first()
+    if not version:
+        version = DependencyVersion()
+
     workers = reachable_workers + unreachable_workers
     for worker in workers:
         worker.config_ids = ', '.join([str(config.id) for config in worker.configurations.filter(user=user)])
@@ -53,6 +57,7 @@ def worker_main(request):
         'user': user,
         'configs': configs,
         'workers': workers,
+        'availableVersion': version
     })
 
 
@@ -144,6 +149,10 @@ def _trigger_worker_update(worker, dependency: str):
     """
     parsed_dependency = None
     match dependency:
+        case "emba":
+            repo_res = _trigger_worker_update(worker, "repo")
+            docker_res = _trigger_worker_update(worker, "docker")
+            return repo_res and docker_res
         case "repo":
             parsed_dependency = DependencyType.REPO
         case "docker":
@@ -250,7 +259,11 @@ def config_worker_scan(request, configuration_id):
             except BaseException:
                 pass
         except Worker.DoesNotExist:
+            version = WorkerDependencyVersion()
+            version.save()
+
             new_worker = Worker(
+                dependency_version=version,
                 name=f"worker-{str(ip_address)}",
                 ip_address=str(ip_address),
                 system_info={},
@@ -481,3 +494,16 @@ def safe_redirect(request, default):
     if not url_has_allowed_host_and_scheme(referer, allowed_hosts={request.get_host()}):
         referer = default
     return HttpResponseRedirect(referer)
+
+
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def check_updates(request):
+    """
+    Checks if new updates are available
+    """
+    fetch_dependency_updates.delay()
+
+    messages.success(request, 'Update check queued!')
+    return safe_redirect(request, '/worker/')
