@@ -161,17 +161,21 @@ def _fetch_analysis_logs(worker) -> None:
         client = worker.ssh_connect()
 
         # To not error if the logs dir has been deleted
-        exec_blocking_ssh(client, f"sudo mkdir -p {settings.WORKER_EMBA_LOGS}")
+        exec_blocking_ssh(client, f"mkdir -p {settings.WORKER_EMBA_LOGS}")
 
         logger.info("[Worker %s] Zipping logs on remote...", worker.id)
 
-        zip_cmd = "cd /root && \
-                   7z u -t7z -y emba_logs.zip emba_logs/ -uq3"
+        homedir = "/root" if client.ssh_user == "root" else f"/home/{client.ssh_user}"
+        zip_cmd = (
+            "cd /root && "
+            f"7z u -t7z -y {homedir}/emba_logs.zip emba_logs/ -uq3 && "
+            f"chown {client.ssh_user}: {homedir}/emba_logs.zip"  # TODO: Test if this is necessary
+        )
         exec_blocking_ssh(client, zip_cmd)
 
         logger.info("[Worker %s] Zipping logs on remote complete.", worker.id)
 
-        # Ensure log_zip/ exists
+        # Ensure log_zip/ exists locally
         os.makedirs(f"{settings.MEDIA_ROOT}/log_zip/", exist_ok=True)
 
         # Fetch zip file
@@ -293,8 +297,8 @@ def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
     logger.info("Firmware analysis has been started on the worker.")
 
     # Create file to supress errors
-    with open(f"{settings.EMBA_LOG_ROOT}/{worker.analysis_id}/emba_logs/emba.log", "w", encoding="utf-8"):
-        pass
+    os.system(f"mkdir -p {settings.EMBA_LOG_ROOT}/{worker.analysis_id}/emba_logs/")  # nosec
+    os.system(f"touch {settings.EMBA_LOG_ROOT}/{worker.analysis_id}/emba_logs/emba.log")  # nosec
 
     future = BoundedExecutor.submit(LogReader, worker.analysis_id)
     if future is None:
