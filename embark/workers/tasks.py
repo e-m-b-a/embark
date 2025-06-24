@@ -17,10 +17,10 @@ from workers.models import Worker, Configuration, DependencyVersion
 from workers.update.dependencies import DependencyType, eval_outdated_dependencies
 from workers.update.update import exec_blocking_ssh, perform_update, update_dependencies_info, parse_deb_list
 from workers.orchestrator import get_orchestrator
+from workers.codeql_ignore import new_autoadd_client
 from uploader.models import FirmwareAnalysis
 from uploader.boundedexecutor import BoundedExecutor
 from embark.logreader import LogReader
-from workers.codeql_ignore import new_autoadd_client
 
 logger = get_task_logger(__name__)
 
