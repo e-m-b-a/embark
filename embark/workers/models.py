@@ -28,7 +28,7 @@ class WorkerDependencyVersion(models.Model):
     epss_head = models.CharField(max_length=40, null=True)
     epss_time = models.DateTimeField(null=True)
     deb_list = models.JSONField(default=default_deb_list)
-    deb_list_dif = models.JSONField(default=default_deb_list)
+    deb_list_diff = models.JSONField(default=default_deb_list)
 
     emba_outdated = models.BooleanField(default=True)
     external_outdated = models.BooleanField(default=True)

@@ -208,22 +208,22 @@ def eval_outdated_dependencies(worker: Worker):
         "updated": [],
     }
 
-    for key, value in worker.dependency_version.deb_list.items():
-        if key not in version.deb_list:
-            deb_list_diff["removed"].append(key)
+    for deb_name, deb_info in worker.dependency_version.deb_list.items():
+        if deb_name not in version.deb_list:
+            deb_list_diff["removed"].append(deb_name)
             continue
 
-        if value["version"] != version.deb_list[key]["version"]:
+        if deb_info["version"] != version.deb_list[deb_name]["version"]:
             deb_list_diff["updated"].append({
-                "name": key,
-                "old": value["version"],
-                "new": version.deb_list[key]["version"]
+                "name": deb_name,
+                "old": deb_info["version"],
+                "new": version.deb_list[deb_name]["version"]
             })
 
-    for key in set(version.deb_list.keys()).difference(worker.dependency_version.deb_list.keys()):
+    for deb_name in set(version.deb_list.keys()).difference(worker.dependency_version.deb_list.keys()):
         deb_list_diff["new"].append({
-            "name": key,
-            "new": version.deb_list[key]["version"]
+            "name": deb_name,
+            "new": version.deb_list[deb_name]["version"]
         })
 
     worker.dependency_version.deb_outdated = bool(deb_list_diff["new"]) or bool(deb_list_diff["removed"]) or bool(deb_list_diff["updated"])
