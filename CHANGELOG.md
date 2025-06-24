@@ -10,7 +10,7 @@
 
 ### ADDED
 
-- Worker health check and analysis logs sync ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=112364687&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C46))
+- Worker health check and fetch analysis logs ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=112364687&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C46))
 - Collect dependency version info for workers ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114773112&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C73))
 - Settings App to EMBArk ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114643627&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C66))
 - Settings helper `workers_enabled` check

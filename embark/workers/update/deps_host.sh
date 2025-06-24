@@ -75,6 +75,7 @@ downloadPackage docker-ce docker-ce-cli containerd.io docker-buildx-plugin docke
 # Needed for EMBA:
 downloadPackage inotify-tools
 downloadPackage libnotify-bin
+downloadPackage p7zip
 
 # Build index (for dependency tree)
 ( cd "${PKGPATH}" && dpkg-scanpackages . ) | gzip -9c > "${PKGPATH}/Packages.gz"
