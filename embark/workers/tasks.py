@@ -329,6 +329,8 @@ def undo_sudoers_file(ip_address, ssh_user, ssh_password):
     After this is done, "sudo" might prompt a password (e.g. if not a root user, not in sudoers file).
     Note: Once this task is called, the configuration is already deleted (and the worker might too)
 
+    Note: If two configurations with the same username exist, the entry in the sudoers file is removed (while it might still be needed).
+
     :params ip_address: The worker ip address
     :params ssh_user: The worker ssh_user
     :params ssh_password: The worker ssh_password
