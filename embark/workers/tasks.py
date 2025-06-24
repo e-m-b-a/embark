@@ -191,10 +191,13 @@ def _fetch_analysis_logs(worker) -> None:
     sftp_client = None
     try:
         local_zip_path = f"{settings.MEDIA_ROOT}/log_zip/{worker.analysis_id}.zip"
-        local_log_path = f"{settings.EMBA_LOG_ROOT}/{worker.analysis_id}/emba_logs/"
+        local_log_path = f"{settings.EMBA_LOG_ROOT}/{worker.analysis_id}/"
 
         # SSH and zip the logs
         client = worker.ssh_connect()
+
+        # To not error if the logs dir has been deleted
+        exec_blocking_ssh(client, f"sudo mkdir -p {settings.WORKER_EMBA_LOGS}")
 
         logger.info("[Worker %s] Zipping logs on remote...", worker.id)
 
@@ -284,7 +287,7 @@ def is_emba_container_running(worker) -> bool:
 
     except Exception as exception:
         logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
-        logger.info("[Worker %s] Setting the worker as free.", worker.id)
+        logger.info("[Worker %s] Returning status free.", worker.id)
         return False
     finally:
         if client is not None:
