@@ -1,10 +1,14 @@
 import logging
+import re
+import os
+import socket
 
 import paramiko
 from paramiko.client import SSHClient
+from django.conf import settings
 
+from workers.update.dependencies import use_dependency, release_dependency, DependencyType, get_dependency_path, eval_outdated_dependencies
 from workers.models import Worker, Configuration
-from workers.update.dependencies import use_dependency, release_dependency, DependencyType, get_dependency_path
 
 logger = logging.getLogger(__name__)
 
@@ -109,3 +113,69 @@ def init_sudoers_file(configuration: Configuration, worker: Worker):
     finally:
         if client is not None:
             client.close()
+
+
+def update_dependencies_info(worker: Worker):
+    """
+    Updates dependencies information on worker node
+    :param worker: The related worker
+    """
+    ssh_client = None
+    try:
+        ssh_client = worker.ssh_connect()
+
+        docker_compose_path = os.path.join(settings.WORKER_EMBA_ROOT, 'docker-compose.yml')
+        emba_version_check = exec_blocking_ssh(ssh_client, f"sudo bash -c 'if test -f {docker_compose_path}; then echo success; fi'")
+        worker.dependency_version.emba = exec_blocking_ssh(ssh_client, f"sudo cat {docker_compose_path} | awk -F: '/image:/ {{print $NF; exit}}'") if emba_version_check == 'success' else "N/A"
+
+        def _fetch_external(external_type):
+            commit_regex = r".*([0-9a-f]{40})\s(.*\s\+[0-9]{4})"
+            path = os.path.join(settings.WORKER_EMBA_ROOT, external_type)
+            perform_check = exec_blocking_ssh(ssh_client, f"sudo bash -c 'if test -d {path}; then echo success; fi'")
+            if perform_check == 'success':
+                result = exec_blocking_ssh(ssh_client, f"sudo bash -c 'cd {path} && git show --no-patch --format=\"%H %ai\" HEAD'")
+                match = re.match(commit_regex, result)
+                if match:
+                    return match.group(1), match.group(2)
+            return "N/A", None
+
+        worker.dependency_version.nvd_head, worker.dependency_version.nvd_time = _fetch_external("external/nvd-json-data-feeds")
+        worker.dependency_version.epss_head, worker.dependency_version.epss_time = _fetch_external("external/EPSS-data")
+
+        deb_check = exec_blocking_ssh(ssh_client, "sudo bash -c 'if test -d /root/DEPS/pkg; then echo 'success'; fi'")
+        deb_list_str = exec_blocking_ssh(ssh_client, "sudo bash -c 'cd /root/DEPS/pkg && sha256sum *.deb'") if deb_check == 'success' else ""
+        worker.dependency_version.deb_list = parse_deb_list(deb_list_str)
+    except (paramiko.SSHException, socket.error) as ssh_error:
+        logger.info("SSH connection to worker %s failed: %s", worker.ip_address, ssh_error)
+    finally:
+        if ssh_client:
+            ssh_client.close()
+
+    worker.dependency_version.save()
+    logger.info("Dependency info updated for worker %s", worker.ip_address)
+
+    eval_outdated_dependencies(worker)
+
+
+def parse_deb_list(deb_list_str: str):
+    """
+    Parse the output of the 'sha256sum *.deb' command to extract package names and their checksums.
+
+    :param deb_list_str: String containing the output of the 'sha256sum *.deb' command
+    :return: List of dictionaries with package information
+    """
+    deb_list = {}
+    for line in deb_list_str.splitlines():
+        try:
+            checksum, package_name = line.split('  ')
+            deb_info = re.match(r"(?P<name>[^_]+)_(?P<version>[^_]+)_(?P<architecture>[^.]+)\.deb", package_name)
+            deb_list[deb_info.group("name")] = {
+                "version": deb_info.group("version"),
+                "architecture": deb_info.group("architecture"),
+                "checksum": checksum
+            }
+        except BaseException as error:
+            if line:
+                logger.error("Error parsing deb list line '%s': %s", line, error)
+            continue
+    return deb_list

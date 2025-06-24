@@ -1,14 +1,14 @@
 import os
-import logging
 import time
+import logging
 from enum import Enum
 
-from threading import Lock, Thread
 from subprocess import Popen, PIPE
 from pathlib import Path
+from threading import Lock
 
 from django.conf import settings
-from workers.models import Worker
+from workers.models import Worker, DependencyVersion
 
 logger = logging.getLogger(__name__)
 
@@ -80,9 +80,10 @@ class DependencyState:
                     self.used_by.append(worker.ip_address)
                     break
                 if self.available == self.AvailabilityType.UNAVAILABLE:
-                    # Trigger dependency setup
+                    # Trigger dependency setup (Blocking, as we are already in a celery task)
                     self.available = self.AvailabilityType.IN_PROGRESS
-                    Thread(target=setup_dependency, args=(self.dependency,)).start()
+                    setup_dependency(self.dependency)
+                    self.available = self.AvailabilityType.AVAILABLE
 
     def release_dependency(self, worker: Worker, force: bool):
         """
@@ -172,7 +173,67 @@ def uses_dependency(dependency: DependencyType, worker: Worker):
     return locks_dict[dependency].uses_dependency(worker)
 
 
-def setup_dependency(dependency: DependencyType):
+def update_dependency(dependency: DependencyType, available: bool):
+    """
+    Sets availability for dependencies
+    If the dependency is not setup, the state is UNAVAILABLE.
+    If it is currently updated, the state is IN_PROGRESS. Else it is AVAILABLE.
+
+    :params dependency: the dependency to check
+    :params available: true if AVAILABLE, else IN_PROGRESS
+    """
+    if dependency == DependencyType.ALL:
+        raise ValueError("DependencyType.ALL can't be updated")
+
+    locks_dict[dependency].update_dependency(available)
+
+
+def eval_outdated_dependencies(worker: Worker):
+    """
+    Evaluates if dependency version is outdated
+    :param worker: The related worker
+    """
+    version = DependencyVersion.objects.first()
+    if not version:
+        version = DependencyVersion()
+
+    worker.dependency_version.emba_outdated = version.emba != worker.dependency_version.emba
+
+    worker.dependency_version.external_outdated = version.nvd_head != worker.dependency_version.nvd_head or version.epss_head != worker.dependency_version.epss_head
+
+    # Eval deb list
+    deb_list_diff = {
+        "new": [],
+        "removed": [],
+        "updated": [],
+    }
+
+    for deb_name, deb_info in worker.dependency_version.deb_list.items():
+        if deb_name not in version.deb_list:
+            deb_list_diff["removed"].append(deb_name)
+            continue
+
+        if deb_info["version"] != version.deb_list[deb_name]["version"]:
+            deb_list_diff["updated"].append({
+                "name": deb_name,
+                "old": deb_info["version"],
+                "new": version.deb_list[deb_name]["version"]
+            })
+
+    for deb_name in set(version.deb_list.keys()).difference(worker.dependency_version.deb_list.keys()):
+        deb_list_diff["new"].append({
+            "name": deb_name,
+            "new": version.deb_list[deb_name]["version"]
+        })
+
+    worker.dependency_version.deb_outdated = bool(deb_list_diff["new"]) or bool(deb_list_diff["removed"]) or bool(deb_list_diff["updated"])
+    worker.dependency_version.deb_list_diff = deb_list_diff
+
+    worker.dependency_version.save()
+    logger.info("Outdated dependencies evaluated for worker %s", worker.ip_address)
+
+
+def setup_dependency(dependency):
     """
     Runs script to setup dependency
 
@@ -187,14 +248,14 @@ def setup_dependency(dependency: DependencyType):
     script_path = os.path.join(os.path.dirname(__file__), dependency.value)
     folder_path, zip_path, done_path = get_dependency_path(dependency)
 
-    locks_dict[dependency].update_dependency(False)
+    # update_dependency(dependency, False)
 
     log_file = settings.WORKER_SETUP_LOGS.format(timestamp=int(time.time()))
 
     logger.info("Worker dependencies setup started with script %s. Logs: %s", dependency.value, log_file)
     try:
         cmd = f"sudo {script_path} '{folder_path}' '{zip_path}' '{done_path}'"
-        with open(f"{log_file}", "w+", encoding="utf-8") as file:
+        with open(log_file, "w+", encoding="utf-8") as file:
             with Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True) as proc:  # nosec
                 proc.communicate()
 
@@ -202,4 +263,4 @@ def setup_dependency(dependency: DependencyType):
     except BaseException as exception:
         logger.error("Error setting up worker dependencies: %s. Logs: %s", exception, log_file)
 
-    locks_dict[dependency].update_dependency(True)
+    # update_dependency(dependency, True)

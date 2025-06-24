@@ -17,7 +17,26 @@ class Configuration(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, help_text="Date time when this entry was created")
 
 
+def default_deb_list():
+    return {}
+
+
+class WorkerDependencyVersion(models.Model):
+    emba = models.CharField(max_length=100, null=True)
+    nvd_head = models.CharField(max_length=40, null=True)
+    nvd_time = models.DateTimeField(null=True)
+    epss_head = models.CharField(max_length=40, null=True)
+    epss_time = models.DateTimeField(null=True)
+    deb_list = models.JSONField(default=default_deb_list)
+    deb_list_diff = models.JSONField(default=default_deb_list)
+
+    emba_outdated = models.BooleanField(default=True)
+    external_outdated = models.BooleanField(default=True)
+    deb_outdated = models.BooleanField(default=True)
+
+
 class Worker(models.Model):
+
     class ConfigStatus(models.TextChoices):  # pylint: disable=too-many-ancestors
         UNCONFIGURED = "U", _("Unconfigured")
         CONFIGURING = "I", _("Configuring")
@@ -31,6 +50,12 @@ class Worker(models.Model):
     reachable = models.BooleanField(default=False)
     status = models.CharField(max_length=1, choices=ConfigStatus, default=ConfigStatus.UNCONFIGURED)
     analysis_id = models.CharField(max_length=100, blank=True, null=True, help_text="ID of the analysis currently running on this worker")
+
+    dependency_version = models.OneToOneField(
+        WorkerDependencyVersion,
+        on_delete=models.CASCADE,
+        null=True
+    )
 
     def clean(self):
         super().clean()
@@ -58,3 +83,12 @@ class Worker(models.Model):
         ssh_client.ssh_pw = configuration.ssh_password
 
         return ssh_client
+
+
+class DependencyVersion(models.Model):
+    emba = models.CharField(max_length=100, null=True)
+    nvd_head = models.CharField(max_length=40, null=True)
+    nvd_time = models.DateTimeField(null=True)
+    epss_head = models.CharField(max_length=40, null=True)
+    epss_time = models.DateTimeField(null=True)
+    deb_list = models.JSONField(default=default_deb_list)
