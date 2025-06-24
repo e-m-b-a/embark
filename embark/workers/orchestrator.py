@@ -133,8 +133,8 @@ class Orchestrator:
         :param worker: The worker to be marked free
         """
         with self.lock:
-            self.free_workers[worker.ip_address] = worker
             del self.busy_workers[worker.ip_address]
+            self.free_workers[worker.ip_address] = worker
             worker.analysis_id = None
             worker.save()
 
@@ -150,13 +150,14 @@ class Orchestrator:
             if worker.ip_address not in self.busy_workers:
                 raise ValueError(f"Worker with IP {worker.ip_address} is not busy.")
 
+            del self.busy_workers[worker.ip_address]
+            self.free_workers[worker.ip_address] = worker
+            worker.analysis_id = None
+            worker.save()
+
             if self.tasks:
                 next_task = self.tasks.popleft()
-                self.free_workers[worker.ip_address] = worker
-                del self.busy_workers[worker.ip_address]
                 self._assign_worker(worker, next_task)
-            else:
-                self.free_worker(worker)
 
     def add_worker(self, worker: Worker):
         """
