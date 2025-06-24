@@ -17,8 +17,8 @@ from django.db.models import Count
 
 from workers.models import Worker, Configuration
 from workers.update.dependencies import DependencyType, uses_dependency
-from workers.update.update import init_sudoers_file, undo_sudoers_file
-from workers.tasks import update_worker, update_system_info, worker_hard_reset_task, worker_soft_reset_task
+from workers.update.update import init_sudoers_file
+from workers.tasks import update_worker, update_system_info, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file
 
 
 @require_http_methods(["GET"])
@@ -76,7 +76,7 @@ def delete_config(request):
 
         config_workers = Worker.objects.filter(configurations__id=config.id)
         for worker in config_workers:
-            undo_sudoers_file(config, worker)
+            undo_sudoers_file.delay(worker.ip_address, config.ssh_user, config.ssh_password)
 
         workers = Worker.objects.annotate(config_count=Count('configurations')).filter(configurations__id=selected_config_id, config_count=1)
         workers.delete()

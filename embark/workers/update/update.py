@@ -109,27 +109,3 @@ def init_sudoers_file(configuration: Configuration, worker: Worker):
     finally:
         if client is not None:
             client.close()
-
-
-def undo_sudoers_file(configuration: Configuration, worker: Worker):
-    """
-    Undos changes from the sudoers file
-    After this is done, "sudo" might prompt a password (e.g. if not a root user, not in sudoers file).
-
-    :params configuration: The configuration with user credentials
-    :params worker: The worker to edit
-    """
-    client = None
-    sudoers_entry = f"{configuration.ssh_user} ALL=(ALL) NOPASSWD: ALL"
-    command = f'sudo bash -c "grep -vxF \'{sudoers_entry}\' /etc/sudoers.d/EMBArk > temp_sudoers; mv -f temp_sudoers /etc/sudoers.d/EMBArk || true"'
-
-    try:
-        client = worker.ssh_connect(configuration.id)
-        exec_blocking_ssh(client, command)
-
-        logger.info("undo sudoers file: Removed user %s from sudoers of worker %s", configuration.ssh_user, worker.ip_address)
-    except Exception as ssh_error:
-        logger.error("undo sudoers file: Failed. SSH connection failed: %s", ssh_error)
-    finally:
-        if client is not None:
-            client.close()

@@ -12,6 +12,7 @@ from workers.models import Worker, Configuration
 from workers.update.dependencies import DependencyType
 from workers.update.update import exec_blocking_ssh, perform_update
 from workers.orchestrator import get_orchestrator
+from workers.codeql_ignore import new_autoadd_client
 
 logger = get_task_logger(__name__)
 
@@ -281,3 +282,31 @@ def worker_hard_reset_task(worker_id, configuration_id):
         logger.error("SSH Connection didnt work for: %s", worker.name)
         if ssh_client:
             ssh_client.close()
+
+
+@shared_task
+def undo_sudoers_file(ip_address, ssh_user, ssh_password):
+    """
+    Undos changes from the sudoers file
+    After this is done, "sudo" might prompt a password (e.g. if not a root user, not in sudoers file).
+    Note: Once this task is called, the configuration is already deleted (and the worker might too)
+
+    :params ip_address: The worker ip address
+    :params ssh_usr: The worker ssh_user
+    :params ssh_password: The worker ssh_password
+    """
+    client = None
+    sudoers_entry = f"{ssh_user} ALL=(ALL) NOPASSWD: ALL"
+    command = f'sudo bash -c "grep -vxF \'{sudoers_entry}\' /etc/sudoers.d/EMBArk > temp_sudoers; mv -f temp_sudoers /etc/sudoers.d/EMBArk || true"'
+
+    try:
+        client = new_autoadd_client()
+        client.connect(ip_address, username=ssh_user, password=ssh_password)
+        exec_blocking_ssh(client, command)
+
+        logger.info("undo sudoers file: Removed user %s from sudoers of worker %s", ssh_user, ip_address)
+    except Exception as ssh_error:
+        logger.error("undo sudoers file: Failed. SSH connection failed: %s", ssh_error)
+    finally:
+        if client is not None:
+            client.close()
