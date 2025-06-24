@@ -1,16 +1,20 @@
 import socket
 import re
 import os
+import shutil
+import subprocess
+import time
 
 import paramiko
 from celery import shared_task
 from celery.utils.log import get_task_logger
 
+import requests
 from django.conf import settings
 
-from workers.models import Worker, Configuration
-from workers.update.dependencies import DependencyType
-from workers.update.update import exec_blocking_ssh, perform_update
+from workers.models import Worker, Configuration, DependencyVersion
+from workers.update.dependencies import DependencyType, eval_outdated_dependencies
+from workers.update.update import exec_blocking_ssh, perform_update, update_dependencies_info, parse_deb_list
 from workers.orchestrator import get_orchestrator
 
 logger = get_task_logger(__name__)
@@ -30,31 +34,6 @@ def create_periodic_tasks(**kwargs):
         name='Update Worker Information',
         task='workers.tasks.update_worker_info',
     )
-
-
-def _parse_deb_list(deb_list_str: str):
-    """
-    Parse the output of the 'sha256sum *.deb' command to extract package names and their checksums.
-
-    :param deb_list_str: String containing the output of the 'sha256sum *.deb' command
-    :return: List of dictionaries with package information
-    """
-    deb_list = []
-    for line in deb_list_str.splitlines():
-        try:
-            checksum, package_name = line.split('  ')
-            deb_info = re.match(r"(?P<name>[^_]+)_(?P<version>[^_]+)_(?P<architecture>[^.]+)\.deb", package_name)
-            deb_list.append({
-                "name": deb_info.group("name"),
-                "version": deb_info.group("version"),
-                "architecture": deb_info.group("architecture"),
-                "checksum": checksum
-            })
-        except BaseException as error:
-            if line:
-                logger.error("Error parsing deb list line '%s': %s", line, error)
-            continue
-    return deb_list
 
 
 def update_system_info(configuration: Configuration, worker: Worker):
@@ -86,18 +65,6 @@ def update_system_info(configuration: Configuration, worker: Worker):
         disk_total = disk_str[1].replace('G', 'GB').replace('M', 'MB')
         disk_free = disk_str[3].replace('G', 'GB').replace('M', 'MB')
         disk_info = f"Free: {disk_free}  Total: {disk_total}"
-        emba_version_check = exec_blocking_ssh(ssh_client, f"sudo bash -c 'if test -f {os.path.join(settings.WORKER_EMBA_ROOT, 'docker-compose.yml')}; then echo success; fi'")
-        emba_version = exec_blocking_ssh(ssh_client, f"sudo cat {os.path.join(settings.WORKER_EMBA_ROOT, 'docker-compose.yml')} | awk -F: '/image:/ {{print $NF; exit}}'") if emba_version_check == 'success' else "N/A"
-
-        last_sync_nvd_check = exec_blocking_ssh(ssh_client, f"sudo bash -c 'if test -d {os.path.join(settings.WORKER_EMBA_ROOT, 'external/nvd-json-data-feeds')}; then echo success; fi'")
-        last_sync_nvd = exec_blocking_ssh(ssh_client, f"sudo bash -c 'cd {os.path.join(settings.WORKER_EMBA_ROOT, 'external/nvd-json-data-feeds')} && git rev-parse --short HEAD'") if last_sync_nvd_check == 'success' else "N/A"
-        last_sync_epss_check = exec_blocking_ssh(ssh_client, f"sudo bash -c 'if test -d {os.path.join(settings.WORKER_EMBA_ROOT, 'external/EPSS-data')}; then echo success; fi'")
-        last_sync_epss = exec_blocking_ssh(ssh_client, f"sudo bash -c 'cd {os.path.join(settings.WORKER_EMBA_ROOT, 'external/EPSS-data')} && git rev-parse --short HEAD'") if last_sync_epss_check == 'success' else "N/A"
-        last_sync = f"NVD feed: {last_sync_nvd}  EPSS: {last_sync_epss}"
-
-        deb_check = exec_blocking_ssh(ssh_client, "sudo bash -c 'if test -d /root/DEPS/pkg; then echo 'success'; fi'")
-        deb_list_str = exec_blocking_ssh(ssh_client, "sudo bash -c 'cd /root/DEPS/pkg && sha256sum *.deb'") if deb_check == 'success' else ""
-        deb_list = _parse_deb_list(deb_list_str)
 
         ssh_client.close()
 
@@ -110,10 +77,7 @@ def update_system_info(configuration: Configuration, worker: Worker):
         'os_info': os_info,
         'cpu_info': cpu_info,
         'ram_info': ram_info,
-        'disk_info': disk_info,
-        'emba_version': emba_version,
-        'last_sync': last_sync,
-        'deb_list': deb_list
+        'disk_info': disk_info
     }
     worker.system_info = system_info
     worker.save()
@@ -226,6 +190,8 @@ def update_worker(worker_id, dependency_idx):
 
         worker.status = Worker.ConfigStatus.CONFIGURED
         logger.info("Setup done")
+
+        update_dependencies_info(worker)
     except Exception as ssh_error:
         logger.error("SSH connection failed: %s", ssh_error)
         worker.status = Worker.ConfigStatus.ERROR
@@ -242,6 +208,78 @@ def update_worker(worker_id, dependency_idx):
             logger.info("Worker: %s added to orchestrator", worker.name)
         except ValueError:
             logger.error("Worker: %s already exists in orchestrator", worker.name)
+
+
+@shared_task
+def fetch_dependency_updates():
+    """
+    Checks if there are updates available
+    """
+    logger.info("Dependency update check started.")
+
+    version = DependencyVersion.objects.first()
+    if not version:
+        version = DependencyVersion()
+
+    DOCKER_COMPOSE_URL = "https://raw.githubusercontent.com/e-m-b-a/emba/refs/heads/master/docker-compose.yml"  # pylint: disable=invalid-name
+    EXTERNAL_URL = "https://api.github.com/repos/EMBA-support-repos/{}/commits?per_page=1"  # pylint: disable=invalid-name
+
+    # Fetch EMBA + docker image
+    try:
+        response = requests.get(DOCKER_COMPOSE_URL, timeout=30)
+        match = re.search(r'image:\s?embeddedanalyzer\/emba:(.*?)\n', response.text)
+
+        if match is None:
+            logger.error("Update check: Failed. EMBA docker-compose.yml does not contain image version")
+            version.emba = "ERROR fetching EMBA"
+        else:
+            version.emba = match.group(1)
+    except requests.exceptions.Timeout as exception:
+        logger.error("Update check: Failed. An error occured on contacting GH API for docker-compose.yml: %s", exception)
+
+    # Fetch external
+    def _get_head_time(repo):
+        try:
+            response = requests.get(EXTERNAL_URL.format(repo), timeout=30)
+            json_response = response.json()
+
+            return json_response[0]["sha"], json_response[0]["commit"]["author"]["date"]
+        except requests.exceptions.Timeout as exception:
+            logger.error("Update check: Failed. An error occured on contacting GH API: %s", exception)
+        except (requests.exceptions.JSONDecodeError, KeyError):
+            logger.error("Update check: Failed. GH API returned invalid or incomplete json: %s", response.text)
+        return "N/A", None
+
+    version.nvd_head, version.nvd_time = _get_head_time("nvd-json-data-feeds")
+    version.epss_head, version.epss_time = _get_head_time("EPSS-data")
+
+    # Fetch APT
+    log_file = settings.WORKER_SETUP_LOGS.format(timestamp=int(time.time()))
+    logger.info("APT dependency update check started. Logs: %s", log_file)
+    try:
+        script_path = os.path.join(os.path.dirname(__file__), "update", DependencyType.DEPS.value)
+        cmd = f"sudo {script_path} '{settings.WORKER_UPDATE_CHECK}' '' ''"
+        with open(log_file, "w+", encoding="utf-8") as file:
+            with subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=file, stderr=file, shell=True) as proc:  # nosec
+                proc.communicate()
+
+            logger.info("APT dependency update check successful. Logs: %s", log_file)
+
+        deb_list_str = subprocess.check_output(f"cd {os.path.join(settings.WORKER_UPDATE_CHECK, 'pkg')} && sha256sum *.deb", shell=True)  # nosec
+        version.deb_list = parse_deb_list(deb_list_str.decode('utf-8'))
+    except BaseException as exception:
+        logger.error("Error APT dependency update check: %s. Logs: %s", exception, log_file)
+        version.deb_list = {}
+
+    shutil.rmtree(settings.WORKER_UPDATE_CHECK, ignore_errors=True)
+
+    # Store in DB
+    version.save()
+
+    # Evaluate for each worker
+    workers = Worker.objects.all()
+    for worker in workers:
+        eval_outdated_dependencies(worker)
 
 
 @shared_task
