@@ -215,7 +215,7 @@ def monitor_workers():
                 _fetch_analysis_logs(worker)
 
                 # Only assign a new task after soft reset is done
-                orchestrator.free_worker(worker)
+                orchestrator.release_worker(worker)
 
                 worker_soft_reset_task(worker, worker.configurations.first().id)
 
