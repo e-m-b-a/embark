@@ -32,12 +32,7 @@ def exec_blocking_ssh(client: SSHClient, command: str):
     if status != 0:
         raise paramiko.ssh_exception.SSHException(f"Command failed with status {status}: {command}")
 
-    # somehow the ssh pw and line endings end up in stdout so we have to remove them
-    output = stdout.read().decode().strip()
-    output_lines = output.splitlines()
-    output_lines = [line for line in output_lines if line.strip() != client.ssh_pw]
-    output = "\n".join(output_lines).strip()
-    return output
+    return stdout.read().decode().strip()
 
 
 def _copy_files(client: SSHClient, dependency: DependencyType):
