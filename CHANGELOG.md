@@ -2,6 +2,8 @@
 
 ## UNRELEASED
 
+## [sprint-10](https://github.com/amosproj/amos2025ss01-embark/releases/tag/sprint-10-release) - 2025-06-25
+
 ### FIXED
 
 - Fix a bug related to incorrect start of celery ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=115359765&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C79))
