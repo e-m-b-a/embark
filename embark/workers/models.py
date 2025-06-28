@@ -85,6 +85,21 @@ class Worker(models.Model):
         return ssh_client
 
 
+class WorkerUpdate(models.Model):
+
+    class DependencyType(models.TextChoices):  # pylint: disable=too-many-ancestors
+        DEPS = "D", _("APT Dependencies")
+        REPO = "R", _("GH Repository")
+        EXTERNAL = "E", _("EXTERNAL DIR")
+        DOCKERIMAGE = "DO", _("DOCKER IMAGE")
+
+    dependency_type = models.CharField(max_length=2, choices=DependencyType)
+    worker = models.ForeignKey(Worker, on_delete=models.CASCADE)
+
+    def get_type(self):
+        return WorkerUpdate.DependencyType(self.dependency_type)
+
+
 class DependencyVersion(models.Model):
     emba = models.CharField(max_length=100, null=True)
     nvd_head = models.CharField(max_length=40, null=True)

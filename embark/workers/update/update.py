@@ -7,8 +7,9 @@ import paramiko
 from paramiko.client import SSHClient
 from django.conf import settings
 
-from workers.update.dependencies import use_dependency, release_dependency, DependencyType, get_dependency_path, eval_outdated_dependencies
-from workers.models import Worker, Configuration
+from workers.update.dependencies import use_dependency, release_dependency, get_dependency_path, eval_outdated_dependencies
+from workers.models import Worker, Configuration, WorkerUpdate
+from workers.orchestrator import get_orchestrator
 
 logger = logging.getLogger(__name__)
 
@@ -35,16 +36,13 @@ def exec_blocking_ssh(client: SSHClient, command: str):
     return stdout.read().decode().strip()
 
 
-def _copy_files(client: SSHClient, dependency: DependencyType):
+def _copy_files(client: SSHClient, dependency: WorkerUpdate.DependencyType):
     """
     Copy zipped dependency file to remote
 
     :params client: paramiko ssh client
     :params dependency: Dependency type
     """
-    if dependency == DependencyType.ALL:
-        raise ValueError("DependencyType.ALL can't be copied")
-
     folder_path = f"/root/{dependency.name}"
     zip_path = f"{folder_path}.tar.gz"
     zip_path_user = zip_path if client.ssh_user == "root" else f"/home/{client.ssh_user}/{dependency.name}.tar.gz"
@@ -59,15 +57,85 @@ def _copy_files(client: SSHClient, dependency: DependencyType):
         exec_blocking_ssh(client, f"sudo mv {zip_path_user} {zip_path}")
 
 
-def perform_update(worker: Worker, client: SSHClient, dependency: DependencyType):
+def queue_update(worker: Worker, dependency: WorkerUpdate.DependencyType):
+    """
+    Adds dependency update to worker update queue
+    :param worker: The worker to update
+    :param dependency: The dependency to update
+    """
+    from workers.tasks import update_worker  # pylint: disable=import-outside-toplevel
+
+    if len(WorkerUpdate.objects.filter(worker__id=worker.id)) >= settings.WORKER_UPDATE_QUEUE_SIZE:
+        logger.info("Update %s discarded for worker %s", dependency.name, worker.name)
+        return
+
+    update = WorkerUpdate(worker=worker, dependency_type=dependency)
+    update.save()
+
+    logger.info("Update %s queued for worker %s", dependency.name, worker.name)
+
+    orchestrator = get_orchestrator()
+    if orchestrator.is_busy(worker):
+        # Update is performed once the analysis is finished
+        return
+
+    if worker.status == Worker.ConfigStatus.CONFIGURING:
+        return
+
+    worker.status = Worker.ConfigStatus.CONFIGURING
+    worker.save()
+
+    update_worker.delay(worker.id)
+
+
+def process_update_queue(worker: Worker):
+    """
+    Processes the update queue
+    :param worker: The worker to update
+    """
+    if len(WorkerUpdate.objects.filter(worker__id=worker.id)) == 0:
+        return
+
+    worker.status = Worker.ConfigStatus.CONFIGURING
+    worker.save()
+
+    client = None
+
+    try:
+        client = worker.ssh_connect()
+        logger.info("Worker update started on worker %s", worker.name)
+
+        while len(updates := WorkerUpdate.objects.filter(worker__id=worker.id)) != 0:
+            current_update = updates[0]
+            logger.info("Update dependency %s on worker %s", current_update.get_type().name, worker.name)
+
+            perform_update(worker, client, current_update)
+            current_update.delete()
+
+        worker.status = Worker.ConfigStatus.CONFIGURED
+
+        update_dependencies_info(worker)
+
+        logger.info("Worker update finished on worker %s", worker.name)
+    except Exception as ssh_error:
+        logger.error("SSH connection failed: %s", ssh_error)
+        worker.status = Worker.ConfigStatus.ERROR
+    finally:
+        if client is not None:
+            client.close()
+
+        worker.save()
+
+
+def perform_update(worker: Worker, client: SSHClient, worker_update: WorkerUpdate):
     """
     Trigger file copy and installer.sh
 
+    :params worker: The worker to update
     :params client: paramiko ssh client
-    :params dependency: Dependency type
+    :params worker_update: The worker update to apply
     """
-    if dependency == DependencyType.ALL:
-        raise ValueError("DependencyType.ALL can't be copied")
+    dependency = worker_update.get_type()
 
     folder_path = f"/root/{dependency.name}"
     zip_path = f"{folder_path}.tar.gz"
