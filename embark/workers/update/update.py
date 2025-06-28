@@ -7,8 +7,8 @@ import paramiko
 from paramiko.client import SSHClient
 from django.conf import settings
 
-from workers.update.dependencies import use_dependency, release_dependency, DependencyType, get_dependency_path, eval_outdated_dependencies
-from workers.models import Worker, Configuration
+from workers.update.dependencies import use_dependency, release_dependency, get_dependency_path, eval_outdated_dependencies
+from workers.models import Worker, Configuration, WorkerUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -35,14 +35,14 @@ def exec_blocking_ssh(client: SSHClient, command: str):
     return stdout.read().decode().strip()
 
 
-def _copy_files(client: SSHClient, dependency: DependencyType):
+def _copy_files(client: SSHClient, dependency: WorkerUpdate.DependencyType):
     """
     Copy zipped dependency file to remote
 
     :params client: paramiko ssh client
     :params dependency: Dependency type
     """
-    if dependency == DependencyType.ALL:
+    if dependency == WorkerUpdate.DependencyType.ALL:
         raise ValueError("DependencyType.ALL can't be copied")
 
     folder_path = f"/root/{dependency.name}"
@@ -59,15 +59,38 @@ def _copy_files(client: SSHClient, dependency: DependencyType):
         exec_blocking_ssh(client, f"sudo mv {zip_path_user} {zip_path}")
 
 
-def perform_update(worker: Worker, client: SSHClient, dependency: DependencyType):
+def queue_update(worker: Worker, dependency: WorkerUpdate.DependencyType):
+    """
+    Adds dependency update to worker update queue
+    :param worker: The worker to update
+    :param dependency: The dependency to update
+    """
+    from workers.tasks import update_worker  # pylint: disable=import-outside-toplevel
+
+    if dependency == WorkerUpdate.DependencyType.ALL:
+        raise ValueError("DependencyType.ALL can't be queued")
+
+    update = WorkerUpdate(worker=worker, dependency_type=dependency)
+    update.save()
+
+    if worker.status == Worker.ConfigStatus.CONFIGURING:
+        return
+
+    worker.status = Worker.ConfigStatus.CONFIGURING
+    worker.save()
+
+    update_worker.delay(worker.id)
+
+
+def perform_update(worker: Worker, client: SSHClient, worker_update: WorkerUpdate):
     """
     Trigger file copy and installer.sh
 
+    :params worker: The worker to update
     :params client: paramiko ssh client
-    :params dependency: Dependency type
+    :params worker_update: The worker update to apply
     """
-    if dependency == DependencyType.ALL:
-        raise ValueError("DependencyType.ALL can't be copied")
+    dependency = worker_update.get_type()
 
     folder_path = f"/root/{dependency.name}"
     zip_path = f"{folder_path}.tar.gz"

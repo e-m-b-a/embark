@@ -15,10 +15,9 @@ from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
 
-from workers.models import Worker, Configuration, WorkerDependencyVersion, DependencyVersion
-from workers.update.dependencies import DependencyType, uses_dependency
-from workers.update.update import init_sudoers_file
-from workers.tasks import update_worker, update_system_info, fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file
+from workers.models import Worker, Configuration, WorkerDependencyVersion, DependencyVersion, WorkerUpdate
+from workers.update.update import init_sudoers_file, queue_update
+from workers.tasks import update_system_info, fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file
 
 
 @require_http_methods(["GET"])
@@ -138,7 +137,10 @@ def configure_worker(request, configuration_id):
     workers = Worker.objects.filter(configurations__id=configuration_id, status__in=[Worker.ConfigStatus.UNCONFIGURED, Worker.ConfigStatus.ERROR])
 
     for worker in workers:
-        update_worker.delay(worker.id, DependencyType.ALL.name)
+        queue_update(worker, WorkerUpdate.DependencyType.DEPS)
+        queue_update(worker, WorkerUpdate.DependencyType.REPO)
+        queue_update(worker, WorkerUpdate.DependencyType.EXTERNAL)
+        queue_update(worker, WorkerUpdate.DependencyType.DOCKERIMAGE)
 
     return safe_redirect(request, '/worker/')
 
@@ -157,20 +159,17 @@ def _trigger_worker_update(worker, dependency: str):
             docker_res = _trigger_worker_update(worker, "docker")
             return repo_res and docker_res
         case "repo":
-            parsed_dependency = DependencyType.REPO
+            parsed_dependency = WorkerUpdate.DependencyType.REPO
         case "docker":
-            parsed_dependency = DependencyType.DOCKERIMAGE
+            parsed_dependency = WorkerUpdate.DependencyType.DOCKERIMAGE
         case "external":
-            parsed_dependency = DependencyType.EXTERNAL
+            parsed_dependency = WorkerUpdate.DependencyType.EXTERNAL
         case "deps":
-            parsed_dependency = DependencyType.DEPS
+            parsed_dependency = WorkerUpdate.DependencyType.DEPS
         case _:
             raise ValueError("Invalid dependency: Dependency could not be parsed.")
 
-    if uses_dependency(parsed_dependency, worker):
-        return False
-
-    update_worker.delay(worker.id, parsed_dependency.name)
+    queue_update(worker, parsed_dependency)
 
     return True
 
@@ -187,9 +186,7 @@ def update_worker_dependency(request, worker_id):
     try:
         worker = Worker.objects.get(id=worker_id)
 
-        if not _trigger_worker_update(worker, dependency):
-            messages.error(request, 'Worker update already queued')
-            return safe_redirect(request, '/worker/')
+        _trigger_worker_update(worker, dependency)
     except Worker.DoesNotExist:
         messages.error(request, 'Worker does not exist')
         return safe_redirect(request, '/worker/')
@@ -210,22 +207,16 @@ def update_configuration_dependency(request, configuration_id):
     :params configuration_id: The configuration id
     """
     dependency = request.POST.get("update")
-    workers = Worker.objects.filter(configurations__id=configuration_id, status__in=[Worker.ConfigStatus.CONFIGURED])
+    workers = Worker.objects.filter(configurations__id=configuration_id, status__in=[Worker.ConfigStatus.CONFIGURED, Worker.ConfigStatus.ERROR])
 
-    count = 0
     try:
         for worker in workers:
-            if not _trigger_worker_update(worker, dependency):
-                continue
-            count = count + 1
+            _trigger_worker_update(worker, dependency)
     except ValueError as exception:
         messages.error(request, str(exception))
         return safe_redirect(request, '/worker/')
 
-    if count > 0:
-        messages.success(request, 'Update queued')
-    else:
-        messages.error(request, 'Configuration update already queued')
+    messages.success(request, 'Update queued')
     return safe_redirect(request, '/worker/')
 
 

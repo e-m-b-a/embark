@@ -12,8 +12,8 @@ from celery.utils.log import get_task_logger
 import requests
 from django.conf import settings
 
-from workers.models import Worker, Configuration, DependencyVersion
-from workers.update.dependencies import DependencyType, eval_outdated_dependencies
+from workers.models import Worker, Configuration, DependencyVersion, WorkerUpdate
+from workers.update.dependencies import eval_outdated_dependencies, get_script_name
 from workers.update.update import exec_blocking_ssh, perform_update, update_dependencies_info, parse_deb_list
 from workers.orchestrator import get_orchestrator
 from workers.codeql_ignore import new_autoadd_client
@@ -143,14 +143,11 @@ def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
 
 
 @shared_task
-def update_worker(worker_id, dependency_idx):
+def update_worker(worker_id):
     """
     Setup/Update an offline worker and add it to the orchestrator.
 
-    DependencyType.ALL equals a full setup (e.g. new worker), all other DependencyType values are for specific dependencies (e.g. the external directory)
-
     :params worker_id: The worker to update
-    :params dependency_idx: Dependency type as index
     """
     try:
         worker = Worker.objects.get(id=worker_id)
@@ -158,16 +155,7 @@ def update_worker(worker_id, dependency_idx):
         logger.error("start_analysis: Invalid worker id")
         return
 
-    if dependency_idx not in DependencyType.__members__:
-        logger.error("start_analysis: Invalid dependency type")
-        return
-
-    dependency = DependencyType[dependency_idx]
-
-    logger.info("Worker update started (Dependency: %s)", dependency)
-
-    worker.status = Worker.ConfigStatus.CONFIGURING
-    worker.save()
+    logger.info("Worker update started")
 
     client = None
 
@@ -181,25 +169,23 @@ def update_worker(worker_id, dependency_idx):
 
     try:
         client = worker.ssh_connect()
-        if dependency == DependencyType.ALL:
-            perform_update(worker, client, DependencyType.DEPS)
-            perform_update(worker, client, DependencyType.REPO)
-            perform_update(worker, client, DependencyType.EXTERNAL)
-            perform_update(worker, client, DependencyType.DOCKERIMAGE)
-        else:
-            perform_update(worker, client, dependency)
+
+        while len(updates := WorkerUpdate.objects.filter(worker__id=worker.id)) != 0:
+            current_update = updates[0]
+            perform_update(worker, client, current_update)
+            current_update.delete()
 
         worker.status = Worker.ConfigStatus.CONFIGURED
-        logger.info("Setup done")
+        worker.save()
 
         update_dependencies_info(worker)
+        logger.info("Worker update finished")
     except Exception as ssh_error:
         logger.error("SSH connection failed: %s", ssh_error)
         worker.status = Worker.ConfigStatus.ERROR
     finally:
         if client is not None:
             client.close()
-        worker.save()
 
     if worker.status == Worker.ConfigStatus.CONFIGURED:
         try:
@@ -258,7 +244,7 @@ def fetch_dependency_updates():
     log_file = settings.WORKER_SETUP_LOGS.format(timestamp=int(time.time()))
     logger.info("APT dependency update check started. Logs: %s", log_file)
     try:
-        script_path = os.path.join(os.path.dirname(__file__), "update", DependencyType.DEPS.value)
+        script_path = os.path.join(os.path.dirname(__file__), "update", get_script_name(WorkerUpdate.DependencyType.DEPS))
         cmd = f"sudo {script_path} '{settings.WORKER_UPDATE_CHECK}' '' ''"
         with open(log_file, "w+", encoding="utf-8") as file:
             with subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=file, stderr=file, shell=True) as proc:  # nosec

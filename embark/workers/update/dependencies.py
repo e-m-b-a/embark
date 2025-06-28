@@ -8,23 +8,29 @@ from pathlib import Path
 from threading import Lock
 
 from django.conf import settings
-from workers.models import Worker, DependencyVersion
+from workers.models import Worker, DependencyVersion, WorkerUpdate
 
 logger = logging.getLogger(__name__)
 
 
-class DependencyType(Enum):
-    """
-    Maps dependency type to host script file
-    """
-    ALL = ""
-    DEPS = "deps_host.sh"
-    REPO = "emba_repo_host.sh"
-    EXTERNAL = "external_host.sh"
-    DOCKERIMAGE = "emba_docker_host.sh"
+def get_script_name(dependency: WorkerUpdate.DependencyType):
+    script_name = ""
+    match dependency:
+        case WorkerUpdate.DependencyType.DEPS:
+            script_name = "deps"
+        case WorkerUpdate.DependencyType.REPO:
+            script_name = "emba_repo"
+        case WorkerUpdate.DependencyType.EXTERNAL:
+            script_name = "external"
+        case WorkerUpdate.DependencyType.DOCKERIMAGE:
+            script_name = "emba_docker"
+        case _:
+            raise ValueError("DependencyType.ALL has no path")
+
+    return f"{script_name}_host.sh"
 
 
-def get_dependency_path(dependency: DependencyType):
+def get_dependency_path(dependency: WorkerUpdate.DependencyType):
     """
     Constructs all relevant paths related to a dependency (folder, zip, done file)
 
@@ -34,8 +40,8 @@ def get_dependency_path(dependency: DependencyType):
     :return: zip_path path to zip
     :return: done_path path to done file (to check if zip generation is actually done)
     """
-    if dependency == DependencyType.ALL:
-        raise ValueError("DependencyType.ALL can't be copied")
+    if dependency == WorkerUpdate.DependencyType.ALL:
+        raise ValueError("DependencyType.ALL has no path")
 
     folder_path = os.path.join(settings.WORKER_FILES_PATH, dependency.name)
     zip_path = folder_path + ".tar.gz"
@@ -57,8 +63,8 @@ class DependencyState:
     available = AvailabilityType.UNAVAILABLE
     used_by = []
 
-    def __init__(self, dependency: DependencyType):
-        if dependency == DependencyType.ALL:
+    def __init__(self, dependency: WorkerUpdate.DependencyType):
+        if dependency == WorkerUpdate.DependencyType.ALL:
             raise ValueError("DependencyType.ALL can't be copied")
 
         done_path = get_dependency_path(dependency)[2]
@@ -128,52 +134,52 @@ class DependencyState:
         return worker.ip_address in self.used_by
 
 
-locks_dict: dict[DependencyType, Lock] = {
-    DependencyType.DEPS: DependencyState(DependencyType.DEPS),
-    DependencyType.REPO: DependencyState(DependencyType.REPO),
-    DependencyType.EXTERNAL: DependencyState(DependencyType.EXTERNAL),
-    DependencyType.DOCKERIMAGE: DependencyState(DependencyType.DOCKERIMAGE)
+locks_dict: dict[WorkerUpdate.DependencyType, Lock] = {
+    WorkerUpdate.DependencyType.DEPS: DependencyState(WorkerUpdate.DependencyType.DEPS),
+    WorkerUpdate.DependencyType.REPO: DependencyState(WorkerUpdate.DependencyType.REPO),
+    WorkerUpdate.DependencyType.EXTERNAL: DependencyState(WorkerUpdate.DependencyType.EXTERNAL),
+    WorkerUpdate.DependencyType.DOCKERIMAGE: DependencyState(WorkerUpdate.DependencyType.DOCKERIMAGE)
 }
 
 
-def use_dependency(dependency: DependencyType, worker: Worker):
+def use_dependency(dependency: WorkerUpdate.DependencyType, worker: Worker):
     """
     Use lock (worker uses dependency)
     :params worker: the worker who uses the dependency
     """
-    if dependency == DependencyType.ALL:
+    if dependency == WorkerUpdate.DependencyType.ALL:
         raise ValueError("DependencyType.ALL can't be copied")
 
     locks_dict[dependency].use_dependency(worker)
 
 
-def release_dependency(dependency: DependencyType, worker: Worker, force=False):
+def release_dependency(dependency: WorkerUpdate.DependencyType, worker: Worker, force=False):
     """
     Releases lock (worker does not use dependency anymore)
     :params dependency: the dependency to release
     :params worker: the worker who does not use the dependency anymore
     :params force: force release (no error if unused)
     """
-    if dependency == DependencyType.ALL:
+    if dependency == WorkerUpdate.DependencyType.ALL:
         raise ValueError("DependencyType.ALL can't be copied")
 
     locks_dict[dependency].release_dependency(worker, force)
 
 
-def uses_dependency(dependency: DependencyType, worker: Worker):
+def uses_dependency(dependency: WorkerUpdate.DependencyType, worker: Worker):
     """
     Checks if dependency is in use by provided worker
     :params dependency: the dependency to check
     :params worker: worker to be checked
     :returns: true if dependency is in use
     """
-    if dependency == DependencyType.ALL:
+    if dependency == WorkerUpdate.DependencyType.ALL:
         raise ValueError("DependencyType.ALL can't be copied")
 
     return locks_dict[dependency].uses_dependency(worker)
 
 
-def update_dependency(dependency: DependencyType, available: bool):
+def update_dependency(dependency: WorkerUpdate.DependencyType, available: bool):
     """
     Sets availability for dependencies
     If the dependency is not setup, the state is UNAVAILABLE.
@@ -182,7 +188,7 @@ def update_dependency(dependency: DependencyType, available: bool):
     :params dependency: the dependency to check
     :params available: true if AVAILABLE, else IN_PROGRESS
     """
-    if dependency == DependencyType.ALL:
+    if dependency == WorkerUpdate.DependencyType.ALL:
         raise ValueError("DependencyType.ALL can't be updated")
 
     locks_dict[dependency].update_dependency(available)
@@ -239,20 +245,20 @@ def setup_dependency(dependency):
 
     :params dependency: Dependency type
     """
-    if dependency == DependencyType.ALL:
+    if dependency == WorkerUpdate.DependencyType.ALL:
         raise ValueError("DependencyType.ALL can't be copied")
 
     Path(settings.WORKER_FILES_PATH).mkdir(parents=True, exist_ok=True)
     Path(os.path.join(settings.WORKER_FILES_PATH, "logs")).mkdir(parents=True, exist_ok=True)
 
-    script_path = os.path.join(os.path.dirname(__file__), dependency.value)
+    script_path = os.path.join(os.path.dirname(__file__), get_script_name(dependency))
     folder_path, zip_path, done_path = get_dependency_path(dependency)
 
     # update_dependency(dependency, False)
 
     log_file = settings.WORKER_SETUP_LOGS.format(timestamp=int(time.time()))
 
-    logger.info("Worker dependencies setup started with script %s. Logs: %s", dependency.value, log_file)
+    logger.info("Worker dependencies setup started with script %s. Logs: %s", get_script_name(dependency), log_file)
     try:
         cmd = f"sudo {script_path} '{folder_path}' '{zip_path}' '{done_path}'"
         with open(log_file, "w+", encoding="utf-8") as file:
