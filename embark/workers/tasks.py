@@ -152,10 +152,10 @@ def update_worker(worker_id):
     try:
         worker = Worker.objects.get(id=worker_id)
     except Worker.DoesNotExist:
-        logger.error("start_analysis: Invalid worker id")
+        logger.error("update_worker: Invalid worker id")
         return
 
-    logger.info("Worker update started")
+    logger.info("update_worker: Worker update task started")
 
     orchestrator = get_orchestrator()
     try:

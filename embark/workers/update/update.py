@@ -68,6 +68,8 @@ def queue_update(worker: Worker, dependency: WorkerUpdate.DependencyType):
     update = WorkerUpdate(worker=worker, dependency_type=dependency)
     update.save()
 
+    logger.info("Update %s queued for worker %s", dependency.name, worker.name)
+
     orchestrator = get_orchestrator()
     if orchestrator.is_busy(worker):
         # Update is performed once the analysis is finished
@@ -97,9 +99,12 @@ def process_update_queue(worker: Worker):
 
     try:
         client = worker.ssh_connect()
+        logger.info("Worker update started on worker %s", worker.name)
 
         while len(updates := WorkerUpdate.objects.filter(worker__id=worker.id)) != 0:
             current_update = updates[0]
+            logger.info("Update dependency %s on worker %s", current_update.get_type().name, worker.name)
+
             perform_update(worker, client, current_update)
             current_update.delete()
 
@@ -107,7 +112,7 @@ def process_update_queue(worker: Worker):
 
         update_dependencies_info(worker)
 
-        logger.info("Worker update finished")
+        logger.info("Worker update finished on worker %s", worker.name)
     except Exception as ssh_error:
         logger.error("SSH connection failed: %s", ssh_error)
         worker.status = Worker.ConfigStatus.ERROR
