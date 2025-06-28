@@ -1,13 +1,17 @@
+import os
+import json
 from typing import Dict, List
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 
-import redis
+from redis import Redis
 
 from workers.models import Worker, OrchestratorInfo
 
 
-REDIS_CLIENT = redis.Redis()
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
+REDIS_CLIENT = Redis(host=REDIS_HOST, port=REDIS_PORT)
 LOCK_KEY = "orchestrator_lock"
 LOCK_TIMEOUT = 60 * 5
 
@@ -23,22 +27,46 @@ class OrchestratorTask:
 class Orchestrator:
     free_workers: Dict[str, Worker] = {}
     busy_workers: Dict[str, Worker] = {}
-    tasks = deque()
-
-    def get_busy_workers(self) -> Dict[str, Worker]:
-        with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
-            self._sync_orchestrator_info()
-            return self.busy_workers
+    tasks: List[OrchestratorTask] = deque()
 
     def get_free_workers(self) -> Dict[str, Worker]:
         with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
             self._sync_orchestrator_info()
             return self.free_workers
 
+    def get_busy_workers(self) -> Dict[str, Worker]:
+        with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
+            self._sync_orchestrator_info()
+            return self.busy_workers
+
+    def is_free(self, worker: Worker) -> bool:
+        with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
+            self._sync_orchestrator_info()
+            return worker.ip_address in self.free_workers
+
     def is_busy(self, worker: Worker) -> bool:
         with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
             self._sync_orchestrator_info()
             return worker.ip_address in self.busy_workers
+
+    def _get_worker_info(self, worker_ips: str) -> Worker:
+        """
+        Get worker information given a list of worker IPs.
+
+        :param worker_ips: IP address of the worker
+        :return: Dictionary mapping worker IPs to their job IDs
+        :raises ValueError: If a worker IP does not exist in the orchestrator
+        """
+        worker_info = {}
+        for worker_ip in worker_ips:
+            if worker_ip in self.free_workers:
+                worker_info[worker_ip] = "-1"
+            elif worker_ip in self.busy_workers:
+                worker = self.busy_workers[worker_ip]
+                worker_info[worker_ip] = f"{worker.analysis_id}"
+            else:
+                raise ValueError(f"Worker with IP {worker_ip} does not exist.")
+        return worker_info
 
     def get_worker_info(self, worker_ips: List[str]) -> Dict[str, str]:
         """
@@ -50,16 +78,7 @@ class Orchestrator:
         """
         with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
             self._sync_orchestrator_info()
-            worker_info = {}
-            for worker_ip in worker_ips:
-                if worker_ip in self.free_workers:
-                    worker_info[worker_ip] = "-1"
-                elif worker_ip in self.busy_workers:
-                    worker = self.busy_workers[worker_ip]
-                    worker_info[worker_ip] = f"{worker.analysis_id}"
-                else:
-                    raise ValueError(f"Worker with IP {worker_ip} does not exist.")
-            return worker_info
+            return self._get_worker_info(worker_ips)
 
     def _assign_task(self, task: OrchestratorTask):
         """
@@ -128,8 +147,7 @@ class Orchestrator:
 
     def _release_worker(self, worker: Worker):
         """
-        Release a busy worker from its current task. If there are tasks in the queue,
-        the next task is assigned to the worker. If no tasks are queued, the worker is marked as free.
+        Release a busy worker from its current task.
 
         :param worker: The worker to be released
         :raises ValueError: If the worker is not busy
@@ -137,16 +155,10 @@ class Orchestrator:
         if worker.ip_address not in self.busy_workers:
             raise ValueError(f"Worker with IP {worker.ip_address} is not busy.")
 
-        if self.tasks:
-            next_task = self.tasks.popleft()
-            self.free_workers[worker.ip_address] = worker
-            del self.busy_workers[worker.ip_address]
-            self._assign_worker(worker, next_task)
-        else:
-            self.free_workers[worker.ip_address] = worker
-            del self.busy_workers[worker.ip_address]
-            worker.analysis_id = None
-            worker.save()
+        self.free_workers[worker.ip_address] = worker
+        del self.busy_workers[worker.ip_address]
+        worker.analysis_id = None
+        worker.save()
 
     def release_worker(self, worker: Worker):
         """
@@ -227,7 +239,7 @@ class Orchestrator:
         orchestrator_info = self._get_orchestrator_info()
         self.free_workers = {worker.ip_address: worker for worker in orchestrator_info.free_workers.all()}
         self.busy_workers = {worker.ip_address: worker for worker in orchestrator_info.busy_workers.all()}
-        self.tasks = deque(orchestrator_info.tasks) if orchestrator_info.tasks else deque()
+        self.tasks = deque([OrchestratorTask(**json.loads(task)) for task in orchestrator_info.tasks]) if orchestrator_info.tasks else deque()
 
     def _update_orchestrator_info(self):
         """
@@ -236,7 +248,7 @@ class Orchestrator:
         orchestrator_info = self._get_orchestrator_info()
         orchestrator_info.free_workers.set(list(self.free_workers.values()))
         orchestrator_info.busy_workers.set(list(self.busy_workers.values()))
-        orchestrator_info.tasks = list(self.tasks)
+        orchestrator_info.tasks = [json.dumps(asdict(task)) for task in self.tasks]
         orchestrator_info.save()
 
 

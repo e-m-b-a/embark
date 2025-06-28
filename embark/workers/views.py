@@ -18,6 +18,7 @@ from django.db.models import Count
 from workers.models import Worker, Configuration, WorkerDependencyVersion, DependencyVersion, WorkerUpdate
 from workers.update.update import init_sudoers_file, queue_update
 from workers.tasks import update_system_info, fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file
+from workers.orchestrator import get_orchestrator, OrchestratorTask
 
 
 @require_http_methods(["GET"])
@@ -486,11 +487,50 @@ def connect_worker(request, configuration_id, worker_id):
     })
 
 
-def safe_redirect(request, default):
-    referer = request.META.get('HTTP_REFERER', default)
-    if not url_has_allowed_host_and_scheme(referer, allowed_hosts={request.get_host()}):
-        referer = default
-    return HttpResponseRedirect(referer)
+def orchestrator_info(request):
+    # TODO: remove after testing
+    orchestrator = get_orchestrator()
+    test_worker1 = Worker.objects.get_or_create(
+        name='Test Worker',
+        ip_address='192.168.1.100',
+    )[0]
+    test_worker2 = Worker.objects.get_or_create(
+        name='Test Worker 2',
+        ip_address='192.168.1.101',
+    )[0]
+
+    try:
+        orchestrator.add_worker(test_worker1)
+        orchestrator.add_worker(test_worker2)
+    except ValueError:
+        pass
+
+    test_task = OrchestratorTask(
+        firmware_analysis_id='12345',
+        emba_cmd='echo "Test Task"',
+        src_path='/test/path',
+        target_path='/test/path')
+
+    try:
+        orchestrator.assign_task(test_task)
+    except ValueError:
+        pass
+
+    try:
+        orchestrator.remove_worker(test_worker1)
+    except ValueError:
+        pass
+
+    free_workers = orchestrator.get_free_workers()
+    busy_workers = orchestrator.get_busy_workers()
+    worker_info = orchestrator.get_worker_info([worker.ip_address for worker in free_workers.values()] + [worker.ip_address for worker in busy_workers.values()])
+    tasks = [task.firmware_analysis_id for task in orchestrator.tasks]
+    return JsonResponse({
+        'free_workers': [worker.ip_address for worker in free_workers.values()],
+        'busy_workers': [worker.ip_address for worker in busy_workers.values()],
+        'worker_info': worker_info,
+        'tasks': tasks
+    })
 
 
 @require_http_methods(["POST"])
@@ -504,3 +544,10 @@ def check_updates(request):
 
     messages.success(request, 'Update check queued!')
     return safe_redirect(request, '/worker/')
+
+
+def safe_redirect(request, default):
+    referer = request.META.get('HTTP_REFERER', default)
+    if not url_has_allowed_host_and_scheme(referer, allowed_hosts={request.get_host()}):
+        referer = default
+    return HttpResponseRedirect(referer)
