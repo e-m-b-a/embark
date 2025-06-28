@@ -107,3 +107,9 @@ class DependencyVersion(models.Model):
     epss_head = models.CharField(max_length=40, null=True)
     epss_time = models.DateTimeField(null=True)
     deb_list = models.JSONField(default=default_deb_list)
+
+
+class OrchestratorInfo(models.Model):
+    free_workers = models.ForeignKey(Worker, on_delete=models.CASCADE, related_name='free_workers', blank=True, null=True)
+    busy_workers = models.ForeignKey(Worker, on_delete=models.CASCADE, related_name='busy_workers', blank=True, null=True)
+    tasks = models.JSONField(default=list, blank=True, null=True, help_text="List of tasks to be processed by workers")
