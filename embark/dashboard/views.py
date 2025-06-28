@@ -25,6 +25,7 @@ from uploader.models import FirmwareAnalysis, Label
 from dashboard.models import Result, SoftwareBillOfMaterial
 from dashboard.forms import LabelSelectForm, StopAnalysisForm
 from porter.views import make_zip
+from users.decorators import require_api_key
 
 
 logger = logging.getLogger(__name__)
@@ -437,3 +438,28 @@ def get_sbom_analysis(request, analysis_id):
         response['Content-Disposition'] = 'inline; filename=' + str(analysis_id) + '_sbom.json'
         messages.success(request, 'Analysis: ' + str(analysis_id) + ' successfully exported sbom')
         return response
+
+
+@require_api_key
+@require_http_methods(["GET"])
+def api_sbom_analysis(request, analysis_id):
+    """
+    exports sbom as raw json
+    """
+    logger.info("export sbom with analysis id: %s", analysis_id)
+    response = JsonResponse({"ERROR": "SBOM for this analysis-id does not exist"})
+    try:
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        result = Result.objects.get(firmware_analysis=analysis)
+        sbom = result.sbom
+    except Result.DoesNotExist:
+        response = JsonResponse({"ERROR": "Result for this analysis-id does not exist"})
+    # check if user auth
+    if not user_is_auth(request.user, analysis.user):
+        response = JsonResponse({"ERROR": "You are not authorized!"})
+    if sbom is not None:
+        with open(sbom.file, "r", encoding='UTF-8') as sbom_file:
+            response = JsonResponse(json.load(sbom_file))
+            logger.info("export sbom with analysis id: %s", analysis_id)
+    response['Content-Disposition'] = 'inline; filename=' + str(analysis_id) + '_sbom.json'
+    return response
