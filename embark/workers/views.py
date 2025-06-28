@@ -207,7 +207,7 @@ def update_configuration_dependency(request, configuration_id):
     :params configuration_id: The configuration id
     """
     dependency = request.POST.get("update")
-    workers = Worker.objects.filter(configurations__id=configuration_id, status__in=[Worker.ConfigStatus.CONFIGURED, Worker.ConfigStatus.ERROR])
+    workers = Worker.objects.filter(configurations__id=configuration_id, status__in=[Worker.ConfigStatus.CONFIGURED, Worker.ConfigStatus.CONFIGURING, Worker.ConfigStatus.ERROR])
 
     try:
         for worker in workers:
