@@ -88,7 +88,6 @@ class Worker(models.Model):
 class WorkerUpdate(models.Model):
 
     class DependencyType(models.TextChoices):  # pylint: disable=too-many-ancestors
-        ALL = "A", _("All")
         DEPS = "D", _("APT Dependencies")
         REPO = "R", _("GH Repository")
         EXTERNAL = "E", _("EXTERNAL DIR")

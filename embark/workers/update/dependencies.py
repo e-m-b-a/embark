@@ -25,7 +25,7 @@ def get_script_name(dependency: WorkerUpdate.DependencyType):
         case WorkerUpdate.DependencyType.DOCKERIMAGE:
             script_name = "emba_docker"
         case _:
-            raise ValueError("DependencyType.ALL has no path")
+            raise ValueError("Invalid DependencyType")
 
     return f"{script_name}_host.sh"
 
@@ -40,9 +40,6 @@ def get_dependency_path(dependency: WorkerUpdate.DependencyType):
     :return: zip_path path to zip
     :return: done_path path to done file (to check if zip generation is actually done)
     """
-    if dependency == WorkerUpdate.DependencyType.ALL:
-        raise ValueError("DependencyType.ALL has no path")
-
     folder_path = os.path.join(settings.WORKER_FILES_PATH, dependency.name)
     zip_path = folder_path + ".tar.gz"
     done_path = folder_path + ".done"
@@ -64,9 +61,6 @@ class DependencyState:
     used_by = []
 
     def __init__(self, dependency: WorkerUpdate.DependencyType):
-        if dependency == WorkerUpdate.DependencyType.ALL:
-            raise ValueError("DependencyType.ALL has no DependencyState")
-
         done_path = get_dependency_path(dependency)[2]
         self.available = self.AvailabilityType.AVAILABLE if os.path.exists(done_path) else self.AvailabilityType.UNAVAILABLE
         self.dependency = dependency
@@ -147,9 +141,6 @@ def use_dependency(dependency: WorkerUpdate.DependencyType, worker: Worker):
     Use lock (worker uses dependency)
     :params worker: the worker who uses the dependency
     """
-    if dependency == WorkerUpdate.DependencyType.ALL:
-        raise ValueError("DependencyType.ALL has no DependencyState")
-
     locks_dict[dependency].use_dependency(worker)
 
 
@@ -160,9 +151,6 @@ def release_dependency(dependency: WorkerUpdate.DependencyType, worker: Worker, 
     :params worker: the worker who does not use the dependency anymore
     :params force: force release (no error if unused)
     """
-    if dependency == WorkerUpdate.DependencyType.ALL:
-        raise ValueError("DependencyType.ALL has no DependencyState")
-
     locks_dict[dependency].release_dependency(worker, force)
 
 
@@ -173,9 +161,6 @@ def uses_dependency(dependency: WorkerUpdate.DependencyType, worker: Worker):
     :params worker: worker to be checked
     :returns: true if dependency is in use
     """
-    if dependency == WorkerUpdate.DependencyType.ALL:
-        raise ValueError("DependencyType.ALL has no DependencyState")
-
     return locks_dict[dependency].uses_dependency(worker)
 
 
@@ -188,9 +173,6 @@ def update_dependency(dependency: WorkerUpdate.DependencyType, available: bool):
     :params dependency: the dependency to check
     :params available: true if AVAILABLE, else IN_PROGRESS
     """
-    if dependency == WorkerUpdate.DependencyType.ALL:
-        raise ValueError("DependencyType.ALL can't be updated")
-
     locks_dict[dependency].update_dependency(available)
 
 
@@ -245,9 +227,6 @@ def setup_dependency(dependency: WorkerUpdate.DependencyType):
 
     :params dependency: Dependency type
     """
-    if dependency == WorkerUpdate.DependencyType.ALL:
-        raise ValueError("DependencyType.ALL can't be setup")
-
     Path(settings.WORKER_FILES_PATH).mkdir(parents=True, exist_ok=True)
     Path(os.path.join(settings.WORKER_FILES_PATH, "logs")).mkdir(parents=True, exist_ok=True)
 

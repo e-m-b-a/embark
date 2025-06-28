@@ -43,9 +43,6 @@ def _copy_files(client: SSHClient, dependency: WorkerUpdate.DependencyType):
     :params client: paramiko ssh client
     :params dependency: Dependency type
     """
-    if dependency == WorkerUpdate.DependencyType.ALL:
-        raise ValueError("DependencyType.ALL can't be copied")
-
     folder_path = f"/root/{dependency.name}"
     zip_path = f"{folder_path}.tar.gz"
     zip_path_user = zip_path if client.ssh_user == "root" else f"/home/{client.ssh_user}/{dependency.name}.tar.gz"
@@ -67,9 +64,6 @@ def queue_update(worker: Worker, dependency: WorkerUpdate.DependencyType):
     :param dependency: The dependency to update
     """
     from workers.tasks import update_worker  # pylint: disable=import-outside-toplevel
-
-    if dependency == WorkerUpdate.DependencyType.ALL:
-        raise ValueError("DependencyType.ALL can't be queued")
 
     update = WorkerUpdate(worker=worker, dependency_type=dependency)
     update.save()
