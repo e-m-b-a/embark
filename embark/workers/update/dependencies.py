@@ -65,7 +65,7 @@ class DependencyState:
 
     def __init__(self, dependency: WorkerUpdate.DependencyType):
         if dependency == WorkerUpdate.DependencyType.ALL:
-            raise ValueError("DependencyType.ALL can't be copied")
+            raise ValueError("DependencyType.ALL has no DependencyState")
 
         done_path = get_dependency_path(dependency)[2]
         self.available = self.AvailabilityType.AVAILABLE if os.path.exists(done_path) else self.AvailabilityType.UNAVAILABLE
@@ -148,7 +148,7 @@ def use_dependency(dependency: WorkerUpdate.DependencyType, worker: Worker):
     :params worker: the worker who uses the dependency
     """
     if dependency == WorkerUpdate.DependencyType.ALL:
-        raise ValueError("DependencyType.ALL can't be copied")
+        raise ValueError("DependencyType.ALL has no DependencyState")
 
     locks_dict[dependency].use_dependency(worker)
 
@@ -161,7 +161,7 @@ def release_dependency(dependency: WorkerUpdate.DependencyType, worker: Worker, 
     :params force: force release (no error if unused)
     """
     if dependency == WorkerUpdate.DependencyType.ALL:
-        raise ValueError("DependencyType.ALL can't be copied")
+        raise ValueError("DependencyType.ALL has no DependencyState")
 
     locks_dict[dependency].release_dependency(worker, force)
 
@@ -174,7 +174,7 @@ def uses_dependency(dependency: WorkerUpdate.DependencyType, worker: Worker):
     :returns: true if dependency is in use
     """
     if dependency == WorkerUpdate.DependencyType.ALL:
-        raise ValueError("DependencyType.ALL can't be copied")
+        raise ValueError("DependencyType.ALL has no DependencyState")
 
     return locks_dict[dependency].uses_dependency(worker)
 
@@ -239,14 +239,14 @@ def eval_outdated_dependencies(worker: Worker):
     logger.info("Outdated dependencies evaluated for worker %s", worker.ip_address)
 
 
-def setup_dependency(dependency):
+def setup_dependency(dependency: WorkerUpdate.DependencyType):
     """
     Runs script to setup dependency
 
     :params dependency: Dependency type
     """
     if dependency == WorkerUpdate.DependencyType.ALL:
-        raise ValueError("DependencyType.ALL can't be copied")
+        raise ValueError("DependencyType.ALL can't be setup")
 
     Path(settings.WORKER_FILES_PATH).mkdir(parents=True, exist_ok=True)
     Path(os.path.join(settings.WORKER_FILES_PATH, "logs")).mkdir(parents=True, exist_ok=True)
