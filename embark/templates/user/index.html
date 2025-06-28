@@ -10,16 +10,13 @@
     <h3><span class="badge bg-secondary"><a href="{% url 'admin:index' %}">
         <input class="solid btn-login" type="submit" value="Admin-page" />
     </a></span></h3>
-    
+
 </div>
 {% endif %}
     <div class="container-fluid">
         {% block timezone %}{% include "user/timezone.html" %}{% endblock timezone %}
     </div>
     <div class="container-fluid">
-  	{% block apikey %}{% include "user/apiKeyGen.html" %}{% endblock apikey %}
+        {% block apikey %}{% include "user/apiKeyGen.html" %}{% endblock apikey %}
     </div>
-    {# <div class="container-fluid"> #}
-    {#    {% block configuration %}{% include "user/configuration.html" %}{% endblock configuration %} #}
-    {# </div> #}
 {% endblock maincontent %}

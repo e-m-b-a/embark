@@ -33,6 +33,4 @@ class User(AbstractUser):
             ("reporter_permission", "Can access reporter functionalities of embark"),
             ("dashboard_permission_minimal", "Can access dashboard functionalities of embark"),
             ("dashboard_permission_advanced", "Can access all dashboard functionalities of embark"),
-            ("worker_permission", "Can access worker functionalities of embark"),
-            ("settings_permission", "Can access settings functionalities of embark")
         )

@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_bootstrap5',
     'django_tables2',
-    'django_celery_beat',
     'mod_wsgi.server',
     'django_apscheduler',
     'uploader',
@@ -48,9 +47,7 @@ INSTALLED_APPS = [
     'tracker',
     'porter',
     'updater',
-    'rest_framework',
-    'workers',
-    'settings',
+    'rest_framework'
 ]
 
 AUTH_USER_MODEL = 'users.User'
@@ -278,16 +275,3 @@ CHANNEL_LAYERS = {
 TEMP_DIR = Path("/tmp/")
 
 VERSION = get_version_strings()
-
-# Worker setup
-WORKER_FILES_PATH = os.path.join(BASE_DIR.parent, "WORKER_FILES")
-WORKER_UPDATE_CHECK = os.path.join(WORKER_FILES_PATH, "update_check")
-WORKER_SETUP_LOGS = os.path.join(WORKER_FILES_PATH, "logs/worker_setup_{timestamp}.log")
-WORKER_EMBA_ROOT = "/root/emba/"
-WORKER_FIRMWARE_DIR = "/root/firmware/"
-WORKER_EMBA_LOGS = "/root/emba_logs/"
-
-# Celery task queue
-CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
-CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
-CELERY_TASK_TRACK_STARTED = True

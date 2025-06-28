@@ -289,8 +289,6 @@ def activate_user(user, token) -> bool:
             | Q(codename="reporter_permission")
             | Q(codename="dashboard_permission_minimal")
             | Q(codename="dashboard_permission_advanced")
-            | Q(codename="worker_permission")
-            | Q(codename="settings_permission")
         )
         user.user_permissions.set(default_permission_set)
         user.save()
@@ -339,7 +337,7 @@ def generate_api_key(request):
     user.api_key = new_api_key
     user.save()
     messages.success(request, f"Your new API key: {new_api_key}")
-    return redirect('..')
+    return redirect("..")
 
 
 @require_api_key

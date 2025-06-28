@@ -26,7 +26,7 @@ from django.template.loader import render_to_string
 from uploader import finish_execution
 from uploader.archiver import Archiver
 from uploader.models import FirmwareAnalysis
-from uploader.settings import get_emba_base_cmd
+from embark.logreader import LogReader
 from embark.helper import get_size, zip_check
 from porter.models import LogZipFile
 from porter.importer import result_read_in
@@ -43,6 +43,9 @@ MAX_QUEUE = MAX_WORKERS
 executor = ThreadPoolExecutor(max_workers=MAX_WORKERS)
 # create semaphore to track queue state
 semaphore = BoundedSemaphore(MAX_QUEUE)
+
+# emba command
+EMBA_BASE_CMD = f"sudo DISABLE_STATUS_BAR=1 DISABLE_NOTIFICATIONS=1 HTML=1 FORMAT_LOG=1 {settings.EMBA_ROOT}/emba"
 
 
 class BoundedException(Exception):
@@ -191,6 +194,70 @@ class BoundedExecutor:
         analysis.failed = True
         analysis.finished = True
         analysis.save(update_fields=["status", "finished", "failed"])
+        return emba_fut
+
+    @classmethod
+    def submit_firmware(cls, firmware_flags, firmware_file):
+        """
+        submit firmware + metadata for emba execution
+
+        params firmware_flags: firmware model with flags and metadata
+        params firmware_file: firmware file model to be analyzed
+
+        return: emba process future on success, None on failure
+        """
+        active_analyzer_dir = f"{settings.ACTIVE_FW}/{firmware_flags.id}/"
+        logger.info("submitting firmware %s to emba", active_analyzer_dir)
+
+        Archiver.copy(src=firmware_file.file.path, dst=active_analyzer_dir)
+
+        # copy success
+        emba_startfile = os.listdir(active_analyzer_dir)
+        logger.debug("active dir contents %s", emba_startfile)
+        if len(emba_startfile) == 1:
+            image_file_location = f"{active_analyzer_dir}{emba_startfile.pop()}"
+        else:
+            logger.error("Uploaded file: %s doesnt comply with processable files.", firmware_file)
+            logger.error("Zip folder with no extra directory in between.")
+            shutil.rmtree(active_analyzer_dir)
+            return None
+
+        # evaluate meta information and safely create log dir
+
+        emba_log_location = f"{settings.EMBA_LOG_ROOT}/{firmware_flags.id}/emba_logs"
+        log_path = Path(emba_log_location).parent
+        log_path.mkdir(parents=True, exist_ok=True)
+
+        firmware_flags.path_to_logs = emba_log_location
+        firmware_flags.status["analysis"] = str(firmware_flags.id)
+        firmware_flags.status["firmware_name"] = firmware_flags.firmware_name
+        firmware_flags.save(update_fields=["status", "path_to_logs"])
+
+        # get emba flags from command parser
+        emba_flags = firmware_flags.get_flags()
+
+        if firmware_flags.sbom_only_test is True:
+            scan_profile = "./scan-profiles/default-sbom.emba"
+        elif firmware_flags.system_emulation_test is True or firmware_flags.user_emulation_test is True:  # if any expert fields are active
+            scan_profile = None
+        else:
+            scan_profile = "./scan-profiles/default-scan-no-notify.emba"
+
+        # building EMBA command
+        emba_cmd = f"cd {settings.EMBA_ROOT} && {EMBA_BASE_CMD} -f {image_file_location} -l {emba_log_location} "
+
+        if scan_profile:
+            emba_cmd += f"-p {scan_profile} "
+
+        emba_cmd += f"{emba_flags}"
+
+        # submit command to executor threadpool
+        emba_fut = BoundedExecutor.submit(cls.run_emba_cmd, emba_cmd, firmware_flags.id, active_analyzer_dir)
+
+        # start log_reader TODO: cancel future and return future
+        # log_read_fut = BoundedExecutor.submit(LogReader, firmware_flags.pk)
+        BoundedExecutor.submit(LogReader, firmware_flags.id)
+
         return emba_fut
 
     @classmethod
@@ -352,7 +419,7 @@ class BoundedExecutor:
         """
         logger.debug("Checking EMBA with: %s", option)
         try:
-            cmd = f"cd {settings.EMBA_ROOT} && {get_emba_base_cmd()} -d{option}"
+            cmd = f"cd {settings.EMBA_ROOT} && {EMBA_BASE_CMD} -d{option}"
 
             with open(f"{settings.EMBA_LOG_ROOT}/emba_update.log", "w+", encoding="utf-8") as file:
                 proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
@@ -410,7 +477,7 @@ class BoundedExecutor:
 
         # emba update
         try:
-            cmd = f"cd {settings.EMBA_ROOT} && {get_emba_base_cmd()} -U"
+            cmd = f"cd {settings.EMBA_ROOT} && {EMBA_BASE_CMD} -U"
 
             with open(f"{settings.EMBA_LOG_ROOT}/emba_update.log", "a", encoding="utf-8") as file:
                 proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec

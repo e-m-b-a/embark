@@ -7,8 +7,6 @@ import logging
 
 from django.utils import timezone
 
-from .celery_dtq import app as celery_app
-
 logger = logging.getLogger(__name__)
 
 
@@ -29,5 +27,3 @@ def check_tz() -> bool:
 
 
 check_tz()
-
-__all__ = ('celery_app',)

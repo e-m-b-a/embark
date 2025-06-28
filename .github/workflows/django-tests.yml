@@ -74,7 +74,7 @@ jobs:
         run: |
           docker compose up -d
           cd embark
-          pipenv run python manage.py makemigrations users uploader reporter dashboard porter workers settings
+          pipenv run python manage.py makemigrations users uploader reporter dashboard porter
           pipenv run python manage.py migrate
 
       - name: Run tests

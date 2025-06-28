@@ -53,7 +53,7 @@ class TestUploader(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, {'status': 'error', 'message': 'Invalid file provided'})
 
-    @patch("uploader.executor.submit_firmware")
+    @patch("uploader.boundedexecutor.BoundedExecutor.submit_firmware")
     def test_uploader__successful_queue(self, mock):
         """
         Test that the API returns 200 when a file and valid api key is provided.:

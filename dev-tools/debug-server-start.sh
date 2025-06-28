@@ -120,7 +120,7 @@ cd ./embark || exit 1
 
 # db_init
 echo -e "[*] Starting migrations - log to embark/logs/migration.log"
-python3 ./manage.py makemigrations users uploader reporter dashboard porter workers settings | tee -a ../logs/migration.log
+python3 ./manage.py makemigrations users uploader reporter dashboard porter | tee -a ../logs/migration.log
 python3 ./manage.py migrate | tee -a ../logs/migration.log
 
 # superuser
@@ -135,11 +135,6 @@ python3 ./manage.py runapscheduler | tee -a ../logs/scheduler.log &
 
 # start embark
 # systemctl start embark.service
-
-# Start celery worker
-celery -A embark worker --beat --scheduler django -l DEBUG --logfile=../logs/celery.log &
-CELERY_PID=$!
-trap 'kill ${CELERY_PID} 2>/dev/null; exit' SIGINT SIGTERM EXIT
 
 echo -e "${ORANGE}""${BOLD}""start EMBArk server(ASGI only) on port ${PORT}""${NC}"
 python3 ./manage.py runserver "${IP}":"${PORT}" |& tee -a ../logs/debug-server.log

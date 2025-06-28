@@ -29,7 +29,6 @@ safe/
 *.sql
 
 media/**/*
-WORKER_FILES
 active
 
 # migrations

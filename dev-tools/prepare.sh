@@ -99,7 +99,7 @@ source ./.venv/bin/activate || exit 1
 
 # db_init
 echo -e "[*] Starting migrations - log to embark/logs/migration.log"
-python3 ./embark/manage.py makemigrations users uploader reporter dashboard porter workers settings | tee -a ./logs/migration.log
+python3 ./embark/manage.py makemigrations users uploader reporter dashboard porter | tee -a ./logs/migration.log
 python3 ./embark/manage.py migrate | tee -a ./logs/migration.log
 
 # superuser
