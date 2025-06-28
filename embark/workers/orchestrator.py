@@ -234,8 +234,8 @@ class Orchestrator:
         Update the orchestrator info in the database with the current state of free_workers, busy_workers, and tasks.
         """
         orchestrator_info = self._get_orchestrator_info()
-        orchestrator_info.free_workers.set(self.free_workers.values())
-        orchestrator_info.busy_workers.set(self.busy_workers.values())
+        orchestrator_info.free_workers.set(list(self.free_workers.values()))
+        orchestrator_info.busy_workers.set(list(self.busy_workers.values()))
         orchestrator_info.tasks = list(self.tasks)
         orchestrator_info.save()
 

@@ -9,6 +9,7 @@
 ### ADDED
 
 - Safe and prioritized worker update management ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114650622&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C70))
+- Add distributed lock to orchestrator to ensure synchronization across multiple instances ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=116668070&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C89))
 
 ## [sprint-10](https://github.com/amosproj/amos2025ss01-embark/releases/tag/sprint-10-release) - 2025-06-25
 
