@@ -24,5 +24,4 @@ urlpatterns = [
     path('worker/update/configuration/<int:configuration_id>/', views.update_configuration_dependency, name='embark-configuration-update'),
 
     path('worker/updates/', views.check_updates, name='embark-worker-check-updates'),
-    path('worker/orchestrator_info/', views.orchestrator_info, name='embark-worker-orchestrator-info'),
 ]
