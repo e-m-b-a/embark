@@ -211,7 +211,7 @@ class Orchestrator:
             self._update_orchestrator_info()
 
     def _get_orchestrator_info(self):
-        """ 
+        """
         Retrieve the orchestrator info from the database. If it does not exist, create a new one.
         """
         orchestrator_info = OrchestratorInfo.objects.first()
@@ -219,7 +219,7 @@ class Orchestrator:
             orchestrator_info = OrchestratorInfo()
             orchestrator_info.save()
         return orchestrator_info
-    
+
     def _sync_orchestrator_info(self):
         """
         Get the latest orchestrator info (free_workers, busy_workers, tasks) from the database and update the internal state.
