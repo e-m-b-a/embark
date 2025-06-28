@@ -62,8 +62,8 @@ def worker_main(request):
     })
 
 
-@require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
+@require_http_methods(["POST"])
 @permission_required("users.worker_permission", login_url='/')
 def delete_config(request):
     """

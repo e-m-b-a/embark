@@ -161,15 +161,15 @@ def _fetch_analysis_logs(worker) -> None:
         client = worker.ssh_connect()
 
         # To not error if the logs dir has been deleted
-        exec_blocking_ssh(client, f"mkdir -p {settings.WORKER_EMBA_LOGS}")
+        exec_blocking_ssh(client, f"sudo mkdir -p {settings.WORKER_EMBA_LOGS}")
 
         logger.info("[Worker %s] Zipping logs on remote...", worker.id)
 
         homedir = "/root" if client.ssh_user == "root" else f"/home/{client.ssh_user}"
         zip_cmd = (
-            "cd /root && "
-            f"7z u -t7z -y {homedir}/emba_logs.zip emba_logs/ -uq3 && "
-            f"chown {client.ssh_user}: {homedir}/emba_logs.zip"  # TODO: Test if this is necessary
+            f'sudo bash -c "cd /root && '
+            f'7z u -t7z -y {homedir}/emba_logs.zip /root/emba_logs/ -uq3; '
+            f'chown {client.ssh_user}: {homedir}/emba_logs.zip"'
         )
         exec_blocking_ssh(client, zip_cmd)
 
@@ -178,18 +178,21 @@ def _fetch_analysis_logs(worker) -> None:
         # Ensure log_zip/ exists locally
         os.makedirs(f"{settings.MEDIA_ROOT}/log_zip/", exist_ok=True)
 
-        # Fetch zip file
+        # Fetch zip file and emba_run.log
         sftp_client = client.open_sftp()
-        sftp_client.get("/root/emba_logs.zip", local_zip_path)
+        sftp_client.get(f"{homedir}/emba_logs.zip", local_zip_path)
+        sftp_client.get("/root/emba_run.log", local_log_path)
         sftp_client.close()
         client.close()
 
         logger.info("[Worker %s] Downloaded the log zip.", worker.id)
 
+        # Unzip logs
         cmd = ["7z", "x", "-y", local_zip_path, f"-o{local_log_path}"]
         subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)  # nosec
 
-        logger.info("[Worker %s] Finished syncing to to %semba_logs.", worker.id, local_log_path)
+        logger.info("[Worker %s] Unzipped the log zip to: %semba_logs/", worker.id, local_log_path)
+        # logger.info("[Worker %s] Finished syncing to: %semba_logs/", worker.id, local_log_path)
 
     finally:
         if client is not None:
@@ -218,10 +221,13 @@ def monitor_workers():
                 # Fetch logs for the last time
                 _fetch_analysis_logs(worker)
 
-                # Only assign a new task after soft reset is done
-                orchestrator.release_worker(worker)
+                # TODO: Aquire thread-wide lock
+                worker_soft_reset_task(worker.id)
 
-                worker_soft_reset_task(worker, worker.configurations.first().id)
+                # Only release worker after soft reset is done
+                orchestrator.release_worker(worker)
+                # TODO: Release thread-wide lock
+
 
                 logger.info("[Worker %s] Analysis finished.", worker.id)
         except Exception as exception:
@@ -244,11 +250,18 @@ def is_emba_container_running(worker) -> bool:
     try:
         client = worker.ssh_connect()
 
-        cmd = "sudo docker ps -q"
-        docker_output = exec_blocking_ssh(client, cmd)
-        if not docker_output:
-            logger.info("[Worker %s] EMBA Docker container is no longer running.", worker.id)
-            return False
+        cmd_running = "sudo docker ps -q"
+        docker_running = exec_blocking_ssh(client, cmd_running)
+        if not docker_running:
+
+            # TODO: Test this more
+            cmd_all = "sudo docker ps -qa"
+            docker_all = exec_blocking_ssh(client, cmd_all)
+            if not docker_all:
+
+                logger.info("[Worker %s] EMBA Docker container is no longer running.", worker.id)
+                return False
+
 
         logger.info("[Worker %s] EMBA Docker container is still running: %s", worker.id, docker_output)
         return True
@@ -292,8 +305,8 @@ def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
         exec_blocking_ssh(client, f"sudo mv {target_path_user} {target_path}")
 
     exec_blocking_ssh(client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
-    exec_blocking_ssh(client, "sudo rm -rf ./terminal.log")
-    client.exec_command(f"sudo sh -c '{emba_cmd}' >./terminal.log 2>&1")  # nosec
+    exec_blocking_ssh(client, "sudo rm -rf /root/emba_run.log")
+    client.exec_command(f"sudo sh -c '{emba_cmd}' >/root/emba_run.log 2>&1")  # nosec
     logger.info("Firmware analysis has been started on the worker.")
 
     # Create file to supress errors
@@ -447,7 +460,7 @@ def fetch_dependency_updates():
 
 
 @shared_task
-def worker_soft_reset_task(worker_id, configuration_id):
+def worker_soft_reset_task(worker_id, configuration_id=None):
     """
     Connects via SSH to the worker and performs the soft reset
     :param worker_id: ID of worker to soft reset
