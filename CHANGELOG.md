@@ -4,9 +4,16 @@
 
 ### FIXED
 
+- Fix missing sudo at worker soft reset ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=112364355&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C43))
+
+## [sprint-10](https://github.com/amosproj/amos2025ss01-embark/releases/tag/sprint-10-release) - 2025-06-25
+
+### FIXED
+
 - Fix a bug related to incorrect start of celery ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=115359765&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C79))
 - Fix a bug related to collecting worker dependency information
 - Fix a bug related to collecting worker external repo and emba version information
+- Fix a bug related to updating APT dependencies ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114467717&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C61))
 
 ### ADDED
 

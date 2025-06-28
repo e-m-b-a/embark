@@ -474,7 +474,7 @@ def worker_soft_reset_task(worker_id, configuration_id=None):
     ssh_client = None
     try:
         ssh_client = worker.ssh_connect(configuration_id)
-        exec_blocking_ssh(ssh_client, "sudo docker ps -aq | xargs -r docker stop | xargs -r docker rm || true")
+        exec_blocking_ssh(ssh_client, "sudo docker ps -aq | xargs -r sudo docker stop | xargs -r sudo docker rm || true")
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
         ssh_client.close()
