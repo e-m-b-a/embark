@@ -9,6 +9,7 @@ from django.conf import settings
 
 from workers.update.dependencies import use_dependency, release_dependency, get_dependency_path, eval_outdated_dependencies
 from workers.models import Worker, Configuration, WorkerUpdate
+from workers.orchestrator import get_orchestrator
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +74,11 @@ def queue_update(worker: Worker, dependency: WorkerUpdate.DependencyType):
     update = WorkerUpdate(worker=worker, dependency_type=dependency)
     update.save()
 
+    orchestrator = get_orchestrator()
+    if orchestrator.is_busy(worker):
+        # Update is performed once the analysis is finished
+        return
+
     if worker.status == Worker.ConfigStatus.CONFIGURING:
         return
 
@@ -80,6 +86,42 @@ def queue_update(worker: Worker, dependency: WorkerUpdate.DependencyType):
     worker.save()
 
     update_worker.delay(worker.id)
+
+
+def process_update_queue(worker: Worker):
+    """
+    Processes the update queue
+    :param worker: The worker to update
+    """
+    if len(WorkerUpdate.objects.filter(worker__id=worker.id)) == 0:
+        return
+
+    worker.status = Worker.ConfigStatus.CONFIGURING
+    worker.save()
+
+    client = None
+
+    try:
+        client = worker.ssh_connect()
+
+        while len(updates := WorkerUpdate.objects.filter(worker__id=worker.id)) != 0:
+            current_update = updates[0]
+            perform_update(worker, client, current_update)
+            current_update.delete()
+
+        worker.status = Worker.ConfigStatus.CONFIGURED
+
+        update_dependencies_info(worker)
+
+        logger.info("Worker update finished")
+    except Exception as ssh_error:
+        logger.error("SSH connection failed: %s", ssh_error)
+        worker.status = Worker.ConfigStatus.ERROR
+    finally:
+        if client is not None:
+            client.close()
+
+        worker.save()
 
 
 def perform_update(worker: Worker, client: SSHClient, worker_update: WorkerUpdate):

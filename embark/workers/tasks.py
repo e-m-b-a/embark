@@ -14,7 +14,7 @@ from django.conf import settings
 
 from workers.models import Worker, Configuration, DependencyVersion, WorkerUpdate
 from workers.update.dependencies import eval_outdated_dependencies, get_script_name
-from workers.update.update import exec_blocking_ssh, perform_update, update_dependencies_info, parse_deb_list
+from workers.update.update import exec_blocking_ssh, parse_deb_list, process_update_queue
 from workers.orchestrator import get_orchestrator
 from workers.codeql_ignore import new_autoadd_client
 
@@ -157,40 +157,20 @@ def update_worker(worker_id):
 
     logger.info("Worker update started")
 
-    client = None
-
     orchestrator = get_orchestrator()
     try:
-        # TODO: if the the worker is currently processing a job, this job should be cancelled here (or implicitly via remove_worker)
         orchestrator.remove_worker(worker)
         logger.info("Worker: %s removed from orchestrator", worker.name)
     except ValueError:
         pass
 
-    try:
-        client = worker.ssh_connect()
-
-        while len(updates := WorkerUpdate.objects.filter(worker__id=worker.id)) != 0:
-            current_update = updates[0]
-            perform_update(worker, client, current_update)
-            current_update.delete()
-
-        worker.status = Worker.ConfigStatus.CONFIGURED
-        worker.save()
-
-        update_dependencies_info(worker)
-        logger.info("Worker update finished")
-    except Exception as ssh_error:
-        logger.error("SSH connection failed: %s", ssh_error)
-        worker.status = Worker.ConfigStatus.ERROR
-    finally:
-        if client is not None:
-            client.close()
+    process_update_queue(worker)
 
     if worker.status == Worker.ConfigStatus.CONFIGURED:
         try:
             config = worker.configurations.first()
             update_system_info(config, worker)
+
             orchestrator.add_worker(worker)
             logger.info("Worker: %s added to orchestrator", worker.name)
         except ValueError:
