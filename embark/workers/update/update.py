@@ -65,6 +65,10 @@ def queue_update(worker: Worker, dependency: WorkerUpdate.DependencyType):
     """
     from workers.tasks import update_worker  # pylint: disable=import-outside-toplevel
 
+    if len(WorkerUpdate.objects.filter(worker__id=worker.id)) >= settings.WORKER_UPDATE_QUEUE_SIZE:
+        logger.info("Update %s discarded for worker %s", dependency.name, worker.name)
+        return
+
     update = WorkerUpdate(worker=worker, dependency_type=dependency)
     update.save()
 
