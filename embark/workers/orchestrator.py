@@ -1,8 +1,8 @@
 import os
-import json
+from uuid import UUID
 from typing import Dict, List
 from collections import deque
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 
 from redis import Redis
 
@@ -18,10 +18,28 @@ LOCK_TIMEOUT = 60 * 5
 
 @dataclass
 class OrchestratorTask:
-    firmware_analysis_id: str
+    firmware_analysis_id: UUID
     emba_cmd: str
     src_path: str
     target_path: str
+
+    @classmethod
+    def to_dict(cls, task):
+        return {
+            "firmware_analysis_id": str(task.firmware_analysis_id),
+            "emba_cmd": task.emba_cmd,
+            "src_path": task.src_path,
+            "target_path": task.target_path
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict):
+        return cls(
+            firmware_analysis_id=UUID(data.get("firmware_analysis_id")),
+            emba_cmd=data.get("emba_cmd"),
+            src_path=data.get("src_path"),
+            target_path=data.get("target_path")
+        )
 
 
 class Orchestrator:
@@ -239,7 +257,7 @@ class Orchestrator:
         orchestrator_info = self._get_orchestrator_info()
         self.free_workers = {worker.ip_address: worker for worker in orchestrator_info.free_workers.all()}
         self.busy_workers = {worker.ip_address: worker for worker in orchestrator_info.busy_workers.all()}
-        self.tasks = deque([OrchestratorTask(**json.loads(task)) for task in orchestrator_info.tasks]) if orchestrator_info.tasks else deque()
+        self.tasks = deque([OrchestratorTask.from_dict(task) for task in orchestrator_info.tasks]) if orchestrator_info.tasks else deque()
 
     def _update_orchestrator_info(self):
         """
@@ -248,7 +266,7 @@ class Orchestrator:
         orchestrator_info = self._get_orchestrator_info()
         orchestrator_info.free_workers.set(list(self.free_workers.values()))
         orchestrator_info.busy_workers.set(list(self.busy_workers.values()))
-        orchestrator_info.tasks = [json.dumps(asdict(task)) for task in self.tasks]
+        orchestrator_info.tasks = [OrchestratorTask.to_dict(task) for task in self.tasks]
         orchestrator_info.save()
 
 

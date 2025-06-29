@@ -49,7 +49,7 @@ class Worker(models.Model):
     system_info = models.JSONField(default=dict, blank=True, null=True)
     reachable = models.BooleanField(default=False)
     status = models.CharField(max_length=1, choices=ConfigStatus, default=ConfigStatus.UNCONFIGURED)
-    analysis_id = models.CharField(max_length=100, blank=True, null=True, help_text="ID of the analysis currently running on this worker")
+    analysis_id = models.UUIDField(blank=True, null=True, help_text="ID of the analysis currently running on this worker")
 
     dependency_version = models.OneToOneField(
         WorkerDependencyVersion,
