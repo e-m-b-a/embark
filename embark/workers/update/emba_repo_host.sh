@@ -11,6 +11,7 @@ fi
 FILEPATH="$1"
 ZIPPATH="$2"
 DONEPATH="$3"
+VERSION="$4"
 
 ### Reset
 rm -rf "${FILEPATH}"
@@ -29,7 +30,11 @@ if ! which curl &> /dev/null; then
 fi
 
 ### Download EMBA
-curl -L --url https://github.com/e-m-b-a/emba/archive/refs/heads/master.tar.gz --output "${FILEPATH}/emba.tar.gz"
+if [ "${VERSION}" = "latest" ]; then
+  curl -L --url https://github.com/e-m-b-a/emba/archive/refs/heads/master.tar.gz --output "${FILEPATH}/emba.tar.gz"
+else
+  curl -L --url "https://github.com/e-m-b-a/emba/archive/${VERSION}.tar.gz" --output "${FILEPATH}/emba.tar.gz"
+fi
 
 tar czf "${ZIPPATH}" -C "${FILEPATH}" .
 touch "${DONEPATH}"

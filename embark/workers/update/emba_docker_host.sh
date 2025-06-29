@@ -11,6 +11,7 @@ fi
 FILEPATH="$1"
 ZIPPATH="$2"
 DONEPATH="$3"
+VERSION="$4"
 IS_UBUNTU=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
 [[ ${IS_UBUNTU} == "Ubuntu" ]] && IS_UBUNTU=true || IS_UBUNTU=false
 
@@ -54,9 +55,13 @@ if ! which docker &> /dev/null; then
 fi
 systemctl is-active --quiet docker || systemctl start docker
 
-### Find image
-EMBAVERSION=$(curl -sL https://raw.githubusercontent.com/e-m-b-a/emba/refs/heads/master/docker-compose.yml \
-  | awk -F: '/image:/ {print $NF; exit}')
+if [ "${VERSION}" = "latest" ]; then
+  ### Find image
+  EMBAVERSION=$(curl -sL https://raw.githubusercontent.com/e-m-b-a/emba/refs/heads/master/docker-compose.yml \
+    | awk -F: '/image:/ {print $NF; exit}')
+else
+  EMBAVERSION="${VERSION}"
+fi
 
 ### Export EMBA image
 docker pull "embeddedanalyzer/emba:${EMBAVERSION}"
