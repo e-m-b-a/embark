@@ -23,6 +23,7 @@ def default_deb_list():
 
 class WorkerDependencyVersion(models.Model):
     emba = models.CharField(max_length=100, null=True)
+    emba_head = models.CharField(max_length=40, null=True)
     nvd_head = models.CharField(max_length=40, null=True)
     nvd_time = models.DateTimeField(null=True)
     epss_head = models.CharField(max_length=40, null=True)
