@@ -154,6 +154,24 @@ def process_update_queue(worker: Worker):
         worker.save()
 
 
+def _is_version_installed(worker: Worker, worker_update: WorkerUpdate):
+    """
+    Checks if desired version is already installed
+    :param worker: The worker to update
+    :param worker_update: The worker update to apply
+    :returns: True if version is already installed
+    """
+    match worker_update.get_type():
+        case WorkerUpdate.DependencyType.REPO:
+            return worker.dependency_version.emba_head == worker_update.version
+        case WorkerUpdate.DependencyType.DOCKERIMAGE:
+            return worker.dependency_version.emba == worker_update.version
+        case WorkerUpdate.DependencyType.DEPS:
+            return False
+        case WorkerUpdate.DependencyType.EXTERNAL:
+            return not worker.dependency_version.is_external_outdated(worker_update.version)
+
+
 def perform_update(worker: Worker, client: SSHClient, worker_update: WorkerUpdate):
     """
     Trigger file copy and installer.sh
@@ -164,10 +182,14 @@ def perform_update(worker: Worker, client: SSHClient, worker_update: WorkerUpdat
     """
     dependency = worker_update.get_type()
 
-    folder_path = f"/root/{dependency.name}"
-    zip_path = f"{folder_path}.tar.gz"
+    if _is_version_installed(worker, worker_update):
+        logger.info("Skip update of %s on worker %s as already installed", worker_update.get_dependency().name, worker.name)
+        return
 
     use_dependency(dependency, worker_update.version, worker)
+
+    folder_path = f"/root/{dependency.name}"
+    zip_path = f"{folder_path}.tar.gz"
 
     try:
         _copy_files(client, dependency)

@@ -37,6 +37,11 @@ class WorkerDependencyVersion(models.Model):
     def get_external_version(self):
         return f"{self.nvd_head},{self.epss_head}"
 
+    def is_external_outdated(self, version: str):
+        nvd_head, epss_head = version.split(',')
+
+        return nvd_head != self.nvd_head or epss_head != self.epss_head
+
 
 class Worker(models.Model):
 
@@ -140,4 +145,4 @@ class CachedDependencyVersion(models.Model):
     def is_external_outdated(self, version: str):
         nvd_head, epss_head = version.split(',')
 
-        return nvd_head == self.nvd_head and epss_head == self.epss_head
+        return nvd_head != self.nvd_head or epss_head != self.epss_head
