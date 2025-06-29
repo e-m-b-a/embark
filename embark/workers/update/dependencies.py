@@ -56,7 +56,7 @@ def _is_desired_version_outdated(dependency: WorkerUpdate.DependencyType, desire
     """
     version = CachedDependencyVersion.objects.first()
     if version is None:
-        version = CachedDependencyVersion()
+        return False
 
     match dependency:
         case WorkerUpdate.DependencyType.REPO:
@@ -78,7 +78,7 @@ def _is_current_version(dependency: WorkerUpdate.DependencyType, desired_version
     """
     version = CachedDependencyVersion.objects.first()
     if version is None:
-        version = CachedDependencyVersion()
+        return False
 
     match dependency:
         case WorkerUpdate.DependencyType.REPO:
@@ -119,8 +119,6 @@ class DependencyState:
         while True:
             with self.lock:
                 if self.available == self.AvailabilityType.AVAILABLE:
-                    version = CachedDependencyVersion.objects.first()
-
                     # If the desired version is outdated, install the cached version as it is newer
                     if _is_current_version(self.dependency, version) or _is_desired_version_outdated(self.dependency, version):
                         if worker.ip_address in self.used_by:
@@ -305,3 +303,19 @@ def setup_dependency(dependency: WorkerUpdate.DependencyType, version: str):
             logger.info("Worker dependencies setup successful. Logs: %s", log_file)
     except BaseException as exception:
         logger.error("Error setting up worker dependencies: %s. Logs: %s", exception, log_file)
+
+    # Update cached versions
+    cached_version = CachedDependencyVersion.objects.first()
+    if cached_version is None:
+        cached_version = CachedDependencyVersion()
+
+    # Note: APT debs are always updated, thus no version to cache
+    match dependency:
+        case WorkerUpdate.DependencyType.REPO:
+            cached_version.set_emba_head(version)
+        case WorkerUpdate.DependencyType.EXTERNAL:
+            cached_version.set_external_version(version)
+        case WorkerUpdate.DependencyType.DOCKERIMAGE:
+            cached_version.set_emba(version)
+
+    cached_version.save()

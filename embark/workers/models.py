@@ -132,16 +132,41 @@ class CachedDependencyVersion(models.Model):
     Cached dependency versions available for download on worker nodes
     """
     emba = models.CharField(max_length=100, default="latest")
-    emba_history = models.JSONField()
+    emba_history = models.JSONField(default=list)
     emba_head = models.CharField(max_length=40, default="latest")
-    emba_head_history = models.JSONField()
+    emba_head_history = models.JSONField(default=list)
     nvd_head = models.CharField(max_length=40, default="latest")
-    nvd_history = models.JSONField()
+    nvd_history = models.JSONField(default=list)
     epss_head = models.CharField(max_length=40, default="latest")
-    epss_history = models.JSONField()
+    epss_history = models.JSONField(default=list)
 
     def get_external_version(self):
         return f"{self.nvd_head},{self.epss_head}"
+
+    def set_emba(self, version: str):
+        self.emba = str
+        history = list(self.emba_history)
+        history.append(version)
+        self.emba_history = history
+
+    def set_emba_version(self, version: str):
+        self.emba_head = version
+        history = list(self.emba_head_history)
+        history.append(version)
+        self.emba_head_history = history
+
+    def set_external_version(self, version: str):
+        nvd_head, epss_head = version.split(',')
+
+        self.nvd_head = nvd_head
+        history = list(self.nvd_history)
+        history.append(version)
+        self.nvd_history = history
+
+        self.epss_head = epss_head
+        history = list(self.epss_history)
+        history.append(version)
+        self.epss_history = history
 
     def is_external_outdated(self, version: str):
         nvd_head, epss_head = version.split(',')
