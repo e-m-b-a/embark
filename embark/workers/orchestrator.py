@@ -1,17 +1,15 @@
-import os
 from uuid import UUID
 from typing import Dict, List
 from collections import deque
 from dataclasses import dataclass
 
 from redis import Redis
+from django.conf import settings
 
 from workers.models import Worker, OrchestratorState
 
 
-REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
-REDIS_CLIENT = Redis(host=REDIS_HOST, port=REDIS_PORT)
+REDIS_CLIENT = Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
 LOCK_KEY = "orchestrator_lock"
 LOCK_TIMEOUT = 60 * 5
 
