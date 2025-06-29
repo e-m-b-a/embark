@@ -319,6 +319,7 @@ WORKER_SETUP_LOGS = os.path.join(WORKER_FILES_PATH, "logs/worker_setup_{timestam
 WORKER_EMBA_ROOT = "/root/emba/"
 WORKER_FIRMWARE_DIR = "/root/firmware/"
 WORKER_EMBA_LOGS = "/root/emba_logs/"
+WORKER_UPDATE_QUEUE_SIZE = 50
 
 WORKER_FETCH_LOGS_EVERY_SECONDS = 30
 

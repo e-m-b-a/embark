@@ -41,6 +41,10 @@ class Orchestrator:
     def get_free_workers(self) -> Dict[str, Worker]:
         return self.free_workers
 
+    def is_busy(self, worker: Worker) -> bool:
+        with self.lock:
+            return worker.ip_address in self.busy_workers
+
     def get_worker_info(self, worker_ips: List[str]) -> Dict[str, str]:
         """
         Get worker information given a list of worker IPs.
