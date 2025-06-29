@@ -45,7 +45,7 @@ class LogReader:
         try:
             self.analysis = FirmwareAnalysis.objects.get(id=self.firmware_id)
         except FirmwareAnalysis.DoesNotExist:
-            logger.error("No Analysis wit this id (%s)", self.firmware_id_str)
+            logger.error("No Analysis with this id (%s)", self.firmware_id_str)
 
         # set variables for channels communication
         self.user = self.analysis.user

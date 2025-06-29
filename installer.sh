@@ -110,7 +110,7 @@ write_env(){
   fi
 
   if [[ -z ${DJANGO_SECRET_KEY} ]] || [[ -z ${DJANGO_SECRET_KEY} ]]; then
-    echo -e "${ORANGE}""${BOLD}""Did not find safed passwords""${NC}"
+    echo -e "${ORANGE}""${BOLD}""Did not find saved passwords""${NC}"
     DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
     RANDOM_PW=$(openssl rand -base64 12)
   fi
@@ -195,7 +195,7 @@ create_ca (){
     openssl req -new -sha256 -key embark.local.key -out embark.local.csr  -subj '/CN=embark.local/O=EMBA/C=US'
     openssl genrsa -out embark-ws.local.key 2048
     openssl req -new -sha256 -key embark-ws.local.key -out embark-ws.local.csr  -subj '/CN=embark-ws.local/O=EMBA/C=US'
-    # signe csr with ca
+    # sign csr with ca
     openssl x509 -req -in embark.local.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out embark.local.crt -days 10000 -sha256
     openssl x509 -req -in embark-ws.local.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out embark-ws.local.crt -days 10000 -sha256
   fi
@@ -414,7 +414,7 @@ install_embark_default(){
 }
 
 install_embark_dev(){
-  echo -e "\n${GREEN}""${BOLD}""Building Developent-Enviroment for EMBArk""${NC}"
+  echo -e "\n${GREEN}""${BOLD}""Building Development-Environment for EMBArk""${NC}"
   # apt packages
   apt-get install -y npm pylint pycodestyle default-libmysqlclient-dev build-essential bandit yamllint mysql-client-core-8.0
 
@@ -678,7 +678,7 @@ while getopts esFUrdDSh OPT ; do
     r)
       export UNINSTALL=1
       export REFORCE=1
-      echo -e "${GREEN}""${BOLD}""Re-Install all dependecies while keeping user-files""${NC}"
+      echo -e "${GREEN}""${BOLD}""Re-Install all dependencies while keeping user-files""${NC}"
       ;;
     d)
       export DEFAULT=1
