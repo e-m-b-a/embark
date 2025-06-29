@@ -94,6 +94,7 @@ class WorkerUpdate(models.Model):
         DOCKERIMAGE = "DO", _("DOCKER IMAGE")
 
     dependency_type = models.CharField(max_length=2, choices=DependencyType)
+    version = models.CharField(max_length=100, default="latest")
     worker = models.ForeignKey(Worker, on_delete=models.CASCADE)
 
     def get_type(self):
@@ -101,9 +102,9 @@ class WorkerUpdate(models.Model):
 
 
 class DependencyVersion(models.Model):
-    emba = models.CharField(max_length=100, null=True)
-    nvd_head = models.CharField(max_length=40, null=True)
+    emba = models.CharField(max_length=100, default="latest")
+    nvd_head = models.CharField(max_length=40, default="latest")
     nvd_time = models.DateTimeField(null=True)
-    epss_head = models.CharField(max_length=40, null=True)
+    epss_head = models.CharField(max_length=40, default="latest")
     epss_time = models.DateTimeField(null=True)
     deb_list = models.JSONField(default=default_deb_list)

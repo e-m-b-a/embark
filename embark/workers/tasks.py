@@ -198,11 +198,12 @@ def fetch_dependency_updates():
 
         if match is None:
             logger.error("Update check: Failed. EMBA docker-compose.yml does not contain image version")
-            version.emba = "ERROR fetching EMBA"
+            version.emba = "latest"
         else:
             version.emba = match.group(1)
     except requests.exceptions.Timeout as exception:
         logger.error("Update check: Failed. An error occured on contacting GH API for docker-compose.yml: %s", exception)
+        version.emba = "latest"
 
     # Fetch external
     def _get_head_time(repo):
@@ -215,7 +216,7 @@ def fetch_dependency_updates():
             logger.error("Update check: Failed. An error occured on contacting GH API: %s", exception)
         except (requests.exceptions.JSONDecodeError, KeyError):
             logger.error("Update check: Failed. GH API returned invalid or incomplete json: %s", response.text)
-        return "N/A", None
+        return "latest", None
 
     version.nvd_head, version.nvd_time = _get_head_time("nvd-json-data-feeds")
     version.epss_head, version.epss_time = _get_head_time("EPSS-data")

@@ -8,7 +8,7 @@ from paramiko.client import SSHClient
 from django.conf import settings
 
 from workers.update.dependencies import use_dependency, release_dependency, get_dependency_path, eval_outdated_dependencies
-from workers.models import Worker, Configuration, WorkerUpdate
+from workers.models import Worker, Configuration, WorkerUpdate, DependencyVersion
 from workers.orchestrator import get_orchestrator
 
 logger = logging.getLogger(__name__)
@@ -57,11 +57,35 @@ def _copy_files(client: SSHClient, dependency: WorkerUpdate.DependencyType):
         exec_blocking_ssh(client, f"sudo mv {zip_path_user} {zip_path}")
 
 
-def queue_update(worker: Worker, dependency: WorkerUpdate.DependencyType):
+def _get_available_version(dependency: WorkerUpdate.DependencyType) -> str:
+    """
+    Selects related dependency version of update check
+    :param dependency: The dependency to query
+    :returns: version string, or "latest" if undefined
+    """
+    version = DependencyVersion.objects.first()
+    if not version:
+        version = DependencyVersion()
+
+    match dependency:
+        case WorkerUpdate.DependencyType.REPO:
+            return version.emba
+        case WorkerUpdate.DependencyType.DOCKERIMAGE:
+            return version.emba
+        case WorkerUpdate.DependencyType.DEPS:
+            return "cached" if bool(version.deb_list) else "latest"
+        case WorkerUpdate.DependencyType.EXTERNAL:
+            return f"{version.nvd_head},{version.epss_head}"
+        case _:
+            raise ValueError("Invalid dependencyType")
+
+
+def queue_update(worker: Worker, dependency: WorkerUpdate.DependencyType, version=None):
     """
     Adds dependency update to worker update queue
     :param worker: The worker to update
     :param dependency: The dependency to update
+    :param version: The desired version of the dependency
     """
     from workers.tasks import update_worker  # pylint: disable=import-outside-toplevel
 
@@ -69,7 +93,10 @@ def queue_update(worker: Worker, dependency: WorkerUpdate.DependencyType):
         logger.info("Update %s discarded for worker %s", dependency.name, worker.name)
         return
 
-    update = WorkerUpdate(worker=worker, dependency_type=dependency)
+    if version is None:
+        version = _get_available_version(dependency)
+
+    update = WorkerUpdate(worker=worker, dependency_type=dependency, version=version)
     update.save()
 
     logger.info("Update %s queued for worker %s", dependency.name, worker.name)
