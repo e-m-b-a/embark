@@ -46,10 +46,10 @@ class Worker(models.Model):
     configurations = models.ManyToManyField(Configuration, related_name='workers', blank=True)
     name = models.CharField(max_length=100)
     ip_address = models.GenericIPAddressField(unique=True)
-    system_info = models.JSONField()
+    system_info = models.JSONField(default=dict, blank=True, null=True)
     reachable = models.BooleanField(default=False)
     status = models.CharField(max_length=1, choices=ConfigStatus, default=ConfigStatus.UNCONFIGURED)
-    analysis_id = models.CharField(max_length=100, blank=True, null=True, help_text="ID of the analysis currently running on this worker")
+    analysis_id = models.UUIDField(blank=True, null=True, help_text="ID of the analysis currently running on this worker")
 
     dependency_version = models.OneToOneField(
         WorkerDependencyVersion,
@@ -107,3 +107,9 @@ class DependencyVersion(models.Model):
     epss_head = models.CharField(max_length=40, null=True)
     epss_time = models.DateTimeField(null=True)
     deb_list = models.JSONField(default=default_deb_list)
+
+
+class OrchestratorState(models.Model):
+    free_workers = models.ManyToManyField(Worker, related_name='free_workers', help_text="Workers that are currently free")
+    busy_workers = models.ManyToManyField(Worker, related_name='busy_workers', help_text="Workers that are currently busy")
+    tasks = models.JSONField(default=list, null=True, help_text="List of tasks to be processed by workers")
