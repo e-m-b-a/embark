@@ -16,7 +16,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
 
 from workers.models import Worker, Configuration, WorkerDependencyVersion, DependencyVersion, WorkerUpdate
-from workers.update.update import init_sudoers_file, queue_update
+from workers.update.update import init_sudoers_file, queue_update, update_dependencies_info
 from workers.tasks import update_system_info, fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file
 
 
@@ -252,6 +252,7 @@ def config_worker_scan(request, configuration_id):
             try:
                 init_sudoers_file(configuration, existing_worker)
                 update_system_info(configuration, existing_worker)
+                update_dependencies_info(existing_worker)
             except BaseException:
                 pass
         except Worker.DoesNotExist:
@@ -270,6 +271,7 @@ def config_worker_scan(request, configuration_id):
             try:
                 init_sudoers_file(configuration, new_worker)
                 update_system_info(configuration, new_worker)
+                update_dependencies_info(new_worker)
             except BaseException:
                 pass
 
