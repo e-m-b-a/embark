@@ -69,13 +69,13 @@ def _get_available_version(dependency: WorkerUpdate.DependencyType) -> str:
 
     match dependency:
         case WorkerUpdate.DependencyType.REPO:
-            return version.emba
+            return version.emba_head
         case WorkerUpdate.DependencyType.DOCKERIMAGE:
             return version.emba
         case WorkerUpdate.DependencyType.DEPS:
             return "cached" if bool(version.deb_list) else "latest"
         case WorkerUpdate.DependencyType.EXTERNAL:
-            return f"{version.nvd_head},{version.epss_head}"
+            return version.get_external_version()
         case _:
             raise ValueError("Invalid dependencyType")
 
@@ -167,7 +167,7 @@ def perform_update(worker: Worker, client: SSHClient, worker_update: WorkerUpdat
     folder_path = f"/root/{dependency.name}"
     zip_path = f"{folder_path}.tar.gz"
 
-    use_dependency(dependency, worker)
+    use_dependency(dependency, worker_update.version, worker)
 
     try:
         _copy_files(client, dependency)

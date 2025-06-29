@@ -8,7 +8,7 @@ from pathlib import Path
 from threading import Lock
 
 from django.conf import settings
-from workers.models import Worker, DependencyVersion, WorkerUpdate
+from workers.models import Worker, DependencyVersion, WorkerUpdate, CachedDependencyVersion
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +47,50 @@ def get_dependency_path(dependency: WorkerUpdate.DependencyType):
     return folder_path, zip_path, done_path
 
 
+def _is_desired_version_outdated(dependency: WorkerUpdate.DependencyType, desired_version: str):
+    """
+    Checks if desired version is currently outdated
+    :param dependency: The dependency to update
+    :param desired_version: the desired version
+    :returns: true if desired_version is outdated
+    """
+    version = CachedDependencyVersion.objects.first()
+    if version is None:
+        version = CachedDependencyVersion()
+
+    match dependency:
+        case WorkerUpdate.DependencyType.REPO:
+            return desired_version in version.emba_head_history
+        case WorkerUpdate.DependencyType.DEPS:
+            raise ValueError("Deps are never outdated")
+        case WorkerUpdate.DependencyType.EXTERNAL:
+            return version.is_external_outdated(desired_version)
+        case WorkerUpdate.DependencyType.DOCKERIMAGE:
+            return desired_version in version.emba_history
+
+
+def _is_current_version(dependency: WorkerUpdate.DependencyType, desired_version: str):
+    """
+    Checks if the desired version is currently cached
+    :param dependency: The dependency to update
+    :param desired_version: the desired version
+    :returns: true if desired_version is currently cached
+    """
+    version = CachedDependencyVersion.objects.first()
+    if version is None:
+        version = CachedDependencyVersion()
+
+    match dependency:
+        case WorkerUpdate.DependencyType.REPO:
+            return version.emba_head == desired_version
+        case WorkerUpdate.DependencyType.DEPS:
+            return True
+        case WorkerUpdate.DependencyType.EXTERNAL:
+            return version.get_external_version() == desired_version
+        case WorkerUpdate.DependencyType.DOCKERIMAGE:
+            return version.emba == desired_version
+
+
 class DependencyState:
     """
     Captures full dependency state (mainly used for synchronization)
@@ -65,24 +109,33 @@ class DependencyState:
         self.available = self.AvailabilityType.AVAILABLE if os.path.exists(done_path) else self.AvailabilityType.UNAVAILABLE
         self.dependency = dependency
 
-    def use_dependency(self, worker: Worker):
+    def use_dependency(self, version: str, worker: Worker):
         """
         Use lock (worker uses dependency)
         If the required files are unavailable, worker setup is delayed and the files are downloaded.
+        :params version: The version to update to
         :params worker: the worker who uses the dependency
         """
         while True:
             with self.lock:
                 if self.available == self.AvailabilityType.AVAILABLE:
-                    if worker.ip_address in self.used_by:
-                        raise ValueError(f"Worker {worker.ip_address} already uses dependency {self.dependency}")
+                    version = CachedDependencyVersion.objects.first()
 
-                    self.used_by.append(worker.ip_address)
-                    break
+                    # If the desired version is outdated, install the cached version as it is newer
+                    if _is_current_version(self.dependency, version) or _is_desired_version_outdated(self.dependency, version):
+                        if worker.ip_address in self.used_by:
+                            raise ValueError(f"Worker {worker.ip_address} already uses dependency {self.dependency}")
+
+                        self.used_by.append(worker.ip_address)
+                        break
+
+                    # Else: Trigger dependency setup, as newer version was found
+                    self.available = self.AvailabilityType.UNAVAILABLE
+
                 if self.available == self.AvailabilityType.UNAVAILABLE:
                     # Trigger dependency setup (Blocking, as we are already in a celery task)
                     self.available = self.AvailabilityType.IN_PROGRESS
-                    setup_dependency(self.dependency)
+                    setup_dependency(self.dependency, version)
                     self.available = self.AvailabilityType.AVAILABLE
 
     def release_dependency(self, worker: Worker, force: bool):
@@ -136,12 +189,13 @@ locks_dict: dict[WorkerUpdate.DependencyType, Lock] = {
 }
 
 
-def use_dependency(dependency: WorkerUpdate.DependencyType, worker: Worker):
+def use_dependency(dependency: WorkerUpdate.DependencyType, version: str, worker: Worker):
     """
     Use lock (worker uses dependency)
+    :params version: The version to update to
     :params worker: the worker who uses the dependency
     """
-    locks_dict[dependency].use_dependency(worker)
+    locks_dict[dependency].use_dependency(str, version, worker)
 
 
 def release_dependency(dependency: WorkerUpdate.DependencyType, worker: Worker, force=False):
@@ -221,11 +275,12 @@ def eval_outdated_dependencies(worker: Worker):
     logger.info("Outdated dependencies evaluated for worker %s", worker.ip_address)
 
 
-def setup_dependency(dependency: WorkerUpdate.DependencyType):
+def setup_dependency(dependency: WorkerUpdate.DependencyType, version: str):
     """
     Runs script to setup dependency
 
     :params dependency: Dependency type
+    :params version: The desired version
     """
     Path(settings.WORKER_FILES_PATH).mkdir(parents=True, exist_ok=True)
     Path(os.path.join(settings.WORKER_FILES_PATH, "logs")).mkdir(parents=True, exist_ok=True)
@@ -233,13 +288,16 @@ def setup_dependency(dependency: WorkerUpdate.DependencyType):
     script_path = os.path.join(os.path.dirname(__file__), get_script_name(dependency))
     folder_path, zip_path, done_path = get_dependency_path(dependency)
 
-    # update_dependency(dependency, False)
-
     log_file = settings.WORKER_SETUP_LOGS.format(timestamp=int(time.time()))
 
     logger.info("Worker dependencies setup started with script %s. Logs: %s", get_script_name(dependency), log_file)
     try:
-        cmd = f"sudo {script_path} '{folder_path}' '{zip_path}' '{done_path}'"
+        cmd = f"sudo {script_path} '{folder_path}' '{zip_path}' '{done_path}' '{version}'"
+
+        if dependency == WorkerUpdate.DependencyType.DEPS:
+            # Add path, as DEPS are cached here
+            cmd = cmd + f" '{settings.WORKER_UPDATE_CHECK}'"
+
         with open(log_file, "w+", encoding="utf-8") as file:
             with Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True) as proc:  # nosec
                 proc.communicate()
@@ -247,5 +305,3 @@ def setup_dependency(dependency: WorkerUpdate.DependencyType):
             logger.info("Worker dependencies setup successful. Logs: %s", log_file)
     except BaseException as exception:
         logger.error("Error setting up worker dependencies: %s. Logs: %s", exception, log_file)
-
-    # update_dependency(dependency, True)
