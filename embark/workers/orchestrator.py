@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from redis import Redis
 
-from workers.models import Worker, OrchestratorInfo
+from workers.models import Worker, OrchestratorState
 
 
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
@@ -49,22 +49,22 @@ class Orchestrator:
 
     def get_free_workers(self) -> Dict[str, Worker]:
         with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
-            self._sync_orchestrator_info()
+            self._sync_orchestrator_state()
             return self.free_workers
 
     def get_busy_workers(self) -> Dict[str, Worker]:
         with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
-            self._sync_orchestrator_info()
+            self._sync_orchestrator_state()
             return self.busy_workers
 
     def is_free(self, worker: Worker) -> bool:
         with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
-            self._sync_orchestrator_info()
+            self._sync_orchestrator_state()
             return worker.ip_address in self.free_workers
 
     def is_busy(self, worker: Worker) -> bool:
         with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
-            self._sync_orchestrator_info()
+            self._sync_orchestrator_state()
             return worker.ip_address in self.busy_workers
 
     def _get_worker_info(self, worker_ips: str) -> Worker:
@@ -95,7 +95,7 @@ class Orchestrator:
         :raises ValueError: If a worker IP does not exist in the orchestrator
         """
         with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
-            self._sync_orchestrator_info()
+            self._sync_orchestrator_state()
             return self._get_worker_info(worker_ips)
 
     def _assign_task(self, task: OrchestratorTask):
@@ -124,9 +124,9 @@ class Orchestrator:
         :param task: The task to be assigned
         """
         with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
-            self._sync_orchestrator_info()
+            self._sync_orchestrator_state()
             self._assign_task(task)
-            self._update_orchestrator_info()
+            self._update_orchestrator_state()
 
     def _assign_worker(self, worker: Worker, task: OrchestratorTask):
         """
@@ -159,9 +159,9 @@ class Orchestrator:
         :raises ValueError: If the worker is already busy
         """
         with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
-            self._sync_orchestrator_info()
+            self._sync_orchestrator_state()
             self._assign_worker(worker, task)
-            self._update_orchestrator_info()
+            self._update_orchestrator_state()
 
     def _release_worker(self, worker: Worker):
         """
@@ -187,9 +187,9 @@ class Orchestrator:
         :raises ValueError: If the worker is not busy
         """
         with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
-            self._sync_orchestrator_info()
+            self._sync_orchestrator_state()
             self._release_worker(worker)
-            self._update_orchestrator_info()
+            self._update_orchestrator_state()
 
     def _add_worker(self, worker: Worker):
         """
@@ -210,9 +210,9 @@ class Orchestrator:
         :raises ValueError: If the worker already exists in the orchestrator
         """
         with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
-            self._sync_orchestrator_info()
+            self._sync_orchestrator_state()
             self._add_worker(worker)
-            self._update_orchestrator_info()
+            self._update_orchestrator_state()
 
     def _remove_worker(self, worker: Worker):
         """
@@ -236,38 +236,38 @@ class Orchestrator:
         :raises ValueError: If the worker does not exist in the orchestrator
         """
         with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
-            self._sync_orchestrator_info()
+            self._sync_orchestrator_state()
             self._remove_worker(worker)
-            self._update_orchestrator_info()
+            self._update_orchestrator_state()
 
-    def _get_orchestrator_info(self):
+    def _get_orchestrator_state(self):
         """
-        Retrieve the orchestrator info from the database. If it does not exist, create a new one.
+        Retrieve the orchestrator state from the database. If it does not exist, create a new one.
         """
-        orchestrator_info = OrchestratorInfo.objects.first()
-        if not orchestrator_info:
-            orchestrator_info = OrchestratorInfo()
-            orchestrator_info.save()
-        return orchestrator_info
+        orchestrator_state = OrchestratorState.objects.first()
+        if not orchestrator_state:
+            orchestrator_state = OrchestratorState()
+            orchestrator_state.save()
+        return orchestrator_state
 
-    def _sync_orchestrator_info(self):
+    def _sync_orchestrator_state(self):
         """
-        Get the latest orchestrator info (free_workers, busy_workers, tasks) from the database and update the internal state.
+        Get the latest orchestrator state (free_workers, busy_workers, tasks) from the database and update the internal state.
         """
-        orchestrator_info = self._get_orchestrator_info()
-        self.free_workers = {worker.ip_address: worker for worker in orchestrator_info.free_workers.all()}
-        self.busy_workers = {worker.ip_address: worker for worker in orchestrator_info.busy_workers.all()}
-        self.tasks = deque([OrchestratorTask.from_dict(task) for task in orchestrator_info.tasks]) if orchestrator_info.tasks else deque()
+        orchestrator_state = self._get_orchestrator_state()
+        self.free_workers = {worker.ip_address: worker for worker in orchestrator_state.free_workers.all()}
+        self.busy_workers = {worker.ip_address: worker for worker in orchestrator_state.busy_workers.all()}
+        self.tasks = deque([OrchestratorTask.from_dict(task) for task in orchestrator_state.tasks]) if orchestrator_state.tasks else deque()
 
-    def _update_orchestrator_info(self):
+    def _update_orchestrator_state(self):
         """
-        Update the orchestrator info in the database with the current state of free_workers, busy_workers, and tasks.
+        Update the orchestrator state in the database with the internal state of free_workers, busy_workers, and tasks.
         """
-        orchestrator_info = self._get_orchestrator_info()
-        orchestrator_info.free_workers.set(list(self.free_workers.values()))
-        orchestrator_info.busy_workers.set(list(self.busy_workers.values()))
-        orchestrator_info.tasks = [OrchestratorTask.to_dict(task) for task in self.tasks]
-        orchestrator_info.save()
+        orchestrator_state = self._get_orchestrator_state()
+        orchestrator_state.free_workers.set(list(self.free_workers.values()))
+        orchestrator_state.busy_workers.set(list(self.busy_workers.values()))
+        orchestrator_state.tasks = [OrchestratorTask.to_dict(task) for task in self.tasks]
+        orchestrator_state.save()
 
 
 orchestrator = Orchestrator()

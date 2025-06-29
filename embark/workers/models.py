@@ -109,7 +109,7 @@ class DependencyVersion(models.Model):
     deb_list = models.JSONField(default=default_deb_list)
 
 
-class OrchestratorInfo(models.Model):
+class OrchestratorState(models.Model):
     free_workers = models.ManyToManyField(Worker, related_name='free_workers', blank=True, help_text="Workers that are currently free")
     busy_workers = models.ManyToManyField(Worker, related_name='busy_workers', blank=True, help_text="Workers that are currently busy")
     tasks = models.JSONField(default=list, blank=True, null=True, help_text="List of tasks to be processed by workers")
