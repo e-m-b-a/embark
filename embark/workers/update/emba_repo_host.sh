@@ -32,7 +32,8 @@ fi
 ### Download EMBA
 if [ "${VERSION}" = "latest" ]; then
   curl -L --url https://github.com/e-m-b-a/emba/archive/refs/heads/master.tar.gz --output "${FILEPATH}/emba.tar.gz"
-  echo "latest N/A" > "${FILEPATH}/git-head-meta"
+  sha=$(git ls-remote https://github.com/e-m-b-a/emba HEAD | awk '{print $1}')
+  echo "${sha} N/A" > "${FILEPATH}/git-head-meta"
 else
   curl -L --url "https://github.com/e-m-b-a/emba/archive/${VERSION}.tar.gz" --output "${FILEPATH}/emba.tar.gz"
   echo "${VERSION} N/A" > "${FILEPATH}/git-head-meta"
