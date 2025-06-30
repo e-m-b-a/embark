@@ -35,6 +35,7 @@ if [ "${NVD_VERSION}" = "latest" ]; then
 else
 	git -C "${EXTERNALPATH}/nvd-json-data-feeds" checkout "${NVD_VERSION}"
 fi
+git -C "${EXTERNALPATH}/nvd-json-data-feeds" show --no-patch --format="%H %ai" HEAD > "${EXTERNALPATH}/nvd-json-data-feeds/git-head-meta"
 rm -rf "${EXTERNALPATH}/nvd-json-data-feeds/.git"
 
 git clone https://github.com/EMBA-support-repos/EPSS-data.git "${EXTERNALPATH}/EPSS-data"
@@ -43,6 +44,7 @@ if [ "${EPSS_VERSION}" = "latest" ]; then
 else
 	git -C "${EXTERNALPATH}/EPSS-data" checkout "${EPSS_VERSION}"
 fi
+git -C "${EXTERNALPATH}/EPSS-data" show --no-patch --format="%H %ai" HEAD > "${EXTERNALPATH}/EPSS-data/git-head-meta"
 rm -rf "${EXTERNALPATH}/EPSS-data/.git"
 
 ### Fake venv (packages are broken)

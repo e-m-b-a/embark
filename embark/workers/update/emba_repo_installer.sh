@@ -24,3 +24,4 @@ rm -rf "${INSTALLPATH}/emba"
 
 mv "${EMBAMASTER}" "${INSTALLPATH}/emba"
 cp "${FILEPATH}/full_uninstaller.sh" "${INSTALLPATH}/emba"
+cp "${FILEPATH}/git-head-meta" "${INSTALLPATH}/emba"

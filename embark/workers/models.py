@@ -144,7 +144,7 @@ class CachedDependencyVersion(models.Model):
         return f"{self.nvd_head},{self.epss_head}"
 
     def set_emba(self, version: str):
-        self.emba = str
+        self.emba = version
         history = list(self.emba_history)
         history.append(version)
         self.emba_history = history

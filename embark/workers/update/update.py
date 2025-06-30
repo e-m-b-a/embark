@@ -242,14 +242,14 @@ def update_dependencies_info(worker: Worker):
         ssh_client = worker.ssh_connect()
 
         def _get_head_time(folder):
-            commit_regex = r".*([0-9a-f]{40})\s(.*\s\+[0-9]{4})"
-            path = os.path.join(settings.WORKER_EMBA_ROOT, folder)
-            perform_check = exec_blocking_ssh(ssh_client, f"sudo bash -c 'if test -d {path}; then echo success; fi'")
-            if perform_check == 'success':
-                result = exec_blocking_ssh(ssh_client, f"sudo bash -c 'cd {path} && git show --no-patch --format=\"%H %ai\" HEAD'")
-                match = re.match(commit_regex, result)
-                if match:
-                    return match.group(1), match.group(2)
+            commit_regex = r"(latest|[0-9a-f]{40})\s(N\/A|.*\s\+[0-9]{4})"
+            path = os.path.join(settings.WORKER_EMBA_ROOT, folder, "git-head-meta")
+            meta_info = exec_blocking_ssh(ssh_client, f"sudo bash -c 'if test -f {path}; then cat {path}; fi'")
+
+            match = re.match(commit_regex, meta_info)
+            if match:
+                return match.group(1), match.group(2) if match.group(2) != "N/A" else None
+
             return "N/A", None
 
         docker_compose_path = os.path.join(settings.WORKER_EMBA_ROOT, 'docker-compose.yml')
@@ -264,7 +264,7 @@ def update_dependencies_info(worker: Worker):
         deb_list_str = exec_blocking_ssh(ssh_client, "sudo bash -c 'cd /root/DEPS/pkg && sha256sum *.deb'") if deb_check == 'success' else ""
         worker.dependency_version.deb_list = parse_deb_list(deb_list_str)
     except (paramiko.SSHException, socket.error) as ssh_error:
-        logger.info("SSH connection to worker %s failed: %s", worker.ip_address, ssh_error)
+        logger.error("SSH connection to worker %s failed: %s", worker.ip_address, ssh_error)
     finally:
         if ssh_client:
             ssh_client.close()
