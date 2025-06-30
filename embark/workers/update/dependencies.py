@@ -190,10 +190,11 @@ locks_dict: dict[WorkerUpdate.DependencyType, Lock] = {
 def use_dependency(dependency: WorkerUpdate.DependencyType, version: str, worker: Worker):
     """
     Use lock (worker uses dependency)
+    :params dependency: the dependency to release
     :params version: The version to update to
     :params worker: the worker who uses the dependency
     """
-    locks_dict[dependency].use_dependency(str, version, worker)
+    locks_dict[dependency].use_dependency(version, worker)
 
 
 def release_dependency(dependency: WorkerUpdate.DependencyType, worker: Worker, force=False):
@@ -300,7 +301,10 @@ def setup_dependency(dependency: WorkerUpdate.DependencyType, version: str):
             with Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True) as proc:  # nosec
                 proc.communicate()
 
-            logger.info("Worker dependencies setup successful. Logs: %s", log_file)
+            if proc.returncode == 0:
+                logger.info("Worker dependencies setup successful. Logs: %s", log_file)
+            else:
+                logger.error("Worker dependencies setup failed. Logs: %s", log_file)
     except BaseException as exception:
         logger.error("Error setting up worker dependencies: %s. Logs: %s", exception, log_file)
 

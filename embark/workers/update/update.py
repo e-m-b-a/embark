@@ -141,8 +141,6 @@ def process_update_queue(worker: Worker):
 
         worker.status = Worker.ConfigStatus.CONFIGURED
 
-        update_dependencies_info(worker)
-
         logger.info("Worker update finished on worker %s", worker.name)
     except Exception as ssh_error:
         logger.error("SSH connection failed: %s", ssh_error)
@@ -152,6 +150,7 @@ def process_update_queue(worker: Worker):
             client.close()
 
         worker.save()
+        update_dependencies_info(worker)
 
 
 def _is_version_installed(worker: Worker, worker_update: WorkerUpdate):
@@ -194,6 +193,7 @@ def perform_update(worker: Worker, client: SSHClient, worker_update: WorkerUpdat
     try:
         _copy_files(client, dependency)
 
+        exec_blocking_ssh(client, f"sudo rm -rf {folder_path}")
         exec_blocking_ssh(client, f"sudo mkdir {folder_path} && sudo tar xvzf {zip_path} -C {folder_path} >/dev/null 2>&1")
         exec_blocking_ssh(client, f"sudo bash -c '{folder_path}/installer.sh >{folder_path}/installer.log 2>&1'")
     except Exception as ssh_error:

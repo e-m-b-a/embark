@@ -1,9 +1,9 @@
 import socket
 import re
 import os
-import shutil
 import subprocess
 import time
+from pathlib import Path
 
 import paramiko
 from celery import shared_task
@@ -223,7 +223,8 @@ def fetch_dependency_updates():
     version.epss_head, version.epss_time = _get_head_time("EMBA-support-repos/EPSS-data")
 
     # Fetch APT
-    shutil.rmtree(settings.WORKER_UPDATE_CHECK, ignore_errors=True)
+    Path(settings.WORKER_FILES_PATH).mkdir(parents=True, exist_ok=True)
+    Path(os.path.join(settings.WORKER_FILES_PATH, "logs")).mkdir(parents=True, exist_ok=True)
 
     log_file = settings.WORKER_SETUP_LOGS.format(timestamp=int(time.time()))
     logger.info("APT dependency update check started. Logs: %s", log_file)
@@ -234,7 +235,10 @@ def fetch_dependency_updates():
             with subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=file, stderr=file, shell=True) as proc:  # nosec
                 proc.communicate()
 
-            logger.info("APT dependency update check successful. Logs: %s", log_file)
+            if proc.returncode == 0:
+                logger.info("APT dependency update check successful. Logs: %s", log_file)
+            else:
+                logger.error("APT dependency update check failed. Logs: %s", log_file)
 
         deb_list_str = subprocess.check_output(f"cd {os.path.join(settings.WORKER_UPDATE_CHECK, 'pkg')} && sha256sum *.deb", shell=True)  # nosec
         version.deb_list = parse_deb_list(deb_list_str.decode('utf-8'))

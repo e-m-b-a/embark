@@ -149,7 +149,7 @@ class CachedDependencyVersion(models.Model):
         history.append(version)
         self.emba_history = history
 
-    def set_emba_version(self, version: str):
+    def set_emba_head(self, version: str):
         self.emba_head = version
         history = list(self.emba_head_history)
         history.append(version)

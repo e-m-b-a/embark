@@ -29,16 +29,21 @@ cp "external_installer.sh" "${FILEPATH}/installer.sh"
 ### Download external data
 mkdir -p "${EXTERNALPATH}"
 
+git clone https://github.com/EMBA-support-repos/nvd-json-data-feeds.git "${EXTERNALPATH}/nvd-json-data-feeds"
 if [ "${NVD_VERSION}" = "latest" ]; then
-	git clone --depth 1 -b main https://github.com/EMBA-support-repos/nvd-json-data-feeds.git "${EXTERNALPATH}/nvd-json-data-feeds"
+	git -C "${EXTERNALPATH}/nvd-json-data-feeds" checkout main
 else
-	git clone --depth 1 --revision "${NVD_VERSION}" https://github.com/EMBA-support-repos/nvd-json-data-feeds.git "${EXTERNALPATH}/nvd-json-data-feeds"
+	git -C "${EXTERNALPATH}/nvd-json-data-feeds" checkout "${NVD_VERSION}"
 fi
+rm -rf "${EXTERNALPATH}/nvd-json-data-feeds/.git"
+
+git clone https://github.com/EMBA-support-repos/EPSS-data.git "${EXTERNALPATH}/EPSS-data"
 if [ "${EPSS_VERSION}" = "latest" ]; then
-	git clone --depth 1 -b main https://github.com/EMBA-support-repos/EPSS-data.git "${EXTERNALPATH}/EPSS-data"
+	git -C "${EXTERNALPATH}/EPSS-data" checkout main
 else
-	git clone --depth 1 --revision "${EPSS_VERSION}" https://github.com/EMBA-support-repos/EPSS-data.git "${EXTERNALPATH}/EPSS-data"
+	git -C "${EXTERNALPATH}/EPSS-data" checkout "${EPSS_VERSION}"
 fi
+rm -rf "${EXTERNALPATH}/EPSS-data/.git"
 
 ### Fake venv (packages are broken)
 mkdir -p "${EXTERNALPATH}/emba_venv/bin"

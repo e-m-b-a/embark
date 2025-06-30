@@ -91,7 +91,7 @@ if [ "${VERSION}" = "latest" ] || [ ! -d "${DEPSCACHE}/pkg" ]; then
   # Build index (for dependency tree)
   ( cd "${PKGPATH}" && dpkg-scanpackages . ) | gzip -9c > "${PKGPATH}/Packages.gz"
 else
-  cp "${DEPSCACHE}/pkg" "${PKGPATH}"
+  cp -rf "${DEPSCACHE}/pkg" "${PKGPATH}"
 fi
 
 if [ -n "${ZIPPATH}" ]; then
