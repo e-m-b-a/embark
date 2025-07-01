@@ -7,10 +7,16 @@ from subprocess import Popen, PIPE
 from pathlib import Path
 from threading import Lock
 
+from redis import Redis
 from django.conf import settings
 from workers.models import Worker, DependencyVersion, WorkerUpdate, CachedDependencyVersion
 
 logger = logging.getLogger(__name__)
+
+
+REDIS_CLIENT = Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
+LOCK_KEY = "dependency_lock"
+LOCK_TIMEOUT = 60 * 5
 
 
 def get_script_name(dependency: WorkerUpdate.DependencyType):
@@ -108,6 +114,7 @@ class DependencyState:
         done_path = get_dependency_path(dependency)[2]
         self.available = self.AvailabilityType.AVAILABLE if os.path.exists(done_path) else self.AvailabilityType.UNAVAILABLE
         self.dependency = dependency
+        self.lock = REDIS_CLIENT.lock(f"{LOCK_KEY}_{dependency.name}", LOCK_TIMEOUT)
 
     def use_dependency(self, version: str, worker: Worker):
         """
@@ -130,7 +137,7 @@ class DependencyState:
                     # Else: Trigger dependency setup, as newer version was found
                     self.available = self.AvailabilityType.UNAVAILABLE
 
-                if self.available == self.AvailabilityType.UNAVAILABLE:
+                if self.available == self.AvailabilityType.UNAVAILABLE and self.is_not_in_use():
                     # Trigger dependency setup (Blocking, as we are already in a celery task)
                     self.available = self.AvailabilityType.IN_PROGRESS
                     setup_dependency(self.dependency, version)
@@ -293,7 +300,7 @@ def setup_dependency(dependency: WorkerUpdate.DependencyType, version: str):
     try:
         cmd = f"sudo {script_path} '{folder_path}' '{zip_path}' '{done_path}' '{version}'"
 
-        if dependency == WorkerUpdate.DependencyType.DEPS:
+        if dependency == WorkerUpdate.DependencyType.DEPS and version == 'cached':
             # Add path, as DEPS are cached here
             cmd = cmd + f" '{settings.WORKER_UPDATE_CHECK}'"
 

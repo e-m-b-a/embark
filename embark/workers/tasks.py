@@ -13,7 +13,7 @@ import requests
 from django.conf import settings
 
 from workers.models import Worker, Configuration, DependencyVersion, WorkerUpdate
-from workers.update.dependencies import eval_outdated_dependencies, get_script_name
+from workers.update.dependencies import eval_outdated_dependencies, get_script_name, update_dependency, setup_dependency
 from workers.update.update import exec_blocking_ssh, parse_deb_list, process_update_queue
 from workers.orchestrator import get_orchestrator
 from workers.codeql_ignore import new_autoadd_client
@@ -242,6 +242,10 @@ def fetch_dependency_updates():
 
         deb_list_str = subprocess.check_output(f"cd {os.path.join(settings.WORKER_UPDATE_CHECK, 'pkg')} && sha256sum *.deb", shell=True)  # nosec
         version.deb_list = parse_deb_list(deb_list_str.decode('utf-8'))
+
+        update_dependency(WorkerUpdate.DependencyType.DEPS, False)
+        setup_dependency(WorkerUpdate.DependencyType.DEPS, "cached")
+        update_dependency(WorkerUpdate.DependencyType.DEPS, True)
     except BaseException as exception:
         logger.error("Error APT dependency update check: %s. Logs: %s", exception, log_file)
         version.deb_list = {}
