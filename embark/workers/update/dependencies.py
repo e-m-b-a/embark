@@ -106,7 +106,7 @@ class DependencyState:
         IN_PROGRESS = "IN_PROGRESS"
         AVAILABLE = "AVAILABLE"
 
-    lock = Lock()
+    lock = None
     available = AvailabilityType.UNAVAILABLE
     used_by = []
 
