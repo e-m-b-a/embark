@@ -267,7 +267,7 @@ def eval_outdated_dependencies(worker: Worker):
             "new": version.deb_list[deb_name]["version"]
         })
 
-    worker.dependency_version.deb_outdated = bool(deb_list_diff["new"]) or bool(deb_list_diff["removed"]) or bool(deb_list_diff["updated"]) or bool(worker.dependency_version.deb_list)
+    worker.dependency_version.deb_outdated = bool(deb_list_diff["new"]) or bool(deb_list_diff["removed"]) or bool(deb_list_diff["updated"]) or not bool(worker.dependency_version.deb_list)
     worker.dependency_version.deb_list_diff = deb_list_diff
 
     worker.dependency_version.save()
