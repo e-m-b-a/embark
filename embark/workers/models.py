@@ -136,9 +136,9 @@ class CachedDependencyVersion(models.Model):
     emba_head = models.CharField(max_length=40, default="latest")
     emba_head_history = models.JSONField(default=list)
     nvd_head = models.CharField(max_length=40, default="latest")
-    nvd_history = models.JSONField(default=list)
+    nvd_head_history = models.JSONField(default=list)
     epss_head = models.CharField(max_length=40, default="latest")
-    epss_history = models.JSONField(default=list)
+    epss_head_history = models.JSONField(default=list)
 
     def get_external_version(self):
         return f"{self.nvd_head},{self.epss_head}"
@@ -167,22 +167,22 @@ class CachedDependencyVersion(models.Model):
         nvd_head, epss_head = version.split(',')
 
         self.nvd_head = nvd_head
-        history = list(self.nvd_history)
+        history = list(self.nvd_head_history)
 
         if nvd_head != "latest":
             # "latest" is never old
             history.append(nvd_head)
 
-        self.nvd_history = history
+        self.nvd_head_history = history
 
         self.epss_head = epss_head
-        history = list(self.epss_history)
+        history = list(self.epss_head_history)
 
         if epss_head != "latest":
             # "latest" is never old
             history.append(epss_head)
 
-        self.epss_history = history
+        self.epss_head_history = history
 
     def is_external_outdated(self, version: str):
         nvd_head, epss_head = version.split(',')
