@@ -10,9 +10,8 @@ fi
 
 FILEPATH="$1"
 ZIPPATH="$2"
-DONEPATH="$3"
-VERSION="$4"
-DEPSCACHE="$5"
+VERSION="$3"
+DEPSCACHE="$4"
 
 PKGPATH="${FILEPATH}/pkg"
 IS_UBUNTU=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
@@ -30,10 +29,6 @@ rm -rf "${FILEPATH}"
 
 if [ -n "${ZIPPATH}" ]; then
   rm -f "${ZIPPATH}"
-fi
-
-if [ -n "${DONEPATH}" ]; then
-  rm -f "${DONEPATH}"
 fi
 
 mkdir -p "${FILEPATH}"
@@ -96,8 +91,4 @@ fi
 
 if [ -n "${ZIPPATH}" ]; then
   tar czf "${ZIPPATH}" -C "${FILEPATH}" .
-fi
-
-if [ -n "${DONEPATH}" ]; then
-  touch "${DONEPATH}"
 fi

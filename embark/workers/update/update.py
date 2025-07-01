@@ -8,7 +8,7 @@ from paramiko.client import SSHClient
 from django.conf import settings
 
 from workers.update.dependencies import use_dependency, release_dependency, get_dependency_path, eval_outdated_dependencies
-from workers.models import Worker, Configuration, WorkerUpdate, DependencyVersion
+from workers.models import Worker, Configuration, WorkerUpdate, DependencyVersion, DependencyType
 from workers.orchestrator import get_orchestrator
 
 logger = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ def exec_blocking_ssh(client: SSHClient, command: str):
     return stdout.read().decode().strip()
 
 
-def _copy_files(client: SSHClient, dependency: WorkerUpdate.DependencyType):
+def _copy_files(client: SSHClient, dependency: DependencyType):
     """
     Copy zipped dependency file to remote
 
@@ -57,7 +57,7 @@ def _copy_files(client: SSHClient, dependency: WorkerUpdate.DependencyType):
         exec_blocking_ssh(client, f"sudo mv {zip_path_user} {zip_path}")
 
 
-def _get_available_version(dependency: WorkerUpdate.DependencyType) -> str:
+def _get_available_version(dependency: DependencyType) -> str:
     """
     Selects related dependency version of update check
     :param dependency: The dependency to query
@@ -68,19 +68,19 @@ def _get_available_version(dependency: WorkerUpdate.DependencyType) -> str:
         version = DependencyVersion()
 
     match dependency:
-        case WorkerUpdate.DependencyType.REPO:
+        case DependencyType.REPO:
             return version.emba_head
-        case WorkerUpdate.DependencyType.DOCKERIMAGE:
+        case DependencyType.DOCKERIMAGE:
             return version.emba
-        case WorkerUpdate.DependencyType.DEPS:
+        case DependencyType.DEPS:
             return "cached" if bool(version.deb_list) else "latest"
-        case WorkerUpdate.DependencyType.EXTERNAL:
+        case DependencyType.EXTERNAL:
             return version.get_external_version()
         case _:
             raise ValueError("Invalid dependencyType")
 
 
-def queue_update(worker: Worker, dependency: WorkerUpdate.DependencyType, version=None):
+def queue_update(worker: Worker, dependency: DependencyType, version=None):
     """
     Adds dependency update to worker update queue
     :param worker: The worker to update
@@ -161,13 +161,13 @@ def _is_version_installed(worker: Worker, worker_update: WorkerUpdate):
     :returns: True if version is already installed
     """
     match worker_update.get_type():
-        case WorkerUpdate.DependencyType.REPO:
+        case DependencyType.REPO:
             return worker.dependency_version.emba_head == worker_update.version
-        case WorkerUpdate.DependencyType.DOCKERIMAGE:
+        case DependencyType.DOCKERIMAGE:
             return worker.dependency_version.emba == worker_update.version
-        case WorkerUpdate.DependencyType.DEPS:
+        case DependencyType.DEPS:
             return False
-        case WorkerUpdate.DependencyType.EXTERNAL:
+        case DependencyType.EXTERNAL:
             return not worker.dependency_version.is_external_outdated(worker_update.version)
 
 

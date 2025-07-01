@@ -94,20 +94,21 @@ class Worker(models.Model):
         return ssh_client
 
 
-class WorkerUpdate(models.Model):
+class DependencyType(models.TextChoices):  # pylint: disable=too-many-ancestors
+    DEPS = "D", _("APT Dependencies")
+    REPO = "R", _("GH Repository")
+    EXTERNAL = "E", _("EXTERNAL DIR")
+    DOCKERIMAGE = "DO", _("DOCKER IMAGE")
 
-    class DependencyType(models.TextChoices):  # pylint: disable=too-many-ancestors
-        DEPS = "D", _("APT Dependencies")
-        REPO = "R", _("GH Repository")
-        EXTERNAL = "E", _("EXTERNAL DIR")
-        DOCKERIMAGE = "DO", _("DOCKER IMAGE")
+
+class WorkerUpdate(models.Model):
 
     dependency_type = models.CharField(max_length=2, choices=DependencyType)
     version = models.CharField(max_length=100, default="latest")
     worker = models.ForeignKey(Worker, on_delete=models.CASCADE)
 
     def get_type(self):
-        return WorkerUpdate.DependencyType(self.dependency_type)
+        return DependencyType(self.dependency_type)
 
 
 class DependencyVersion(models.Model):
@@ -199,3 +200,14 @@ class OrchestratorState(models.Model):
     free_workers = models.ManyToManyField(Worker, related_name='free_workers', help_text="Workers that are currently free")
     busy_workers = models.ManyToManyField(Worker, related_name='busy_workers', help_text="Workers that are currently busy")
     tasks = models.JSONField(default=list, null=True, help_text="List of tasks to be processed by workers")
+
+
+class DependencyState(models.Model):
+    class AvailabilityType(models.TextChoices):  # pylint: disable=too-many-ancestors
+        UNAVAILABLE = "U", _("Unavailable")
+        IN_PROGRESS = "I", _("In progress")
+        AVAILABLE = "A", _("Available")
+
+    used_by = models.ManyToManyField(Worker, related_name='used_by', help_text="Workers that are currently using the dependency")
+    dependency_type = models.CharField(max_length=2, choices=DependencyType)
+    availability = models.CharField(max_length=1, choices=AvailabilityType, default=AvailabilityType.UNAVAILABLE)

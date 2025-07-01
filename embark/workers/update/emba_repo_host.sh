@@ -10,13 +10,11 @@ fi
 
 FILEPATH="$1"
 ZIPPATH="$2"
-DONEPATH="$3"
-VERSION="$4"
+VERSION="$3"
 
 ### Reset
 rm -rf "${FILEPATH}"
 rm -f "${ZIPPATH}"
-rm -rf "${DONEPATH}"
 mkdir -p "${FILEPATH}"
 
 ### Copy scripts
@@ -40,4 +38,3 @@ else
 fi
 
 tar czf "${ZIPPATH}" -C "${FILEPATH}" .
-touch "${DONEPATH}"

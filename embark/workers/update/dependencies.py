@@ -1,34 +1,31 @@
 import os
 import time
 import logging
-from enum import Enum
 
 from subprocess import Popen, PIPE
 from pathlib import Path
-from threading import Lock
 
 from redis import Redis
 from django.conf import settings
-from workers.models import Worker, DependencyVersion, WorkerUpdate, CachedDependencyVersion
+from workers.models import Worker, DependencyVersion, DependencyType, CachedDependencyVersion, DependencyState
 
 logger = logging.getLogger(__name__)
 
 
 REDIS_CLIENT = Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
 LOCK_KEY = "dependency_lock"
-LOCK_TIMEOUT = 60 * 5
 
 
-def get_script_name(dependency: WorkerUpdate.DependencyType):
+def get_script_name(dependency: DependencyType):
     script_name = ""
     match dependency:
-        case WorkerUpdate.DependencyType.DEPS:
+        case DependencyType.DEPS:
             script_name = "deps"
-        case WorkerUpdate.DependencyType.REPO:
+        case DependencyType.REPO:
             script_name = "emba_repo"
-        case WorkerUpdate.DependencyType.EXTERNAL:
+        case DependencyType.EXTERNAL:
             script_name = "external"
-        case WorkerUpdate.DependencyType.DOCKERIMAGE:
+        case DependencyType.DOCKERIMAGE:
             script_name = "emba_docker"
         case _:
             raise ValueError("Invalid DependencyType")
@@ -36,24 +33,22 @@ def get_script_name(dependency: WorkerUpdate.DependencyType):
     return f"{script_name}_host.sh"
 
 
-def get_dependency_path(dependency: WorkerUpdate.DependencyType):
+def get_dependency_path(dependency: DependencyType):
     """
-    Constructs all relevant paths related to a dependency (folder, zip, done file)
+    Constructs all relevant paths related to a dependency (folder, zip)
 
     :params dependency: Dependency type
 
     :return: folder_path path to folder
     :return: zip_path path to zip
-    :return: done_path path to done file (to check if zip generation is actually done)
     """
     folder_path = os.path.join(settings.WORKER_FILES_PATH, dependency.name)
     zip_path = folder_path + ".tar.gz"
-    done_path = folder_path + ".done"
 
-    return folder_path, zip_path, done_path
+    return folder_path, zip_path
 
 
-def _is_desired_version_outdated(dependency: WorkerUpdate.DependencyType, desired_version: str):
+def _is_desired_version_outdated(dependency: DependencyType, desired_version: str):
     """
     Checks if desired version is currently outdated
     :param dependency: The dependency to update
@@ -65,17 +60,17 @@ def _is_desired_version_outdated(dependency: WorkerUpdate.DependencyType, desire
         return False
 
     match dependency:
-        case WorkerUpdate.DependencyType.REPO:
+        case DependencyType.REPO:
             return desired_version in version.emba_head_history
-        case WorkerUpdate.DependencyType.DEPS:
+        case DependencyType.DEPS:
             raise ValueError("Deps are never outdated")
-        case WorkerUpdate.DependencyType.EXTERNAL:
+        case DependencyType.EXTERNAL:
             return version.is_external_outdated(desired_version)
-        case WorkerUpdate.DependencyType.DOCKERIMAGE:
+        case DependencyType.DOCKERIMAGE:
             return desired_version in version.emba_history
 
 
-def _is_current_version(dependency: WorkerUpdate.DependencyType, desired_version: str):
+def _is_current_version(dependency: DependencyType, desired_version: str):
     """
     Checks if the desired version is currently cached
     :param dependency: The dependency to update
@@ -87,34 +82,38 @@ def _is_current_version(dependency: WorkerUpdate.DependencyType, desired_version
         return False
 
     match dependency:
-        case WorkerUpdate.DependencyType.REPO:
+        case DependencyType.REPO:
             return version.emba_head == desired_version
-        case WorkerUpdate.DependencyType.DEPS:
+        case DependencyType.DEPS:
             return True
-        case WorkerUpdate.DependencyType.EXTERNAL:
+        case DependencyType.EXTERNAL:
             return version.get_external_version() == desired_version
-        case WorkerUpdate.DependencyType.DOCKERIMAGE:
+        case DependencyType.DOCKERIMAGE:
             return version.emba == desired_version
 
 
-class DependencyState:
+class DependencyLock:
     """
     Captures full dependency state (mainly used for synchronization)
     """
-    class AvailabilityType(Enum):
-        UNAVAILABLE = "UNAVAILABLE"
-        IN_PROGRESS = "IN_PROGRESS"
-        AVAILABLE = "AVAILABLE"
-
     lock = None
-    available = AvailabilityType.UNAVAILABLE
-    used_by = []
 
-    def __init__(self, dependency: WorkerUpdate.DependencyType):
-        done_path = get_dependency_path(dependency)[2]
-        self.available = self.AvailabilityType.AVAILABLE if os.path.exists(done_path) else self.AvailabilityType.UNAVAILABLE
+    def __init__(self, dependency: DependencyType):
         self.dependency = dependency
-        self.lock = REDIS_CLIENT.lock(f"{LOCK_KEY}_{dependency.name}", LOCK_TIMEOUT)
+        self.lock = REDIS_CLIENT.lock(f"{LOCK_KEY}_{dependency.name}")
+
+    def _get_db_data(self):
+        state, _ = DependencyState.objects.get_or_create(dependency_type=self.dependency)
+        return {worker.ip_address: worker for worker in state.used_by.all()}, DependencyState.AvailabilityType(state.availability)
+
+    def _set_db_data(self, used_by=None, availability=None):
+        state, _ = DependencyState.objects.get_or_create(dependency_type=self.dependency)
+        if used_by is not None:
+            state.used_by.set(list(used_by.values()))
+        if availability is not None:
+            state.availability = availability
+
+        state.save()
 
     def use_dependency(self, version: str, worker: Worker):
         """
@@ -125,23 +124,25 @@ class DependencyState:
         """
         while True:
             with self.lock:
-                if self.available == self.AvailabilityType.AVAILABLE:
+                used_by, availability = self._get_db_data()
+                if availability == DependencyState.AvailabilityType.AVAILABLE:
                     # If the desired version is outdated, install the cached version as it is newer
                     if _is_current_version(self.dependency, version) or _is_desired_version_outdated(self.dependency, version):
-                        if worker.ip_address in self.used_by:
+                        if worker.ip_address in used_by:
                             raise ValueError(f"Worker {worker.ip_address} already uses dependency {self.dependency}")
 
-                        self.used_by.append(worker.ip_address)
+                        used_by[worker.ip_address] = worker
+                        self._set_db_data(used_by=used_by)
                         break
 
                     # Else: Trigger dependency setup, as newer version was found
-                    self.available = self.AvailabilityType.UNAVAILABLE
+                    self._set_db_data(availability=DependencyState.AvailabilityType.UNAVAILABLE)
 
-                if self.available == self.AvailabilityType.UNAVAILABLE and self.is_not_in_use():
+                if availability == DependencyState.AvailabilityType.UNAVAILABLE and self.is_not_in_use():
                     # Trigger dependency setup (Blocking, as we are already in a celery task)
-                    self.available = self.AvailabilityType.IN_PROGRESS
+                    self._set_db_data(availability=DependencyState.AvailabilityType.IN_PROGRESS)
                     setup_dependency(self.dependency, version)
-                    self.available = self.AvailabilityType.AVAILABLE
+                    self._set_db_data(availability=DependencyState.AvailabilityType.AVAILABLE)
 
     def release_dependency(self, worker: Worker, force: bool):
         """
@@ -149,11 +150,15 @@ class DependencyState:
         :params worker: the worker who does not use the dependency anymore
         :params force: force release (no error if unused)
         """
-        if worker.ip_address not in self.used_by and not force:
-            raise ValueError(f"Worker {worker.ip_address} does not use dependency {self.dependency}")
+        with self.lock:
+            used_by, _ = self._get_db_data()
 
-        if worker.ip_address in self.used_by:
-            self.used_by.remove(worker.ip_address)
+            if worker.ip_address not in used_by and not force:
+                raise ValueError(f"Worker {worker.ip_address} does not use dependency {self.dependency}")
+
+            if worker.ip_address in used_by:
+                del used_by[worker.ip_address]
+                self._set_db_data(used_by=used_by)
 
     def is_not_in_use(self):
         """
@@ -161,7 +166,8 @@ class DependencyState:
 
         Warning: Assumes thread has the lock
         """
-        return len(self.used_by) == 0
+        used_by, _ = self._get_db_data()
+        return len(used_by) == 0
 
     def update_dependency(self, available: bool):
         """
@@ -174,7 +180,7 @@ class DependencyState:
         while True:
             with self.lock:
                 if self.is_not_in_use():
-                    self.available = self.AvailabilityType.AVAILABLE if available else self.AvailabilityType.IN_PROGRESS
+                    self._set_db_data(availability=DependencyState.AvailabilityType.AVAILABLE if available else DependencyState.AvailabilityType.IN_PROGRESS)
                     break
 
     def uses_dependency(self, worker: Worker):
@@ -183,18 +189,19 @@ class DependencyState:
         :params worker: worker to be checked
         :returns: true if dependency is in use
         """
-        return worker.ip_address in self.used_by
+        used_by, _ = self._get_db_data()
+        return worker.ip_address in used_by
 
 
-locks_dict: dict[WorkerUpdate.DependencyType, Lock] = {
-    WorkerUpdate.DependencyType.DEPS: DependencyState(WorkerUpdate.DependencyType.DEPS),
-    WorkerUpdate.DependencyType.REPO: DependencyState(WorkerUpdate.DependencyType.REPO),
-    WorkerUpdate.DependencyType.EXTERNAL: DependencyState(WorkerUpdate.DependencyType.EXTERNAL),
-    WorkerUpdate.DependencyType.DOCKERIMAGE: DependencyState(WorkerUpdate.DependencyType.DOCKERIMAGE)
+locks_dict: dict[DependencyType, DependencyLock] = {
+    DependencyType.DEPS: DependencyLock(DependencyType.DEPS),
+    DependencyType.REPO: DependencyLock(DependencyType.REPO),
+    DependencyType.EXTERNAL: DependencyLock(DependencyType.EXTERNAL),
+    DependencyType.DOCKERIMAGE: DependencyLock(DependencyType.DOCKERIMAGE)
 }
 
 
-def use_dependency(dependency: WorkerUpdate.DependencyType, version: str, worker: Worker):
+def use_dependency(dependency: DependencyType, version: str, worker: Worker):
     """
     Use lock (worker uses dependency)
     :params dependency: the dependency to release
@@ -204,7 +211,7 @@ def use_dependency(dependency: WorkerUpdate.DependencyType, version: str, worker
     locks_dict[dependency].use_dependency(version, worker)
 
 
-def release_dependency(dependency: WorkerUpdate.DependencyType, worker: Worker, force=False):
+def release_dependency(dependency: DependencyType, worker: Worker, force=False):
     """
     Releases lock (worker does not use dependency anymore)
     :params dependency: the dependency to release
@@ -214,7 +221,7 @@ def release_dependency(dependency: WorkerUpdate.DependencyType, worker: Worker, 
     locks_dict[dependency].release_dependency(worker, force)
 
 
-def uses_dependency(dependency: WorkerUpdate.DependencyType, worker: Worker):
+def uses_dependency(dependency: DependencyType, worker: Worker):
     """
     Checks if dependency is in use by provided worker
     :params dependency: the dependency to check
@@ -224,7 +231,7 @@ def uses_dependency(dependency: WorkerUpdate.DependencyType, worker: Worker):
     return locks_dict[dependency].uses_dependency(worker)
 
 
-def update_dependency(dependency: WorkerUpdate.DependencyType, available: bool):
+def update_dependency(dependency: DependencyType, available: bool):
     """
     Sets availability for dependencies
     If the dependency is not setup, the state is UNAVAILABLE.
@@ -281,7 +288,7 @@ def eval_outdated_dependencies(worker: Worker):
     logger.info("Outdated dependencies evaluated for worker %s", worker.ip_address)
 
 
-def setup_dependency(dependency: WorkerUpdate.DependencyType, version: str):
+def setup_dependency(dependency: DependencyType, version: str):
     """
     Runs script to setup dependency
 
@@ -292,15 +299,15 @@ def setup_dependency(dependency: WorkerUpdate.DependencyType, version: str):
     Path(os.path.join(settings.WORKER_FILES_PATH, "logs")).mkdir(parents=True, exist_ok=True)
 
     script_path = os.path.join(os.path.dirname(__file__), get_script_name(dependency))
-    folder_path, zip_path, done_path = get_dependency_path(dependency)
+    folder_path, zip_path = get_dependency_path(dependency)
 
     log_file = settings.WORKER_SETUP_LOGS.format(timestamp=int(time.time()))
 
     logger.info("Worker dependencies setup started with script %s. Logs: %s", get_script_name(dependency), log_file)
     try:
-        cmd = f"sudo {script_path} '{folder_path}' '{zip_path}' '{done_path}' '{version}'"
+        cmd = f"sudo {script_path} '{folder_path}' '{zip_path}' '{version}'"
 
-        if dependency == WorkerUpdate.DependencyType.DEPS and version == 'cached':
+        if dependency == DependencyType.DEPS and version == 'cached':
             # Add path, as DEPS are cached here
             cmd = cmd + f" '{settings.WORKER_UPDATE_CHECK}'"
 
@@ -322,11 +329,11 @@ def setup_dependency(dependency: WorkerUpdate.DependencyType, version: str):
 
     # Note: APT debs are always updated, thus no version to cache
     match dependency:
-        case WorkerUpdate.DependencyType.REPO:
+        case DependencyType.REPO:
             cached_version.set_emba_head(version)
-        case WorkerUpdate.DependencyType.EXTERNAL:
+        case DependencyType.EXTERNAL:
             cached_version.set_external_version(version)
-        case WorkerUpdate.DependencyType.DOCKERIMAGE:
+        case DependencyType.DOCKERIMAGE:
             cached_version.set_emba(version)
 
     cached_version.save()

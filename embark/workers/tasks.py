@@ -12,7 +12,7 @@ from celery.utils.log import get_task_logger
 import requests
 from django.conf import settings
 
-from workers.models import Worker, Configuration, DependencyVersion, WorkerUpdate
+from workers.models import Worker, Configuration, DependencyVersion, DependencyType
 from workers.update.dependencies import eval_outdated_dependencies, get_script_name, update_dependency, setup_dependency
 from workers.update.update import exec_blocking_ssh, parse_deb_list, process_update_queue
 from workers.orchestrator import get_orchestrator
@@ -229,8 +229,8 @@ def fetch_dependency_updates():
     log_file = settings.WORKER_SETUP_LOGS.format(timestamp=int(time.time()))
     logger.info("APT dependency update check started. Logs: %s", log_file)
     try:
-        script_path = os.path.join(os.path.dirname(__file__), "update", get_script_name(WorkerUpdate.DependencyType.DEPS))
-        cmd = f"sudo {script_path} '{settings.WORKER_UPDATE_CHECK}' '' ''"
+        script_path = os.path.join(os.path.dirname(__file__), "update", get_script_name(DependencyType.DEPS))
+        cmd = f"sudo {script_path} '{settings.WORKER_UPDATE_CHECK}' ''"
         with open(log_file, "w+", encoding="utf-8") as file:
             with subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=file, stderr=file, shell=True) as proc:  # nosec
                 proc.communicate()
@@ -243,9 +243,9 @@ def fetch_dependency_updates():
         deb_list_str = subprocess.check_output(f"cd {os.path.join(settings.WORKER_UPDATE_CHECK, 'pkg')} && sha256sum *.deb", shell=True)  # nosec
         version.deb_list = parse_deb_list(deb_list_str.decode('utf-8'))
 
-        update_dependency(WorkerUpdate.DependencyType.DEPS, False)
-        setup_dependency(WorkerUpdate.DependencyType.DEPS, "cached")
-        update_dependency(WorkerUpdate.DependencyType.DEPS, True)
+        update_dependency(DependencyType.DEPS, False)
+        setup_dependency(DependencyType.DEPS, "cached")
+        update_dependency(DependencyType.DEPS, True)
     except BaseException as exception:
         logger.error("Error APT dependency update check: %s. Logs: %s", exception, log_file)
         version.deb_list = {}
