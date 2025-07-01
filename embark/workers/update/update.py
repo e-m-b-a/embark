@@ -185,21 +185,19 @@ def perform_update(worker: Worker, client: SSHClient, worker_update: WorkerUpdat
         logger.info("Skip update of %s on worker %s as already installed", worker_update.get_dependency().name, worker.name)
         return
 
-    use_dependency(dependency, worker_update.version, worker)
-
     folder_path = f"/root/{dependency.name}"
     zip_path = f"{folder_path}.tar.gz"
 
-    try:
-        _copy_files(client, dependency)
+    use_dependency(dependency, worker_update.version, worker)
+    _copy_files(client, dependency)
+    release_dependency(dependency, worker)
 
+    try:
         exec_blocking_ssh(client, f"sudo rm -rf {folder_path}")
         exec_blocking_ssh(client, f"sudo mkdir {folder_path} && sudo tar xvzf {zip_path} -C {folder_path} >/dev/null 2>&1")
         exec_blocking_ssh(client, f"sudo bash -c '{folder_path}/installer.sh >{folder_path}/installer.log 2>&1'")
     except Exception as ssh_error:
         raise ssh_error
-    finally:
-        release_dependency(dependency, worker)
 
 
 def init_sudoers_file(configuration: Configuration, worker: Worker):
