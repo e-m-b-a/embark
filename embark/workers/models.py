@@ -185,9 +185,14 @@ class CachedDependencyVersion(models.Model):
         self.epss_head_history = history
 
     def is_external_outdated(self, version: str):
+        """
+        Checks if external version was already installed
+        :param version: the version string containing nvd and epss version
+        :returns: True if both were already installed, otherwise false
+        """
         nvd_head, epss_head = version.split(',')
 
-        return nvd_head != self.nvd_head or epss_head != self.epss_head
+        return nvd_head in self.nvd_head_history and epss_head in self.epss_head_history
 
 
 class OrchestratorState(models.Model):
