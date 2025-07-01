@@ -146,13 +146,21 @@ class CachedDependencyVersion(models.Model):
     def set_emba(self, version: str):
         self.emba = version
         history = list(self.emba_history)
-        history.append(version)
+
+        if version != "latest":
+            # "latest" is never old
+            history.append(version)
+
         self.emba_history = history
 
     def set_emba_head(self, version: str):
         self.emba_head = version
         history = list(self.emba_head_history)
-        history.append(version)
+
+        if version != "latest":
+            # "latest" is never old
+            history.append(version)
+
         self.emba_head_history = history
 
     def set_external_version(self, version: str):
@@ -160,12 +168,20 @@ class CachedDependencyVersion(models.Model):
 
         self.nvd_head = nvd_head
         history = list(self.nvd_history)
-        history.append(version)
+
+        if nvd_head != "latest":
+            # "latest" is never old
+            history.append(nvd_head)
+
         self.nvd_history = history
 
         self.epss_head = epss_head
         history = list(self.epss_history)
-        history.append(version)
+
+        if epss_head != "latest":
+            # "latest" is never old
+            history.append(epss_head)
+
         self.epss_history = history
 
     def is_external_outdated(self, version: str):
