@@ -489,13 +489,6 @@ def connect_worker(request, configuration_id, worker_id):
     })
 
 
-def safe_redirect(request, default):
-    referer = request.META.get('HTTP_REFERER', default)
-    if not url_has_allowed_host_and_scheme(referer, allowed_hosts={request.get_host()}):
-        referer = default
-    return HttpResponseRedirect(referer)
-
-
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
@@ -507,3 +500,10 @@ def check_updates(request):
 
     messages.success(request, 'Update check queued!')
     return safe_redirect(request, '/worker/')
+
+
+def safe_redirect(request, default):
+    referer = request.META.get('HTTP_REFERER', default)
+    if not url_has_allowed_host_and_scheme(referer, allowed_hosts={request.get_host()}):
+        referer = default
+    return HttpResponseRedirect(referer)
