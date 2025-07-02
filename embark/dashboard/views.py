@@ -27,6 +27,8 @@ from dashboard.forms import LabelSelectForm, StopAnalysisForm
 from porter.views import make_zip
 from users.decorators import require_api_key
 
+from settings.helper import workers_enabled
+
 
 logger = logging.getLogger(__name__)
 req_logger = logging.getLogger("requests")
@@ -58,24 +60,26 @@ def stop_analysis(request):
     if form.is_valid():
         logger.debug("Posted Form is valid")
         # get id
-        analysis = form.cleaned_data['analysis']
-        analysis_object_ = FirmwareAnalysis.objects.get(id=analysis.id)
-        # check if user auth
-        if not user_is_auth(request.user, analysis_object_.user):
+        analysis_form = form.cleaned_data['analysis']
+        analysis = FirmwareAnalysis.objects.get(id=analysis_form.id)
+
+        if not user_is_auth(request.user, analysis.user):
             return HttpResponseForbidden("You are not authorized!")
-        logger.info("Stopping analysis with id %s", analysis_object_.id)
-        pid = analysis_object_.pid
-        logger.debug("PID is %s", pid)
+
+        logger.info("Stopping analysis with id: %s", analysis.id)
         try:
-            BoundedExecutor.submit_kill(analysis.id)
-            os.killpg(os.getpgid(pid), signal.SIGTERM)  # kill proc group too
+            if not workers_enabled():
+                pid = analysis.pid
+                logger.debug("PID is %s", pid)
+                BoundedExecutor.submit_kill(analysis_form.id)
+                os.killpg(os.getpgid(pid), signal.SIGTERM)  # kill proc group too
             form = StopAnalysisForm()
             form.fields['analysis'].queryset = FirmwareAnalysis.objects.filter(user=request.user).filter(finished=False)
             return render(request, 'dashboard/serviceDashboard.html', {'username': request.user.username, 'form': form, 'success_message': True, 'message': "Stopped successfully"})
-        except builtins.Exception as error:
-            logger.error("Error %s", error)
-            analysis_object_.failed = True
-            analysis_object_.save(update_fields=["failed"])
+        except Exception as exc:
+            logger.error("Unexpected exception: %s", exc)
+            analysis.failed = True
+            analysis.save(update_fields=["failed"])
             return HttpResponseServerError("Failed to stop process, but set its status to failed. Please handle EMBA process manually: PID=" + str(pid))
     return HttpResponseBadRequest("invalid form")
 
