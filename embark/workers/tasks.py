@@ -2,7 +2,6 @@ import os
 import re
 import time
 import socket
-import shutil
 import subprocess
 from pathlib import Path
 
@@ -37,6 +36,8 @@ def create_periodic_tasks(**kwargs):
         name="Update Worker Information",
         task="workers.tasks.update_worker_info",
     )
+
+    fetch_running_analysis_logs.delay()
 
 
 def update_system_info(configuration: Configuration, worker: Worker):
@@ -118,6 +119,7 @@ def fetch_running_analysis_logs():
     3) downloads them
     4) extracts them to the logs location
     5) checks if the EMBA Docker container is still running
+    6) if not, soft resets the workers
     """
     orchestrator = get_orchestrator()
     while True:
@@ -127,7 +129,7 @@ def fetch_running_analysis_logs():
                 _fetch_analysis_logs(worker)
 
                 # Check if analysis was terminated
-                is_running = is_emba_container_running(worker)
+                is_running = _is_emba_container_running(worker)
                 analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
                 if analysis.status["finished"] or not is_running:
                     worker_soft_reset_task(worker.id)
@@ -137,16 +139,17 @@ def fetch_running_analysis_logs():
 
             except Exception as exception:
                 logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
-                logger.info("[Worker %s] Setting the worker as free...", worker.id)
+                logger.info("[Worker %s] Releasing the worker...", worker.id)
                 worker_soft_reset_task(worker.id)
                 orchestrator.release_worker(worker)
 
-        time.sleep(5)
+        time.sleep(5)  # Save on resources (especially with one analysis running)
 
 
 def _fetch_analysis_logs(worker) -> None:
     """
-    Zips the analysis log files on remote worker, fetches it, extracts it.
+    Zips the analysis log files on remote worker, downloads it, extracts it.
+    Also gets the emba_run.log file that's displayed in the UI
 
     :param worker: Worker object whose analysis_id logs to process.
     :raises CalledProcessError: If extracting the zipfile fails.
@@ -154,11 +157,6 @@ def _fetch_analysis_logs(worker) -> None:
     client = None
     sftp_client = None
     try:
-        print(worker.analysis_id)
-        local_zip_path = f"{settings.MEDIA_ROOT}/log_zip/{worker.analysis_id}.zip"
-        local_log_dir = f"{settings.EMBA_LOG_ROOT}/{worker.analysis_id}"
-
-        # SSH and zip the logs
         client = worker.ssh_connect()
 
         # To not error if the logs dir has been deleted
@@ -170,26 +168,27 @@ def _fetch_analysis_logs(worker) -> None:
         logger.info("[Worker %s] Zipping logs on remote...", worker.id)
         zip_cmd = (
             f'sudo bash -c "cd /root && '
-            f"7z u -t7z -y {remote_zip_path} /root/emba_logs/ -uq3; "
+            f"7z u -t7z -y {remote_zip_path} {settings.WORKER_EMBA_LOGS} -uq3; "
             f'chown {client.ssh_user}: {remote_zip_path}"'
         )
         exec_blocking_ssh(client, zip_cmd)
         logger.info("[Worker %s] Zipping logs on remote complete.", worker.id)
 
         # Ensure dirs exists locally
-        os.makedirs(f"{settings.MEDIA_ROOT}/log_zip/", exist_ok=True)
+        local_log_dir = f"{settings.EMBA_LOG_ROOT}/{worker.analysis_id}"
         os.makedirs(f"{local_log_dir}/emba_logs/", exist_ok=True)
+        os.makedirs(f"{settings.MEDIA_ROOT}/log_zip/", exist_ok=True)
 
         # Fetch zip file
+        local_zip_path = f"{settings.MEDIA_ROOT}/log_zip/{worker.analysis_id}.zip"
         sftp_client = client.open_sftp()
         sftp_client.get(f"{homedir}/emba_logs.zip", local_zip_path)
         logger.info("[Worker %s] Downloaded the log zip.", worker.id)
 
         # Ensure emba_run.log can be accessed by the user
         if client.ssh_user != "root":
-            # f'cp /root/emba_run.log {homedir}/; '
-            cp_cmd = f'sudo bash -c "chown {client.ssh_user}: {homedir}/emba_run.log"'
-            exec_blocking_ssh(client, cp_cmd)
+            chown_cmd = f'sudo bash -c "chown {client.ssh_user}: {homedir}/emba_run.log"'
+            exec_blocking_ssh(client, chown_cmd)
 
         sftp_client.get(f"{homedir}/emba_run.log", f"{local_log_dir}/emba_run.log")
         sftp_client.close()
@@ -197,9 +196,8 @@ def _fetch_analysis_logs(worker) -> None:
 
         logger.info("[Worker %s] Downloaded emba_run.log.", worker.id)
 
-        # Unzip logs
-        cmd = ["7z", "x", "-y", local_zip_path, f"-o{local_log_dir}/"]
-        subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)  # nosec
+        unzip_cmd = ["7z", "x", "-y", local_zip_path, f"-o{local_log_dir}/"]
+        subprocess.run(unzip_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)  # nosec
 
         logger.info("[Worker %s] Unzipped the log zip to: %s/emba_logs/", worker.id, local_log_dir)
 
@@ -208,7 +206,7 @@ def _fetch_analysis_logs(worker) -> None:
             client.close()
 
 
-def is_emba_container_running(worker) -> bool:
+def _is_emba_container_running(worker) -> bool:
     """
     Checks if a Docker container is running on the worker.
 
@@ -216,20 +214,20 @@ def is_emba_container_running(worker) -> bool:
     :return: True, if a Docker container is still running,
              False, otherwise
     """
+    client = None
     try:
         client = worker.ssh_connect()
 
-        cmd_running = "sudo docker ps -q"
-        running_containers = exec_blocking_ssh(client, cmd_running)
-        if not running_containers:
-            # TODO: Test this more
-            cmd_all = "sudo docker ps -qa"
-            all_containers = exec_blocking_ssh(client, cmd_all)
-            if not all_containers:
+        cmd = "sudo docker ps -qa"
+        containers = exec_blocking_ssh(client, cmd)
+        if not containers:
+            # The container initially needs time to start up
+            time.sleep(5)
+            containers_recheck = exec_blocking_ssh(client, cmd)
+            if not containers_recheck:
                 logger.info("[Worker %s] EMBA Docker container is no longer running.", worker.id)
                 return False
 
-        logger.debug("[Worker %s] EMBA Docker container is still running: %s", worker.id, running_containers)
         return True
 
     except Exception as exception:
@@ -411,13 +409,16 @@ def worker_soft_reset_task(worker_id, configuration_id=None):
     ssh_client = None
     try:
         ssh_client = worker.ssh_connect(configuration_id)
+        homedir = "/root" if ssh_client.ssh_user == "root" else f"/home/{ssh_client.ssh_user}"
         exec_blocking_ssh(ssh_client, "sudo docker ps -aq | xargs -r sudo docker stop | xargs -r sudo docker rm || true")
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
+        exec_blocking_ssh(ssh_client, f"sudo rm -rf {homedir}/emba_logs.zip*")  # Also delete possible leftover tmp files
+        exec_blocking_ssh(ssh_client, f"sudo rm -rf {homedir}/emba_run.log")
         ssh_client.close()
     except (paramiko.SSHException, socket.error):
-        logger.error("SSH Connection didnt work for: %s", worker.name)
-        if ssh_client:
+        logger.error("[Worker %s] SSH Connection failed while soft resetting.", worker.id)
+        if ssh_client is not None:
             ssh_client.close()
 
 
