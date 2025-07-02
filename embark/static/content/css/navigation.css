@@ -1,13 +1,18 @@
 /* navigation menu */
 #navigation {
     position: fixed;
-    overflow: hidden;
+    overflow: visible;
     width: 80px;
     height: 100%;
     background: #29043f;
     top: 0;
     left: 0;
     padding: 6px;
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
 }
 
 #navigation.active {
@@ -32,10 +37,6 @@
 #navigation.active .logo-content .logo {
     opacity: 1;
     pointer-events: none;
-}
-
-#navigation ul {
-    padding-left: 0;
 }
 
 .logo-content .logo img {
@@ -75,10 +76,11 @@
 
 #navigation ul li {
     line-height: 40px;
-    font-size: 20px;
+    font-size: 1em;
+    height: fit-content;
     flex-wrap: wrap;
     justify-content: space-between;
-    margin: 65px 0 0 0;
+    margin: 4em 0 0 0;
 }
 
 #navigation ul li a {

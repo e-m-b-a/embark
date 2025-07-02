@@ -321,7 +321,7 @@ install_embark_default(){
   fi
 
   #debs
-  apt-get install -y -q default-libmysqlclient-dev build-essential mysql-client-core-8.0 apache2
+  apt-get install -y -q default-libmysqlclient-dev build-essential mysql-client-core-8.0
 
   #Add user for server
   if ! cut -d: -f1 /etc/passwd | grep -E www-embark ; then
@@ -360,6 +360,9 @@ install_embark_default(){
   if ! [[ -d /var/www/conf ]]; then
     mkdir /var/www/conf
   fi
+
+  # apache stuff
+
 
   # daemon
   install_daemon
