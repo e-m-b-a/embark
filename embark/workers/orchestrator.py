@@ -27,7 +27,7 @@ class OrchestratorTask:
             "firmware_analysis_id": str(task.firmware_analysis_id),
             "emba_cmd": task.emba_cmd,
             "src_path": task.src_path,
-            "target_path": task.target_path,
+            "target_path": task.target_path
         }
 
     @classmethod
@@ -36,7 +36,7 @@ class OrchestratorTask:
             firmware_analysis_id=UUID(data.get("firmware_analysis_id")),
             emba_cmd=data.get("emba_cmd"),
             src_path=data.get("src_path"),
-            target_path=data.get("target_path"),
+            target_path=data.get("target_path")
         )
 
 
@@ -141,9 +141,7 @@ class Orchestrator:
             worker.analysis_id = task.firmware_analysis_id
             worker.save()
 
-            start_analysis.delay(
-                worker.id, task.emba_cmd, task.src_path, task.target_path
-            )
+            start_analysis.delay(worker.id, task.emba_cmd, task.src_path, task.target_path)
 
             self.busy_workers[worker.ip_address] = worker
             del self.free_workers[worker.ip_address]
@@ -197,10 +195,7 @@ class Orchestrator:
         :param worker: The worker to be added
         :raises ValueError: If the worker already exists in the orchestrator
         """
-        if (
-            worker.ip_address in self.free_workers
-            or worker.ip_address in self.busy_workers
-        ):
+        if worker.ip_address in self.free_workers or worker.ip_address in self.busy_workers:
             raise ValueError(f"Worker with IP {worker.ip_address} already exists.")
         self.free_workers[worker.ip_address] = worker
 
@@ -257,21 +252,9 @@ class Orchestrator:
         Get the latest orchestrator state (free_workers, busy_workers, tasks) from the database and update the internal state.
         """
         orchestrator_state = self._get_orchestrator_state()
-        self.free_workers = {
-            worker.ip_address: worker
-            for worker in orchestrator_state.free_workers.all()
-        }
-        self.busy_workers = {
-            worker.ip_address: worker
-            for worker in orchestrator_state.busy_workers.all()
-        }
-        self.tasks = (
-            deque(
-                [OrchestratorTask.from_dict(task) for task in orchestrator_state.tasks]
-            )
-            if orchestrator_state.tasks
-            else deque()
-        )
+        self.free_workers = {worker.ip_address: worker for worker in orchestrator_state.free_workers.all()}
+        self.busy_workers = {worker.ip_address: worker for worker in orchestrator_state.busy_workers.all()}
+        self.tasks = deque([OrchestratorTask.from_dict(task) for task in orchestrator_state.tasks]) if orchestrator_state.tasks else deque()
 
     def _update_orchestrator_state(self):
         """
@@ -280,9 +263,7 @@ class Orchestrator:
         orchestrator_state = self._get_orchestrator_state()
         orchestrator_state.free_workers.set(list(self.free_workers.values()))
         orchestrator_state.busy_workers.set(list(self.busy_workers.values()))
-        orchestrator_state.tasks = [
-            OrchestratorTask.to_dict(task) for task in self.tasks
-        ]
+        orchestrator_state.tasks = [OrchestratorTask.to_dict(task) for task in self.tasks]
         orchestrator_state.save()
 
 
