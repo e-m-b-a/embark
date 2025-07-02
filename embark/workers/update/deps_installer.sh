@@ -4,8 +4,8 @@ set -e
 cd "$(dirname "$0")"
 
 if [[ ${EUID} -ne 0 ]]; then
-  echo "This script has to be run as root"
-  exit 1
+    echo "This script has to be run as root"
+    exit 1
 fi
 
 FILEPATH="."

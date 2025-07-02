@@ -19,8 +19,6 @@ from workers.models import Worker, Configuration, WorkerDependencyVersion, Depen
 from workers.update.update import init_sudoers_file, queue_update
 from workers.tasks import update_system_info, fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file
 
-logger = logging.getLogger(__name__)
-
 
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -61,8 +59,8 @@ def worker_main(request):
     })
 
 
-@login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
 def delete_config(request):
     """
@@ -188,15 +186,13 @@ def update_worker_dependency(request, worker_id):
     try:
         worker = Worker.objects.get(id=worker_id)
 
-        if not _trigger_worker_update(worker, dependency):
-            messages.error(request, 'Worker update already queued')
-        else:
-            messages.success(request, 'Update queued')
-
+        _trigger_worker_update(worker, dependency):
     except Worker.DoesNotExist:
         messages.error(request, 'Worker does not exist')
-    except Exception as exception:
+        return safe_redirect(request, '/worker/')
+    except ValueError as exception:
         messages.error(request, str(exception))
+        return safe_redirect(request, '/worker/')
 
     return safe_redirect(request, '/worker/')
 

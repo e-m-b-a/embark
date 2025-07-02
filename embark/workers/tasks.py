@@ -79,7 +79,7 @@ def update_system_info(configuration: Configuration, worker: Worker):
         'os_info': os_info,
         'cpu_info': cpu_info,
         'ram_info': ram_info,
-        'disk_info': disk_info,
+        'disk_info': disk_info
     }
     worker.system_info = system_info
     worker.save()
@@ -97,9 +97,7 @@ def update_worker_info():
         config = worker.configurations.first()
         try:
             logger.info("Updating worker %s", worker.name)
-
             update_system_info(config, worker)
-
             worker.reachable = True
         except paramiko.SSHException:
             logger.info("Worker %s is unreachable, setting status to offline.", worker.name)
