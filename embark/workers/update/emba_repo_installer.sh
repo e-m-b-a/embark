@@ -14,7 +14,7 @@ EXTERNALPATH="${INSTALLPATH}/emba/external"
 EMBAMASTER="${INSTALLPATH}/emba-master"
 
 rm -rf "${EMBAMASTER}"
-tar -xvzf "${FILEPATH}/emba.tar.gz" -C "${INSTALLPATH}"
+mkdir "${EMBAMASTER}" && tar -xvzf "${FILEPATH}/emba.tar.gz" -C "${EMBAMASTER}" --strip-components 1
 
 if [ -d "${EXTERNALPATH}" ]; then
   cp -r "${EXTERNALPATH}" "${EMBAMASTER}"
@@ -24,3 +24,4 @@ rm -rf "${INSTALLPATH}/emba"
 
 mv "${EMBAMASTER}" "${INSTALLPATH}/emba"
 cp "${FILEPATH}/full_uninstaller.sh" "${INSTALLPATH}/emba"
+cp "${FILEPATH}/git-head-meta" "${INSTALLPATH}/emba"

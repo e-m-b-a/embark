@@ -2,7 +2,6 @@
 
 ## UNRELEASED
 
-
 ### FIXED
 
 ### ADDED
@@ -11,11 +10,17 @@
 
 ## [sprint-11](https://github.com/amosproj/amos2025ss01-embark/releases/tag/sprint-11-release) - 2025-07-02
 
+### FIXED
+
+- Missing sudo at worker soft reset ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=112364355&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C43))
+>>>>>>> main
+
 ### ADDED
 
 - Safe and prioritized worker update management ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114650622&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C70))
-- Add distributed lock to orchestrator to ensure synchronization across multiple instances ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=116668070&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C89))
+- Distributed lock to orchestrator to ensure synchronization across multiple instances ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=116668070&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C89))
 - Show workers app only when enabled ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=113440769&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C52))
+- Download specific worker nodes dependency version ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=116857375&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C90))
 
 ### FIXED
 
