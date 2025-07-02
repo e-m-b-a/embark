@@ -1,8 +1,8 @@
 import ipaddress
 import socket
 import re
-import logging
 from concurrent.futures import ThreadPoolExecutor
+
 import paramiko
 
 from django.shortcuts import render
@@ -186,7 +186,7 @@ def update_worker_dependency(request, worker_id):
     try:
         worker = Worker.objects.get(id=worker_id)
 
-        _trigger_worker_update(worker, dependency):
+        _trigger_worker_update(worker, dependency)
     except Worker.DoesNotExist:
         messages.error(request, 'Worker does not exist')
         return safe_redirect(request, '/worker/')
@@ -194,6 +194,7 @@ def update_worker_dependency(request, worker_id):
         messages.error(request, str(exception))
         return safe_redirect(request, '/worker/')
 
+    messages.success(request, 'Update queued')
     return safe_redirect(request, '/worker/')
 
 
