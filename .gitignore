@@ -13,6 +13,7 @@ www/
 .venv/
 safe/
 .embark_db_backup
+.last_checked
 
 # temp dirs/files
 .tmp/
@@ -27,8 +28,9 @@ safe/
 *.service
 *.sql
 
+media/**/*
+active
+
 # migrations
 **/migrations/*.py
 !**/migrations/__init__.py
-
-media/**/*
