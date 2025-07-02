@@ -15,8 +15,8 @@ from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
 
-from workers.models import Worker, Configuration, WorkerDependencyVersion, DependencyVersion, WorkerUpdate
-from workers.update.update import init_sudoers_file, queue_update
+from workers.models import Worker, Configuration, WorkerDependencyVersion, DependencyVersion, DependencyType
+from workers.update.update import init_sudoers_file, queue_update, update_dependencies_info
 from workers.tasks import update_system_info, fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file
 
 
@@ -137,10 +137,10 @@ def configure_worker(request, configuration_id):
     workers = Worker.objects.filter(configurations__id=configuration_id, status__in=[Worker.ConfigStatus.UNCONFIGURED, Worker.ConfigStatus.ERROR])
 
     for worker in workers:
-        queue_update(worker, WorkerUpdate.DependencyType.DEPS)
-        queue_update(worker, WorkerUpdate.DependencyType.REPO)
-        queue_update(worker, WorkerUpdate.DependencyType.EXTERNAL)
-        queue_update(worker, WorkerUpdate.DependencyType.DOCKERIMAGE)
+        queue_update(worker, DependencyType.DEPS)
+        queue_update(worker, DependencyType.REPO)
+        queue_update(worker, DependencyType.EXTERNAL)
+        queue_update(worker, DependencyType.DOCKERIMAGE)
 
     return safe_redirect(request, '/worker/')
 
@@ -159,13 +159,13 @@ def _trigger_worker_update(worker, dependency: str):
             docker_res = _trigger_worker_update(worker, "docker")
             return repo_res and docker_res
         case "repo":
-            parsed_dependency = WorkerUpdate.DependencyType.REPO
+            parsed_dependency = DependencyType.REPO
         case "docker":
-            parsed_dependency = WorkerUpdate.DependencyType.DOCKERIMAGE
+            parsed_dependency = DependencyType.DOCKERIMAGE
         case "external":
-            parsed_dependency = WorkerUpdate.DependencyType.EXTERNAL
+            parsed_dependency = DependencyType.EXTERNAL
         case "deps":
-            parsed_dependency = WorkerUpdate.DependencyType.DEPS
+            parsed_dependency = DependencyType.DEPS
         case _:
             raise ValueError("Invalid dependency: Dependency could not be parsed.")
 
@@ -252,6 +252,7 @@ def config_worker_scan(request, configuration_id):
             try:
                 init_sudoers_file(configuration, existing_worker)
                 update_system_info(configuration, existing_worker)
+                update_dependencies_info(existing_worker)
             except BaseException:
                 pass
         except Worker.DoesNotExist:
@@ -270,6 +271,7 @@ def config_worker_scan(request, configuration_id):
             try:
                 init_sudoers_file(configuration, new_worker)
                 update_system_info(configuration, new_worker)
+                update_dependencies_info(new_worker)
             except BaseException:
                 pass
 

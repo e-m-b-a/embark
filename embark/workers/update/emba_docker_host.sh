@@ -10,14 +10,13 @@ fi
 
 FILEPATH="$1"
 ZIPPATH="$2"
-DONEPATH="$3"
+VERSION="$3"
 IS_UBUNTU=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
 [[ ${IS_UBUNTU} == "Ubuntu" ]] && IS_UBUNTU=true || IS_UBUNTU=false
 
 ### Reset
 rm -rf "${FILEPATH}"
 rm -f "${ZIPPATH}"
-rm -rf "${DONEPATH}"
 mkdir -p "${FILEPATH}"
 
 ### Copy scripts
@@ -54,9 +53,13 @@ if ! which docker &> /dev/null; then
 fi
 systemctl is-active --quiet docker || systemctl start docker
 
-### Find image
-EMBAVERSION=$(curl -sL https://raw.githubusercontent.com/e-m-b-a/emba/refs/heads/master/docker-compose.yml \
-  | awk -F: '/image:/ {print $NF; exit}')
+if [ "${VERSION}" = "latest" ]; then
+  ### Find image
+  EMBAVERSION=$(curl -sL https://raw.githubusercontent.com/e-m-b-a/emba/refs/heads/master/docker-compose.yml \
+    | awk -F: '/image:/ {print $NF; exit}')
+else
+  EMBAVERSION="${VERSION}"
+fi
 
 ### Export EMBA image
 docker pull "embeddedanalyzer/emba:${EMBAVERSION}"
@@ -65,4 +68,3 @@ chmod 755 "${FILEPATH}/emba-docker-image.tar"
 docker image rm "embeddedanalyzer/emba:${EMBAVERSION}"
 
 tar czf "${ZIPPATH}" -C "${FILEPATH}" .
-touch "${DONEPATH}"

@@ -10,12 +10,11 @@ fi
 
 FILEPATH="$1"
 ZIPPATH="$2"
-DONEPATH="$3"
+VERSION="$3"
 
 ### Reset
 rm -rf "${FILEPATH}"
 rm -f "${ZIPPATH}"
-rm -rf "${DONEPATH}"
 mkdir -p "${FILEPATH}"
 
 ### Copy scripts
@@ -29,7 +28,13 @@ if ! which curl &> /dev/null; then
 fi
 
 ### Download EMBA
-curl -L --url https://github.com/e-m-b-a/emba/archive/refs/heads/master.tar.gz --output "${FILEPATH}/emba.tar.gz"
+if [ "${VERSION}" = "latest" ]; then
+  curl -L --url https://github.com/e-m-b-a/emba/archive/refs/heads/master.tar.gz --output "${FILEPATH}/emba.tar.gz"
+  sha=$(git ls-remote https://github.com/e-m-b-a/emba HEAD | awk '{print $1}')
+  echo "${sha} N/A" > "${FILEPATH}/git-head-meta"
+else
+  curl -L --url "https://github.com/e-m-b-a/emba/archive/${VERSION}.tar.gz" --output "${FILEPATH}/emba.tar.gz"
+  echo "${VERSION} N/A" > "${FILEPATH}/git-head-meta"
+fi
 
 tar czf "${ZIPPATH}" -C "${FILEPATH}" .
-touch "${DONEPATH}"

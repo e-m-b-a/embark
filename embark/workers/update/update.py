@@ -8,7 +8,7 @@ from paramiko.client import SSHClient
 from django.conf import settings
 
 from workers.update.dependencies import use_dependency, release_dependency, get_dependency_path, eval_outdated_dependencies
-from workers.models import Worker, Configuration, WorkerUpdate
+from workers.models import Worker, Configuration, WorkerUpdate, DependencyVersion, DependencyType
 from workers.orchestrator import get_orchestrator
 
 logger = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ def exec_blocking_ssh(client: SSHClient, command: str):
     return stdout.read().decode().strip()
 
 
-def _copy_files(client: SSHClient, dependency: WorkerUpdate.DependencyType):
+def _copy_files(client: SSHClient, dependency: DependencyType):
     """
     Copy zipped dependency file to remote
 
@@ -57,11 +57,35 @@ def _copy_files(client: SSHClient, dependency: WorkerUpdate.DependencyType):
         exec_blocking_ssh(client, f"sudo mv {zip_path_user} {zip_path}")
 
 
-def queue_update(worker: Worker, dependency: WorkerUpdate.DependencyType):
+def _get_available_version(dependency: DependencyType) -> str:
+    """
+    Selects related dependency version of update check
+    :param dependency: The dependency to query
+    :returns: version string, or "latest" if undefined
+    """
+    version = DependencyVersion.objects.first()
+    if not version:
+        version = DependencyVersion()
+
+    match dependency:
+        case DependencyType.REPO:
+            return version.emba_head
+        case DependencyType.DOCKERIMAGE:
+            return version.emba
+        case DependencyType.DEPS:
+            return "cached" if bool(version.deb_list) else "latest"
+        case DependencyType.EXTERNAL:
+            return version.get_external_version()
+        case _:
+            raise ValueError("Invalid dependencyType")
+
+
+def queue_update(worker: Worker, dependency: DependencyType, version=None):
     """
     Adds dependency update to worker update queue
     :param worker: The worker to update
     :param dependency: The dependency to update
+    :param version: The desired version of the dependency
     """
     from workers.tasks import update_worker  # pylint: disable=import-outside-toplevel
 
@@ -69,7 +93,10 @@ def queue_update(worker: Worker, dependency: WorkerUpdate.DependencyType):
         logger.info("Update %s discarded for worker %s", dependency.name, worker.name)
         return
 
-    update = WorkerUpdate(worker=worker, dependency_type=dependency)
+    if version is None:
+        version = _get_available_version(dependency)
+
+    update = WorkerUpdate(worker=worker, dependency_type=dependency, version=version)
     update.save()
 
     logger.info("Update %s queued for worker %s", dependency.name, worker.name)
@@ -114,8 +141,6 @@ def process_update_queue(worker: Worker):
 
         worker.status = Worker.ConfigStatus.CONFIGURED
 
-        update_dependencies_info(worker)
-
         logger.info("Worker update finished on worker %s", worker.name)
     except Exception as ssh_error:
         logger.error("SSH connection failed: %s", ssh_error)
@@ -125,6 +150,25 @@ def process_update_queue(worker: Worker):
             client.close()
 
         worker.save()
+        update_dependencies_info(worker)
+
+
+def _is_version_installed(worker: Worker, worker_update: WorkerUpdate):
+    """
+    Checks if desired version is already installed
+    :param worker: The worker to update
+    :param worker_update: The worker update to apply
+    :returns: True if version is already installed
+    """
+    match worker_update.get_type():
+        case DependencyType.REPO:
+            return worker.dependency_version.emba_head == worker_update.version
+        case DependencyType.DOCKERIMAGE:
+            return worker.dependency_version.emba == worker_update.version
+        case DependencyType.DEPS:
+            return False
+        case DependencyType.EXTERNAL:
+            return not worker.dependency_version.is_external_outdated(worker_update.version)
 
 
 def perform_update(worker: Worker, client: SSHClient, worker_update: WorkerUpdate):
@@ -137,20 +181,23 @@ def perform_update(worker: Worker, client: SSHClient, worker_update: WorkerUpdat
     """
     dependency = worker_update.get_type()
 
+    if _is_version_installed(worker, worker_update):
+        logger.info("Skip update of %s on worker %s as already installed", worker_update.get_dependency().name, worker.name)
+        return
+
     folder_path = f"/root/{dependency.name}"
     zip_path = f"{folder_path}.tar.gz"
 
-    use_dependency(dependency, worker)
+    use_dependency(dependency, worker_update.version, worker)
+    _copy_files(client, dependency)
+    release_dependency(dependency, worker)
 
     try:
-        _copy_files(client, dependency)
-
+        exec_blocking_ssh(client, f"sudo rm -rf {folder_path}")
         exec_blocking_ssh(client, f"sudo mkdir {folder_path} && sudo tar xvzf {zip_path} -C {folder_path} >/dev/null 2>&1")
         exec_blocking_ssh(client, f"sudo bash -c '{folder_path}/installer.sh >{folder_path}/installer.log 2>&1'")
     except Exception as ssh_error:
         raise ssh_error
-    finally:
-        release_dependency(dependency, worker)
 
 
 def init_sudoers_file(configuration: Configuration, worker: Worker):
@@ -192,29 +239,30 @@ def update_dependencies_info(worker: Worker):
     try:
         ssh_client = worker.ssh_connect()
 
+        def _get_head_time(folder):
+            commit_regex = r"(latest|[0-9a-f]{40})\s(N\/A|.*\s\+[0-9]{4})"
+            path = os.path.join(settings.WORKER_EMBA_ROOT, folder, "git-head-meta")
+            meta_info = exec_blocking_ssh(ssh_client, f"sudo bash -c 'if test -f {path}; then cat {path}; fi'")
+
+            match = re.match(commit_regex, meta_info)
+            if match:
+                return match.group(1), match.group(2) if match.group(2) != "N/A" else None
+
+            return "N/A", None
+
         docker_compose_path = os.path.join(settings.WORKER_EMBA_ROOT, 'docker-compose.yml')
         emba_version_check = exec_blocking_ssh(ssh_client, f"sudo bash -c 'if test -f {docker_compose_path}; then echo success; fi'")
         worker.dependency_version.emba = exec_blocking_ssh(ssh_client, f"sudo cat {docker_compose_path} | awk -F: '/image:/ {{print $NF; exit}}'") if emba_version_check == 'success' else "N/A"
+        worker.dependency_version.emba_head, _ = _get_head_time("")
 
-        def _fetch_external(external_type):
-            commit_regex = r".*([0-9a-f]{40})\s(.*\s\+[0-9]{4})"
-            path = os.path.join(settings.WORKER_EMBA_ROOT, external_type)
-            perform_check = exec_blocking_ssh(ssh_client, f"sudo bash -c 'if test -d {path}; then echo success; fi'")
-            if perform_check == 'success':
-                result = exec_blocking_ssh(ssh_client, f"sudo bash -c 'cd {path} && git show --no-patch --format=\"%H %ai\" HEAD'")
-                match = re.match(commit_regex, result)
-                if match:
-                    return match.group(1), match.group(2)
-            return "N/A", None
-
-        worker.dependency_version.nvd_head, worker.dependency_version.nvd_time = _fetch_external("external/nvd-json-data-feeds")
-        worker.dependency_version.epss_head, worker.dependency_version.epss_time = _fetch_external("external/EPSS-data")
+        worker.dependency_version.nvd_head, worker.dependency_version.nvd_time = _get_head_time("external/nvd-json-data-feeds")
+        worker.dependency_version.epss_head, worker.dependency_version.epss_time = _get_head_time("external/EPSS-data")
 
         deb_check = exec_blocking_ssh(ssh_client, "sudo bash -c 'if test -d /root/DEPS/pkg; then echo 'success'; fi'")
         deb_list_str = exec_blocking_ssh(ssh_client, "sudo bash -c 'cd /root/DEPS/pkg && sha256sum *.deb'") if deb_check == 'success' else ""
         worker.dependency_version.deb_list = parse_deb_list(deb_list_str)
     except (paramiko.SSHException, socket.error) as ssh_error:
-        logger.info("SSH connection to worker %s failed: %s", worker.ip_address, ssh_error)
+        logger.error("SSH connection to worker %s failed: %s", worker.ip_address, ssh_error)
     finally:
         if ssh_client:
             ssh_client.close()

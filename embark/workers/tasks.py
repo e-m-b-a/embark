@@ -1,9 +1,9 @@
 import socket
 import re
 import os
-import shutil
 import subprocess
 import time
+from pathlib import Path
 
 import paramiko
 from celery import shared_task
@@ -12,8 +12,8 @@ from celery.utils.log import get_task_logger
 import requests
 from django.conf import settings
 
-from workers.models import Worker, Configuration, DependencyVersion, WorkerUpdate
-from workers.update.dependencies import eval_outdated_dependencies, get_script_name
+from workers.models import Worker, Configuration, DependencyVersion, DependencyType
+from workers.update.dependencies import eval_outdated_dependencies, get_script_name, update_dependency, setup_dependency
 from workers.update.update import exec_blocking_ssh, parse_deb_list, process_update_queue
 from workers.orchestrator import get_orchestrator
 from workers.codeql_ignore import new_autoadd_client
@@ -189,7 +189,19 @@ def fetch_dependency_updates():
         version = DependencyVersion()
 
     DOCKER_COMPOSE_URL = "https://raw.githubusercontent.com/e-m-b-a/emba/refs/heads/master/docker-compose.yml"  # pylint: disable=invalid-name
-    EXTERNAL_URL = "https://api.github.com/repos/EMBA-support-repos/{}/commits?per_page=1"  # pylint: disable=invalid-name
+    GH_API_URL = "https://api.github.com/repos/{}/commits?per_page=1"  # pylint: disable=invalid-name
+
+    def _get_head_time(repo):
+        try:
+            response = requests.get(GH_API_URL.format(repo), timeout=30)
+            json_response = response.json()
+
+            return json_response[0]["sha"], json_response[0]["commit"]["author"]["date"]
+        except requests.exceptions.Timeout as exception:
+            logger.error("Update check: Failed. An error occured on contacting GH API: %s", exception)
+        except (requests.exceptions.JSONDecodeError, KeyError):
+            logger.error("Update check: Failed. GH API returned invalid or incomplete json: %s", response.text)
+        return "latest", None
 
     # Fetch EMBA + docker image
     try:
@@ -198,47 +210,45 @@ def fetch_dependency_updates():
 
         if match is None:
             logger.error("Update check: Failed. EMBA docker-compose.yml does not contain image version")
-            version.emba = "ERROR fetching EMBA"
+            version.emba = "latest"
         else:
             version.emba = match.group(1)
+            version.emba_head, _ = _get_head_time("e-m-b-a/emba")
     except requests.exceptions.Timeout as exception:
         logger.error("Update check: Failed. An error occured on contacting GH API for docker-compose.yml: %s", exception)
+        version.emba = "latest"
 
     # Fetch external
-    def _get_head_time(repo):
-        try:
-            response = requests.get(EXTERNAL_URL.format(repo), timeout=30)
-            json_response = response.json()
-
-            return json_response[0]["sha"], json_response[0]["commit"]["author"]["date"]
-        except requests.exceptions.Timeout as exception:
-            logger.error("Update check: Failed. An error occured on contacting GH API: %s", exception)
-        except (requests.exceptions.JSONDecodeError, KeyError):
-            logger.error("Update check: Failed. GH API returned invalid or incomplete json: %s", response.text)
-        return "N/A", None
-
-    version.nvd_head, version.nvd_time = _get_head_time("nvd-json-data-feeds")
-    version.epss_head, version.epss_time = _get_head_time("EPSS-data")
+    version.nvd_head, version.nvd_time = _get_head_time("EMBA-support-repos/nvd-json-data-feeds")
+    version.epss_head, version.epss_time = _get_head_time("EMBA-support-repos/EPSS-data")
 
     # Fetch APT
+    Path(settings.WORKER_FILES_PATH).mkdir(parents=True, exist_ok=True)
+    Path(os.path.join(settings.WORKER_FILES_PATH, "logs")).mkdir(parents=True, exist_ok=True)
+
     log_file = settings.WORKER_SETUP_LOGS.format(timestamp=int(time.time()))
     logger.info("APT dependency update check started. Logs: %s", log_file)
     try:
-        script_path = os.path.join(os.path.dirname(__file__), "update", get_script_name(WorkerUpdate.DependencyType.DEPS))
-        cmd = f"sudo {script_path} '{settings.WORKER_UPDATE_CHECK}' '' ''"
+        script_path = os.path.join(os.path.dirname(__file__), "update", get_script_name(DependencyType.DEPS))
+        cmd = f"sudo {script_path} '{settings.WORKER_UPDATE_CHECK}' ''"
         with open(log_file, "w+", encoding="utf-8") as file:
             with subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=file, stderr=file, shell=True) as proc:  # nosec
                 proc.communicate()
 
-            logger.info("APT dependency update check successful. Logs: %s", log_file)
+            if proc.returncode == 0:
+                logger.info("APT dependency update check successful. Logs: %s", log_file)
+            else:
+                logger.error("APT dependency update check failed. Logs: %s", log_file)
 
         deb_list_str = subprocess.check_output(f"cd {os.path.join(settings.WORKER_UPDATE_CHECK, 'pkg')} && sha256sum *.deb", shell=True)  # nosec
         version.deb_list = parse_deb_list(deb_list_str.decode('utf-8'))
+
+        update_dependency(DependencyType.DEPS, False)
+        setup_dependency(DependencyType.DEPS, "cached")
+        update_dependency(DependencyType.DEPS, True)
     except BaseException as exception:
         logger.error("Error APT dependency update check: %s. Logs: %s", exception, log_file)
         version.deb_list = {}
-
-    shutil.rmtree(settings.WORKER_UPDATE_CHECK, ignore_errors=True)
 
     # Store in DB
     version.save()
