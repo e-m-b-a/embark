@@ -37,8 +37,6 @@ def create_periodic_tasks(**kwargs):
         task="workers.tasks.update_worker_info",
     )
 
-    fetch_running_analysis_logs.delay()
-
 
 def update_system_info(configuration: Configuration, worker: Worker):
     """
@@ -112,39 +110,82 @@ def update_worker_info():
 
 
 @shared_task
-def fetch_running_analysis_logs():
+def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
     """
-    1) Iterates through the busy workers forever
-    2) zips the analysis log files on the remote worker
-    3) downloads them
-    4) extracts them to the logs location
-    5) checks if the EMBA Docker container is still running
-    6) if not, soft resets the workers
+    Copies the firmware image and triggers analysis start
+    :param worker_id: the worker to use
+    :param emba_cmd: The command to run
+    :param src_path: img source path
+    :param target_path: target path on worker
+    """
+    try:
+        worker = Worker.objects.get(id=worker_id)
+    except Worker.DoesNotExist:
+        logger.error("start_analysis: Invalid worker id")
+        return
+
+    client = worker.ssh_connect()
+
+    exec_blocking_ssh(client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
+    exec_blocking_ssh(client, f"sudo mkdir -p {settings.WORKER_FIRMWARE_DIR}")
+
+    target_path_user = target_path if client.ssh_user == "root" else f"/home/{client.ssh_user}/temp"
+
+    sftp_client = client.open_sftp()
+    sftp_client.put(src_path, target_path_user)
+    sftp_client.close()
+
+    if client.ssh_user != "root":
+        exec_blocking_ssh(client, f"sudo mv {target_path_user} {target_path}")
+
+    exec_blocking_ssh(client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
+    exec_blocking_ssh(client, "sudo rm -rf /root/emba_run.log")
+    client.exec_command(f"sudo sh -c '{emba_cmd}' >./emba_run.log 2>&1")  # nosec
+    logger.info("Firmware analysis has been started on the worker.")
+
+    # Create file to supress errors
+    os.system(f"mkdir -p {settings.EMBA_LOG_ROOT}/{worker.analysis_id}/emba_logs/")  # nosec
+    os.system(f"touch {settings.EMBA_LOG_ROOT}/{worker.analysis_id}/emba_logs/emba.log")  # nosec
+
+    time.sleep(10)  # Give the Docker container time to start up
+    monitor_worker_and_fetch_logs.delay(worker.id)
+
+
+@shared_task
+def monitor_worker_and_fetch_logs(worker_id):
+    """
+    Loops until the analysis stops on the remote worker.
+    Zips the analysis logs on the remote worker, downloads and extracts them.
+    If the worker is finished, performs a soft reset.
+
+    :param worker_id: ID of worker to monitor and fetch logs for.
     """
     orchestrator = get_orchestrator()
+    worker = Worker.objects.get(id=worker_id)
     while True:
-        busy_workers = list(orchestrator.get_busy_workers().values())
-        for worker in busy_workers:
-            try:
-                _fetch_analysis_logs(worker)
+        try:
+            _fetch_analysis_logs(worker)
 
-                # Check if analysis was terminated
-                is_running = _is_emba_container_running(worker)
-                analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
-                if analysis.status["finished"] or not is_running:
-                    worker_soft_reset_task(worker.id)
-                    orchestrator.release_worker(worker)
+            analysis_finished = FirmwareAnalysis.objects.get(id=worker.analysis_id).status["finished"]
+            is_running = _is_emba_container_running(worker)
+            is_busy = worker in orchestrator.get_busy_workers().values()
+            if not is_running or analysis_finished or not is_busy:
 
-                    logger.info("[Worker %s] Analysis finished.", worker.id)
+                worker_soft_reset_task(worker.id)
+                orchestrator.release_worker(worker)
 
-            except Exception as exception:
-                logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
-                if worker in list(orchestrator.get_busy_workers().values()):
-                    logger.info("[Worker %s] Releasing the worker...", worker.id)
-                    worker_soft_reset_task(worker.id)
-                    orchestrator.release_worker(worker)
+                logger.info("[Worker %s] Analysis finished.", worker.id)
+                return
 
-        time.sleep(5)  # Save on resources (especially with one analysis running)
+        except Exception as exception:
+            logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
+            if worker in orchestrator.get_busy_workers().values():
+                logger.info("[Worker %s] Releasing the worker...", worker.id)
+                worker_soft_reset_task(worker.id)
+                orchestrator.release_worker(worker)
+                return
+
+        time.sleep(15)
 
 
 def _fetch_analysis_logs(worker) -> None:
@@ -222,12 +263,8 @@ def _is_emba_container_running(worker) -> bool:
         cmd = "sudo docker ps -qa"
         containers = exec_blocking_ssh(client, cmd)
         if not containers:
-            # The container initially needs time to start up
-            time.sleep(5)
-            containers_recheck = exec_blocking_ssh(client, cmd)
-            if not containers_recheck:
-                logger.info("[Worker %s] EMBA Docker container is no longer running.", worker.id)
-                return False
+            logger.info("[Worker %s] EMBA Docker container is no longer running.", worker.id)
+            return False
 
         return True
 
@@ -237,45 +274,6 @@ def _is_emba_container_running(worker) -> bool:
     finally:
         if client is not None:
             client.close()
-
-
-@shared_task
-def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
-    """
-    Copies the firmware image and triggers analysis start
-    :param worker_id: the worker to use
-    :param emba_cmd: The command to run
-    :param src_path: img source path
-    :param target_path: target path on worker
-    """
-    try:
-        worker = Worker.objects.get(id=worker_id)
-    except Worker.DoesNotExist:
-        logger.error("start_analysis: Invalid worker id")
-        return
-
-    client = worker.ssh_connect()
-
-    exec_blocking_ssh(client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
-    exec_blocking_ssh(client, f"sudo mkdir -p {settings.WORKER_FIRMWARE_DIR}")
-
-    target_path_user = target_path if client.ssh_user == "root" else f"/home/{client.ssh_user}/temp"
-
-    sftp_client = client.open_sftp()
-    sftp_client.put(src_path, target_path_user)
-    sftp_client.close()
-
-    if client.ssh_user != "root":
-        exec_blocking_ssh(client, f"sudo mv {target_path_user} {target_path}")
-
-    exec_blocking_ssh(client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
-    exec_blocking_ssh(client, "sudo rm -rf /root/emba_run.log")
-    client.exec_command(f"sudo sh -c '{emba_cmd}' >./emba_run.log 2>&1")  # nosec
-    logger.info("Firmware analysis has been started on the worker.")
-
-    # Create file to supress errors
-    os.system(f"mkdir -p {settings.EMBA_LOG_ROOT}/{worker.analysis_id}/emba_logs/")  # nosec
-    os.system(f"touch {settings.EMBA_LOG_ROOT}/{worker.analysis_id}/emba_logs/emba.log")  # nosec
 
 
 @shared_task
