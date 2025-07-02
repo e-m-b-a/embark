@@ -65,7 +65,7 @@ def _is_desired_version_outdated(dependency: DependencyType, desired_version: st
         case DependencyType.DEPS:
             raise ValueError("Deps are never outdated")
         case DependencyType.EXTERNAL:
-            return version.is_external_outdated(desired_version)
+            return version.external_already_installed(desired_version)
         case DependencyType.DOCKERIMAGE:
             return desired_version in version.emba_history
 
@@ -183,15 +183,6 @@ class DependencyLock:
                     self._set_db_data(availability=DependencyState.AvailabilityType.AVAILABLE if available else DependencyState.AvailabilityType.IN_PROGRESS)
                     break
 
-    def uses_dependency(self, worker: Worker):
-        """
-        Checks if dependency is in use by provided worker
-        :params worker: worker to be checked
-        :returns: true if dependency is in use
-        """
-        used_by, _ = self._get_db_data()
-        return worker.ip_address in used_by
-
 
 locks_dict: dict[DependencyType, DependencyLock] = {
     DependencyType.DEPS: DependencyLock(DependencyType.DEPS),
@@ -219,16 +210,6 @@ def release_dependency(dependency: DependencyType, worker: Worker, force=False):
     :params force: force release (no error if unused)
     """
     locks_dict[dependency].release_dependency(worker, force)
-
-
-def uses_dependency(dependency: DependencyType, worker: Worker):
-    """
-    Checks if dependency is in use by provided worker
-    :params dependency: the dependency to check
-    :params worker: worker to be checked
-    :returns: true if dependency is in use
-    """
-    return locks_dict[dependency].uses_dependency(worker)
 
 
 def update_dependency(dependency: DependencyType, available: bool):

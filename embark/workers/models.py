@@ -185,7 +185,7 @@ class CachedDependencyVersion(models.Model):
 
         self.epss_head_history = history
 
-    def is_external_outdated(self, version: str):
+    def external_already_installed(self, version: str):
         """
         Checks if external version was already installed
         :param version: the version string containing nvd and epss version
