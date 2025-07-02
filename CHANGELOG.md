@@ -2,15 +2,24 @@
 
 ## UNRELEASED
 
+
 ### FIXED
 
-- Fix missing sudo at worker soft reset ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=112364355&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C43))
+### ADDED
+
+- Worker health check and fetch analysis logs ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=112364687&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C46))
+
+## [sprint-11](https://github.com/amosproj/amos2025ss01-embark/releases/tag/sprint-11-release) - 2025-07-02
 
 ### ADDED
 
 - Safe and prioritized worker update management ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114650622&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C70))
 - Add distributed lock to orchestrator to ensure synchronization across multiple instances ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=116668070&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C89))
 - Show workers app only when enabled ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=113440769&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C52))
+
+### FIXED
+
+- Fix missing sudo at worker soft reset ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=112364355&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C43))
 
 ## [sprint-10](https://github.com/amosproj/amos2025ss01-embark/releases/tag/sprint-10-release) - 2025-06-25
 
@@ -23,7 +32,6 @@
 
 ### ADDED
 
-- Worker health check and fetch analysis logs ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=112364687&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C46))
 - Collect dependency version info for workers ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114773112&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C73))
 - Settings App to EMBArk ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114643627&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C66))
 - Settings helper `workers_enabled` check
