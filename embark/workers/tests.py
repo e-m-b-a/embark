@@ -18,9 +18,9 @@ class TestOrchestrator(TestCase):
         user.set_password('12345')
         user.api_key = secrets.token_urlsafe(32)
         user.save()
-        test_config = Configuration.objects.create(user=user, name="test_config", ssh_user="test_user", ssh_password="test_password", ip_range="192.111.111.1/24")  # nosec
-        self.test_worker1 = Worker.objects.create(name="test_worker1", ip_address="192.111.111.1", system_info={}, reachable=True)  # pylint: disable=W0201
-        self.test_worker2 = Worker.objects.create(name="test_worker2", ip_address="192.111.111.2", system_info={}, reachable=True)  # pylint: disable=W0201
+        test_config = Configuration.objects.create(user=user, name='test_config', ssh_user='test_user', ssh_password='test_password', ip_range='192.111.111.1/24')  # nosec
+        self.test_worker1 = Worker.objects.create(name='test_worker1', ip_address='192.111.111.1', system_info={}, reachable=True)  # pylint: disable=W0201
+        self.test_worker2 = Worker.objects.create(name='test_worker2', ip_address='192.111.111.2', system_info={}, reachable=True)  # pylint: disable=W0201
         self.test_worker1.configurations.add(test_config)  # pylint: disable=W0201
         self.test_worker2.configurations.add(test_config)  # pylint: disable=W0201
         self.orchestrator = Orchestrator()  # pylint: disable=W0201
@@ -96,6 +96,7 @@ class TestOrchestrator(TestCase):
         task1 = OrchestratorTask(FirmwareAnalysis.objects.create().id, None, None, None)
         task2 = OrchestratorTask(FirmwareAnalysis.objects.create().id, None, None, None)
         task3 = OrchestratorTask(FirmwareAnalysis.objects.create().id, None, None, None)
+
         orchestrator.assign_task(task1)
         orchestrator.assign_task(task2)
         orchestrator.assign_task(task3)
