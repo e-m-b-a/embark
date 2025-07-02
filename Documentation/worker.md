@@ -8,6 +8,7 @@ The dependencies are:
 - Docker compose package
 - `inotify-tools` package
 - `libnotify-bin` package
+- `p7zip-full` package
 - Exported EMBA docker image (`embeddedanalyzer/emba`)
 - External data (NVD Json data feeds, EPSS data)
 
