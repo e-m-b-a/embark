@@ -4,8 +4,8 @@ set -e
 cd "$(dirname "$0")"
 
 if [[ ${EUID} -ne 0 ]]; then
-	echo "This script has to be run as root"
-	exit 1
+  echo "This script has to be run as root"
+  exit 1
 fi
 
 FILEPATH="."
@@ -35,7 +35,7 @@ apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin do
 
 apt-get install -y inotify-tools
 apt-get install -y libnotify-bin
-apt-get install -y p7zip 
+apt-get install -y p7zip-full
 
 systemctl enable docker
 systemctl start docker
