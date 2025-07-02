@@ -139,9 +139,10 @@ def fetch_running_analysis_logs():
 
             except Exception as exception:
                 logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
-                logger.info("[Worker %s] Releasing the worker...", worker.id)
-                worker_soft_reset_task(worker.id)
-                orchestrator.release_worker(worker)
+                if worker in list(orchestrator.get_busy_workers().values()):
+                    logger.info("[Worker %s] Releasing the worker...", worker.id)
+                    worker_soft_reset_task(worker.id)
+                    orchestrator.release_worker(worker)
 
         time.sleep(5)  # Save on resources (especially with one analysis running)
 

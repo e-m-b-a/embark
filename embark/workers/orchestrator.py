@@ -141,7 +141,7 @@ class Orchestrator:
             worker.analysis_id = task.firmware_analysis_id
             worker.save()
 
-            start_analysis.delay(worker.id, task.emba_cmd, task.src_path, task.target_path)
+            start_analysis(worker.id, task.emba_cmd, task.src_path, task.target_path)
 
             self.busy_workers[worker.ip_address] = worker
             del self.free_workers[worker.ip_address]
