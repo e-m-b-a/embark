@@ -9,6 +9,7 @@ on:
   pull_request:
     branches:
       - '**'
+
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -17,43 +18,61 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Branch
-      uses: actions/checkout@v4
-    - name: Install dependencies for linting
-      run: |
-        sudo apt-get update -y
-        sudo apt-get install -y python3-dev npm pycodestyle bandit pylint
-        sudo npm install -g jshint
-        sudo npm install -g @stoplight/spectral-cli
-    - name: Install Python, pipenv and Pipfile packages
-      uses: palewire/install-python-pipenv-pipfile@v4
-      with:
-        python-version: '3.10'
-    - name: Make dirs
-      run: |
-        mkdir ./embark/logs
-        touch ./embark/logs/web.log
-        mkdir ./embark/uploadFirmwareImages
-    - name: Run checkproject
-      run: |
-        pipenv install --dev
-        ./dev-tools/check_project.sh
-      env:
-        PIPENV_VENV_IN_PROJECT: "True"
-        DJANGO_SECRET_KEY: $(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
-        DATABASE_NAME: "embark"
-        DATABASE_USER: "embark"
-        DATABASE_PASSWORD: "embark"
-        DATABASE_HOST: "127.0.0.1"
-        DATABASE_PORT: "3306"
-        MYSQL_PASSWORD: "embark"
-        MYSQL_USER: "embark"
-        MYSQL_DATABASE: "embark"
-        REDIS_HOST: "127.0.0.1"
-        REDIS_PORT: "7777"
-        SECRET_KEY: "$DJANGO_SECRET_KEY"
-        HASHID_SALT: "EMBArk1234§$S@lt"
-        DJANGO_SUPERUSER_PASSWORD:  "embark"
-        DJANGO_SUPERUSER_USERNAME:  "superuser"
-        DJANGO_SUPERUSER_EMAIL:  "idk@lol.com"
+      - name: Checkout Branch
+        uses: actions/checkout@v4
+
+      - name: Install dependencies for linting
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y python3-dev npm pycodestyle bandit pylint yamllint shellcheck
+          sudo npm install -g jshint
+          sudo npm install -g @stoplight/spectral-cli
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+
+      - name: Set env for .venv in project
+        run: echo "PIPENV_VENV_IN_PROJECT=1" >> $GITHUB_ENV
+
+      - name: Install Pipenv
+        run: pip install --upgrade pipenv
+
+      - name: Restore Pipenv cache
+        id: pipenv-cache
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: pipenv-${{ hashFiles('Pipfile.lock') }}
+
+      # Note: This has to be executed with retries, as network errors might occur (e.g. the github runner being rate limited)
+      - name: Install cacheable dependencies
+        if: steps.pipenv-cache.outputs.cache-hit != 'true'
+        uses: Wandalen/wretry.action@master
+        with:
+          command: pipenv install --deploy --ignore-pipfile --dev
+          attempt_limit: 3
+
+      - name: Run check_project.sh
+        run: |
+          ./dev-tools/check_project.sh
+        env:
+          PIPENV_VENV_IN_PROJECT: "True"
+          DJANGO_SECRET_KEY: $(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+          DATABASE_NAME: "embark"
+          DATABASE_USER: "embark"
+          DATABASE_PASSWORD: "embark"
+          DATABASE_HOST: "127.0.0.1"
+          DATABASE_PORT: "3306"
+          MYSQL_PASSWORD: "embark"
+          MYSQL_USER: "embark"
+          MYSQL_DATABASE: "embark"
+          REDIS_HOST: "127.0.0.1"
+          REDIS_PORT: "7777"
+          SECRET_KEY: "$DJANGO_SECRET_KEY"
+          HASHID_SALT: "EMBArk1234§$S@lt"
+          DJANGO_SUPERUSER_PASSWORD:  "embark"
+          DJANGO_SUPERUSER_USERNAME:  "superuser"
+          DJANGO_SUPERUSER_EMAIL:  "idk@lol.com"
 
