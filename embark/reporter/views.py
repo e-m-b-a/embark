@@ -62,10 +62,9 @@ def html_report(request, analysis_id, html_file):
     if FirmwareAnalysis.objects.filter(id=analysis_id).exists() and bool(re.match(html_file_pattern, html_file)):
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         if user_is_auth(request.user, analysis.user):
-            if (analysis.hidden and analysis.user == request.user) or request.user.is_superuser:
-                html_body = get_template(report_path)
-                logger.debug("html_report - analysis_id: %s html_file: %s", analysis_id, html_file)
-                return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
+            html_body = get_template(report_path)
+            logger.debug("html_report - analysis_id: %s html_file: %s", analysis_id, html_file)
+            return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
         messages.error(request, "User not authorized")
     logger.error("could  not get template - %s", request)
     return redirect("..")
