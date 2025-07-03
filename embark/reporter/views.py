@@ -83,7 +83,7 @@ def html_report_path(request, analysis_id, html_path, file):
     file_pattern = re.compile(r'^[\w\.-]+\.(tar.gz|html)$')
     if FirmwareAnalysis.objects.filter(id=analysis_id).exists() and bool(re.match(file_pattern, file)):
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
-        if analysis.user == request.user or (not analysis.hidden and user_is_auth(request.user, analysis.user)):
+        if user_is_auth(request.user, analysis.user):
             resource_path = f'{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/html-report/{html_path}/{file}'
             parent_path = os.path.abspath(f'{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/html-report/')
             if os.path.commonpath([parent_path, resource_path]) == parent_path:
@@ -98,7 +98,7 @@ def html_report_path(request, analysis_id, html_path, file):
                     except FileNotFoundError:
                         messages.error(request, "File not found on the server")
                         logger.error("Couldn't find %s", resource_path)
-                        return redirect("..")
+                        return redirect("embark-ReportDashboard")
 
                 elif file.endswith(".html"):
                     content_type = "text/html"
@@ -123,12 +123,12 @@ def html_report_path(request, analysis_id, html_path, file):
                         return render(request, resource_path, {'embarkBackUrl': reverse('embark-ReportDashboard')}, content_type=content_type)
                 messages.error(request, "Can't server that file")
                 logger.error("Server can't handle that file - %s", request)
-                return redirect("..")
+                return redirect("embark-ReportDashboard")
         messages.error(request, "User not authorized")
         logger.error("User not authorized - %s", request)
-        return redirect("..")
+        return redirect("embark-ReportDashboard")
     logger.error("could  not get path - %s", request)
-    return redirect("..")
+    return redirect("embark-ReportDashboard")
 
 
 @permission_required("users.reporter_permission", login_url='/')
@@ -144,7 +144,7 @@ def html_report_resource(request, analysis_id, img_file):
     if bool(re.match(img_file_pattern, img_file)):
         if FirmwareAnalysis.objects.filter(id=analysis_id).exists():
             analysis = FirmwareAnalysis.objects.get(id=analysis_id)
-            if analysis.hidden is False or analysis.user == request.user or request.user.is_superuser:
+            if user_is_auth(request.user, analysis.user):
                 content_type = "text/plain"
 
                 if img_file.endswith(".css"):
@@ -165,7 +165,7 @@ def html_report_resource(request, analysis_id, img_file):
                     logger.error(error)
                     logger.error(request.path)
     logger.error("could  not get path - %s", request)
-    return redirect("..")
+    return redirect("embark-ReportDashboard")
 
 
 @permission_required("users.reporter_permission", login_url='/')
@@ -177,7 +177,7 @@ def get_individual_report(request, analysis_id):
     """
     if FirmwareAnalysis.objects.filter(id=analysis_id).exists():
         analysis_object = FirmwareAnalysis.objects.get(id=analysis_id)
-        if analysis_object.hidden is False or analysis_object.user == request.user or request.user.is_superuser:
+        if user_is_auth(request.user, analysis_object.user):
             try:
                 result = Result.objects.get(firmware_analysis=analysis_object)
 
