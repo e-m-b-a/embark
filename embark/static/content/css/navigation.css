@@ -1,18 +1,13 @@
 /* navigation menu */
 #navigation {
     position: fixed;
-    overflow: visible;
+    overflow: hidden;
     width: 80px;
     height: 100%;
     background: #29043f;
     top: 0;
     left: 0;
     padding: 6px;
-    display: -webkit-box;
-    display: -moz-box;
-    display: -ms-flexbox;
-    display: -webkit-flex;
-    display: flex;
 }
 
 #navigation.active {
@@ -52,6 +47,7 @@
     text-decoration: none;
 }
 
+/* nav bar button */
 #navigation #menuBtn {
     position: absolute;
     color: #EEEEEE;
@@ -62,8 +58,9 @@
     width: 60px;
     text-align: center;
     line-height: 40px;
-    transform: translateX(-50%);
+    transform: translateX(-60%);
     cursor: pointer;
+    margin-left: 10px;
 }
 
 #navigation #menuBtn:hover {
@@ -74,12 +71,15 @@
     left: 86%;
 }
 
+/* botton bar */
+#navigation #nav-container {
+    position: absolute;
+    height: calc(100% - 140px);
+    overflow-y: auto;
+}
+
 #navigation ul li {
-    line-height: 40px;
     font-size: 1em;
-    height: fit-content;
-    flex-wrap: wrap;
-    justify-content: space-between;
     margin: 4em 0 0 0;
 }
 
@@ -87,16 +87,14 @@
     display: flex;
     text-decoration: none;
     color: #eee;
-    margin-left: 10px;
+    margin-left: .8em;
 }
 
 #navigation .nav-link {
-    margin-left: 10px;
-    opacity: 0;
+    margin-left: 30px;
     pointer-events: none;
+    text-decoration: none;
     color: #fff;
-    width: 100%;
-    height: min-content;
 }
 
 #navigation .nav-link:hover {
@@ -134,8 +132,8 @@
     pointer-events: auto;
 }
 
-.icon {
-    margin-top: 7px;
+.icon svg{
+    font-size: 20px;
 }
 
 .profile-content .profile .profile-details {
@@ -204,7 +202,7 @@
     position: absolute;
     width: 150%;
     overflow: initial;
-    font-size: 15px;
+    font-size: 1em;
     line-height: 0.3em;
     margin-left: 70px;
 }
