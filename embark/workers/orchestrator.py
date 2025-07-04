@@ -178,8 +178,7 @@ class Orchestrator:
 
     def release_worker(self, worker: Worker):
         """
-        Release a busy worker from its current task. If there are tasks in the queue,
-        the next task is assigned to the worker. If no tasks are queued, the worker is marked as free.
+        Release a busy worker from its current task and mark it as free.
 
         :param worker: The worker to be released
         :raises ValueError: If the worker is not busy

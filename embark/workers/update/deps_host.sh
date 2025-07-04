@@ -82,6 +82,7 @@ if [ "${VERSION}" = "latest" ] || [ ! -d "${DEPSCACHE}/pkg" ]; then
   # Needed for EMBA:
   downloadPackage inotify-tools
   downloadPackage libnotify-bin
+  downloadPackage p7zip-full
 
   # Build index (for dependency tree)
   ( cd "${PKGPATH}" && dpkg-scanpackages . ) | gzip -9c > "${PKGPATH}/Packages.gz"

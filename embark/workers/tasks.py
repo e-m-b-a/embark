@@ -1,15 +1,16 @@
-import socket
-import re
 import os
-import subprocess
+import re
 import time
+import socket
+import subprocess
 from pathlib import Path
 
+import requests
 import paramiko
+
 from celery import shared_task
 from celery.utils.log import get_task_logger
-
-import requests
+from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from django.conf import settings
 
 from workers.models import Worker, Configuration, DependencyVersion, DependencyType
@@ -17,6 +18,7 @@ from workers.update.dependencies import eval_outdated_dependencies, get_script_n
 from workers.update.update import exec_blocking_ssh, parse_deb_list, process_update_queue
 from workers.orchestrator import get_orchestrator
 from workers.codeql_ignore import new_autoadd_client
+from uploader.models import FirmwareAnalysis
 
 logger = get_task_logger(__name__)
 
@@ -25,15 +27,14 @@ def create_periodic_tasks(**kwargs):
     """
     Create periodic tasks with the start of the application. (called in ready() method of the app config)
     """
-    from django_celery_beat.models import PeriodicTask, IntervalSchedule  # pylint: disable=import-outside-toplevel
-    schedule, _created = IntervalSchedule.objects.get_or_create(
-        every=2,
-        period=IntervalSchedule.MINUTES
+    schedule_2m, _ = IntervalSchedule.objects.get_or_create(
+        every=2, period=IntervalSchedule.MINUTES
     )
+
     PeriodicTask.objects.get_or_create(
-        interval=schedule,
-        name='Update Worker Information',
-        task='workers.tasks.update_worker_info',
+        interval=schedule_2m,
+        name="Update Worker Information",
+        task="workers.tasks.update_worker_info",
     )
 
 
@@ -112,10 +113,10 @@ def update_worker_info():
 def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
     """
     Copies the firmware image and triggers analysis start
-    :params worker_id: the worker to use
-    :params emba_cmd: The command to run
-    :params src_path: img source path
-    :params target_path: target path on worker
+    :param worker_id: the worker to use
+    :param emba_cmd: The command to run
+    :param src_path: img source path
+    :param target_path: target path on worker
     """
     try:
         worker = Worker.objects.get(id=worker_id)
@@ -138,8 +139,141 @@ def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
         exec_blocking_ssh(client, f"sudo mv {target_path_user} {target_path}")
 
     exec_blocking_ssh(client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
-    exec_blocking_ssh(client, "sudo rm -rf ./terminal.log")
-    exec_blocking_ssh(client, f"sudo sh -c '{emba_cmd}' >./terminal.log 2>&1")
+    exec_blocking_ssh(client, "sudo rm -rf /root/emba_run.log")
+    client.exec_command(f"sudo sh -c '{emba_cmd}' >./emba_run.log 2>&1")  # nosec
+    logger.info("Firmware analysis has been started on the worker.")
+
+    # Create file to suppress errors
+    os.makedirs(f"{settings.EMBA_LOG_ROOT}/{worker.analysis_id}/emba_logs/", exist_ok=True)
+    open(f"{settings.EMBA_LOG_ROOT}/{worker.analysis_id}/emba_logs/emba.log", "a").close()  # pylint: disable=unspecified-encoding, consider-using-with
+    time.sleep(10)  # Give the Docker container time to start up
+
+    monitor_worker_and_fetch_logs.delay(worker.id)
+
+
+@shared_task
+def monitor_worker_and_fetch_logs(worker_id):
+    """
+    Loops until the analysis stops on the remote worker.
+    Zips the analysis logs on the remote worker, downloads and extracts them.
+    If the worker is finished, performs a soft reset.
+
+    :param worker_id: ID of worker to monitor and fetch logs for.
+    """
+    orchestrator = get_orchestrator()
+    worker = Worker.objects.get(id=worker_id)
+    while True:
+        try:
+            _fetch_analysis_logs(worker)
+
+            analysis_finished = FirmwareAnalysis.objects.get(id=worker.analysis_id).status["finished"]
+            is_running = _is_emba_container_running(worker)
+            is_busy = orchestrator.is_busy(worker)
+            if not is_running or analysis_finished or not is_busy:
+
+                worker_soft_reset_task(worker.id)
+                orchestrator.release_worker(worker)
+
+                logger.info("[Worker %s] Analysis finished.", worker.id)
+                return
+
+        except Exception as exception:
+            logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
+            if worker in orchestrator.get_busy_workers().values():
+                logger.info("[Worker %s] Releasing the worker...", worker.id)
+                worker_soft_reset_task(worker.id)
+                orchestrator.release_worker(worker)
+                return
+
+        time.sleep(15)
+
+
+def _fetch_analysis_logs(worker) -> None:
+    """
+    Zips the analysis log files on remote worker, downloads it, extracts it.
+    Also gets the emba_run.log file that's displayed in the UI
+
+    :param worker: Worker object whose analysis_id logs to process.
+    :raises CalledProcessError: If extracting the zipfile fails.
+    """
+    client = None
+    sftp_client = None
+    try:
+        client = worker.ssh_connect()
+
+        # To not error if the logs dir has been deleted
+        exec_blocking_ssh(client, f"sudo mkdir -p {settings.WORKER_EMBA_LOGS}")
+
+        homedir = "/root" if client.ssh_user == "root" else f"/home/{client.ssh_user}"
+        remote_zip_path = f"{homedir}/emba_logs.zip"
+
+        logger.info("[Worker %s] Zipping logs on remote...", worker.id)
+        zip_cmd = (
+            f'sudo bash -c "cd /root && '
+            f"7z u -t7z -y {remote_zip_path} {settings.WORKER_EMBA_LOGS} -uq3; "
+            f'chown {client.ssh_user}: {remote_zip_path}"'
+        )
+        exec_blocking_ssh(client, zip_cmd)
+        logger.info("[Worker %s] Zipping logs on remote complete.", worker.id)
+
+        # Ensure dirs exists locally
+        local_log_dir = f"{settings.EMBA_LOG_ROOT}/{worker.analysis_id}"
+        os.makedirs(f"{local_log_dir}/emba_logs/", exist_ok=True)
+        os.makedirs(f"{settings.MEDIA_ROOT}/log_zip/", exist_ok=True)
+
+        # Fetch zip file
+        local_zip_path = f"{settings.MEDIA_ROOT}/log_zip/{worker.analysis_id}.zip"
+        sftp_client = client.open_sftp()
+        sftp_client.get(f"{homedir}/emba_logs.zip", local_zip_path)
+        logger.info("[Worker %s] Downloaded the log zip.", worker.id)
+
+        # Ensure emba_run.log can be accessed by the user
+        if client.ssh_user != "root":
+            chown_cmd = f'sudo bash -c "chown {client.ssh_user}: {homedir}/emba_run.log"'
+            exec_blocking_ssh(client, chown_cmd)
+
+        sftp_client.get(f"{homedir}/emba_run.log", f"{local_log_dir}/emba_run.log")
+
+        logger.info("[Worker %s] Downloaded emba_run.log.", worker.id)
+
+        unzip_cmd = ["7z", "x", "-y", local_zip_path, f"-o{local_log_dir}/"]
+        subprocess.run(unzip_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)  # nosec
+
+        logger.info("[Worker %s] Unzipped the log zip to: %s/emba_logs/", worker.id, local_log_dir)
+
+    finally:
+        if sftp_client is not None:
+            sftp_client.close()
+        if client is not None:
+            client.close()
+
+
+def _is_emba_container_running(worker) -> bool:
+    """
+    Checks if a Docker container is running on the worker.
+
+    :param worker: The worker to check.
+    :return: True, if a Docker container is still running,
+             False, otherwise
+    """
+    client = None
+    try:
+        client = worker.ssh_connect()
+
+        cmd = "sudo docker ps -qa"
+        containers = exec_blocking_ssh(client, cmd)
+        if not containers:
+            logger.info("[Worker %s] EMBA Docker container is no longer running.", worker.id)
+            return False
+
+        return True
+
+    except Exception as exception:
+        logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
+        return False
+    finally:
+        if client is not None:
+            client.close()
 
 
 @shared_task
@@ -260,7 +394,12 @@ def fetch_dependency_updates():
 
 
 @shared_task
-def worker_soft_reset_task(worker_id, configuration_id):
+def worker_soft_reset_task(worker_id, configuration_id=None):
+    """
+    Connects via SSH to the worker and performs the soft reset
+    :param worker_id: ID of worker to soft reset
+    :param configuration_id: ID of the configuration based on which the worker needs to be reset
+    """
     try:
         worker = Worker.objects.get(id=worker_id)
     except Worker.DoesNotExist:
@@ -269,13 +408,16 @@ def worker_soft_reset_task(worker_id, configuration_id):
     ssh_client = None
     try:
         ssh_client = worker.ssh_connect(configuration_id)
+        homedir = "/root" if ssh_client.ssh_user == "root" else f"/home/{ssh_client.ssh_user}"
         exec_blocking_ssh(ssh_client, "sudo docker ps -aq | xargs -r sudo docker stop | xargs -r sudo docker rm || true")
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
+        exec_blocking_ssh(ssh_client, f"sudo rm -rf {homedir}/emba_logs.zip*")  # Also delete possible leftover tmp files
+        exec_blocking_ssh(ssh_client, f"sudo rm -rf {homedir}/emba_run.log")
         ssh_client.close()
     except (paramiko.SSHException, socket.error):
-        logger.error("SSH Connection didnt work for: %s", worker.name)
-        if ssh_client:
+        logger.error("[Worker %s] SSH Connection failed while soft resetting.", worker.id)
+        if ssh_client is not None:
             ssh_client.close()
 
 
@@ -313,7 +455,7 @@ def undo_sudoers_file(ip_address, ssh_user, ssh_password):
     """
     client = None
     sudoers_entry = f"{ssh_user} ALL=(ALL) NOPASSWD: ALL"
-    command = f'sudo bash -c "grep -vxF \'{sudoers_entry}\' /etc/sudoers.d/EMBArk > temp_sudoers; mv -f temp_sudoers /etc/sudoers.d/EMBArk || true"'
+    command = f"sudo bash -c \"grep -vxF '{sudoers_entry}' /etc/sudoers.d/EMBArk > temp_sudoers; mv -f temp_sudoers /etc/sudoers.d/EMBArk || true\""
 
     try:
         client = new_autoadd_client()
