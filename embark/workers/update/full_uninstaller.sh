@@ -21,6 +21,7 @@ if command -v docker >/dev/null 2>&1; then
 
 	apt-get autoremove --purge -y libnotify-bin
 	apt-get autoremove --purge -y inotify-tools
+	apt-get autoremove --purge -y p7zip-full
 	apt-get autoremove --purge -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 fi
 
