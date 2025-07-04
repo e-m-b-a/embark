@@ -145,9 +145,9 @@ def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
 
     # Create file to suppress errors
     os.makedirs(f"{settings.EMBA_LOG_ROOT}/{worker.analysis_id}/emba_logs/", exist_ok=True)
-    open(f"{settings.EMBA_LOG_ROOT}/{worker.analysis_id}/emba_logs/emba.log", "a").close()
-
+    open(f"{settings.EMBA_LOG_ROOT}/{worker.analysis_id}/emba_logs/emba.log", "a").close()  # pylint: disable=unspecified-encoding, consider-using-with
     time.sleep(10)  # Give the Docker container time to start up
+
     monitor_worker_and_fetch_logs.delay(worker.id)
 
 
