@@ -143,9 +143,9 @@ def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
     client.exec_command(f"sudo sh -c '{emba_cmd}' >./emba_run.log 2>&1")  # nosec
     logger.info("Firmware analysis has been started on the worker.")
 
-    # Create file to supress errors
-    os.system(f"mkdir -p {settings.EMBA_LOG_ROOT}/{worker.analysis_id}/emba_logs/")  # nosec
-    os.system(f"touch {settings.EMBA_LOG_ROOT}/{worker.analysis_id}/emba_logs/emba.log")  # nosec
+    # Create file to suppress errors
+    os.makedirs(f"{settings.EMBA_LOG_ROOT}/{worker.analysis_id}/emba_logs/", exist_ok=True)
+    open(f"{settings.EMBA_LOG_ROOT}/{worker.analysis_id}/emba_logs/emba.log").close()
 
     time.sleep(10)  # Give the Docker container time to start up
     monitor_worker_and_fetch_logs.delay(worker.id)
@@ -168,7 +168,7 @@ def monitor_worker_and_fetch_logs(worker_id):
 
             analysis_finished = FirmwareAnalysis.objects.get(id=worker.analysis_id).status["finished"]
             is_running = _is_emba_container_running(worker)
-            is_busy = worker in orchestrator.get_busy_workers().values()
+            is_busy = orchestrator.is_busy(worker)
             if not is_running or analysis_finished or not is_busy:
 
                 worker_soft_reset_task(worker.id)
@@ -233,8 +233,6 @@ def _fetch_analysis_logs(worker) -> None:
             exec_blocking_ssh(client, chown_cmd)
 
         sftp_client.get(f"{homedir}/emba_run.log", f"{local_log_dir}/emba_run.log")
-        sftp_client.close()
-        client.close()
 
         logger.info("[Worker %s] Downloaded emba_run.log.", worker.id)
 
@@ -244,6 +242,8 @@ def _fetch_analysis_logs(worker) -> None:
         logger.info("[Worker %s] Unzipped the log zip to: %s/emba_logs/", worker.id, local_log_dir)
 
     finally:
+        if sftp_client is not None:
+            sftp_client.close()
         if client is not None:
             client.close()
 
