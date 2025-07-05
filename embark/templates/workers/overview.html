@@ -12,7 +12,8 @@
         <th>Created</th>
         <th>IP Range</th>
         <th>SSH Username</th>
-        <th>Reachable / Total</th>
+        <th>Scan Status</th>
+        <th>Reachable</th>
         <th>Actions</th>
     </tr>
     {% for config in configs %}
@@ -22,6 +23,7 @@
         <td>{{ config.created_at|date:"Y-m-d H:i" }}</td>
         <td>{{ config.ip_range }}</td>
         <td>{{ config.ssh_user }}</td>
+        <td>{{ config.scan_status }}</td>
         <td>{{ config.reachable_workers }} / {{ config.total_workers }}</td>
         <td>
             <div class="actions-container">

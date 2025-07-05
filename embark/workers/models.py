@@ -9,12 +9,19 @@ from workers.codeql_ignore import new_autoadd_client
 
 
 class Configuration(models.Model):
+    class ScanStatus(models.TextChoices):  # pylint: disable=too-many-ancestors
+        NEW = "N", _("New")
+        SCANNING = "S", _("Scanning")
+        FINISHED = "F", _("Finished")
+        ERROR = "E", _("Error")
+
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='configuration', help_text="User who created this configuration")
     name = models.CharField(max_length=150, blank=True, null=True, help_text="Name of the configuration")
     ssh_user = models.CharField(max_length=150, blank=True, null=True, help_text="SSH user of the worker nodes")
     ssh_password = models.CharField(max_length=150, blank=True, null=True, help_text="SSH password of the worker nodes")
     ip_range = models.TextField(blank=True, null=True, help_text="IP range of the worker nodes")
     created_at = models.DateTimeField(auto_now_add=True, help_text="Date time when this entry was created")
+    scan_status = models.CharField(max_length=1, choices=ScanStatus, default=ScanStatus.NEW)
 
 
 def default_deb_list():

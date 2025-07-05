@@ -1,3 +1,4 @@
+import ipaddress
 import os
 import re
 import time
@@ -13,9 +14,10 @@ from celery.utils.log import get_task_logger
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from django.conf import settings
 
-from workers.models import Worker, Configuration, DependencyVersion, DependencyType
+from concurrent.futures import ThreadPoolExecutor
+from workers.models import Worker, Configuration, DependencyVersion, DependencyType, WorkerDependencyVersion
 from workers.update.dependencies import eval_outdated_dependencies, get_script_name, update_dependency, setup_dependency
-from workers.update.update import exec_blocking_ssh, parse_deb_list, process_update_queue
+from workers.update.update import exec_blocking_ssh, parse_deb_list, process_update_queue, init_sudoers_file, update_dependencies_info
 from workers.orchestrator import get_orchestrator
 from workers.codeql_ignore import new_autoadd_client
 from uploader.models import FirmwareAnalysis
@@ -468,3 +470,87 @@ def undo_sudoers_file(ip_address, ssh_user, ssh_password):
     finally:
         if client is not None:
             client.close()
+
+
+def _update_or_create_worker(config: Configuration, ip_address: str):
+    """Creates a worker for a given IP address or updates an existing one.
+
+    :param config: The configuration the worker belongs to
+    """
+    try:
+        existing_worker = Worker.objects.get(ip_address=ip_address)
+        existing_worker.reachable = True
+        existing_worker.save()
+        if config not in existing_worker.configurations.all():
+            existing_worker.configurations.add(config)
+            existing_worker.save()
+        try:
+            init_sudoers_file(config, existing_worker)
+            update_system_info(config, existing_worker)
+            update_dependencies_info(existing_worker)
+        except BaseException:
+            pass
+    except Worker.DoesNotExist:
+        version = WorkerDependencyVersion()
+        version.save()
+
+        new_worker = Worker(
+            dependency_version=version,
+            name=f"worker-{ip_address}",
+            ip_address=ip_address,
+            system_info={},
+            reachable=True
+        )
+        new_worker.save()
+        new_worker.configurations.set([config])
+        try:
+            init_sudoers_file(config, new_worker)
+            update_system_info(config, new_worker)
+            update_dependencies_info(new_worker)
+        except BaseException:
+            pass
+
+
+def _scan_for_worker(config: Configuration, ip_address: str, port: int=22, timeout: int=1):
+    """Scans a given IP address to check if a worker is reachable."""
+    try:
+        with socket.create_connection((ip_address, port), timeout):
+            _update_or_create_worker(config, ip_address)
+            return ip_address
+    except Exception as error:
+        return None
+
+
+@shared_task
+def config_worker_scan_(configuration_id: int):
+    """
+    Scan the IP range of a given configuration and create/update workers based on the reachable IPs.
+
+    :param configuration_id: ID of the configuration to scan
+    """
+    try:
+        config = Configuration.objects.get(id=configuration_id)
+        config.scan_status = Configuration.ScanStatus.SCANNING
+        config.save()
+
+        ip_network = ipaddress.ip_network(config.ip_range, strict=False)
+        ip_addresses = [str(ip) for ip in ip_network.hosts()]
+        with ThreadPoolExecutor(max_workers=50) as executor:
+            results = executor.map(_scan_for_worker, [config]*len(ip_addresses), ip_addresses)
+            reachable = list(filter(None, results))
+
+        for worker in config.workers.all():
+            if worker.ip_address not in reachable:
+                worker.reachable = False
+                worker.save()
+
+        config.scan_status = Configuration.ScanStatus.FINISHED
+        logger.info("config_worker_scan_task: Scan finished for configuration %s", config.name)
+    except Configuration.DoesNotExist:
+        logger.error("config_worker_scan_task: Invalid configuration id")
+        config.scan_status = Configuration.ScanStatus.ERROR
+    except BaseException as error:
+        logger.error("config_worker_scan_task: An error occurred while scanning workers: %s", error)
+        config.scan_status = Configuration.ScanStatus.ERROR
+    finally:
+        config.save()
