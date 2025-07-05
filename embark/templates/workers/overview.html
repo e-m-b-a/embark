@@ -76,25 +76,29 @@
     {% endfor %}
     </table>
 
-    <button id="toggle-create-form">Add Configuration</button>
-        <div class="configuration-create-container">
+    <div class="config-modal">
+        <button id="config-modal-toggle">Add Configuration</button>
+        <div class="config-modal-content">
             <form action="{% url 'embark-create-configuration' %}" method="post">
+                <div class="config-modal-title">Configuration</div>
                 {% csrf_token %}
-                <label for="name">Configuration Name:</label>
-                <input type="text" name="name" id="name">
-
-                <label for="ssh_user">SSH Username:</label>
-                <input type="text" name="ssh_user" id="ssh_user">
-
-                <label for="ssh_password">SSH Password:</label>
-                <input type="password" name="ssh_password" id="ssh_password">
-
-                <label for="ip_range">IP Range (CIDR):</label>
-                <input type="text" name="ip_range" id="ip_range">
-
-                <input type="submit" value="Create">
+                <div class="config-modal-body">
+                    <label for="name">Name:</label>
+                    <input type="text" name="name" id="name">
+                    <label for="ssh_user">SSH Username:</label>
+                    <input type="text" name="ssh_user" id="ssh_user">
+                    <label for="ssh_password">SSH Password:</label>
+                    <input type="password" name="ssh_password" id="ssh_password">
+                    <label for="ip_range">IP Range (CIDR):</label>
+                    <input type="text" name="ip_range" id="ip_range">
+                </div>
+                <div class="config-modal-actions">
+                    <button type="button" class="cancel-button">Cancel</button>
+                    <button type="submit" class="confirm-button">Confirm</button>
+                </div>
             </form>
         </div>
+    </div>
     </div>
 
     <div class="worker-container">
@@ -268,20 +272,19 @@
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const toggleButton = document.getElementById("toggle-create-form");
-    const createContainer = document.querySelector(".configuration-create-container");
-
-    // Open the "Add Configuration" menu
-    toggleButton.addEventListener("click", function () {
-        if (createContainer.style.display === "none" || !createContainer.style.display) {
-            createContainer.style.display = "block";
-        } else {
-            createContainer.style.display = "none";
-        }
+    document.addEventListener("DOMContentLoaded", function () {
+    // Open the configuration modal on button click
+    const configModalContent = document.querySelector(".config-modal-content");
+    const configModalToggle = document.getElementById("config-modal-toggle");
+    configModalToggle.addEventListener("click", function () {
+        configModalContent.style.display = (configModalContent.style.display === "none" || configModalContent.style.display === "") ? "block" : "none";
     });
 
-    createContainer.style.display = "none";
+    // Close the configuration modal on cancel button click
+    const cancelButton = document.querySelector(".cancel-button");
+    cancelButton.addEventListener("click", function () {
+        configModalContent.style.display = "none";
+    });
 
     // Open the actions-dropdown menu on "..." clicked
     document.querySelectorAll(".toggle-actions-menu").forEach(button => {
@@ -299,6 +302,12 @@ document.addEventListener("DOMContentLoaded", function () {
         document.querySelectorAll(".actions-dropdown-content").forEach(menu => {
             if (!menu.contains(event.target) && !menu.previousElementSibling.contains(event.target)) {
                 menu.style.display = "none";
+            }
+        });
+
+        document.querySelectorAll(".config-modal-content").forEach(modal => {
+            if (!modal.contains(event.target) && !modal.previousElementSibling.contains(event.target)) {
+                modal.style.display = "none";
             }
         });
 
