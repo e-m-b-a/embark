@@ -5,6 +5,7 @@ import time
 import socket
 import subprocess
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
 
 import requests
 import paramiko
@@ -14,7 +15,6 @@ from celery.utils.log import get_task_logger
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from django.conf import settings
 
-from concurrent.futures import ThreadPoolExecutor
 from workers.models import Worker, Configuration, DependencyVersion, DependencyType, WorkerDependencyVersion
 from workers.update.dependencies import eval_outdated_dependencies, get_script_name, update_dependency, setup_dependency
 from workers.update.update import exec_blocking_ssh, parse_deb_list, process_update_queue, init_sudoers_file, update_dependencies_info
@@ -511,13 +511,13 @@ def _update_or_create_worker(config: Configuration, ip_address: str):
             pass
 
 
-def _scan_for_worker(config: Configuration, ip_address: str, port: int=22, timeout: int=1):
+def _scan_for_worker(config: Configuration, ip_address: str, port: int = 22, timeout: int = 1):
     """Scans a given IP address to check if a worker is reachable."""
     try:
         with socket.create_connection((ip_address, port), timeout):
             _update_or_create_worker(config, ip_address)
             return ip_address
-    except Exception as error:
+    except BaseException:
         return None
 
 
