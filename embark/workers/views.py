@@ -64,7 +64,6 @@ def worker_main(request):
         elif worker.status == Worker.ConfigStatus.ERROR:
             messages.error(request, f"Update for {worker.name} failed.")
 
-
     return render(request, 'workers/index.html', {
         'user': user,
         'configs': configs,
