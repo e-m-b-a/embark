@@ -3,6 +3,7 @@ import socket
 import paramiko
 
 from django.db import models
+from django.forms import ModelForm
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
@@ -17,6 +18,12 @@ class Configuration(models.Model):
     ssh_password = models.CharField(max_length=150, blank=True, null=True, help_text="SSH password of the worker nodes")
     ip_range = models.TextField(blank=True, null=True, help_text="IP range of the worker nodes")
     created_at = models.DateTimeField(auto_now_add=True, help_text="Date time when this entry was created")
+
+
+class ConfigurationForm(ModelForm):
+    class Meta:
+        model = Configuration
+        fields = ['name', 'ssh_user', 'ssh_password', 'ip_range']
 
 
 def default_deb_list():

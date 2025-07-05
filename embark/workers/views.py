@@ -15,7 +15,7 @@ from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
 
-from workers.models import Worker, Configuration, WorkerDependencyVersion, DependencyVersion, DependencyType
+from workers.models import ConfigurationForm, Worker, Configuration, WorkerDependencyVersion, DependencyVersion, DependencyType
 from workers.update.update import init_sudoers_file, queue_update, update_dependencies_info
 from workers.tasks import update_system_info, fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file
 
@@ -103,27 +103,22 @@ def create_config(request):
     Create a new configuration for workers.
     """
     user = get_user(request)
-    name = request.POST.get("name")
-    ssh_user = request.POST.get("ssh_user")
-    ssh_password = request.POST.get("ssh_password")
-    ip_range = request.POST.get("ip_range")
 
-    if not ssh_user or not ssh_password or not ip_range or not name:
-        messages.error(request, 'Name, SSH user, SSH password, and IP range are required.')
+    configuration_form = ConfigurationForm(request.POST)
+    if not configuration_form.is_valid():
+        messages.error(request, 'Invalid configuration data.')
         return safe_redirect(request, '/worker/')
 
+    ip_range = configuration_form.cleaned_data.get('ip_range')
     ip_range_regex = r"^(\d{1,3}\.){3}\d{1,3}/\d{1,2}$"
     if not re.match(ip_range_regex, ip_range):
         messages.error(request, 'Invalid IP range format. Use CIDR notation')
         return safe_redirect(request, '/worker/')
 
-    Configuration.objects.create(
-        name=name,
-        user=user,
-        ssh_user=ssh_user,
-        ssh_password=ssh_password,
-        ip_range=ip_range
-    )
+    new_config = configuration_form.save(commit=False)
+    new_config.user = user
+    new_config.save()
+
     messages.success(request, 'Configuration created successfully.')
     return safe_redirect(request, '/worker/')
 
