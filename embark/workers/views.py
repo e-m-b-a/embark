@@ -15,7 +15,7 @@ from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
 
-from workers.models import Worker, Configuration, WorkerDependencyVersion, DependencyVersion, DependencyType
+from workers.models import Worker, WorkerUpdate, Configuration, WorkerDependencyVersion, DependencyVersion, DependencyType
 from workers.update.update import init_sudoers_file, queue_update, update_dependencies_info
 from workers.tasks import update_system_info, fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file
 
@@ -50,6 +50,20 @@ def worker_main(request):
     for worker in workers:
         worker.config_ids = ', '.join([str(config.id) for config in worker.configurations.filter(user=user)])
         worker.status = worker.get_status_display()
+
+    update_pool = WorkerUpdate.objects.filter(
+        worker__configurations__user=user,
+    ).select_related('worker')
+
+    for update in update_pool:
+        worker = update.worker
+        if worker.status == Worker.ConfigStatus.CONFIGURING:
+            messages.info(request, f"Update for {worker.name} started.")
+        elif worker.status == Worker.ConfigStatus.CONFIGURED:
+            messages.success(request, f"Update for {worker.name} finished.")
+        elif worker.status == Worker.ConfigStatus.ERROR:
+            messages.error(request, f"Update for {worker.name} failed.")
+
 
     return render(request, 'workers/index.html', {
         'user': user,
