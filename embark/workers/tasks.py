@@ -13,7 +13,7 @@ from celery.utils.log import get_task_logger
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from django.conf import settings
 
-from workers.models import Worker, Configuration, DependencyVersion, DependencyType
+from workers.models import Worker, DependencyVersion, DependencyType
 from workers.update.dependencies import eval_outdated_dependencies, get_script_name, update_dependency, setup_dependency
 from workers.update.update import exec_blocking_ssh, parse_deb_list, process_update_queue
 from workers.orchestrator import get_orchestrator
@@ -38,11 +38,10 @@ def create_periodic_tasks(**kwargs):
     )
 
 
-def update_system_info(configuration: Configuration, worker: Worker):
+def update_system_info(worker: Worker):
     """
     Update the system_info of a worker using the SSH credentials of the provided configuration to connect to the worker.
 
-    :param configuration: Configuration object containing SSH credentials
     :param worker: Worker object to update
     :return: Dictionary containing system information
     :raises paramiko.SSHException: If the SSH connection fails or if any command execution fails
@@ -50,7 +49,7 @@ def update_system_info(configuration: Configuration, worker: Worker):
     ssh_client = None
 
     try:
-        ssh_client = worker.ssh_connect(configuration.id)
+        ssh_client = worker.ssh_connect()
 
         os_info = exec_blocking_ssh(ssh_client, 'grep PRETTY_NAME /etc/os-release')
         os_info = os_info[len('PRETTY_NAME='):-1].strip('"')
@@ -394,11 +393,10 @@ def fetch_dependency_updates():
 
 
 @shared_task
-def worker_soft_reset_task(worker_id, configuration_id=None):
+def worker_soft_reset_task(worker_id):
     """
     Connects via SSH to the worker and performs the soft reset
     :param worker_id: ID of worker to soft reset
-    :param configuration_id: ID of the configuration based on which the worker needs to be reset
     """
     try:
         worker = Worker.objects.get(id=worker_id)
@@ -407,7 +405,7 @@ def worker_soft_reset_task(worker_id, configuration_id=None):
         return
     ssh_client = None
     try:
-        ssh_client = worker.ssh_connect(configuration_id)
+        ssh_client = worker.ssh_connect()
         homedir = "/root" if ssh_client.ssh_user == "root" else f"/home/{ssh_client.ssh_user}"
         exec_blocking_ssh(ssh_client, "sudo docker ps -aq | xargs -r sudo docker stop | xargs -r sudo docker rm || true")
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
@@ -422,7 +420,7 @@ def worker_soft_reset_task(worker_id, configuration_id=None):
 
 
 @shared_task
-def worker_hard_reset_task(worker_id, configuration_id):
+def worker_hard_reset_task(worker_id):
     try:
         worker = Worker.objects.get(id=worker_id)
     except Worker.DoesNotExist:
@@ -430,7 +428,7 @@ def worker_hard_reset_task(worker_id, configuration_id):
         return
     ssh_client = None
     try:
-        ssh_client = worker.ssh_connect(configuration_id)
+        ssh_client = worker.ssh_connect()
         emba_path = os.path.join(settings.WORKER_EMBA_ROOT, "full_uninstaller.sh")
         exec_blocking_ssh(ssh_client, "sudo bash " + emba_path)
         ssh_client.close()

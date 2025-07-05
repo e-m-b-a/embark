@@ -1,4 +1,6 @@
 import ipaddress
+import socket
+import paramiko
 
 from django.db import models
 from django.core.exceptions import ValidationError
@@ -81,15 +83,20 @@ class Worker(models.Model):
                     except ValueError as value_error:
                         raise ValidationError({"configuration": f"Invalid IP range: {value_error}"}) from value_error
 
-    def ssh_connect(self, configuration_id=None):
+    def ssh_connect(self):
         ssh_client = new_autoadd_client()
-        configuration = self.configurations.first() if configuration_id is None else self.configurations.get(id=configuration_id)
 
-        ssh_client.connect(self.ip_address, username=configuration.ssh_user, password=configuration.ssh_password)
+        # try to establish an ssh connection with each configuration and return the first successful connection
+        for configuration in self.configurations.all():
+            try:
+                ssh_client.connect(self.ip_address, username=configuration.ssh_user, password=configuration.ssh_password)
 
-        # save the ssh user and password so they can later be used in commands
-        ssh_client.ssh_user = configuration.ssh_user
-        ssh_client.ssh_pw = configuration.ssh_password
+                # save the ssh user and password so they can later be used in commands
+                ssh_client.ssh_user = configuration.ssh_user
+                ssh_client.ssh_pw = configuration.ssh_password
+                break
+            except (paramiko.SSHException, socket.error):
+                continue
 
         return ssh_client
 

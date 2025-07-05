@@ -149,6 +149,9 @@ def get_emba_version():
 
 
 def user_is_auth(req_user, own_user):
+    """
+    Checks if the request user is allowed to access a resource owned by another user.
+    """
     if req_user.is_superuser:
         return True
     elif req_user.is_staff:
