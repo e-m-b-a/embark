@@ -21,6 +21,7 @@ from workers.tasks import update_system_info, fetch_dependency_updates, worker_h
 
 from embark.helper import user_is_auth
 
+
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
@@ -252,7 +253,7 @@ def config_worker_scan(request, configuration_id):
                 existing_worker.save()
             try:
                 init_sudoers_file(configuration, existing_worker)
-                update_system_info(configuration, existing_worker)
+                update_system_info(existing_worker)
                 update_dependencies_info(existing_worker)
             except BaseException:
                 pass
@@ -271,7 +272,7 @@ def config_worker_scan(request, configuration_id):
             new_worker.configurations.set([configuration])
             try:
                 init_sudoers_file(configuration, new_worker)
-                update_system_info(configuration, new_worker)
+                update_system_info(new_worker)
                 update_dependencies_info(new_worker)
             except BaseException:
                 pass
@@ -476,7 +477,7 @@ def connect_worker(request, configuration_id, worker_id):
         return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
 
     try:
-        system_info = update_system_info(configuration, worker)
+        system_info = update_system_info(worker)
     except paramiko.SSHException:
         return JsonResponse({'status': 'error', 'message': 'Failed to retrieve system_info.'})
 

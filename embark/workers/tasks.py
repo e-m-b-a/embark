@@ -93,10 +93,9 @@ def update_worker_info():
     """
     workers = Worker.objects.all()
     for worker in workers:
-        config = worker.configurations.first()
         try:
             logger.info("Updating worker %s", worker.name)
-            update_system_info(config, worker)
+            update_system_info(worker)
             worker.reachable = True
         except paramiko.SSHException:
             logger.info("Worker %s is unreachable, setting status to offline.", worker.name)
@@ -301,8 +300,7 @@ def update_worker(worker_id):
 
     if worker.status == Worker.ConfigStatus.CONFIGURED:
         try:
-            config = worker.configurations.first()
-            update_system_info(config, worker)
+            update_system_info(worker)
 
             orchestrator.add_worker(worker)
             logger.info("Worker: %s added to orchestrator", worker.name)

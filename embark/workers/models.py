@@ -84,9 +84,11 @@ class Worker(models.Model):
                         raise ValidationError({"configuration": f"Invalid IP range: {value_error}"}) from value_error
 
     def ssh_connect(self):
+        """
+        Tries to establish an ssh connection with each configuration and returns the first successful connection
+        """
         ssh_client = new_autoadd_client()
 
-        # try to establish an ssh connection with each configuration and return the first successful connection
         for configuration in self.configurations.all():
             try:
                 ssh_client.connect(self.ip_address, username=configuration.ssh_user, password=configuration.ssh_password)
