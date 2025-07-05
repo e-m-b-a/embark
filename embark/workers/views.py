@@ -14,7 +14,8 @@ from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
 
-from workers.models import ConfigurationForm, Worker, Configuration, WorkerDependencyVersion, DependencyVersion, DependencyType
+from workers.forms import ConfigurationForm
+from workers.models import Worker, Configuration, WorkerDependencyVersion, DependencyVersion, DependencyType
 from workers.update.update import init_sudoers_file, queue_update, update_dependencies_info
 from workers.tasks import update_system_info, fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file
 
