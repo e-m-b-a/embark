@@ -103,12 +103,12 @@ def create_config(request):
     """
     user = get_user(request)
 
-    configuration_form = ConfigurationForm(request.POST)
-    if not configuration_form.is_valid():
+    config_form = ConfigurationForm(request.POST)
+    if not config_form.is_valid():
         messages.error(request, 'Invalid configuration data.')
         return safe_redirect(request, '/worker/')
 
-    new_config = configuration_form.save(commit=False)
+    new_config = config_form.save(commit=False)
     new_config.user = user
     new_config.save()
 
