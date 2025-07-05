@@ -477,36 +477,31 @@ def _update_or_create_worker(config: Configuration, ip_address: str):
 
     :param config: The configuration the worker belongs to
     """
+    worker = None
     try:
-        existing_worker = Worker.objects.get(ip_address=ip_address)
-        existing_worker.reachable = True
-        existing_worker.save()
-        if config not in existing_worker.configurations.all():
-            existing_worker.configurations.add(config)
-            existing_worker.save()
-        try:
-            init_sudoers_file(config, existing_worker)
-            update_system_info(config, existing_worker)
-            update_dependencies_info(existing_worker)
-        except BaseException:
-            pass
+        worker = Worker.objects.get(ip_address=ip_address)
+        worker.reachable = True
+        worker.save()
+        if config not in worker.configurations.all():
+            worker.configurations.add(config)
+            worker.save()
     except Worker.DoesNotExist:
         version = WorkerDependencyVersion()
         version.save()
-
-        new_worker = Worker(
+        worker = Worker(
             dependency_version=version,
             name=f"worker-{ip_address}",
             ip_address=ip_address,
             system_info={},
             reachable=True
         )
-        new_worker.save()
-        new_worker.configurations.set([config])
+        worker.save()
+        worker.configurations.set([config])
+    finally:
         try:
-            init_sudoers_file(config, new_worker)
-            update_system_info(config, new_worker)
-            update_dependencies_info(new_worker)
+            init_sudoers_file(config, worker)
+            update_system_info(config, worker)
+            update_dependencies_info(worker)
         except BaseException:
             pass
 
@@ -517,7 +512,7 @@ def _scan_for_worker(config: Configuration, ip_address: str, port: int = 22, tim
         with socket.create_connection((ip_address, port), timeout):
             _update_or_create_worker(config, ip_address)
             return ip_address
-    except BaseException:
+    except socket.error:
         return None
 
 
