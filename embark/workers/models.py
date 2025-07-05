@@ -31,6 +31,7 @@ class ConfigurationForm(ModelForm):
         ip_range_regex = r"^(\d{1,3}\.){3}\d{1,3}/\d{1,2}$"
         if not re.match(ip_range_regex, ip_range):
             raise ValidationError("Invalid IP range format. Use CIDR notation")
+        return ip_range
 
 
 def default_deb_list():
