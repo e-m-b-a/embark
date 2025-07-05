@@ -1,6 +1,5 @@
 import ipaddress
 import socket
-import re
 from concurrent.futures import ThreadPoolExecutor
 
 import paramiko
@@ -107,12 +106,6 @@ def create_config(request):
     configuration_form = ConfigurationForm(request.POST)
     if not configuration_form.is_valid():
         messages.error(request, 'Invalid configuration data.')
-        return safe_redirect(request, '/worker/')
-
-    ip_range = configuration_form.cleaned_data.get('ip_range')
-    ip_range_regex = r"^(\d{1,3}\.){3}\d{1,3}/\d{1,2}$"
-    if not re.match(ip_range_regex, ip_range):
-        messages.error(request, 'Invalid IP range format. Use CIDR notation')
         return safe_redirect(request, '/worker/')
 
     new_config = configuration_form.save(commit=False)

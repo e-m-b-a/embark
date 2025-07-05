@@ -1,3 +1,4 @@
+import re
 import ipaddress
 import socket
 import paramiko
@@ -12,18 +13,24 @@ from workers.codeql_ignore import new_autoadd_client
 
 
 class Configuration(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='configuration', help_text="User who created this configuration")
-    name = models.CharField(max_length=150, blank=True, null=True, help_text="Name of the configuration")
-    ssh_user = models.CharField(max_length=150, blank=True, null=True, help_text="SSH user of the worker nodes")
-    ssh_password = models.CharField(max_length=150, blank=True, null=True, help_text="SSH password of the worker nodes")
-    ip_range = models.TextField(blank=True, null=True, help_text="IP range of the worker nodes")
-    created_at = models.DateTimeField(auto_now_add=True, help_text="Date time when this entry was created")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='configuration')
+    name = models.CharField(max_length=150)
+    ssh_user = models.CharField(max_length=150)
+    ssh_password = models.CharField(max_length=150)
+    ip_range = models.CharField(max_length=150)
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 class ConfigurationForm(ModelForm):
     class Meta:
         model = Configuration
         fields = ['name', 'ssh_user', 'ssh_password', 'ip_range']
+
+    def clean_ip_range(self):
+        ip_range = self.cleaned_data.get('ip_range')
+        ip_range_regex = r"^(\d{1,3}\.){3}\d{1,3}/\d{1,2}$"
+        if not re.match(ip_range_regex, ip_range):
+            raise ValidationError("Invalid IP range format. Use CIDR notation")
 
 
 def default_deb_list():
