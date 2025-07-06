@@ -473,9 +473,11 @@ def undo_sudoers_file(ip_address, ssh_user, ssh_password):
 
 
 def _update_or_create_worker(config: Configuration, ip_address: str):
-    """Creates a worker for a given IP address or updates an existing one.
+    """
+    Creates a worker for a given IP address or updates an existing one.
 
     :param config: The configuration the worker belongs to
+    :param ip_address: The IP address of the worker
     """
     worker = None
     try:
@@ -507,7 +509,9 @@ def _update_or_create_worker(config: Configuration, ip_address: str):
 
 
 def _scan_for_worker(config: Configuration, ip_address: str, port: int = 22, timeout: int = 1):
-    """Scans a given IP address to check if a worker is reachable."""
+    """
+    Scans a given IP address to check if a worker is reachable.
+    """
     try:
         with socket.create_connection((ip_address, port), timeout):
             _update_or_create_worker(config, ip_address)
