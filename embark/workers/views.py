@@ -83,7 +83,9 @@ def delete_config(request):
             undo_sudoers_file.delay(worker.ip_address, config.ssh_user, config.ssh_password)
 
         workers = Worker.objects.annotate(config_count=Count('configurations')).filter(configurations__id=selected_config_id, config_count=1)
-        workers.delete()
+        for worker in workers:
+            worker.dependency_version.delete()
+            worker.delete()
 
         config.delete()
         messages.success(request, 'Configuration deleted successfully')

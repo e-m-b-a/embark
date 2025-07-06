@@ -32,8 +32,8 @@ if [[ ${EUID} -eq 0 ]]; then
   echo -e "\\n${RED}""Running this script as root is not supported""${NC}\\n"
 fi
 
-declare -A lastCheckedCache
-declare -A updatedLastCheckedCache
+declare -A LAST_CHECKED_CACHE
+declare -A UPDATED_LAST_CHECKED_CACHE
 
 FAST_EXECUTION=$([[ "$*" == *"--fast"* ]] && echo true || echo false)
 
@@ -42,19 +42,19 @@ CACHE_FILE=".last_checked"
 if [ -f "$CACHE_FILE" ] && $FAST_EXECUTION; then
   # shellcheck source=/dev/null
   source -- "$CACHE_FILE" || rm "$CACHE_FILE"
-  "${updatedLastCheckedCache[@]@A}" && declare -A lastCheckedCache="${_#*=}"
+  "${UPDATED_LAST_CHECKED_CACHE[@]@A}" && declare -A LAST_CHECKED_CACHE="${_#*=}"
   echo -e "\\n${GREEN}""Found and loaded cache""${NC}\\n"
 fi
 
 hasChanged(){
   modTime=$(stat -c %Y "$1")
-  updatedLastCheckedCache["$1"]="$modTime"
+  UPDATED_LAST_CHECKED_CACHE["$1"]="$modTime"
 
   # hasChanged if no entry exists
-  if [[ -z ${lastCheckedCache["$1"]+_} ]]; then return 0; fi
+  if [[ -z ${LAST_CHECKED_CACHE["$1"]+_} ]]; then return 0; fi
 
   # hasChanged if mod time is newer than cached
-  [[ "$modTime" -gt ${lastCheckedCache["$1"]} ]]
+  [[ "$modTime" -gt ${LAST_CHECKED_CACHE["$1"]} ]]
 }
 
 # check that all tools are installed
@@ -425,11 +425,11 @@ copy_right_check 2025 "${PWD}" "${PWD}/emba_logs"
 if $FAST_EXECUTION; then
   # Enable recheck of failed files
   for MODULE in "${MODULES_TO_CHECK_ARR[@]}"; do
-    unset 'updatedLastCheckedCache[$MODULE]'
+    unset 'UPDATED_LAST_CHECKED_CACHE[$MODULE]'
   done
 
   # Store cache
-  declare -p updatedLastCheckedCache > "$CACHE_FILE"
+  declare -p UPDATED_LAST_CHECKED_CACHE > "$CACHE_FILE"
 fi
 
 if [[ "${#MODULES_TO_CHECK_ARR[@]}" -gt 0 ]]; then
