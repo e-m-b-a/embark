@@ -133,6 +133,7 @@
                 <span class="nav-link">Updater</span>
             </a>
         </li>
+        {% if show_worker_app %}
         <li>
             <a href="{% url 'embark-worker-main' %}">
                 <span class="icon">
@@ -146,7 +147,8 @@
                 </span>
                 <span class="nav-link">Workers</span>
             </a>
-        </li>        
+        </li>
+        {% endif %}
         <li>
             <a href="{% url 'embark-settings-main' %}">
                 <span class="icon">

@@ -90,6 +90,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'settings.context_processors.show_worker_app_processor',
             ],
         },
     },
@@ -314,10 +315,12 @@ VERSION = get_version_strings()
 
 # Worker setup
 WORKER_FILES_PATH = os.path.join(BASE_DIR.parent, "WORKER_FILES")
+WORKER_UPDATE_CHECK = os.path.join(WORKER_FILES_PATH, "update_check")
 WORKER_SETUP_LOGS = os.path.join(WORKER_FILES_PATH, "logs/worker_setup_{timestamp}.log")
 WORKER_EMBA_ROOT = "/root/emba/"
 WORKER_FIRMWARE_DIR = "/root/firmware/"
 WORKER_EMBA_LOGS = "/root/emba_logs/"
+WORKER_UPDATE_QUEUE_SIZE = 50
 
 # Celery task queue
 CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"

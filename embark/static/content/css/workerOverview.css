@@ -120,3 +120,93 @@ form {
     width: 100%;
 }
 
+.toggle-update-diff {
+    position: relative;
+    margin: 4px 2px;
+}
+
+.update-dot {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: red;
+    display: inline-block;
+    border: 3px solid white;
+}
+
+.update-modal {
+    z-index: 10;
+    position: fixed;
+    display: none;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: white;
+    background-color: rgba(0,0,0,0.4);
+    color: black;
+}
+
+.modal-content {
+    display: flex;
+    background-color: #fefefe;
+    border: 2px solid #888;
+    padding: 20px;
+    margin: 20% auto;
+    width: 40%;
+    border-radius: 10px;
+}
+
+.modal-title {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid black;
+}
+
+.modal-title p {
+    font-weight: bold;
+    font-size: 30px;
+}
+
+.modal-close {
+    margin-top: -6px;
+    font-size: 32px;
+    font-weight: bold;
+    color: #aaa;
+}
+
+.modal-body {
+    margin-top: 32px;
+    display: block;
+    text-align: left;
+}
+
+.modal-body p {
+    margin-bottom: 0;
+    font-size: 20px;
+}
+
+.modal-close:hover,
+.modal-close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.modal-action-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-abort-button {
+    background-color: #A9A9A9;
+}
+
+.modal-abort-button:hover {
+    background-color: #808080;
+}

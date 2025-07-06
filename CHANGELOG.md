@@ -4,14 +4,45 @@
 
 ### FIXED
 
+### ADDED
+
+- Worker health check and fetch analysis logs ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=112364687&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C46))
+- Trigger orchestrator at critical moments ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114047181&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C59)) 
+
+## [sprint-11](https://github.com/amosproj/amos2025ss01-embark/releases/tag/sprint-11-release) - 2025-07-02
+
+### FIXED
+
+- Missing sudo at worker soft reset ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=112364355&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C43))
+
+### ADDED
+
+- Safe and prioritized worker update management ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114650622&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C70))
+- Distributed lock to orchestrator to ensure synchronization across multiple instances ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=116668070&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C89))
+- Show workers app only when enabled ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=113440769&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C52))
+- Download specific worker nodes dependency version ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=116857375&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C90))
+
+## [sprint-10](https://github.com/amosproj/amos2025ss01-embark/releases/tag/sprint-10-release) - 2025-06-25
+
+### FIXED
+
 - Fix a bug related to incorrect start of celery ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=115359765&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C79))
+- Fix a bug related to collecting worker dependency information
+- Fix a bug related to collecting worker external repo and emba version information
+- Fix a bug related to updating APT dependencies ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114467717&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C61))
 
 ### ADDED
 
 - Collect dependency version info for workers ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114773112&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C73))
 - Settings App to EMBArk ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114643627&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C66))
 - Settings helper `workers_enabled` check
-- Trigger orchestrator at critical moments ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114047181&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C59)) 
+- Available Update check ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114467717&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C61))
+- Celery for reset ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=115510818&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C81))
+- Add configuration user to sudoers file ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=115519308&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C82))
+
+### CHANGED
+
+- Use settings worker path variables
 
 ## [sprint-09](https://github.com/amosproj/amos2025ss01-embark/releases/tag/sprint-09-release) - 2025-06-18
 

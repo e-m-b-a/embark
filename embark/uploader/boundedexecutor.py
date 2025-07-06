@@ -120,10 +120,10 @@ class BoundedExecutor:
             if active_analyzer_dir:
                 shutil.rmtree(active_analyzer_dir)
 
-        except builtins.Exception as execpt:
+        except builtins.Exception as exce:
             # fail
             logger.error("EMBA run was probably not successful!")
-            logger.error("run_emba_cmd error: %s", execpt)
+            logger.error("run_emba_cmd error: %s", exce)
             exit_fail = True
             logger.debug("sending email to admin")
             admin_email = User.objects.get(name="admin").email
@@ -213,10 +213,10 @@ class BoundedExecutor:
             return None
         try:
             future = executor.submit(function_cmd, *args, **kwargs)
-        except builtins.Exception as error:
+        except builtins.Exception as exce:
             logger.error("Executor task could not be submitted")
             semaphore.release()
-            raise error
+            raise exce
         future.add_done_callback(lambda x: semaphore.release())
         return future
 
@@ -252,7 +252,7 @@ class BoundedExecutor:
         analysis.status['finished'] = False
         analysis.status['work'] = True
         analysis.status['last_update'] = str(timezone.now())
-        analysis.status['last_phase'] = "Started Zipping"
+        analysis.status['last_phase'] = "Started zipping"
         analysis.save()
 
         room_group_name = f"services_{analysis.user}"
@@ -265,7 +265,6 @@ class BoundedExecutor:
             }
         )
         try:
-            # archive = Archiver.pack(f"{settings.MEDIA_ROOT}/log_zip/{analysis_id}", 'zip', analysis.path_to_logs, './*')
             archive = Archiver.make_zipfile(f"{settings.MEDIA_ROOT}/log_zip/{analysis_id}.zip", analysis.path_to_logs)
 
             # create a LogZipFile obj
@@ -315,20 +314,20 @@ class BoundedExecutor:
                     logger.debug("finished unzipping, now renaming")
                     # renaming and moving
                     # 1. find toplevel in tmp (takes first find)
-                    for root_, dir_ in os.walk(Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/tmp/")):
-                        if os.path.dirname(dir_) == "html-report":
-                            top_level = os.path.abspath(root_)
+                    for root, dirs, _ in os.walk(Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/tmp/")):
+                        if os.path.dirname(dirs) == "html-report":
+                            top_level = os.path.abspath(root)
                             break
                     # 2. move dirs and file from there into emba_logs
                     shutil.move(top_level, f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs")
                 # 3. sanity check (conformity)
                 # TODO check the files
-        except builtins.Exception as exce:
+        except Exception as exce:
             logger.error("Unzipping failed: %s", exce)
 
         result_obj = result_read_in(analysis_id)
         if result_obj is None:
-            logger.error("Readin failed: %s", exce)
+            logger.error("Readin failed.")
             return
 
         logger.debug("Got %s from zip", result_obj)

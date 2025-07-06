@@ -35,6 +35,7 @@ apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin do
 
 apt-get install -y inotify-tools
 apt-get install -y libnotify-bin
+apt-get install -y p7zip-full
 
 systemctl enable docker
 systemctl start docker

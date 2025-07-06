@@ -1,16 +1,24 @@
-import socket
+import os
 import re
+import time
+import socket
+import subprocess
+from pathlib import Path
 
+import requests
 import paramiko
+
 from celery import shared_task
 from celery.utils.log import get_task_logger
-
+from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from django.conf import settings
 
-from workers.models import Worker, Configuration
-from workers.update.dependencies import DependencyType
-from workers.update.update import exec_blocking_ssh, perform_update
+from workers.models import Worker, Configuration, DependencyVersion, DependencyType
+from workers.update.dependencies import eval_outdated_dependencies, get_script_name, update_dependency, setup_dependency
+from workers.update.update import exec_blocking_ssh, parse_deb_list, process_update_queue
 from workers.orchestrator import get_orchestrator
+from workers.codeql_ignore import new_autoadd_client
+from uploader.models import FirmwareAnalysis
 
 logger = get_task_logger(__name__)
 
@@ -19,41 +27,15 @@ def create_periodic_tasks(**kwargs):
     """
     Create periodic tasks with the start of the application. (called in ready() method of the app config)
     """
-    from django_celery_beat.models import PeriodicTask, IntervalSchedule  # pylint: disable=import-outside-toplevel
-    schedule, _created = IntervalSchedule.objects.get_or_create(
-        every=2,
-        period=IntervalSchedule.MINUTES
+    schedule_2m, _ = IntervalSchedule.objects.get_or_create(
+        every=2, period=IntervalSchedule.MINUTES
     )
+
     PeriodicTask.objects.get_or_create(
-        interval=schedule,
-        name='Update Worker Information',
-        task='workers.tasks.update_worker_info',
+        interval=schedule_2m,
+        name="Update Worker Information",
+        task="workers.tasks.update_worker_info",
     )
-
-
-def _parse_deb_list(deb_list_str: str):
-    """
-    Parse the output of the 'sha256sum *.deb' command to extract package names and their checksums.
-
-    :param deb_list_str: String containing the output of the 'sha256sum *.deb' command
-    :return: List of dictionaries with package information
-    """
-    deb_list = []
-    for line in deb_list_str.splitlines():
-        try:
-            checksum, package_name = line.split('  ')
-            deb_info = re.match(r"(?P<name>[^_]+)_(?P<version>[^_]+)_(?P<architecture>[^.]+)\.deb", package_name)
-            deb_list.append({
-                "name": deb_info.group("name"),
-                "version": deb_info.group("version"),
-                "architecture": deb_info.group("architecture"),
-                "checksum": checksum
-            })
-        except BaseException as error:
-            if line:
-                logger.error("Error parsing deb list line '%s': %s", line, error)
-            continue
-    return deb_list
 
 
 def update_system_info(configuration: Configuration, worker: Worker):
@@ -86,21 +68,6 @@ def update_system_info(configuration: Configuration, worker: Worker):
         disk_free = disk_str[3].replace('G', 'GB').replace('M', 'MB')
         disk_info = f"Free: {disk_free}  Total: {disk_total}"
 
-        version_regex = r"\d+\.\d+\.\d+[a-z]?"
-        emba_version = exec_blocking_ssh(ssh_client, "sudo cat /root/emba/docker-compose.yml | awk -F: '/image:/ {print $NF; exit}'")
-        emba_version = "N/A" if not re.match(version_regex, emba_version) else emba_version
-
-        commit_regex = r"[0-9a-f]{7,40}"
-        last_sync_nvd = exec_blocking_ssh(ssh_client, "sudo bash -c 'cd /root/emba/external/nvd-json-data-feeds && git rev-parse --short HEAD'")
-        last_sync_nvd = "N/A" if not re.match(commit_regex, last_sync_nvd) else last_sync_nvd
-        last_sync_epss = exec_blocking_ssh(ssh_client, "sudo bash -c 'cd /root/emba/external/EPSS-data && git rev-parse --short HEAD'")
-        last_sync_epss = "N/A" if not re.match(commit_regex, last_sync_epss) else last_sync_epss
-        last_sync = f"NVD feed: {last_sync_nvd}  EPSS: {last_sync_epss}"
-
-        deb_check = exec_blocking_ssh(ssh_client, "sudo bash -c 'if test -d /root/DEPS/pkg; then echo 'success'; fi'")
-        deb_list_str = exec_blocking_ssh(ssh_client, "sudo bash -c 'cd /root/DEPS/pkg && sha256sum *.deb'") if deb_check == 'success' else ""
-        deb_list = _parse_deb_list(deb_list_str)
-
         ssh_client.close()
 
     except (paramiko.SSHException, socket.error) as ssh_error:
@@ -112,10 +79,7 @@ def update_system_info(configuration: Configuration, worker: Worker):
         'os_info': os_info,
         'cpu_info': cpu_info,
         'ram_info': ram_info,
-        'disk_info': disk_info,
-        'emba_version': emba_version,
-        'last_sync': last_sync,
-        'deb_list': deb_list
+        'disk_info': disk_info
     }
     worker.system_info = system_info
     worker.save()
@@ -149,10 +113,10 @@ def update_worker_info():
 def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
     """
     Copies the firmware image and triggers analysis start
-    :params worker_id: the worker to use
-    :params emba_cmd: The command to run
-    :params src_path: img source path
-    :params target_path: target path on worker
+    :param worker_id: the worker to use
+    :param emba_cmd: The command to run
+    :param src_path: img source path
+    :param target_path: target path on worker
     """
     try:
         worker = Worker.objects.get(id=worker_id)
@@ -175,38 +139,157 @@ def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
         exec_blocking_ssh(client, f"sudo mv {target_path_user} {target_path}")
 
     exec_blocking_ssh(client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
-    exec_blocking_ssh(client, "sudo rm -rf ./terminal.log")
-    exec_blocking_ssh(client, f"sudo sh -c '{emba_cmd}' >./terminal.log 2>&1")
+    exec_blocking_ssh(client, "sudo rm -rf /root/emba_run.log")
+    client.exec_command(f"sudo sh -c '{emba_cmd}' >./emba_run.log 2>&1")  # nosec
+    logger.info("Firmware analysis has been started on the worker.")
+
+    # Create file to suppress errors
+    os.makedirs(f"{settings.EMBA_LOG_ROOT}/{worker.analysis_id}/emba_logs/", exist_ok=True)
+    open(f"{settings.EMBA_LOG_ROOT}/{worker.analysis_id}/emba_logs/emba.log", "a").close()  # pylint: disable=unspecified-encoding, consider-using-with
+    time.sleep(10)  # Give the Docker container time to start up
+
+    monitor_worker_and_fetch_logs.delay(worker.id)
 
 
 @shared_task
-def update_worker(worker_id, dependency_idx):
+def monitor_worker_and_fetch_logs(worker_id):
+    """
+    Loops until the analysis stops on the remote worker.
+    Zips the analysis logs on the remote worker, downloads and extracts them.
+    If the worker is finished, performs a soft reset.
+
+    :param worker_id: ID of worker to monitor and fetch logs for.
+    """
+    orchestrator = get_orchestrator()
+    worker = Worker.objects.get(id=worker_id)
+    while True:
+        try:
+            _fetch_analysis_logs(worker)
+
+            analysis_finished = FirmwareAnalysis.objects.get(id=worker.analysis_id).status["finished"]
+            is_running = _is_emba_container_running(worker)
+            is_busy = orchestrator.is_busy(worker)
+            if not is_running or analysis_finished or not is_busy:
+
+                worker_soft_reset_task(worker.id)
+                orchestrator.release_worker(worker)
+
+                logger.info("[Worker %s] Analysis finished.", worker.id)
+                return
+
+        except Exception as exception:
+            logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
+            if worker in orchestrator.get_busy_workers().values():
+                logger.info("[Worker %s] Releasing the worker...", worker.id)
+                worker_soft_reset_task(worker.id)
+                orchestrator.release_worker(worker)
+                return
+
+        time.sleep(15)
+
+
+def _fetch_analysis_logs(worker) -> None:
+    """
+    Zips the analysis log files on remote worker, downloads it, extracts it.
+    Also gets the emba_run.log file that's displayed in the UI
+
+    :param worker: Worker object whose analysis_id logs to process.
+    :raises CalledProcessError: If extracting the zipfile fails.
+    """
+    client = None
+    sftp_client = None
+    try:
+        client = worker.ssh_connect()
+
+        # To not error if the logs dir has been deleted
+        exec_blocking_ssh(client, f"sudo mkdir -p {settings.WORKER_EMBA_LOGS}")
+
+        homedir = "/root" if client.ssh_user == "root" else f"/home/{client.ssh_user}"
+        remote_zip_path = f"{homedir}/emba_logs.zip"
+
+        logger.info("[Worker %s] Zipping logs on remote...", worker.id)
+        zip_cmd = (
+            f'sudo bash -c "cd /root && '
+            f"7z u -t7z -y {remote_zip_path} {settings.WORKER_EMBA_LOGS} -uq3; "
+            f'chown {client.ssh_user}: {remote_zip_path}"'
+        )
+        exec_blocking_ssh(client, zip_cmd)
+        logger.info("[Worker %s] Zipping logs on remote complete.", worker.id)
+
+        # Ensure dirs exists locally
+        local_log_dir = f"{settings.EMBA_LOG_ROOT}/{worker.analysis_id}"
+        os.makedirs(f"{local_log_dir}/emba_logs/", exist_ok=True)
+        os.makedirs(f"{settings.MEDIA_ROOT}/log_zip/", exist_ok=True)
+
+        # Fetch zip file
+        local_zip_path = f"{settings.MEDIA_ROOT}/log_zip/{worker.analysis_id}.zip"
+        sftp_client = client.open_sftp()
+        sftp_client.get(f"{homedir}/emba_logs.zip", local_zip_path)
+        logger.info("[Worker %s] Downloaded the log zip.", worker.id)
+
+        # Ensure emba_run.log can be accessed by the user
+        if client.ssh_user != "root":
+            chown_cmd = f'sudo bash -c "chown {client.ssh_user}: {homedir}/emba_run.log"'
+            exec_blocking_ssh(client, chown_cmd)
+
+        sftp_client.get(f"{homedir}/emba_run.log", f"{local_log_dir}/emba_run.log")
+
+        logger.info("[Worker %s] Downloaded emba_run.log.", worker.id)
+
+        unzip_cmd = ["7z", "x", "-y", local_zip_path, f"-o{local_log_dir}/"]
+        subprocess.run(unzip_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)  # nosec
+
+        logger.info("[Worker %s] Unzipped the log zip to: %s/emba_logs/", worker.id, local_log_dir)
+
+    finally:
+        if sftp_client is not None:
+            sftp_client.close()
+        if client is not None:
+            client.close()
+
+
+def _is_emba_container_running(worker) -> bool:
+    """
+    Checks if a Docker container is running on the worker.
+
+    :param worker: The worker to check.
+    :return: True, if a Docker container is still running,
+             False, otherwise
+    """
+    client = None
+    try:
+        client = worker.ssh_connect()
+
+        cmd = "sudo docker ps -qa"
+        containers = exec_blocking_ssh(client, cmd)
+        if not containers:
+            logger.info("[Worker %s] EMBA Docker container is no longer running.", worker.id)
+            return False
+
+        return True
+
+    except Exception as exception:
+        logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
+        return False
+    finally:
+        if client is not None:
+            client.close()
+
+
+@shared_task
+def update_worker(worker_id):
     """
     Setup/Update an offline worker and add it to the orchestrator.
 
-    DependencyType.ALL equals a full setup (e.g. new worker), all other DependencyType values are for specific dependencies (e.g. the external directory)
-
     :params worker_id: The worker to update
-    :params dependency_idx: Dependency type as index
     """
     try:
         worker = Worker.objects.get(id=worker_id)
     except Worker.DoesNotExist:
-        logger.error("start_analysis: Invalid worker id")
+        logger.error("update_worker: Invalid worker id")
         return
 
-    if dependency_idx not in DependencyType.__members__:
-        logger.error("start_analysis: Invalid dependency type")
-        return
-
-    dependency = DependencyType[dependency_idx]
-
-    logger.info("Worker update started (Dependency: %s)", dependency)
-
-    worker.status = Worker.ConfigStatus.CONFIGURING
-    worker.save()
-
-    client = None
+    logger.info("update_worker: Worker update task started")
 
     orchestrator = get_orchestrator()
     try:
@@ -216,32 +299,174 @@ def update_worker(worker_id, dependency_idx):
     except ValueError:
         pass
 
-    try:
-        client = worker.ssh_connect()
-        if dependency == DependencyType.ALL:
-            perform_update(worker, client, DependencyType.DEPS)
-            perform_update(worker, client, DependencyType.REPO)
-            perform_update(worker, client, DependencyType.EXTERNAL)
-            perform_update(worker, client, DependencyType.DOCKERIMAGE)
-        else:
-            perform_update(worker, client, dependency)
-
-        worker.status = Worker.ConfigStatus.CONFIGURED
-        logger.info("Setup done")
-    except Exception as ssh_error:
-        logger.error("SSH connection failed: %s", ssh_error)
-        worker.status = Worker.ConfigStatus.ERROR
-    finally:
-        if client is not None:
-            client.close()
-        worker.save()
+    process_update_queue(worker)
 
     if worker.status == Worker.ConfigStatus.CONFIGURED:
         try:
             config = worker.configurations.first()
             update_system_info(config, worker)
+
             orchestrator.add_worker(worker)
             orchestrator.trigger()
             logger.info("Worker: %s added to orchestrator", worker.name)
         except ValueError:
             logger.error("Worker: %s already exists in orchestrator", worker.name)
+
+
+@shared_task
+def fetch_dependency_updates():
+    """
+    Checks if there are updates available
+    """
+    logger.info("Dependency update check started.")
+
+    version = DependencyVersion.objects.first()
+    if not version:
+        version = DependencyVersion()
+
+    DOCKER_COMPOSE_URL = "https://raw.githubusercontent.com/e-m-b-a/emba/refs/heads/master/docker-compose.yml"  # pylint: disable=invalid-name
+    GH_API_URL = "https://api.github.com/repos/{}/commits?per_page=1"  # pylint: disable=invalid-name
+
+    def _get_head_time(repo):
+        try:
+            response = requests.get(GH_API_URL.format(repo), timeout=30)
+            json_response = response.json()
+
+            return json_response[0]["sha"], json_response[0]["commit"]["author"]["date"]
+        except requests.exceptions.Timeout as exception:
+            logger.error("Update check: Failed. An error occured on contacting GH API: %s", exception)
+        except (requests.exceptions.JSONDecodeError, KeyError):
+            logger.error("Update check: Failed. GH API returned invalid or incomplete json: %s", response.text)
+        return "latest", None
+
+    # Fetch EMBA + docker image
+    try:
+        response = requests.get(DOCKER_COMPOSE_URL, timeout=30)
+        match = re.search(r'image:\s?embeddedanalyzer\/emba:(.*?)\n', response.text)
+
+        if match is None:
+            logger.error("Update check: Failed. EMBA docker-compose.yml does not contain image version")
+            version.emba = "latest"
+        else:
+            version.emba = match.group(1)
+            version.emba_head, _ = _get_head_time("e-m-b-a/emba")
+    except requests.exceptions.Timeout as exception:
+        logger.error("Update check: Failed. An error occured on contacting GH API for docker-compose.yml: %s", exception)
+        version.emba = "latest"
+
+    # Fetch external
+    version.nvd_head, version.nvd_time = _get_head_time("EMBA-support-repos/nvd-json-data-feeds")
+    version.epss_head, version.epss_time = _get_head_time("EMBA-support-repos/EPSS-data")
+
+    # Fetch APT
+    Path(settings.WORKER_FILES_PATH).mkdir(parents=True, exist_ok=True)
+    Path(os.path.join(settings.WORKER_FILES_PATH, "logs")).mkdir(parents=True, exist_ok=True)
+
+    log_file = settings.WORKER_SETUP_LOGS.format(timestamp=int(time.time()))
+    logger.info("APT dependency update check started. Logs: %s", log_file)
+    try:
+        script_path = os.path.join(os.path.dirname(__file__), "update", get_script_name(DependencyType.DEPS))
+        cmd = f"sudo {script_path} '{settings.WORKER_UPDATE_CHECK}' ''"
+        with open(log_file, "w+", encoding="utf-8") as file:
+            with subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=file, stderr=file, shell=True) as proc:  # nosec
+                proc.communicate()
+
+            if proc.returncode == 0:
+                logger.info("APT dependency update check successful. Logs: %s", log_file)
+            else:
+                logger.error("APT dependency update check failed. Logs: %s", log_file)
+
+        deb_list_str = subprocess.check_output(f"cd {os.path.join(settings.WORKER_UPDATE_CHECK, 'pkg')} && sha256sum *.deb", shell=True)  # nosec
+        version.deb_list = parse_deb_list(deb_list_str.decode('utf-8'))
+
+        update_dependency(DependencyType.DEPS, False)
+        setup_dependency(DependencyType.DEPS, "cached")
+        update_dependency(DependencyType.DEPS, True)
+    except BaseException as exception:
+        logger.error("Error APT dependency update check: %s. Logs: %s", exception, log_file)
+        version.deb_list = {}
+
+    # Store in DB
+    version.save()
+
+    # Evaluate for each worker
+    workers = Worker.objects.all()
+    for worker in workers:
+        eval_outdated_dependencies(worker)
+
+
+@shared_task
+def worker_soft_reset_task(worker_id, configuration_id=None):
+    """
+    Connects via SSH to the worker and performs the soft reset
+    :param worker_id: ID of worker to soft reset
+    :param configuration_id: ID of the configuration based on which the worker needs to be reset
+    """
+    try:
+        worker = Worker.objects.get(id=worker_id)
+    except Worker.DoesNotExist:
+        logger.error("Worker Soft Reset: Invalid worker id")
+        return
+    ssh_client = None
+    try:
+        ssh_client = worker.ssh_connect(configuration_id)
+        homedir = "/root" if ssh_client.ssh_user == "root" else f"/home/{ssh_client.ssh_user}"
+        exec_blocking_ssh(ssh_client, "sudo docker ps -aq | xargs -r sudo docker stop | xargs -r sudo docker rm || true")
+        exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
+        exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
+        exec_blocking_ssh(ssh_client, f"sudo rm -rf {homedir}/emba_logs.zip*")  # Also delete possible leftover tmp files
+        exec_blocking_ssh(ssh_client, f"sudo rm -rf {homedir}/emba_run.log")
+        ssh_client.close()
+    except (paramiko.SSHException, socket.error):
+        logger.error("[Worker %s] SSH Connection failed while soft resetting.", worker.id)
+        if ssh_client is not None:
+            ssh_client.close()
+
+
+@shared_task
+def worker_hard_reset_task(worker_id, configuration_id):
+    try:
+        worker = Worker.objects.get(id=worker_id)
+    except Worker.DoesNotExist:
+        logger.error("Worker Hard Reset: Invalid worker id")
+        return
+    ssh_client = None
+    try:
+        ssh_client = worker.ssh_connect(configuration_id)
+        emba_path = os.path.join(settings.WORKER_EMBA_ROOT, "full_uninstaller.sh")
+        exec_blocking_ssh(ssh_client, "sudo bash " + emba_path)
+        ssh_client.close()
+    except (paramiko.SSHException, socket.error):
+        logger.error("SSH Connection didnt work for: %s", worker.name)
+        if ssh_client:
+            ssh_client.close()
+
+
+@shared_task
+def undo_sudoers_file(ip_address, ssh_user, ssh_password):
+    """
+    Undos changes from the sudoers file
+    After this is done, "sudo" might prompt a password (e.g. if not a root user, not in sudoers file).
+    Note: Once this task is called, the configuration is already deleted (and the worker might too)
+
+    Note: If two configurations with the same username exist, the entry in the sudoers file is removed (while it might still be needed).
+
+    :params ip_address: The worker ip address
+    :params ssh_user: The worker ssh_user
+    :params ssh_password: The worker ssh_password
+    """
+    client = None
+    sudoers_entry = f"{ssh_user} ALL=(ALL) NOPASSWD: ALL"
+    command = f"sudo bash -c \"grep -vxF '{sudoers_entry}' /etc/sudoers.d/EMBArk > temp_sudoers; mv -f temp_sudoers /etc/sudoers.d/EMBArk || true\""
+
+    try:
+        client = new_autoadd_client()
+        client.connect(ip_address, username=ssh_user, password=ssh_password)
+        exec_blocking_ssh(client, command)
+
+        logger.info("undo sudoers file: Removed user %s from sudoers of worker %s", ssh_user, ip_address)
+    except Exception as ssh_error:
+        logger.error("undo sudoers file: Failed. SSH connection failed: %s", ssh_error)
+    finally:
+        if client is not None:
+            client.close()

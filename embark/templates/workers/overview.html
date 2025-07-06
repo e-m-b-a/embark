@@ -45,24 +45,24 @@
                     <div class="actions-dropdown-content" id="menu-{{ config.id }}">
                         <form action="{% url 'embark-configuration-update' config.id %}" method="post">
                             {% csrf_token %}
-                            <input type="hidden" name="update" value="repo">
-                            <input type="submit" name="action" value="Update EMBA repository">
+                            <input type="hidden" name="update" value="emba">
+                            <input type="submit" name="action" value="Update EMBA">
                         </form>
                         <form action="{% url 'embark-configuration-update' config.id %}" method="post">
                             {% csrf_token %}
-                            <input type="hidden" name="update" value="docker">
-                            <input type="submit" name="action" value="Update Docker container">
+                            <input type="hidden" name="update" value="deps">
+                            <input type="submit" name="action" value="Update APT dependencies">
                         </form>
                         <form action="{% url 'embark-configuration-update' config.id %}" method="post">
                             {% csrf_token %}
                             <input type="hidden" name="update" value="external">
                             <input type="submit" name="action" value="Update external directory">
                         </form>
-                        <form action="{% url 'embark-worker-hard-reset' config.id %}" method="get">
+                        <form action="{% url 'embark-configuration-hard-reset' config.id %}" method="post">
                             {% csrf_token %}
                             <input type="submit" value="Hard Reset">
                         </form>
-                        <form action="{% url 'embark-worker-soft-reset' config.id %}" method="get">
+                        <form action="{% url 'embark-configuration-soft-reset' config.id %}" method="post">
                             {% csrf_token %}
                             <input type="submit" value="Soft Reset">
                         </form>
@@ -96,6 +96,11 @@
     </div>
 
     <div class="worker-container">
+        <form action="{% url 'embark-worker-check-updates' %}" method="post">
+            {% csrf_token %}
+            <input type="submit" value="Check updates">
+        </form>
+
     <h2>Worker Nodes</h2>
     <table>
     <tr>
@@ -108,8 +113,8 @@
         <th>CPU</th>
         <th>Memory</th>
         <th>Disk</th>
-        <th>EMBA Version</th>
-        <th>Last Sync</th>
+        <th>EMBA version</th>
+        <th>External directory</th>
         <th>Actions</th>
     </tr>
     {% for worker in workers %}
@@ -123,42 +128,137 @@
         <td>{{ worker.system_info.cpu_info }}</td>
         <td>{{ worker.system_info.ram_info }}</td>
         <td>{{ worker.system_info.disk_info }}</td>
-        <td>{{ worker.system_info.emba_version }}</td>
-        <td>{{ worker.system_info.last_sync }}</td>
+        <td>{{ worker.dependency_version.emba }}</td>
+        <td>NVD: {{ worker.dependency_version.nvd_head|slice:"0:6" }}<br/>EPSS: {{ worker.dependency_version.epss_head|slice:"0:6" }}</td>
 
         <td>
             {% if worker.status != "Unconfigured" %}
                 <div class="actions-dropdown">
                     <button class="toggle-actions-menu" data-id="{{ worker.ip_address }}">...</button>
                     <div class="actions-dropdown-content" id="menu-{{ worker.ip_address }}">
-                        <form action="{% url 'embark-worker-update' worker.id %}" method="post">
-                            {% csrf_token %}
-                            <input type="hidden" name="update" value="repo">
-                            <input type="submit" name="action" value="Update EMBA repository">
-                        </form>
-                        <form action="{% url 'embark-worker-update' worker.id %}" method="post">
-                            {% csrf_token %}
-                            <input type="hidden" name="update" value="docker">
-                            <input type="submit" name="action" value="Update Docker container">
-                        </form>
-                        <form action="{% url 'embark-worker-update' worker.id %}" method="post">
-                            {% csrf_token %}
-                            <input type="hidden" name="update" value="external">
-                            <input type="submit" name="action" value="Update external directory">
-                        </form>
-                        <form action="{% url 'embark-worker-hard-reset' worker.id %}" method="get">
+                        {% if worker.dependency_version.emba_outdated %}
+                            <button class="toggle-update-diff" dep-type="emba">Update EMBA
+                                <span class="update-dot"/>
+                            </button>
+                        {% endif %}
+                        {% if worker.dependency_version.deb_outdated %}
+                            <button class="toggle-update-diff" dep-type="deb">Update APT dependencies
+                                <span class="update-dot"/>
+                            </button>
+                        {% endif %}
+                        {% if worker.dependency_version.external_outdated %}
+                            <button class="toggle-update-diff" dep-type="external">Update external directory
+                                <span class="update-dot"/>
+                            </button>
+                        {% endif %}
+                        <form action="{% url 'embark-worker-hard-reset' worker.id %}" method="post">
                             {% csrf_token %}
                             <input type="submit" value="Hard Reset">
                         </form>
-                        <form action="{% url 'embark-worker-soft-reset' worker.id %}" method="get">
+                        <form action="{% url 'embark-worker-soft-reset' worker.id %}" method="post">
                             {% csrf_token %}
                             <input type="submit" value="Soft Reset">
                         </form>
                     </div>
                 </div>
+                {% if worker.dependency_version.emba_outdated %}
+                    <div class="update-modal" id="update-modal-emba">
+                        <div class="modal-content">
+                            <div class="modal-title">
+                                <p>Update diff - EMBA</p>
+                                <div class="modal-close">×</div>
+                            </div>
+                            <div class="modal-body">
+                                <p><b>Installed:</b> EMBA {{ worker.dependency_version.emba }}</p>
+                                <p><b>Available:</b> EMBA {{ availableVersion.emba }}</p>
+                            </div>
+                            <div class="modal-action-buttons">
+                                <button class="modal-abort-button">Close</button>
+                                <form action="{% url 'embark-worker-update' worker.id %}" method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="update" value="emba">
+                                    <input type="submit" name="action" value="Update">
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                {% if worker.dependency_version.external_outdated %}
+                    <div class="update-modal" id="update-modal-external">
+                        <div class="modal-content">
+                            <div class="modal-title">
+                                <p>Update diff - external directory</p>
+                                <div class="modal-close">×</div>
+                            </div>
+                            <div class="modal-body">
+                                <p><b>Installed:</b></p>
+                                <ul>
+                                    <li>NVD: {{ worker.dependency_version.nvd_head }} (Timestamp: {{ worker.dependency_version.nvd_time }})</li>
+                                    <li>EPSS: {{ worker.dependency_version.epss_head }} (Timestamp: {{ worker.dependency_version.epss_time }})</li>
+                                </ul>
+                                <p><b>Available:</b></p>
+                                <ul>
+                                    <li>NVD: {{ availableVersion.nvd_head }} (Timestamp: {{ availableVersion.nvd_time }})</li>
+                                    <li>EPSS: {{ availableVersion.epss_head }} (Timestamp: {{ availableVersion.epss_time }})</li>
+                                </ul>
+                            </div>
+                            <div class="modal-action-buttons">
+                                <button class="modal-abort-button">Close</button>
+                                <form action="{% url 'embark-worker-update' worker.id %}" method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="update" value="external">
+                                    <input type="submit" name="action" value="Update">
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                {% if worker.dependency_version.deb_outdated %}
+                    <div class="update-modal" id="update-modal-deb">
+                        <div class="modal-content">
+                            <div class="modal-title">
+                                <p>Update diff - APT dependencies</p>
+                                <div class="modal-close">×</div>
+                            </div>
+                            <div class="modal-body">
+                                {% if worker.dependency_version.deb_list_diff.updated|length != 0 %}
+                                    <p><b>Update available:</b></p>
+                                    <ul>
+                                    {% for deb in worker.dependency_version.deb_list_diff.updated %}
+                                        <li>{{ deb.name }}: {{ deb.old }} → {{ deb.new }}</li>
+                                    {% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if worker.dependency_version.deb_list_diff.new|length != 0 %}
+                                    <p><b>New debs:</b></p>
+                                    <ul>
+                                    {% for deb in worker.dependency_version.deb_list_diff.new %}
+                                        <li>{{ deb.name }}: {{ deb.new }}</li>
+                                    {% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if worker.dependency_version.deb_list_diff.removed|length != 0 %}
+                                    <p><b>Removed debs:</b></p>
+                                    <ul>
+                                    {% for deb in worker.dependency_version.deb_list_diff.removed %}
+                                        <li>{{ deb }}</li>
+                                    {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>
+                            <div class="modal-action-buttons">
+                                <button class="modal-abort-button">Close</button>
+                                <form action="{% url 'embark-worker-update' worker.id %}" method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="update" value="deps">
+                                    <input type="submit" name="action" value="Update">
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
             {% endif %}
         </td>
-
     </tr>
     {% endfor %}
     </table>
@@ -199,7 +299,35 @@ document.addEventListener("DOMContentLoaded", function () {
                 menu.style.display = "none";
             }
         });
+
+        document.querySelectorAll(".update-modal").forEach(modal => {
+            if (modal == event.target) {
+                modal.style.display = "none";
+            }
+        });
+    });
+
+    // Close dropdown and open modal
+    document.querySelectorAll(".toggle-update-diff").forEach(button => {
+        button.addEventListener("click", function () {
+            const type = button.getAttribute("dep-type");
+            const menu = document.getElementById("update-modal-" + type);
+            if (menu) {
+                menu.style.display = (menu.style.display === "none" || menu.style.display === "") ? "block" : "none";
+
+                // Close actions-dropdown
+                document.querySelectorAll(".actions-dropdown-content").forEach(dropdown => {
+                    dropdown.style.display = "none";
+                });
+            }
+        });
+    });
+
+    // Close modal if exit/abort button is pressed
+    document.querySelectorAll(".modal-close, .modal-abort-button").forEach(button => {
+        button.addEventListener("click", function () {
+            button.parentElement.parentElement.parentElement.style.display = "none"
+        });
     });
 });
 </script>
-

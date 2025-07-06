@@ -5,7 +5,6 @@ from concurrent.futures import ThreadPoolExecutor
 
 import paramiko
 
-from celery.utils.log import get_task_logger
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import get_user
@@ -16,14 +15,9 @@ from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
 
-from workers.models import Worker, Configuration
-from workers.update.update import exec_blocking_ssh
-from workers.update.dependencies import DependencyType, uses_dependency
-from workers.tasks import update_worker, update_system_info
-from workers.orchestrator import get_orchestrator
-
-
-logger = get_task_logger(__name__)
+from workers.models import Worker, Configuration, WorkerDependencyVersion, DependencyVersion, DependencyType
+from workers.update.update import init_sudoers_file, queue_update, update_dependencies_info
+from workers.tasks import update_system_info, fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file
 
 
 @require_http_methods(["GET"])
@@ -48,6 +42,10 @@ def worker_main(request):
     reachable_workers = sorted(reachable_workers, key=lambda x: x.ip_address)
     unreachable_workers = sorted(unreachable_workers, key=lambda x: x.ip_address)
 
+    version = DependencyVersion.objects.first()
+    if not version:
+        version = DependencyVersion()
+
     workers = reachable_workers + unreachable_workers
     for worker in workers:
         worker.config_ids = ', '.join([str(config.id) for config in worker.configurations.filter(user=user)])
@@ -57,6 +55,7 @@ def worker_main(request):
         'user': user,
         'configs': configs,
         'workers': workers,
+        'availableVersion': version
     })
 
 
@@ -78,6 +77,10 @@ def delete_config(request):
         if config.user != user:
             messages.error(request, 'You are not allowed to delete this configuration')
             return safe_redirect(request, '/worker/')
+
+        config_workers = Worker.objects.filter(configurations__id=config.id)
+        for worker in config_workers:
+            undo_sudoers_file.delay(worker.ip_address, config.ssh_user, config.ssh_password)
 
         workers = Worker.objects.annotate(config_count=Count('configurations')).filter(configurations__id=selected_config_id, config_count=1)
         orchestrator = get_orchestrator()
@@ -136,11 +139,15 @@ def create_config(request):
 def configure_worker(request, configuration_id):
     """
     Configure all workers that are in the given configuration and have not been configured yet.
+    :params configuration_id: The configuration id
     """
     workers = Worker.objects.filter(configurations__id=configuration_id, status__in=[Worker.ConfigStatus.UNCONFIGURED, Worker.ConfigStatus.ERROR])
 
     for worker in workers:
-        update_worker.delay(worker.id, DependencyType.ALL.name)
+        queue_update(worker, DependencyType.DEPS)
+        queue_update(worker, DependencyType.REPO)
+        queue_update(worker, DependencyType.EXTERNAL)
+        queue_update(worker, DependencyType.DOCKERIMAGE)
 
     return safe_redirect(request, '/worker/')
 
@@ -154,6 +161,10 @@ def _trigger_worker_update(worker, dependency: str):
     """
     parsed_dependency = None
     match dependency:
+        case "emba":
+            repo_res = _trigger_worker_update(worker, "repo")
+            docker_res = _trigger_worker_update(worker, "docker")
+            return repo_res and docker_res
         case "repo":
             parsed_dependency = DependencyType.REPO
         case "docker":
@@ -165,10 +176,7 @@ def _trigger_worker_update(worker, dependency: str):
         case _:
             raise ValueError("Invalid dependency: Dependency could not be parsed.")
 
-    if uses_dependency(parsed_dependency, worker):
-        return False
-
-    update_worker.delay(worker.id, parsed_dependency.name)
+    queue_update(worker, parsed_dependency)
 
     return True
 
@@ -179,14 +187,13 @@ def _trigger_worker_update(worker, dependency: str):
 def update_worker_dependency(request, worker_id):
     """
     Update specific worker dependency
+    :params worker_id: The worker id
     """
     dependency = request.POST.get("update")
     try:
         worker = Worker.objects.get(id=worker_id)
 
-        if not _trigger_worker_update(worker, dependency):
-            messages.error(request, 'Worker update already queued')
-            return safe_redirect(request, '/worker/')
+        _trigger_worker_update(worker, dependency)
     except Worker.DoesNotExist:
         messages.error(request, 'Worker does not exist')
         return safe_redirect(request, '/worker/')
@@ -204,24 +211,19 @@ def update_worker_dependency(request, worker_id):
 def update_configuration_dependency(request, configuration_id):
     """
     Update specific configuration dependency
+    :params configuration_id: The configuration id
     """
     dependency = request.POST.get("update")
-    workers = Worker.objects.filter(configurations__id=configuration_id, status__in=[Worker.ConfigStatus.CONFIGURED])
+    workers = Worker.objects.filter(configurations__id=configuration_id, status__in=[Worker.ConfigStatus.CONFIGURED, Worker.ConfigStatus.CONFIGURING, Worker.ConfigStatus.ERROR])
 
-    count = 0
     try:
         for worker in workers:
-            if not _trigger_worker_update(worker, dependency):
-                continue
-            count = count + 1
+            _trigger_worker_update(worker, dependency)
     except ValueError as exception:
         messages.error(request, str(exception))
         return safe_redirect(request, '/worker/')
 
-    if count > 0:
-        messages.success(request, 'Update queued')
-    else:
-        messages.error(request, 'Configuration update already queued')
+    messages.success(request, 'Update queued')
     return safe_redirect(request, '/worker/')
 
 
@@ -236,6 +238,7 @@ def config_worker_scan(request, configuration_id):
 
     If a worker registration has already been processed for the configuration,
     gives information about the number of reachable workers out of the registered ones.
+    :params configuration_id: The configuration id
     """
     try:
         user = get_user(request)
@@ -254,11 +257,17 @@ def config_worker_scan(request, configuration_id):
                 existing_worker.configurations.add(configuration)
                 existing_worker.save()
             try:
+                init_sudoers_file(configuration, existing_worker)
                 update_system_info(configuration, existing_worker)
+                update_dependencies_info(existing_worker)
             except BaseException:
                 pass
         except Worker.DoesNotExist:
+            version = WorkerDependencyVersion()
+            version.save()
+
             new_worker = Worker(
+                dependency_version=version,
                 name=f"worker-{str(ip_address)}",
                 ip_address=str(ip_address),
                 system_info={},
@@ -267,7 +276,9 @@ def config_worker_scan(request, configuration_id):
             new_worker.save()
             new_worker.configurations.set([configuration])
             try:
+                init_sudoers_file(configuration, new_worker)
                 update_system_info(configuration, new_worker)
+                update_dependencies_info(new_worker)
             except BaseException:
                 pass
 
@@ -299,56 +310,112 @@ def config_worker_scan(request, configuration_id):
     return JsonResponse({'status': 'scan_complete', 'configuration': configuration.name, 'registered_workers': registered, 'reachable_workers': reachable})
 
 
-@require_http_methods(["GET"])
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def configuration_soft_reset(request, configuration_id):
+    """
+    Soft resets all workers in a given configuration
+    :params configuration_id: The configuration id
+    """
+    try:
+        user = get_user(request)
+        configuration = Configuration.objects.get(id=configuration_id)
+
+        if configuration.user != user:
+            messages.error(request, 'You are not allowed to access this configuration.')
+            return safe_redirect(request, '/worker/')
+    except Configuration.DoesNotExist:
+        messages.error(request, 'Configuration not found.')
+        return safe_redirect(request, '/worker/')
+
+    workers = Worker.objects.filter(configurations__id=configuration_id)
+
+    for worker in workers:
+        worker_soft_reset(request, worker.id, configuration_id)
+
+    messages.success(request, f'Successfully soft resetted configuration: {configuration_id} ({configuration.name})')
+    return safe_redirect(request, '/worker/')
+
+
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def configuration_hard_reset(request, configuration_id):
+    """
+    Hard resets all workers in a given configuration
+    :params configuration_id: The configuration id
+    """
+    try:
+        user = get_user(request)
+        configuration = Configuration.objects.get(id=configuration_id)
+
+        if configuration.user != user:
+            messages.error(request, 'You are not allowed to access this configuration.')
+            return safe_redirect(request, '/worker/')
+    except Configuration.DoesNotExist:
+        messages.error(request, 'Configuration not found.')
+        return safe_redirect(request, '/worker/')
+
+    workers = Worker.objects.filter(configurations__id=configuration_id)
+
+    for worker in workers:
+        worker_hard_reset(request, worker.id, configuration_id)
+
+    messages.success(request, f'Successfully hard resetted configuration: {configuration_id} ({configuration.name})')
+    return safe_redirect(request, '/worker/')
+
+
+@require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
 def worker_soft_reset(request, worker_id, configuration_id=None):
     """
     Soft reset the worker with the given worker ID.
+    :params worker_id: The worker id
+    :params configuration_id: The configuration id
     """
     try:
-        if not configuration_id and not worker_id:
-            return JsonResponse({'status': 'error', 'message': 'No worker id and no config id given'})
-        if worker_id:
-            user = get_user(request)
-            worker = Worker.objects.get(id=worker_id)
-            if not configuration_id:
-                configuration = worker.configurations.filter(user=user).first()
-            else:
-                configuration = Configuration.objects.get(id=configuration_id)
-            if configuration.user != user:
-                return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
+        if not worker_id:
+            messages.error(request, 'No worker id given')
+            return safe_redirect(request, '/worker/')
 
-        ssh_client = None
+        user = get_user(request)
+        worker = Worker.objects.get(id=worker_id)
+        if not configuration_id:
+            configuration = worker.configurations.filter(user=user).first()
+        else:
+            configuration = Configuration.objects.get(id=configuration_id)
+        if configuration.user != user:
+            messages.error(request, 'You are not allowed to access this worker.')
+            return safe_redirect(request, '/worker/')
+
         try:
-            ssh_client = worker.ssh_connect(configuration.id)
-            exec_blocking_ssh(ssh_client, "sudo docker stop $(sudo docker ps -aq)")
-            exec_blocking_ssh(ssh_client, "sudo docker rm $(sudo docker ps -aq)")
-            exec_blocking_ssh(ssh_client, "sudo rm -rf /root/emba/emba_logs")
-            # TODO: change this path to the actual firmware file location
-            exec_blocking_ssh(ssh_client, "sudo rm -rf /root/amos2025ss01-embark/media/*")
-            ssh_client.close()
-            return JsonResponse({'status': 'success', 'message': 'Worker soft reset completed.'})
-
-        except (paramiko.SSHException, socket.error):
-            if ssh_client:
-                ssh_client.close()
-            return JsonResponse({'status': 'error', 'message': 'SSH connection failed or command execution failed.'})
+            worker_soft_reset_task.delay(worker.id, configuration.id)
+            messages.success(request, f'Successfully soft resetted worker: ({worker.name})')
+            return safe_redirect(request, '/worker/')
+        except BaseException:
+            messages.error(request, 'Soft Reset failed.')
+            return safe_redirect(request, '/worker/')
 
     except (Worker.DoesNotExist, Configuration.DoesNotExist):
-        return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
+        messages.error(request, 'Worker or configuration not found.')
+        return safe_redirect(request, '/worker/')
 
 
-@require_http_methods(["GET"])
+@require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
 def worker_hard_reset(request, worker_id, configuration_id=None):
     """
     Hard reset the worker with the given worker ID.
+    :params worker_id: The worker id
+    :params configuration_id: The configuration id
     """
     try:
-        if not configuration_id and not worker_id:
-            return JsonResponse({'status': 'error', 'message': 'No worker id and no config id given'})
+        if not worker_id:
+            messages.error(request, 'No worker id given')
+            return safe_redirect(request, '/worker/')
         if worker_id:
             user = get_user(request)
             worker = Worker.objects.get(id=worker_id)
@@ -357,24 +424,21 @@ def worker_hard_reset(request, worker_id, configuration_id=None):
             else:
                 configuration = Configuration.objects.get(id=configuration_id)
             if configuration.user != user:
-                return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this worker.'})
+                messages.error(request, 'You are not allowed to access this worker.')
+                return safe_redirect(request, '/worker/')
 
-        ssh_client = None
         try:
-            worker_soft_reset(request, worker_id, configuration.id)
-            ssh_client = worker.ssh_connect(configuration.id)
-            emba_path = "/root/emba/full_uninstaller.sh"
-            exec_blocking_ssh(ssh_client, "sudo bash " + emba_path)
-            ssh_client.close()
-            return JsonResponse({'status': 'success', 'message': 'Worker hard reset completed.'})
-
-        except (paramiko.SSHException, socket.error):
-            if ssh_client:
-                ssh_client.close()
-            return JsonResponse({'status': 'error', 'message': 'SSH connection failed or command execution failed.'})
+            worker_soft_reset_task.delay(worker.id, configuration.id)
+            worker_hard_reset_task.delay(worker.id, configuration.id)
+            messages.success(request, f'Successfully hard resetted worker: ({worker.name})')
+            return safe_redirect(request, '/worker/')
+        except BaseException:
+            messages.error(request, 'Hard Reset failed.')
+            return safe_redirect(request, '/worker/')
 
     except (Worker.DoesNotExist, Configuration.DoesNotExist):
-        return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
+        messages.error(request, 'Worker or configuration not found.')
+        return safe_redirect(request, '/worker/')
 
 
 @require_http_methods(["GET"])
@@ -383,6 +447,7 @@ def worker_hard_reset(request, worker_id, configuration_id=None):
 def registered_workers(request, configuration_id):
     """
     Get detailed information about all registered workers for a given configuration.
+    :params configuration_id: The configuration id
     """
     try:
         user = get_user(request)
@@ -404,6 +469,8 @@ def connect_worker(request, configuration_id, worker_id):
     """
     Connect to the worker with the given worker ID using SSH credentials from the given config ID and gather system information.
     This information is comprised of OS type and version, CPU count, RAM size, and Disk size
+    :params configuration_id: The configuration id
+    :params worker_id: The worker id
     """
     try:
         user = get_user(request)
@@ -426,6 +493,19 @@ def connect_worker(request, configuration_id, worker_id):
         'worker_ip': worker.ip_address,
         'system_info': system_info
     })
+
+
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def check_updates(request):
+    """
+    Checks if new updates are available
+    """
+    fetch_dependency_updates.delay()
+
+    messages.success(request, 'Update check queued!')
+    return safe_redirect(request, '/worker/')
 
 
 def safe_redirect(request, default):
