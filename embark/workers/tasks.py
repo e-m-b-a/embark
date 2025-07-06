@@ -172,18 +172,25 @@ def monitor_worker_and_fetch_logs(worker_id):
             if not is_running or analysis_finished or not is_busy:
 
                 worker_soft_reset_task(worker.id)
+
+                analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
+                analysis.failed = True
+                analysis.finished = True
+                analysis.save()
+
                 orchestrator.release_worker(worker)
+
 
                 logger.info("[Worker %s] Analysis finished.", worker.id)
                 return
 
         except Exception as exception:
             logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
-            if worker in orchestrator.get_busy_workers().values():
+            if orchestrator.is_busy(worker):
                 logger.info("[Worker %s] Releasing the worker...", worker.id)
                 worker_soft_reset_task(worker.id)
                 orchestrator.release_worker(worker)
-                return
+            return
 
         time.sleep(15)
 
@@ -272,6 +279,46 @@ def _is_emba_container_running(worker) -> bool:
         logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
         return False
     finally:
+        if client is not None:
+            client.close()
+
+
+@shared_task
+def stop_remote_analysis(worker_id) -> None:
+    """
+    Stops the EMBA Docker container. Fetches the logs for the
+    last time and releases the worker in the orchestrator.
+
+    :param worker_id: ID of worker whose analysis to stop.
+    """
+    client = None
+    try:
+        worker = Worker.objects.get(id=worker_id)
+        ssh_client = worker.ssh_connect()
+
+        logger.info("[Worker %s] Trying to stop the analysis", worker.id)
+
+        docker_cmd = "sudo docker ps | grep emba | awk '{print $1;}' | xargs -I {} sudo docker stop {}"
+        exec_blocking_ssh(ssh_client, docker_cmd)
+
+        # Get leftover logs
+        _fetch_analysis_logs(worker)
+
+        analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
+        analysis.failed = True
+        analysis.finished = True
+        analysis.save()
+
+        worker_soft_reset_task(worker.id)
+
+        logger.info("[Worker %s] Successfully stopped the analysis.", worker.id)
+
+    except Exception as exception:
+        logger.error("[Worker %s] Error while stopping analysis: %s", worker.id, exception)
+    finally:
+        orchestrator = get_orchestrator()
+        if orchestrator.is_busy(worker):
+            orchestrator.release_worker(worker)
         if client is not None:
             client.close()
 
@@ -400,23 +447,23 @@ def worker_soft_reset_task(worker_id, configuration_id=None):
     :param worker_id: ID of worker to soft reset
     :param configuration_id: ID of the configuration based on which the worker needs to be reset
     """
-    try:
-        worker = Worker.objects.get(id=worker_id)
-    except Worker.DoesNotExist:
-        logger.error("Worker Soft Reset: Invalid worker id")
-        return
     ssh_client = None
     try:
+        worker = Worker.objects.get(id=worker_id)
         ssh_client = worker.ssh_connect(configuration_id)
+
         homedir = "/root" if ssh_client.ssh_user == "root" else f"/home/{ssh_client.ssh_user}"
         exec_blocking_ssh(ssh_client, "sudo docker ps -aq | xargs -r sudo docker stop | xargs -r sudo docker rm || true")
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {homedir}/emba_logs.zip*")  # Also delete possible leftover tmp files
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {homedir}/emba_run.log")
-        ssh_client.close()
+
+    except Worker.DoesNotExist:
+        logger.error("Worker Soft Reset: Invalid worker id")
     except (paramiko.SSHException, socket.error):
         logger.error("[Worker %s] SSH Connection failed while soft resetting.", worker.id)
+    finally:
         if ssh_client is not None:
             ssh_client.close()
 

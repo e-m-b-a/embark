@@ -16,16 +16,19 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.shortcuts import redirect
+
 from embark.helper import user_is_auth
 from tracker.forms import AssociateForm
 from uploader.boundedexecutor import BoundedExecutor
 from uploader.forms import LabelForm
-
 from uploader.models import FirmwareAnalysis, Label
 from dashboard.models import Result, SoftwareBillOfMaterial
 from dashboard.forms import LabelSelectForm, StopAnalysisForm
 from porter.views import make_zip
 from users.decorators import require_api_key
+
+from workers.models import Worker
+from workers.tasks import stop_remote_analysis
 
 
 logger = logging.getLogger(__name__)
@@ -58,25 +61,43 @@ def stop_analysis(request):
     if form.is_valid():
         logger.debug("Posted Form is valid")
         # get id
-        analysis = form.cleaned_data['analysis']
-        analysis_object_ = FirmwareAnalysis.objects.get(id=analysis.id)
-        # check if user auth
-        if not user_is_auth(request.user, analysis_object_.user):
+        analysis_form = form.cleaned_data['analysis']
+        analysis = FirmwareAnalysis.objects.get(id=analysis_form.id)
+
+        if not user_is_auth(request.user, analysis.user):
             return HttpResponseForbidden("You are not authorized!")
-        logger.info("Stopping analysis with id %s", analysis_object_.id)
-        pid = analysis_object_.pid
+
+        logger.info("Stopping analysis with id %s", analysis.id)
+
+        pid = analysis.pid
         logger.debug("PID is %s", pid)
         try:
-            BoundedExecutor.submit_kill(analysis.id)
-            os.killpg(os.getpgid(pid), signal.SIGTERM)  # kill proc group too
+            BoundedExecutor.submit_kill(analysis_form.id)
+
+            if analysis.running_on_worker:
+                worker = Worker.objects.get(analysis_id=analysis.id)
+                stop_remote_analysis.delay(worker.id)
+            else:
+                os.killpg(os.getpgid(pid), signal.SIGTERM)  # kill proc group too
+
             form = StopAnalysisForm()
             form.fields['analysis'].queryset = FirmwareAnalysis.objects.filter(user=request.user).filter(finished=False)
-            return render(request, 'dashboard/serviceDashboard.html', {'username': request.user.username, 'form': form, 'success_message': True, 'message': "Stopped successfully"})
-        except builtins.Exception as error:
-            logger.error("Error %s", error)
-            analysis_object_.failed = True
-            analysis_object_.save(update_fields=["failed"])
-            return HttpResponseServerError("Failed to stop process, but set its status to failed. Please handle EMBA process manually: PID=" + str(pid))
+
+            message = "Analysis termination queued on worker." if analysis.running_on_worker else "Local analysis stopped successfully."
+            return render(request, 'dashboard/serviceDashboard.html', {'username': request.user.username, 'form': form, 'success_message': True, 'message': message})
+
+        except Worker.DoesNotExist as exc:
+            logger.error("No worker with this analysis has been found: %s", exc)
+            analysis.failed = True
+            analysis.finished = True
+            analysis.save()
+            return HttpResponseServerError("No worker with this analysis has been found.")
+        except Exception as exc:
+            logger.error("Unexpected exception: %s", exc)
+            analysis.failed = True
+            analysis.save(update_fields=["failed"])
+            return HttpResponseServerError("Failed to stop process, but set its status to failed. Please handle EMBA process manually: PID=" + str(pid) + str(exc))
+
     return HttpResponseBadRequest("invalid form")
 
 
@@ -241,7 +262,7 @@ def delete_analysis(request, analysis_id):
         return redirect('..')
     # check that the user is authorized
     if user_is_auth(request.user, analysis.user):
-        if analysis.finished is False:
+        if not analysis.finished:
             try:
                 BoundedExecutor.submit_kill(analysis.id)
                 os.killpg(os.getpgid(analysis.pid), signal.SIGTERM)  # kill proc group too
@@ -249,7 +270,7 @@ def delete_analysis(request, analysis_id):
                 logger.error("Error %s when stopping", error)
                 messages.error(request, 'Error when stopping Analysis')
         # check if finished
-        if analysis.finished is True:
+        if analysis.finished:
             # delete
             try:
                 analysis.delete(keep_parents=True)
