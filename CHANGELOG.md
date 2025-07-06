@@ -16,6 +16,7 @@
 ### FIXED
 
 - Missing sudo at worker soft reset ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=112364355&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C43))
+- User permission checks for different resources ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=118050504&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C93))
 
 ### ADDED
 
