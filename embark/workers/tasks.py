@@ -152,7 +152,7 @@ def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
 
 
 @shared_task
-def monitor_worker_and_fetch_logs(worker_id):
+def monitor_worker_and_fetch_logs(worker_id) -> None:
     """
     Loops until the analysis stops on the remote worker.
     Zips the analysis logs on the remote worker, downloads and extracts them.
@@ -180,9 +180,17 @@ def monitor_worker_and_fetch_logs(worker_id):
 
                 orchestrator.release_worker(worker)
 
+            if not is_running or analysis_finished or not orchestrator.is_busy(worker):
                 logger.info("[Worker %s] Analysis finished.", worker.id)
-                return
+                worker_soft_reset_task(worker.id)
+                process_update_queue(worker)
 
+                if worker.status == Worker.ConfigStatus.CONFIGURED:
+                    orchestrator.release_worker(worker)
+                else:
+                    orchestrator.remove_worker(worker)
+
+                return
         except Exception as exception:
             logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
             if orchestrator.is_busy(worker):
@@ -323,11 +331,12 @@ def stop_remote_analysis(worker_id) -> None:
 
 
 @shared_task
-def update_worker(worker_id):
+def update_worker(worker_id, add_orchestrator=True):
     """
     Setup/Update an offline worker and add it to the orchestrator.
 
     :params worker_id: The worker to update
+    :params add_orchestrator: If True, re-adds worker to orchestrator
     """
     try:
         worker = Worker.objects.get(id=worker_id)
@@ -351,8 +360,9 @@ def update_worker(worker_id):
             config = worker.configurations.first()
             update_system_info(config, worker)
 
-            orchestrator.add_worker(worker)
-            logger.info("Worker: %s added to orchestrator", worker.name)
+            if add_orchestrator:
+                orchestrator.add_worker(worker)
+                logger.info("Worker: %s added to orchestrator", worker.name)
         except ValueError:
             logger.error("Worker: %s already exists in orchestrator", worker.name)
 

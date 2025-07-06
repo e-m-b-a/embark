@@ -109,10 +109,17 @@ def queue_update(worker: Worker, dependency: DependencyType, version=None):
     if worker.status == Worker.ConfigStatus.CONFIGURING:
         return
 
+    removed = False
+    try:
+        orchestrator.remove_worker(worker)
+        removed = True
+    except ValueError:
+        pass
+
     worker.status = Worker.ConfigStatus.CONFIGURING
     worker.save()
 
-    update_worker.delay(worker.id)
+    update_worker.delay(worker.id, removed)
 
 
 def process_update_queue(worker: Worker):
@@ -182,7 +189,7 @@ def perform_update(worker: Worker, client: SSHClient, worker_update: WorkerUpdat
     dependency = worker_update.get_type()
 
     if _is_version_installed(worker, worker_update):
-        logger.info("Skip update of %s on worker %s as already installed", worker_update.get_dependency().name, worker.name)
+        logger.info("Skip update of %s on worker %s as already installed", worker_update.get_type().name, worker.name)
         return
 
     folder_path = f"/root/{dependency.name}"
