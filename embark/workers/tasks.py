@@ -180,7 +180,6 @@ def monitor_worker_and_fetch_logs(worker_id):
 
                 orchestrator.release_worker(worker)
 
-
                 logger.info("[Worker %s] Analysis finished.", worker.id)
                 return
 
