@@ -173,6 +173,7 @@ def monitor_worker_and_fetch_logs(worker_id):
 
                 worker_soft_reset_task(worker.id)
                 orchestrator.release_worker(worker)
+                orchestrator.trigger()
 
                 logger.info("[Worker %s] Analysis finished.", worker.id)
                 return
@@ -183,6 +184,7 @@ def monitor_worker_and_fetch_logs(worker_id):
                 logger.info("[Worker %s] Releasing the worker...", worker.id)
                 worker_soft_reset_task(worker.id)
                 orchestrator.release_worker(worker)
+                orchestrator.trigger()
                 return
 
         time.sleep(15)
