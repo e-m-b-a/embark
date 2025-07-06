@@ -521,7 +521,7 @@ def _scan_for_worker(config: Configuration, ip_address: str, port: int = 22, tim
 
 
 @shared_task
-def config_worker_scan_(configuration_id: int):
+def config_worker_scan_task(configuration_id: int):
     """
     Scan the IP range of a given configuration and create/update workers based on the reachable IPs.
 
