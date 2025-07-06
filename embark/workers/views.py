@@ -14,7 +14,7 @@ from django.db.models import Count
 
 from workers.models import Worker, Configuration, DependencyVersion, DependencyType
 from workers.update.update import queue_update
-from workers.tasks import update_system_info, fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file, config_worker_scan_
+from workers.tasks import update_system_info, fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file, config_worker_scan_task
 
 
 @require_http_methods(["GET"])
@@ -241,7 +241,7 @@ def config_worker_scan(request, configuration_id):
         messages.error(request, 'Configuration not found.')
         return safe_redirect(request, '/worker/')
 
-    config_worker_scan_.delay(config.id)
+    config_worker_scan_tas.delay(config.id)
     messages.success(request, f'Scan for configuration: {config.name} has been queued.')
     return safe_redirect(request, '/worker/')
 
