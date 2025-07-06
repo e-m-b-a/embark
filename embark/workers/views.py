@@ -88,14 +88,16 @@ def delete_config(request):
             undo_sudoers_file.delay(worker.ip_address, config.ssh_user, config.ssh_password)
 
         workers = Worker.objects.annotate(config_count=Count('configurations')).filter(configurations__id=selected_config_id, config_count=1)
+
         orchestrator = get_orchestrator()
         for worker in workers:
             try:
                 orchestrator.remove_worker(worker)
+                worker.dependency_version.delete()
+                worker.delete()
                 logger.info("Worker: %s removed from orchestrator", worker.name)
             except ValueError:
                 logger.error("Worker: %s could not be removed from orchestrator", worker.name)
-        workers.delete()
 
         config.delete()
         messages.success(request, 'Configuration deleted successfully')
