@@ -160,46 +160,37 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
 
     :param worker_id: ID of worker to monitor and fetch logs for.
     """
-    orchestrator = get_orchestrator()
-    worker = Worker.objects.get(id=worker_id)
-    while True:
-        try:
+    try:
+        orchestrator = get_orchestrator()
+        worker = Worker.objects.get(id=worker_id)
+        while True:
             _fetch_analysis_logs(worker)
 
-            analysis_finished = FirmwareAnalysis.objects.get(id=worker.analysis_id).status["finished"]
             is_running = _is_emba_container_running(worker)
-            is_busy = orchestrator.is_busy(worker)
-            if not is_running or analysis_finished or not is_busy:
-
-                worker_soft_reset_task(worker.id)
-
-                analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
-                analysis.failed = True
-                analysis.finished = True
-                analysis.save()
-
-                orchestrator.release_worker(worker)
-
+            analysis_finished = FirmwareAnalysis.objects.get(id=worker.analysis_id).status["finished"]
             if not is_running or analysis_finished or not orchestrator.is_busy(worker):
                 logger.info("[Worker %s] Analysis finished.", worker.id)
-                worker_soft_reset_task(worker.id)
-                process_update_queue(worker)
-
-                if worker.status == Worker.ConfigStatus.CONFIGURED:
-                    orchestrator.release_worker(worker)
-                else:
-                    orchestrator.remove_worker(worker)
-
                 return
-        except Exception as exception:
-            logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
-            if orchestrator.is_busy(worker):
-                logger.info("[Worker %s] Releasing the worker...", worker.id)
-                worker_soft_reset_task(worker.id)
-                orchestrator.release_worker(worker)
-            return
 
-        time.sleep(15)
+            time.sleep(15)
+    except Exception as exception:
+        logger.error("[Worker %s] Monitoring failed, stopping the task. Exception: %s", worker.id, exception)
+        analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
+        analysis.failed = True
+        analysis.save()
+    finally:
+        worker_soft_reset_task(worker.id)
+
+        analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
+        analysis.finished = True
+        analysis.save()
+
+        if orchestrator.is_busy(worker):
+            logger.info("[Worker %s] Releasing the worker...", worker.id)
+            orchestrator.release_worker(worker)
+
+        if not worker.status == Worker.ConfigStatus.CONFIGURED:
+            orchestrator.remove_worker(worker)
 
 
 def _fetch_analysis_logs(worker) -> None:
