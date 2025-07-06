@@ -241,7 +241,7 @@ def config_worker_scan(request, configuration_id):
         messages.error(request, 'Configuration not found.')
         return safe_redirect(request, '/worker/')
 
-    config_worker_scan_tas.delay(config.id)
+    config_worker_scan_task.delay(config.id)
     messages.success(request, f'Scan for configuration: {config.name} has been queued.')
     return safe_redirect(request, '/worker/')
 
