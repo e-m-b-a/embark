@@ -180,6 +180,7 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
         analysis.save()
     finally:
         worker_soft_reset_task(worker.id)
+        process_update_queue(worker)
 
         analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
         analysis.finished = True
