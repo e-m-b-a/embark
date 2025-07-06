@@ -76,20 +76,20 @@
     {% endfor %}
     </table>
 
+    <button id="config-modal-toggle">Add Configuration</button>
     <div class="config-modal">
-        <button id="config-modal-toggle">Add Configuration</button>
         <div class="config-modal-content">
             <form action="{% url 'embark-create-configuration' %}" method="post">
-                <div class="config-modal-title">Configuration</div>
                 {% csrf_token %}
+                <div class="config-modal-title">Configuration</div>
                 <div class="config-modal-body">
-                    <label for="name">Name:</label>
+                    <label for="name"><b>Name:</b></label>
                     <input type="text" name="name" id="name">
-                    <label for="ssh_user">SSH Username:</label>
+                    <label for="ssh_user"><b>SSH Username:</b></label>
                     <input type="text" name="ssh_user" id="ssh_user">
-                    <label for="ssh_password">SSH Password:</label>
+                    <label for="ssh_password"><b>SSH Password:</b></label>
                     <input type="password" name="ssh_password" id="ssh_password">
-                    <label for="ip_range">IP Range (CIDR):</label>
+                    <label for="ip_range"><b>IP Range (CIDR):</b></label>
                     <input type="text" name="ip_range" id="ip_range">
                 </div>
                 <div class="config-modal-actions">
@@ -274,16 +274,16 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
     // Open the configuration modal on button click
-    const configModalContent = document.querySelector(".config-modal-content");
+    const configModal = document.querySelector(".config-modal");
     const configModalToggle = document.getElementById("config-modal-toggle");
     configModalToggle.addEventListener("click", function () {
-        configModalContent.style.display = (configModalContent.style.display === "none" || configModalContent.style.display === "") ? "block" : "none";
+        configModal.style.display = (configModal.style.display === "none" || configModal.style.display === "") ? "block" : "none";
     });
 
     // Close the configuration modal on cancel button click
     const cancelButton = document.querySelector(".cancel-button");
     cancelButton.addEventListener("click", function () {
-        configModalContent.style.display = "none";
+        configModal.style.display = "none";
     });
 
     // Open the actions-dropdown menu on "..." clicked
@@ -305,8 +305,8 @@
             }
         });
 
-        document.querySelectorAll(".config-modal-content").forEach(modal => {
-            if (!modal.contains(event.target) && !modal.previousElementSibling.contains(event.target)) {
+        document.querySelectorAll(".config-modal").forEach(modal => {
+            if (modal == event.target) {
                 modal.style.display = "none";
             }
         });
