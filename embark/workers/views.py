@@ -1,6 +1,7 @@
 import ipaddress
 import socket
 import re
+import logging
 from concurrent.futures import ThreadPoolExecutor
 
 import paramiko
@@ -18,6 +19,10 @@ from django.db.models import Count
 from workers.models import Worker, Configuration, WorkerDependencyVersion, DependencyVersion, DependencyType
 from workers.update.update import init_sudoers_file, queue_update, update_dependencies_info
 from workers.tasks import update_system_info, fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file
+from workers.orchestrator import get_orchestrator
+
+
+logger = logging.getLogger(__name__)
 
 
 @require_http_methods(["GET"])
