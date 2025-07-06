@@ -96,7 +96,7 @@ def stop_analysis(request):
             logger.error("Unexpected exception: %s", exc)
             analysis.failed = True
             analysis.save(update_fields=["failed"])
-            return HttpResponseServerError("Failed to stop process, but set its status to failed. Please handle EMBA process manually: PID=" + str(pid) + str(exc))
+            return HttpResponseServerError("Failed to stop process, but set its status to failed. Please handle EMBA process manually: PID=" + str(pid))
 
     return HttpResponseBadRequest("invalid form")
 
