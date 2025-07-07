@@ -214,10 +214,14 @@ class Orchestrator:
     def _remove_worker(self, worker: Worker):
         """
         Remove a worker from the orchestrator. The worker is removed from either the free or busy workers list.
+        We assume that any analysis running on the worker has been completed or cancelled before calling this method.
 
         :param worker: The worker to be removed
         :raises ValueError: If the worker does not exist in the orchestrator
         """
+        worker.analysis_id = None
+        worker.save()
+
         if worker.ip_address in self.free_workers:
             del self.free_workers[worker.ip_address]
         elif worker.ip_address in self.busy_workers:

@@ -21,7 +21,8 @@ from workers.update.dependencies import eval_outdated_dependencies, get_script_n
 from workers.update.update import exec_blocking_ssh, parse_deb_list, process_update_queue, init_sudoers_file, update_dependencies_info
 from workers.orchestrator import get_orchestrator
 from workers.codeql_ignore import new_autoadd_client
-from uploader.models import FirmwareAnalysis
+from uploader.models import FirmwareAnalysis, FirmwareFile
+from uploader.executor import submit_firmware
 
 logger = get_task_logger(__name__)
 
@@ -89,6 +90,38 @@ def update_system_info(worker: Worker):
     return system_info
 
 
+def _handle_unreachable_worker(worker: Worker):
+    """
+    If a worker node has been unresponsive for the last settings.WORKER_REACHABLE_TIMEOUT minutes,
+    set its reachable status to False and remove it from the orchestrator.
+    Any analysis which was running on the worker will be rescheduled to another worker.
+    """
+    try:
+        reachable_threshold = datetime.now() - datetime.timedelta(minutes=settings.WORKER_REACHABLE_TIMEOUT)
+        if worker.last_reached < reachable_threshold:
+            worker.reachable = False
+            logger.info(
+                "Failed to reach worker %s for the last %d minutes, setting status to offline and reassigning analysis.",
+                worker.name, settings.WORKER_REACHABLE_TIMEOUT
+            )
+
+            # We need this because the analysis_id will be set to None in orchestrator.remove_worker
+            # We also have to remove the worker before reassigning the analysis
+            reassign_analysis_id = worker.analysis_id
+
+            orchestrator = get_orchestrator()
+            orchestrator.remove_worker(worker)
+
+            if reassign_analysis_id:
+                firmware_analysis = FirmwareAnalysis.objects.get(id=reassign_analysis_id)
+                firmware_file = FirmwareFile.objects.get(id=firmware_analysis.firmware.id)
+                submit_firmware(firmware_analysis, firmware_file)
+    except BaseException as error:
+        logger.error("An error occurred while handling unreachable worker %s: %s", worker.name, error)
+    finally:
+        worker.save()
+
+
 @shared_task
 def update_worker_info():
     """
@@ -102,13 +135,7 @@ def update_worker_info():
             worker.last_reached = datetime.now()
             logger.info("Worker %s updated successfully.", worker.name)
         except paramiko.SSHException:
-            reachable_threshold = datetime.now() - datetime.timedelta(minutes=settings.WORKER_REACHABLE_TIMEOUT)
-            if worker.last_reached < reachable_threshold:
-                worker.reachable = False
-                logger.info(
-                    "Failed to reach worker %s for the last %d minutes, setting status to offline.",
-                    worker.name, settings.WORKER_REACHABLE_TIMEOUT
-                )
+            _handle_unreachable_worker(worker)
         except BaseException as error:
             logger.error("An error occurred while updating worker %s: %s", worker.name, error)
             continue
@@ -553,10 +580,7 @@ def config_worker_scan_task(configuration_id: int):
 
         unreachable_workers = [worker for worker in config.workers.all() if worker.ip_address not in reachable]
         for worker in unreachable_workers:
-            reachable_threshold = datetime.now() - datetime.timedelta(minutes=settings.WORKER_REACHABLE_TIMEOUT)
-            if worker.last_reached < reachable_threshold:
-                worker.reachable = False
-                worker.save()
+            _handle_unreachable_worker(worker)
 
         config.scan_status = Configuration.ScanStatus.FINISHED
         logger.info("config_worker_scan_task: Scan finished for configuration %s", config.name)
