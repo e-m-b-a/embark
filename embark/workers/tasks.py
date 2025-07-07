@@ -184,12 +184,13 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
         analysis.finished = True
         analysis.save()
 
+        if not worker.status == Worker.ConfigStatus.CONFIGURED:
+            orchestrator.remove_worker(worker)
+
         if orchestrator.is_busy(worker):
             logger.info("[Worker %s] Releasing the worker...", worker.id)
             orchestrator.release_worker(worker)
 
-        if not worker.status == Worker.ConfigStatus.CONFIGURED:
-            orchestrator.remove_worker(worker)
 
 
 def _fetch_analysis_logs(worker) -> None:
@@ -264,7 +265,8 @@ def _is_emba_container_running(worker) -> bool:
     try:
         client = worker.ssh_connect()
 
-        cmd = "sudo docker ps -qa"
+        # cmd = "sudo docker ps -qa"
+        cmd = "sudo docker ps -qa | grep emba"
         containers = exec_blocking_ssh(client, cmd)
         if not containers:
             logger.info("[Worker %s] EMBA Docker container is no longer running.", worker.id)
@@ -298,24 +300,16 @@ def stop_remote_analysis(worker_id) -> None:
         docker_cmd = "sudo docker ps | grep emba | awk '{print $1;}' | xargs -I {} sudo docker stop {}"
         exec_blocking_ssh(ssh_client, docker_cmd)
 
-        # Get leftover logs
-        _fetch_analysis_logs(worker)
-
         analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
-        analysis.failed = True
         analysis.finished = True
+        analysis.failed = True
         analysis.save()
-
-        worker_soft_reset_task(worker.id)
 
         logger.info("[Worker %s] Successfully stopped the analysis.", worker.id)
 
     except Exception as exception:
         logger.error("[Worker %s] Error while stopping analysis: %s", worker.id, exception)
     finally:
-        orchestrator = get_orchestrator()
-        if orchestrator.is_busy(worker):
-            orchestrator.release_worker(worker)
         if client is not None:
             client.close()
 
