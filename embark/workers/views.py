@@ -88,7 +88,6 @@ def delete_config(request):
         for worker in config_workers:
             undo_sudoers_file.delay(worker.ip_address, config.ssh_user, config.ssh_password)
 
-
         workers = Worker.objects.annotate(config_count=Count('configurations')).filter(configurations__id=config_id, config_count=1)
         orchestrator = get_orchestrator()
         for worker in workers:
