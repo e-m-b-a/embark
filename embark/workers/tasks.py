@@ -188,7 +188,6 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
 
         if not worker.status == Worker.ConfigStatus.CONFIGURED:
             orchestrator.remove_worker(worker)
-            return
 
         if orchestrator.is_busy(worker):
             logger.info("[Worker %s] Releasing the worker...", worker.id)
