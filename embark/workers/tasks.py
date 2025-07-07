@@ -176,7 +176,7 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
 
                 if worker.status == Worker.ConfigStatus.CONFIGURED:
                     orchestrator.release_worker(worker)
-                    orchestrator.trigger()
+                    orchestrator.assign_tasks()
                 else:
                     orchestrator.remove_worker(worker)
                 return
@@ -188,7 +188,7 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
 
                 if worker.status == Worker.ConfigStatus.CONFIGURED:
                     orchestrator.release_worker(worker)
-                    orchestrator.trigger()
+                    orchestrator.assign_tasks()
                 else:
                     orchestrator.remove_worker(worker)
                 return
@@ -315,7 +315,7 @@ def update_worker(worker_id, add_orchestrator=True):
 
             if add_orchestrator:
                 orchestrator.add_worker(worker)
-                orchestrator.trigger()
+                orchestrator.assign_tasks()
                 logger.info("Worker: %s added to orchestrator", worker.name)
 
         except ValueError:
