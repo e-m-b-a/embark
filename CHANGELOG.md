@@ -17,7 +17,7 @@
 
 ### REMOVED
 
-- Removed `worker/connect` and `worker/registered` endpoints and user configuration view
+- `worker/connect` and `worker/registered` endpoints and user configuration view
 
 ## [sprint-11](https://github.com/amosproj/amos2025ss01-embark/releases/tag/sprint-11-release) - 2025-07-02
 
