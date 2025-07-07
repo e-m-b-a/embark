@@ -40,11 +40,10 @@ def create_periodic_tasks(**kwargs):
     )
 
 
-def update_system_info(configuration: Configuration, worker: Worker):
+def update_system_info(worker: Worker):
     """
     Update the system_info of a worker using the SSH credentials of the provided configuration to connect to the worker.
 
-    :param configuration: Configuration object containing SSH credentials
     :param worker: Worker object to update
     :return: Dictionary containing system information
     :raises paramiko.SSHException: If the SSH connection fails or if any command execution fails
@@ -52,7 +51,7 @@ def update_system_info(configuration: Configuration, worker: Worker):
     ssh_client = None
 
     try:
-        ssh_client = worker.ssh_connect(configuration.id)
+        ssh_client = worker.ssh_connect()
 
         os_info = exec_blocking_ssh(ssh_client, 'grep PRETTY_NAME /etc/os-release')
         os_info = os_info[len('PRETTY_NAME='):-1].strip('"')
@@ -96,10 +95,9 @@ def update_worker_info():
     """
     workers = Worker.objects.all()
     for worker in workers:
-        config = worker.configurations.first()
         try:
             logger.info("Updating worker %s", worker.name)
-            update_system_info(config, worker)
+            update_system_info(worker)
             worker.reachable = True
         except paramiko.SSHException:
             logger.info("Worker %s is unreachable, setting status to offline.", worker.name)
@@ -308,8 +306,7 @@ def update_worker(worker_id, add_orchestrator=True):
 
     if worker.status == Worker.ConfigStatus.CONFIGURED:
         try:
-            config = worker.configurations.first()
-            update_system_info(config, worker)
+            update_system_info(worker)
 
             if add_orchestrator:
                 orchestrator.add_worker(worker)
@@ -401,11 +398,10 @@ def fetch_dependency_updates():
 
 
 @shared_task
-def worker_soft_reset_task(worker_id, configuration_id=None):
+def worker_soft_reset_task(worker_id):
     """
     Connects via SSH to the worker and performs the soft reset
     :param worker_id: ID of worker to soft reset
-    :param configuration_id: ID of the configuration based on which the worker needs to be reset
     """
     try:
         worker = Worker.objects.get(id=worker_id)
@@ -414,7 +410,7 @@ def worker_soft_reset_task(worker_id, configuration_id=None):
         return
     ssh_client = None
     try:
-        ssh_client = worker.ssh_connect(configuration_id)
+        ssh_client = worker.ssh_connect()
         homedir = "/root" if ssh_client.ssh_user == "root" else f"/home/{ssh_client.ssh_user}"
         exec_blocking_ssh(ssh_client, "sudo docker ps -aq | xargs -r sudo docker stop | xargs -r sudo docker rm || true")
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
@@ -429,7 +425,7 @@ def worker_soft_reset_task(worker_id, configuration_id=None):
 
 
 @shared_task
-def worker_hard_reset_task(worker_id, configuration_id):
+def worker_hard_reset_task(worker_id):
     try:
         worker = Worker.objects.get(id=worker_id)
     except Worker.DoesNotExist:
@@ -437,7 +433,7 @@ def worker_hard_reset_task(worker_id, configuration_id):
         return
     ssh_client = None
     try:
-        ssh_client = worker.ssh_connect(configuration_id)
+        ssh_client = worker.ssh_connect()
         emba_path = os.path.join(settings.WORKER_EMBA_ROOT, "full_uninstaller.sh")
         exec_blocking_ssh(ssh_client, "sudo bash " + emba_path)
         ssh_client.close()

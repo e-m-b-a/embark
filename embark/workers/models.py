@@ -1,4 +1,6 @@
 import ipaddress
+import socket
+import paramiko
 
 from django.db import models
 from django.core.exceptions import ValidationError
@@ -9,18 +11,19 @@ from workers.codeql_ignore import new_autoadd_client
 
 
 class Configuration(models.Model):
+
     class ScanStatus(models.TextChoices):  # pylint: disable=too-many-ancestors
         NEW = "N", _("New")
         SCANNING = "S", _("Scanning")
         FINISHED = "F", _("Finished")
         ERROR = "E", _("Error")
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='configuration', help_text="User who created this configuration")
-    name = models.CharField(max_length=150, blank=True, null=True, help_text="Name of the configuration")
-    ssh_user = models.CharField(max_length=150, blank=True, null=True, help_text="SSH user of the worker nodes")
-    ssh_password = models.CharField(max_length=150, blank=True, null=True, help_text="SSH password of the worker nodes")
-    ip_range = models.TextField(blank=True, null=True, help_text="IP range of the worker nodes")
-    created_at = models.DateTimeField(auto_now_add=True, help_text="Date time when this entry was created")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='configuration')
+    name = models.CharField(max_length=150)
+    ssh_user = models.CharField(max_length=150)
+    ssh_password = models.CharField(max_length=150)
+    ip_range = models.CharField(max_length=150)
+    created_at = models.DateTimeField(auto_now_add=True)
     scan_status = models.CharField(max_length=1, choices=ScanStatus, default=ScanStatus.NEW)
 
 
@@ -88,15 +91,22 @@ class Worker(models.Model):
                     except ValueError as value_error:
                         raise ValidationError({"configuration": f"Invalid IP range: {value_error}"}) from value_error
 
-    def ssh_connect(self, configuration_id=None):
+    def ssh_connect(self):
+        """
+        Tries to establish an ssh connection with each configuration and returns the first successful connection
+        """
         ssh_client = new_autoadd_client()
-        configuration = self.configurations.first() if configuration_id is None else self.configurations.get(id=configuration_id)
 
-        ssh_client.connect(self.ip_address, username=configuration.ssh_user, password=configuration.ssh_password)
+        for configuration in self.configurations.all():
+            try:
+                ssh_client.connect(self.ip_address, username=configuration.ssh_user, password=configuration.ssh_password)
 
-        # save the ssh user and password so they can later be used in commands
-        ssh_client.ssh_user = configuration.ssh_user
-        ssh_client.ssh_pw = configuration.ssh_password
+                # save the ssh user and password so they can later be used in commands
+                ssh_client.ssh_user = configuration.ssh_user
+                ssh_client.ssh_pw = configuration.ssh_password
+                break
+            except (paramiko.SSHException, socket.error):
+                continue
 
         return ssh_client
 

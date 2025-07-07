@@ -16,6 +16,8 @@ from workers.models import Worker, Configuration, DependencyVersion, DependencyT
 from workers.update.update import queue_update
 from workers.tasks import update_system_info, fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file, config_worker_scan_task
 
+from embark.helper import user_is_auth
+
 
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -65,14 +67,14 @@ def delete_config(request):
     Delete a worker configuration and all workers associated with it. (If there are no other configs associated with the worker)
     """
     user = get_user(request)
-    selected_config_id = request.POST.get("configuration")
-    if not selected_config_id:
+    config_id = request.POST.get("configuration")
+    if not config_id:
         messages.error(request, 'No configuration selected')
         return safe_redirect(request, '/worker/')
 
     try:
-        config = Configuration.objects.get(id=selected_config_id)
-        if config.user != user:
+        config = Configuration.objects.get(id=config_id)
+        if not user_is_auth(user, config.user):
             messages.error(request, 'You are not allowed to delete this configuration')
             return safe_redirect(request, '/worker/')
 
@@ -80,7 +82,7 @@ def delete_config(request):
         for worker in config_workers:
             undo_sudoers_file.delay(worker.ip_address, config.ssh_user, config.ssh_password)
 
-        workers = Worker.objects.annotate(config_count=Count('configurations')).filter(configurations__id=selected_config_id, config_count=1)
+        workers = Worker.objects.annotate(config_count=Count('configurations')).filter(configurations__id=config_id, config_count=1)
         for worker in workers:
             worker.dependency_version.delete()
             worker.delete()
@@ -101,27 +103,16 @@ def create_config(request):
     Create a new configuration for workers.
     """
     user = get_user(request)
-    name = request.POST.get("name")
-    ssh_user = request.POST.get("ssh_user")
-    ssh_password = request.POST.get("ssh_password")
-    ip_range = request.POST.get("ip_range")
 
-    if not ssh_user or not ssh_password or not ip_range or not name:
-        messages.error(request, 'Name, SSH user, SSH password, and IP range are required.')
+    config_form = ConfigurationForm(request.POST)
+    if not config_form.is_valid():
+        messages.error(request, 'Invalid configuration data.')
         return safe_redirect(request, '/worker/')
 
-    ip_range_regex = r"^(\d{1,3}\.){3}\d{1,3}/\d{1,2}$"
-    if not re.match(ip_range_regex, ip_range):
-        messages.error(request, 'Invalid IP range format. Use CIDR notation')
-        return safe_redirect(request, '/worker/')
+    new_config = config_form.save(commit=False)
+    new_config.user = user
+    new_config.save()
 
-    Configuration.objects.create(
-        name=name,
-        user=user,
-        ssh_user=ssh_user,
-        ssh_password=ssh_password,
-        ip_range=ip_range
-    )
     messages.success(request, 'Configuration created successfully.')
     return safe_redirect(request, '/worker/')
 
@@ -236,7 +227,7 @@ def config_worker_scan(request, configuration_id):
     try:
         user = get_user(request)
         config = Configuration.objects.get(id=configuration_id)
-        if user != config.user:
+        if not user_is_auth(user, config.user):
             messages.error(request, 'You are not allowed to access this configuration.')
             return safe_redirect(request, '/worker/')
     except Configuration.DoesNotExist:
@@ -260,7 +251,7 @@ def configuration_soft_reset(request, configuration_id):
         user = get_user(request)
         configuration = Configuration.objects.get(id=configuration_id)
 
-        if configuration.user != user:
+        if not user_is_auth(user, configuration.user):
             messages.error(request, 'You are not allowed to access this configuration.')
             return safe_redirect(request, '/worker/')
     except Configuration.DoesNotExist:
@@ -270,7 +261,7 @@ def configuration_soft_reset(request, configuration_id):
     workers = Worker.objects.filter(configurations__id=configuration_id)
 
     for worker in workers:
-        worker_soft_reset(request, worker.id, configuration_id)
+        worker_soft_reset(request, worker.id)
 
     messages.success(request, f'Successfully soft resetted configuration: {configuration_id} ({configuration.name})')
     return safe_redirect(request, '/worker/')
@@ -288,7 +279,7 @@ def configuration_hard_reset(request, configuration_id):
         user = get_user(request)
         configuration = Configuration.objects.get(id=configuration_id)
 
-        if configuration.user != user:
+        if not user_is_auth(user, configuration.user):
             messages.error(request, 'You are not allowed to access this configuration.')
             return safe_redirect(request, '/worker/')
     except Configuration.DoesNotExist:
@@ -324,12 +315,12 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
             configuration = worker.configurations.filter(user=user).first()
         else:
             configuration = Configuration.objects.get(id=configuration_id)
-        if configuration.user != user:
+        if not user_is_auth(user, configuration.user):
             messages.error(request, 'You are not allowed to access this worker.')
             return safe_redirect(request, '/worker/')
 
         try:
-            worker_soft_reset_task.delay(worker.id, configuration.id)
+            worker_soft_reset_task.delay(worker.id)
             messages.success(request, f'Successfully soft resetted worker: ({worker.name})')
             return safe_redirect(request, '/worker/')
         except BaseException:
@@ -361,13 +352,13 @@ def worker_hard_reset(request, worker_id, configuration_id=None):
                 configuration = worker.configurations.filter(user=user).first()
             else:
                 configuration = Configuration.objects.get(id=configuration_id)
-            if configuration.user != user:
+            if not user_is_auth(user, configuration.user):
                 messages.error(request, 'You are not allowed to access this worker.')
                 return safe_redirect(request, '/worker/')
 
         try:
-            worker_soft_reset_task.delay(worker.id, configuration.id)
-            worker_hard_reset_task.delay(worker.id, configuration.id)
+            worker_soft_reset_task.delay(worker.id)
+            worker_hard_reset_task.delay(worker.id)
             messages.success(request, f'Successfully hard resetted worker: ({worker.name})')
             return safe_redirect(request, '/worker/')
         except BaseException:
@@ -390,7 +381,7 @@ def registered_workers(request, configuration_id):
     try:
         user = get_user(request)
         configuration = Configuration.objects.get(id=configuration_id)
-        if user != configuration.user:
+        if not user_is_auth(user, configuration.user):
             return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this configuration.'})
     except Configuration.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Configuration not found.'})
@@ -414,13 +405,13 @@ def connect_worker(request, configuration_id, worker_id):
         user = get_user(request)
         worker = Worker.objects.get(id=worker_id)
         configuration = worker.configurations.get(id=configuration_id)
-        if user != configuration.user:
+        if not user_is_auth(user, configuration.user):
             return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this configuration.'})
     except (Worker.DoesNotExist, Configuration.DoesNotExist):
         return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
 
     try:
-        system_info = update_system_info(configuration, worker)
+        system_info = update_system_info(worker)
     except paramiko.SSHException:
         return JsonResponse({'status': 'error', 'message': 'Failed to retrieve system_info.'})
 

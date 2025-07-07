@@ -29,7 +29,7 @@ def toggle_orchestrator(request):
     Toggle function for orchestrator
     """
     user = get_user(request)
-    if not user.is_staff:
+    if not (user.is_staff or user.is_superuser or user.groups.filter(name='Administration_Group').exists()):
         return JsonResponse({"status": "error", "message": "You do not have permission to perform this action."}, status=403)
 
     app_settings = get_settings()
