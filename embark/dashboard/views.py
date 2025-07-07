@@ -72,7 +72,7 @@ def stop_analysis(request):
         pid = analysis.pid
         logger.debug("PID is %s", pid)
         try:
-            BoundedExecutor.submit_kill(analysis_form.id)
+            BoundedExecutor.submit_kill(analysis.id)
 
             if analysis.running_on_worker:
                 worker = Worker.objects.get(analysis_id=analysis.id)
