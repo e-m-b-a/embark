@@ -227,7 +227,7 @@ class Orchestrator:
         elif worker.ip_address in self.busy_workers:
             del self.busy_workers[worker.ip_address]
         else:
-            raise ValueError(f"Worker with IP {worker.ip_address} does not exist.")
+            raise ValueError(f"Worker with IP {worker.ip_address} not registered in the orchestrator.")
 
     def remove_worker(self, worker: Worker):
         """

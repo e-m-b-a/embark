@@ -81,7 +81,7 @@ def update_system_info(worker: Worker):
         worker.last_reached = make_aware(datetime.now())
         worker.reachable = True
     except (paramiko.SSHException, socket.error, AttributeError) as ssh_error:
-        logger.error("Failed to connect during update system info")
+        logger.error("Failed to connect while updating system info for worker: %s: %s", worker.name, ssh_error)
         raise paramiko.SSHException("SSH connection failed") from ssh_error
     except BaseException as error:
         logger.error("An error occurred while updating system info for worker %s: %s", worker.name, error)
