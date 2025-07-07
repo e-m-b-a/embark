@@ -503,7 +503,7 @@ def _update_or_create_worker(config: Configuration, ip_address: str):
     finally:
         try:
             init_sudoers_file(config, worker)
-            update_system_info(config, worker)
+            update_system_info(worker)
             update_dependencies_info(worker)
         except BaseException:
             pass
