@@ -81,7 +81,7 @@ def update_system_info(worker: Worker):
         worker.system_info = system_info
         worker.last_reached = make_aware(datetime.now())
         worker.reachable = True
-    except (paramiko.SSHException, socket.error) as ssh_error:
+    except paramiko.SSHException as ssh_error:
         logger.error("Failed to connect while updating system info for worker: %s: %s", worker.name, ssh_error)
         raise paramiko.SSHException("SSH connection failed") from ssh_error
     except BaseException as error:
@@ -459,7 +459,7 @@ def worker_soft_reset_task(worker_id):
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {homedir}/emba_logs.zip*")  # Also delete possible leftover tmp files
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {homedir}/emba_run.log")
         ssh_client.close()
-    except (paramiko.SSHException, socket.error):
+    except paramiko.SSHException:
         logger.error("[Worker %s] SSH Connection failed while soft resetting.", worker.id)
         if ssh_client is not None:
             ssh_client.close()
@@ -478,7 +478,7 @@ def worker_hard_reset_task(worker_id):
         emba_path = os.path.join(settings.WORKER_EMBA_ROOT, "full_uninstaller.sh")
         exec_blocking_ssh(ssh_client, "sudo bash " + emba_path)
         ssh_client.close()
-    except (paramiko.SSHException, socket.error):
+    except paramiko.SSHException:
         logger.error("SSH Connection didnt work for: %s", worker.name)
         if ssh_client:
             ssh_client.close()
