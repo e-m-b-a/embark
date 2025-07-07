@@ -380,60 +380,6 @@ def worker_hard_reset(request, worker_id, configuration_id=None):
         return safe_redirect(request, '/worker/')
 
 
-@require_http_methods(["GET"])
-@login_required(login_url='/' + settings.LOGIN_URL)
-@permission_required("users.worker_permission", login_url='/')
-def registered_workers(request, configuration_id):
-    """
-    Get detailed information about all registered workers for a given configuration.
-    :params configuration_id: The configuration id
-    """
-    try:
-        user = get_user(request)
-        configuration = Configuration.objects.get(id=configuration_id)
-        if not user_is_auth(user, configuration.user):
-            return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this configuration.'})
-    except Configuration.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Configuration not found.'})
-
-    workers = configuration.workers.all()
-    worker_list = [{'id': worker.id, 'name': worker.name, 'ip_address': worker.ip_address, 'system_info': worker.system_info} for worker in workers]
-    return JsonResponse({'status': 'success', 'configuration': configuration.name, 'workers': worker_list})
-
-
-@require_http_methods(["GET"])
-@login_required(login_url='/' + settings.LOGIN_URL)
-@permission_required("users.worker_permission", login_url='/')
-def connect_worker(request, configuration_id, worker_id):
-    """
-    Connect to the worker with the given worker ID using SSH credentials from the given config ID and gather system information.
-    This information is comprised of OS type and version, CPU count, RAM size, and Disk size
-    :params configuration_id: The configuration id
-    :params worker_id: The worker id
-    """
-    try:
-        user = get_user(request)
-        worker = Worker.objects.get(id=worker_id)
-        configuration = worker.configurations.get(id=configuration_id)
-        if not user_is_auth(user, configuration.user):
-            return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this configuration.'})
-    except (Worker.DoesNotExist, Configuration.DoesNotExist):
-        return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
-
-    try:
-        system_info = update_system_info(worker)
-    except paramiko.SSHException:
-        return JsonResponse({'status': 'error', 'message': 'Failed to retrieve system_info.'})
-
-    return JsonResponse({
-        'status': 'success',
-        'worker_id': worker_id,
-        'worker_name': worker.name,
-        'worker_ip': worker.ip_address,
-        'system_info': system_info
-    })
-
-
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
