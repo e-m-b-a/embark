@@ -208,6 +208,7 @@ def update_worker_dependency(request, worker_id):
         return safe_redirect(request, '/worker/')
 
     messages.success(request, 'Update queued')
+    messages.info(request, 'Please make sure to refresh the website to show status updates')
     return safe_redirect(request, '/worker/')
 
 
@@ -230,6 +231,7 @@ def update_configuration_dependency(request, configuration_id):
         return safe_redirect(request, '/worker/')
 
     messages.success(request, 'Update queued')
+    messages.info(request, 'Please make sure to refresh the website to show status updates')
     return safe_redirect(request, '/worker/')
 
 
