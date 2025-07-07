@@ -170,9 +170,9 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
             if not is_running or analysis_finished or not orchestrator.is_busy(worker):
                 logger.info("[Worker %s] Analysis finished.", worker.id)
                 worker_soft_reset_task(worker.id)
+                process_update_queue(worker)
                 orchestrator.release_worker(worker)
                 orchestrator.trigger()
-                process_update_queue(worker)
 
                 if worker.status == Worker.ConfigStatus.CONFIGURED:
                     orchestrator.release_worker(worker)
@@ -299,7 +299,6 @@ def update_worker(worker_id, add_orchestrator=True):
     orchestrator = get_orchestrator()
     try:
         orchestrator.remove_worker(worker)
-        orchestrator.trigger()
         logger.info("Worker: %s removed from orchestrator", worker.name)
     except ValueError:
         pass

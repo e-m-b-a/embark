@@ -50,17 +50,24 @@ class Orchestrator:
             self._sync_orchestrator_state()
             return self.free_workers
 
+    def _trigger(self):
+        """
+        Trigger the orchestrator to assign tasks to free workers.
+        """
+        if self.tasks and self.free_workers:
+            next_task = self.tasks.popleft()
+            free_worker = next(iter(self.free_workers.values()))
+            self._assign_worker(free_worker, next_task)
+            self._trigger()
+
     def trigger(self):
         """
         Trigger the orchestrator to assign tasks to free workers.
         """
-        next_task = None
         with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
-            if self.tasks:
-                next_task = self.tasks.popleft()
-
-        if next_task:
-            self.assign_task(next_task)
+            self._sync_orchestrator_state()
+            self._trigger()
+            self._update_orchestrator_state()
 
     def get_busy_workers(self) -> Dict[str, Worker]:
         with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
