@@ -76,7 +76,7 @@ For developers, we recommend simply using: `sudo ./installer.sh -F ` and the `./
 - http://localhost:8001/user/ use this link to generate an API key
 - http://localhost:8001/api/uploader inside Headers define Authorization = 'API key' and inside body define file = 'Your File'
 - This returns a UUID if successfull
-- http://localhost:8001/status_report/'Your UUID' inside Headers define Authorization = 'API key'
+- http://localhost:8001/status_report/'YourUUID' inside Headers define Authorization = 'API key'
 - This returns a link to the report if the report is finished
 
 For more information and details, please refer to the [Swagger UI documentation](https://amosproj.github.io/amos2025ss01-embark/), which showcases the REST API.
