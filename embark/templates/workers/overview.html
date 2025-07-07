@@ -142,17 +142,17 @@
                 <div class="actions-dropdown">
                     <button class="toggle-actions-menu" data-id="{{ worker.ip_address }}">...</button>
                     <div class="actions-dropdown-content" id="menu-{{ worker.ip_address }}">
-                            <button class="toggle-update-diff" dep-type="emba">Update EMBA
+                            <button class="toggle-update-diff" dep-type="emba" worker-id="{{ worker.id }}">Update EMBA
                             {% if worker.dependency_version.emba_outdated %}
                                 <span class="update-dot"/>
                             {% endif %}
                             </button>
-                            <button class="toggle-update-diff" dep-type="deb">Update APT dependencies
+                            <button class="toggle-update-diff" dep-type="deb" worker-id="{{ worker.id }}">Update APT dependencies
                             {% if worker.dependency_version.deb_outdated %}
                                 <span class="update-dot"/>
                             {% endif %}
                             </button>
-                            <button class="toggle-update-diff" dep-type="external">Update external directory
+                            <button class="toggle-update-diff" dep-type="external" worker-id="{{ worker.id }}">Update external directory
                             {% if worker.dependency_version.external_outdated %}
                                 <span class="update-dot"/>
                             {% endif %}
@@ -167,7 +167,7 @@
                         </form>
                     </div>
                 </div>
-                <div class="update-modal" id="update-modal-emba">
+                <div class="update-modal" id="update-modal-emba-{{ worker.id }}">
                     <div class="modal-content">
                         <div class="modal-title">
                             <p>Update diff - EMBA</p>
@@ -193,7 +193,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="update-modal" id="update-modal-external">
+                <div class="update-modal" id="update-modal-external-{{ worker.id }}">
                     <div class="modal-content">
                         <div class="modal-title">
                             <p>Update diff - external directory</p>
@@ -227,7 +227,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="update-modal" id="update-modal-deb">
+                <div class="update-modal" id="update-modal-deb-{{ worker.id }}">
                     <div class="modal-content">
                         <div class="modal-title">
                             <p>Update diff - APT dependencies</p>
@@ -340,7 +340,8 @@
     document.querySelectorAll(".toggle-update-diff").forEach(button => {
         button.addEventListener("click", function () {
             const type = button.getAttribute("dep-type");
-            const menu = document.getElementById("update-modal-" + type);
+            const workerId = button.getAttribute("worker-id");
+            const menu = document.getElementById("update-modal-" + type + "-" + workerId);
             if (menu) {
                 menu.style.display = (menu.style.display === "none" || menu.style.display === "") ? "block" : "none";
 
