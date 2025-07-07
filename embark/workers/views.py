@@ -1,3 +1,5 @@
+import logging
+
 import paramiko
 
 from django.shortcuts import render
@@ -11,11 +13,14 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
 
 from workers.forms import ConfigurationForm
+from workers.orchestrator import get_orchestrator
 from workers.models import Worker, Configuration, DependencyVersion, DependencyType
 from workers.update.update import queue_update
 from workers.tasks import update_system_info, fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file, config_worker_scan_task
-
 from embark.helper import user_is_auth
+
+
+logger = logging.getLogger(__name__)
 
 
 @require_http_methods(["GET"])
@@ -82,9 +87,15 @@ def delete_config(request):
             undo_sudoers_file.delay(worker.ip_address, config.ssh_user, config.ssh_password)
 
         workers = Worker.objects.annotate(config_count=Count('configurations')).filter(configurations__id=config_id, config_count=1)
+        orchestrator = get_orchestrator()
         for worker in workers:
-            worker.dependency_version.delete()
-            worker.delete()
+            try:
+                orchestrator.remove_worker(worker)
+                worker.dependency_version.delete()
+                worker.delete()
+                logger.info("Worker: %s removed from orchestrator", worker.name)
+            except ValueError:
+                logger.error("Worker: %s could not be removed from orchestrator", worker.name)
 
         config.delete()
         messages.success(request, 'Configuration deleted successfully')

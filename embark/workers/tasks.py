@@ -176,16 +176,21 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
 
                 if worker.status == Worker.ConfigStatus.CONFIGURED:
                     orchestrator.release_worker(worker)
+                    orchestrator.assign_tasks()
                 else:
                     orchestrator.remove_worker(worker)
-
                 return
         except Exception as exception:
             logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
             if orchestrator.is_busy(worker):
                 logger.info("[Worker %s] Releasing the worker...", worker.id)
                 worker_soft_reset_task(worker.id)
-                orchestrator.release_worker(worker)
+
+                if worker.status == Worker.ConfigStatus.CONFIGURED:
+                    orchestrator.release_worker(worker)
+                    orchestrator.assign_tasks()
+                else:
+                    orchestrator.remove_worker(worker)
                 return
 
         time.sleep(15)
@@ -310,7 +315,9 @@ def update_worker(worker_id, add_orchestrator=True):
 
             if add_orchestrator:
                 orchestrator.add_worker(worker)
+                orchestrator.assign_tasks()
                 logger.info("Worker: %s added to orchestrator", worker.name)
+
         except ValueError:
             logger.error("Worker: %s already exists in orchestrator", worker.name)
 

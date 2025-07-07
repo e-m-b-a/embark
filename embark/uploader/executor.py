@@ -46,7 +46,7 @@ def submit_firmware(firmware_analysis: FirmwareAnalysis, firmware_file: Firmware
 
     if workers_enabled():
         orchestrator = get_orchestrator()
-        orchestrator.assign_task(OrchestratorTask(firmware_analysis.id, emba_cmd, firmware_file.file.path, image_file_location))
+        orchestrator.queue_task(OrchestratorTask(firmware_analysis.id, emba_cmd, firmware_file.file.path, image_file_location))
 
         return True
     else:
