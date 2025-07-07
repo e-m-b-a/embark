@@ -6,13 +6,14 @@ import socket
 import subprocess
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import requests
 import paramiko
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
+from django.utils.timezone import make_aware
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from django.conf import settings
 
@@ -51,7 +52,6 @@ def update_system_info(worker: Worker):
     :raises paramiko.SSHException: If the SSH connection fails or if any command execution fails
     """
     ssh_client = None
-
     try:
         ssh_client = worker.ssh_connect()
 
@@ -71,23 +71,23 @@ def update_system_info(worker: Worker):
         disk_free = disk_str[3].replace('G', 'GB').replace('M', 'MB')
         disk_info = f"Free: {disk_free}  Total: {disk_total}"
 
-        ssh_client.close()
-
-    except (paramiko.SSHException, socket.error) as ssh_error:
+        system_info = {
+            'os_info': os_info,
+            'cpu_info': cpu_info,
+            'ram_info': ram_info,
+            'disk_info': disk_info
+        }
+        worker.system_info = system_info
+    except (paramiko.SSHException, socket.error, AttributeError) as ssh_error:
+        logger.error("Failed to connect during update system info")
+        raise paramiko.SSHException("SSH connection failed") from ssh_error
+    except BaseException as error:
+        logger.error("An error occurred while updating system info for worker %s: %s", worker.name, error)
+        raise BaseException("Failed to update system info") from error
+    finally:
         if ssh_client:
             ssh_client.close()
-        raise paramiko.SSHException("SSH connection failed") from ssh_error
-
-    system_info = {
-        'os_info': os_info,
-        'cpu_info': cpu_info,
-        'ram_info': ram_info,
-        'disk_info': disk_info
-    }
-    worker.system_info = system_info
-    worker.save()
-
-    return system_info
+        worker.save()
 
 
 def _handle_unreachable_worker(worker: Worker):
@@ -96,8 +96,12 @@ def _handle_unreachable_worker(worker: Worker):
     set its reachable status to False and remove it from the orchestrator.
     Any analysis which was running on the worker will be rescheduled to another worker.
     """
+    if not worker.reachable:
+        # Unreachable worker has already been dealt with
+        return
+
     try:
-        reachable_threshold = datetime.now() - datetime.timedelta(minutes=settings.WORKER_REACHABLE_TIMEOUT)
+        reachable_threshold = make_aware(datetime.now()) - timedelta(minutes=settings.WORKER_REACHABLE_TIMEOUT)
         if worker.last_reached < reachable_threshold:
             worker.reachable = False
             logger.info(
@@ -130,11 +134,12 @@ def update_worker_info():
     workers = Worker.objects.all()
     for worker in workers:
         try:
+            logger.info("Updating system info: %s", worker.name)
             update_system_info(worker)
             worker.reachable = True
-            worker.last_reached = datetime.now()
-            logger.info("Worker %s updated successfully.", worker.name)
+            worker.last_reached = make_aware(datetime.now())
         except paramiko.SSHException:
+            logger.info("Handling unreachable worker: %s", worker.name)
             _handle_unreachable_worker(worker)
         except BaseException as error:
             logger.error("An error occurred while updating worker %s: %s", worker.name, error)
