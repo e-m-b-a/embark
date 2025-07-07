@@ -1,3 +1,7 @@
+__copyright__ = 'Copyright 2025 Siemens Energy AG, Copyright 2025 The AMOS Projects'
+__author__ = 'ashiven, ClProsser, SirGankalot'
+__license__ = 'MIT'
+
 import paramiko
 
 from django.shortcuts import render

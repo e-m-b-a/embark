@@ -1,3 +1,7 @@
+__copyright__ = 'Copyright 2025 Siemens Energy AG, Copyright 2025 The AMOS Projects'
+__author__ = 'ashiven, SirGankalot'
+__license__ = 'MIT'
+
 from django.apps import AppConfig
 
 

@@ -1,6 +1,5 @@
-# Create your tests here.
-__copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2021-2025 The AMOS Projects'
-__author__ = 'Benedikt Kuehne, ashiven'
+__copyright__ = 'Copyright 2025 Siemens Energy AG, Copyright 2025 The AMOS Projects'
+__author__ = 'ashiven, SirGankalot, ClProsser'
 __license__ = 'MIT'
 
 import secrets

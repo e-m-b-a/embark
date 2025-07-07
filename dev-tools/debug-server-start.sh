@@ -8,6 +8,7 @@
 # EMBArk is licensed under MIT
 #
 # Author(s): Benedikt Kuehne
+# Contributor(s): ClProsser, ashiven, SirGankalot
 
 # Description: Automates setup of developer environment for Debug-Server
 

@@ -1,3 +1,8 @@
+__copyright__ = 'Copyright 2025 Siemens Energy AG, Copyright 2025 The AMOS Projects'
+__author__ = 'ClProsser'
+__license__ = 'MIT'
+
+
 import os
 
 from celery import Celery

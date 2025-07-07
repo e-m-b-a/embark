@@ -1,3 +1,7 @@
+__copyright__ = 'Copyright 2025 Siemens Energy AG, Copyright 2025 The AMOS Projects'
+__author__ = 'ashiven, ClProsser, Luka Dekanozishvili, SirGankalot'
+__license__ = 'MIT'
+
 import ipaddress
 import os
 import re

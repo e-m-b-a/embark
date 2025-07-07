@@ -1,5 +1,16 @@
 #!/bin/bash
 
+# EMBArk - The firmware security scanning environment
+#
+# Copyright 2025 Siemens Energy AG
+#
+# EMBArk comes with ABSOLUTELY NO WARRANTY.
+#
+# EMBArk is licensed under MIT
+#
+# Author(s): ClProsser, SirGankalot
+# Contributor(s): Luka Dekanozishvili
+
 set -e
 cd "$(dirname "$0")"
 

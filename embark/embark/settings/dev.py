@@ -1,5 +1,5 @@
 __copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2025 The AMOS Projects'
-__author__ = 'Benedikt Kuehne, SirGankalot, ClProsser'
+__author__ = 'Benedikt Kuehne, SirGankalot, ClProsser, ashiven'
 __license__ = 'MIT'
 
 from pathlib import Path
