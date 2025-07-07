@@ -54,8 +54,6 @@ def update_system_info(worker: Worker):
     ssh_client = None
     try:
         ssh_client = worker.ssh_connect()
-        worker.last_reached = make_aware(datetime.now())
-        worker.reachable = True
 
         os_info = exec_blocking_ssh(ssh_client, 'grep PRETTY_NAME /etc/os-release')
         os_info = os_info[len('PRETTY_NAME='):-1].strip('"')
@@ -80,6 +78,8 @@ def update_system_info(worker: Worker):
             'disk_info': disk_info
         }
         worker.system_info = system_info
+        worker.last_reached = make_aware(datetime.now())
+        worker.reachable = True
     except (paramiko.SSHException, socket.error, AttributeError) as ssh_error:
         logger.error("Failed to connect during update system info")
         raise paramiko.SSHException("SSH connection failed") from ssh_error
@@ -457,7 +457,7 @@ def worker_soft_reset_task(worker_id):
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {homedir}/emba_logs.zip*")  # Also delete possible leftover tmp files
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {homedir}/emba_run.log")
         ssh_client.close()
-    except (paramiko.SSHException, socket.error):
+    except (paramiko.SSHException, socket.error, AttributeError):
         logger.error("[Worker %s] SSH Connection failed while soft resetting.", worker.id)
         if ssh_client is not None:
             ssh_client.close()
@@ -476,7 +476,7 @@ def worker_hard_reset_task(worker_id):
         emba_path = os.path.join(settings.WORKER_EMBA_ROOT, "full_uninstaller.sh")
         exec_blocking_ssh(ssh_client, "sudo bash " + emba_path)
         ssh_client.close()
-    except (paramiko.SSHException, socket.error):
+    except (paramiko.SSHException, socket.error, AttributeError):
         logger.error("SSH Connection didnt work for: %s", worker.name)
         if ssh_client:
             ssh_client.close()
