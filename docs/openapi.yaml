@@ -1,0 +1,244 @@
+openapi: 3.1.1
+info:
+  title: EMBArk API
+  description: API of the firmware security scanning environment
+  version: "0.2"
+  license:
+    name: "MIT License"
+    identifier: "MIT"
+  contact:
+    name: EMBA - The security analyzer for firmware of embedded devices
+    url: https://github.com/e-m-b-a
+
+tags:
+  - name: Uploader
+    description: Uploader API
+  - name: Status report
+    description: Status report API
+  - name: API Test
+    description: Test API Authentication
+
+paths:
+  /api/uploader:
+    post:
+      tags:
+        - Uploader
+      summary: Firmware upload and analysis
+      description: Stores the provided firmware, queues a firmware analysis process with provided firmware and parameters
+      operationId: uploadFirmware
+      security:
+        - ApiKeyAuth: []
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploaderResult"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/UploaderResult"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/Error"
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  description: The firmware to be analyzed
+                  type: string
+                  format: binary
+                version:
+                  type: string
+                device:
+                  type: array
+                  items:
+                    type: string
+                notes:
+                  type: string
+                firmware_Architecture:
+                  type: string
+                user_emulation_test:
+                  type: boolean
+                system_emulation_test:
+                  type: boolean
+                sbom_only_test:
+                  type: boolean
+                scan_modules:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - file
+  /status_report/{analysis_id}:
+    get:
+      tags:
+        - Status report
+      summary: Get analysis status report
+      description: >
+        Retrieves the report of a firmware analysis.
+
+        - If the analysis is still **running**, returns its progress
+
+        - If the analysis has **failed**, returns failure message, queues zip file generation. Returns the download link on subsequent request
+
+        - If analysis is **finished**, queues zip file generation. Returns the download link on subsequent request
+
+      operationId: getStatusReport
+      parameters:
+        - name: analysis_id
+          in: path
+          required: true
+          description: UUID of the analysis
+          schema:
+            type: string
+            format: uuid
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Zip ready for download
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                finished_success:
+                  summary: Analysis finished successfully
+                  value:
+                    status: "finished"
+                    message: "Analysis finished successfully in 0:23:45."
+                    download_url: "http://example.com:8001/download_zipped/<analysis_id>"
+                failed_with_logs:
+                  summary: Analysis failed, logs available
+                  value:
+                    status: "failed"
+                    error: "Analysis failed, but logs are available."
+                    download_url: "http://example.com:8001/download_zipped/<analysis_id>"
+        '201':
+          description: Zip generation queued on success/failure
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                zipping_success:
+                  summary: Zip generation on success
+                  value:
+                    status: "finished"
+                    message: "Analysis finished successfully. The logs are being zipped and will soon be ready for download"
+                zipping_failure:
+                  summary: Zip generation on failure
+                  value:
+                    status: "failed"
+                    error: "Analysis failed. The logs are being zipped and will soon be ready for download."
+        '202':
+          description: Analysis in progress
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "running"
+                  completion:
+                    type: string
+                    example: "32.8125% finished"
+                  message:
+                    type: string
+                    example: "Analysis has been running since 2025-05-11 19:42:28.986026+00:00"
+        '404':
+          description: UUID not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "error"
+                  error:
+                    type: string
+                    example: "The analysis with the provided UUID doesn't exist."
+  /user/api_test:
+    get:
+      tags:
+        - API Test
+      summary: Greet the API user
+      description: >
+        Returns a JSON greeting message to the authenticated API user.
+        API key must be passed in either the `Authorization` header or the `api_key` query parameter.
+      operationId: apiTest
+      parameters:
+        - in: query
+          name: api_key
+          schema:
+            type: string
+          required: false
+          description: API key passed as a query parameter (alternative to Authorization header).
+      security:
+        - ApiKeyAuth: []
+        - ApiKeyAuthQuery: []
+      responses:
+        '200':
+          description: A successful response with a greeting message.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Hello, johndoe!
+        '401':
+          description: Unauthorized - API key is missing or invalid.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Missing API key
+
+components:
+  schemas:
+    UploaderResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+            - success
+    Error:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - error
+        message:
+          type: string
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+    ApiKeyAuthQuery:
+      type: apiKey
+      in: query
+      name: api_key
+
