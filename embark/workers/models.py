@@ -109,6 +109,9 @@ class Worker(models.Model):
             except (paramiko.SSHException, socket.error):
                 continue
 
+        if ssh_client.get_transport() is None or not ssh_client.get_transport().is_active():
+            raise paramiko.SSHException("Failed to connect to worker with any configuration.")
+
         return ssh_client
 
 
