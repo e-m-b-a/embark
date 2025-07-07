@@ -1,7 +1,6 @@
 import logging
 import re
 import os
-import socket
 
 import paramiko
 from paramiko.client import SSHClient
