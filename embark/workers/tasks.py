@@ -188,11 +188,13 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
 
         if not worker.status == Worker.ConfigStatus.CONFIGURED:
             orchestrator.remove_worker(worker)
+            return
 
         if orchestrator.is_busy(worker):
             logger.info("[Worker %s] Releasing the worker...", worker.id)
             orchestrator.release_worker(worker)
 
+        orchestrator.assign_tasks()
 
 
 def _fetch_analysis_logs(worker) -> None:
@@ -350,7 +352,9 @@ def update_worker(worker_id, add_orchestrator=True):
 
             if add_orchestrator:
                 orchestrator.add_worker(worker)
+                orchestrator.assign_tasks()
                 logger.info("Worker: %s added to orchestrator", worker.name)
+
         except ValueError:
             logger.error("Worker: %s already exists in orchestrator", worker.name)
 
