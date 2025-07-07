@@ -9,6 +9,8 @@
 ### ADDED
 
 - Worker health check and fetch analysis logs ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=112364687&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C46))
+- Abort running analysis on worker ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=111365543&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C41))
+- Trigger orchestrator at critical moments ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114047181&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C59)) 
 - Use celery for IP range scanning and update config UI ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=118038092&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C91))
 - `process_update_queue` call once the analysis is finished ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114650622&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C70))
 - Handle unresponsive worker nodes ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=115550958&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C85))
