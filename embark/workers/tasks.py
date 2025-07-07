@@ -268,8 +268,8 @@ def _is_emba_running(worker) -> bool:
         client = worker.ssh_connect()
 
         cmd = "sudo docker ps -a | grep emba || true"
-        containers = exec_blocking_ssh(client, cmd)
-        if not containers:
+        output = exec_blocking_ssh(client, cmd)
+        if not output:
             logger.info("[Worker %s] EMBA Docker container is no longer running.", worker.id)
             return False
 
@@ -294,6 +294,10 @@ def stop_remote_analysis(worker_id) -> None:
     client = None
     try:
         worker = Worker.objects.get(id=worker_id)
+        if not _is_emba_running(worker):
+            logger.error("[Worker %s] Failed to stop analysis: EMBA container isn't running.", worker.id)
+            return
+
         ssh_client = worker.ssh_connect()
 
         logger.info("[Worker %s] Trying to stop the analysis.", worker.id)
