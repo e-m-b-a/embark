@@ -220,7 +220,7 @@ def init_sudoers_file(configuration: Configuration, worker: Worker):
     command = f'sudo -S -p "" bash -c "grep -qxF \'{sudoers_entry}\' /etc/sudoers.d/EMBArk || echo \'{sudoers_entry}\' >> /etc/sudoers.d/EMBArk"'
 
     try:
-        client = worker.ssh_connect(configuration.id)
+        client = worker.ssh_connect()
         stdin, stdout, _ = client.exec_command(command, get_pty=True)  # nosec B601: No user input
         stdin.write(f"{configuration.ssh_password}\n")
         stdin.flush()

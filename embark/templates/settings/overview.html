@@ -3,7 +3,7 @@
 <link rel="stylesheet" type="text/css" href="{% static 'content/css/settings.css' %}" />
 {% endblock style %}
 
-{% if user.is_staff %}
+{% if user.is_staff or user.is_superuser %}
 <div class="overview-container">
   <div class="configuration-container">
     <h2>Global Settings</h2>
