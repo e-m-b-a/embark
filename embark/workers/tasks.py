@@ -51,6 +51,7 @@ def update_system_info(worker: Worker):
     :return: Dictionary containing system information
     :raises paramiko.SSHException: If the SSH connection fails or if any command execution fails
     """
+    system_info = {}
     ssh_client = None
     try:
         ssh_client = worker.ssh_connect()
@@ -90,6 +91,7 @@ def update_system_info(worker: Worker):
         if ssh_client:
             ssh_client.close()
         worker.save()
+    return system_info
 
 
 def _handle_unreachable_worker(worker: Worker):
