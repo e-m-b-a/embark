@@ -50,24 +50,22 @@ def main_dashboard(request):
 @require_http_methods(["POST"])
 def stop_analysis(request):
     """
-    View to submit form for flags to run emba with
-    if: form is valid
-        send interrupt to analysis.pid
-    Args:
-        request: the http req with FirmwareForm
-    Returns: redirect
+    View to stop a running analysis.
+    If the analysis is running on a worker, stops it.
+    Else sends an interrupt to analysis.pid.
+    :param request: The HTTP request with FirmwareForm
+    :return: Redirect
     """
     form = StopAnalysisForm(request.POST)
     if form.is_valid():
-        logger.debug("Posted Form is valid")
-        # get id
-        analysis_form = form.cleaned_data['analysis']
-        analysis = FirmwareAnalysis.objects.get(id=analysis_form.id)
+        logger.debug("Posted form is valid")
+
+        analysis = form.cleaned_data['analysis']
 
         if not user_is_auth(request.user, analysis.user):
             return HttpResponseForbidden("You are not authorized!")
 
-        logger.info("Stopping analysis with id %s", analysis.id)
+        logger.info("Stopping analysis with ID: %s", analysis.id)
 
         pid = analysis.pid
         logger.debug("PID is %s", pid)
