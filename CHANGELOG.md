@@ -12,6 +12,7 @@
 - Use celery for IP range scanning and update config UI ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=118038092&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C91))
 - `process_update_queue` call once the analysis is finished ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114650622&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C70))
 - Handle unresponsive worker nodes ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=115550958&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C85))
+- Add wiki entries for API ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114744149&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C71))
 
 ## [sprint-11](https://github.com/amosproj/amos2025ss01-embark/releases/tag/sprint-11-release) - 2025-07-02
 
