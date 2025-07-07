@@ -1,13 +1,11 @@
 import logging
 
-import paramiko
-
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import get_user
 from django.views.decorators.http import require_http_methods
 from django.conf import settings
-from django.http import JsonResponse, HttpResponseRedirect
+from django.http import HttpResponseRedirect
 from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
@@ -16,7 +14,7 @@ from workers.forms import ConfigurationForm
 from workers.orchestrator import get_orchestrator
 from workers.models import Worker, Configuration, DependencyVersion, DependencyType
 from workers.update.update import queue_update
-from workers.tasks import update_system_info, fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file, config_worker_scan_task
+from workers.tasks import fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file, config_worker_scan_task
 from embark.helper import user_is_auth
 
 
