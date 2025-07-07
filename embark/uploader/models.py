@@ -322,6 +322,7 @@ class FirmwareAnalysis(models.Model):
     duration = models.CharField(blank=True, null=True, max_length=100, help_text='')
     finished = models.BooleanField(default=False, blank=False)
     failed = models.BooleanField(default=False, blank=False)
+    running_on_worker = models.BooleanField(default=workers_enabled, blank=True)
 
     # view option fields
     archived = models.BooleanField(default=False, blank=False)

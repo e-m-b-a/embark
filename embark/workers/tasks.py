@@ -160,40 +160,40 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
 
     :param worker_id: ID of worker to monitor and fetch logs for.
     """
-    orchestrator = get_orchestrator()
-    worker = Worker.objects.get(id=worker_id)
-    while True:
-        try:
+    try:
+        orchestrator = get_orchestrator()
+        worker = Worker.objects.get(id=worker_id)
+        while True:
             _fetch_analysis_logs(worker)
 
+            is_running = _is_emba_running(worker)
             analysis_finished = FirmwareAnalysis.objects.get(id=worker.analysis_id).status["finished"]
-            is_running = _is_emba_container_running(worker)
-
             if not is_running or analysis_finished or not orchestrator.is_busy(worker):
                 logger.info("[Worker %s] Analysis finished.", worker.id)
-                worker_soft_reset_task(worker.id)
-                process_update_queue(worker)
-
-                if worker.status == Worker.ConfigStatus.CONFIGURED:
-                    orchestrator.release_worker(worker)
-                    orchestrator.assign_tasks()
-                else:
-                    orchestrator.remove_worker(worker)
-                return
-        except Exception as exception:
-            logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
-            if orchestrator.is_busy(worker):
-                logger.info("[Worker %s] Releasing the worker...", worker.id)
-                worker_soft_reset_task(worker.id)
-
-                if worker.status == Worker.ConfigStatus.CONFIGURED:
-                    orchestrator.release_worker(worker)
-                    orchestrator.assign_tasks()
-                else:
-                    orchestrator.remove_worker(worker)
                 return
 
-        time.sleep(15)
+            time.sleep(15)
+    except Exception as exception:
+        logger.error("[Worker %s] Monitoring failed, stopping the task. Exception: %s", worker.id, exception)
+        analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
+        analysis.failed = True
+        analysis.save()
+    finally:
+        worker_soft_reset_task(worker.id)
+        process_update_queue(worker)
+
+        analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
+        analysis.finished = True
+        analysis.save()
+
+        if not worker.status == Worker.ConfigStatus.CONFIGURED:
+            orchestrator.remove_worker(worker)
+
+        if orchestrator.is_busy(worker):
+            logger.info("[Worker %s] Releasing the worker...", worker.id)
+            orchestrator.release_worker(worker)
+
+        orchestrator.assign_tasks()
 
 
 def _fetch_analysis_logs(worker) -> None:
@@ -256,21 +256,21 @@ def _fetch_analysis_logs(worker) -> None:
             client.close()
 
 
-def _is_emba_container_running(worker) -> bool:
+def _is_emba_running(worker) -> bool:
     """
-    Checks if a Docker container is running on the worker.
+    Checks if an EMBA Docker container is running on the worker.
 
     :param worker: The worker to check.
-    :return: True, if a Docker container is still running,
+    :return: True, if EMBA is still running,
              False, otherwise
     """
     client = None
     try:
         client = worker.ssh_connect()
 
-        cmd = "sudo docker ps -qa"
-        containers = exec_blocking_ssh(client, cmd)
-        if not containers:
+        cmd = "sudo docker ps -a | grep emba || true"
+        output = exec_blocking_ssh(client, cmd)
+        if not output:
             logger.info("[Worker %s] EMBA Docker container is no longer running.", worker.id)
             return False
 
@@ -279,6 +279,42 @@ def _is_emba_container_running(worker) -> bool:
     except Exception as exception:
         logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
         return False
+    finally:
+        if client is not None:
+            client.close()
+
+
+@shared_task
+def stop_remote_analysis(worker_id) -> None:
+    """
+    Stops the EMBA Docker container. Fetches the logs for the
+    last time and releases the worker in the orchestrator.
+
+    :param worker_id: ID of worker whose analysis to stop.
+    """
+    client = None
+    try:
+        worker = Worker.objects.get(id=worker_id)
+        if not _is_emba_running(worker):
+            logger.error("[Worker %s] Failed to stop analysis: EMBA container isn't running.", worker.id)
+            return
+
+        ssh_client = worker.ssh_connect()
+
+        logger.info("[Worker %s] Trying to stop the analysis.", worker.id)
+
+        docker_cmd = "sudo docker ps | grep emba | awk '{print $1;}' | xargs -I {} sudo docker stop {}"
+        exec_blocking_ssh(ssh_client, docker_cmd)
+
+        analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
+        analysis.finished = True
+        analysis.failed = True
+        analysis.save()
+
+        logger.info("[Worker %s] Successfully stopped the analysis.", worker.id)
+
+    except Exception as exception:
+        logger.error("[Worker %s] Error while stopping analysis: %s", worker.id, exception)
     finally:
         if client is not None:
             client.close()
@@ -410,13 +446,9 @@ def worker_soft_reset_task(worker_id):
     Connects via SSH to the worker and performs the soft reset
     :param worker_id: ID of worker to soft reset
     """
-    try:
-        worker = Worker.objects.get(id=worker_id)
-    except Worker.DoesNotExist:
-        logger.error("Worker Soft Reset: Invalid worker id")
-        return
     ssh_client = None
     try:
+        worker = Worker.objects.get(id=worker_id)
         ssh_client = worker.ssh_connect()
         homedir = "/root" if ssh_client.ssh_user == "root" else f"/home/{ssh_client.ssh_user}"
         exec_blocking_ssh(ssh_client, "sudo docker ps -aq | xargs -r sudo docker stop | xargs -r sudo docker rm || true")
@@ -424,9 +456,12 @@ def worker_soft_reset_task(worker_id):
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {homedir}/emba_logs.zip*")  # Also delete possible leftover tmp files
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {homedir}/emba_run.log")
-        ssh_client.close()
+
+    except Worker.DoesNotExist:
+        logger.error("Worker Soft Reset: Invalid worker id")
     except (paramiko.SSHException, socket.error):
         logger.error("[Worker %s] SSH Connection failed while soft resetting.", worker.id)
+    finally:
         if ssh_client is not None:
             ssh_client.close()
 
