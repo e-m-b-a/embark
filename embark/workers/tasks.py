@@ -6,6 +6,7 @@ import socket
 import subprocess
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
 
 import requests
 import paramiko
@@ -96,12 +97,18 @@ def update_worker_info():
     workers = Worker.objects.all()
     for worker in workers:
         try:
-            logger.info("Updating worker %s", worker.name)
             update_system_info(worker)
             worker.reachable = True
+            worker.last_reached = datetime.now()
+            logger.info("Worker %s updated successfully.", worker.name)
         except paramiko.SSHException:
-            logger.info("Worker %s is unreachable, setting status to offline.", worker.name)
-            worker.reachable = False
+            reachable_threshold = datetime.now() - datetime.timedelta(minutes=settings.WORKER_REACHABLE_TIMEOUT)
+            if worker.last_reached < reachable_threshold:
+                worker.reachable = False
+                logger.info(
+                    "Failed to reach worker %s for the last %d minutes, setting status to offline.",
+                    worker.name, settings.WORKER_REACHABLE_TIMEOUT
+                )
         except BaseException as error:
             logger.error("An error occurred while updating worker %s: %s", worker.name, error)
             continue
@@ -544,8 +551,10 @@ def config_worker_scan_task(configuration_id: int):
             results = executor.map(_scan_for_worker, [config]*len(ip_addresses), ip_addresses)
             reachable = list(filter(None, results))
 
-        for worker in config.workers.all():
-            if worker.ip_address not in reachable:
+        unreachable_workers = [worker for worker in config.workers.all() if worker.ip_address not in reachable]
+        for worker in unreachable_workers:
+            reachable_threshold = datetime.now() - datetime.timedelta(minutes=settings.WORKER_REACHABLE_TIMEOUT)
+            if worker.last_reached < reachable_threshold:
                 worker.reachable = False
                 worker.save()
 
