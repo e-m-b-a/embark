@@ -1,7 +1,3 @@
-import ipaddress
-import socket
-from concurrent.futures import ThreadPoolExecutor
-
 import paramiko
 
 from django.shortcuts import render
@@ -15,9 +11,9 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
 
 from workers.forms import ConfigurationForm
-from workers.models import Worker, Configuration, WorkerDependencyVersion, DependencyVersion, DependencyType
-from workers.update.update import init_sudoers_file, queue_update, update_dependencies_info
-from workers.tasks import update_system_info, fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file
+from workers.models import Worker, Configuration, DependencyVersion, DependencyType
+from workers.update.update import queue_update
+from workers.tasks import update_system_info, fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file, config_worker_scan_task
 
 from embark.helper import user_is_auth
 
@@ -37,6 +33,7 @@ def worker_main(request):
     for config in configs:
         config.total_workers = config.workers.count()
         config.reachable_workers = config.workers.filter(reachable=True).count()
+        config.scan_status = config.get_scan_status_display()
 
     reachable_workers = Worker.objects.filter(configurations__in=configs, reachable=True).distinct()
     unreachable_workers = Worker.objects.filter(configurations__in=configs, reachable=False).distinct()
@@ -228,72 +225,17 @@ def config_worker_scan(request, configuration_id):
     """
     try:
         user = get_user(request)
-        configuration = Configuration.objects.get(id=configuration_id)
-        if not user_is_auth(user, configuration.user):
-            return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this configuration.'})
+        config = Configuration.objects.get(id=configuration_id)
+        if not user_is_auth(user, config.user):
+            messages.error(request, 'You are not allowed to access this configuration.')
+            return safe_redirect(request, '/worker/')
     except Configuration.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Configuration not found.'})
-
-    def update_or_create_worker(ip_address):
-        try:
-            existing_worker = Worker.objects.get(ip_address=str(ip_address))
-            existing_worker.reachable = True
-            existing_worker.save()
-            if configuration not in existing_worker.configurations.all():
-                existing_worker.configurations.add(configuration)
-                existing_worker.save()
-            try:
-                init_sudoers_file(configuration, existing_worker)
-                update_system_info(existing_worker)
-                update_dependencies_info(existing_worker)
-            except BaseException:
-                pass
-        except Worker.DoesNotExist:
-            version = WorkerDependencyVersion()
-            version.save()
-
-            new_worker = Worker(
-                dependency_version=version,
-                name=f"worker-{str(ip_address)}",
-                ip_address=str(ip_address),
-                system_info={},
-                reachable=True
-            )
-            new_worker.save()
-            new_worker.configurations.set([configuration])
-            try:
-                init_sudoers_file(configuration, new_worker)
-                update_system_info(new_worker)
-                update_dependencies_info(new_worker)
-            except BaseException:
-                pass
-
-    def connect_ssh(ip_address, port=22, timeout=1):
-        try:
-            with socket.create_connection((str(ip_address), port), timeout):
-                update_or_create_worker(ip_address)
-                return str(ip_address)
-        except Exception:
-            return None
-
-    ip_range = configuration.ip_range
-    ip_network = ipaddress.ip_network(ip_range, strict=False)
-    with ThreadPoolExecutor(max_workers=50) as executor:
-        reachable = list(filter(None, executor.map(connect_ssh, list(ip_network.hosts()))))
-
-    registered = []
-    for worker in configuration.workers.all():
-        registered.append(worker.ip_address)
-        if worker.ip_address not in reachable:
-            worker.reachable = False
-            worker.save()
-
-    view_access = request.GET.get('view_access')
-    if view_access == "True":
-        messages.success(request, f"Scan complete. {len(reachable)} reachable workers out of {len(registered)} registered workers.")
+        messages.error(request, 'Configuration not found.')
         return safe_redirect(request, '/worker/')
 
-    return JsonResponse({'status': 'scan_complete', 'configuration': configuration.name, 'registered_workers': registered, 'reachable_workers': reachable})
+    config_worker_scan_task.delay(config.id)
+    messages.success(request, f'Scan for configuration: {config.name} has been queued.')
+    return safe_redirect(request, '/worker/')
 
 
 @require_http_methods(["POST"])
