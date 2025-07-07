@@ -54,6 +54,8 @@ def update_system_info(worker: Worker):
     ssh_client = None
     try:
         ssh_client = worker.ssh_connect()
+        worker.last_reached = make_aware(datetime.now())
+        worker.reachable = True
 
         os_info = exec_blocking_ssh(ssh_client, 'grep PRETTY_NAME /etc/os-release')
         os_info = os_info[len('PRETTY_NAME='):-1].strip('"')
@@ -136,8 +138,6 @@ def update_worker_info():
         try:
             logger.info("Updating system info: %s", worker.name)
             update_system_info(worker)
-            worker.reachable = True
-            worker.last_reached = make_aware(datetime.now())
         except paramiko.SSHException:
             logger.info("Handling unreachable worker: %s", worker.name)
             _handle_unreachable_worker(worker)
@@ -522,8 +522,6 @@ def _update_or_create_worker(config: Configuration, ip_address: str):
     worker = None
     try:
         worker = Worker.objects.get(ip_address=ip_address)
-        worker.reachable = True
-        worker.save()
         if config not in worker.configurations.all():
             worker.configurations.add(config)
             worker.save()
