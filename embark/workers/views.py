@@ -2,24 +2,27 @@ __copyright__ = 'Copyright 2025 Siemens Energy AG, Copyright 2025 The AMOS Proje
 __author__ = 'ashiven, ClProsser, SirGankalot'
 __license__ = 'MIT'
 
-import paramiko
+import logging
 
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import get_user
 from django.views.decorators.http import require_http_methods
 from django.conf import settings
-from django.http import JsonResponse, HttpResponseRedirect
+from django.http import HttpResponseRedirect
 from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
 
 from workers.forms import ConfigurationForm
+from workers.orchestrator import get_orchestrator
 from workers.models import Worker, Configuration, DependencyVersion, DependencyType
 from workers.update.update import queue_update
-from workers.tasks import update_system_info, fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file, config_worker_scan_task
-
+from workers.tasks import fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file, config_worker_scan_task
 from embark.helper import user_is_auth
+
+
+logger = logging.getLogger(__name__)
 
 
 @require_http_methods(["GET"])
@@ -86,9 +89,15 @@ def delete_config(request):
             undo_sudoers_file.delay(worker.ip_address, config.ssh_user, config.ssh_password)
 
         workers = Worker.objects.annotate(config_count=Count('configurations')).filter(configurations__id=config_id, config_count=1)
+        orchestrator = get_orchestrator()
         for worker in workers:
-            worker.dependency_version.delete()
-            worker.delete()
+            try:
+                orchestrator.remove_worker(worker)
+                worker.dependency_version.delete()
+                worker.delete()
+                logger.info("Worker: %s removed from orchestrator", worker.name)
+            except ValueError:
+                logger.error("Worker: %s could not be removed from orchestrator", worker.name)
 
         config.delete()
         messages.success(request, 'Configuration deleted successfully')
@@ -371,60 +380,6 @@ def worker_hard_reset(request, worker_id, configuration_id=None):
     except (Worker.DoesNotExist, Configuration.DoesNotExist):
         messages.error(request, 'Worker or configuration not found.')
         return safe_redirect(request, '/worker/')
-
-
-@require_http_methods(["GET"])
-@login_required(login_url='/' + settings.LOGIN_URL)
-@permission_required("users.worker_permission", login_url='/')
-def registered_workers(request, configuration_id):
-    """
-    Get detailed information about all registered workers for a given configuration.
-    :params configuration_id: The configuration id
-    """
-    try:
-        user = get_user(request)
-        configuration = Configuration.objects.get(id=configuration_id)
-        if not user_is_auth(user, configuration.user):
-            return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this configuration.'})
-    except Configuration.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Configuration not found.'})
-
-    workers = configuration.workers.all()
-    worker_list = [{'id': worker.id, 'name': worker.name, 'ip_address': worker.ip_address, 'system_info': worker.system_info} for worker in workers]
-    return JsonResponse({'status': 'success', 'configuration': configuration.name, 'workers': worker_list})
-
-
-@require_http_methods(["GET"])
-@login_required(login_url='/' + settings.LOGIN_URL)
-@permission_required("users.worker_permission", login_url='/')
-def connect_worker(request, configuration_id, worker_id):
-    """
-    Connect to the worker with the given worker ID using SSH credentials from the given config ID and gather system information.
-    This information is comprised of OS type and version, CPU count, RAM size, and Disk size
-    :params configuration_id: The configuration id
-    :params worker_id: The worker id
-    """
-    try:
-        user = get_user(request)
-        worker = Worker.objects.get(id=worker_id)
-        configuration = worker.configurations.get(id=configuration_id)
-        if not user_is_auth(user, configuration.user):
-            return JsonResponse({'status': 'error', 'message': 'You are not allowed to access this configuration.'})
-    except (Worker.DoesNotExist, Configuration.DoesNotExist):
-        return JsonResponse({'status': 'error', 'message': 'Worker or configuration not found.'})
-
-    try:
-        system_info = update_system_info(worker)
-    except paramiko.SSHException:
-        return JsonResponse({'status': 'error', 'message': 'Failed to retrieve system_info.'})
-
-    return JsonResponse({
-        'status': 'success',
-        'worker_id': worker_id,
-        'worker_name': worker.name,
-        'worker_ip': worker.ip_address,
-        'system_info': system_info
-    })
 
 
 @require_http_methods(["POST"])

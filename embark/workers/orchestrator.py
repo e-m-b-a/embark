@@ -54,6 +54,25 @@ class Orchestrator:
             self._sync_orchestrator_state()
             return self.free_workers
 
+    def _assign_tasks(self):
+        """
+        Assign tasks to free workers as long as there are both tasks and free workers available.
+        """
+        if self.tasks and self.free_workers:
+            next_task = self.tasks.popleft()
+            free_worker = next(iter(self.free_workers.values()))
+            self._assign_worker(free_worker, next_task)
+            self._assign_tasks()
+
+    def assign_tasks(self):
+        """
+        Trigger the orchestrator to assign tasks to free workers.
+        """
+        with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
+            self._sync_orchestrator_state()
+            self._assign_tasks()
+            self._update_orchestrator_state()
+
     def get_busy_workers(self) -> Dict[str, Worker]:
         with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
             self._sync_orchestrator_state()
@@ -100,34 +119,24 @@ class Orchestrator:
             self._sync_orchestrator_state()
             return self._get_worker_info(worker_ips)
 
-    def _assign_task(self, task: OrchestratorTask):
+    def _queue_task(self, task: OrchestratorTask):
         """
-        Assign a task to a worker. If no workers are free, the task is queued.
-        If there are free workers and no tasks in the queue, the task is assigned immediately.
-        Otherwise, assigns queued tasks to free workers until no more free workers are available.
+        Add a task to the task queue and trigger task assignment.
 
         :param task: The task to be assigned
         """
-        if not self.free_workers:
-            self.tasks.append(task)
-        else:
-            free_worker = next(iter(self.free_workers.values()))
-            if not self.tasks:
-                self._assign_worker(free_worker, task)
-            else:
-                queued_task = self.tasks.popleft()
-                self._assign_worker(free_worker, queued_task)
-                self._assign_task(task)
+        self.tasks.append(task)
+        self._assign_tasks()
 
-    def assign_task(self, task: OrchestratorTask):
+    def queue_task(self, task: OrchestratorTask):
         """
-        Checks the lock and calls `_assign_task`
+        Checks the lock and calls `_queue_task`
 
         :param task: The task to be assigned
         """
         with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
             self._sync_orchestrator_state()
-            self._assign_task(task)
+            self._queue_task(task)
             self._update_orchestrator_state()
 
     def _assign_worker(self, worker: Worker, task: OrchestratorTask):
