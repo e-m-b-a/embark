@@ -173,22 +173,24 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
                 logger.info("[Worker %s] Analysis finished.", worker.id)
                 worker_soft_reset_task(worker.id)
                 process_update_queue(worker)
-                orchestrator.release_worker(worker)
-                orchestrator.trigger()
 
                 if worker.status == Worker.ConfigStatus.CONFIGURED:
                     orchestrator.release_worker(worker)
+                    orchestrator.trigger()
                 else:
                     orchestrator.remove_worker(worker)
-
                 return
         except Exception as exception:
             logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
             if orchestrator.is_busy(worker):
                 logger.info("[Worker %s] Releasing the worker...", worker.id)
                 worker_soft_reset_task(worker.id)
-                orchestrator.release_worker(worker)
-                orchestrator.trigger()
+
+                if worker.status == Worker.ConfigStatus.CONFIGURED:
+                    orchestrator.release_worker(worker)
+                    orchestrator.trigger()
+                else:
+                    orchestrator.remove_worker(worker)
                 return
 
         time.sleep(15)
