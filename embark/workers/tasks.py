@@ -166,7 +166,7 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
         while True:
             _fetch_analysis_logs(worker)
 
-            is_running = _is_emba_container_running(worker)
+            is_running = _is_emba_running(worker)
             analysis_finished = FirmwareAnalysis.objects.get(id=worker.analysis_id).status["finished"]
             if not is_running or analysis_finished or not orchestrator.is_busy(worker):
                 logger.info("[Worker %s] Analysis finished.", worker.id)
@@ -255,20 +255,19 @@ def _fetch_analysis_logs(worker) -> None:
             client.close()
 
 
-def _is_emba_container_running(worker) -> bool:
+def _is_emba_running(worker) -> bool:
     """
-    Checks if a Docker container is running on the worker.
+    Checks if an EMBA Docker container is running on the worker.
 
     :param worker: The worker to check.
-    :return: True, if a Docker container is still running,
+    :return: True, if EMBA is still running,
              False, otherwise
     """
     client = None
     try:
         client = worker.ssh_connect()
 
-        # cmd = "sudo docker ps -qa"
-        cmd = "sudo docker ps -qa | grep emba"
+        cmd = "sudo docker ps -a | grep emba || true"
         containers = exec_blocking_ssh(client, cmd)
         if not containers:
             logger.info("[Worker %s] EMBA Docker container is no longer running.", worker.id)
@@ -297,7 +296,7 @@ def stop_remote_analysis(worker_id) -> None:
         worker = Worker.objects.get(id=worker_id)
         ssh_client = worker.ssh_connect()
 
-        logger.info("[Worker %s] Trying to stop the analysis", worker.id)
+        logger.info("[Worker %s] Trying to stop the analysis.", worker.id)
 
         docker_cmd = "sudo docker ps | grep emba | awk '{print $1;}' | xargs -I {} sudo docker stop {}"
         exec_blocking_ssh(ssh_client, docker_cmd)
