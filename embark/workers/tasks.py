@@ -14,8 +14,8 @@ import paramiko
 from celery import shared_task
 from celery.utils.log import get_task_logger
 from django.utils.timezone import make_aware
-from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from django.conf import settings
+from django_celery_beat.models import PeriodicTask, IntervalSchedule
 
 from workers.models import Worker, Configuration, DependencyVersion, DependencyType, WorkerDependencyVersion
 from workers.update.dependencies import eval_outdated_dependencies, get_script_name, update_dependency, setup_dependency
