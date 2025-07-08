@@ -172,7 +172,7 @@ paths:
                     example: "The analysis with the provided UUID doesn't exist."
   /user/api_test:
     get:
-      tags: 
+      tags:
         - API Test
       summary: Greet the API user
       description: >
