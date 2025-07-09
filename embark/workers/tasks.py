@@ -430,12 +430,11 @@ def stop_remote_analysis(worker_id) -> None:
 
 
 @shared_task
-def update_worker(worker_id, add_orchestrator=True):
+def update_worker(worker_id):
     """
     Setup/Update an offline worker and add it to the orchestrator.
 
     :params worker_id: The worker to update
-    :params add_orchestrator: If True, re-adds worker to orchestrator
     """
     try:
         worker = Worker.objects.get(id=worker_id)
@@ -457,12 +456,9 @@ def update_worker(worker_id, add_orchestrator=True):
     if worker.status == Worker.ConfigStatus.CONFIGURED:
         try:
             update_system_info(worker)
-
-            if add_orchestrator:
-                orchestrator.add_worker(worker)
-                orchestrator.assign_tasks()
-                logger.info("Worker: %s added to orchestrator", worker.name)
-
+            orchestrator.add_worker(worker)
+            orchestrator.assign_tasks()
+            logger.info("Worker: %s added to orchestrator", worker.name)
         except ValueError:
             logger.error("Worker: %s already exists in orchestrator", worker.name)
 

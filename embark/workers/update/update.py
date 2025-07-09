@@ -108,17 +108,15 @@ def queue_update(worker: Worker, dependency: DependencyType, version=None):
     if worker.status == Worker.ConfigStatus.CONFIGURING:
         return
 
-    removed = False
     try:
         orchestrator.remove_worker(worker)
-        removed = True
     except ValueError:
         pass
 
     worker.status = Worker.ConfigStatus.CONFIGURING
     worker.save()
 
-    update_worker.delay(worker.id, removed)
+    update_worker.delay(worker.id)
 
 
 def process_update_queue(worker: Worker):
