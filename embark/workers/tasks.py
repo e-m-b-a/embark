@@ -204,6 +204,9 @@ def update_worker_info():
             # The worker was previously set to unreachable and is now reachable again
             if not worker.reachable:
                 logger.info("Reconnecting worker: %s", worker.name)
+                # Note: This will block the entire update_worker_info task until the worker
+                #       is successfully reset, updated, and re-added to the orchestrator.
+                #       It might be better to use threads to update the workers instead of a for loop.
                 _handle_reconnected_worker(worker)
 
             worker.last_reached = make_aware(datetime.now())
