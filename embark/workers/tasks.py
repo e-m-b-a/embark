@@ -94,6 +94,49 @@ def update_system_info(worker: Worker):
     return system_info
 
 
+def _new_analysis_from(old_analysis: FirmwareAnalysis) -> FirmwareAnalysis:
+    """
+    Creates a new FirmwareAnalysis object based on the provided old_analysis.
+    This can be used to restart a cancelled or failed analysis on a different worker
+    with the same settings and parameters as the original analysis.
+
+    The settings that the user chooses in the FirmwareAnalysisForm will be copied over,
+    everything else may have changed and will be created anew.
+
+    After the new analysis is created, the old one will be deleted.
+    
+    :param old_analysis: The original FirmwareAnalysis object to duplicate
+    """
+    new_analysis = FirmwareAnalysis(
+        firmware=old_analysis.firmware,
+        version=old_analysis.version,
+        notes=old_analysis.notes,
+        firmware_Architecture=old_analysis.firmware_Architecture,
+        user_emulation_test=old_analysis.user_emulation_test,
+        system_emulation_test=old_analysis.system_emulation_test,
+        sbom_only_test=old_analysis.sbom_only_test,
+        scan_modules=old_analysis.scan_modules,
+    )
+    new_analysis.save()
+    new_analysis.device.set(old_analysis.device.all())
+
+    # NOTE:
+    # - This triggers uploader/models::delete_analysis_pre_delete() which tries to delete the log directory at 
+    #   old_analysis.path_to_logs if the logs haven't been archived and it is a valid path in settings.EMBA_LOG_ROOT.
+    #   If they have been archived (old_analysis.archived=True), the archived logs (old_analysis.zip_file) will be deleted.
+    # - We may want to set keep_parents=True in case the analysis is still referenced by a parent object.
+    #   This is how it was previously done in dashboard/views::delete_analysis().
+    # - We don't need to worry about an unterminated LogReader.read_loop() since this only gets started for local analyses
+    #   via BoundedExecutor.submit() of LogReader.__init__() with the analysis ID.
+    # - Since we assume that the old analysis was running on an unreachable worker, we don't need to check
+    #   if the analysis is still running (old_analysis.finished) but we do need to reset the worker once it becomes reachable again.
+    # - We have to explicitly reset the worker once it reconnects because the monitoring task
+    #   which would usually reset the worker when an analysis failed or finished will not be able to reach the worker.
+    old_analysis.delete(keep_parents=True)
+    
+    return new_analysis
+
+
 def _handle_unreachable_worker(worker: Worker):
     """
     If a worker node has been unresponsive for the last settings.WORKER_REACHABLE_TIMEOUT minutes,
@@ -123,7 +166,8 @@ def _handle_unreachable_worker(worker: Worker):
             if reassign_analysis_id:
                 firmware_analysis = FirmwareAnalysis.objects.get(id=reassign_analysis_id)
                 firmware_file = FirmwareFile.objects.get(id=firmware_analysis.firmware.id)
-                submit_firmware(firmware_analysis, firmware_file)
+                new_analysis = _new_analysis_from(firmware_analysis)
+                submit_firmware(new_analysis, firmware_file)
     except BaseException as error:
         logger.error("An error occurred while handling unreachable worker %s: %s", worker.name, error)
     finally:
