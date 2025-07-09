@@ -79,8 +79,7 @@ def update_system_info(worker: Worker):
             'disk_info': disk_info
         }
         worker.system_info = system_info
-        worker.last_reached = make_aware(datetime.now())
-        worker.reachable = True
+
     except paramiko.SSHException as ssh_error:
         logger.error("Failed to connect while updating system info for worker: %s: %s", worker.name, ssh_error)
         raise paramiko.SSHException("SSH connection failed") from ssh_error
@@ -104,7 +103,7 @@ def _new_analysis_from(old_analysis: FirmwareAnalysis) -> FirmwareAnalysis:
     everything else may have changed and will be created anew.
 
     After the new analysis is created, the old one will be deleted.
-    
+
     :param old_analysis: The original FirmwareAnalysis object to duplicate
     """
     new_analysis = FirmwareAnalysis(
@@ -121,7 +120,7 @@ def _new_analysis_from(old_analysis: FirmwareAnalysis) -> FirmwareAnalysis:
     new_analysis.device.set(old_analysis.device.all())
 
     # NOTE:
-    # - This triggers uploader/models::delete_analysis_pre_delete() which tries to delete the log directory at 
+    # - This triggers uploader/models::delete_analysis_pre_delete() which tries to delete the log directory at
     #   old_analysis.path_to_logs if the logs haven't been archived and it is a valid path in settings.EMBA_LOG_ROOT.
     #   If they have been archived (old_analysis.archived=True), the archived logs (old_analysis.zip_file) will be deleted.
     # - We may want to set keep_parents=True in case the analysis is still referenced by a parent object.
@@ -133,8 +132,25 @@ def _new_analysis_from(old_analysis: FirmwareAnalysis) -> FirmwareAnalysis:
     # - We have to explicitly reset the worker once it reconnects because the monitoring task
     #   which would usually reset the worker when an analysis failed or finished will not be able to reach the worker.
     old_analysis.delete(keep_parents=True)
-    
+
     return new_analysis
+
+
+def _handle_reconnected_worker(worker: Worker):
+    """
+    Handle a worker that was marked as unreachable but has now reconnected.
+    This will soft reset the worker, perform any queued updates, and re-add it to the orchestrator.
+    """
+    worker_soft_reset_task(worker.id)
+    process_update_queue(worker)
+
+    if worker.status == Worker.ConfigStatus.CONFIGURED:
+        try:
+            orchestrator = get_orchestrator()
+            orchestrator.add_worker(worker)
+            orchestrator.assign_tasks()
+        except ValueError:
+            logger.error("Reconnected worker: %s already registered in the orchestrator", worker.name)
 
 
 def _handle_unreachable_worker(worker: Worker):
@@ -177,13 +193,21 @@ def _handle_unreachable_worker(worker: Worker):
 @shared_task
 def update_worker_info():
     """
-    Task to update system information for all workers.
+    Task to update system information for all workers and handle worker disconnections/reconnections.
     """
     workers = Worker.objects.all()
     for worker in workers:
         try:
             logger.info("Updating system info: %s", worker.name)
             update_system_info(worker)
+
+            # The worker was previously set to unreachable and is now reachable again
+            if not worker.reachable:
+                logger.info("Reconnecting worker: %s", worker.name)
+                _handle_reconnected_worker(worker)
+
+            worker.last_reached = make_aware(datetime.now())
+            worker.reachable = True
         except paramiko.SSHException:
             logger.info("Handling unreachable worker: %s", worker.name)
             _handle_unreachable_worker(worker)
