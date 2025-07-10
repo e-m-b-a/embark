@@ -2,6 +2,16 @@
 
 ## UNRELEASED
 
+### FIXED
+
+- Deps setup error (APT sources are not updated)
+
+### ADDED
+
+- Siemens PR review
+  - Dependency update script input sanitation
+  - `queue_update` count optimization
+
 ## [sprint-12](https://github.com/amosproj/amos2025ss01-embark/releases/tag/sprint-12-release) - 2025-07-09
 
 ### FIXED
