@@ -293,7 +293,7 @@ def setup_dependency(dependency: DependencyType, version: str):
             cmd.append(settings.WORKER_UPDATE_CHECK)
 
         with open(log_file, "w+", encoding="utf-8") as file:
-            with Popen(cmd, stdin=PIPE, stdout=file, stderr=file) as proc:
+            with Popen(cmd, stdin=PIPE, stdout=file, stderr=file) as proc:  # nosec
                 proc.communicate()
 
             if proc.returncode == 0:
