@@ -91,7 +91,6 @@ def delete_config(request):
                 orchestrator.remove_worker(worker)
                 worker.dependency_version.delete()
                 worker.delete()
-                logger.info("Worker: %s removed from orchestrator", worker.name)
             except ValueError:
                 logger.error("Worker: %s could not be removed from orchestrator", worker.name)
 
