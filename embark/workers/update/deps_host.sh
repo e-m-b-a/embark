@@ -47,11 +47,11 @@ mkdir -p "${FILEPATH}"
 ### Copy scripts
 cp "deps_installer.sh" "${FILEPATH}/installer.sh"
 
+apt-get update -y
 
 if [ "${VERSION}" = "latest" ] || [ ! -d "${DEPSCACHE}/pkg" ]; then
   ### Install needed tools
   if ! which curl &> /dev/null; then
-    apt-get update -y
     apt-get install -y curl
   fi
 

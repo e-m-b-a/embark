@@ -68,8 +68,7 @@ To access the admin pages from outside localhost use the `-b` option.
 For developers, we recommend simply using: `sudo ./installer.sh -F ` and the `./dev-tools/debug-server-start.sh` script.
 
 ## API Usage
-Please refer to the [Swagger UI documentation](https://amosproj.github.io/amos2025ss01-embark/), which showcases the REST API.
-
+Please refer to the [Swagger UI documentation](https://e-m-b-a.github.io/embark/), which showcases the REST API.
 
 ## Get involved
 The IoT is growing, the development is ongoing, and there are many new features that we want to add.

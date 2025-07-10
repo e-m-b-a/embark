@@ -93,7 +93,7 @@ def queue_update(worker: Worker, dependency: DependencyType, version=None):
     """
     from workers.tasks import update_worker  # pylint: disable=import-outside-toplevel
 
-    if len(WorkerUpdate.objects.filter(worker__id=worker.id)) >= settings.WORKER_UPDATE_QUEUE_SIZE:
+    if WorkerUpdate.objects.filter(worker__id=worker.id).count() >= settings.WORKER_UPDATE_QUEUE_SIZE:
         logger.info("Update %s discarded for worker %s", dependency.name, worker.name)
         return
 
@@ -113,17 +113,15 @@ def queue_update(worker: Worker, dependency: DependencyType, version=None):
     if worker.status == Worker.ConfigStatus.CONFIGURING:
         return
 
-    removed = False
     try:
         orchestrator.remove_worker(worker)
-        removed = True
     except ValueError:
         pass
 
     worker.status = Worker.ConfigStatus.CONFIGURING
     worker.save()
 
-    update_worker.delay(worker.id, removed)
+    update_worker.delay(worker.id)
 
 
 def process_update_queue(worker: Worker):

@@ -290,14 +290,14 @@ def setup_dependency(dependency: DependencyType, version: str):
 
     logger.info("Worker dependencies setup started with script %s. Logs: %s", get_script_name(dependency), log_file)
     try:
-        cmd = f"sudo {script_path} '{folder_path}' '{zip_path}' '{version}'"
+        cmd = ["sudo", script_path, folder_path, zip_path, version]
 
         if dependency == DependencyType.DEPS and version == 'cached':
             # Add path, as DEPS are cached here
-            cmd = cmd + f" '{settings.WORKER_UPDATE_CHECK}'"
+            cmd.append(settings.WORKER_UPDATE_CHECK)
 
         with open(log_file, "w+", encoding="utf-8") as file:
-            with Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True) as proc:  # nosec
+            with Popen(cmd, stdin=PIPE, stdout=file, stderr=file) as proc:  # nosec
                 proc.communicate()
 
             if proc.returncode == 0:
