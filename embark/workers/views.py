@@ -87,12 +87,10 @@ def delete_config(request):
         workers = Worker.objects.annotate(config_count=Count('configurations')).filter(configurations__id=config_id, config_count=1)
         orchestrator = get_orchestrator()
         for worker in workers:
-            try:
-                orchestrator.remove_worker(worker)
-                worker.dependency_version.delete()
-                worker.delete()
-            except ValueError:
-                logger.error("Worker: %s could not be removed from orchestrator", worker.name)
+            orchestrator.remove_worker(worker, False)
+
+            worker.dependency_version.delete()
+            worker.delete()
 
         config.delete()
         messages.success(request, 'Configuration deleted successfully')
