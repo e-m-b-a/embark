@@ -1,5 +1,5 @@
-__copyright__ = 'Copyright 2022-2025 Siemens Energy AG'
-__author__ = 'Benedikt Kuehne'
+__copyright__ = 'Copyright 2022-2025 Siemens Energy AG, Copyright 2025 The AMOS Projects'
+__author__ = 'Benedikt Kuehne, ashiven'
 __license__ = 'MIT'
 
 from random import randrange
@@ -149,6 +149,9 @@ def get_emba_version():
 
 
 def user_is_auth(req_user, own_user):
+    """
+    Checks if the request user is allowed to access a resource owned by another user.
+    """
     if req_user.is_superuser:
         return True
     elif req_user.is_staff:

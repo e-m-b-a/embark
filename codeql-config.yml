@@ -1,0 +1,9 @@
+---
+paths-ignore:
+  - "**/codeql_ignore.py"
+
+query-filters:
+  - exclude:
+      problem.severity:
+        - warning
+        - recommendation
