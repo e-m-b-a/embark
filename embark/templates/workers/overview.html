@@ -64,9 +64,9 @@
                             {% csrf_token %}
                             <input type="submit" value="Hard Reset">
                         </form>
-                        <form action="{% url 'embark-configuration-soft-reset' config.id %}" method="post">
+                        <form action="{% url 'embark-configuration-sshkey-download' config.id %}">
                             {% csrf_token %}
-                            <input type="submit" value="Soft Reset">
+                            <input type="submit" value="SSH Key download">
                         </form>
                     </div>
                 </div>

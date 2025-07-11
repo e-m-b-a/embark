@@ -22,6 +22,8 @@ class Configuration(models.Model):
     name = models.CharField(max_length=150)
     ssh_user = models.CharField(max_length=150)
     ssh_password = models.CharField(max_length=150)
+    ssh_private_key = models.TextField()
+    ssh_public_key = models.TextField()
     ip_range = models.CharField(max_length=150)
     created_at = models.DateTimeField(auto_now_add=True)
     scan_status = models.CharField(max_length=1, choices=ScanStatus, default=ScanStatus.NEW)

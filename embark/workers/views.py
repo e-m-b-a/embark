@@ -1,11 +1,13 @@
 import logging
+from io import StringIO
+from Crypto.PublicKey import RSA  # nosec
 
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import get_user
 from django.views.decorators.http import require_http_methods
 from django.conf import settings
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
@@ -116,10 +118,39 @@ def create_config(request):
 
     new_config = config_form.save(commit=False)
     new_config.user = user
+
+    key = RSA.generate(settings.WORKER_SSH_KEY_SIZE)
+    new_config.ssh_private_key = key.exportKey().decode("utf-8")
+    new_config.ssh_public_key = key.publickey().exportKey().decode("utf-8")
+
     new_config.save()
 
     messages.success(request, 'Configuration created successfully.')
     return safe_redirect(request, '/worker/')
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def download_ssh_private_key(request, configuration_id):
+    """
+    Download SSH private key
+    :params configuration_id: The configuration id
+    """
+    try:
+        user = get_user(request)
+        config = Configuration.objects.get(id=configuration_id)
+        if not user_is_auth(user, config.user):
+            messages.error(request, 'You are not allowed to access this configuration.')
+            return safe_redirect(request, '/worker/')
+    except Configuration.DoesNotExist:
+        messages.error(request, 'Configuration not found.')
+        return safe_redirect(request, '/worker/')
+
+    file = StringIO(config.ssh_private_key)
+    response = HttpResponse(file, content_type="text/plain")
+    response["Content-Disposition"] = "attachment; filename=private.key"
+    return response
 
 
 @require_http_methods(["POST"])
