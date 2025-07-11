@@ -459,16 +459,17 @@ def worker_soft_reset_task(worker_id):
 
 @shared_task
 def worker_hard_reset_task(worker_id):
-    orchestrator = get_orchestrator()
-    orchestrator.remove_worker(worker, False)
-
-    worker_soft_reset_task(worker_id)
-
     try:
         worker = Worker.objects.get(id=worker_id)
     except Worker.DoesNotExist:
         logger.error("Worker Hard Reset: Invalid worker id")
         return
+
+    orchestrator = get_orchestrator()
+    orchestrator.remove_worker(worker, False)
+
+    worker_soft_reset_task(worker_id)
+
     ssh_client = None
     try:
         worker.status = Worker.ConfigStatus.UNCONFIGURED

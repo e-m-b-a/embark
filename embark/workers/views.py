@@ -252,8 +252,8 @@ def configuration_soft_reset(request, configuration_id):
     Soft resets all workers in a given configuration
     :params configuration_id: The configuration id
     """
+    user = get_user(request)
     try:
-        user = get_user(request)
         configuration = Configuration.objects.get(id=configuration_id)
 
         if not user_is_auth(user, configuration.user):
@@ -280,8 +280,8 @@ def configuration_hard_reset(request, configuration_id):
     Hard resets all workers in a given configuration
     :params configuration_id: The configuration id
     """
+    user = get_user(request)
     try:
-        user = get_user(request)
         configuration = Configuration.objects.get(id=configuration_id)
 
         if not user_is_auth(user, configuration.user):
@@ -294,7 +294,7 @@ def configuration_hard_reset(request, configuration_id):
     workers = Worker.objects.filter(configurations__id=configuration_id)
 
     for worker in workers:
-        worker_hard_reset(request, worker.id, configuration_id)
+        worker_hard_reset(request, worker.id)
 
     messages.success(request, f'Successfully hard resetted configuration: {configuration_id} ({configuration.name})')
     return safe_redirect(request, '/worker/')
@@ -303,75 +303,55 @@ def configuration_hard_reset(request, configuration_id):
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
-def worker_soft_reset(request, worker_id, configuration_id=None):
+def worker_soft_reset(request, worker_id):
     """
     Soft reset the worker with the given worker ID.
     :params worker_id: The worker id
-    :params configuration_id: The configuration id
     """
+    user = get_user(request)
     try:
-        if not worker_id:
-            messages.error(request, 'No worker id given')
-            return safe_redirect(request, '/worker/')
-
-        user = get_user(request)
         worker = Worker.objects.get(id=worker_id)
-        if not configuration_id:
-            configuration = worker.configurations.filter(user=user).first()
-        else:
-            configuration = Configuration.objects.get(id=configuration_id)
+        configuration = worker.configurations.filter(user=user).first()
+
         if not user_is_auth(user, configuration.user):
             messages.error(request, 'You are not allowed to access this worker.')
             return safe_redirect(request, '/worker/')
 
-        try:
-            worker_soft_reset_task.delay(worker.id)
-            messages.success(request, f'Worker soft reset queued: {worker.name}')
-            return safe_redirect(request, '/worker/')
-        except BaseException:
-            messages.error(request, 'Soft Reset failed.')
-            return safe_redirect(request, '/worker/')
-
-    except (Worker.DoesNotExist, Configuration.DoesNotExist):
+        worker_soft_reset_task.delay(worker.id)
+        messages.success(request, f'Worker soft reset queued: {worker.name}')
+    except Worker.DoesNotExist:
         messages.error(request, 'Worker or configuration not found.')
-        return safe_redirect(request, '/worker/')
+    except Configuration.DoesNotExist:
+        messages.error(request, 'You are not allowed to access this worker.')
+
+    return safe_redirect(request, '/worker/')
 
 
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
-def worker_hard_reset(request, worker_id, configuration_id=None):
+def worker_hard_reset(request, worker_id):
     """
     Hard reset the worker with the given worker ID.
     :params worker_id: The worker id
-    :params configuration_id: The configuration id
     """
+    user = get_user(request)
     try:
-        if not worker_id:
-            messages.error(request, 'No worker id given')
-            return safe_redirect(request, '/worker/')
-        if worker_id:
-            user = get_user(request)
-            worker = Worker.objects.get(id=worker_id)
-            if not configuration_id:
-                configuration = worker.configurations.filter(user=user).first()
-            else:
-                configuration = Configuration.objects.get(id=configuration_id)
-            if not user_is_auth(user, configuration.user):
-                messages.error(request, 'You are not allowed to access this worker.')
-                return safe_redirect(request, '/worker/')
+        worker = Worker.objects.get(id=worker_id)
+        configuration = worker.configurations.filter(user=user).first()
 
-        try:
-            worker_hard_reset_task.delay(worker.id)
-            messages.success(request, f'Worker hard reset queued: {worker.name}')
-            return safe_redirect(request, '/worker/')
-        except BaseException:
-            messages.error(request, 'Hard Reset failed.')
+        if not user_is_auth(user, configuration.user):
+            messages.error(request, 'You are not allowed to access this worker.')
             return safe_redirect(request, '/worker/')
 
-    except (Worker.DoesNotExist, Configuration.DoesNotExist):
+        worker_hard_reset_task.delay(worker.id)
+        messages.success(request, f'Worker {worker.name} hard reset queued')
+    except Worker.DoesNotExist:
         messages.error(request, 'Worker or configuration not found.')
-        return safe_redirect(request, '/worker/')
+    except Configuration.DoesNotExist:
+        messages.error(request, 'You are not allowed to access this worker.')
+
+    return safe_redirect(request, '/worker/')
 
 
 @require_http_methods(["POST"])
