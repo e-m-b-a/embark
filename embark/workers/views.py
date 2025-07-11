@@ -362,7 +362,6 @@ def worker_hard_reset(request, worker_id, configuration_id=None):
                 return safe_redirect(request, '/worker/')
 
         try:
-            worker_soft_reset_task.delay(worker.id)
             worker_hard_reset_task.delay(worker.id)
             messages.success(request, f'Worker hard reset queued: {worker.name}')
             return safe_redirect(request, '/worker/')

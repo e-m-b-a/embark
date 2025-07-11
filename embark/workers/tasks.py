@@ -462,6 +462,8 @@ def worker_hard_reset_task(worker_id):
     orchestrator = get_orchestrator()
     orchestrator.remove_worker(worker, False)
 
+    worker_soft_reset_task(worker_id)
+
     try:
         worker = Worker.objects.get(id=worker_id)
     except Worker.DoesNotExist:
