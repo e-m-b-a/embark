@@ -336,11 +336,7 @@ def update_worker(worker_id):
     logger.info("update_worker: Worker update task started")
 
     orchestrator = get_orchestrator()
-    try:
-        orchestrator.remove_worker(worker)
-        logger.info("Worker: %s removed from orchestrator", worker.name)
-    except ValueError:
-        pass
+    orchestrator.remove_worker(worker, False)
 
     process_update_queue(worker)
 
@@ -349,7 +345,6 @@ def update_worker(worker_id):
             update_system_info(worker)
             orchestrator.add_worker(worker)
             orchestrator.assign_tasks()
-            logger.info("Worker: %s added to orchestrator", worker.name)
         except ValueError:
             logger.error("Worker: %s already exists in orchestrator", worker.name)
 

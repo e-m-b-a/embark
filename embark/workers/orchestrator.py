@@ -1,3 +1,4 @@
+import logging
 from uuid import UUID
 from typing import Dict, List
 from collections import deque
@@ -7,6 +8,8 @@ from redis import Redis
 from django.conf import settings
 
 from workers.models import Worker, OrchestratorState
+
+logger = logging.getLogger(__name__)
 
 
 REDIS_CLIENT = Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
@@ -208,6 +211,8 @@ class Orchestrator:
             raise ValueError(f"Worker with IP {worker.ip_address} already exists.")
         self.free_workers[worker.ip_address] = worker
 
+        logger.info("Worker: %s added to orchestrator", worker.name)
+
     def add_worker(self, worker: Worker):
         """
         Add a new worker to the orchestrator. The worker is added to the free workers list.
@@ -220,30 +225,37 @@ class Orchestrator:
             self._add_worker(worker)
             self._update_orchestrator_state()
 
-    def _remove_worker(self, worker: Worker):
+    def _remove_worker(self, worker: Worker, check: bool = True):
         """
         Remove a worker from the orchestrator. The worker is removed from either the free or busy workers list.
 
         :param worker: The worker to be removed
-        :raises ValueError: If the worker does not exist in the orchestrator
+        :param check: If True, throws an error
+        :raises ValueError: If the worker does not exist in the orchestrator and check = True
         """
         if worker.ip_address in self.free_workers:
             del self.free_workers[worker.ip_address]
         elif worker.ip_address in self.busy_workers:
             del self.busy_workers[worker.ip_address]
         else:
-            raise ValueError(f"Worker with IP {worker.ip_address} does not exist.")
+            if check:
+                raise ValueError(f"Worker with IP {worker.ip_address} does not exist.")
 
-    def remove_worker(self, worker: Worker):
+            return
+
+        logger.info("Worker: %s removed from orchestrator", worker.name)
+
+    def remove_worker(self, worker: Worker, check: bool = True):
         """
         Remove a worker from the orchestrator.
 
         :param worker: The worker to be removed
-        :raises ValueError: If the worker does not exist in the orchestrator
+        :param check: If True, throws an error
+        :raises ValueError: If the worker does not exist in the orchestrator and check = True
         """
         with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
             self._sync_orchestrator_state()
-            self._remove_worker(worker)
+            self._remove_worker(worker, check)
             self._update_orchestrator_state()
 
     def _get_orchestrator_state(self):

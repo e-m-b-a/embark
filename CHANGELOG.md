@@ -5,10 +5,11 @@
 ### FIXED
 
 - Deps setup error (APT sources are not updated)
+- Workers not consistently deleted ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=119037519&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C102))
 
 ### ADDED
 
-- Siemens PR review
+- Siemens PR review ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=119028315&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C98))
   - Dependency update script input sanitation
   - `queue_update` count optimization
 
