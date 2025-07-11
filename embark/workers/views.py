@@ -326,7 +326,7 @@ def worker_soft_reset(request, worker_id, configuration_id=None):
 
         try:
             worker_soft_reset_task.delay(worker.id)
-            messages.success(request, f'Successfully soft resetted worker: ({worker.name})')
+            messages.success(request, f'Worker soft reset queued: {worker.name}')
             return safe_redirect(request, '/worker/')
         except BaseException:
             messages.error(request, 'Soft Reset failed.')
@@ -364,7 +364,7 @@ def worker_hard_reset(request, worker_id, configuration_id=None):
         try:
             worker_soft_reset_task.delay(worker.id)
             worker_hard_reset_task.delay(worker.id)
-            messages.success(request, f'Successfully hard resetted worker: ({worker.name})')
+            messages.success(request, f'Worker hard reset queued: {worker.name}')
             return safe_redirect(request, '/worker/')
         except BaseException:
             messages.error(request, 'Hard Reset failed.')
