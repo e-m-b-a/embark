@@ -14,17 +14,14 @@ from workers.orchestrator import get_orchestrator
 logger = logging.getLogger(__name__)
 
 
-def exec_blocking_ssh(client: SSHClient, command: str):
+def exec_blocking_ssh(client: SSHClient, command: str) -> str:
     """
     Executes ssh command blocking, as exec_command is non-blocking
-
     Warning: This command might block forever, if the output is too large (based on recv_exit_status). Thus redirect to file
 
     :params client: modified paramiko ssh client (see: workers.models.Worker.ssh_connect)
     :params command: command string
-
     :raises SSHException: if command fails
-
     :return: command output
     """
     stdout = client.exec_command(command)[1]  # nosec B601: No user input
