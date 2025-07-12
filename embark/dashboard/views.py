@@ -114,7 +114,7 @@ def service_dashboard(request):
     #   - The frontend then displays the logs in the "Progress" section. (dashboard/views.py::service_dashboard)
     #   - These are rendered with the following templates: (templates/dashboard/serviceDashboard.js, static/scripts/serviceDashboard.html)
     #   - Since the logs are stored on worker nodes, the log consumers do not have access to the log files.
-    #   - To fix this, we would need to implement a way to access the log files on the worker nodes from the log consumers. 
+    #   - To fix this, we would need to implement a way to access the log files on the worker nodes from the log consumers.
     form = StopAnalysisForm()
     form.fields['analysis'].queryset = FirmwareAnalysis.objects.filter(user=request.user).filter(finished=False).exclude(status__work=True)
     return render(request, 'dashboard/serviceDashboard.html', {'username': request.user.username, 'form': form, 'success_message': False})
