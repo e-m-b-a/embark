@@ -7,6 +7,7 @@
 ### FIXED
 
 - Missing `WorkerDependencyVersion` deletion on config delete
+- Analyses not marked as finished correctly ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=119038453&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C103))
 
 ### ADDED
 

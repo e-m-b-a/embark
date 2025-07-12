@@ -200,6 +200,7 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
 
         orchestrator.assign_tasks()
 
+
 def _fetch_analysis_logs(worker) -> None:
     """
     Zips the analysis log files on remote worker, downloads it, extracts it.
