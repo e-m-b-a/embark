@@ -14,6 +14,7 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from django.conf import settings
+from django.utils import timezone
 
 from workers.models import Worker, Configuration, DependencyVersion, DependencyType, WorkerDependencyVersion
 from workers.update.dependencies import eval_outdated_dependencies, get_script_name, update_dependency, setup_dependency
@@ -166,6 +167,7 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
         while True:
             _fetch_analysis_logs(worker)
 
+            # Will the docker container even stop after the analysis has finished?
             is_running = _is_emba_running(worker)
             analysis_finished = FirmwareAnalysis.objects.get(id=worker.analysis_id).finished
             if not is_running or analysis_finished or not orchestrator.is_busy(worker):
@@ -184,6 +186,11 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
 
         analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
         analysis.finished = True
+        analysis.status['finished'] = True
+        analysis.status['work'] = False
+        analysis.end_date = timezone.now()
+        analysis.scan_time = timezone.now() - analysis.start_date
+        analysis.duration = str(analysis.scan_time)
         analysis.save()
 
         if not worker.status == Worker.ConfigStatus.CONFIGURED:

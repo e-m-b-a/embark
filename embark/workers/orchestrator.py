@@ -50,25 +50,6 @@ class Orchestrator:
             self._sync_orchestrator_state()
             return self.free_workers
 
-    def _assign_tasks(self):
-        """
-        Assign tasks to free workers as long as there are both tasks and free workers available.
-        """
-        if self.tasks and self.free_workers:
-            next_task = self.tasks.popleft()
-            free_worker = next(iter(self.free_workers.values()))
-            self._assign_worker(free_worker, next_task)
-            self._assign_tasks()
-
-    def assign_tasks(self):
-        """
-        Trigger the orchestrator to assign tasks to free workers.
-        """
-        with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
-            self._sync_orchestrator_state()
-            self._assign_tasks()
-            self._update_orchestrator_state()
-
     def get_busy_workers(self) -> Dict[str, Worker]:
         with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
             self._sync_orchestrator_state()
@@ -114,6 +95,76 @@ class Orchestrator:
         with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
             self._sync_orchestrator_state()
             return self._get_worker_info(worker_ips)
+
+    def _get_current_state(self):
+        """
+        Get the current state of the orchestrator, including free workers, busy workers, and tasks.
+
+        :return: Dictionary containing free workers, busy workers, and tasks
+        """
+        tasks = [OrchestratorTask.to_dict(task) for task in self.tasks]
+        all_worker_ips = list(self.free_workers.keys()) + list(self.busy_workers.keys())
+        assignments = self._get_worker_info(all_worker_ips)
+
+        return {
+            "tasks": tasks,
+            "assignments": assignments
+        }
+
+    def get_current_state(self):
+        """
+        Get the current state of the orchestrator, including free workers, busy workers, and tasks.
+
+        :return: Dictionary containing free workers, busy workers, and tasks
+        """
+        with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
+            self._sync_orchestrator_state()
+            return self._get_current_state()
+
+    def _reset(self):
+        """
+        Reset the orchestrator state by clearing tasks, removing all workers, soft-resetting them, and then re-adding them.
+        """
+        # pylint: disable=import-outside-toplevel
+        from workers.tasks import worker_soft_reset_task
+
+        self.tasks.clear()
+
+        all_workers = self.free_workers | self.busy_workers
+        for worker in all_workers.values():
+            self._remove_worker(worker)
+            worker_soft_reset_task.delay(worker.id)
+
+        for worker_ip, worker in all_workers.items():
+            self.free_workers[worker_ip] = worker
+
+    def reset(self):
+        """
+        Reset the orchestrator state by clearing tasks, removing all workers, soft-resetting them, and then re-adding them.
+        """
+        with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
+            self._sync_orchestrator_state()
+            self._reset()
+            self._update_orchestrator_state()
+
+    def _assign_tasks(self):
+        """
+        Assign tasks to free workers as long as there are both tasks and free workers available.
+        """
+        if self.tasks and self.free_workers:
+            next_task = self.tasks.popleft()
+            free_worker = next(iter(self.free_workers.values()))
+            self._assign_worker(free_worker, next_task)
+            self._assign_tasks()
+
+    def assign_tasks(self):
+        """
+        Trigger the orchestrator to assign tasks to free workers.
+        """
+        with REDIS_CLIENT.lock(LOCK_KEY, LOCK_TIMEOUT):
+            self._sync_orchestrator_state()
+            self._assign_tasks()
+            self._update_orchestrator_state()
 
     def _queue_task(self, task: OrchestratorTask):
         """
