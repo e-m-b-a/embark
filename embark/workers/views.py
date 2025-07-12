@@ -14,7 +14,7 @@ from workers.forms import ConfigurationForm
 from workers.orchestrator import get_orchestrator
 from workers.models import Worker, Configuration, DependencyVersion, DependencyType, WorkerUpdate
 from workers.update.update import queue_update
-from workers.tasks import fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file, config_worker_scan_task, update_system_info
+from workers.tasks import fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file, config_worker_scan_task
 from embark.helper import user_is_auth
 
 logger = logging.getLogger(__name__)
