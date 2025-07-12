@@ -12,6 +12,7 @@
 - Siemens PR review ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=119028315&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C98))
   - Dependency update script input sanitation
   - `queue_update` count optimization
+- SSH setup and sudo perm check ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=119036293&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C100))
 
 ## [sprint-12](https://github.com/amosproj/amos2025ss01-embark/releases/tag/sprint-12-release) - 2025-07-09
 
