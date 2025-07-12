@@ -244,6 +244,8 @@ def _fetch_analysis_logs(worker) -> None:
 
         logger.info("[Worker %s] Downloaded emba_run.log.", worker.id)
 
+        # Note: The LogReader.read_loop() will look for logfiles in <analysis.path_to_logs>/emba.log
+        #       where path_to_logs will be set to settings.EMBA_LOG_ROOT/<analysis.id>/emba_logs/
         unzip_cmd = ["7z", "x", "-y", local_zip_path, f"-o{local_log_dir}/"]
         subprocess.run(unzip_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)  # nosec
 
