@@ -162,30 +162,29 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
     :param worker_id: ID of worker to monitor and fetch logs for.
     """
     try:
-        orchestrator = get_orchestrator()
         worker = Worker.objects.get(id=worker_id)
+        analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
+    except (Worker.DoesNotExist, FirmwareAnalysis.DoesNotExist):
+        logger.error("[Worker %s] Invalid worker or analysis ID.", worker_id)
+        return
+
+    orchestrator = get_orchestrator()
+    try:
         while True:
             _fetch_analysis_logs(worker)
 
-            # Will the docker container even stop after the analysis has finished?
             is_running = _is_emba_running(worker)
-            analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
             analysis_finished = analysis.finished or analysis.status["finished"]
             if not is_running or analysis_finished or not orchestrator.is_busy(worker):
                 logger.info("[Worker %s] Analysis finished.", worker.id)
                 return
-
-            time.sleep(15)
     except Exception as exception:
         logger.error("[Worker %s] Monitoring failed, stopping the task. Exception: %s", worker.id, exception)
-        analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
         analysis.failed = True
-        analysis.save()
     finally:
         worker_soft_reset_task(worker.id)
         process_update_queue(worker)
 
-        analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
         analysis.finished = True
         analysis.status['finished'] = True
         analysis.status['work'] = False
@@ -196,13 +195,10 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
 
         if not worker.status == Worker.ConfigStatus.CONFIGURED:
             orchestrator.remove_worker(worker)
-
         if orchestrator.is_busy(worker):
-            logger.info("[Worker %s] Releasing the worker...", worker.id)
             orchestrator.release_worker(worker)
 
         orchestrator.assign_tasks()
-
 
 def _fetch_analysis_logs(worker) -> None:
     """
