@@ -169,7 +169,8 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
 
             # Will the docker container even stop after the analysis has finished?
             is_running = _is_emba_running(worker)
-            analysis_finished = FirmwareAnalysis.objects.get(id=worker.analysis_id).finished
+            analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
+            analysis_finished = analysis.finished or analysis.status["finished"]
             if not is_running or analysis_finished or not orchestrator.is_busy(worker):
                 logger.info("[Worker %s] Analysis finished.", worker.id)
                 return
