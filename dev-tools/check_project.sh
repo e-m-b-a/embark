@@ -317,14 +317,14 @@ yamlchecker(){
 }
 
 openapichecker(){
-  if hasChanged "./openapi.yaml"; then
+  if hasChanged "./docs/openapi.yaml"; then
     echo -e "\\n""${ORANGE}""${BOLD}""EMBArk openapi spec check""${NC}""\\n""${BOLD}""=================================================================""${NC}"
-    if spectral lint ./openapi.yaml ; then
+    if spectral lint ./docs/openapi.yaml ; then
       echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
     else
       echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
         ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
-        MODULES_TO_CHECK_ARR+=( "./openapi.yaml" )
+        MODULES_TO_CHECK_ARR+=( "./docs/openapi.yaml" )
     fi
   fi
 }

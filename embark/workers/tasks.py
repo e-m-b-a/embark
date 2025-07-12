@@ -1,9 +1,11 @@
+import ipaddress
 import os
 import re
 import time
 import socket
 import subprocess
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
 
 import requests
 import paramiko
@@ -13,9 +15,9 @@ from celery.utils.log import get_task_logger
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from django.conf import settings
 
-from workers.models import Worker, Configuration, DependencyVersion, DependencyType
+from workers.models import Worker, Configuration, DependencyVersion, DependencyType, WorkerDependencyVersion
 from workers.update.dependencies import eval_outdated_dependencies, get_script_name, update_dependency, setup_dependency
-from workers.update.update import exec_blocking_ssh, parse_deb_list, process_update_queue
+from workers.update.update import exec_blocking_ssh, parse_deb_list, process_update_queue, init_sudoers_file, update_dependencies_info
 from workers.orchestrator import get_orchestrator
 from workers.codeql_ignore import new_autoadd_client
 from uploader.models import FirmwareAnalysis
@@ -38,11 +40,10 @@ def create_periodic_tasks(**kwargs):
     )
 
 
-def update_system_info(configuration: Configuration, worker: Worker):
+def update_system_info(worker: Worker):
     """
     Update the system_info of a worker using the SSH credentials of the provided configuration to connect to the worker.
 
-    :param configuration: Configuration object containing SSH credentials
     :param worker: Worker object to update
     :return: Dictionary containing system information
     :raises paramiko.SSHException: If the SSH connection fails or if any command execution fails
@@ -50,7 +51,7 @@ def update_system_info(configuration: Configuration, worker: Worker):
     ssh_client = None
 
     try:
-        ssh_client = worker.ssh_connect(configuration.id)
+        ssh_client = worker.ssh_connect()
 
         os_info = exec_blocking_ssh(ssh_client, 'grep PRETTY_NAME /etc/os-release')
         os_info = os_info[len('PRETTY_NAME='):-1].strip('"')
@@ -94,10 +95,9 @@ def update_worker_info():
     """
     workers = Worker.objects.all()
     for worker in workers:
-        config = worker.configurations.first()
         try:
             logger.info("Updating worker %s", worker.name)
-            update_system_info(config, worker)
+            update_system_info(worker)
             worker.reachable = True
         except paramiko.SSHException:
             logger.info("Worker %s is unreachable, setting status to offline.", worker.name)
@@ -152,7 +152,7 @@ def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
 
 
 @shared_task
-def monitor_worker_and_fetch_logs(worker_id):
+def monitor_worker_and_fetch_logs(worker_id) -> None:
     """
     Loops until the analysis stops on the remote worker.
     Zips the analysis logs on the remote worker, downloads and extracts them.
@@ -160,32 +160,40 @@ def monitor_worker_and_fetch_logs(worker_id):
 
     :param worker_id: ID of worker to monitor and fetch logs for.
     """
-    orchestrator = get_orchestrator()
-    worker = Worker.objects.get(id=worker_id)
-    while True:
-        try:
+    try:
+        orchestrator = get_orchestrator()
+        worker = Worker.objects.get(id=worker_id)
+        while True:
             _fetch_analysis_logs(worker)
 
+            is_running = _is_emba_running(worker)
             analysis_finished = FirmwareAnalysis.objects.get(id=worker.analysis_id).status["finished"]
-            is_running = _is_emba_container_running(worker)
-            is_busy = orchestrator.is_busy(worker)
-            if not is_running or analysis_finished or not is_busy:
-
-                worker_soft_reset_task(worker.id)
-                orchestrator.release_worker(worker)
-
+            if not is_running or analysis_finished or not orchestrator.is_busy(worker):
                 logger.info("[Worker %s] Analysis finished.", worker.id)
                 return
 
-        except Exception as exception:
-            logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
-            if worker in orchestrator.get_busy_workers().values():
-                logger.info("[Worker %s] Releasing the worker...", worker.id)
-                worker_soft_reset_task(worker.id)
-                orchestrator.release_worker(worker)
-                return
+            time.sleep(15)
+    except Exception as exception:
+        logger.error("[Worker %s] Monitoring failed, stopping the task. Exception: %s", worker.id, exception)
+        analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
+        analysis.failed = True
+        analysis.save()
+    finally:
+        worker_soft_reset_task(worker.id)
+        process_update_queue(worker)
 
-        time.sleep(15)
+        analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
+        analysis.finished = True
+        analysis.save()
+
+        if not worker.status == Worker.ConfigStatus.CONFIGURED:
+            orchestrator.remove_worker(worker)
+
+        if orchestrator.is_busy(worker):
+            logger.info("[Worker %s] Releasing the worker...", worker.id)
+            orchestrator.release_worker(worker)
+
+        orchestrator.assign_tasks()
 
 
 def _fetch_analysis_logs(worker) -> None:
@@ -248,21 +256,21 @@ def _fetch_analysis_logs(worker) -> None:
             client.close()
 
 
-def _is_emba_container_running(worker) -> bool:
+def _is_emba_running(worker) -> bool:
     """
-    Checks if a Docker container is running on the worker.
+    Checks if an EMBA Docker container is running on the worker.
 
     :param worker: The worker to check.
-    :return: True, if a Docker container is still running,
+    :return: True, if EMBA is still running,
              False, otherwise
     """
     client = None
     try:
         client = worker.ssh_connect()
 
-        cmd = "sudo docker ps -qa"
-        containers = exec_blocking_ssh(client, cmd)
-        if not containers:
+        cmd = "sudo docker ps -a | grep emba || true"
+        output = exec_blocking_ssh(client, cmd)
+        if not output:
             logger.info("[Worker %s] EMBA Docker container is no longer running.", worker.id)
             return False
 
@@ -271,6 +279,42 @@ def _is_emba_container_running(worker) -> bool:
     except Exception as exception:
         logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
         return False
+    finally:
+        if client is not None:
+            client.close()
+
+
+@shared_task
+def stop_remote_analysis(worker_id) -> None:
+    """
+    Stops the EMBA Docker container. Fetches the logs for the
+    last time and releases the worker in the orchestrator.
+
+    :param worker_id: ID of worker whose analysis to stop.
+    """
+    client = None
+    try:
+        worker = Worker.objects.get(id=worker_id)
+        if not _is_emba_running(worker):
+            logger.error("[Worker %s] Failed to stop analysis: EMBA container isn't running.", worker.id)
+            return
+
+        ssh_client = worker.ssh_connect()
+
+        logger.info("[Worker %s] Trying to stop the analysis.", worker.id)
+
+        docker_cmd = "sudo docker ps | grep emba | awk '{print $1;}' | xargs -I {} sudo docker stop {}"
+        exec_blocking_ssh(ssh_client, docker_cmd)
+
+        analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
+        analysis.finished = True
+        analysis.failed = True
+        analysis.save()
+
+        logger.info("[Worker %s] Successfully stopped the analysis.", worker.id)
+
+    except Exception as exception:
+        logger.error("[Worker %s] Error while stopping analysis: %s", worker.id, exception)
     finally:
         if client is not None:
             client.close()
@@ -292,21 +336,15 @@ def update_worker(worker_id):
     logger.info("update_worker: Worker update task started")
 
     orchestrator = get_orchestrator()
-    try:
-        orchestrator.remove_worker(worker)
-        logger.info("Worker: %s removed from orchestrator", worker.name)
-    except ValueError:
-        pass
+    orchestrator.remove_worker(worker, False)
 
     process_update_queue(worker)
 
     if worker.status == Worker.ConfigStatus.CONFIGURED:
         try:
-            config = worker.configurations.first()
-            update_system_info(config, worker)
-
+            update_system_info(worker)
             orchestrator.add_worker(worker)
-            logger.info("Worker: %s added to orchestrator", worker.name)
+            orchestrator.assign_tasks()
         except ValueError:
             logger.error("Worker: %s already exists in orchestrator", worker.name)
 
@@ -394,35 +432,33 @@ def fetch_dependency_updates():
 
 
 @shared_task
-def worker_soft_reset_task(worker_id, configuration_id=None):
+def worker_soft_reset_task(worker_id):
     """
     Connects via SSH to the worker and performs the soft reset
     :param worker_id: ID of worker to soft reset
-    :param configuration_id: ID of the configuration based on which the worker needs to be reset
     """
-    try:
-        worker = Worker.objects.get(id=worker_id)
-    except Worker.DoesNotExist:
-        logger.error("Worker Soft Reset: Invalid worker id")
-        return
     ssh_client = None
     try:
-        ssh_client = worker.ssh_connect(configuration_id)
+        worker = Worker.objects.get(id=worker_id)
+        ssh_client = worker.ssh_connect()
         homedir = "/root" if ssh_client.ssh_user == "root" else f"/home/{ssh_client.ssh_user}"
         exec_blocking_ssh(ssh_client, "sudo docker ps -aq | xargs -r sudo docker stop | xargs -r sudo docker rm || true")
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {homedir}/emba_logs.zip*")  # Also delete possible leftover tmp files
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {homedir}/emba_run.log")
-        ssh_client.close()
+
+    except Worker.DoesNotExist:
+        logger.error("Worker Soft Reset: Invalid worker id")
     except (paramiko.SSHException, socket.error):
         logger.error("[Worker %s] SSH Connection failed while soft resetting.", worker.id)
+    finally:
         if ssh_client is not None:
             ssh_client.close()
 
 
 @shared_task
-def worker_hard_reset_task(worker_id, configuration_id):
+def worker_hard_reset_task(worker_id):
     try:
         worker = Worker.objects.get(id=worker_id)
     except Worker.DoesNotExist:
@@ -430,7 +466,7 @@ def worker_hard_reset_task(worker_id, configuration_id):
         return
     ssh_client = None
     try:
-        ssh_client = worker.ssh_connect(configuration_id)
+        ssh_client = worker.ssh_connect()
         emba_path = os.path.join(settings.WORKER_EMBA_ROOT, "full_uninstaller.sh")
         exec_blocking_ssh(ssh_client, "sudo bash " + emba_path)
         ssh_client.close()
@@ -468,3 +504,91 @@ def undo_sudoers_file(ip_address, ssh_user, ssh_password):
     finally:
         if client is not None:
             client.close()
+
+
+def _update_or_create_worker(config: Configuration, ip_address: str):
+    """
+    Creates a worker DB entry for a given IP address or updates the existing one.
+
+    :param config: The configuration the worker belongs to
+    :param ip_address: The IP address of the worker
+    """
+    worker = None
+    try:
+        worker = Worker.objects.get(ip_address=ip_address)
+        worker.reachable = True
+        worker.save()
+        if config not in worker.configurations.all():
+            worker.configurations.add(config)
+            worker.save()
+    except Worker.DoesNotExist:
+        version = WorkerDependencyVersion()
+        version.save()
+        worker = Worker(
+            dependency_version=version,
+            name=f"worker-{ip_address}",
+            ip_address=ip_address,
+            system_info={},
+            reachable=True
+        )
+        worker.save()
+        worker.configurations.set([config])
+    finally:
+        try:
+            init_sudoers_file(config, worker)
+            update_system_info(worker)
+            update_dependencies_info(worker)
+        except BaseException:
+            pass
+
+
+def _scan_for_worker(config: Configuration, ip_address: str, port: int = 22, timeout: int = 1):
+    """
+    Scans a given IP address to check if a worker is reachable and updates or creates its DB entry.
+
+    :param config: The configuration the worker belongs to
+    :param ip_address: The IP address of the worker
+    :param port: The SSH port to connect to (22 by default)
+    :param timeout: The time after which a connection attempt is cancelled
+    """
+    try:
+        with socket.create_connection((ip_address, port), timeout):
+            _update_or_create_worker(config, ip_address)
+            return ip_address
+    except socket.error:
+        return None
+
+
+@shared_task
+def config_worker_scan_task(configuration_id: int):
+    """
+    Scan the IP range of a given configuration and create/update workers based on the reachable IPs.
+
+    :param configuration_id: ID of the configuration to scan
+    """
+    try:
+        config = Configuration.objects.get(id=configuration_id)
+        config.scan_status = Configuration.ScanStatus.SCANNING
+        config.save()
+
+        ip_network = ipaddress.ip_network(config.ip_range, strict=False)
+        ip_addresses = [str(ip) for ip in ip_network.hosts()]
+        with ThreadPoolExecutor(max_workers=50) as executor:
+            results = executor.map(_scan_for_worker, [config]*len(ip_addresses), ip_addresses)
+            reachable = list(filter(None, results))
+
+        for worker in config.workers.all():
+            if worker.ip_address not in reachable:
+                worker.reachable = False
+                worker.save()
+
+        config.scan_status = Configuration.ScanStatus.FINISHED
+        logger.info("config_worker_scan_task: Scan finished for configuration %s", config.name)
+    except Configuration.DoesNotExist:
+        logger.error("config_worker_scan_task: Invalid configuration id")
+        config.scan_status = Configuration.ScanStatus.ERROR
+    except BaseException as error:
+        logger.error("config_worker_scan_task: An error occurred while scanning workers: %s", error)
+        config.scan_status = Configuration.ScanStatus.ERROR
+    finally:
+        config.save()

@@ -89,7 +89,7 @@ def queue_update(worker: Worker, dependency: DependencyType, version=None):
     """
     from workers.tasks import update_worker  # pylint: disable=import-outside-toplevel
 
-    if len(WorkerUpdate.objects.filter(worker__id=worker.id)) >= settings.WORKER_UPDATE_QUEUE_SIZE:
+    if WorkerUpdate.objects.filter(worker__id=worker.id).count() >= settings.WORKER_UPDATE_QUEUE_SIZE:
         logger.info("Update %s discarded for worker %s", dependency.name, worker.name)
         return
 
@@ -108,6 +108,8 @@ def queue_update(worker: Worker, dependency: DependencyType, version=None):
 
     if worker.status == Worker.ConfigStatus.CONFIGURING:
         return
+
+    orchestrator.remove_worker(worker, False)
 
     worker.status = Worker.ConfigStatus.CONFIGURING
     worker.save()
@@ -182,7 +184,7 @@ def perform_update(worker: Worker, client: SSHClient, worker_update: WorkerUpdat
     dependency = worker_update.get_type()
 
     if _is_version_installed(worker, worker_update):
-        logger.info("Skip update of %s on worker %s as already installed", worker_update.get_dependency().name, worker.name)
+        logger.info("Skip update of %s on worker %s as already installed", worker_update.get_type().name, worker.name)
         return
 
     folder_path = f"/root/{dependency.name}"
@@ -213,7 +215,7 @@ def init_sudoers_file(configuration: Configuration, worker: Worker):
     command = f'sudo -S -p "" bash -c "grep -qxF \'{sudoers_entry}\' /etc/sudoers.d/EMBArk || echo \'{sudoers_entry}\' >> /etc/sudoers.d/EMBArk"'
 
     try:
-        client = worker.ssh_connect(configuration.id)
+        client = worker.ssh_connect()
         stdin, stdout, _ = client.exec_command(command, get_pty=True)  # nosec B601: No user input
         stdin.write(f"{configuration.ssh_password}\n")
         stdin.flush()

@@ -5,12 +5,12 @@
 
 {% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
 {% block maincontent %}
-{% if user.is_staff %}
+{% if user.is_staff or user.is_superuser %}
 <div class="d-flex justify-content-center">
     <h3><span class="badge bg-secondary"><a href="{% url 'admin:index' %}">
         <input class="solid btn-login" type="submit" value="Admin-page" />
     </a></span></h3>
-    
+
 </div>
 {% endif %}
     <div class="container-fluid">
@@ -19,7 +19,4 @@
     <div class="container-fluid">
   	{% block apikey %}{% include "user/apiKeyGen.html" %}{% endblock apikey %}
     </div>
-    {# <div class="container-fluid"> #}
-    {#    {% block configuration %}{% include "user/configuration.html" %}{% endblock configuration %} #}
-    {# </div> #}
 {% endblock maincontent %}

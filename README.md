@@ -71,6 +71,9 @@ To access the admin pages from outside localhost use the `-b` option.
 ## Developer
 For developers, we recommend simply using: `sudo ./installer.sh -F ` and the `./dev-tools/debug-server-start.sh` script.
 
+## API Usage
+Please refer to the [Swagger UI documentation](https://e-m-b-a.github.io/embark/), which showcases the REST API.
+
 ## Get involved
 The IoT is growing, the development is ongoing, and there are many new features that we want to add.
 We welcome [pull requests](https://github.com/e-m-b-a/embark/pulls) and bug reports or feature requests via [issues](https://github.com/e-m-b-a/embark/issues) on GitHub.
