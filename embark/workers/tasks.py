@@ -565,8 +565,8 @@ def _scan_for_worker(config: Configuration, ip_address: str, port: int = 22, tim
 
             logger.info("[%s@%s] Connected via SSH. Now testing for sudo privileges.", config.ssh_user, ip_address)
 
-            stdin, stdout, stderr = client.exec_command("sudo -v", get_pty=True)
-            stdin.write(config.ssh_password + "\n")
+            stdin, stdout, _ = client.exec_command("sudo -v", get_pty=True)
+            stdin.write(config.ssh_password + "\n")  # nosec
             stdin.flush()
             if stdout.channel.recv_exit_status():
                 logger.info("[%s@%s] Can't register worker: No sudo permission.", config.ssh_user, ip_address)

@@ -115,8 +115,8 @@ class TestOrchestrator(TestCase):
         config = Configuration.objects.create(
             user=User.objects.create(email="tom@example.com"),
             ssh_user='tom',
-            ssh_password='tomisthebest',  # nosec
+            ssh_password='tomisthebest',
             ip_range=f'{unroutable_ip}/32'
-        )
+        )  # nosec
         config_worker_scan_task(config.id)
         self.assertNotIn(unroutable_ip, self.orchestrator.free_workers)
