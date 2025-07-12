@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import get_user
 from django.views.decorators.http import require_http_methods
 from django.conf import settings
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
@@ -389,6 +389,25 @@ def check_updates(request):
 
     messages.success(request, 'Update check queued!')
     return safe_redirect(request, '/worker/')
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def orchestrator_info(request):
+    """
+    Shows orchestrator information, including free and busy workers and current tasks.
+    """
+    orchestrator = get_orchestrator()
+    busy_workers = list(orchestrator.get_busy_workers().keys())
+    free_workers = list(orchestrator.get_free_workers().keys())
+    tasks = [task.to_dict() for task in orchestrator.tasks]
+    assignments = orchestrator.get_worker_info(busy_workers + free_workers)
+
+    return JsonResponse({"busy_workers": busy_workers,
+                         "free_workers": free_workers,
+                         "tasks": tasks,
+                         "assignments": assignments, })
 
 
 def safe_redirect(request, default):
