@@ -542,27 +542,51 @@ def _update_or_create_worker(config: Configuration, ip_address: str):
             pass
 
 
-def _scan_for_worker(config: Configuration, ip_address: str, port: int = 22, timeout: int = 1):
+def _scan_for_worker(config: Configuration, ip_address: str, port: int = 22, timeout: int = 1) -> str:
     """
-    Scans a given IP address to check if a worker is reachable and updates or creates its DB entry.
+    Checks if a host is reachable via SSH, has valid creds, and sudo perms.
+    Updates the DB accordingly.
 
-    :param config: The configuration the worker belongs to
-    :param ip_address: The IP address of the worker
-    :param port: The SSH port to connect to (22 by default)
-    :param timeout: The time after which a connection attempt is cancelled
+    :param config: Host's configuration
+    :param ip_address: Host's IP address
+    :param port: SSH port (default: 22)
+    :param timeout: Connection timeout in seconds
+    :return: ip_address on success, None otherwise
     """
     try:
-        with socket.create_connection((ip_address, port), timeout):
+        with paramiko.SSHClient() as client:
+            client.load_system_host_keys()
+            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            client.connect(
+                ip_address, port=port,
+                username=config.ssh_user, password=config.ssh_password,
+                timeout=timeout
+            )
+
+            logger.info("[%s@%s] Connected via SSH. Now testing for sudo privileges.", config.ssh_user, ip_address)
+
+            stdin, stdout, stderr = client.exec_command("sudo -v", get_pty=True)
+            stdin.write(config.ssh_password + "\n")
+            stdin.flush()
+            if stdout.channel.recv_exit_status():
+                logger.info("[%s@%s] Can't register worker: No sudo permission.", config.ssh_user, ip_address)
+                # Delete worker if SSH configuration changed
+                Worker.objects.filter(ip_address=ip_address).delete()
+                return None
+
             _update_or_create_worker(config, ip_address)
+            logger.info("[%s@%s] Worker is reachable via SSH.", config.ssh_user, ip_address)
             return ip_address
-    except socket.error:
+
+    except Exception as exc:
+        logger.error("[%s@%s] Exception while scanning worker: %s", config.ssh_user, ip_address, exc)
         return None
 
 
 @shared_task
 def config_worker_scan_task(configuration_id: int):
     """
-    Scan the IP range of a given configuration and create/update workers based on the reachable IPs.
+    Scan the IP range of a given configuration and create/update correctly setup workers.
 
     :param configuration_id: ID of the configuration to scan
     """
