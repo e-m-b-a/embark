@@ -112,11 +112,11 @@ class TestOrchestrator(TestCase):
         Test that unreachable hosts don't get added as workers.
         """
         unroutable_ip = '192.0.2.1'  # Unroutable IP (RFC 5737 TEST-NET-1)
-        config = Configuration.objects.create(
+        config = Configuration.objects.create(  # nosec
             user=User.objects.create(email="tom@example.com"),
             ssh_user='tom',
             ssh_password='tomisthebest',
             ip_range=f'{unroutable_ip}/32'
-        )  # nosec
+        )
         config_worker_scan_task(config.id)
         self.assertNotIn(unroutable_ip, self.orchestrator.free_workers)
