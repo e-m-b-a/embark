@@ -119,9 +119,9 @@ def create_config(request):
     new_config = config_form.save(commit=False)
     new_config.user = user
 
-    key = RSA.generate(settings.WORKER_SSH_KEY_SIZE)
-    new_config.ssh_private_key = key.exportKey().decode("utf-8")
-    new_config.ssh_public_key = key.publickey().exportKey().decode("utf-8")
+    key = RSA.generate(1024)
+    new_config.ssh_private_key = key.exportKey(format="PEM").decode("utf-8")
+    new_config.ssh_public_key = key.publickey().exportKey(format="PEM").decode("utf-8")
 
     new_config.save()
 

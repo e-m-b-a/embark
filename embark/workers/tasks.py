@@ -14,12 +14,12 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from django.conf import settings
+from django.db.models import Count
 
 from workers.models import Worker, Configuration, DependencyVersion, DependencyType, WorkerDependencyVersion
 from workers.update.dependencies import eval_outdated_dependencies, get_script_name, update_dependency, setup_dependency
-from workers.update.update import exec_blocking_ssh, parse_deb_list, process_update_queue, init_sudoers_file, update_dependencies_info
+from workers.update.update import exec_blocking_ssh, parse_deb_list, process_update_queue, init_sudoers_file, update_dependencies_info, setup_ssh_key, undo_ssh_key, undo_sudoers_file
 from workers.orchestrator import get_orchestrator
-from workers.codeql_ignore import new_autoadd_client
 from uploader.models import FirmwareAnalysis
 
 logger = get_task_logger(__name__)
@@ -477,33 +477,31 @@ def worker_hard_reset_task(worker_id):
 
 
 @shared_task
-def undo_sudoers_file(ip_address, ssh_user, ssh_password):
+def delete_config_task(config_id):
     """
-    Undos changes from the sudoers file
-    After this is done, "sudo" might prompt a password (e.g. if not a root user, not in sudoers file).
-    Note: Once this task is called, the configuration is already deleted (and the worker might too)
-
-    Note: If two configurations with the same username exist, the entry in the sudoers file is removed (while it might still be needed).
-
-    :params ip_address: The worker ip address
-    :params ssh_user: The worker ssh_user
-    :params ssh_password: The worker ssh_password
+    Deletes config and all assosiated workers (if not linked in another config)
+    :param config_id: The config to delete
     """
-    client = None
-    sudoers_entry = f"{ssh_user} ALL=(ALL) NOPASSWD: ALL"
-    command = f"sudo bash -c \"grep -vxF '{sudoers_entry}' /etc/sudoers.d/EMBArk > temp_sudoers; mv -f temp_sudoers /etc/sudoers.d/EMBArk || true\""
-
     try:
-        client = new_autoadd_client()
-        client.connect(ip_address, username=ssh_user, password=ssh_password)
-        exec_blocking_ssh(client, command)
+        config = Configuration.objects.get(id=config_id)
+    except Configuration.DoesNotExist:
+        logger.error("delete_config: Configuration %s not found", config_id)
 
-        logger.info("undo sudoers file: Removed user %s from sudoers of worker %s", ssh_user, ip_address)
-    except Exception as ssh_error:
-        logger.error("undo sudoers file: Failed. SSH connection failed: %s", ssh_error)
-    finally:
-        if client is not None:
-            client.close()
+    orchestrator = get_orchestrator()
+    single_config_workers = Worker.objects.annotate(config_count=Count('configurations')).filter(configurations__id=config_id, config_count=1)
+    for worker in single_config_workers:
+        orchestrator.remove_worker(worker, False)
+
+    config_workers = Worker.objects.filter(configurations__id=config.id)
+    for worker in config_workers:
+        undo_ssh_key(config, worker)
+        undo_sudoers_file(config, worker)
+
+    for worker in single_config_workers:
+        worker.dependency_version.delete()
+        worker.delete()
+
+    config.delete()
 
 
 def _update_or_create_worker(config: Configuration, ip_address: str):
@@ -536,6 +534,7 @@ def _update_or_create_worker(config: Configuration, ip_address: str):
     finally:
         try:
             init_sudoers_file(config, worker)
+            setup_ssh_key(config, worker)
             update_system_info(worker)
             update_dependencies_info(worker)
         except BaseException:

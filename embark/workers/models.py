@@ -1,3 +1,4 @@
+import os
 import ipaddress
 import socket
 import paramiko
@@ -5,6 +6,7 @@ import paramiko
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from django.conf import settings
 
 from users.models import User
 from workers.codeql_ignore import new_autoadd_client
@@ -27,6 +29,25 @@ class Configuration(models.Model):
     ip_range = models.CharField(max_length=150)
     created_at = models.DateTimeField(auto_now_add=True)
     scan_status = models.CharField(max_length=1, choices=ScanStatus, default=ScanStatus.NEW)
+
+    def ensure_ssh_keys(self):
+        """
+        Ensures that SSH keys are created on disk
+        """
+        os.makedirs(settings.WORKER_KEY_LOCATION, exist_ok=True)
+
+        private_key = f"{settings.WORKER_KEY_LOCATION}/key_{self.id}"
+        public_key = f"{settings.WORKER_KEY_LOCATION}/key_{self.id}.pub"
+
+        if not os.path.isfile(private_key):
+            with open(private_key, "a", encoding="utf-8") as file:
+                file.write(self.ssh_private_key)
+
+        if not os.path.isfile(public_key):
+            with open(public_key, "a", encoding="utf-8") as file:
+                file.write(self.ssh_public_key)
+
+        return private_key, public_key
 
 
 def default_deb_list():
@@ -93,19 +114,24 @@ class Worker(models.Model):
                     except ValueError as value_error:
                         raise ValidationError({"configuration": f"Invalid IP range: {value_error}"}) from value_error
 
-    def ssh_connect(self):
+    def ssh_connect(self, use_password=False):
         """
         Tries to establish an ssh connection with each configuration and returns the first successful connection
+        :param use_password: Use SSH password instead of SSH key
         """
         ssh_client = new_autoadd_client()
 
         for configuration in self.configurations.all():
             try:
-                ssh_client.connect(self.ip_address, username=configuration.ssh_user, password=configuration.ssh_password)
+                if use_password:
+                    ssh_client.connect(self.ip_address, username=configuration.ssh_user, password=configuration.ssh_password)
+                else:
+                    private_key_path, _ = configuration.ensure_ssh_keys()
+                    pkey = paramiko.RSAKey.from_path(private_key_path)
+                    ssh_client.connect(self.ip_address, username=configuration.ssh_user, pkey=pkey)
 
-                # save the ssh user and password so they can later be used in commands
+                # save the ssh user so it can later be used in commands
                 ssh_client.ssh_user = configuration.ssh_user
-                ssh_client.ssh_pw = configuration.ssh_password
                 break
             except (paramiko.SSHException, socket.error):
                 continue
