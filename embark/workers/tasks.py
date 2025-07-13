@@ -175,9 +175,11 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
     try:
         while True:
             _fetch_analysis_logs(worker)
-
             is_running = _is_emba_running(worker)
+
+            analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
             analysis_finished = analysis.finished or analysis.status["finished"]
+
             if not is_running or analysis_finished or not orchestrator.is_busy(worker):
                 logger.info("[Worker %s] Analysis finished.", worker.id)
                 return
