@@ -99,6 +99,9 @@ def update_worker_info():
         try:
             logger.info("Updating worker %s", worker.name)
             update_system_info(worker)
+            # Note: worker dependencies may change during update queue processing
+            #       and after hard resets, so we should keep the dependencies info up to date
+            update_dependencies_info(worker)
             worker.reachable = True
         except paramiko.SSHException:
             logger.info("Worker %s is unreachable, setting status to offline.", worker.name)

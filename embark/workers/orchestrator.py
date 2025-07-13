@@ -5,7 +5,9 @@ from dataclasses import dataclass
 
 from redis import Redis
 from django.conf import settings
+from django.utils import timezone
 
+from uploader.models import FirmwareAnalysis
 from workers.models import Worker, OrchestratorState
 
 
@@ -132,6 +134,16 @@ class Orchestrator:
 
         all_workers = self.free_workers | self.busy_workers
         for worker in all_workers.values():
+            if worker.analysis_id:
+                analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
+                analysis.failed = True
+                analysis.finished = True
+                analysis.status['finished'] = True
+                analysis.status['work'] = False
+                analysis.end_date = timezone.now()
+                analysis.scan_time = timezone.now() - analysis.start_date
+                analysis.duration = str(analysis.scan_time)
+                analysis.save()
             self._remove_worker(worker)
             worker_soft_reset_task.delay(worker.id)
 
