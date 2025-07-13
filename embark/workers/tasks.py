@@ -99,9 +99,6 @@ def update_worker_info():
         try:
             logger.info("Updating worker %s", worker.name)
             update_system_info(worker)
-            # Note: worker dependencies may change during update queue processing
-            #       and after hard resets, so we should keep the dependencies info up to date
-            update_dependencies_info(worker)
             worker.reachable = True
         except paramiko.SSHException:
             logger.info("Worker %s is unreachable, setting status to offline.", worker.name)
@@ -488,6 +485,7 @@ def worker_hard_reset_task(worker_id):
         emba_path = os.path.join(settings.WORKER_EMBA_ROOT, "full_uninstaller.sh")
         exec_blocking_ssh(ssh_client, "sudo bash " + emba_path)
         ssh_client.close()
+        update_dependencies_info(worker)
     except (paramiko.SSHException, socket.error):
         logger.error("SSH Connection didnt work for: %s", worker.name)
         if ssh_client:
