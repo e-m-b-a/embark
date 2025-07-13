@@ -4,6 +4,7 @@ import re
 import time
 import socket
 import subprocess
+from functools import partial
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 
@@ -544,43 +545,54 @@ def _update_or_create_worker(config: Configuration, ip_address: str):
 
 def _scan_for_worker(config: Configuration, ip_address: str, port: int = 22, timeout: int = 1) -> str:
     """
-    Checks if a host is reachable via SSH, has valid creds, and sudo perms.
+    Checks if a host is reachable, has valid SSH creds, and sudo perms.
     Updates the DB accordingly.
 
-    :param config: Host's configuration
+    :param config: Config template
     :param ip_address: Host's IP address
     :param port: SSH port (default: 22)
     :param timeout: Connection timeout in seconds
     :return: ip_address on success, None otherwise
     """
+    try:  # Check TCP socket first before trying SSH
+        with socket.create_connection((ip_address, port), timeout):
+            pass
+    except TimeoutError:
+        return None
+    except Exception as exc:
+        logger.error("[%s@%s] Cannot connect to host: %s", config.ssh_user, ip_address, exc)
+        return None
+
+    client = None
     try:
-        with paramiko.SSHClient() as client:
-            client.load_system_host_keys()
-            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            client.connect(
-                ip_address, port=port,
-                username=config.ssh_user, password=config.ssh_password,
-                timeout=timeout
-            )
+        client = new_autoadd_client()
+        client.connect(
+            ip_address, port=port,
+            username=config.ssh_user, password=config.ssh_password,
+            timeout=timeout
+        )
 
-            logger.info("[%s@%s] Connected via SSH. Now testing for sudo privileges.", config.ssh_user, ip_address)
+        logger.info("[%s@%s] Connected via SSH. Now testing for sudo privileges.", config.ssh_user, ip_address)
 
-            stdin, stdout, _ = client.exec_command("sudo -v", get_pty=True)  # nosec
-            stdin.write(config.ssh_password + "\n")
-            stdin.flush()
-            if stdout.channel.recv_exit_status():
-                logger.info("[%s@%s] Can't register worker: No sudo permission.", config.ssh_user, ip_address)
-                # Delete worker if SSH configuration changed
-                Worker.objects.filter(ip_address=ip_address).delete()
-                return None
+        stdin, stdout, _ = client.exec_command("sudo -v", get_pty=True)  # nosec
+        stdin.write(config.ssh_password + "\n")
+        stdin.flush()
+        if stdout.channel.recv_exit_status():
+            logger.info("[%s@%s] Can't register worker: No sudo permission.", config.ssh_user, ip_address)
+            # Delete worker if SSH configuration changed
+            Worker.objects.filter(ip_address=ip_address).delete()
+            return None
 
-            _update_or_create_worker(config, ip_address)
-            logger.info("[%s@%s] Worker is reachable via SSH.", config.ssh_user, ip_address)
-            return ip_address
+        _update_or_create_worker(config, ip_address)
+        logger.info("[%s@%s] Worker is reachable via SSH.", config.ssh_user, ip_address)
+        return ip_address
 
     except Exception as exc:
         logger.error("[%s@%s] Exception while scanning worker: %s", config.ssh_user, ip_address, exc)
         return None
+    finally:
+        if client is not None:
+            client.close()
 
 
 @shared_task
@@ -598,8 +610,8 @@ def config_worker_scan_task(configuration_id: int):
         ip_network = ipaddress.ip_network(config.ip_range, strict=False)
         ip_addresses = [str(ip) for ip in ip_network.hosts()]
         with ThreadPoolExecutor(max_workers=50) as executor:
-            results = executor.map(_scan_for_worker, [config]*len(ip_addresses), ip_addresses)
-            reachable = list(filter(None, results))
+            results = executor.map(partial(_scan_for_worker, config), ip_addresses)
+            reachable = list(results)
 
         for worker in config.workers.all():
             if worker.ip_address not in reachable:
