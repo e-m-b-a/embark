@@ -237,6 +237,33 @@ def init_sudoers_file(configuration: Configuration, worker: Worker):
             client.close()
 
 
+def undo_sudoers_file(configuration: Configuration, worker: Worker):
+    """
+    Undos changes from the sudoers file
+    After this is done, "sudo" might prompt a password (e.g. if not a root user, not in sudoers file).
+
+    Note: If two configurations with the same username exist, the entry in the sudoers file is removed (while it might still be needed).
+
+    :params ip_address: The worker ip address
+    :params ssh_user: The worker ssh_user
+    :params ssh_password: The worker ssh_password
+    """
+    client = None
+    sudoers_entry = f"{configuration.ssh_user} ALL=(ALL) NOPASSWD: ALL"
+    command = f"sudo bash -c \"grep -vxF '{sudoers_entry}' /etc/sudoers.d/EMBArk > temp_sudoers; mv -f temp_sudoers /etc/sudoers.d/EMBArk || true\""
+
+    try:
+        client = worker.ssh_connect(True)
+        exec_blocking_ssh(client, command)
+
+        logger.info("undo sudoers file: Removed user %s from sudoers of worker %s", configuration.ssh_user, worker.ip_address)
+    except Exception as ssh_error:
+        logger.error("undo sudoers file: Failed. SSH connection failed: %s", ssh_error)
+    finally:
+        if client is not None:
+            client.close()
+
+
 def setup_ssh_key(configuration: Configuration, worker: Worker):
     """
     Install SSH key on provided worker and disable PW auth

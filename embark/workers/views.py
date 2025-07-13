@@ -10,13 +10,11 @@ from django.conf import settings
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
-from django.db.models import Count
 
 from workers.forms import ConfigurationForm
-from workers.orchestrator import get_orchestrator
 from workers.models import Worker, Configuration, DependencyVersion, DependencyType
 from workers.update.update import queue_update
-from workers.tasks import fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file, config_worker_scan_task
+from workers.tasks import fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, config_worker_scan_task, delete_config_task
 from embark.helper import user_is_auth
 
 
@@ -82,20 +80,8 @@ def delete_config(request):
             messages.error(request, 'You are not allowed to delete this configuration')
             return safe_redirect(request, '/worker/')
 
-        config_workers = Worker.objects.filter(configurations__id=config.id)
-        for worker in config_workers:
-            undo_sudoers_file.delay(worker.ip_address, config.ssh_user, config.ssh_password)
-
-        workers = Worker.objects.annotate(config_count=Count('configurations')).filter(configurations__id=config_id, config_count=1)
-        orchestrator = get_orchestrator()
-        for worker in workers:
-            orchestrator.remove_worker(worker, False)
-
-            worker.dependency_version.delete()
-            worker.delete()
-
-        config.delete()
-        messages.success(request, 'Configuration deleted successfully')
+        delete_config_task.delay(config_id)
+        messages.success(request, 'Configuration deletion queued')
     except Configuration.DoesNotExist:
         messages.error(request, 'Configuration not found')
 
