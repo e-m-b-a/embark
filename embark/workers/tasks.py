@@ -241,6 +241,7 @@ def _fetch_analysis_logs(worker) -> None:
         logger.info("[Worker %s] Downloaded the log zip.", worker.id)
 
         # Ensure emba_run.log can be accessed by the user
+        # TODO: emba_error.log also needs to be fetched here
         if client.ssh_user != "root":
             chown_cmd = f'sudo bash -c "chown {client.ssh_user}: {homedir}/emba_run.log"'
             exec_blocking_ssh(client, chown_cmd)
