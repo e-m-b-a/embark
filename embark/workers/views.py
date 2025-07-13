@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import get_user
 from django.views.decorators.http import require_http_methods
 from django.conf import settings
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.db.models import Count
@@ -386,6 +386,34 @@ def check_updates(request):
 
     messages.success(request, 'Update check queued!')
     return safe_redirect(request, '/worker/')
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def orchestrator_reset(request):
+    """
+    Resets the orchestrator, clearing all tasks, soft resetting all workers, and marking
+    them as free.
+    """
+    orchestrator = get_orchestrator()
+    orchestrator.reset()
+
+    messages.success(request, 'Orchestrator reset successfully. Please wait a minute for worker soft resets to complete.')
+    return safe_redirect(request, '/worker/')
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def orchestrator_state(request):
+    """
+    Shows orchestrator information, including free and busy workers and current tasks.
+    """
+    # TODO: Create a template for this view instead of returning JSON
+    orchestrator = get_orchestrator()
+
+    return JsonResponse({"orchestrator_state": orchestrator.get_current_state()})
 
 
 def safe_redirect(request, default):

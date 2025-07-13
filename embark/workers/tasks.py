@@ -14,6 +14,7 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from django.conf import settings
+from django.utils import timezone
 
 from workers.models import Worker, Configuration, DependencyVersion, DependencyType, WorkerDependencyVersion
 from workers.update.dependencies import eval_outdated_dependencies, get_script_name, update_dependency, setup_dependency
@@ -161,36 +162,42 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
     :param worker_id: ID of worker to monitor and fetch logs for.
     """
     try:
-        orchestrator = get_orchestrator()
         worker = Worker.objects.get(id=worker_id)
+        analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
+    except (Worker.DoesNotExist, FirmwareAnalysis.DoesNotExist):
+        logger.error("[Worker %s] Invalid worker or analysis ID.", worker_id)
+        return
+
+    orchestrator = get_orchestrator()
+    try:
         while True:
             _fetch_analysis_logs(worker)
-
             is_running = _is_emba_running(worker)
-            analysis_finished = FirmwareAnalysis.objects.get(id=worker.analysis_id).status["finished"]
+
+            analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
+            analysis_finished = analysis.finished or analysis.status["finished"]
+
             if not is_running or analysis_finished or not orchestrator.is_busy(worker):
                 logger.info("[Worker %s] Analysis finished.", worker.id)
                 return
-
-            time.sleep(15)
     except Exception as exception:
         logger.error("[Worker %s] Monitoring failed, stopping the task. Exception: %s", worker.id, exception)
-        analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
         analysis.failed = True
-        analysis.save()
     finally:
         worker_soft_reset_task(worker.id)
         process_update_queue(worker)
 
-        analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
         analysis.finished = True
+        analysis.status['finished'] = True
+        analysis.status['work'] = False
+        analysis.end_date = timezone.now()
+        analysis.scan_time = timezone.now() - analysis.start_date
+        analysis.duration = str(analysis.scan_time)
         analysis.save()
 
         if not worker.status == Worker.ConfigStatus.CONFIGURED:
             orchestrator.remove_worker(worker)
-
         if orchestrator.is_busy(worker):
-            logger.info("[Worker %s] Releasing the worker...", worker.id)
             orchestrator.release_worker(worker)
 
         orchestrator.assign_tasks()
@@ -236,6 +243,7 @@ def _fetch_analysis_logs(worker) -> None:
         logger.info("[Worker %s] Downloaded the log zip.", worker.id)
 
         # Ensure emba_run.log can be accessed by the user
+        # TODO: emba_error.log also needs to be fetched here
         if client.ssh_user != "root":
             chown_cmd = f'sudo bash -c "chown {client.ssh_user}: {homedir}/emba_run.log"'
             exec_blocking_ssh(client, chown_cmd)
@@ -244,6 +252,8 @@ def _fetch_analysis_logs(worker) -> None:
 
         logger.info("[Worker %s] Downloaded emba_run.log.", worker.id)
 
+        # Note: The LogReader.read_loop() will look for logfiles in <analysis.path_to_logs>/emba.log
+        #       where path_to_logs will be set to settings.EMBA_LOG_ROOT/<analysis.id>/emba_logs/
         unzip_cmd = ["7z", "x", "-y", local_zip_path, f"-o{local_log_dir}/"]
         subprocess.run(unzip_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)  # nosec
 
@@ -470,6 +480,7 @@ def worker_hard_reset_task(worker_id):
         emba_path = os.path.join(settings.WORKER_EMBA_ROOT, "full_uninstaller.sh")
         exec_blocking_ssh(ssh_client, "sudo bash " + emba_path)
         ssh_client.close()
+        update_dependencies_info(worker)
     except (paramiko.SSHException, socket.error):
         logger.error("SSH Connection didnt work for: %s", worker.name)
         if ssh_client:

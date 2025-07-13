@@ -175,7 +175,8 @@ def _is_version_installed(worker: Worker, worker_update: WorkerUpdate):
 
 def perform_update(worker: Worker, client: SSHClient, worker_update: WorkerUpdate):
     """
-    Trigger file copy and installer.sh
+    Trigger file copy and installer.sh.
+    After an update has been performed, the worker's dependency information is updated.
 
     :params worker: The worker to update
     :params client: paramiko ssh client
@@ -200,6 +201,8 @@ def perform_update(worker: Worker, client: SSHClient, worker_update: WorkerUpdat
         exec_blocking_ssh(client, f"sudo bash -c '{folder_path}/installer.sh >{folder_path}/installer.log 2>&1'")
     except Exception as ssh_error:
         raise ssh_error
+
+    update_dependencies_info(worker)
 
 
 def init_sudoers_file(configuration: Configuration, worker: Worker):
