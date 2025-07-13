@@ -611,7 +611,7 @@ def config_worker_scan_task(configuration_id: int):
         ip_addresses = [str(ip) for ip in ip_network.hosts()]
         with ThreadPoolExecutor(max_workers=50) as executor:
             results = executor.map(partial(_scan_for_worker, config), ip_addresses)
-            reachable = list(results)
+            reachable = set(results) - {None}
 
         for worker in config.workers.all():
             if worker.ip_address not in reachable:
