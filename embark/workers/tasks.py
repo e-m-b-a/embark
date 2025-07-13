@@ -549,21 +549,46 @@ def fetch_dependency_updates():
 
 
 @shared_task
-def worker_soft_reset_task(worker_id):
+def worker_soft_reset_task(worker_id, reassign=True):
     """
-    Connects via SSH to the worker and performs the soft reset
+    Removes the worker from the orchestrator, reassigns the analysis if needed,
+    connects via SSH to the worker and performs the soft reset, and re-adds the worker to the orchestrator.
+
     :param worker_id: ID of worker to soft reset
+    :param reassign: If True, reassigns the analysis running on the worker to another worker
     """
     ssh_client = None
     try:
+        # Remove the worker from the orchestrator
+        orchestrator = get_orchestrator()
         worker = Worker.objects.get(id=worker_id)
+        try:
+            orchestrator.remove_worker(worker)
+        except ValueError:
+            pass
+
+        # Reassign the analysis running on the worker
+        if reassign:
+            reassign_analysis_id = worker.analysis_id
+            if reassign_analysis_id:
+                firmware_analysis = FirmwareAnalysis.objects.get(id=reassign_analysis_id)
+                firmware_file = FirmwareFile.objects.get(id=firmware_analysis.firmware.id)
+                new_analysis = _new_analysis_from(firmware_analysis)
+                submit_firmware(new_analysis, firmware_file)
+
+        # Soft reset the worker
         ssh_client = worker.ssh_connect()
         homedir = "/root" if ssh_client.ssh_user == "root" else f"/home/{ssh_client.ssh_user}"
         exec_blocking_ssh(ssh_client, "sudo docker ps -aq | xargs -r sudo docker stop | xargs -r sudo docker rm || true")
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_EMBA_LOGS}")
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {homedir}/emba_logs.zip*")  # Also delete possible leftover tmp files
-        exec_blocking_ssh(ssh_client, f"sudo rm -rf {homedir}/emba_run.log")
+
+        # Re-add the worker to the orchestrator
+        try:
+            orchestrator.add_worker(worker)
+        except ValueError:
+            pass
     except Worker.DoesNotExist:
         logger.error("Worker Soft Reset: Invalid worker id")
     except (paramiko.SSHException, socket.error):
