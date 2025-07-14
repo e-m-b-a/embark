@@ -110,7 +110,9 @@ def _new_analysis_from(old_analysis: FirmwareAnalysis) -> FirmwareAnalysis:
     :param old_analysis: The original FirmwareAnalysis object to duplicate
     """
     new_analysis = FirmwareAnalysis(
+        user=old_analysis.user,
         firmware=old_analysis.firmware,
+        firmware_name=old_analysis.firmware_name,
         version=old_analysis.version,
         notes=old_analysis.notes,
         firmware_Architecture=old_analysis.firmware_Architecture,
@@ -121,6 +123,9 @@ def _new_analysis_from(old_analysis: FirmwareAnalysis) -> FirmwareAnalysis:
     )
     new_analysis.save()
     new_analysis.device.set(old_analysis.device.all())
+
+    logger.info("Created new analysis %s from old analysis %s", new_analysis.id, old_analysis.id)
+    logger.info("New analysis for firmware file: %s", new_analysis.firmware.id)
 
     # NOTE:
     # - This triggers uploader/models::delete_analysis_pre_delete() which tries to delete the log directory at
@@ -134,7 +139,7 @@ def _new_analysis_from(old_analysis: FirmwareAnalysis) -> FirmwareAnalysis:
     #   if the analysis is still running (old_analysis.finished) but we do need to reset the worker once it becomes reachable again.
     # - We have to explicitly reset the worker once it reconnects because the monitoring task
     #   which would usually reset the worker when an analysis failed or finished will not be able to reach the worker.
-    old_analysis.delete(keep_parents=True)
+    # old_analysis.delete(keep_parents=True)  Don't uncomment. Since we are now calling this function from the monitoring task, we still need the old analysis.
 
     return new_analysis
 
@@ -156,11 +161,14 @@ def _handle_reconnected_worker(worker: Worker):
             logger.error("Reconnected worker: %s already registered in the orchestrator", worker.name)
 
 
-def _handle_unreachable_worker(worker: Worker):
+def _handle_unreachable_worker(worker: Worker, force: bool = False):
     """
     If a worker node has been unresponsive for the last settings.WORKER_REACHABLE_TIMEOUT minutes,
     set its reachable status to False and remove it from the orchestrator.
     Any analysis which was running on the worker will be rescheduled to another worker.
+
+    :param worker: The worker to handle
+    :param force: If True, the worker will be set to unreachable even if the reachable timeout has not been exceeded.
     """
     if not worker.reachable:
         # Unreachable worker has already been dealt with
@@ -168,7 +176,7 @@ def _handle_unreachable_worker(worker: Worker):
 
     try:
         reachable_threshold = make_aware(datetime.now()) - timedelta(minutes=settings.WORKER_REACHABLE_TIMEOUT)
-        if worker.last_reached < reachable_threshold:
+        if worker.last_reached < reachable_threshold or force:
             worker.reachable = False
             logger.info(
                 "Failed to reach worker %s for the last %d minutes, setting status to offline and reassigning analysis.",
@@ -180,7 +188,7 @@ def _handle_unreachable_worker(worker: Worker):
             reassign_analysis_id = worker.analysis_id
 
             orchestrator = get_orchestrator()
-            orchestrator.remove_worker(worker)
+            orchestrator.remove_worker(worker, check=False)
 
             if reassign_analysis_id:
                 firmware_analysis = FirmwareAnalysis.objects.get(id=reassign_analysis_id)
@@ -287,20 +295,21 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
         while True:
             _fetch_analysis_logs(worker)
             is_running = _is_emba_running(worker)
-
             analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
             analysis_finished = analysis.finished or analysis.status["finished"]
 
             if not is_running or analysis_finished or not orchestrator.is_busy(worker):
                 logger.info("[Worker %s] Analysis finished.", worker.id)
                 return
+            time.sleep(2)
+    except paramiko.SSHException as ssh_error:
+        logger.error("[Worker %s] SSH connection failed while monitoring: %s", worker.id, ssh_error)
+        _handle_unreachable_worker(worker, force=True)
+        analysis.failed = True
     except Exception as exception:
         logger.error("[Worker %s] Monitoring failed, stopping the task. Exception: %s", worker.id, exception)
         analysis.failed = True
     finally:
-        worker_soft_reset_task(worker.id)
-        process_update_queue(worker)
-
         analysis.finished = True
         analysis.status['finished'] = True
         analysis.status['work'] = False
@@ -308,6 +317,9 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
         analysis.scan_time = timezone.now() - analysis.start_date
         analysis.duration = str(analysis.scan_time)
         analysis.save()
+
+        worker_soft_reset_task(worker.id)
+        process_update_queue(worker)
 
         if not worker.status == Worker.ConfigStatus.CONFIGURED:
             orchestrator.remove_worker(worker)
