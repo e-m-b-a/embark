@@ -44,9 +44,5 @@ class WorkersConfig(AppConfig):
 
             workers = Worker.objects.all()
             for worker in workers:
-                update_queue = WorkerUpdate.objects.filter(worker__id=worker.id)
-                update_queue = [{
-                    "dependency_type": update.get_type().label,
-                    "version": update.version
-                } for update in update_queue]
+                WorkerUpdate.objects.filter(worker__id=worker.id).delete()
         post_migrate.connect(reset_update_queues)
