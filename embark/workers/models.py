@@ -127,8 +127,8 @@ class Worker(models.Model):
                     ssh_client.connect(self.ip_address, username=configuration.ssh_user, password=configuration.ssh_password)
                 else:
                     private_key_path, _ = configuration.ensure_ssh_keys()
-                    pkey = paramiko.RSAKey.from_path(private_key_path)
-                    ssh_client.connect(self.ip_address, username=configuration.ssh_user, pkey=pkey)
+                    pkey = paramiko.RSAKey.from_private_key_file(private_key_path)
+                    ssh_client.connect(self.ip_address, username=configuration.ssh_user, pkey=pkey, look_for_keys=False, allow_agent=False)
 
                 # save the ssh user so it can later be used in commands
                 ssh_client.ssh_user = configuration.ssh_user

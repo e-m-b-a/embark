@@ -105,9 +105,12 @@ def create_config(request):
     new_config = config_form.save(commit=False)
     new_config.user = user
 
-    key = RSA.generate(1024)
-    new_config.ssh_private_key = key.exportKey(format="PEM").decode("utf-8")
-    new_config.ssh_public_key = key.publickey().exportKey(format="PEM").decode("utf-8")
+    key = RSA.generate(2048)
+    new_config.ssh_private_key = key.export_key(format="PEM", pkcs=8).decode("utf-8")
+    new_config.ssh_public_key = key.publickey().export_key(format="OpenSSH").decode("utf-8")
+
+    # Fix paramiko RSA peculiarity
+    new_config.ssh_private_key = new_config.ssh_private_key.replace("PRIVATE KEY", "RSA PRIVATE KEY")
 
     new_config.save()
 

@@ -275,18 +275,18 @@ def setup_ssh_key(configuration: Configuration, worker: Worker):
     logger.info("setup_ssh_key: Starting ssh-copy-id on worker %s", worker.ip_address)
     cmd = ["sshpass", "-p", configuration.ssh_password, "ssh-copy-id", "-f", "-i", public_key, "-oStrictHostKeyChecking=accept-new", f"{configuration.ssh_user}@{worker.ip_address}"]
     with Popen(cmd, stdout=PIPE, stdin=PIPE, stderr=PIPE, text=True) as proc:  # nosec
-        stdout = proc.communicate()[0]
+        stdout, stderr = proc.communicate()
         failed = proc.returncode
 
     if failed:
-        logger.error("setup_ssh_key: SSH key could not be copied: %s", stdout)
+        logger.error("setup_ssh_key: SSH key could not be copied on worker %s: STDOUT: %s, STDERR: %s", worker.ip_address, stdout, stderr)
         return
 
     logger.info("setup_ssh_key: SSH key installed on worker %s", worker.ip_address)
 
     client = None
     try:
-        client = worker.ssh_connect(True)
+        client = worker.ssh_connect()
 
         # Note: sshd config is first come first serve. Thus just add the entry to the top
         exec_blocking_ssh(client, "sudo sed -i '1s/^/PasswordAuthentication no\\n/' /etc/ssh/sshd_config")
@@ -307,23 +307,19 @@ def undo_ssh_key(configuration: Configuration, worker: Worker):
     """
     client = None
     try:
-        logger.info("1")
         client = worker.ssh_connect()
-        logger.info("2")
 
         # Enable PW login
-        is_disabled = exec_blocking_ssh(client, "sudo sed -n '1{/^PasswordAuthentication/p};q' /etc/ssh/sshd_config && echo 'SUCCESS'")
-        logger.info("3")
+        is_disabled = exec_blocking_ssh(client, "sudo sed '1{/^PasswordAuthentication/p};q' /etc/ssh/sshd_config > /dev/null && echo 'SUCCESS'")
 
-        logger.error("RESULT: '%s'", is_disabled)
         if is_disabled == "SUCCESS":
             exec_blocking_ssh(client, "sudo sed -i '1d' /etc/ssh/sshd_config")
 
         # Remove key
         if configuration.ssh_user == "root":
-            exec_blocking_ssh(client, f"sed -i 's#`{configuration.ssh_public_key}`##' /root/.ssh/authorized_keys")
+            exec_blocking_ssh(client, f"sed -i '\|{configuration.ssh_public_key}|d' /root/.ssh/authorized_keys")
         else:
-            exec_blocking_ssh(client, f"sudo sed -i 's#`{configuration.ssh_public_key}`##' /home/{configuration.ssh_user}/.ssh/authorized_keys")
+            exec_blocking_ssh(client, f"sed -i '\|{configuration.ssh_public_key}|d' /home/{configuration.ssh_user}/.ssh/authorized_keys")
 
         exec_blocking_ssh(client, "sudo systemctl restart ssh")
         logger.info("undo_ssh_key: Removing SSH key on worker %s finished", worker.ip_address)
