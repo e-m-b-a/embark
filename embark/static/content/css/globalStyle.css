@@ -28,6 +28,7 @@ body {
 
 .main {
     color: #fff;
+    z-index: 0;
 }
 
 input:focus,
@@ -152,4 +153,8 @@ button[type="delete"]:hover {
 .subText {
     font-size: medium;
     text-align: center;
+}
+
+.fixed-bottom {
+    z-index: 0;
 }

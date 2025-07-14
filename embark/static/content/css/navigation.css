@@ -8,6 +8,7 @@
     top: 0;
     left: 0;
     padding-top: 6px;
+    z-index: 1000;
 }
 
 #navigation.active {
@@ -146,17 +147,26 @@
     position: absolute;
     background: #30294d;
     margin: .2em 0 0 0;
-    padding-bottom: .2em;
-    height: 9em;
+    padding-bottom: .5em;
+    padding-top: 1em;
+    height: 7em;
     width: 100%;
     display: inline-block;
-    align-items: stretch;
+    align-items: center;
+    z-index: 2000;
 }
 
 #navigation.active #nav-bottom button {
     width: 100%;
     display: flex;
     justify-content: center;
+    margin: 0 0 0 0;
+}
+
+#navigation.active #logout {
+    width: 45%;
+    display: block;
+    float: right;
 }
 
 #user-image {
@@ -164,18 +174,25 @@
 }
 
 #navigation.active #user-image {
-    display: inline-block;
-    width: 40%;
+    display: block;
+    width: 45%;
+    float: left;
 }
 
-#navigation #logout a .icon {
+#user-image .icon {
     width: 100%;
-    text-align: left;
+    text-align: center;
 }
 
-#navigation.active #logout {
-    display: inline-block;
-    width: 40%;
+#logout {
+    margin-left: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+#logout .icon {
+    width: 100%;
+    text-align: center;
 }
 
 /* main content */
