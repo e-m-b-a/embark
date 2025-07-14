@@ -289,6 +289,7 @@ WORKER_EMBA_ROOT = "/root/emba/"
 WORKER_FIRMWARE_DIR = "/root/firmware/"
 WORKER_EMBA_LOGS = "/root/emba_logs/"
 WORKER_UPDATE_QUEUE_SIZE = 50
+WORKER_SSH_KEY_SIZE = 2048
 
 # Celery task queue
 CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"

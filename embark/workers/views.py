@@ -15,6 +15,7 @@ from workers.forms import ConfigurationForm
 from workers.models import Worker, Configuration, DependencyVersion, DependencyType
 from workers.update.update import queue_update
 from workers.tasks import fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, config_worker_scan_task, delete_config_task
+from workers.orchestrator import get_orchestrator
 from embark.helper import user_is_auth
 
 
@@ -105,7 +106,7 @@ def create_config(request):
     new_config = config_form.save(commit=False)
     new_config.user = user
 
-    key = RSA.generate(2048)
+    key = RSA.generate(settings.WORKER_SSH_KEY_SIZE)
     new_config.ssh_private_key = key.export_key(format="PEM", pkcs=8).decode("utf-8")
     new_config.ssh_public_key = key.publickey().export_key(format="OpenSSH").decode("utf-8")
 

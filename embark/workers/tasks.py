@@ -22,6 +22,7 @@ from workers.models import Worker, Configuration, DependencyVersion, DependencyT
 from workers.update.dependencies import eval_outdated_dependencies, get_script_name, update_dependency, setup_dependency
 from workers.update.update import exec_blocking_ssh, parse_deb_list, process_update_queue, init_sudoers_file, update_dependencies_info, setup_ssh_key, undo_ssh_key, undo_sudoers_file
 from workers.orchestrator import get_orchestrator
+from workers.codeql_ignore import new_autoadd_client
 from uploader.models import FirmwareAnalysis
 
 logger = get_task_logger(__name__)
