@@ -12,7 +12,7 @@ from django.db.models import Count
 
 from workers.forms import ConfigurationForm
 from workers.orchestrator import get_orchestrator
-from workers.models import Worker, Configuration, DependencyVersion, DependencyType
+from workers.models import Worker, Configuration, DependencyVersion, DependencyType, WorkerUpdate
 from workers.update.update import queue_update
 from workers.tasks import fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file, config_worker_scan_task
 from embark.helper import user_is_auth
@@ -414,6 +414,36 @@ def orchestrator_state(request):
     orchestrator = get_orchestrator()
 
     return JsonResponse({"orchestrator_state": orchestrator.get_current_state()})
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def update_queue_reset(request, worker_id):
+    """
+    Clears the update queue for a worker.
+    """
+    WorkerUpdate.objects.filter(worker__id=worker_id).delete()
+
+    messages.success(request, 'Update queue reset successfully.')
+    return safe_redirect(request, '/worker/')
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def update_queue_state(request, worker_id):
+    """
+    Shows the current update queue for a worker.
+    """
+    # TODO: Create a template for this view instead of returning JSON
+    update_queue = WorkerUpdate.objects.filter(worker__id=worker_id)
+    update_queue = [{
+        "dependency_type": update.get_type().label,
+        "version": update.version
+    } for update in update_queue]
+
+    return JsonResponse({"update_queue": update_queue})
 
 
 def safe_redirect(request, default):
