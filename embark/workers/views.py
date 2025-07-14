@@ -56,14 +56,14 @@ def worker_main(request):
         worker__configurations__user=user,
     ).select_related('worker')
 
-    for update in update_pool:
-        worker = update.worker
+    if update_pool:
+        worker = update_pool[0].worker
         if worker.status == Worker.ConfigStatus.CONFIGURING:
-            messages.info(request, f"Update for {worker.name} started.")
+            messages.info(request, f"Update for {worker.name} started: {update_pool[0].dependency_type}")
         elif worker.status == Worker.ConfigStatus.CONFIGURED:
-            messages.success(request, f"Update for {worker.name} finished.")
+            messages.success(request, f"Update for {worker.name} finished: {update_pool[0].dependency_type}")
         elif worker.status == Worker.ConfigStatus.ERROR:
-            messages.error(request, f"Update for {worker.name} failed.")
+            messages.error(request, f"Update for {worker.name} failed: {update_pool[0].dependency_type}")
 
     return render(request, 'workers/index.html', {
         'user': user,
