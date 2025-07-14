@@ -56,7 +56,6 @@ def worker_main(request):
         worker__configurations__user=user,
     ).select_related('worker')
 
-
     if update_pool:
         worker = update_pool[-1].worker
         if worker.status == Worker.ConfigStatus.CONFIGURING:
