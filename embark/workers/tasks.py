@@ -4,6 +4,7 @@ import re
 import time
 import socket
 import subprocess
+from functools import partial
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
@@ -14,7 +15,9 @@ import paramiko
 from celery import shared_task
 from celery.utils.log import get_task_logger
 from django.utils.timezone import make_aware
+from django.utils import timezone
 from django.conf import settings
+
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 
 from workers.models import Worker, Configuration, DependencyVersion, DependencyType, WorkerDependencyVersion
@@ -273,36 +276,42 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
     :param worker_id: ID of worker to monitor and fetch logs for.
     """
     try:
-        orchestrator = get_orchestrator()
         worker = Worker.objects.get(id=worker_id)
+        analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
+    except (Worker.DoesNotExist, FirmwareAnalysis.DoesNotExist):
+        logger.error("[Worker %s] Invalid worker or analysis ID.", worker_id)
+        return
+
+    orchestrator = get_orchestrator()
+    try:
         while True:
             _fetch_analysis_logs(worker)
-
             is_running = _is_emba_running(worker)
-            analysis_finished = FirmwareAnalysis.objects.get(id=worker.analysis_id).status["finished"]
+
+            analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
+            analysis_finished = analysis.finished or analysis.status["finished"]
+
             if not is_running or analysis_finished or not orchestrator.is_busy(worker):
                 logger.info("[Worker %s] Analysis finished.", worker.id)
                 return
-
-            time.sleep(15)
     except Exception as exception:
         logger.error("[Worker %s] Monitoring failed, stopping the task. Exception: %s", worker.id, exception)
-        analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
         analysis.failed = True
-        analysis.save()
     finally:
         worker_soft_reset_task(worker.id)
         process_update_queue(worker)
 
-        analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
         analysis.finished = True
+        analysis.status['finished'] = True
+        analysis.status['work'] = False
+        analysis.end_date = timezone.now()
+        analysis.scan_time = timezone.now() - analysis.start_date
+        analysis.duration = str(analysis.scan_time)
         analysis.save()
 
         if not worker.status == Worker.ConfigStatus.CONFIGURED:
             orchestrator.remove_worker(worker)
-
         if orchestrator.is_busy(worker):
-            logger.info("[Worker %s] Releasing the worker...", worker.id)
             orchestrator.release_worker(worker)
 
         orchestrator.assign_tasks()
@@ -348,6 +357,7 @@ def _fetch_analysis_logs(worker) -> None:
         logger.info("[Worker %s] Downloaded the log zip.", worker.id)
 
         # Ensure emba_run.log can be accessed by the user
+        # TODO: emba_error.log also needs to be fetched here
         if client.ssh_user != "root":
             chown_cmd = f'sudo bash -c "chown {client.ssh_user}: {homedir}/emba_run.log"'
             exec_blocking_ssh(client, chown_cmd)
@@ -356,6 +366,8 @@ def _fetch_analysis_logs(worker) -> None:
 
         logger.info("[Worker %s] Downloaded emba_run.log.", worker.id)
 
+        # Note: The LogReader.read_loop() will look for logfiles in <analysis.path_to_logs>/emba.log
+        #       where path_to_logs will be set to settings.EMBA_LOG_ROOT/<analysis.id>/emba_logs/
         unzip_cmd = ["7z", "x", "-y", local_zip_path, f"-o{local_log_dir}/"]
         subprocess.run(unzip_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)  # nosec
 
@@ -448,11 +460,7 @@ def update_worker(worker_id):
     logger.info("update_worker: Worker update task started")
 
     orchestrator = get_orchestrator()
-    try:
-        orchestrator.remove_worker(worker)
-        logger.info("Worker: %s removed from orchestrator", worker.name)
-    except ValueError:
-        pass
+    orchestrator.remove_worker(worker, False)
 
     process_update_queue(worker)
 
@@ -461,7 +469,6 @@ def update_worker(worker_id):
             update_system_info(worker)
             orchestrator.add_worker(worker)
             orchestrator.assign_tasks()
-            logger.info("Worker: %s added to orchestrator", worker.name)
         except ValueError:
             logger.error("Worker: %s already exists in orchestrator", worker.name)
 
@@ -586,6 +593,7 @@ def worker_hard_reset_task(worker_id):
         emba_path = os.path.join(settings.WORKER_EMBA_ROOT, "full_uninstaller.sh")
         exec_blocking_ssh(ssh_client, "sudo bash " + emba_path)
         ssh_client.close()
+        update_dependencies_info(worker)
     except paramiko.SSHException:
         logger.error("SSH Connection didnt work for: %s", worker.name)
         if ssh_client:
@@ -656,27 +664,62 @@ def _update_or_create_worker(config: Configuration, ip_address: str):
             pass
 
 
-def _scan_for_worker(config: Configuration, ip_address: str, port: int = 22, timeout: int = 1):
+def _scan_for_worker(config: Configuration, ip_address: str, port: int = 22, timeout: int = 1) -> str:
     """
-    Scans a given IP address to check if a worker is reachable and updates or creates its DB entry.
+    Checks if a host is reachable, has valid SSH creds, and sudo perms.
+    Updates the DB accordingly.
 
-    :param config: The configuration the worker belongs to
-    :param ip_address: The IP address of the worker
-    :param port: The SSH port to connect to (22 by default)
-    :param timeout: The time after which a connection attempt is cancelled
+    :param config: Config template
+    :param ip_address: Host's IP address
+    :param port: SSH port (default: 22)
+    :param timeout: Connection timeout in seconds
+    :return: ip_address on success, None otherwise
     """
-    try:
+    try:  # Check TCP socket first before trying SSH
         with socket.create_connection((ip_address, port), timeout):
-            _update_or_create_worker(config, ip_address)
-            return ip_address
-    except socket.error:
+            pass
+    except TimeoutError:
         return None
+    except Exception as exc:
+        logger.error("[%s@%s] Cannot connect to host: %s", config.ssh_user, ip_address, exc)
+        return None
+
+    client = None
+    try:
+        client = new_autoadd_client()
+        client.connect(
+            ip_address, port=port,
+            username=config.ssh_user, password=config.ssh_password,
+            timeout=timeout
+        )
+
+        logger.info("[%s@%s] Connected via SSH. Now testing for sudo privileges.", config.ssh_user, ip_address)
+
+        stdin, stdout, _ = client.exec_command("sudo -v", get_pty=True)  # nosec
+        stdin.write(config.ssh_password + "\n")
+        stdin.flush()
+        if stdout.channel.recv_exit_status():
+            logger.info("[%s@%s] Can't register worker: No sudo permission.", config.ssh_user, ip_address)
+            # Delete worker if SSH configuration changed
+            Worker.objects.filter(ip_address=ip_address).delete()
+            return None
+
+        _update_or_create_worker(config, ip_address)
+        logger.info("[%s@%s] Worker is reachable via SSH.", config.ssh_user, ip_address)
+        return ip_address
+
+    except Exception as exc:
+        logger.error("[%s@%s] Exception while scanning worker: %s", config.ssh_user, ip_address, exc)
+        return None
+    finally:
+        if client is not None:
+            client.close()
 
 
 @shared_task
 def config_worker_scan_task(configuration_id: int):
     """
-    Scan the IP range of a given configuration and create/update workers based on the reachable IPs.
+    Scan the IP range of a given configuration and create/update correctly setup workers.
 
     :param configuration_id: ID of the configuration to scan
     """
@@ -688,8 +731,8 @@ def config_worker_scan_task(configuration_id: int):
         ip_network = ipaddress.ip_network(config.ip_range, strict=False)
         ip_addresses = [str(ip) for ip in ip_network.hosts()]
         with ThreadPoolExecutor(max_workers=50) as executor:
-            results = executor.map(_scan_for_worker, [config]*len(ip_addresses), ip_addresses)
-            reachable = list(filter(None, results))
+            results = executor.map(partial(_scan_for_worker, config), ip_addresses)
+            reachable = set(results) - {None}
 
         unreachable_workers = [worker for worker in config.workers.all() if worker.ip_address not in reachable]
         for worker in unreachable_workers:

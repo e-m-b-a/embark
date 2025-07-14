@@ -8,6 +8,7 @@ from django.test import TestCase
 
 from workers.models import Worker, Configuration
 from workers.orchestrator import Orchestrator, OrchestratorTask
+from workers.tasks import config_worker_scan_task
 from uploader.models import FirmwareAnalysis
 from users.models import User
 
@@ -105,3 +106,17 @@ class TestOrchestrator(TestCase):
         self.orchestrator.release_worker(self.test_worker2)
         self.orchestrator.queue_task(task2)
         self.assertEqual(self.orchestrator.get_busy_workers()[self.test_worker1.ip_address].analysis_id, task3.firmware_analysis_id)
+
+    def test_unreachable_host(self):
+        """
+        Test that unreachable hosts don't get added as workers.
+        """
+        unroutable_ip = '192.0.2.1'  # Unroutable IP (RFC 5737 TEST-NET-1)
+        config = Configuration.objects.create(  # nosec
+            user=User.objects.create(email="tom@example.com"),
+            ssh_user='tom',
+            ssh_password='tomisthebest',
+            ip_range=f'{unroutable_ip}/32'
+        )
+        config_worker_scan_task(config.id)
+        self.assertNotIn(unroutable_ip, self.orchestrator.free_workers)

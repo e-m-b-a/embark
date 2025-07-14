@@ -13,17 +13,14 @@ from workers.orchestrator import get_orchestrator
 logger = logging.getLogger(__name__)
 
 
-def exec_blocking_ssh(client: SSHClient, command: str):
+def exec_blocking_ssh(client: SSHClient, command: str) -> str:
     """
     Executes ssh command blocking, as exec_command is non-blocking
-
     Warning: This command might block forever, if the output is too large (based on recv_exit_status). Thus redirect to file
 
     :params client: modified paramiko ssh client (see: workers.models.Worker.ssh_connect)
     :params command: command string
-
     :raises SSHException: if command fails
-
     :return: command output
     """
     stdout = client.exec_command(command)[1]  # nosec B601: No user input
@@ -88,7 +85,7 @@ def queue_update(worker: Worker, dependency: DependencyType, version=None):
     """
     from workers.tasks import update_worker  # pylint: disable=import-outside-toplevel
 
-    if len(WorkerUpdate.objects.filter(worker__id=worker.id)) >= settings.WORKER_UPDATE_QUEUE_SIZE:
+    if WorkerUpdate.objects.filter(worker__id=worker.id).count() >= settings.WORKER_UPDATE_QUEUE_SIZE:
         logger.info("Update %s discarded for worker %s", dependency.name, worker.name)
         return
 
@@ -108,10 +105,7 @@ def queue_update(worker: Worker, dependency: DependencyType, version=None):
     if worker.status == Worker.ConfigStatus.CONFIGURING:
         return
 
-    try:
-        orchestrator.remove_worker(worker)
-    except ValueError:
-        pass
+    orchestrator.remove_worker(worker, False)
 
     worker.status = Worker.ConfigStatus.CONFIGURING
     worker.save()
@@ -177,7 +171,8 @@ def _is_version_installed(worker: Worker, worker_update: WorkerUpdate):
 
 def perform_update(worker: Worker, client: SSHClient, worker_update: WorkerUpdate):
     """
-    Trigger file copy and installer.sh
+    Trigger file copy and installer.sh.
+    After an update has been performed, the worker's dependency information is updated.
 
     :params worker: The worker to update
     :params client: paramiko ssh client
@@ -202,6 +197,8 @@ def perform_update(worker: Worker, client: SSHClient, worker_update: WorkerUpdat
         exec_blocking_ssh(client, f"sudo bash -c '{folder_path}/installer.sh >{folder_path}/installer.log 2>&1'")
     except Exception as ssh_error:
         raise ssh_error
+
+    update_dependencies_info(worker)
 
 
 def init_sudoers_file(configuration: Configuration, worker: Worker):
