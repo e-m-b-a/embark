@@ -12,7 +12,7 @@ from django.db.models import Count
 
 from workers.forms import ConfigurationForm
 from workers.orchestrator import get_orchestrator
-from workers.models import Worker, Configuration, DependencyVersion, DependencyType, WorkerUpdate
+from workers.models import DependencyState, Worker, Configuration, DependencyVersion, DependencyType, WorkerUpdate
 from workers.update.update import queue_update
 from workers.tasks import fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file, config_worker_scan_task
 from embark.helper import user_is_auth
@@ -444,6 +444,36 @@ def update_queue_state(request, worker_id):
     } for update in update_queue]
 
     return JsonResponse({"update_queue": update_queue})
+
+
+def dependency_state_reset(request):
+    """
+    Resets the used_by attribute of all dependency states.
+    An incorrect shutdown of the embark application may leave this field
+    populated with workers that no longer use the dependency.
+    """
+    states = DependencyState.objects.all()
+    for state in states:
+        state.used_by.clear()
+        state.save()
+
+    messages.success(request, 'Dependency states reset successfully.')
+    return safe_redirect(request, '/worker/')
+
+
+def dependency_state(request):
+    """
+    Shows the current state of all dependencies.
+    """
+    # TODO: Create a template for this view instead of returning JSON
+    states = DependencyState.objects.all()
+    states = [{
+        "dependency_type": state.dependency_type,
+        "used_by": [worker.name for worker in state.used_by.all()],
+        "availability": state.availability
+    } for state in states]
+
+    return JsonResponse({"states": states})
 
 
 def safe_redirect(request, default):

@@ -207,7 +207,7 @@ def update_worker_info():
             # The worker was previously set to unreachable and is now reachable again
             if not worker.reachable:
                 logger.info("Reconnecting worker: %s", worker.name)
-                # Note: This will block the entire update_worker_info task until the worker
+                # TODO: This will block the entire update_worker_info task until the worker
                 #       is successfully reset, updated, and re-added to the orchestrator.
                 #       It might be better to use threads to update the workers instead of a for loop.
                 _handle_reconnected_worker(worker)
@@ -423,16 +423,21 @@ def stop_remote_analysis(worker_id) -> None:
             logger.error("[Worker %s] Failed to stop analysis: EMBA container isn't running.", worker.id)
             return
 
-        ssh_client = worker.ssh_connect()
+        client = worker.ssh_connect()
 
         logger.info("[Worker %s] Trying to stop the analysis.", worker.id)
 
         docker_cmd = "sudo docker ps | grep emba | awk '{print $1;}' | xargs -I {} sudo docker stop {}"
-        exec_blocking_ssh(ssh_client, docker_cmd)
+        exec_blocking_ssh(client, docker_cmd)
 
         analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
-        analysis.finished = True
         analysis.failed = True
+        analysis.finished = True
+        analysis.status['finished'] = True
+        analysis.status['work'] = False
+        analysis.end_date = timezone.now()
+        analysis.scan_time = timezone.now() - analysis.start_date
+        analysis.duration = str(analysis.scan_time)
         analysis.save()
 
         logger.info("[Worker %s] Successfully stopped the analysis.", worker.id)
