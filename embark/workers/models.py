@@ -30,24 +30,48 @@ class Configuration(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     scan_status = models.CharField(max_length=1, choices=ScanStatus, default=ScanStatus.NEW)
 
+    def _ssh_key_paths(self):
+        """
+        Returns ssh key paths
+        :return: private_key_path
+        :return: public_key_path
+        """
+        private_key_path = f"{settings.WORKER_KEY_LOCATION}/key_{self.id}"
+        public_key_path = f"{settings.WORKER_KEY_LOCATION}/key_{self.id}.pub"
+
+        return private_key_path, public_key_path
+
     def ensure_ssh_keys(self):
         """
         Ensures that SSH keys are created on disk
+        :return: private_key_path
+        :return: public_key_path
         """
         os.makedirs(settings.WORKER_KEY_LOCATION, exist_ok=True)
 
-        private_key = f"{settings.WORKER_KEY_LOCATION}/key_{self.id}"
-        public_key = f"{settings.WORKER_KEY_LOCATION}/key_{self.id}.pub"
+        private_key_path, public_key_path = self._ssh_key_paths()
 
-        if not os.path.isfile(private_key):
-            with open(private_key, "a", encoding="utf-8") as file:
+        if not os.path.isfile(private_key_path):
+            with open(private_key_path, "a", encoding="utf-8") as file:
                 file.write(self.ssh_private_key)
 
-        if not os.path.isfile(public_key):
-            with open(public_key, "a", encoding="utf-8") as file:
+        if not os.path.isfile(public_key_path):
+            with open(public_key_path, "a", encoding="utf-8") as file:
                 file.write(self.ssh_public_key)
 
-        return private_key, public_key
+        return private_key_path, public_key_path
+
+    def delete_ssh_keys(self):
+        """
+        Removes SSH keys from disk, if exists
+        """
+        private_key_path, public_key_path = self._ssh_key_paths()
+
+        if os.path.isfile(private_key_path):
+            os.remove(private_key_path)
+
+        if os.path.isfile(public_key_path):
+            os.remove(public_key_path)
 
 
 def default_deb_list():

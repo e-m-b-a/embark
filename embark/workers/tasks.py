@@ -519,6 +519,8 @@ def delete_config_task(config_id):
         undo_ssh_key(config, worker)
         undo_sudoers_file(config, worker)
 
+    config.delete_ssh_keys()
+
     for worker in single_config_workers:
         worker.dependency_version.delete()
         worker.delete()
