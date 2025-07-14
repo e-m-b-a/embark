@@ -22,4 +22,6 @@ urlpatterns = [
     path('worker/update/configuration/<int:configuration_id>/', views.update_configuration_dependency, name='embark-configuration-update'),
 
     path('worker/updates/', views.check_updates, name='embark-worker-check-updates'),
+    path('worker/orchestrator/state/', views.orchestrator_state, name='embark-orchestrator-state'),
+    path('worker/orchestrator/reset/', views.orchestrator_reset, name='embark-orchestrator-reset'),
 ]

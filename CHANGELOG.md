@@ -13,12 +13,14 @@
   - Dependency update script input sanitation
   - `queue_update` count optimization
 - Extend update user experience ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114784692&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C74))
+- SSH setup and sudo perm check ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=119036293&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C100))
 
 ## [sprint-12](https://github.com/amosproj/amos2025ss01-embark/releases/tag/sprint-12-release) - 2025-07-09
 
 ### FIXED
 
 - Missing `WorkerDependencyVersion` deletion on config delete
+- Analyses not marked as finished correctly ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=119038453&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C103))
 
 ### ADDED
 
