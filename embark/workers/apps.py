@@ -27,7 +27,6 @@ class WorkersConfig(AppConfig):
             that no longer use the dependency.
             """
             from workers.models import DependencyState  # pylint: disable=import-outside-toplevel
-
             states = DependencyState.objects.all()
             for state in states:
                 state.used_by.clear()
@@ -41,7 +40,6 @@ class WorkersConfig(AppConfig):
             populated with updates that are no longer relevant.
             """
             from workers.models import Worker, WorkerUpdate  # pylint: disable=import-outside-toplevel
-
             workers = Worker.objects.all()
             for worker in workers:
                 WorkerUpdate.objects.filter(worker__id=worker.id).delete()
