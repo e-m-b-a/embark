@@ -448,9 +448,9 @@ def update_queue_state(request, worker_id):
 
 def dependency_state_reset(request):
     """
-    Resets the used_by attribute of all dependency states.
-    An incorrect shutdown of the embark application may leave this field
-    populated with workers that no longer use the dependency.
+    Reset the 'used_by' field for all DependencyState instances.
+    An unexpected shutdown may leave this field populated with workers
+    that no longer use the dependency.
     """
     states = DependencyState.objects.all()
     for state in states:
