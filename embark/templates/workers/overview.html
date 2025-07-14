@@ -128,7 +128,7 @@
         <td>{{ worker.ip_address }}</td>
         <td>{% if worker.reachable %}🟢{% else %}🔴{% endif %}</td>
         <td>{{ worker.config_ids }}</td>
-        <td>{{ worker.analysis_id|default_if_none:""|slice:"-5:" }}</td>
+        <td>{{ worker.analysis_id|default_if_none:"Idle"|slice:"-5:" }}</td>
         <td>{{ worker.status }}</td>
         <td>{{ worker.system_info.os_info }}</td>
         <td>{{ worker.system_info.cpu_info }}</td>
