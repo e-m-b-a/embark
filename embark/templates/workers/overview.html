@@ -140,23 +140,27 @@
         <td>
             {% if worker.status != "Unconfigured" %}
                 <div class="actions-dropdown">
-                    <button class="toggle-actions-menu" data-id="{{ worker.ip_address }}">...</button>
+                  <button class="toggle-actions-menu" data-id="{{ worker.ip_address }}">...
+                        {% if worker.dependency_version.emba_outdated or worker.dependency_version.deb_outdated or worker.dependency_version.external_outdated %}
+                            <span class="update-dot"/>
+                        {% endif %}
+                    </button>
                     <div class="actions-dropdown-content" id="menu-{{ worker.ip_address }}">
-                            <button class="toggle-update-diff" dep-type="emba" worker-id="{{ worker.id }}">Update EMBA
+                        <button class="toggle-update-diff" dep-type="emba" worker-id="{{ worker.id }}">Update EMBA
                             {% if worker.dependency_version.emba_outdated %}
                                 <span class="update-dot"/>
                             {% endif %}
-                            </button>
-                            <button class="toggle-update-diff" dep-type="deb" worker-id="{{ worker.id }}">Update APT dependencies
+                        </button>
+                        <button class="toggle-update-diff" dep-type="deb" worker-id="{{ worker.id }}">Update APT dependencies
                             {% if worker.dependency_version.deb_outdated %}
                                 <span class="update-dot"/>
                             {% endif %}
-                            </button>
-                            <button class="toggle-update-diff" dep-type="external" worker-id="{{ worker.id }}">Update external directory
+                        </button>
+                        <button class="toggle-update-diff" dep-type="external" worker-id="{{ worker.id }}">Update external directory
                             {% if worker.dependency_version.external_outdated %}
                                 <span class="update-dot"/>
                             {% endif %}
-                            </button>
+                        </button>
                         <form action="{% url 'embark-worker-hard-reset' worker.id %}" method="post">
                             {% csrf_token %}
                             <input type="submit" value="Hard Reset">
