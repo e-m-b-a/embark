@@ -12,11 +12,10 @@ from django.db.models import Count
 
 from workers.forms import ConfigurationForm
 from workers.orchestrator import get_orchestrator
-from workers.models import Worker, Configuration, DependencyVersion, DependencyType
+from workers.models import Worker, Configuration, DependencyVersion, DependencyType, WorkerUpdate
 from workers.update.update import queue_update
 from workers.tasks import fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file, config_worker_scan_task
 from embark.helper import user_is_auth
-
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +51,19 @@ def worker_main(request):
     for worker in workers:
         worker.config_ids = ', '.join([str(config.id) for config in worker.configurations.filter(user=user)])
         worker.status = worker.get_status_display()
+
+    update_pool = WorkerUpdate.objects.order_by('-created_at').filter(
+        worker__configurations__user=user,
+    ).select_related('worker')
+
+    if update_pool:
+        worker = update_pool[0].worker
+        if worker.status == Worker.ConfigStatus.CONFIGURING:
+            messages.info(request, f"Update for {worker.name} started: {update_pool[0].get_dependency_type_display()}")
+        elif worker.status == Worker.ConfigStatus.CONFIGURED:
+            messages.success(request, f"Update for {worker.name} finished: {update_pool[0].get_dependency_type_display()}")
+        elif worker.status == Worker.ConfigStatus.ERROR:
+            messages.error(request, f"Update for {worker.name} failed: {update_pool[0].get_dependency_type_display()}")
 
     return render(request, 'workers/index.html', {
         'user': user,
@@ -191,6 +203,7 @@ def update_worker_dependency(request, worker_id):
         return safe_redirect(request, '/worker/')
 
     messages.success(request, 'Update queued')
+    messages.info(request, 'Please make sure to refresh the website to show status updates')
     return safe_redirect(request, '/worker/')
 
 
@@ -213,6 +226,7 @@ def update_configuration_dependency(request, configuration_id):
         return safe_redirect(request, '/worker/')
 
     messages.success(request, 'Update queued')
+    messages.info(request, 'Please make sure to refresh the website to show status updates')
     return safe_redirect(request, '/worker/')
 
 
