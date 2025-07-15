@@ -13,7 +13,10 @@
 - Siemens PR review ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=119028315&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C98))
   - Dependency update script input sanitation
   - `queue_update` count optimization
+- Extend update user experience ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114784692&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C74))
 - SSH setup and sudo perm check ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=119036293&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C100))
+- Indicate worker update availability (red dot) ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=119737574&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C108))
+- Show HEAD hash for worker EMBA version ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=119733872&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C107))
 - SSH key authentication ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=118803738&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C97))
 
 ## [sprint-12](https://github.com/amosproj/amos2025ss01-embark/releases/tag/sprint-12-release) - 2025-07-09
@@ -30,6 +33,7 @@
 - Trigger orchestrator at critical moments ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114047181&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C59))
 - Use celery for IP range scanning and update config UI ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=118038092&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C91))
 - `process_update_queue` call once the analysis is finished ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114650622&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C70))
+- Handle unresponsive worker nodes ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=115550958&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C85))
 - Wiki entries for API ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114744149&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C71))
 - Indicate currently installed dependency versions ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=118051293&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C94))
 

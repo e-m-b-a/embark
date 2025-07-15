@@ -12,12 +12,11 @@ from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
 
 from workers.forms import ConfigurationForm
-from workers.models import Worker, Configuration, DependencyVersion, DependencyType
+from workers.models import DependencyState, Worker, Configuration, DependencyVersion, DependencyType, WorkerUpdate
 from workers.update.update import queue_update
 from workers.tasks import fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, config_worker_scan_task, delete_config_task
 from workers.orchestrator import get_orchestrator
 from embark.helper import user_is_auth
-
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +52,19 @@ def worker_main(request):
     for worker in workers:
         worker.config_ids = ', '.join([str(config.id) for config in worker.configurations.filter(user=user)])
         worker.status = worker.get_status_display()
+
+    update_pool = WorkerUpdate.objects.order_by('-created_at').filter(
+        worker__configurations__user=user,
+    ).select_related('worker')
+
+    if update_pool:
+        worker = update_pool[0].worker
+        if worker.status == Worker.ConfigStatus.CONFIGURING:
+            messages.info(request, f"Update for {worker.name} started: {update_pool[0].get_dependency_type_display()}")
+        elif worker.status == Worker.ConfigStatus.CONFIGURED:
+            messages.success(request, f"Update for {worker.name} finished: {update_pool[0].get_dependency_type_display()}")
+        elif worker.status == Worker.ConfigStatus.ERROR:
+            messages.error(request, f"Update for {worker.name} failed: {update_pool[0].get_dependency_type_display()}")
 
     return render(request, 'workers/index.html', {
         'user': user,
@@ -212,6 +224,7 @@ def update_worker_dependency(request, worker_id):
         return safe_redirect(request, '/worker/')
 
     messages.success(request, 'Update queued')
+    messages.info(request, 'Please make sure to refresh the website to show status updates')
     return safe_redirect(request, '/worker/')
 
 
@@ -234,6 +247,7 @@ def update_configuration_dependency(request, configuration_id):
         return safe_redirect(request, '/worker/')
 
     messages.success(request, 'Update queued')
+    messages.info(request, 'Please make sure to refresh the website to show status updates')
     return safe_redirect(request, '/worker/')
 
 
@@ -414,6 +428,68 @@ def orchestrator_state(request):
     orchestrator = get_orchestrator()
 
     return JsonResponse({"orchestrator_state": orchestrator.get_current_state()})
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def update_queue_reset(request, worker_id):
+    """
+    Clears the update queue for a worker.
+    :param worker_id: The worker for which to delete updates
+    """
+    WorkerUpdate.objects.filter(worker__id=worker_id).delete()
+
+    messages.success(request, 'Update queue reset successfully.')
+    return safe_redirect(request, '/worker/')
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def update_queue_state(request, worker_id):
+    """
+    Shows the current update queue for a worker.
+    :param worker_id: The worker for which to list updates
+    """
+    # TODO: Create a template for this view instead of returning JSON
+    update_queue = WorkerUpdate.objects.filter(worker__id=worker_id)
+    update_queue = [{
+        "dependency_type": update.get_type().label,
+        "version": update.version
+    } for update in update_queue]
+
+    return JsonResponse({"update_queue": update_queue})
+
+
+def dependency_state_reset(request):
+    """
+    Reset the 'used_by' field for all DependencyState instances.
+    An unexpected shutdown may leave this field populated with workers
+    that no longer use the dependency.
+    """
+    states = DependencyState.objects.all()
+    for state in states:
+        state.used_by.clear()
+        state.save()
+
+    messages.success(request, 'Dependency states reset successfully.')
+    return safe_redirect(request, '/worker/')
+
+
+def dependency_state(request):
+    """
+    Shows the current state of all dependencies.
+    """
+    # TODO: Create a template for this view instead of returning JSON
+    states = DependencyState.objects.all()
+    states = [{
+        "dependency_type": state.dependency_type,
+        "used_by": [worker.name for worker in state.used_by.all()],
+        "availability": state.availability
+    } for state in states]
+
+    return JsonResponse({"states": states})
 
 
 def safe_redirect(request, default):

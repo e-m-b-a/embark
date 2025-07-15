@@ -27,4 +27,10 @@ urlpatterns = [
 
     path('worker/orchestrator/state/', views.orchestrator_state, name='embark-orchestrator-state'),
     path('worker/orchestrator/reset/', views.orchestrator_reset, name='embark-orchestrator-reset'),
+
+    path('worker/queue/state/<int:worker_id>/', views.update_queue_state, name='embark-worker-update-queue'),
+    path('worker/queue/reset/<int:worker_id>/', views.update_queue_reset, name='embark-worker-update-queue-reset'),
+
+    path('worker/dependencies/state/', views.dependency_state, name='embark-worker-dependency-state'),
+    path('worker/dependencies/reset/', views.dependency_state_reset, name='embark-worker-dependency-reset'),
 ]

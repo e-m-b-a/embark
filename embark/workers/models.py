@@ -116,6 +116,7 @@ class Worker(models.Model):
     reachable = models.BooleanField(default=False)
     status = models.CharField(max_length=1, choices=ConfigStatus, default=ConfigStatus.UNCONFIGURED)
     analysis_id = models.UUIDField(blank=True, null=True, help_text="ID of the analysis currently running on this worker")
+    last_reached = models.DateTimeField(auto_now_add=True)
 
     dependency_version = models.OneToOneField(
         WorkerDependencyVersion,
@@ -138,27 +139,31 @@ class Worker(models.Model):
                     except ValueError as value_error:
                         raise ValidationError({"configuration": f"Invalid IP range: {value_error}"}) from value_error
 
-    def ssh_connect(self, use_password=False):
+    def ssh_connect(self, use_password=False, timeout=30):
         """
         Tries to establish an ssh connection with each configuration and returns the first successful connection
         :param use_password: Use SSH password instead of SSH key
+        :param timeout: max ssh connect timeout
         """
         ssh_client = new_autoadd_client()
 
         for configuration in self.configurations.all():
             try:
                 if use_password:
-                    ssh_client.connect(self.ip_address, username=configuration.ssh_user, password=configuration.ssh_password)
+                    ssh_client.connect(self.ip_address, username=configuration.ssh_user, password=configuration.ssh_password, timeout=timeout)
                 else:
                     private_key_path, _ = configuration.ensure_ssh_keys()
                     pkey = paramiko.RSAKey.from_private_key_file(private_key_path)
-                    ssh_client.connect(self.ip_address, username=configuration.ssh_user, pkey=pkey, look_for_keys=False, allow_agent=False)
+                    ssh_client.connect(self.ip_address, username=configuration.ssh_user, pkey=pkey, look_for_keys=False, allow_agent=False, timeout=timeout)
 
                 # save the ssh user so it can later be used in commands
                 ssh_client.ssh_user = configuration.ssh_user
                 break
             except (paramiko.SSHException, socket.error):
                 continue
+
+        if ssh_client.get_transport() is None or not ssh_client.get_transport().is_active():
+            raise paramiko.SSHException("Failed to connect to worker with any configuration.")
 
         return ssh_client
 
@@ -175,6 +180,7 @@ class WorkerUpdate(models.Model):
     dependency_type = models.CharField(max_length=2, choices=DependencyType)
     version = models.CharField(max_length=100, default="latest")
     worker = models.ForeignKey(Worker, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def get_type(self):
         return DependencyType(self.dependency_type)
