@@ -174,11 +174,11 @@
                             <div class="modal-close">×</div>
                         </div>
                         <div class="modal-body">
-                            <p><b>Installed:</b> EMBA {{ worker.dependency_version.emba }}</p>
+                            <p><b>Installed:</b> EMBA {{ worker.dependency_version.emba }}: {{ worker.dependency_version.emba_head }}</p>
                             {% if worker.dependency_version.emba_outdated %}
-                            <p><b>Available:</b> EMBA {{ availableVersion.emba }}</p>
+                                <p><b>Available:</b> EMBA {{ availableVersion.emba }}: {{ availableVersion.emba_head }}</p>
                             {% else %}
-                            <br/><p>No update available.</p>
+                                <br/><p>No update available.</p>
                             {% endif %}
                         </div>
                         <div class="modal-action-buttons">
