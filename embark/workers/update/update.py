@@ -1,7 +1,6 @@
 import logging
 import re
 import os
-import socket
 
 import paramiko
 from paramiko.client import SSHClient
@@ -263,7 +262,7 @@ def update_dependencies_info(worker: Worker):
         deb_check = exec_blocking_ssh(ssh_client, "sudo bash -c 'if test -d /root/DEPS/pkg; then echo 'success'; fi'")
         deb_list_str = exec_blocking_ssh(ssh_client, "sudo bash -c 'cd /root/DEPS/pkg && sha256sum *.deb'") if deb_check == 'success' else ""
         worker.dependency_version.deb_list = parse_deb_list(deb_list_str)
-    except (paramiko.SSHException, socket.error) as ssh_error:
+    except paramiko.SSHException as ssh_error:
         logger.error("SSH connection to worker %s failed: %s", worker.ip_address, ssh_error)
     finally:
         if ssh_client:

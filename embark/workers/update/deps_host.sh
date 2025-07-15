@@ -41,9 +41,10 @@ apt-get update -y
 if [ "${VERSION}" = "latest" ] || [ ! -d "${DEPSCACHE}/pkg" ]; then
   ### Add some required sources if they haven't been added yet
   if [ ! -f /etc/apt/sources.list.d/embark.list ]; then
-    echo 'deb http://archive.ubuntu.com/ubuntu jammy main universe restricted multiverse' | tee /etc/apt/sources.list.d/embark.list >/dev/null
-    echo 'deb http://security.ubuntu.com/ubuntu jammy-security main universe restricted multiverse' | tee /etc/apt/sources.list.d/embark.list >/dev/null
-    echo 'deb http://archive.ubuntu.com/ubuntu jammy-updates main universe restricted multiverse' | tee /etc/apt/sources.list.d/embark.list >/dev/null
+    echo 'deb http://archive.ubuntu.com/ubuntu jammy main universe restricted multiverse' | tee -a /etc/apt/sources.list.d/embark.list >/dev/null
+    echo 'deb http://security.ubuntu.com/ubuntu jammy-security main universe restricted multiverse' | tee -a /etc/apt/sources.list.d/embark.list >/dev/null
+    echo 'deb http://archive.ubuntu.com/ubuntu jammy-updates main universe restricted multiverse' | tee -a /etc/apt/sources.list.d/embark.list >/dev/null
+    echo 'deb http://archive.ubuntu.com/ubuntu focal main universe' | tee -a /etc/apt/sources.list.d/embark.list >/dev/null
     apt-get update -y
   fi
 

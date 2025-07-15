@@ -7,24 +7,32 @@ import subprocess
 from functools import partial
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta
 
 import requests
 import paramiko
+from redis import Redis
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
-from django_celery_beat.models import PeriodicTask, IntervalSchedule
-from django.conf import settings
+from django.utils.timezone import make_aware
 from django.utils import timezone
+from django.conf import settings
+
+from django_celery_beat.models import PeriodicTask, IntervalSchedule
 
 from workers.models import Worker, Configuration, DependencyVersion, DependencyType, WorkerDependencyVersion
 from workers.update.dependencies import eval_outdated_dependencies, get_script_name, update_dependency, setup_dependency
 from workers.update.update import exec_blocking_ssh, parse_deb_list, process_update_queue, init_sudoers_file, update_dependencies_info
 from workers.orchestrator import get_orchestrator
 from workers.codeql_ignore import new_autoadd_client
-from uploader.models import FirmwareAnalysis
+from uploader.models import FirmwareAnalysis, FirmwareFile
+from uploader.executor import submit_firmware
 
 logger = get_task_logger(__name__)
+
+REDIS_CLIENT = Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
+LOCK_TIMEOUT = 60 * 5
 
 
 def create_periodic_tasks(**kwargs):
@@ -50,10 +58,10 @@ def update_system_info(worker: Worker):
     :return: Dictionary containing system information
     :raises paramiko.SSHException: If the SSH connection fails or if any command execution fails
     """
+    system_info = {}
     ssh_client = None
-
     try:
-        ssh_client = worker.ssh_connect()
+        ssh_client = worker.ssh_connect(timeout=10)
 
         os_info = exec_blocking_ssh(ssh_client, 'grep PRETTY_NAME /etc/os-release')
         os_info = os_info[len('PRETTY_NAME='):-1].strip('"')
@@ -71,44 +79,170 @@ def update_system_info(worker: Worker):
         disk_free = disk_str[3].replace('G', 'GB').replace('M', 'MB')
         disk_info = f"Free: {disk_free}  Total: {disk_total}"
 
-        ssh_client.close()
+        system_info = {
+            'os_info': os_info,
+            'cpu_info': cpu_info,
+            'ram_info': ram_info,
+            'disk_info': disk_info
+        }
+        worker.system_info = system_info
 
-    except (paramiko.SSHException, socket.error) as ssh_error:
+    except paramiko.SSHException as ssh_error:
+        raise paramiko.SSHException(f"Failed to connect while updating system info for worker: {worker.name}: {ssh_error}") from ssh_error
+    except BaseException as error:
+        logger.error("An error occurred while updating system info for worker %s: %s", worker.name, error)
+        raise BaseException("Failed to update system info") from error
+    finally:
         if ssh_client:
             ssh_client.close()
-        raise paramiko.SSHException("SSH connection failed") from ssh_error
-
-    system_info = {
-        'os_info': os_info,
-        'cpu_info': cpu_info,
-        'ram_info': ram_info,
-        'disk_info': disk_info
-    }
-    worker.system_info = system_info
-    worker.save()
-
+        worker.save()
     return system_info
+
+
+def _new_analysis_form(old_analysis: FirmwareAnalysis) -> FirmwareAnalysis:
+    """
+    Creates a new FirmwareAnalysis object based on the provided old_analysis.
+    This can be used to restart a cancelled or failed analysis on a different worker
+    with the same settings and parameters as the original analysis.
+
+    The settings that the user chooses in the FirmwareAnalysisForm will be copied over,
+    everything else may have changed and will be created anew.
+
+    After the new analysis is created, the old one will be deleted.
+
+    :param old_analysis: The original FirmwareAnalysis object to duplicate
+    """
+    new_analysis = FirmwareAnalysis(
+        user=old_analysis.user,
+        firmware=old_analysis.firmware,
+        firmware_name=old_analysis.firmware_name,
+        version=old_analysis.version,
+        notes=old_analysis.notes,
+        firmware_Architecture=old_analysis.firmware_Architecture,
+        user_emulation_test=old_analysis.user_emulation_test,
+        system_emulation_test=old_analysis.system_emulation_test,
+        sbom_only_test=old_analysis.sbom_only_test,
+        scan_modules=old_analysis.scan_modules,
+    )
+    new_analysis.save()
+    new_analysis.device.set(old_analysis.device.all())
+
+    logger.info("Created new analysis %s from old analysis %s", new_analysis.id, old_analysis.id)
+    logger.info("New analysis for firmware file: %s", new_analysis.firmware.id)
+
+    # NOTE:
+    # - This triggers uploader/models::delete_analysis_pre_delete() which tries to delete the log directory at
+    #   old_analysis.path_to_logs if the logs haven't been archived and it is a valid path in settings.EMBA_LOG_ROOT.
+    #   If they have been archived (old_analysis.archived=True), the archived logs (old_analysis.zip_file) will be deleted.
+    # - We may want to set keep_parents=True in case the analysis is still referenced by a parent object.
+    #   This is how it was previously done in dashboard/views::delete_analysis().
+    # - We don't need to worry about an unterminated LogReader.read_loop() since this only gets started for local analyses
+    #   via BoundedExecutor.submit() of LogReader.__init__() with the analysis ID.
+    # - Since we assume that the old analysis was running on an unreachable worker, we don't need to check
+    #   if the analysis is still running (old_analysis.finished) but we do need to reset the worker once it becomes reachable again.
+    # - We have to explicitly reset the worker once it reconnects because the monitoring task
+    #   which would usually reset the worker when an analysis failed or finished will not be able to reach the worker.
+    # old_analysis.delete(keep_parents=True)  Don't uncomment. Since we are now calling this function from the monitoring task, we still need the old analysis.
+
+    return new_analysis
+
+
+def _handle_reconnected_worker(worker: Worker):
+    """
+    Handle a worker that was marked as unreachable but has now reconnected.
+    This will soft reset the worker, perform any queued updates, and re-add it to the orchestrator.
+    """
+    logger.info("Reconnecting worker: %s", worker.name)
+
+    worker_soft_reset_task(worker.id)
+    process_update_queue(worker)
+
+    if worker.status == Worker.ConfigStatus.CONFIGURED:
+        try:
+            orchestrator = get_orchestrator()
+            orchestrator.add_worker(worker)
+            orchestrator.assign_tasks()
+        except ValueError:
+            logger.error("Reconnected worker: %s already registered in the orchestrator", worker.name)
+
+
+def _handle_unreachable_worker(worker: Worker, force: bool = False):
+    """
+    If a worker node has been unresponsive for the last settings.WORKER_REACHABLE_TIMEOUT minutes,
+    set its reachable status to False and remove it from the orchestrator.
+    Any analysis which was running on the worker will be rescheduled to another worker.
+
+    :param worker: The worker to handle
+    :param force: If True, the worker will be set to unreachable even if the reachable timeout has not been exceeded.
+    """
+    with REDIS_CLIENT.lock(f"HANDLE_UNREACHABLE_WORKER__{worker.ip_address}", LOCK_TIMEOUT):
+        worker.refresh_from_db()
+        if not worker.reachable:
+            # Unreachable worker has already been dealt with
+            return
+
+        logger.info("Handling unreachable worker: %s", worker.name)
+
+        try:
+            reachable_threshold = make_aware(datetime.now()) - timedelta(minutes=settings.WORKER_REACHABLE_TIMEOUT)
+            if worker.last_reached < reachable_threshold or force:
+                worker.reachable = False
+                logger.info(
+                    "Failed to reach worker %s for the last %d minutes, setting status to offline and reassigning analysis.",
+                    worker.name, settings.WORKER_REACHABLE_TIMEOUT
+                )
+
+                # We need this because the analysis_id will be set to None in orchestrator.remove_worker
+                # We also have to remove the worker before reassigning the analysis
+                reassign_analysis_id = worker.analysis_id
+
+                orchestrator = get_orchestrator()
+                orchestrator.remove_worker(worker, check=False)
+
+                if reassign_analysis_id:
+                    firmware_analysis = FirmwareAnalysis.objects.get(id=reassign_analysis_id)
+                    firmware_file = FirmwareFile.objects.get(id=firmware_analysis.firmware.id)
+                    new_analysis = _new_analysis_form(firmware_analysis)
+                    submit_firmware(new_analysis, firmware_file)
+        except BaseException as error:
+            logger.error("An error occurred while handling unreachable worker %s: %s", worker.name, error)
+        finally:
+            worker.save()
 
 
 @shared_task
 def update_worker_info():
     """
-    Task to update system information for all workers.
+    Task to update system information for all workers and handle worker disconnections/reconnections.
     """
-    workers = Worker.objects.all()
-    for worker in workers:
-        try:
-            logger.info("Updating worker %s", worker.name)
-            update_system_info(worker)
-            worker.reachable = True
-        except paramiko.SSHException:
-            logger.info("Worker %s is unreachable, setting status to offline.", worker.name)
-            worker.reachable = False
-        except BaseException as error:
-            logger.error("An error occurred while updating worker %s: %s", worker.name, error)
-            continue
-        finally:
-            worker.save()
+    lock = REDIS_CLIENT.lock("UPDATE_WORKER_INFO_LOCK", LOCK_TIMEOUT)
+    if lock.locked():
+        logger.info("update_worker_info: Skipped, as previous task still running")
+        return
+
+    with lock:
+        workers = Worker.objects.all()
+        for worker in workers:
+            try:
+                logger.info("Updating system info: %s", worker.name)
+                update_system_info(worker)
+
+                # The worker was previously set to unreachable and is now reachable again
+                if not worker.reachable:
+                    # TODO: This will block the entire update_worker_info task until the worker
+                    #       is successfully reset, updated, and re-added to the orchestrator.
+                    #       It might be better to use threads to update the workers instead of a for loop.
+                    _handle_reconnected_worker(worker)
+
+                worker.last_reached = make_aware(datetime.now())
+                worker.reachable = True
+            except paramiko.SSHException:
+                _handle_unreachable_worker(worker)
+            except BaseException as error:
+                logger.error("An error occurred while updating worker %s: %s", worker.name, error)
+                continue
+            finally:
+                worker.save()
 
 
 @shared_task
@@ -169,25 +303,28 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
         logger.error("[Worker %s] Invalid worker or analysis ID.", worker_id)
         return
 
+    ssh_failed = False
     orchestrator = get_orchestrator()
     try:
         while True:
             _fetch_analysis_logs(worker)
             is_running = _is_emba_running(worker)
-
             analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
             analysis_finished = analysis.finished or analysis.status["finished"]
 
             if not is_running or analysis_finished or not orchestrator.is_busy(worker):
                 logger.info("[Worker %s] Analysis finished.", worker.id)
                 return
+            time.sleep(2)
+    except paramiko.SSHException as ssh_error:
+        logger.error("[Worker %s] SSH connection failed while monitoring: %s", worker.id, ssh_error)
+        _handle_unreachable_worker(worker, force=True)
+        analysis.failed = True
+        ssh_failed = True
     except Exception as exception:
         logger.error("[Worker %s] Monitoring failed, stopping the task. Exception: %s", worker.id, exception)
         analysis.failed = True
     finally:
-        worker_soft_reset_task(worker.id)
-        process_update_queue(worker)
-
         analysis.finished = True
         analysis.status['finished'] = True
         analysis.status['work'] = False
@@ -196,12 +333,16 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
         analysis.duration = str(analysis.scan_time)
         analysis.save()
 
-        if not worker.status == Worker.ConfigStatus.CONFIGURED:
-            orchestrator.remove_worker(worker)
-        if orchestrator.is_busy(worker):
-            orchestrator.release_worker(worker)
+        if not ssh_failed:
+            worker_soft_reset_task(worker.id)
+            process_update_queue(worker)
 
-        orchestrator.assign_tasks()
+            if not worker.status == Worker.ConfigStatus.CONFIGURED:
+                orchestrator.remove_worker(worker)
+            if orchestrator.is_busy(worker):
+                orchestrator.release_worker(worker)
+
+            orchestrator.assign_tasks()
 
 
 def _fetch_analysis_logs(worker) -> None:
@@ -310,16 +451,21 @@ def stop_remote_analysis(worker_id) -> None:
             logger.error("[Worker %s] Failed to stop analysis: EMBA container isn't running.", worker.id)
             return
 
-        ssh_client = worker.ssh_connect()
+        client = worker.ssh_connect()
 
         logger.info("[Worker %s] Trying to stop the analysis.", worker.id)
 
         docker_cmd = "sudo docker ps | grep emba | awk '{print $1;}' | xargs -I {} sudo docker stop {}"
-        exec_blocking_ssh(ssh_client, docker_cmd)
+        exec_blocking_ssh(client, docker_cmd)
 
         analysis = FirmwareAnalysis.objects.get(id=worker.analysis_id)
-        analysis.finished = True
         analysis.failed = True
+        analysis.finished = True
+        analysis.status['finished'] = True
+        analysis.status['work'] = False
+        analysis.end_date = timezone.now()
+        analysis.scan_time = timezone.now() - analysis.start_date
+        analysis.duration = str(analysis.scan_time)
         analysis.save()
 
         logger.info("[Worker %s] Successfully stopped the analysis.", worker.id)
@@ -458,7 +604,6 @@ def worker_soft_reset_task(worker_id):
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {homedir}/emba_logs.zip*")  # Also delete possible leftover tmp files
         exec_blocking_ssh(ssh_client, f"sudo rm -rf {homedir}/emba_run.log")
-
     except Worker.DoesNotExist:
         logger.error("Worker Soft Reset: Invalid worker id")
     except (paramiko.SSHException, socket.error):
@@ -491,7 +636,7 @@ def worker_hard_reset_task(worker_id):
         exec_blocking_ssh(ssh_client, "sudo bash " + emba_path)
         ssh_client.close()
         update_dependencies_info(worker)
-    except (paramiko.SSHException, socket.error):
+    except paramiko.SSHException:
         logger.error("SSH Connection didnt work for: %s", worker.name)
         if ssh_client:
             ssh_client.close()
@@ -537,8 +682,6 @@ def _update_or_create_worker(config: Configuration, ip_address: str):
     worker = None
     try:
         worker = Worker.objects.get(ip_address=ip_address)
-        worker.reachable = True
-        worker.save()
         if config not in worker.configurations.all():
             worker.configurations.add(config)
             worker.save()
@@ -633,10 +776,9 @@ def config_worker_scan_task(configuration_id: int):
             results = executor.map(partial(_scan_for_worker, config), ip_addresses)
             reachable = set(results) - {None}
 
-        for worker in config.workers.all():
-            if worker.ip_address not in reachable:
-                worker.reachable = False
-                worker.save()
+        unreachable_workers = [worker for worker in config.workers.all() if worker.ip_address not in reachable]
+        for worker in unreachable_workers:
+            _handle_unreachable_worker(worker)
 
         config.scan_status = Configuration.ScanStatus.FINISHED
         logger.info("config_worker_scan_task: Scan finished for configuration %s", config.name)
