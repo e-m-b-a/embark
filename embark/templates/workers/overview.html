@@ -140,7 +140,11 @@
         <td>
             {% if worker.status != "Unconfigured" %}
                 <div class="actions-dropdown">
-                    <button class="toggle-actions-menu" data-id="{{ worker.ip_address }}">...</button>
+                    <button class="toggle-actions-menu" data-id="{{ worker.ip_address }}">...
+                        {% if worker.dependency_version.emba_outdated or worker.dependency_version.deb_outdated or worker.dependency_version.external_outdated %}
+                            <span class="update-dot"/>
+                        {% endif %}
+                    </button>
                     <div class="actions-dropdown-content" id="menu-{{ worker.ip_address }}">
                         <button class="toggle-update-diff" dep-type="emba" worker-id="{{ worker.id }}">Update EMBA
                             {% if worker.dependency_version.emba_outdated %}
