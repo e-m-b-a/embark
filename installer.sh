@@ -10,6 +10,7 @@
 # EMBArk is licensed under MIT
 #
 # Author(s): Michael Messner, Pascal Eckmann, Benedikt Kuehne
+# Contributor(s): ClProsser
 
 # Description: Installer for EMBArk
 
@@ -360,9 +361,6 @@ install_embark_default(){
   if ! [[ -d /var/www/conf ]]; then
     mkdir /var/www/conf
   fi
-
-  # apache stuff
-
 
   # daemon
   install_daemon
