@@ -318,9 +318,9 @@ def undo_ssh_key(configuration: Configuration, worker: Worker):
 
         # Remove key
         if configuration.ssh_user == "root":
-            exec_blocking_ssh(client, f"sed -i '\|{configuration.ssh_public_key}|d' /root/.ssh/authorized_keys")
+            exec_blocking_ssh(client, f"sed -i '\\|{configuration.ssh_public_key}|d' /root/.ssh/authorized_keys")
         else:
-            exec_blocking_ssh(client, f"sed -i '\|{configuration.ssh_public_key}|d' /home/{configuration.ssh_user}/.ssh/authorized_keys")
+            exec_blocking_ssh(client, f"sed -i '\\|{configuration.ssh_public_key}|d' /home/{configuration.ssh_user}/.ssh/authorized_keys")
 
         exec_blocking_ssh(client, "sudo systemctl restart ssh")
         logger.info("undo_ssh_key: Removing SSH key on worker %s finished", worker.ip_address)
