@@ -128,6 +128,7 @@ class WorkerUpdate(models.Model):
     dependency_type = models.CharField(max_length=2, choices=DependencyType)
     version = models.CharField(max_length=100, default="latest")
     worker = models.ForeignKey(Worker, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def get_type(self):
         return DependencyType(self.dependency_type)

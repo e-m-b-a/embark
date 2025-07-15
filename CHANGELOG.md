@@ -6,13 +6,17 @@
 
 - Deps setup error (APT sources are not updated)
 - Workers not consistently deleted ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=119037519&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C102))
+- Hard reset routine in arbitrary execution order and incomplete ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=119117248&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C104))
 
 ### ADDED
 
 - Siemens PR review ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=119028315&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C98))
   - Dependency update script input sanitation
   - `queue_update` count optimization
+- Extend update user experience ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=114784692&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C74))
 - SSH setup and sudo perm check ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=119036293&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C100))
+- Indicate worker update availability (red dot) ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=119737574&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C108))
+- Show HEAD hash for worker EMBA version ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=119733872&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C107))
 
 ## [sprint-12](https://github.com/amosproj/amos2025ss01-embark/releases/tag/sprint-12-release) - 2025-07-09
 

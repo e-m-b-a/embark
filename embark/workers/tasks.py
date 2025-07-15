@@ -620,8 +620,17 @@ def worker_hard_reset_task(worker_id):
     except Worker.DoesNotExist:
         logger.error("Worker Hard Reset: Invalid worker id")
         return
+
+    orchestrator = get_orchestrator()
+    orchestrator.remove_worker(worker, False)
+
+    worker_soft_reset_task(worker_id)
+
     ssh_client = None
     try:
+        worker.status = Worker.ConfigStatus.UNCONFIGURED
+        worker.save()
+
         ssh_client = worker.ssh_connect()
         emba_path = os.path.join(settings.WORKER_EMBA_ROOT, "full_uninstaller.sh")
         exec_blocking_ssh(ssh_client, "sudo bash " + emba_path)
