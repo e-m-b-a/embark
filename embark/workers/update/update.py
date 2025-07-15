@@ -284,19 +284,20 @@ def setup_ssh_key(configuration: Configuration, worker: Worker):
 
     logger.info("setup_ssh_key: SSH key installed on worker %s", worker.ip_address)
 
-    client = None
-    try:
-        client = worker.ssh_connect()
+    if worker.configurations.count == 1:
+        client = None
+        try:
+            client = worker.ssh_connect()
 
-        # Note: sshd config is first come first serve. Thus just add the entry to the top
-        exec_blocking_ssh(client, "sudo sed -i '1s/^/PasswordAuthentication no\\n/' /etc/ssh/sshd_config")
-        exec_blocking_ssh(client, "sudo systemctl restart ssh")
-        logger.info("setup_ssh_key: Password disabled on worker %s", worker.ip_address)
-    except (paramiko.SSHException, socket.error) as ssh_error:
-        logger.error("setup_ssh_key: Disabling SSH password login on worker %s failed: %s", worker.ip_address, ssh_error)
-    finally:
-        if client:
-            client.close()
+            # Note: sshd config is first come first serve. Thus just add the entry to the top
+            exec_blocking_ssh(client, "sudo sed -i '1s/^/PasswordAuthentication no\\n/' /etc/ssh/sshd_config")
+            exec_blocking_ssh(client, "sudo systemctl restart ssh")
+            logger.info("setup_ssh_key: Password disabled on worker %s", worker.ip_address)
+        except paramiko.SSHException as ssh_error:
+            logger.error("setup_ssh_key: Disabling SSH password login on worker %s failed: %s", worker.ip_address, ssh_error)
+        finally:
+            if client:
+                client.close()
 
 
 def undo_ssh_key(configuration: Configuration, worker: Worker):
@@ -309,11 +310,12 @@ def undo_ssh_key(configuration: Configuration, worker: Worker):
     try:
         client = worker.ssh_connect()
 
-        # Enable PW login
-        is_disabled = exec_blocking_ssh(client, "sudo sed '1{/^PasswordAuthentication/p};q' /etc/ssh/sshd_config > /dev/null && echo 'SUCCESS'")
+        if worker.configurations.count == 1:
+            # Enable PW login
+            is_disabled = exec_blocking_ssh(client, "sudo sed '1{/^PasswordAuthentication/p};q' /etc/ssh/sshd_config > /dev/null && echo 'SUCCESS'")
 
-        if is_disabled == "SUCCESS":
-            exec_blocking_ssh(client, "sudo sed -i '1d' /etc/ssh/sshd_config")
+            if is_disabled == "SUCCESS":
+                exec_blocking_ssh(client, "sudo sed -i '1d' /etc/ssh/sshd_config")
 
         # Remove key
         if configuration.ssh_user == "root":
@@ -323,7 +325,7 @@ def undo_ssh_key(configuration: Configuration, worker: Worker):
 
         exec_blocking_ssh(client, "sudo systemctl restart ssh")
         logger.info("undo_ssh_key: Removing SSH key on worker %s finished", worker.ip_address)
-    except (paramiko.SSHException, socket.error) as ssh_error:
+    except paramiko.SSHException as ssh_error:
         logger.error("undo_ssh_key: Removing SSH key on worker %s failed: %s", worker.ip_address, ssh_error)
     finally:
         if client:
