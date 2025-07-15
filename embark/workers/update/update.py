@@ -1,6 +1,7 @@
 import logging
 import re
 import os
+from subprocess import Popen, PIPE
 
 import paramiko
 from paramiko.client import SSHClient
@@ -209,12 +210,16 @@ def init_sudoers_file(configuration: Configuration, worker: Worker):
     :params configuration: The configuration with user credentials
     :params worker: The worker to edit
     """
+    if configuration.ssh_user == "root":
+        logger.info("init sudoers file: Skipped as user is root on worker %s", worker.ip_address)
+        return
+
     client = None
     sudoers_entry = f"{configuration.ssh_user} ALL=(ALL) NOPASSWD: ALL"
     command = f'sudo -S -p "" bash -c "grep -qxF \'{sudoers_entry}\' /etc/sudoers.d/EMBArk || echo \'{sudoers_entry}\' >> /etc/sudoers.d/EMBArk"'
 
     try:
-        client = worker.ssh_connect()
+        client = worker.ssh_connect(True)
         stdin, stdout, _ = client.exec_command(command, get_pty=True)  # nosec B601: No user input
         stdin.write(f"{configuration.ssh_password}\n")
         stdin.flush()
@@ -228,6 +233,101 @@ def init_sudoers_file(configuration: Configuration, worker: Worker):
         logger.error("init sudoers file: Failed. SSH connection failed: %s", ssh_error)
     finally:
         if client is not None:
+            client.close()
+
+
+def undo_sudoers_file(configuration: Configuration, worker: Worker):
+    """
+    Undos changes from the sudoers file
+    After this is done, "sudo" might prompt a password (e.g. if not a root user, not in sudoers file).
+
+    Note: If two configurations with the same username exist, the entry in the sudoers file is removed (while it might still be needed).
+
+    :params ip_address: The worker ip address
+    :params ssh_user: The worker ssh_user
+    :params ssh_password: The worker ssh_password
+    """
+    client = None
+    sudoers_entry = f"{configuration.ssh_user} ALL=(ALL) NOPASSWD: ALL"
+    command = f"sudo bash -c \"grep -vxF '{sudoers_entry}' /etc/sudoers.d/EMBArk > temp_sudoers; mv -f temp_sudoers /etc/sudoers.d/EMBArk || true\""
+
+    try:
+        client = worker.ssh_connect(True)
+        exec_blocking_ssh(client, command)
+
+        logger.info("undo sudoers file: Removed user %s from sudoers of worker %s", configuration.ssh_user, worker.ip_address)
+    except Exception as ssh_error:
+        logger.error("undo sudoers file: Failed. SSH connection failed: %s", ssh_error)
+    finally:
+        if client is not None:
+            client.close()
+
+
+def setup_ssh_key(configuration: Configuration, worker: Worker):
+    """
+    Install SSH key on provided worker and disable PW auth
+    :params configuration: The SSH keys
+    :params worker: The worker to update
+    """
+    _, public_key = configuration.ensure_ssh_keys()
+
+    logger.info("setup_ssh_key: Starting ssh-copy-id on worker %s", worker.ip_address)
+    cmd = ["sshpass", "-p", configuration.ssh_password, "ssh-copy-id", "-f", "-i", public_key, "-oStrictHostKeyChecking=accept-new", f"{configuration.ssh_user}@{worker.ip_address}"]
+    with Popen(cmd, stdout=PIPE, stdin=PIPE, stderr=PIPE, text=True) as proc:  # nosec
+        stdout, stderr = proc.communicate()
+        failed = proc.returncode
+
+    if failed:
+        logger.error("setup_ssh_key: SSH key could not be copied on worker %s: STDOUT: %s, STDERR: %s", worker.ip_address, stdout, stderr)
+        return
+
+    logger.info("setup_ssh_key: SSH key installed on worker %s", worker.ip_address)
+
+    if worker.configurations.count() == 1:
+        client = None
+        try:
+            client = worker.ssh_connect()
+
+            # Note: sshd config is first come first serve. Thus just add the entry to the top
+            exec_blocking_ssh(client, "sudo sed -i '1s/^/PasswordAuthentication no\\n/' /etc/ssh/sshd_config")
+            exec_blocking_ssh(client, "sudo systemctl restart ssh")
+            logger.info("setup_ssh_key: Password disabled on worker %s", worker.ip_address)
+        except paramiko.SSHException as ssh_error:
+            logger.error("setup_ssh_key: Disabling SSH password login on worker %s failed: %s", worker.ip_address, ssh_error)
+        finally:
+            if client:
+                client.close()
+
+
+def undo_ssh_key(configuration: Configuration, worker: Worker):
+    """
+    Removes SSH key on provided worker and enables PW auth
+    :params configuration: The SSH keys
+    :params worker: The worker to update
+    """
+    client = None
+    try:
+        client = worker.ssh_connect()
+
+        if worker.configurations.count() == 1:
+            # Enable PW login
+            is_disabled = exec_blocking_ssh(client, "sudo sed '1{/^PasswordAuthentication/p};q' /etc/ssh/sshd_config > /dev/null && echo 'SUCCESS'")
+
+            if is_disabled == "SUCCESS":
+                exec_blocking_ssh(client, "sudo sed -i '1d' /etc/ssh/sshd_config")
+
+        # Remove key
+        if configuration.ssh_user == "root":
+            exec_blocking_ssh(client, f"sed -i '\|{configuration.ssh_public_key}|d' /root/.ssh/authorized_keys")
+        else:
+            exec_blocking_ssh(client, f"sed -i '\|{configuration.ssh_public_key}|d' /home/{configuration.ssh_user}/.ssh/authorized_keys")
+
+        exec_blocking_ssh(client, "sudo systemctl restart ssh")
+        logger.info("undo_ssh_key: Removing SSH key on worker %s finished", worker.ip_address)
+    except paramiko.SSHException as ssh_error:
+        logger.error("undo_ssh_key: Removing SSH key on worker %s failed: %s", worker.ip_address, ssh_error)
+    finally:
+        if client:
             client.close()
 
 

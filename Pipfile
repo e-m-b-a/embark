@@ -27,6 +27,7 @@ typing-extensions = "*"
 paramiko = "*"
 celery = {extras = ["redis"], version = "*"}
 django-celery-beat = "*"
+pycryptodome = "*"
 
 [dev-packages]
 pycodestyle = "*"

@@ -1,20 +1,21 @@
 import logging
+from io import StringIO
+from Crypto.PublicKey import RSA  # nosec
 
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import get_user
 from django.views.decorators.http import require_http_methods
 from django.conf import settings
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
-from django.db.models import Count
 
 from workers.forms import ConfigurationForm
-from workers.orchestrator import get_orchestrator
 from workers.models import DependencyState, Worker, Configuration, DependencyVersion, DependencyType, WorkerUpdate
 from workers.update.update import queue_update
-from workers.tasks import fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file, config_worker_scan_task
+from workers.tasks import fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, config_worker_scan_task, delete_config_task
+from workers.orchestrator import get_orchestrator
 from embark.helper import user_is_auth
 
 logger = logging.getLogger(__name__)
@@ -92,20 +93,8 @@ def delete_config(request):
             messages.error(request, 'You are not allowed to delete this configuration')
             return safe_redirect(request, '/worker/')
 
-        config_workers = Worker.objects.filter(configurations__id=config.id)
-        for worker in config_workers:
-            undo_sudoers_file.delay(worker.ip_address, config.ssh_user, config.ssh_password)
-
-        workers = Worker.objects.annotate(config_count=Count('configurations')).filter(configurations__id=config_id, config_count=1)
-        orchestrator = get_orchestrator()
-        for worker in workers:
-            orchestrator.remove_worker(worker, False)
-
-            worker.dependency_version.delete()
-            worker.delete()
-
-        config.delete()
-        messages.success(request, 'Configuration deleted successfully')
+        delete_config_task.delay(config_id)
+        messages.success(request, 'Configuration deletion queued')
     except Configuration.DoesNotExist:
         messages.error(request, 'Configuration not found')
 
@@ -128,10 +117,42 @@ def create_config(request):
 
     new_config = config_form.save(commit=False)
     new_config.user = user
+
+    key = RSA.generate(settings.WORKER_SSH_KEY_SIZE)
+    new_config.ssh_private_key = key.export_key(format="PEM", pkcs=8).decode("utf-8")
+    new_config.ssh_public_key = key.publickey().export_key(format="OpenSSH").decode("utf-8")
+
+    # Fix paramiko RSA peculiarity
+    new_config.ssh_private_key = new_config.ssh_private_key.replace("PRIVATE KEY", "RSA PRIVATE KEY")
+
     new_config.save()
 
     messages.success(request, 'Configuration created successfully.')
     return safe_redirect(request, '/worker/')
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def download_ssh_private_key(request, configuration_id):
+    """
+    Download SSH private key
+    :params configuration_id: The configuration id
+    """
+    try:
+        user = get_user(request)
+        config = Configuration.objects.get(id=configuration_id)
+        if not user_is_auth(user, config.user):
+            messages.error(request, 'You are not allowed to access this configuration.')
+            return safe_redirect(request, '/worker/')
+    except Configuration.DoesNotExist:
+        messages.error(request, 'Configuration not found.')
+        return safe_redirect(request, '/worker/')
+
+    file = StringIO(config.ssh_private_key)
+    response = HttpResponse(file, content_type="text/plain")
+    response["Content-Disposition"] = "attachment; filename=private.key"
+    return response
 
 
 @require_http_methods(["POST"])
