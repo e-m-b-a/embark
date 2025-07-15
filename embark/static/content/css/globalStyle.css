@@ -158,3 +158,7 @@ button[type="delete"]:hover {
 .fixed-bottom {
     z-index: 0;
 }
+
+.modal-backdrop {
+  z-index: -1;
+}
