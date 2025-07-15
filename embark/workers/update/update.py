@@ -284,7 +284,7 @@ def setup_ssh_key(configuration: Configuration, worker: Worker):
 
     logger.info("setup_ssh_key: SSH key installed on worker %s", worker.ip_address)
 
-    if worker.configurations.count == 1:
+    if worker.configurations.count() == 1:
         client = None
         try:
             client = worker.ssh_connect()
@@ -310,7 +310,7 @@ def undo_ssh_key(configuration: Configuration, worker: Worker):
     try:
         client = worker.ssh_connect()
 
-        if worker.configurations.count == 1:
+        if worker.configurations.count() == 1:
             # Enable PW login
             is_disabled = exec_blocking_ssh(client, "sudo sed '1{/^PasswordAuthentication/p};q' /etc/ssh/sshd_config > /dev/null && echo 'SUCCESS'")
 
