@@ -52,18 +52,18 @@ def worker_main(request):
         worker.config_ids = ', '.join([str(config.id) for config in worker.configurations.filter(user=user)])
         worker.status = worker.get_status_display()
 
-    update_pool = WorkerUpdate.objects.filter(
+    update_pool = WorkerUpdate.objects.order_by('-created_at').filter(
         worker__configurations__user=user,
     ).select_related('worker')
 
     if update_pool:
-        worker = update_pool[-1].worker
+        worker = update_pool[0].worker
         if worker.status == Worker.ConfigStatus.CONFIGURING:
-            messages.info(request, f"Update for {worker.name} started: {update_pool[-1].get_dependency_type_display()}")
+            messages.info(request, f"Update for {worker.name} started: {update_pool[0].get_dependency_type_display()}")
         elif worker.status == Worker.ConfigStatus.CONFIGURED:
-            messages.success(request, f"Update for {worker.name} finished: {update_pool[-1].get_dependency_type_display()}")
+            messages.success(request, f"Update for {worker.name} finished: {update_pool[0].get_dependency_type_display()}")
         elif worker.status == Worker.ConfigStatus.ERROR:
-            messages.error(request, f"Update for {worker.name} failed: {update_pool[-1].get_dependency_type_display()}")
+            messages.error(request, f"Update for {worker.name} failed: {update_pool[0].get_dependency_type_display()}")
 
     return render(request, 'workers/index.html', {
         'user': user,
