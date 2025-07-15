@@ -422,6 +422,7 @@ def orchestrator_state(request):
 def update_queue_reset(request, worker_id):
     """
     Clears the update queue for a worker.
+    :param worker_id: The worker for which to delete updates
     """
     WorkerUpdate.objects.filter(worker__id=worker_id).delete()
 
@@ -435,6 +436,7 @@ def update_queue_reset(request, worker_id):
 def update_queue_state(request, worker_id):
     """
     Shows the current update queue for a worker.
+    :param worker_id: The worker for which to list updates
     """
     # TODO: Create a template for this view instead of returning JSON
     update_queue = WorkerUpdate.objects.filter(worker__id=worker_id)

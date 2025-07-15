@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 
 import requests
 import paramiko
+from redis import Redis
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
@@ -29,6 +30,9 @@ from uploader.models import FirmwareAnalysis, FirmwareFile
 from uploader.executor import submit_firmware
 
 logger = get_task_logger(__name__)
+
+REDIS_CLIENT = Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
+LOCK_TIMEOUT = 60 * 5
 
 
 def create_periodic_tasks(**kwargs):
@@ -57,7 +61,7 @@ def update_system_info(worker: Worker):
     system_info = {}
     ssh_client = None
     try:
-        ssh_client = worker.ssh_connect()
+        ssh_client = worker.ssh_connect(timeout=10)
 
         os_info = exec_blocking_ssh(ssh_client, 'grep PRETTY_NAME /etc/os-release')
         os_info = os_info[len('PRETTY_NAME='):-1].strip('"')
@@ -84,8 +88,7 @@ def update_system_info(worker: Worker):
         worker.system_info = system_info
 
     except paramiko.SSHException as ssh_error:
-        logger.error("Failed to connect while updating system info for worker: %s: %s", worker.name, ssh_error)
-        raise paramiko.SSHException("SSH connection failed") from ssh_error
+        raise paramiko.SSHException(f"Failed to connect while updating system info for worker: {worker.name}: {ssh_error}") from ssh_error
     except BaseException as error:
         logger.error("An error occurred while updating system info for worker %s: %s", worker.name, error)
         raise BaseException("Failed to update system info") from error
@@ -96,7 +99,7 @@ def update_system_info(worker: Worker):
     return system_info
 
 
-def _new_analysis_from(old_analysis: FirmwareAnalysis) -> FirmwareAnalysis:
+def _new_analysis_form(old_analysis: FirmwareAnalysis) -> FirmwareAnalysis:
     """
     Creates a new FirmwareAnalysis object based on the provided old_analysis.
     This can be used to restart a cancelled or failed analysis on a different worker
@@ -149,6 +152,8 @@ def _handle_reconnected_worker(worker: Worker):
     Handle a worker that was marked as unreachable but has now reconnected.
     This will soft reset the worker, perform any queued updates, and re-add it to the orchestrator.
     """
+    logger.info("Reconnecting worker: %s", worker.name)
+
     worker_soft_reset_task(worker.id)
     process_update_queue(worker)
 
@@ -170,35 +175,39 @@ def _handle_unreachable_worker(worker: Worker, force: bool = False):
     :param worker: The worker to handle
     :param force: If True, the worker will be set to unreachable even if the reachable timeout has not been exceeded.
     """
-    if not worker.reachable:
-        # Unreachable worker has already been dealt with
-        return
+    with REDIS_CLIENT.lock(f"HANDLE_UNREACHABLE_WORKER__{worker.ip_address}", LOCK_TIMEOUT):
+        worker.refresh_from_db()
+        if not worker.reachable:
+            # Unreachable worker has already been dealt with
+            return
 
-    try:
-        reachable_threshold = make_aware(datetime.now()) - timedelta(minutes=settings.WORKER_REACHABLE_TIMEOUT)
-        if worker.last_reached < reachable_threshold or force:
-            worker.reachable = False
-            logger.info(
-                "Failed to reach worker %s for the last %d minutes, setting status to offline and reassigning analysis.",
-                worker.name, settings.WORKER_REACHABLE_TIMEOUT
-            )
+        logger.info("Handling unreachable worker: %s", worker.name)
 
-            # We need this because the analysis_id will be set to None in orchestrator.remove_worker
-            # We also have to remove the worker before reassigning the analysis
-            reassign_analysis_id = worker.analysis_id
+        try:
+            reachable_threshold = make_aware(datetime.now()) - timedelta(minutes=settings.WORKER_REACHABLE_TIMEOUT)
+            if worker.last_reached < reachable_threshold or force:
+                worker.reachable = False
+                logger.info(
+                    "Failed to reach worker %s for the last %d minutes, setting status to offline and reassigning analysis.",
+                    worker.name, settings.WORKER_REACHABLE_TIMEOUT
+                )
 
-            orchestrator = get_orchestrator()
-            orchestrator.remove_worker(worker, check=False)
+                # We need this because the analysis_id will be set to None in orchestrator.remove_worker
+                # We also have to remove the worker before reassigning the analysis
+                reassign_analysis_id = worker.analysis_id
 
-            if reassign_analysis_id:
-                firmware_analysis = FirmwareAnalysis.objects.get(id=reassign_analysis_id)
-                firmware_file = FirmwareFile.objects.get(id=firmware_analysis.firmware.id)
-                new_analysis = _new_analysis_from(firmware_analysis)
-                submit_firmware(new_analysis, firmware_file)
-    except BaseException as error:
-        logger.error("An error occurred while handling unreachable worker %s: %s", worker.name, error)
-    finally:
-        worker.save()
+                orchestrator = get_orchestrator()
+                orchestrator.remove_worker(worker, check=False)
+
+                if reassign_analysis_id:
+                    firmware_analysis = FirmwareAnalysis.objects.get(id=reassign_analysis_id)
+                    firmware_file = FirmwareFile.objects.get(id=firmware_analysis.firmware.id)
+                    new_analysis = _new_analysis_form(firmware_analysis)
+                    submit_firmware(new_analysis, firmware_file)
+        except BaseException as error:
+            logger.error("An error occurred while handling unreachable worker %s: %s", worker.name, error)
+        finally:
+            worker.save()
 
 
 @shared_task
@@ -206,30 +215,34 @@ def update_worker_info():
     """
     Task to update system information for all workers and handle worker disconnections/reconnections.
     """
-    workers = Worker.objects.all()
-    for worker in workers:
-        try:
-            logger.info("Updating system info: %s", worker.name)
-            update_system_info(worker)
+    lock = REDIS_CLIENT.lock("UPDATE_WORKER_INFO_LOCK", LOCK_TIMEOUT)
+    if lock.locked():
+        logger.info("update_worker_info: Skipped, as previous task still running")
+        return
 
-            # The worker was previously set to unreachable and is now reachable again
-            if not worker.reachable:
-                logger.info("Reconnecting worker: %s", worker.name)
-                # TODO: This will block the entire update_worker_info task until the worker
-                #       is successfully reset, updated, and re-added to the orchestrator.
-                #       It might be better to use threads to update the workers instead of a for loop.
-                _handle_reconnected_worker(worker)
+    with lock:
+        workers = Worker.objects.all()
+        for worker in workers:
+            try:
+                logger.info("Updating system info: %s", worker.name)
+                update_system_info(worker)
 
-            worker.last_reached = make_aware(datetime.now())
-            worker.reachable = True
-        except paramiko.SSHException:
-            logger.info("Handling unreachable worker: %s", worker.name)
-            _handle_unreachable_worker(worker)
-        except BaseException as error:
-            logger.error("An error occurred while updating worker %s: %s", worker.name, error)
-            continue
-        finally:
-            worker.save()
+                # The worker was previously set to unreachable and is now reachable again
+                if not worker.reachable:
+                    # TODO: This will block the entire update_worker_info task until the worker
+                    #       is successfully reset, updated, and re-added to the orchestrator.
+                    #       It might be better to use threads to update the workers instead of a for loop.
+                    _handle_reconnected_worker(worker)
+
+                worker.last_reached = make_aware(datetime.now())
+                worker.reachable = True
+            except paramiko.SSHException:
+                _handle_unreachable_worker(worker)
+            except BaseException as error:
+                logger.error("An error occurred while updating worker %s: %s", worker.name, error)
+                continue
+            finally:
+                worker.save()
 
 
 @shared_task
@@ -290,6 +303,7 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
         logger.error("[Worker %s] Invalid worker or analysis ID.", worker_id)
         return
 
+    ssh_failed = False
     orchestrator = get_orchestrator()
     try:
         while True:
@@ -306,6 +320,7 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
         logger.error("[Worker %s] SSH connection failed while monitoring: %s", worker.id, ssh_error)
         _handle_unreachable_worker(worker, force=True)
         analysis.failed = True
+        ssh_failed = True
     except Exception as exception:
         logger.error("[Worker %s] Monitoring failed, stopping the task. Exception: %s", worker.id, exception)
         analysis.failed = True
@@ -318,15 +333,16 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
         analysis.duration = str(analysis.scan_time)
         analysis.save()
 
-        worker_soft_reset_task(worker.id)
-        process_update_queue(worker)
+        if not ssh_failed:
+            worker_soft_reset_task(worker.id)
+            process_update_queue(worker)
 
-        if not worker.status == Worker.ConfigStatus.CONFIGURED:
-            orchestrator.remove_worker(worker)
-        if orchestrator.is_busy(worker):
-            orchestrator.release_worker(worker)
+            if not worker.status == Worker.ConfigStatus.CONFIGURED:
+                orchestrator.remove_worker(worker)
+            if orchestrator.is_busy(worker):
+                orchestrator.release_worker(worker)
 
-        orchestrator.assign_tasks()
+            orchestrator.assign_tasks()
 
 
 def _fetch_analysis_logs(worker) -> None:
