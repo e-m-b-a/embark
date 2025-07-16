@@ -148,7 +148,7 @@ class Orchestrator:
                 analysis.duration = str(analysis.scan_time)
                 analysis.save()
             self._remove_worker(worker)
-            worker_soft_reset_task.delay(worker.id)
+            worker_soft_reset_task.delay(worker.id, only_reset=True)
 
         for worker_ip, worker in all_workers.items():
             self.free_workers[worker_ip] = worker
@@ -271,7 +271,7 @@ class Orchestrator:
         :raises ValueError: If the worker already exists in the orchestrator
         """
         if worker.ip_address in self.free_workers or worker.ip_address in self.busy_workers:
-            raise ValueError(f"Worker with IP {worker.ip_address} already exists.")
+            raise ValueError(f"Worker with IP {worker.ip_address} already registered in the orchestrator.")
         self.free_workers[worker.ip_address] = worker
 
         logger.info("Worker: %s added to orchestrator", worker.name)
