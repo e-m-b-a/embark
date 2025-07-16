@@ -724,15 +724,12 @@ def _update_or_create_worker(config: Configuration, ip_address: str):
         )
         worker.save()
         worker.configurations.set([config])
-        try:
-            init_sudoers_file(config, worker)
-            setup_ssh_key(config, worker)
-        except BaseException:
-            logger.error("Failed to setup SSH key or sudoers file for worker %s", worker.name)
-            worker.delete()
-            return
     finally:
         try:
+            # TODO: The first two function calls may cause issues when a config
+            #       is re-scanned after its first successful scan
+            init_sudoers_file(config, worker)
+            setup_ssh_key(config, worker)
             update_system_info(worker)
             update_dependencies_info(worker)
         except BaseException:
