@@ -724,17 +724,22 @@ def _update_or_create_worker(config: Configuration, ip_address: str):
         )
         worker.save()
         worker.configurations.set([config])
-    finally:
         try:
             init_sudoers_file(config, worker)
             setup_ssh_key(config, worker)
+        except BaseException:
+            logger.error("Failed to setup SSH key or sudoers file for worker %s", worker.name)
+            worker.delete()
+            return
+    finally:
+        try:
             update_system_info(worker)
             update_dependencies_info(worker)
         except BaseException:
             pass
 
 
-def _scan_for_worker(config: Configuration, ip_address: str, port: int = 22, timeout: int = 1) -> str:
+def _scan_for_worker(config: Configuration, ip_address: str, port: int = 22, timeout: int = 1, ssh_auth_check: bool = True) -> str:
     """
     Checks if a host is reachable, has valid SSH creds, and sudo perms.
     Updates the DB accordingly.
@@ -743,6 +748,7 @@ def _scan_for_worker(config: Configuration, ip_address: str, port: int = 22, tim
     :param ip_address: Host's IP address
     :param port: SSH port (default: 22)
     :param timeout: Connection timeout in seconds
+    :param ssh_auth_check: If True, tries to connect to the ip address with the config's ssh credentials and checks whether the user has sudo privileges
     :return: ip_address on success, None otherwise
     """
     try:  # Check TCP socket first before trying SSH
@@ -756,23 +762,26 @@ def _scan_for_worker(config: Configuration, ip_address: str, port: int = 22, tim
 
     client = None
     try:
-        client = new_autoadd_client()
-        client.connect(
-            ip_address, port=port,
-            username=config.ssh_user, password=config.ssh_password,
-            timeout=timeout
-        )
+        # We only want to perform this check for newly created configs, not for scans of existing configs
+        # (ssh pw auth would have been disabled for workers belonging to existing configs)
+        if ssh_auth_check:
+            client = new_autoadd_client()
+            client.connect(
+                ip_address, port=port,
+                username=config.ssh_user, password=config.ssh_password,
+                timeout=timeout
+            )
 
-        logger.info("[%s@%s] Connected via SSH. Now testing for sudo privileges.", config.ssh_user, ip_address)
+            logger.info("[%s@%s] Connected via SSH. Now testing for sudo privileges.", config.ssh_user, ip_address)
 
-        stdin, stdout, _ = client.exec_command("sudo -v", get_pty=True)  # nosec
-        stdin.write(config.ssh_password + "\n")
-        stdin.flush()
-        if stdout.channel.recv_exit_status():
-            logger.info("[%s@%s] Can't register worker: No sudo permission.", config.ssh_user, ip_address)
-            # Delete worker if SSH configuration changed
-            Worker.objects.filter(ip_address=ip_address).delete()
-            return None
+            stdin, stdout, _ = client.exec_command("sudo -v", get_pty=True)  # nosec
+            stdin.write(config.ssh_password + "\n")
+            stdin.flush()
+            if stdout.channel.recv_exit_status():
+                logger.info("[%s@%s] Can't register worker: No sudo permission.", config.ssh_user, ip_address)
+                # Delete worker if SSH configuration changed
+                Worker.objects.filter(ip_address=ip_address).delete()
+                return None
 
         _update_or_create_worker(config, ip_address)
         logger.info("[%s@%s] Worker is reachable via SSH.", config.ssh_user, ip_address)
@@ -795,13 +804,14 @@ def config_worker_scan_task(configuration_id: int):
     """
     try:
         config = Configuration.objects.get(id=configuration_id)
+        ssh_auth_check = not config.scan_status == Configuration.ScanStatus.FINISHED
         config.scan_status = Configuration.ScanStatus.SCANNING
         config.save()
 
         ip_network = ipaddress.ip_network(config.ip_range, strict=False)
         ip_addresses = [str(ip) for ip in ip_network.hosts()]
         with ThreadPoolExecutor(max_workers=50) as executor:
-            results = executor.map(partial(_scan_for_worker, config), ip_addresses)
+            results = executor.map(partial(_scan_for_worker, config, ssh_auth_check=ssh_auth_check), ip_addresses)
             reachable = set(results) - {None}
 
         unreachable_workers = [worker for worker in config.workers.all() if worker.ip_address not in reachable]
