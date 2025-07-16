@@ -602,10 +602,10 @@ def worker_soft_reset_task(worker_id, only_reset=False):
     """
     ssh_client = None
     try:
+        worker = Worker.objects.get(id=worker_id)
         if not only_reset:
             # Remove the worker from the orchestrator
             orchestrator = get_orchestrator()
-            worker = Worker.objects.get(id=worker_id)
             orchestrator.remove_worker(worker, check=False)
 
             # Reassign the analysis running on the worker
