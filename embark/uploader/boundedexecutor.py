@@ -89,6 +89,9 @@ class BoundedExecutor:
                 analysis.pid = proc.pid
                 analysis.save(update_fields=["pid"])
                 logger.debug("subprocess got pid %s", proc.pid)
+                # write into pid file
+                with open(f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_run.pid", "w+", encoding="utf-8") as pid_file:
+                    pid_file.write(str(proc.pid))
                 # wait for completion
                 proc.communicate()
                 return_code = proc.wait()
@@ -184,6 +187,7 @@ class BoundedExecutor:
             logger.info("Kill Successful: %s", cmd)
         except BaseException as exce:
             logger.error("kill_emba_cmd error: %s", exce)
+            raise BoundedException("Killing EMBA process failed")
 
     @classmethod
     def submit_kill(cls, uuid):

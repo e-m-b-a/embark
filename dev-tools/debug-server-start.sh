@@ -30,9 +30,18 @@ export IGNORE_EMBA=${IGNORE_EMBA:=0}
 export WSL=0
 
 cleaner() {
-  pkill -u root daphne
-  pkill -u root "${PWD}"/emba/emba
-  pkill -u root runapscheduler
+  local PID_FILES=()
+  mapfile -d '' PID_FILES < <(find "${EMBA_LOG_ROOT:-emba_logs}" -type f -name "emba_run.pid" -print0 2> /dev/null)
+
+  if [[ ${#PID_FILES[@]} -ne 0 ]]; then
+    for FILE in "${PID_FILES[@]}"; do
+      echo -e "${RED}""${BOLD}""Making sure the EMBA process with PID ""$(cat "${FILE}")"" from ""${FILE}"" is stopped""${NC}"
+      timeout 3s pkill -F "${FILE}"
+    done
+  fi
+
+  pkill -u root -f daphne
+  pkill -u root -f runapscheduler
 
   docker container stop embark_db
   docker container stop embark_redis
@@ -40,7 +49,7 @@ cleaner() {
   # docker container prune -f --filter "label=flag"
   # rm embark_db/* -rf
 
-  fuser -k "${PORT}"/tcp
+  timeout 5s fuser -k "${PORT}"/tcp
   chown "${SUDO_USER:-${USER}}" "${PWD}" -R
   exit 1
 }
