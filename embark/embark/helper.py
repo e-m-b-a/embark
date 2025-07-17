@@ -162,6 +162,7 @@ def user_is_auth(req_user, own_user):
         return True
     return False
 
+
 def disk_space_check(directory: str = "/var/www/embark/", size: int = 4000000) -> bool:
     """
     Checks if the disk space is sufficient for the application.
