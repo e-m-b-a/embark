@@ -3,10 +3,12 @@ __author__ = 'Benedikt Kuehne, Maximilian Wagner, p4cx, Garima Chauhan, VAISHNAV
 __license__ = 'MIT'
 
 import logging
+import mimetypes
 import os
+from wsgiref.util import FileWrapper
 
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError, QueryDict
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError, QueryDict, StreamingHttpResponse
 from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
@@ -17,8 +19,9 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
 from rest_framework import serializers
 
+from embark.helper import user_is_auth
 from uploader.boundedexecutor import BoundedExecutor
-from uploader.forms import DeviceForm, FirmwareAnalysisForm, DeleteFirmwareForm, LabelForm, VendorForm
+from uploader.forms import DeviceForm, DownloadFirmwareForm, FirmwareAnalysisForm, DeleteFirmwareForm, LabelForm, VendorForm
 from uploader.models import FirmwareFile
 from uploader.serializers import FirmwareAnalysisSerializer
 from users.decorators import require_api_key
@@ -276,10 +279,11 @@ def start_analysis(request):
 def manage_file(request):
     req_logger.info("User %s called manage_file", request.user.username)
     if FirmwareFile.objects.filter(user=request.user).count() > 0:
-        form = DeleteFirmwareForm(initial={'firmware': FirmwareFile.objects.filter(user=request.user).latest('upload_date').id})
-        return render(request, 'uploader/manage.html', {'delete_form': form})
-    form = DeleteFirmwareForm()
-    return render(request, 'uploader/manage.html', {'delete_form': form})
+        delete_form = DeleteFirmwareForm(initial={'firmware': FirmwareFile.objects.filter(user=request.user).latest('upload_date').id})
+        download_form = DownloadFirmwareForm(initial={'firmware': FirmwareFile.objects.filter(user=request.user).latest('upload_date').id})
+    delete_form = DeleteFirmwareForm()
+    download_form = DownloadFirmwareForm()
+    return render(request, 'uploader/manage.html', {'delete_form': delete_form, 'download_form': download_form})
 
 
 @permission_required("users.uploader_permission_advanced", login_url='/')
@@ -301,16 +305,18 @@ def delete_fw_file(request):
 
         # get relevant data
         firmware_file = form.cleaned_data['firmware']
-        if request.user != firmware_file.user and not request.user.is_superuser:
-            return HttpResponseForbidden("You are not authorized!")
+        if not user_is_auth(request.user, firmware_file.user):
+            messages.error(request, 'You are not authorized to delete this firmware file.')
+            logger.error("User %s is not authorized to delete firmware file %s", request.user.username, firmware_file)
+            return redirect('uploader-manage-file')
         firmware_file.delete()
         messages.info(request, 'delete successful.')
-        return redirect('..')
+        return redirect('uploader-manage-file')
 
     logger.error("Form %s is invalid", form)
     logger.error("Form error: %s", form.errors)
     messages.error(request, 'error in form')
-    return redirect('..')
+    return redirect('uploader-manage-file')
 
 
 @permission_required("users.uploader_permission_minimal", login_url='/')
@@ -325,3 +331,38 @@ def uploader_home_minimal(request):
     analysis_form = FirmwareAnalysisForm()
     analysis_form.fields.pop('device')
     return render(request, 'uploader/minimal.html', {'analysis_form': analysis_form})
+
+def download_firmware(request):
+    """
+    Download the firmware file 
+    """
+    req_logger.info("User %s called download_firmware", request.user.username)
+    form = DownloadFirmwareForm(request.POST)
+
+    if form.is_valid():
+        logger.debug("Form %s is valid", form)
+
+        # get relevant data
+        firmware_file = form.cleaned_data['firmware']
+        if not user_is_auth(request.user, firmware_file.user):
+            messages.error(request, 'You are not authorized to download this firmware file.')
+            logger.error("User %s is not authorized to download firmware file %s", request.user.username, firmware_file)
+            return redirect('uploader-manage-file')
+        file = firmware_file.file.path
+        filename = os.path.basename(file)
+        chunk_size = 8192
+        response = StreamingHttpResponse(
+            FileWrapper(
+                open(file, "rb"),
+                chunk_size,
+            ),
+            content_type=mimetypes.guess_type(file)[0],
+        )
+        response["Content-Length"] = os.path.getsize(file)
+        response["Content-Disposition"] = f"attachment; filename={filename}"
+        return response
+
+    logger.error("Form %s is invalid", form)
+    logger.error("Form error: %s", form.errors)
+    messages.error(request, 'error in form')
+    return redirect('uploader-manage-file')
