@@ -203,8 +203,8 @@ class AnalysisLogConsumer(LogConsumer):
             await self.send_message({"error": "Firmware analysis not found."})
             await self.close()
             return
-        except PermissionError as e:
-            await self.send_message({"error": str(e)})
+        except PermissionError as perm_exception:
+            await self.send_message({"error": str(perm_exception)})
             await self.close()
             return
 
