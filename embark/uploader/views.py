@@ -369,4 +369,4 @@ def download_firmware(request):
     logger.error("Form %s is invalid", form)
     logger.error("Form error: %s", form.errors)
     messages.error(request, 'error in form')
-    return redirect('uploader-manage-file')
+    return redirect('embark-uploader-manage-file')
