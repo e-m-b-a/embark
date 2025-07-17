@@ -98,6 +98,7 @@ def update_emba(request):
         if not disk_space_check(str(settings.EMBA_ROOT)):
             messages.error(request, 'Disk space is not sufficient for update.')
             return redirect('embark-updater-home')
+        logger.debug("Disk space is sufficient for update.")
         for option_ in option:
             # inject into bounded Executor
             if BoundedExecutor.submit_emba_update(option=option_):
