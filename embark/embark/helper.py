@@ -175,7 +175,7 @@ def disk_space_check(directory: str = "/var/www/embark/", size: int = 4000000) -
         print(f"Directory {directory} does not exist.")
         return False
     try:
-        output = subprocess.check_output(['df', '-l', directory]).decode('utf-8')  #nosec
+        output = subprocess.check_output(['df', '-l', directory]).decode('utf-8')  # nosec
         available_space = int(output.splitlines()[1].split()[3])  # Get the available space in KB
         # print(f"Available disk space: {available_space} KB")
         if available_space < size:
