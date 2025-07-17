@@ -281,8 +281,9 @@ def manage_file(request):
     if FirmwareFile.objects.filter(user=request.user).count() > 0:
         delete_form = DeleteFirmwareForm(initial={'firmware': FirmwareFile.objects.filter(user=request.user).latest('upload_date').id})
         download_form = DownloadFirmwareForm(initial={'firmware': FirmwareFile.objects.filter(user=request.user).latest('upload_date').id})
-    delete_form = DeleteFirmwareForm()
-    download_form = DownloadFirmwareForm()
+    else:
+        delete_form = DeleteFirmwareForm()
+        download_form = DownloadFirmwareForm()
     return render(request, 'uploader/manage.html', {'delete_form': delete_form, 'download_form': download_form})
 
 
@@ -307,16 +308,15 @@ def delete_fw_file(request):
         firmware_file = form.cleaned_data['firmware']
         if not user_is_auth(request.user, firmware_file.user):
             messages.error(request, 'You are not authorized to delete this firmware file.')
-            logger.error("User %s is not authorized to delete firmware file %s", request.user.username, firmware_file)
-            return redirect('uploader-manage-file')
+            return redirect('embark-uploader-manage-file')
         firmware_file.delete()
         messages.info(request, 'delete successful.')
-        return redirect('uploader-manage-file')
+        return redirect('embark-uploader-manage-file')
 
     logger.error("Form %s is invalid", form)
     logger.error("Form error: %s", form.errors)
     messages.error(request, 'error in form')
-    return redirect('uploader-manage-file')
+    return redirect('embark-uploader-manage-file')
 
 
 @permission_required("users.uploader_permission_minimal", login_url='/')
@@ -346,8 +346,7 @@ def download_firmware(request):
         firmware_file = form.cleaned_data['firmware']
         if not user_is_auth(request.user, firmware_file.user):
             messages.error(request, 'You are not authorized to download this firmware file.')
-            logger.error("User %s is not authorized to download firmware file %s", request.user.username, firmware_file)
-            return redirect('uploader-manage-file')
+            return redirect('embark-uploader-manage-file')
         file = firmware_file.file.path
         filename = os.path.basename(file)
         chunk_size = 8192
