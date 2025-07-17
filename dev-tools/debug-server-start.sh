@@ -91,6 +91,16 @@ if [[ "${WSL}" -eq 1 ]]; then
   check_docker_wsl
 fi
 
+# check disk-size
+echo -e "${BLUE}""${BOLD}""checking disk size""${NC}"
+AVAILABLE_SIZE="$(df -l . | awk '{print $4}' | grep -E '^[0-9]+$')"
+echo -e "${GREEN}""Available disk size: ${AVAILABLE_SIZE} KB""${NC}"
+if [[ "${AVAILABLE_SIZE}" -lt 4000000 ]]; then
+  echo -e "${RED}""Less than 4GB disk space available!""${NC}"
+  exit 1
+fi
+
+
 # check emba
 if [[ "${IGNORE_EMBA}" -eq 1 ]] || grep -q "EMBA_INSTALL=no" ./.env; then
   echo -e "${BLUE}""${BOLD}""ignoring EMBA""${NC}"
