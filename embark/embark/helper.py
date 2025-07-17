@@ -149,6 +149,14 @@ def get_emba_version():
 
 
 def user_is_auth(req_user, own_user):
+    """
+    Checks if the user is authorized to view the logs of the own_user.
+    Returns True if the user is authorized, otherwise False.
+    
+    :param req_user: The user who is requesting access to the logs.
+    :param own_user: The user whose logs are being requested.
+    :return: True if authorized, False otherwise.
+    """
     if req_user.is_superuser:
         return True
     elif req_user.is_staff:

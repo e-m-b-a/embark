@@ -16,6 +16,7 @@ from watchdog.events import FileSystemEventHandler
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 
+from embark.helper import user_is_auth
 from uploader.models import FirmwareAnalysis
 
 logger = logging.getLogger(__name__)
@@ -183,7 +184,12 @@ class AnalysisLogConsumer(LogConsumer):
 
     @database_sync_to_async
     def get_firmware(self, analysis_id: str) -> FirmwareAnalysis:
-        return FirmwareAnalysis.objects.get(id=analysis_id, user=self.scope["user"])
+        firmware_analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        if user_is_auth(self.scope["user"], firmware_analysis.user):
+            return firmware_analysis
+        raise PermissionError(
+            "You are not authorized to view the firmware analysis logs."
+        )
 
     async def connect(self):
         logger.info("WS - connect")
@@ -191,7 +197,17 @@ class AnalysisLogConsumer(LogConsumer):
         logger.info("WS - connect - accept")
 
         self.analysis_id = self.scope["url_route"]["kwargs"]["analysis_id"]
-        firmware = await self.get_firmware(self.analysis_id)
+        try:
+            firmware = await self.get_firmware(self.analysis_id)
+        except FirmwareAnalysis.DoesNotExist:
+            await self.send_message({"error": "Firmware analysis not found."})
+            await self.close()
+            return
+        except PermissionError as e:
+            await self.send_message({"error": str(e)})
+            await self.close()
+            return
+
         self.log_file_path = f"{Path(firmware.path_to_logs).parent}/emba_run.log"
 
         if not os.path.isfile(self.log_file_path):
