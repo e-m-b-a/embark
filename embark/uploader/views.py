@@ -1,4 +1,3 @@
-# pylint: disable=consider-using-with
 __copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2021-2025 The AMOS Projects, Copyright 2021 Siemens AG'
 __author__ = 'Benedikt Kuehne, Maximilian Wagner, p4cx, Garima Chauhan, VAISHNAVI UMESH, m-1-k-3, Ashutosh Singh, RaviChandra, diegiesskanne, Vaish1795, ravichandraachanta, uk61elac, YulianaPoliakova, SirGankalot, ClProsser'
 __license__ = 'MIT'
@@ -357,7 +356,7 @@ def download_firmware(request):
         chunk_size = 8192
         response = StreamingHttpResponse(
             FileWrapper(
-                open(file, "rb"),
+                open(file, "rb"),   # pylint: disable=consider-using-with
                 chunk_size,
             ),
             content_type=mimetypes.guess_type(file)[0],
