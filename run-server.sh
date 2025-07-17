@@ -202,6 +202,15 @@ fi
     echo -e "Allow from ${ADMIN_HOST_RANGE[*]}"
   fi
   echo -e "</Location>"
+  echo -e "\\n"
+  echo -e "<Location /media>"
+  echo -e "Order deny,allow"
+  echo -e "Deny from all"
+  echo -e "Allow from 127.0.0.1"
+  if [[ ${#ADMIN_HOST_RANGE[@]} -ne 0 ]]; then
+    echo -e "Allow from ${ADMIN_HOST_RANGE[*]}"
+  fi
+  echo -e "</Location>"
 } > /var/www/conf/embark.conf
 
 # certs
@@ -257,7 +266,7 @@ echo -e "\n[""${BLUE} JOB""${NC}""] Starting Apache"
 pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --host "${BIND_IP}" --port="${HTTP_PORT}" --limit-request-body "${FILE_SIZE}" \
 --url-alias /static/ /var/www/static/ \
---url-alias /media/ /var/www/media/ \
+--url-alias /media/ /var/www/media/ \     # Note: This gets restricted to ADMIN_HOST_RANGE in embark.conf
 --allow-localhost --working-directory /var/www/embark/ --server-root /var/www/httpd80/ \
 --include-file /var/www/conf/embark.conf \
 --processes 4 --threads 4 \
