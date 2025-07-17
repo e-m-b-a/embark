@@ -1,3 +1,4 @@
+# pylint: disable=unused-import
 """
 WSGI config for djangoProject project.
 

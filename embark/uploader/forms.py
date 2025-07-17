@@ -170,5 +170,6 @@ class FirmwareAnalysisForm(forms.ModelForm):
 class DeleteFirmwareForm(forms.Form):
     firmware = forms.ModelChoiceField(queryset=models.FirmwareFile.objects, empty_label='Select firmware-file to delete')
 
+
 class DownloadFirmwareForm(forms.Form):
     firmware = forms.ModelChoiceField(queryset=models.FirmwareFile.objects, empty_label='Select firmware-file to download')

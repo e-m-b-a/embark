@@ -281,7 +281,7 @@ echo -e "\n[""${BLUE} JOB""${NC}""] Starting Apache"
 pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --host "${BIND_IP}" --port="${HTTP_PORT}" --limit-request-body "${FILE_SIZE}" \
 --url-alias /static/ /var/www/static/ \
---url-alias /media/ /var/www/media/ \     # Note: This gets restricted to ADMIN_HOST_RANGE in embark.conf
+--url-alias /media/ /var/www/media/ \
 --allow-localhost --working-directory /var/www/embark/ --server-root /var/www/httpd80/ \
 --include-file /var/www/conf/embark.conf \
 --processes 4 --threads 4 \

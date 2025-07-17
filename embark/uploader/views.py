@@ -1,3 +1,4 @@
+# pylint: disable=consider-using-with
 __copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2021-2025 The AMOS Projects, Copyright 2021 Siemens AG'
 __author__ = 'Benedikt Kuehne, Maximilian Wagner, p4cx, Garima Chauhan, VAISHNAVI UMESH, m-1-k-3, Ashutosh Singh, RaviChandra, diegiesskanne, Vaish1795, ravichandraachanta, uk61elac, YulianaPoliakova, SirGankalot, ClProsser'
 __license__ = 'MIT'
@@ -332,9 +333,13 @@ def uploader_home_minimal(request):
     analysis_form.fields.pop('device')
     return render(request, 'uploader/minimal.html', {'analysis_form': analysis_form})
 
+
+@permission_required("users.uploader_permission_advanced", login_url='/')
+@login_required(login_url='/' + settings.LOGIN_URL)
+@require_http_methods(["POST"])
 def download_firmware(request):
     """
-    Download the firmware file 
+    Download the firmware file
     """
     req_logger.info("User %s called download_firmware", request.user.username)
     form = DownloadFirmwareForm(request.POST)
