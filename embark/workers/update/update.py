@@ -263,12 +263,33 @@ def undo_sudoers_file(configuration: Configuration, worker: Worker):
             client.close()
 
 
+def _create_ssh_config_dir(configuration: Configuration, worker: Worker):
+    """
+    Connects to the worker and creates the .ssh directory if it does not exist.
+    If this is not done before calling ssh-copy-id, the command may fail.
+    :params configuration: The worker configuration that includes the ssh credentials for the worker
+    :params worker: The worker on which to create the SSH config directory
+    """
+    client = None
+    try:
+        client = worker.ssh_connect(use_password=True)
+        homedir = f"/home/{configuration.ssh_user}" if configuration.ssh_user != "root" else "/root"
+        exec_blocking_ssh(client, f"sudo mkdir -p {homedir}/.ssh && sudo chown {configuration.ssh_user}:{configuration.ssh_user} {homedir}/.ssh")
+        logger.info("_create_ssh_config_dir: SSH config directory created for user %s on worker %s", configuration.ssh_user, worker.ip_address)
+    except paramiko.SSHException as ssh_error:
+        logger.error("_create_ssh_config_dir: Failed to create SSH config directory on worker %s: %s", worker.ip_address, ssh_error)
+    finally:
+        if client:
+            client.close()
+
+
 def setup_ssh_key(configuration: Configuration, worker: Worker):
     """
     Install SSH key on provided worker and disable PW auth
     :params configuration: The SSH keys
     :params worker: The worker to update
     """
+    _create_ssh_config_dir(configuration, worker)
     _, public_key = configuration.ensure_ssh_keys()
 
     logger.info("setup_ssh_key: Starting ssh-copy-id on worker %s", worker.ip_address)

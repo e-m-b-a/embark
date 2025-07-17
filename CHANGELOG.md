@@ -4,6 +4,12 @@
 
 ### FIXED
 
+- Broken config re-scan and ssh-copy-id bug 
+
+## [sprint-13](https://github.com/amosproj/amos2025ss01-embark/releases/tag/sprint-13-release) - 2025-07-16
+
+### FIXED
+
 - Deps setup error (APT sources are not updated)
 - Workers not consistently deleted ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=119037519&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C102))
 - Hard reset routine in arbitrary execution order and incomplete ([Issue](https://github.com/orgs/amosproj/projects/79/views/2?pane=issue&itemId=119117248&issue=amosproj%7Camos2025ss01-embark-orchestration-framework%7C104))
