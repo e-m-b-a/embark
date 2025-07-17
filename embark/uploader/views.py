@@ -17,6 +17,7 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
 from rest_framework import serializers
 
+from embark.helper import disk_space_check, user_is_auth
 from uploader.boundedexecutor import BoundedExecutor
 from uploader.forms import DeviceForm, FirmwareAnalysisForm, DeleteFirmwareForm, LabelForm, VendorForm
 from uploader.models import FirmwareFile
@@ -237,11 +238,17 @@ def start_analysis(request):
             # get the id of the firmware-file to submit
             new_firmware_file = FirmwareFile.objects.get(id=new_analysis.firmware.id)
             logger.debug("Firmware file: %s", new_firmware_file)
-            if request.user != new_firmware_file.user and not request.user.is_superuser:
-                return HttpResponseForbidden("You are not authorized!")
+            if not user_is_auth(request.user, new_firmware_file.user):
+                messages.error(request=request, message='Unauthorized')
+                return redirect('embark-uploader-home')
             new_analysis.user = new_firmware_file.user
             logger.debug(" FILE_NAME is %s", new_analysis.firmware.file.name)
             new_analysis.firmware_name = os.path.basename(new_analysis.firmware.file.name)
+            # check if disk space is sufficient
+            if not disk_space_check(str(settings.EMBA_LOG_ROOT)):
+                messages.error(request, 'Disk space is not sufficient for analysis.')
+                return redirect('embark-uploader-home')
+            logger.debug("Disk space is sufficient for analysis.")
             # save form
             new_analysis = form.save(commit=True)
             # add labels from devices FIXME what if device has no label

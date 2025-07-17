@@ -14,7 +14,7 @@ from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.shortcuts import redirect
 
-from embark.helper import get_emba_version
+from embark.helper import disk_space_check, get_emba_version
 from updater.forms import CheckForm, EmbaUpdateForm
 from uploader.boundedexecutor import BoundedExecutor
 
@@ -94,6 +94,10 @@ def update_emba(request):
         option = form.cleaned_data['option']
         # do something with it
         logger.debug("Option was: %s", option)
+        # check if disk space is sufficient
+        if not disk_space_check(str(settings.EMBA_ROOT)):
+            messages.error(request, 'Disk space is not sufficient for update.')
+            return redirect('embark-updater-home')
         for option_ in option:
             # inject into bounded Executor
             if BoundedExecutor.submit_emba_update(option=option_):
