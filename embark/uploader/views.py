@@ -245,7 +245,7 @@ def start_analysis(request):
             logger.debug(" FILE_NAME is %s", new_analysis.firmware.file.name)
             new_analysis.firmware_name = os.path.basename(new_analysis.firmware.file.name)
             # check if disk space is sufficient
-            if not disk_space_check(str(settings.EMBA_LOG_ROOT)):
+            if not disk_space_check(str(settings.EMBA_LOG_ROOT), 20000000):     # 20GB in KB
                 messages.error(request, 'Disk space is not sufficient for analysis.')
                 return redirect('embark-uploader-home')
             logger.debug("Disk space is sufficient for analysis.")
