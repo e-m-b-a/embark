@@ -187,7 +187,7 @@ class BoundedExecutor:
             logger.info("Kill Successful: %s", cmd)
         except BaseException as exce:
             logger.error("kill_emba_cmd error: %s", exce)
-            raise BoundedException("Killing EMBA process failed")
+            raise BoundedException("Killing EMBA process might have failed") from exce
 
     @classmethod
     def submit_kill(cls, uuid):
