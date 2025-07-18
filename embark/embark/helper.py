@@ -5,6 +5,7 @@ __license__ = 'MIT'
 from random import randrange
 import os
 from pathlib import Path
+import subprocess
 
 from django.conf import settings
 
@@ -169,10 +170,35 @@ def user_is_auth(req_user, own_user):
     return False
 
 
+def disk_space_check(directory: str = "/var/www/embark/", size: int = 4000000) -> bool:
+    """
+    Checks if the disk space is sufficient for the application.
+    Returns True if sufficient, False otherwise.
+
+    DO NOT USE WITH USER_INPUT!!!
+
+    DEFAULT = 4GB in KB
+    """
+    if not os.path.exists(directory):
+        print(f"Directory {directory} does not exist.")
+        return False
+    try:
+        output = subprocess.check_output(['df', '-l', directory]).decode('utf-8')  # nosec
+        available_space = int(output.splitlines()[1].split()[3])  # Get the available space in KB
+        # print(f"Available disk space: {available_space} KB")
+        if available_space < size:
+            return False
+    except Exception as exception:
+        print(f"Error checking disk space: {exception}")
+        return False
+    return True
+
+
 if __name__ == '__main__':
-    import pprint
-    TEST_STRING = 'Linux / v2.6.33.2'
-    print(cleanup_charfield(TEST_STRING))
-    emba_modle_list = get_emba_modules(emba_dir_path="/home/cylox/embark/emba")
-    print(pprint.pformat(emba_modle_list, indent=1))
-    print(count_emba_modules(emba_modle_list))
+    # import pprint
+    # TEST_STRING = 'Linux / v2.6.33.2'
+    # print(cleanup_charfield(TEST_STRING))
+    # emba_modle_list = get_emba_modules(emba_dir_path="/home/cylox/embark/emba")
+    # print(pprint.pformat(emba_modle_list, indent=1))
+    # print(count_emba_modules(emba_modle_list))
+    disk_space_check()

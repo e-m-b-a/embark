@@ -151,6 +151,15 @@ if ! (cd "${EMBARK_BASEDIR:-${PWD}}"/emba && ./emba -d 1); then
   exit 1
 fi
 
+# check disk-size
+echo -e "${BLUE}""${BOLD}""Checking disk size""${NC}"
+AVAILABLE_SIZE="$(df -l /var/www/embark/ | awk '{print $4}' | grep -E '^[0-9]+$')"
+echo -e "${GREEN}""Available disk size: ${AVAILABLE_SIZE} KB""${NC}"
+if [[ "${AVAILABLE_SIZE}" -lt 4000000 ]]; then
+  echo -e "${RED}""Less than 4GB disk space available for the Server!""${NC}"
+  exit 1
+fi
+
 # check venv
 if ! [[ -d /var/www/.venv ]]; then
   echo -e "${RED}""${BOLD}""Pip-enviroment not found!""${NC}"
