@@ -17,8 +17,8 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
 from rest_framework import serializers
 
-from uploader.executor import submit_firmware
 from embark.helper import disk_space_check, user_is_auth
+from uploader.executor import submit_firmware
 from uploader.forms import DeviceForm, FirmwareAnalysisForm, DeleteFirmwareForm, LabelForm, VendorForm
 from uploader.models import FirmwareFile
 from uploader.serializers import FirmwareAnalysisSerializer

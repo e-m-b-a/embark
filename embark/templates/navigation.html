@@ -1,7 +1,5 @@
 {% load static %}
-{% block style %}
-<link rel="stylesheet" type="text/css" href="{% static 'content/css/navigation.css' %}"/>
-{% endblock style %}
+{% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/navigation.css' %}"/>{% endblock style %}
 {% block navigation %}
     <div id="navigation">
         <div class="logo-content">
@@ -147,6 +145,39 @@
                     </a>
                 </li>
 
+                {% if show_worker_app %}
+                    <li class="nav-item">
+                        <a href="{% url 'embark-worker-main' %}">
+                            <span class="icon">
+                                <svg fill="currentColor" height="48px" width="48px" xmlns="http://www.w3.org/2000/svg" viewBox="-1.6 -1.6 19.20 19.20">
+                                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                                    <g id="SVGRepo_iconCarrier">
+                                        <path class="cls-1" d="M14,12V6H5v6H9v1H7v1h5V13H10V12ZM6,11V7h7v4ZM7,5H4V4H7ZM8,5V3H3v7H4v3H6v1H3a1,1,0,0,1-1-1V3A1,1,0,0,1,3,2H8A1,1,0,0,1,9,3V5Z"></path>
+                                    </g>
+                                </svg>
+                            </span>
+                            <button class="btn">
+                                <span class="nav-link">Workers</span>
+                            </button>
+                        </a>
+                    </li>
+                {% endif %}
+
+                <li class="nav-item">
+                    <a href="{% url 'embark-settings-main' %}">
+                        <span class="icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="currentColor" stroke="#000000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z" />
+                            <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
+                            </svg>
+                        </span>
+                        <button class="btn">
+                            <span class="nav-link">Settings</span>
+                        </button>
+                    </a>
+                </li>
+
                 <li class="nav-item">
                     <a href="{% url 'embark-user-main' %}" onclick="">
                         <span class="icon">
@@ -208,199 +239,4 @@
             </a>
         </div>
     </div>
-    <ul class="navbar-nav mr-auto">
-        <li>
-            <a href="{% url 'embark-MainDashboard' %}" onclick="">
-                <span class="icon">
-                    <svg width="48px" height="48px" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
-                        <path d="m3.49859901.50058486-2 .00245141c-.55180573.00067635-.9987743.4481931-.9987743.99999924v1.99673096c0 .51283584.38604019.93550716.88337888.99327227l.11784682.00672698 2-.00245141c.55180573-.00067635.9987743-.4481931.9987743-.99999925v-1.9967302c0-.51283659-.38604019-.93550791-.88337887-.99327302zm6 0-2 .00245141c-.55180573.00067635-.9987743.4481931-.9987743.99999924v1.99673096c0 .51283584.38604019.93550716.88337888.99327227l.11784682.00672698 2-.00245141c.55180569-.00067635.99877429-.4481931.99877429-.99999925v-1.9967302c0-.51283659-.3860402-.93550791-.88337886-.99327302zm-6 6-2 .00245141c-.55180573.00067635-.9987743.4481931-.9987743.99999924v1.99673096c0 .51283583.38604019.93550713.88337888.99327223l.11784682.006727 2-.0024514c.55180573-.0006763.9987743-.4481931.9987743-.99999924v-1.9967302c0-.51283659-.38604019-.93550791-.88337887-.99327302zm6 0-2 .00245141c-.55180573.00067635-.9987743.4481931-.9987743.99999924v1.99673096c0 .51283583.38604019.93550713.88337888.99327223l.11784682.006727 2-.0024514c.55180569-.0006763.99877429-.4481931.99877429-.99999924v-1.9967302c0-.51283659-.3860402-.93550791-.88337886-.99327302z"
-                            fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" transform="translate(5 3)"/>
-                    </svg>
-                </span>
-                <span class="nav-link">Dashboard</span>
-            </a>
-        </li>
-        <li>
-            <a href="{% url 'embark-tracker' %}" onclick="">
-                <span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="48px" height="48px"
-                        fill="currentColor" class="bi bi-activity" viewBox="0 0 21 21" transform="translate(5 5)">
-                        <path d="M11 2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v12h.5a.5.5 0 0 1 0 1H.5a.5.5 0 0 1 0-1H1v-3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3h1V7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7h1V2zm1 12h2V2h-2v12zm-3 0V7H7v7h2zm-5 0v-3H2v3h2z"/>
-                    </svg>
-                </span>
-                <span class="nav-link">Tracker</span>
-            </a>
-        </li>
-        <li class="submenu">
-            <div class="dropdown">
-                <a data-toggle="collapse" aria-expanded="true">
-                    <span class="icon" onclick="navToggle()">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="48px" height="48px"
-                            fill="currentColor" class="bi bi-activity" viewBox="0 0 21 21">
-                            <g fill="none" fill-rule="evenodd" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" transform="translate(5 2)">
-                                <path d="m2.5 4.753 4-4.232 4 4.191"/>
-                                <path d="m6.5.5v11"/>
-                                <path d="m.5 14.5h12"/>
-                            </g>
-                        </svg>
-                    </span>
-                    <span class="nav-link" >Uploader</span>
-                </a>
-                <ul class="dropdown-content">
-                    <a href="{% url 'embark-uploader-home' %}" data-link>
-                    <span class="nav-link">Upload and Start</span>
-                    </a>
-                    <a href="{% url 'embark-uploader-manage-file' %}" data-link>
-                    <span class="nav-link">Manage Firmware</span>
-                    </a>
-                </ul>
-            </div>
-        </li>
-        <li class="submenu">
-            <div class="dropdown">
-                <a data-toggle="collapse" aria-expanded="true">
-                    <span class="icon" onclick="navToggle()">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="48px" height="48px"
-                            fill="currentColor" class="bi bi-activity" viewBox="0 0 21 21" transform="translate(7 3)">
-                            <path fill-rule="evenodd" d="M6 2a.5.5 0 0 1 .47.33L10 12.036l1.53-4.208A.5.5 0 0 1 12 7.5h3.5a.5.5 0 0 1 0 1h-3.15l-1.88 5.17a.5.5 0 0 1-.94 0L6 3.964 4.47 8.171A.5.5 0 0 1 4 8.5H.5a.5.5 0 0 1 0-1h3.15l1.88-5.17A.5.5 0 0 1 6 2Z"/>
-                        </svg>
-                    </span>
-                    <span class="nav-link" >Im-/Exporter</span>
-                </a>
-                <ul class="dropdown-content">
-                    <a href="{% url 'embark-import-menu' %}" data-link>
-                    <span class="nav-link">Import Menu</span>
-                    </a>
-                    <a href="{% url 'embark-export-menu' %}" data-link>
-                    <span class="nav-link">Export Menu</span>
-                    </a>
-                </ul>
-            </div>
-        </li>
-        <li>
-            <a href="{% url 'embark-dashboard-service' %}">
-                <span class="icon">
-                    <svg height="48px" viewBox="0 0 21 21" width="48px" xmlns="http://www.w3.org/2000/svg">
-                        <g fill="none" fill-rule="evenodd" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" transform="matrix(-1 0 0 1 19 1)">
-                            <circle cx="8.5" cy="8.5" r="8"/>
-                            <path d="m8.5 5.5v4h-3.5"/>
-                        </g>
-                    </svg>
-                </span>
-                <span class="nav-link">Progress</span>
-            </a>
-        </li>
-        <li>
-            <a href="{% url 'embark-ReportDashboard' %}">
-                <span class="icon">
-                    <svg height="48px" viewBox="0 0 21 21" width="48px" xmlns="http://www.w3.org/2000/svg">
-                        <g fill="none" fill-rule="evenodd"
-                            stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" transform="translate(4 3)">
-                            <path d="m3.5 1.5c-.42139382 0-1.08806048 0-2 0-.55228475 0-1 .44771525-1 1v11c0 .5522848.44771525 1 1 1h10c.5522847 0 1-.4477152 1-1v-11c0-.55228475-.4477153-1-1-1-.8888889 0-1.55555556 0-2 0"/>
-                            <path d="m4.5.5h4c.55228475 0 1 .44771525 1 1s-.44771525 1-1 1h-4c-.55228475 0-1-.44771525-1-1s.44771525-1 1-1z"/>
-                            <path d="m5.5 5.5h5"/>
-                            <path d="m5.5 8.5h5"/>
-                            <path d="m5.5 11.5h5"/>
-                            <path d="m2.5 5.5h1"/>
-                            <path d="m2.5 8.5h1"/>
-                            <path d="m2.5 11.5h1"/>
-                        </g>
-                    </svg>
-                </span>
-                <span class="nav-link">Reports</span>
-            </a>
-        </li>
-        <li>
-            <a href="{% url 'embark-updater-home' %}">
-                <span class="icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="48px" height="48px" viewBox="0 0 24 24" fill="none" fill-rule="evenodd"
-                        stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
-                    </svg>
-                </span>
-                <span class="nav-link">Updater</span>
-            </a>
-        </li>
-        {% if show_worker_app %}
-        <li>
-            <a href="{% url 'embark-worker-main' %}">
-                <span class="icon">
-                    <svg fill="currentColor" height="48px" width="48px" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="-1.6 -1.6 19.20 19.20">
-                        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-                        <g id="SVGRepo_iconCarrier">
-                            <path class="cls-1" d="M14,12V6H5v6H9v1H7v1h5V13H10V12ZM6,11V7h7v4ZM7,5H4V4H7ZM8,5V3H3v7H4v3H6v1H3a1,1,0,0,1-1-1V3A1,1,0,0,1,3,2H8A1,1,0,0,1,9,3V5Z"></path>
-                        </g>
-                    </svg>
-                </span>
-                <span class="nav-link">Workers</span>
-            </a>
-        </li>
-        {% endif %}
-        <li>
-            <a href="{% url 'embark-settings-main' %}">
-                <span class="icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="currentColor" stroke="#000000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z" />
-                    <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
-                    </svg>
-                </span>
-                <span class="nav-link">Settings</span>
-            </a>
-        </li>
-        <li class="submenu">
-            <div class="dropdown">
-                <a data-toggle="collapse" aria-expanded="true">
-                    <span class="icon" onclick="navToggle()">
-                        <svg height="48px" viewBox="0 0 21 21" width="48px" xmlns="http://www.w3.org/2000/svg">
-                            <g fill="none" fill-rule="evenodd" stroke="currentColor" stroke-linecap="round"
-                                stroke-linejoin="round" transform="matrix(-1 0 0 1 19 2)">
-                                <path d="m7.5.5c1.65685425 0 3 1.34314575 3 3v2c0 1.65685425-1.34314575 3-3 3s-3-1.34314575-3-3v-2c0-1.65685425 1.34314575-3 3-3zm7 14v-.7281753c0-3.1864098-3.6862915-5.2718247-7-5.2718247s-7 2.0854149-7 5.2718247v.7281753c0 .5522847.44771525 1 1 1h12c.5522847 0 1-.4477153 1-1z"/>
-                            </g>
-                        </svg>
-                    </span>
-                    <span class="nav-link" >My Account</span>
-                </a>
-                <ul class="dropdown-content">
-                    <a href="{% url 'embark-user-main' %}">
-                    <span class="nav-link">User Menu</span>
-                    </a>
-                    <a href="{% url 'embark-password-change' %}">
-                    <span class="nav-link">Change password</span>
-                    </a>
-                    <a href="{% url 'embark-acc-delete' %}">
-                    <span class="nav-link">Delete account</span>
-                    </a>
-                </ul>
-            </div>
-        </li>
-    </ul>
-    <div class="profile-content">
-        <div class="profile">
-            <div class="profile-details">
-                <div class="user-image">
-                    <svg height="48px" viewBox="0 0 21 21" width="48px" xmlns="http://www.w3.org/2000/svg">
-                        <g fill="none" fill-rule="evenodd" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" transform="translate(2 2)">
-                            <circle cx="8.5" cy="8.5" r="8"/>
-                            <path d="m14.5 13.5c-.6615287-2.2735217-3.1995581-3.0251263-6-3.0251263-2.72749327 0-5.27073171.8688092-6 3.0251263"/>
-                            <path d="m8.5 2.5c1.6568542 0 3 1.34314575 3 3v2c0 1.65685425-1.3431458 3-3 3-1.65685425 0-3-1.34314575-3-3v-2c0-1.65685425 1.34314575-3 3-3z"/>
-                        </g>
-                    </svg>
-                </div>
-                <div class="user-id">
-                    {{ username }}
-                </div>
-            </div>
-            <a href="{% url 'embark-logout' %}">
-                <svg id="log-out" height="48px" viewBox="0 0 21 21" width="48px" xmlns="http://www.w3.org/2000/svg">
-                    <g fill="none" fill-rule="evenodd" transform="translate(4 3)">
-                        <path d="m2.5.5h8c1.1045695 0 2 .8954305 2 2v10c0 1.1045695-.8954305 2-2 2h-8c-1.1045695 0-2-.8954305-2-2v-10c0-1.1045695.8954305-2 2-2z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="m10.2022469 14.5-3.64502265-1.9482581c-.65083781-.3478717-1.05722425-1.0258787-1.05722425-1.763852v-6.57577979c0-.73797327.40638644-1.41598036 1.05722425-1.76385201l3.64502265-1.9482581" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                        <circle cx="7.5" cy="7.5" fill="currentColor" r="1"/>
-                    </g>
-                </svg>
-            </a>
-        </div>
-    </div>
-</div>
 {% endblock navigation %}
