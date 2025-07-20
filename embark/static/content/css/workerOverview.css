@@ -124,6 +124,11 @@ form {
     margin: 4px 2px;
 }
 
+.toggle-actions-menu {
+    position: relative;
+    margin: 4px 2px;
+}
+
 .update-dot {
     position: absolute;
     top: -4px;

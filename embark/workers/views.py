@@ -3,24 +3,24 @@ __author__ = 'ashiven, ClProsser, SirGankalot'
 __license__ = 'MIT'
 
 import logging
+from io import StringIO
+from Crypto.PublicKey import RSA  # nosec
 
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import get_user
 from django.views.decorators.http import require_http_methods
 from django.conf import settings
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
-from django.db.models import Count
 
 from workers.forms import ConfigurationForm
-from workers.orchestrator import get_orchestrator
-from workers.models import Worker, Configuration, DependencyVersion, DependencyType
+from workers.models import DependencyState, Worker, Configuration, DependencyVersion, DependencyType, WorkerUpdate
 from workers.update.update import queue_update
-from workers.tasks import fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, undo_sudoers_file, config_worker_scan_task
+from workers.tasks import fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, config_worker_scan_task, delete_config_task
+from workers.orchestrator import get_orchestrator
 from embark.helper import user_is_auth
-
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +57,19 @@ def worker_main(request):
         worker.config_ids = ', '.join([str(config.id) for config in worker.configurations.filter(user=user)])
         worker.status = worker.get_status_display()
 
+    update_pool = WorkerUpdate.objects.order_by('-created_at').filter(
+        worker__configurations__user=user,
+    ).select_related('worker')
+
+    if update_pool:
+        worker = update_pool[0].worker
+        if worker.status == Worker.ConfigStatus.CONFIGURING:
+            messages.info(request, f"Update for {worker.name} started: {update_pool[0].get_dependency_type_display()}")
+        elif worker.status == Worker.ConfigStatus.CONFIGURED:
+            messages.success(request, f"Update for {worker.name} finished: {update_pool[0].get_dependency_type_display()}")
+        elif worker.status == Worker.ConfigStatus.ERROR:
+            messages.error(request, f"Update for {worker.name} failed: {update_pool[0].get_dependency_type_display()}")
+
     return render(request, 'workers/index.html', {
         'user': user,
         'configs': configs,
@@ -84,23 +97,8 @@ def delete_config(request):
             messages.error(request, 'You are not allowed to delete this configuration')
             return safe_redirect(request, '/worker/')
 
-        config_workers = Worker.objects.filter(configurations__id=config.id)
-        for worker in config_workers:
-            undo_sudoers_file.delay(worker.ip_address, config.ssh_user, config.ssh_password)
-
-        workers = Worker.objects.annotate(config_count=Count('configurations')).filter(configurations__id=config_id, config_count=1)
-        orchestrator = get_orchestrator()
-        for worker in workers:
-            try:
-                orchestrator.remove_worker(worker)
-                worker.dependency_version.delete()
-                worker.delete()
-                logger.info("Worker: %s removed from orchestrator", worker.name)
-            except ValueError:
-                logger.error("Worker: %s could not be removed from orchestrator", worker.name)
-
-        config.delete()
-        messages.success(request, 'Configuration deleted successfully')
+        delete_config_task.delay(config_id)
+        messages.success(request, 'Configuration deletion queued')
     except Configuration.DoesNotExist:
         messages.error(request, 'Configuration not found')
 
@@ -123,10 +121,42 @@ def create_config(request):
 
     new_config = config_form.save(commit=False)
     new_config.user = user
+
+    key = RSA.generate(settings.WORKER_SSH_KEY_SIZE)
+    new_config.ssh_private_key = key.export_key(format="PEM", pkcs=8).decode("utf-8")
+    new_config.ssh_public_key = key.publickey().export_key(format="OpenSSH").decode("utf-8")
+
+    # Fix paramiko RSA peculiarity
+    new_config.ssh_private_key = new_config.ssh_private_key.replace("PRIVATE KEY", "RSA PRIVATE KEY")
+
     new_config.save()
 
     messages.success(request, 'Configuration created successfully.')
     return safe_redirect(request, '/worker/')
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def download_ssh_private_key(request, configuration_id):
+    """
+    Download SSH private key
+    :params configuration_id: The configuration id
+    """
+    try:
+        user = get_user(request)
+        config = Configuration.objects.get(id=configuration_id)
+        if not user_is_auth(user, config.user):
+            messages.error(request, 'You are not allowed to access this configuration.')
+            return safe_redirect(request, '/worker/')
+    except Configuration.DoesNotExist:
+        messages.error(request, 'Configuration not found.')
+        return safe_redirect(request, '/worker/')
+
+    file = StringIO(config.ssh_private_key)
+    response = HttpResponse(file, content_type="text/plain")
+    response["Content-Disposition"] = "attachment; filename=private.key"
+    return response
 
 
 @require_http_methods(["POST"])
@@ -198,6 +228,7 @@ def update_worker_dependency(request, worker_id):
         return safe_redirect(request, '/worker/')
 
     messages.success(request, 'Update queued')
+    messages.info(request, 'Please make sure to refresh the website to show status updates')
     return safe_redirect(request, '/worker/')
 
 
@@ -220,6 +251,7 @@ def update_configuration_dependency(request, configuration_id):
         return safe_redirect(request, '/worker/')
 
     messages.success(request, 'Update queued')
+    messages.info(request, 'Please make sure to refresh the website to show status updates')
     return safe_redirect(request, '/worker/')
 
 
@@ -259,8 +291,8 @@ def configuration_soft_reset(request, configuration_id):
     Soft resets all workers in a given configuration
     :params configuration_id: The configuration id
     """
+    user = get_user(request)
     try:
-        user = get_user(request)
         configuration = Configuration.objects.get(id=configuration_id)
 
         if not user_is_auth(user, configuration.user):
@@ -287,8 +319,8 @@ def configuration_hard_reset(request, configuration_id):
     Hard resets all workers in a given configuration
     :params configuration_id: The configuration id
     """
+    user = get_user(request)
     try:
-        user = get_user(request)
         configuration = Configuration.objects.get(id=configuration_id)
 
         if not user_is_auth(user, configuration.user):
@@ -301,7 +333,7 @@ def configuration_hard_reset(request, configuration_id):
     workers = Worker.objects.filter(configurations__id=configuration_id)
 
     for worker in workers:
-        worker_hard_reset(request, worker.id, configuration_id)
+        worker_hard_reset(request, worker.id)
 
     messages.success(request, f'Successfully hard resetted configuration: {configuration_id} ({configuration.name})')
     return safe_redirect(request, '/worker/')
@@ -310,76 +342,55 @@ def configuration_hard_reset(request, configuration_id):
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
-def worker_soft_reset(request, worker_id, configuration_id=None):
+def worker_soft_reset(request, worker_id):
     """
     Soft reset the worker with the given worker ID.
     :params worker_id: The worker id
-    :params configuration_id: The configuration id
     """
+    user = get_user(request)
     try:
-        if not worker_id:
-            messages.error(request, 'No worker id given')
-            return safe_redirect(request, '/worker/')
-
-        user = get_user(request)
         worker = Worker.objects.get(id=worker_id)
-        if not configuration_id:
-            configuration = worker.configurations.filter(user=user).first()
-        else:
-            configuration = Configuration.objects.get(id=configuration_id)
+        configuration = worker.configurations.filter(user=user).first()
+
         if not user_is_auth(user, configuration.user):
             messages.error(request, 'You are not allowed to access this worker.')
             return safe_redirect(request, '/worker/')
 
-        try:
-            worker_soft_reset_task.delay(worker.id)
-            messages.success(request, f'Successfully soft resetted worker: ({worker.name})')
-            return safe_redirect(request, '/worker/')
-        except BaseException:
-            messages.error(request, 'Soft Reset failed.')
-            return safe_redirect(request, '/worker/')
-
-    except (Worker.DoesNotExist, Configuration.DoesNotExist):
+        worker_soft_reset_task.delay(worker.id)
+        messages.success(request, f'Worker soft reset queued: {worker.name}')
+    except Worker.DoesNotExist:
         messages.error(request, 'Worker or configuration not found.')
-        return safe_redirect(request, '/worker/')
+    except Configuration.DoesNotExist:
+        messages.error(request, 'You are not allowed to access this worker.')
+
+    return safe_redirect(request, '/worker/')
 
 
 @require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
-def worker_hard_reset(request, worker_id, configuration_id=None):
+def worker_hard_reset(request, worker_id):
     """
     Hard reset the worker with the given worker ID.
     :params worker_id: The worker id
-    :params configuration_id: The configuration id
     """
+    user = get_user(request)
     try:
-        if not worker_id:
-            messages.error(request, 'No worker id given')
-            return safe_redirect(request, '/worker/')
-        if worker_id:
-            user = get_user(request)
-            worker = Worker.objects.get(id=worker_id)
-            if not configuration_id:
-                configuration = worker.configurations.filter(user=user).first()
-            else:
-                configuration = Configuration.objects.get(id=configuration_id)
-            if not user_is_auth(user, configuration.user):
-                messages.error(request, 'You are not allowed to access this worker.')
-                return safe_redirect(request, '/worker/')
+        worker = Worker.objects.get(id=worker_id)
+        configuration = worker.configurations.filter(user=user).first()
 
-        try:
-            worker_soft_reset_task.delay(worker.id)
-            worker_hard_reset_task.delay(worker.id)
-            messages.success(request, f'Successfully hard resetted worker: ({worker.name})')
-            return safe_redirect(request, '/worker/')
-        except BaseException:
-            messages.error(request, 'Hard Reset failed.')
+        if not user_is_auth(user, configuration.user):
+            messages.error(request, 'You are not allowed to access this worker.')
             return safe_redirect(request, '/worker/')
 
-    except (Worker.DoesNotExist, Configuration.DoesNotExist):
+        worker_hard_reset_task.delay(worker.id)
+        messages.success(request, f'Worker {worker.name} hard reset queued')
+    except Worker.DoesNotExist:
         messages.error(request, 'Worker or configuration not found.')
-        return safe_redirect(request, '/worker/')
+    except Configuration.DoesNotExist:
+        messages.error(request, 'You are not allowed to access this worker.')
+
+    return safe_redirect(request, '/worker/')
 
 
 @require_http_methods(["POST"])
@@ -393,6 +404,96 @@ def check_updates(request):
 
     messages.success(request, 'Update check queued!')
     return safe_redirect(request, '/worker/')
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def orchestrator_reset(request):
+    """
+    Resets the orchestrator, clearing all tasks, soft resetting all workers, and marking
+    them as free.
+    """
+    orchestrator = get_orchestrator()
+    orchestrator.reset()
+
+    messages.success(request, 'Orchestrator reset successfully. Please wait a minute for worker soft resets to complete.')
+    return safe_redirect(request, '/worker/')
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def orchestrator_state(request):
+    """
+    Shows orchestrator information, including free and busy workers and current tasks.
+    """
+    # TODO: Create a template for this view instead of returning JSON
+    orchestrator = get_orchestrator()
+
+    return JsonResponse({"orchestrator_state": orchestrator.get_current_state()})
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def update_queue_reset(request, worker_id):
+    """
+    Clears the update queue for a worker.
+    :param worker_id: The worker for which to delete updates
+    """
+    WorkerUpdate.objects.filter(worker__id=worker_id).delete()
+
+    messages.success(request, 'Update queue reset successfully.')
+    return safe_redirect(request, '/worker/')
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def update_queue_state(request, worker_id):
+    """
+    Shows the current update queue for a worker.
+    :param worker_id: The worker for which to list updates
+    """
+    # TODO: Create a template for this view instead of returning JSON
+    update_queue = WorkerUpdate.objects.filter(worker__id=worker_id)
+    update_queue = [{
+        "dependency_type": update.get_type().label,
+        "version": update.version
+    } for update in update_queue]
+
+    return JsonResponse({"update_queue": update_queue})
+
+
+def dependency_state_reset(request):
+    """
+    Reset the 'used_by' field for all DependencyState instances.
+    An unexpected shutdown may leave this field populated with workers
+    that no longer use the dependency.
+    """
+    states = DependencyState.objects.all()
+    for state in states:
+        state.used_by.clear()
+        state.save()
+
+    messages.success(request, 'Dependency states reset successfully.')
+    return safe_redirect(request, '/worker/')
+
+
+def dependency_state(request):
+    """
+    Shows the current state of all dependencies.
+    """
+    # TODO: Create a template for this view instead of returning JSON
+    states = DependencyState.objects.all()
+    states = [{
+        "dependency_type": state.dependency_type,
+        "used_by": [worker.name for worker in state.used_by.all()],
+        "availability": state.availability
+    } for state in states]
+
+    return JsonResponse({"states": states})
 
 
 def safe_redirect(request, default):

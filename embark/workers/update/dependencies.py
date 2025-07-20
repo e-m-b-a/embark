@@ -303,6 +303,7 @@ def setup_dependency(dependency: DependencyType, version: str):
             if proc.returncode == 0:
                 logger.info("Worker dependencies setup successful. Logs: %s", log_file)
             else:
+                # TODO: The dependency state should not be set to available if the setup failed
                 logger.error("Worker dependencies setup failed. Logs: %s", log_file)
     except BaseException as exception:
         logger.error("Error setting up worker dependencies: %s. Logs: %s", exception, log_file)

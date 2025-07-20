@@ -22,4 +22,15 @@ urlpatterns = [
     path('worker/update/configuration/<int:configuration_id>/', views.update_configuration_dependency, name='embark-configuration-update'),
 
     path('worker/updates/', views.check_updates, name='embark-worker-check-updates'),
+
+    path('worker/configuration/<int:configuration_id>/ssh', views.download_ssh_private_key, name='embark-configuration-sshkey-download'),
+
+    path('worker/orchestrator/state/', views.orchestrator_state, name='embark-orchestrator-state'),
+    path('worker/orchestrator/reset/', views.orchestrator_reset, name='embark-orchestrator-reset'),
+
+    path('worker/queue/state/<int:worker_id>/', views.update_queue_state, name='embark-worker-update-queue'),
+    path('worker/queue/reset/<int:worker_id>/', views.update_queue_reset, name='embark-worker-update-queue-reset'),
+
+    path('worker/dependencies/state/', views.dependency_state, name='embark-worker-dependency-state'),
+    path('worker/dependencies/reset/', views.dependency_state_reset, name='embark-worker-dependency-reset'),
 ]

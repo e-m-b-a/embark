@@ -53,22 +53,31 @@ import_helper()
 }
 
 cleaner() {
-  pkill -u root "${EMBARK_BASEDIR:-${PWD}}"/emba/emba
-  pkill -u root runapscheduler
+  # stops ALL emba processes started from within embark that were not killed successfully
+  # timeout 30s pkill -u root -f "embark/emba/emba"
+  local PID_FILES=()
+  mapfile -d '' PID_FILES < <(find "${EMBA_LOG_ROOT:-emba_logs}" -type f -name "emba_run.pid" -print0 2> /dev/null)
 
-  fuser -k "${HTTP_PORT}"/tcp
-  fuser -k "${HTTPS_PORT}"/tcp
-  fuser -k 8000/tcp
-  fuser -k 8001/tcp
+  if [[ ${#PID_FILES[@]} -ne 0 ]]; then
+    for FILE in "${PID_FILES[@]}"; do
+      echo -e "${RED}""${BOLD}""Making sure the EMBA process with PID ""$(cat "${FILE}")"" from ""${FILE}"" is stopped""${NC}"
+      timeout 3s pkill -F "${FILE}"
+    done
+  fi
 
-  docker container stop embark_db
-  docker container stop embark_redis
-  # docker network rm embark_backend
-  # docker container prune -f --filter "label=flag"
+  timeout 30s pkill -u root -f "runapscheduler"
 
-  sync_emba_backward
+  timeout 5s fuser -k "${HTTP_PORT}"/tcp
+  timeout 5s fuser -k "${HTTPS_PORT}"/tcp
+  timeout 5s fuser -k 8000/tcp
+  timeout 5s fuser -k 8001/tcp
+
+  timeout 10s docker container stop embark_db
+  timeout 10s docker container stop embark_redis
+
+  sync_emba_backward || echo -e "${RED}""${BOLD}""Syncing EMBA backward failed!""${NC}"
   systemctl stop embark.service
-  exit 1
+  exit 0
 }
 
 # main
@@ -140,6 +149,15 @@ if ! [[ -d ./emba ]]; then
 fi
 if ! (cd "${EMBARK_BASEDIR:-${PWD}}"/emba && ./emba -d 1); then
   echo -e "${RED}""EMBA is not configured correctly""${NC}"
+  exit 1
+fi
+
+# check disk-size
+echo -e "${BLUE}""${BOLD}""Checking disk size""${NC}"
+AVAILABLE_SIZE="$(df -l /var/www/embark/ | awk '{print $4}' | grep -E '^[0-9]+$')"
+echo -e "${GREEN}""Available disk size: ${AVAILABLE_SIZE} KB""${NC}"
+if [[ "${AVAILABLE_SIZE}" -lt 4000000 ]]; then
+  echo -e "${RED}""Less than 4GB disk space available for the Server!""${NC}"
   exit 1
 fi
 
