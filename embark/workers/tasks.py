@@ -610,12 +610,13 @@ def worker_soft_reset_task(worker_id, only_reset=False):
     try:
         worker = Worker.objects.get(id=worker_id)
         if not only_reset:
+            reassign_analysis_id = worker.analysis_id
+
             # Remove the worker from the orchestrator
             orchestrator = get_orchestrator()
             orchestrator.remove_worker(worker, check=False)
 
             # Reassign the analysis running on the worker
-            reassign_analysis_id = worker.analysis_id
             if reassign_analysis_id:
                 firmware_analysis = FirmwareAnalysis.objects.get(id=reassign_analysis_id)
                 firmware_file = FirmwareFile.objects.get(id=firmware_analysis.firmware.id)
