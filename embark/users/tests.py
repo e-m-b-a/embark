@@ -1,5 +1,5 @@
 __copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2021-2025 The AMOS Projects'
-__author__ = 'Benedikt Kuehne, ashiven'
+__author__ = 'Benedikt Kuehne, ashiven, ClProsser'
 __license__ = 'MIT'
 
 from http import HTTPStatus

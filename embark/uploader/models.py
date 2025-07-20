@@ -1,6 +1,6 @@
 # pylint: disable=W4903
-__copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2021 The AMOS Projects'
-__author__ = 'Benedikt Kuehne, Maximilian Wagner, Mani Kumar, m-1-k-3, Ashutosh Singh, Garima Chauhan, diegiesskanne, VAISHNAVI UMESH, Vaish1795'
+__copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2021-2025 The AMOS Projects'
+__author__ = 'Benedikt Kuehne, Maximilian Wagner, Mani Kumar, m-1-k-3, Ashutosh Singh, Garima Chauhan, diegiesskanne, VAISHNAVI UMESH, Vaish1795, Luka Dekanozishvili, ClProsser'
 __license__ = 'MIT'
 
 import builtins
@@ -9,6 +9,7 @@ import os
 import shutil
 import uuid
 import re
+from pathlib import Path
 
 from django.conf import settings
 from django.db import models
@@ -19,6 +20,8 @@ from django.utils import timezone
 
 from porter.models import LogZipFile
 from users.models import User as Userclass
+from uploader.settings import get_emba_root, get_emba_base_cmd
+from settings.helper import workers_enabled
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +149,7 @@ class FirmwareFile(models.Model):
         return f"{settings.MEDIA_ROOT}/{self.pk}"
 
     def __str__(self):
-        return f"{self.file.name.replace('/', ' - ')}"  # this the only sanitizing we do?
+        return f"{self.file.name.replace('/', ' - ')}"
 
 
 @receiver(pre_delete, sender=FirmwareFile)
@@ -311,7 +314,7 @@ class FirmwareAnalysis(models.Model):
     zip_file = models.ForeignKey(LogZipFile, on_delete=models.SET_NULL, help_text='Archive file', null=True, editable=True, blank=True)
 
     # embark meta data
-    path_to_logs = models.FilePathField(path=settings.EMBA_LOG_ROOT, editable=True, allow_folders=True)
+    path_to_logs = models.FilePathField(path=settings.EMBA_LOG_ROOT, editable=True, allow_folders=True, max_length=255)
     log_size = models.PositiveBigIntegerField(default=0, blank=True)
     start_date = models.DateTimeField(default=timezone.now, blank=True)
     end_date = models.DateTimeField(default=None, null=True)
@@ -319,6 +322,7 @@ class FirmwareAnalysis(models.Model):
     duration = models.CharField(blank=True, null=True, max_length=100, help_text='')
     finished = models.BooleanField(default=False, blank=False)
     failed = models.BooleanField(default=False, blank=False)
+    running_on_worker = models.BooleanField(default=workers_enabled, blank=True)
 
     # view option fields
     archived = models.BooleanField(default=False, blank=False)
@@ -398,6 +402,51 @@ class FirmwareAnalysis(models.Model):
                 shutil.rmtree(os.path.join(log_path, _content), ignore_errors=False, onerror=logger.error("Error when trying to delete %s", os.path.join(log_path, _content)))
         logger.debug("Reduced the size to. stat=%s", os.stat(log_path))
         logger.debug("Archived %s", self.id)
+
+    def create_log_dir(self):
+        """
+        Creates firmware log directory
+        """
+        emba_log_location = f"{settings.EMBA_LOG_ROOT}/{self.id}/emba_logs"
+        log_path = Path(emba_log_location).parent
+        log_path.mkdir(parents=True, exist_ok=True)
+
+        self.path_to_logs = emba_log_location
+        self.save(update_fields=["path_to_logs"])
+
+    def set_meta_info(self):
+        """
+        Sets meta information
+        """
+        self.status["analysis"] = str(self.id)
+        self.status["firmware_name"] = self.firmware_name
+        self.save(update_fields=["status"])
+
+    def construct_emba_command(self, image_file_location: str):
+        """
+        Constructs EMBA command
+        :param image_file_location: String to the image file
+        :param log_path: Path to emba logs
+        :returns: emba command as string
+        """
+        emba_flags = self.get_flags()
+
+        if self.sbom_only_test is True:
+            scan_profile = "./scan-profiles/default-sbom.emba"
+        elif self.system_emulation_test is True or self.user_emulation_test is True:  # if any expert fields are active
+            scan_profile = None
+        else:
+            scan_profile = "./scan-profiles/default-scan-no-notify.emba"
+
+        log_path = settings.WORKER_EMBA_LOGS if workers_enabled() else self.path_to_logs
+        emba_cmd = f"cd {get_emba_root()} && {get_emba_base_cmd()} -f {image_file_location} -l {log_path} "
+
+        if scan_profile:
+            emba_cmd += f"-p {scan_profile} "
+
+        emba_cmd += f"{emba_flags}"
+
+        return emba_cmd
 
 
 @receiver(pre_delete, sender=FirmwareAnalysis)
