@@ -1,4 +1,4 @@
-__copyright__ = 'Copyright 2025 Siemens Energy AG, Copyright 2025 The AMOS Projects'
+__copyright__ = 'Copyright 2025 The AMOS Projects'
 __author__ = 'ashiven, ClProsser, SirGankalot'
 __license__ = 'MIT'
 
@@ -123,7 +123,7 @@ def process_update_queue(worker: Worker):
     Processes the update queue
     :param worker: The worker to update
     """
-    if len(WorkerUpdate.objects.filter(worker__id=worker.id)) == 0:
+    if WorkerUpdate.objects.filter(worker__id=worker.id).count() == 0:
         return
 
     worker.status = Worker.ConfigStatus.CONFIGURING

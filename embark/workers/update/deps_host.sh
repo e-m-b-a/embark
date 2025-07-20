@@ -2,14 +2,14 @@
 
 # EMBArk - The firmware security scanning environment
 #
-# Copyright 2025 Siemens Energy AG
+# Copyright 2025 The AMOS Projects
 #
 # EMBArk comes with ABSOLUTELY NO WARRANTY.
 #
 # EMBArk is licensed under MIT
 #
 # Author(s): ClProsser, SirGankalot
-# Contributor(s): Luka Dekanozishvili
+# Contributor(s): Luka Dekanozishvili, ashiven
 
 set -e
 cd "$(dirname "$0")"

@@ -1,5 +1,5 @@
 # pylint: disable=R1732, C0201, E1129, W1509
-__copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2021 The AMOS Projects'
+__copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2021-2025 The AMOS Projects'
 __author__ = 'Benedikt Kuehne, m-1-k-3, ClProsser, Luka Dekanozishvili'
 __license__ = 'MIT'
 

@@ -1,5 +1,5 @@
-__copyright__ = 'Copyright 2025 Siemens Energy AG, Copyright 2025 The AMOS Projects'
-__author__ = 'ClProsser'
+__copyright__ = 'Copyright 2025 The AMOS Projects'
+__author__ = 'ClProsser, ashiven'
 __license__ = 'MIT'
 
 import logging

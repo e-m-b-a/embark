@@ -2,7 +2,7 @@
 
 # EMBArk - The firmware security scanning environment
 #
-# Copyright 2025 Siemens Energy AG
+# Copyright 2025 The AMOS Projects
 #
 # EMBArk comes with ABSOLUTELY NO WARRANTY.
 #
