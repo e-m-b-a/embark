@@ -25,7 +25,7 @@ VERSION="$3"
 DEPSCACHE="$4"
 
 PKGPATH="${FILEPATH}/pkg"
-IS_UBUNTU=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
+IS_UBUNTU=$(awk -F= '/^NAME/{gsub(/"/, "", $2); print $2}' /etc/os-release)
 [[ ${IS_UBUNTU} == "Ubuntu" ]] && IS_UBUNTU=true || IS_UBUNTU=false
 
 function downloadPackage() {
