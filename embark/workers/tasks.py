@@ -147,11 +147,19 @@ def _new_analysis_from(old_analysis: FirmwareAnalysis) -> FirmwareAnalysis:
     return new_analysis
 
 
-def _handle_reconnected_worker(worker: Worker):
+@shared_task
+def setup_reconnected_worker_task(worker_id):
     """
     Handle a worker that was marked as unreachable but has now reconnected.
     This will soft reset the worker, perform any queued updates, and re-add it to the orchestrator.
+    :param worker_id: The worker to setup
     """
+    try:
+        worker = Worker.objects.get(id=worker_id)
+    except Worker.DoesNotExist:
+        logger.error("start_analysis: Invalid worker id")
+        return
+
     logger.info("Reconnecting worker: %s", worker.name)
 
     worker_soft_reset_task(worker.id)
@@ -187,10 +195,7 @@ def _handle_unreachable_worker(worker: Worker, force: bool = False):
             reachable_threshold = make_aware(datetime.now()) - timedelta(minutes=settings.WORKER_REACHABLE_TIMEOUT)
             if worker.last_reached < reachable_threshold or force:
                 worker.reachable = False
-                logger.info(
-                    "Failed to reach worker %s for the last %d minutes, setting status to offline and reassigning analysis.",
-                    worker.name, settings.WORKER_REACHABLE_TIMEOUT
-                )
+                logger.info("Failed to reach worker %s for the last %d minutes, setting status to unreachable.", worker.name, settings.WORKER_REACHABLE_TIMEOUT)
 
                 # We need this because the analysis_id will be set to None in orchestrator.remove_worker
                 # We also have to remove the worker before reassigning the analysis
@@ -200,6 +205,7 @@ def _handle_unreachable_worker(worker: Worker, force: bool = False):
                 orchestrator.remove_worker(worker, check=False)
 
                 if reassign_analysis_id:
+                    logger.info("Reassigning analysis %s of unreachable worker %s", reassign_analysis_id, worker.name)
                     firmware_analysis = FirmwareAnalysis.objects.get(id=reassign_analysis_id)
                     firmware_file = FirmwareFile.objects.get(id=firmware_analysis.firmware.id)
                     new_analysis = _new_analysis_from(firmware_analysis)
@@ -229,10 +235,7 @@ def update_worker_info():
 
                 # The worker was previously set to unreachable and is now reachable again
                 if not worker.reachable:
-                    # TODO: This will block the entire update_worker_info task until the worker
-                    #       is successfully reset, updated, and re-added to the orchestrator.
-                    #       It might be better to use threads to update the workers instead of a for loop.
-                    _handle_reconnected_worker(worker)
+                    setup_reconnected_worker_task.delay(worker.id)
 
                 worker.last_reached = make_aware(datetime.now())
                 worker.reachable = True
