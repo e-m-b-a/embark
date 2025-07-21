@@ -29,3 +29,19 @@ def check_password(environ, user, password):
             return False
     finally:
         db.connection.close()
+
+
+def groups_for_user(environ, user):
+    db.reset_queries()
+
+    kwargs = {'username': user, 'is_active': True}
+
+    try:
+        user = User.objects.get(**kwargs)
+    except User.DoesNotExist:
+        return None
+
+    group_list = user.groups.values_list('name', flat=True)
+    print(group_list)
+    db.connection.close()
+    return group_list
