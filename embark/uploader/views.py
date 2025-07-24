@@ -8,7 +8,7 @@ import os
 from wsgiref.util import FileWrapper
 
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError, QueryDict, StreamingHttpResponse
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseServerError, QueryDict, StreamingHttpResponse
 from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
