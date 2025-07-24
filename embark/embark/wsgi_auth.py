@@ -1,3 +1,4 @@
+# pylint: disable=simplifiable-if-statement, unused-argument, wrong-import-order, wrong-import-position, ungrouped-imports
 import os
 
 os.environ["DJANGO_SETTINGS_MODULE"] = "embark.settings.deploy"
@@ -11,6 +12,7 @@ application = WSGIHandler()
 
 from users.models import User
 from django import db
+
 
 def check_password(environ, user, password):
     db.reset_queries()
