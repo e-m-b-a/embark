@@ -16,6 +16,7 @@ urlpatterns = [
     path('uploader/manage/', views.manage_file, name='embark-uploader-manage-file'),
     path('uploader/save/', views.save_file, name='embark-uploader-save'),
     path('uploader/delete/', views.delete_fw_file, name='embark-uploader-delete'),
+    path('uploader/download/', views.download_firmware, name='embark-uploader-download'),
 
     path('uploader/start/', views.start_analysis, name='embark-uploader-start-analysis'),
 

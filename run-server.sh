@@ -212,14 +212,54 @@ if ! [[ -d /var/www/conf ]]; then
   mkdir /var/www/conf
 fi
 {
+  echo -e "LoadModule auth_basic_module \${MOD_WSGI_MODULES_DIRECTORY}/mod_auth_basic.so"
+  echo -e "LoadModule authz_user_module \${MOD_WSGI_MODULES_DIRECTORY}/mod_authz_user.so"
+  echo -e "WSGIPythonHome /var/www/.venv"
+  echo -e "WSGIPythonPath /var/www/embark/embark"
+  echo -e ""
+  echo -e "WSGIProcessGroup %{GLOBAL}"
+  echo -e "WSGIApplicationGroup %{GLOBAL}"
+  echo -e ""
   echo -e "<Location /admin>"
-  echo -e "Order deny,allow"
-  echo -e "Deny from all"
-  echo -e "Allow from 127.0.0.1"
+  echo -e "  Order deny,allow"
+  echo -e "  Deny from all"
+  echo -e "  Allow from 127.0.0.1"
   if [[ ${#ADMIN_HOST_RANGE[@]} -ne 0 ]]; then
-    echo -e "Allow from ${ADMIN_HOST_RANGE[*]}"
+    echo -e "  Allow from ${ADMIN_HOST_RANGE[*]}"
   fi
   echo -e "</Location>"
+  echo -e ""
+  echo -e "Alias '/media' '/var/www/media'"
+  echo -e "<Directory '/var/www/media'>"
+  echo -e "    AllowOverride None"
+  echo -e "<IfVersion < 2.4>"
+  echo -e "    Order allow,deny"
+  echo -e "    Allow from all"
+  echo -e "</IfVersion>"
+  echo -e "<IfVersion >= 2.4>"
+  echo -e "    Require all granted"
+  echo -e "</IfVersion>"
+  echo -e "</Directory>"
+  echo -e "<Location /media>"
+  echo -e "  Order deny,allow"
+  echo -e "  Deny from all"
+  echo -e "  Allow from 127.0.0.1"
+  if [[ ${#ADMIN_HOST_RANGE[@]} -ne 0 ]]; then
+    echo -e "  Allow from ${ADMIN_HOST_RANGE[*]}"
+  fi
+  echo -e "  AuthType Basic"
+  echo -e "  AuthName Admin"
+  echo -e "  AuthBasicProvider wsgi"
+  echo -e "  WSGIAuthUserScript /var/www/embark/embark/wsgi_auth.py"
+  echo -e "  WSGIAuthGroupScript /var/www/embark/embark/wsgi_auth.py"
+  # echo -e "  Require valid-user"
+  echo -e "  Require wsgi-group Administration_Group"
+  echo -e "</Location>"
+  # echo -e "<Directory /var/www/embark/embark>"
+  # echo -e "  <Files wsgi_auth.py>"
+  # echo -e "    Require all granted"
+  # echo -e "  </Files>"
+  # echo -e "</Directory>"
 } > /var/www/conf/embark.conf
 
 # certs
