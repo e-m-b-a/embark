@@ -30,6 +30,8 @@ export IGNORE_EMBA=${IGNORE_EMBA:=0}
 
 export WSL=0
 
+CELERY_PID=0
+
 cleaner() {
   local PID_FILES=()
   mapfile -d '' PID_FILES < <(find "${EMBA_LOG_ROOT:-emba_logs}" -type f -name "emba_run.pid" -print0 2> /dev/null)
@@ -43,6 +45,10 @@ cleaner() {
 
   pkill -u root -f daphne
   pkill -u root -f runapscheduler
+
+  if [ ${CELERY_PID} -ne 0 ]; then
+    timeout 10s kill --timeout 5000 KILL ${CELERY_PID} 2>/dev/null
+  fi
 
   docker container stop embark_db
   docker container stop embark_redis
@@ -159,7 +165,6 @@ python3 ./manage.py runapscheduler | tee -a ../logs/scheduler.log &
 # Start celery worker
 celery -A embark worker --beat --scheduler django -l INFO --logfile=../logs/celery.log &
 CELERY_PID=$!
-trap 'kill ${CELERY_PID} 2>/dev/null; exit' SIGINT SIGTERM EXIT
 
 echo -e "${ORANGE}""${BOLD}""start EMBArk server(ASGI only) on port ${PORT}""${NC}"
 python3 ./manage.py runserver "${IP}":"${PORT}" |& tee -a ../logs/debug-server.log

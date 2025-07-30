@@ -35,6 +35,8 @@ export EMBARK_BASEDIR=""
 STRICT_MODE=0
 EMBARK_BASEDIR="$(realpath "$(dirname "${0}")")"
 
+CELERY_PID=0
+
 import_helper()
 {
   local HELPERS=()
@@ -66,6 +68,10 @@ cleaner() {
   fi
 
   timeout 30s pkill -u root -f "runapscheduler"
+
+  if [ ${CELERY_PID} -ne 0 ]; then
+    timeout 10s kill --timeout 5000 KILL ${CELERY_PID} 2>/dev/null
+  fi
 
   timeout 5s fuser -k "${HTTP_PORT}"/tcp
   timeout 5s fuser -k "${HTTPS_PORT}"/tcp
@@ -293,10 +299,9 @@ echo -e "\n[""${BLUE} JOB""${NC}""] Starting daphne(ASGI) - log to /embark/logs/
 cd /var/www/embark && pipenv run daphne --access-log /var/www/logs/daphne.log -e ssl:8000:privateKey=/var/www/conf/cert/embark-ws.local.key:certKey=/var/www/conf/cert/embark-ws.local.crt -b "${BIND_IP}" -p 8001 -s embark-ws.local embark.asgi:application &
 sleep 5
 
-# Start celery worker (note that we are in /var/www/embark now and the logs are in /var/www/logs)
+# Start celery worker
 pipenv run python -m celery -A embark worker --beat --scheduler django -l INFO --logfile=../logs/celery.log &
 CELERY_PID=$!
-trap 'kill ${CELERY_PID} 2>/dev/null; exit' SIGINT SIGTERM EXIT
 
 echo -e "\n""${ORANGE}${BOLD}""=============================================================""${NC}"
 echo -e "\n""${ORANGE}${BOLD}""EMBA logs are under /var/www/emba_logs/<id> ""${NC}"
