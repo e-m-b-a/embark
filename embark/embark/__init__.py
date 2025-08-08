@@ -1,11 +1,13 @@
-__copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2021 The AMOS Projects'
-__author__ = 'Benedikt Kuehne, diegiesskanne'
+__copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2021-2025 The AMOS Projects'
+__author__ = 'Benedikt Kuehne, diegiesskanne, ClProsser'
 __license__ = 'MIT'
 
 from subprocess import Popen, PIPE
 import logging
 
 from django.utils import timezone
+
+from .celery_dtq import app as celery_app
 
 logger = logging.getLogger(__name__)
 
@@ -27,3 +29,5 @@ def check_tz() -> bool:
 
 
 check_tz()
+
+__all__ = ('celery_app',)

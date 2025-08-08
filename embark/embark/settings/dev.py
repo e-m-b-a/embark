@@ -1,5 +1,5 @@
 __copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2025 The AMOS Projects'
-__author__ = 'Benedikt Kuehne, SirGankalot, ClProsser'
+__author__ = 'Benedikt Kuehne, SirGankalot, ClProsser, ashiven'
 __license__ = 'MIT'
 
 from pathlib import Path
@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_bootstrap5',
     'django_tables2',
+    'django_celery_beat',
     'mod_wsgi.server',
     'django_apscheduler',
     'uploader',
@@ -47,7 +48,9 @@ INSTALLED_APPS = [
     'tracker',
     'porter',
     'updater',
-    'rest_framework'
+    'rest_framework',
+    'workers',
+    'settings',
 ]
 
 AUTH_USER_MODEL = 'users.User'
@@ -75,7 +78,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'embark.context_processor.embark_version'
+                'embark.context_processor.embark_version',
+                'settings.context_processors.show_worker_app_processor',
             ],
         },
     },
@@ -275,3 +279,20 @@ CHANNEL_LAYERS = {
 TEMP_DIR = Path("/tmp/")
 
 VERSION = get_version_strings()
+
+# Worker setup
+WORKER_FILES_PATH = os.path.join(BASE_DIR.parent, "WORKER_FILES")
+WORKER_UPDATE_CHECK = os.path.join(WORKER_FILES_PATH, "update_check")
+WORKER_KEY_LOCATION = os.path.join(WORKER_FILES_PATH, "ssh_keys")
+WORKER_SETUP_LOGS = os.path.join(WORKER_FILES_PATH, "logs/worker_setup_{timestamp}.log")
+WORKER_EMBA_ROOT = "/root/emba/"
+WORKER_FIRMWARE_DIR = "/root/firmware/"
+WORKER_EMBA_LOGS = "/root/emba_logs/"
+WORKER_UPDATE_QUEUE_SIZE = 50
+WORKER_SSH_KEY_SIZE = 2048
+WORKER_REACHABLE_TIMEOUT = 10
+
+# Celery task queue
+CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
+CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
+CELERY_TASK_TRACK_STARTED = True

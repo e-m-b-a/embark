@@ -1,6 +1,6 @@
 # pylint: disable=R1705
 __copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2021-2025 The AMOS Projects, Copyright 2021 Siemens AG'
-__author__ = 'YulianaPoliakova, Garima Chauhan, p4cx, Benedikt Kuehne, VAISHNAVI UMESH, m-1-k-3, ashiven'
+__author__ = 'YulianaPoliakova, Garima Chauhan, p4cx, Benedikt Kuehne, VAISHNAVI UMESH, m-1-k-3, ashiven, SirGankalot, ClProsser'
 __license__ = 'MIT'
 
 import builtins
@@ -289,6 +289,8 @@ def activate_user(user, token) -> bool:
             | Q(codename="reporter_permission")
             | Q(codename="dashboard_permission_minimal")
             | Q(codename="dashboard_permission_advanced")
+            | Q(codename="worker_permission")
+            | Q(codename="settings_permission")
         )
         user.user_permissions.set(default_permission_set)
         user.save()
@@ -337,7 +339,7 @@ def generate_api_key(request):
     user.api_key = new_api_key
     user.save()
     messages.success(request, f"Your new API key: {new_api_key}")
-    return redirect("..")
+    return redirect('..')
 
 
 @require_api_key
