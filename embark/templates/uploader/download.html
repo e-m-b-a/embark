@@ -1,0 +1,20 @@
+{% load static %}
+{% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/uploader.css' %}"/>{% endblock style %}
+
+<div class="row DownloadRow">
+    <div class="box">
+        <p class="mainText">Select and download a firmware file</p>
+        <form action="{% url 'embark-uploader-download' %}" method="post" id="download-form">
+            <!--  onsubmit="window.confirmDelete(event)" -->
+            {% csrf_token %}
+            <div class="innerBlock">
+                <div id="firmwareToDownload" class="form-group downloadFirmware" >
+                    {{ download_form }}
+                </div>
+            </div>
+            <div class="buttonRow">
+                <button type="submit" class="btn buttonRowElem">Download</button>
+            </div>
+        </form>
+    </div>
+</div>
