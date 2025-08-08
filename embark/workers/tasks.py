@@ -341,13 +341,13 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
         analysis.save()
 
         if not ssh_failed:
-            worker_soft_reset_task(worker.id)
+            orchestrator.remove_worker(worker)
+
+            worker_soft_reset_task(worker.id, True)
             process_update_queue(worker)
 
-            if not worker.status == Worker.ConfigStatus.CONFIGURED:
-                orchestrator.remove_worker(worker)
-            if orchestrator.is_busy(worker):
-                orchestrator.release_worker(worker)
+            if worker.status == Worker.ConfigStatus.CONFIGURED:
+                orchestrator.add_worker(worker)
 
             orchestrator.assign_tasks()
 
@@ -600,9 +600,6 @@ def worker_soft_reset_task(worker_id, only_reset=False):
     Removes the worker from the orchestrator, reassigns the analysis if needed,
     connects via SSH to the worker and performs the soft reset, and re-adds the worker to the orchestrator.
 
-    Removes the worker from the orchestrator, reassigns the analysis if needed,
-    connects via SSH to the worker and performs the soft reset, and re-adds the worker to the orchestrator.
-
     :param worker_id: ID of worker to soft reset
     :param only_reset: If True, only performs the reset without reassigning the analysis or removing the worker from the orchestrator.
     """
@@ -658,7 +655,7 @@ def worker_hard_reset_task(worker_id):
     orchestrator = get_orchestrator()
     orchestrator.remove_worker(worker, False)
 
-    worker_soft_reset_task(worker_id)
+    worker_soft_reset_task(worker_id, True)
 
     ssh_client = None
     try:

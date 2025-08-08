@@ -152,7 +152,7 @@ class Orchestrator:
                 analysis.duration = str(analysis.scan_time)
                 analysis.save()
             self._remove_worker(worker)
-            worker_soft_reset_task.delay(worker.id, only_reset=True)
+            worker_soft_reset_task.delay(worker.id, True)
 
         for worker_ip, worker in all_workers.items():
             self.free_workers[worker_ip] = worker
