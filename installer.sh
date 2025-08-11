@@ -290,6 +290,10 @@ install_debs(){
   if ! command -v ansifilter > /dev/null ; then
     apt-get install -y ansifilter
   fi
+  # sshpass
+  if ! command -v sshpass > /dev/null ; then
+    apt-get install -y sshpass
+  fi
   # in Ubuntu 22 the apt package is broken
   if ! pipenv --version ; then
     pip install --upgrade pipenv

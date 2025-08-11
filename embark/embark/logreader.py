@@ -295,9 +295,14 @@ class LogReader:
                 pass
 
         while not self.finish:
+            emba_log_path = f"{self.analysis.path_to_logs}/emba.log"
+            if not pathlib.Path(emba_log_path).exists():
+                time.sleep(5)
+                continue
+
             # look for new events in log
-            logger.debug("looking for events in %s", f"{self.analysis.path_to_logs}/emba.log")
-            got_event = self.inotify_events(f"{self.analysis.path_to_logs}/emba.log")
+            logger.debug("looking for events in %s", emba_log_path)
+            got_event = self.inotify_events(emba_log_path)
 
             for eve in got_event:
                 for flag in flags.from_mask(eve.mask):
@@ -307,7 +312,7 @@ class LogReader:
                     # Act on file change
                     elif flag is flags.MODIFY:
                         # get the actual difference
-                        tmp = self.get_diff(f"{self.analysis.path_to_logs}/emba.log")
+                        tmp = self.get_diff(emba_log_path)
                         logger.debug("Got diff-output: %s", tmp)
                         # send changes to frontend
                         self.input_processing(tmp)

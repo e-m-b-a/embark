@@ -1,5 +1,5 @@
 __copyright__ = 'Copyright 2021-2025 Siemens Energy AG, Copyright 2021-2025 The AMOS Projects'
-__author__ = 'Garima Chauhan, m-1-k-3, Benedikt Kuehne, ashiven'
+__author__ = 'Garima Chauhan, m-1-k-3, Benedikt Kuehne, ashiven, SirGankalot'
 __license__ = 'MIT'
 
 from django.db import models
@@ -33,4 +33,6 @@ class User(AbstractUser):
             ("reporter_permission", "Can access reporter functionalities of embark"),
             ("dashboard_permission_minimal", "Can access dashboard functionalities of embark"),
             ("dashboard_permission_advanced", "Can access all dashboard functionalities of embark"),
+            ("worker_permission", "Can access worker functionalities of embark"),
+            ("settings_permission", "Can access settings functionalities of embark")
         )
