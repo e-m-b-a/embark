@@ -2,6 +2,7 @@ __copyright__ = 'Copyright 2022-2025 Siemens Energy AG, Copyright 2025 The AMOS 
 __author__ = 'Benedikt Kuehne, ashiven'
 __license__ = 'MIT'
 
+import socket
 from random import randrange
 import os
 from pathlib import Path
@@ -194,6 +195,25 @@ def disk_space_check(directory: str = "/var/www/embark/", size: int = 4000000) -
     return True
 
 
+def is_ip_local_host(ip_address: str) -> bool:
+    """
+    Checks if the given IP address is a local host address.
+    Returns True if it is a local host address, otherwise False.
+    inspired by https://gist.github.com/bennr01/7043a460155e8e763b3a9061c95faaa0
+    """
+    hostname = socket.getfqdn(ip_address)
+    if hostname in ("localhost", "0.0.0.0"):
+        return True
+    localhost = socket.gethostname()
+    localaddrs = socket.getaddrinfo(localhost, 22)  # port 22 is arbitrary here
+    targetaddrs = socket.getaddrinfo(hostname, 22)
+    for (family, socktype, proto, canonname, sockaddr) in localaddrs:
+        for (rfamily, rsocktype, rproto, rcanonname, rsockaddr) in targetaddrs:
+            if rsockaddr[0] == sockaddr[0]:
+                return True
+    return False
+
+
 if __name__ == '__main__':
     # import pprint
     # TEST_STRING = 'Linux / v2.6.33.2'
@@ -201,4 +221,7 @@ if __name__ == '__main__':
     # emba_modle_list = get_emba_modules(emba_dir_path="/home/cylox/embark/emba")
     # print(pprint.pformat(emba_modle_list, indent=1))
     # print(count_emba_modules(emba_modle_list))
-    disk_space_check()
+    if disk_space_check('./'):
+        print("Disk space is sufficient.")
+    print(is_ip_local_host("127.0.0.1"))
+    print(is_ip_local_host("172.22.0.1"))

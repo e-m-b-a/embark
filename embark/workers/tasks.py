@@ -25,6 +25,7 @@ from django.utils.timezone import make_aware
 from django.utils import timezone
 from django.conf import settings
 
+from embark.helper import is_ip_local_host
 from workers.models import Worker, Configuration, DependencyVersion, DependencyType, WorkerDependencyVersion
 from workers.update.dependencies import eval_outdated_dependencies, get_script_name, update_dependency, setup_dependency
 from workers.update.update import exec_blocking_ssh, parse_deb_list, process_update_queue, init_sudoers_file, update_dependencies_info, setup_ssh_key, undo_ssh_key, undo_sudoers_file
@@ -810,7 +811,10 @@ def config_worker_scan_task(configuration_id: int):
         config.save()
 
         ip_network = ipaddress.ip_network(config.ip_range, strict=False)
-        ip_addresses = [str(ip) for ip in ip_network.hosts()]
+        ip_addresses = [str(ip) for ip in ip_network.hosts() if not is_ip_local_host(ip)]  # filter out local host IPs
+        # remove special addresses
+        ip_addresses.remove(ip_network.broadcast_address)  # remove broadcast address
+        ip_addresses.remove(ip_network.network_address)  # remove network address
         with ThreadPoolExecutor(max_workers=50) as executor:
             results = executor.map(partial(_scan_for_worker, config, ssh_auth_check=ssh_auth_check), ip_addresses)
             reachable = set(results) - {None}
