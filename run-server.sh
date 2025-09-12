@@ -89,13 +89,14 @@ cleaner() {
 # main
 echo -e "\\n${ORANGE}""${BOLD}""EMBArk Startup""${NC}\\n""${BOLD}=================================================================${NC}"
 
-while getopts "ha:b:" OPT ; do
+while getopts "ha:b:i:" OPT ; do
   case ${OPT} in
     h)
       echo -e "\\n""${CYAN}""USAGE""${NC}"
       echo -e "${CYAN}-h${NC}           Print this help message"
-      echo -e "${CYAN}-a <IP/Name>${NC} Add a server Domain-name alias"
+      echo -e "${CYAN}-a <IP/Name>${NC} Add a server Virtualhost alias"
       echo -e "${CYAN}-b <IP/Range>${NC} Add a ipv4 to access the admin pages from"
+      echo -e "${CYAN}-i <IP>${NC} specify the ipv4 to host the server on (default=0.0.0.0)"
       echo -e "---------------------------------------------------------------------------"
       if ip addr show eth0 &>/dev/null ; then
         IP=$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
@@ -116,8 +117,12 @@ while getopts "ha:b:" OPT ; do
     b)
       ADMIN_HOST_RANGE+=("${OPTARG}")
       ;;
+    i)
+      BIND_IP="${OPTARG}"
+      echo -e "${GREEN} Bind IP set to: ${BIND_IP}""${NC}"
+      ;;
     :)
-      echo -e "${CYAN} Usage: [-a <IP/HOSTNAME>] [-b <IP/Range>] ${NC}"
+      echo -e "${CYAN} Usage: [-a <IP/HOSTNAME>] [-b <IP/Range>] [-i <IP>] ${NC}"
       exit 1
       ;;
     *)
@@ -125,6 +130,31 @@ while getopts "ha:b:" OPT ; do
       ;;
   esac
 done
+
+# Bind IP check
+if ! [[ ${BIND_IP} == "0.0.0.0" ]]; then
+
+  # localhost to loopback for sanitization
+  if [[ ${BIND_IP} == "localhost" ]]; then
+    BIND_IP="127.0.0.1"
+  fi
+  #sanitize IP
+  if ! [[ ${BIND_IP} =~ ^((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])$ ]] ; then
+    echo -e "\\n${RED}""${BOLD}""The bind IP (${BIND_IP}) is not a valid IPv4 address!""${NC}\\n"
+    exit 1
+  fi
+  # check if IP is configured on host
+  if ! ip addr show | grep -q "${BIND_IP}"; then
+    echo -e "\\n${RED}""${BOLD}""The bind IP (${BIND_IP}) is not configured on this host!""${NC}\\n"
+    exit 1
+  fi
+
+fi
+
+# add to hosts file with correct IP
+sed -i "/embark.local/d" /etc/hosts
+echo -e "${BIND_IP}     embark.local\\n" >>/etc/hosts
+
 
 # Alias
 if [[ ${#SERVER_ALIAS[@]} -ne 0 ]]; then
@@ -228,26 +258,26 @@ fi
   echo -e "WSGIApplicationGroup %{GLOBAL}"
   echo -e ""
   echo -e "<Location /admin>"
+  echo -e "<IfVersion < 2.4>"
   echo -e "  Order deny,allow"
   echo -e "  Deny from all"
   echo -e "  Allow from 127.0.0.1"
   if [[ ${#ADMIN_HOST_RANGE[@]} -ne 0 ]]; then
     echo -e "  Allow from ${ADMIN_HOST_RANGE[*]}"
   fi
-  echo -e "</Location>"
-  echo -e ""
-  echo -e "Alias '/media' '/var/www/media'"
-  echo -e "<Directory '/var/www/media'>"
-  echo -e "    AllowOverride None"
-  echo -e "<IfVersion < 2.4>"
-  echo -e "    Order allow,deny"
-  echo -e "    Allow from all"
   echo -e "</IfVersion>"
   echo -e "<IfVersion >= 2.4>"
   echo -e "    Require all granted"
+  echo -e "    Require ip 127.0.0.1"
+  if [[ ${#ADMIN_HOST_RANGE[@]} -ne 0 ]]; then
+    echo -e "    Require ip ${ADMIN_HOST_RANGE[*]}"
+  fi
   echo -e "</IfVersion>"
-  echo -e "</Directory>"
+  echo -e "</Location>"
+  echo -e ""
+  echo -e "Alias '/media' '/var/www/media'"
   echo -e "<Location /media>"
+  echo -e "<IfVersion < 2.4>"
   echo -e "  Order deny,allow"
   echo -e "  Deny from all"
   echo -e "  Allow from 127.0.0.1"
@@ -261,6 +291,21 @@ fi
   echo -e "  WSGIAuthGroupScript /var/www/embark/embark/wsgi_auth.py"
   # echo -e "  Require valid-user"
   echo -e "  Require wsgi-group Administration_Group"
+  echo -e "</IfVersion>"
+  echo -e "<IfVersion >= 2.4>"
+  echo -e "  Require all granted"
+  echo -e "  Require ip 127.0.0.1"
+  if [[ ${#ADMIN_HOST_RANGE[@]} -ne 0 ]]; then
+    echo -e "  Require ip ${ADMIN_HOST_RANGE[*]}"
+  fi
+  echo -e "  AuthType Basic"
+  echo -e "  AuthName Admin"
+  echo -e "  AuthBasicProvider wsgi"
+  echo -e "  WSGIAuthUserScript /var/www/embark/embark/wsgi_auth.py"
+  echo -e "  WSGIAuthGroupScript /var/www/embark/embark/wsgi_auth.py"
+  # echo -e "  Require valid-user"
+  echo -e "  Require wsgi-group Administration_Group"
+  echo -e "</IfVersion>"
   echo -e "</Location>"
   # echo -e "<Directory /var/www/embark/embark>"
   # echo -e "  <Files wsgi_auth.py>"
@@ -328,8 +373,9 @@ pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 --processes 4 --threads 4 \
 --graceful-timeout 5 \
 --log-level debug \
---server-name embark.local "${WSGI_FLAGS[@]}" &
-
+--server-name "embark.local" \
+--server-alias localhost \
+--server-alias "${BIND_IP}" "${WSGI_FLAGS[@]}" &
 # --ssl-certificate /var/www/conf/cert/embark.local --ssl-certificate-key-file /var/www/conf/cert/embark.local.key \
 # --https-port "${HTTPS_PORT}" &
 #  --https-only --enable-debugger \
@@ -347,9 +393,9 @@ echo -e "\n""${ORANGE}${BOLD}""=================================================
 echo -e "\n""${ORANGE}${BOLD}""EMBA logs are under /var/www/emba_logs/<id> ""${NC}"
 # echo -e "\n\n""${GREEN}${BOLD}""the trusted rootCA.key for the ssl encryption is in ./cert""${NC}"
 if [[ ${#SERVER_ALIAS[@]} -ne 0 ]]; then
-  echo -e "\n""${ORANGE}${BOLD}""Server started on http://embark.local with aliases: \n"
+  echo -e "\n""${ORANGE}${BOLD}""Server started on http://embark.local with aliases:""${NC}"
   for _alias in "${!SERVER_ALIAS[@]}" ; do
-    echo "http://""${SERVER_ALIAS[$_alias]}"":""${HTTP_PORT}""${NC}"
+    echo -e "\n${ORANGE}http://${SERVER_ALIAS[$_alias]}:${HTTP_PORT}${NC}"
   done
 else
   echo -e "\n""${ORANGE}${BOLD}""Server started on http://embark.local"":""${HTTP_PORT}""${NC}"

@@ -24,7 +24,7 @@ export DJANGO_SETTINGS_MODULE=embark.settings.dev
 export EMBARK_DEBUG=True
 export PIPENV_VENV_IN_PROJECT="True"
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 cleaner() {
   if [[ -f ./embark/embark.log ]]; then
     rm ./embark/embark.log -f
@@ -57,12 +57,13 @@ import_helper()
   echo -e "\\n""==> ""${GREEN}""Imported ""${HELPER_COUNT}"" necessary files""${NC}\\n"
 }
 
-set -a
-trap cleaner INT
+
 
 cd "$(dirname "${0}")" || exit 1
 cd .. || exit 1
 import_helper
+set -a
+trap cleaner INT
 echo -e "\n${GREEN}""${BOLD}""Configuring Embark""${NC}"
 
 # shellcheck disable=SC1091
