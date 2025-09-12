@@ -276,6 +276,9 @@ class FirmwareAnalysis(models.Model):
     user_emulation_test = BooleanFieldExpertMode(help_text='Enables automated qemu emulation tests', default=False, expert_mode=True, blank=True)
     system_emulation_test = BooleanFieldExpertMode(help_text='Enables automated qemu system emulation tests', default=False, expert_mode=True, blank=True)
 
+    # default on options
+    web_report = BooleanFieldExpertMode(help_text='Activates web report creation in log path, -w will be added', default=True, expert_mode=True, blank=True)
+
     # SBOM mode option
     sbom_only_test = models.BooleanField(verbose_name='SBOM only test', help_text='Enables SBOM default-profile', default=False, blank=True)
 
@@ -380,6 +383,8 @@ class FirmwareAnalysis(models.Model):
             command = command + r" -E"
         if self.system_emulation_test:
             command = command + r" -Q"
+        if self.web_report:
+            command = command + r" -W"
         if self.scan_modules:
             for module_ in self.scan_modules:
                 command = command + r" -m " + str(module_)
