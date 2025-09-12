@@ -32,7 +32,7 @@ Furthermore, *EMBArk* improves the data provision by aggregating the various sca
 ## Quick-Start
 `git clone https://github.com/e-m-b-a/embark.git; cd embark; sudo ./installer.sh -d`
 
-`sudo ./run-server.sh [-a <IP/HOSTNAME>] [-b <IP/RANGE>] [-h]`
+`sudo ./run-server.sh [-a <IP/HOSTNAME>] [-b <IP/RANGE>] [-i <HOST-IP>] [-h]`
 
 Example:
 
