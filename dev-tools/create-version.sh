@@ -12,6 +12,6 @@
 # Description: Automates writing the VERSION.txt
 
 # create version
-sed -i "s|-.*|-$(git describe --always)|1" "$(dirname "${0}")/../VERSION.txt"
+sed -i "s|-.*|-$(git describe --always --exclude '*')|1" "$(dirname "${0}")/../VERSION.txt"
 # and tag for version
 # TODO
