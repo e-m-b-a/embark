@@ -122,7 +122,7 @@ while getopts "ha:b:i:" OPT ; do
       echo -e "${GREEN} Bind IP set to: ${BIND_IP}""${NC}"
       ;;
     :)
-      echo -e "${CYAN} Usage: [-a <IP/HOSTNAME>] [-b <IP/Range>] ${NC}"
+      echo -e "${CYAN} Usage: [-a <IP/HOSTNAME>] [-b <IP/Range>] [-i <IP>] ${NC}"
       exit 1
       ;;
     *)
@@ -139,7 +139,7 @@ if ! [[ ${BIND_IP} == "0.0.0.0" ]]; then
     BIND_IP="127.0.0.1"
   fi
   #sanitize IP
-  if ! [[ ${BIND_IP} =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] ; then
+  if ! [[ ${BIND_IP} =~ ^((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])$ ]] ; then
     echo -e "\\n${RED}""${BOLD}""The bind IP (${BIND_IP}) is not a valid IPv4 address!""${NC}\\n"
     exit 1
   fi
@@ -395,7 +395,7 @@ echo -e "\n""${ORANGE}${BOLD}""EMBA logs are under /var/www/emba_logs/<id> ""${N
 if [[ ${#SERVER_ALIAS[@]} -ne 0 ]]; then
   echo -e "\n""${ORANGE}${BOLD}""Server started on http://embark.local with aliases:""${NC}"
   for _alias in "${!SERVER_ALIAS[@]}" ; do
-    echo -E "\n""${ORANGE}""http://""${SERVER_ALIAS[$_alias]}"":""${HTTP_PORT}""${NC}"
+    echo -e "\n${ORANGE}http://${SERVER_ALIAS[$_alias]}:${HTTP_PORT}${NC}"
   done
 else
   echo -e "\n""${ORANGE}${BOLD}""Server started on http://embark.local"":""${HTTP_PORT}""${NC}"
