@@ -153,7 +153,7 @@ fi
 
 # add to hosts file with correct IP
 sed -i "/embark.local/d" /etc/hosts
-echo "${BIND_IP}     embark.local\n" >>/etc/hosts
+echo -e "${BIND_IP}     embark.local\\n" >>/etc/hosts
 
 
 # Alias
