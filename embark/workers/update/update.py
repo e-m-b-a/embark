@@ -224,7 +224,7 @@ def init_sudoers_file(configuration: Configuration, worker: Worker):
 
     try:
         client = worker.ssh_connect(True)
-        stdin, stdout, _ = client.exec_command(command, get_pty=True)  # nosec B601: No user input
+        stdin, stdout, _ = client.exec_command(command, get_pty=True)  # nosec B601: Filtered user input
         stdin.write(f"{configuration.ssh_password}\n")
         stdin.flush()
 
