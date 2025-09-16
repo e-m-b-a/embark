@@ -382,11 +382,11 @@ pipenv run ./manage.py runmodwsgi --user www-embark --group sudo \
 sleep 5
 
 echo -e "\n[""${BLUE} JOB""${NC}""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-cd /var/www/embark && pipenv run daphne --access-log /var/www/logs/daphne.log -e ssl:8000:privateKey=/var/www/conf/cert/embark-ws.local.key:certKey=/var/www/conf/cert/embark-ws.local.crt -b "${BIND_IP}" -p 8001 -s embark-ws.local embark.asgi:application &
+cd /var/www/embark && sudo -u www-embark pipenv run daphne --access-log /var/www/logs/daphne.log -e ssl:8000:privateKey=/var/www/conf/cert/embark-ws.local.key:certKey=/var/www/conf/cert/embark-ws.local.crt -b "${BIND_IP}" -p 8001 -s embark-ws.local embark.asgi:application &
 sleep 5
 
 # Start celery worker
-pipenv run python -m celery -A embark worker --beat --scheduler django -l INFO --logfile=../logs/celery.log &
+sudo -u www-embark pipenv run python -m celery -A embark worker --beat --scheduler django -l INFO --logfile=../logs/celery.log &
 CELERY_PID=$!
 
 echo -e "\n""${ORANGE}${BOLD}""=============================================================""${NC}"
