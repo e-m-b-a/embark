@@ -764,5 +764,7 @@ elif [[ "${NO_EMBA}" -eq 1 ]]; then
 else
   echo "EMBA_INSTALL=git" >> .env
 fi
+chmod 640 .env
 
+chown "${SUDO_USER:-${USER}}" -R ./
 exit 0
