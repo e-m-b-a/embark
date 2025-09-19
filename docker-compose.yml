@@ -17,7 +17,6 @@ services:
       - ./mysql.cnf:/etc/my.cnf
       - ./mysql-init:/docker-entrypoint-initdb.d
       - ./embark_db:/var/lib/mysql
-      - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     networks:
       embark_backend:
@@ -37,7 +36,6 @@ services:
       - "7777"
     restart: always
     volumes:
-      - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     networks:
       embark_backend:

@@ -111,7 +111,12 @@ write_env(){
 
   if [[ -z ${DJANGO_SECRET_KEY} ]] || [[ -z ${DJANGO_SECRET_KEY} ]]; then
     echo -e "${ORANGE}""${BOLD}""Did not find saved passwords""${NC}"
-    DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+    source /etc/os-release
+    if [[ "$ID" == "ubuntu" ]] || [[ "$ID" == "debian" ]]; then
+      DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+    elif [[ "$ID" == "rhel" ]] || [[ "$ID" == "rocky" ]]; then
+      DJANGO_SECRET_KEY=$(cd /var/www && python3.11 -m pipenv run python3.11 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+    fi
     RANDOM_PW=$(openssl rand -base64 12)
   fi
 
@@ -228,75 +233,129 @@ reset_docker(){
 
 }
 
-install_debs(){
-  echo -e "\n${GREEN}""${BOLD}""Install debian packages for EMBArk installation""${NC}"
-  apt-get update -y
-  # Git
-  if ! command -v git > /dev/null ; then
-    apt-get install -y git
-  fi
-  # Python3
-  if ! command -v python3 > /dev/null ; then
-    apt-get install -y python3
-  fi
-  # GCC
-  if ! command -v gcc > /dev/null ; then
-    apt-get install -y build-essential
-  fi
-  # Pip
-  if ! command -v pip > /dev/null ; then
-    apt-get install -y python3-pip
-  fi
-  # install pipenv
-  if ! command -v pipenv > /dev/null ; then
-    apt-get install -y pipenv
-  fi
-  # Docker + docker compose
-  if [[ "${WSL}" -eq 1 ]]; then
-    echo -e "\n${ORANGE}WARNING: If you are using WSL2, disable docker integration from the docker-desktop daemon!${NC}"
-    read -p "Fix docker stuff, then continue. Press any key to continue ..." -n1 -s -r
-  fi
-  
-  if command -v docker-compose > /dev/null ; then
-    echo -e "\n${RED}""${BOLD}""Old docker-compose version found remove it please""${NC}"
-    exit 1
-  fi
-  if ! command -v docker > /dev/null || ! command -v docker compose > /dev/null ; then
-    if grep -q "VERSION_ID=\"24.04\"" /etc/os-release 2>/dev/null ; then
-      apt-get install -y docker.io wmdocker docker-compose-plugin > /dev/null
-    else
-      # Add Docker's official GPG key:
-      apt-get install -y ca-certificates curl gnupg
-      install -m 0755 -d /etc/apt/keyrings
-      curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-      chmod a+r /etc/apt/keyrings/docker.asc
-      # Add the repository to Apt sources:
-      # shellcheck source=/dev/null
-      echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-      $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-      apt-get update -y
-      apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker compose-plugin
+install_deps(){
+  # shellcheck source=/dev/null
+  source /etc/os-release
+  if [[ "$ID" == "ubuntu" ]] || [[ "$ID" == "debian" ]]; then
+    echo -e "\n${GREEN}""${BOLD}""Install debian packages for EMBArk installation""${NC}"
+    apt-get update -y
+    # Git
+    if ! command -v git > /dev/null ; then
+      apt-get install -y git
     fi
-  fi
-  # python3-dev
-  if ! dpkg -l python3-dev &>/dev/null; then
-    apt-get install -y python3-dev
-  fi
-  #  python3-django
-  if ! dpkg -l python3-django &>/dev/null; then
-    apt-get install -y python3-django
-  fi
-  # ansifilter
-  if ! command -v ansifilter > /dev/null ; then
-    apt-get install -y ansifilter
-  fi
-  # sshpass
-  if ! command -v sshpass > /dev/null ; then
-    apt-get install -y sshpass
-  fi
-  # in Ubuntu 22 the apt package is broken
-  if ! pipenv --version ; then
-    pip install --upgrade pipenv
+    # Python3
+    if ! command -v python3 > /dev/null ; then
+      apt-get install -y python3
+    fi
+    # GCC
+    if ! command -v gcc > /dev/null ; then
+      apt-get install -y build-essential
+    fi
+    # Pip
+    if ! command -v pip > /dev/null ; then
+      apt-get install -y python3-pip
+    fi
+    # install pipenv
+    if ! command -v pipenv > /dev/null ; then
+      apt-get install -y pipenv
+    fi
+    # Docker + docker compose
+    if [[ "${WSL}" -eq 1 ]]; then
+      echo -e "\n${ORANGE}WARNING: If you are using WSL2, disable docker integration from the docker-desktop daemon!${NC}"
+      read -p "Fix docker stuff, then continue. Press any key to continue ..." -n1 -s -r
+    fi
+    
+    if command -v docker-compose > /dev/null ; then
+      echo -e "\n${RED}""${BOLD}""Old docker-compose version found remove it please""${NC}"
+      exit 1
+    fi
+    if ! command -v docker > /dev/null || ! command -v docker compose > /dev/null ; then
+      if grep -q "VERSION_ID=\"24.04\"" /etc/os-release 2>/dev/null ; then
+        apt-get install -y docker.io wmdocker docker-compose-plugin > /dev/null
+      else
+        # Add Docker's official GPG key:
+        apt-get install -y ca-certificates curl gnupg
+        install -m 0755 -d /etc/apt/keyrings
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+        chmod a+r /etc/apt/keyrings/docker.asc
+        # Add the repository to Apt sources:
+        # shellcheck source=/dev/null
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+        $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+        apt-get update -y
+        apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+      fi
+    fi
+    # python3-dev
+    if ! dpkg -l python3-dev &>/dev/null; then
+      apt-get install -y python3-dev
+    fi
+    #  python3-django
+    if ! dpkg -l python3-django &>/dev/null; then
+      apt-get install -y python3-django
+    fi
+    # ansifilter
+    if ! command -v ansifilter > /dev/null ; then
+      apt-get install -y ansifilter
+    fi
+    # sshpass
+    if ! command -v sshpass > /dev/null ; then
+      apt-get install -y sshpass
+    fi
+    # in Ubuntu 22 the apt package is broken
+    if ! pipenv --version ; then
+      pip install --upgrade pipenv
+    fi
+  elif [[ "$ID" == "rhel" ]] || [[ "$ID" == "rocky" ]]; then
+    echo -e "\n${GREEN}""${BOLD}""Install rpm packages for EMBArk installation""${NC}"
+    dnf install -y 'dnf-command(config-manager)' epel-release
+    # Git
+    if ! command -v git > /dev/null ; then
+      dnf install -y git
+    fi
+    # Python3 & Pip
+    if ! command -v python3.11 > /dev/null ; then
+      dnf install -y python3.11
+    fi
+    if ! command -v pip3.11 > /dev/null ; then
+      dnf install -y python3.11-pip
+    fi
+    # GCC / Build Tools
+    if ! command -v gcc > /dev/null ; then
+      dnf groupinstall -y "Development Tools"
+    fi
+    # install pipenv
+    if ! command -v pipenv > /dev/null ; then
+      pip3.11 install --upgrade pipenv
+    fi
+    # Docker + docker compose
+    if [[ "${WSL}" -eq 1 ]]; then
+      echo -e "\n${RED}WARNING: WSL with RHEL/Rocky is not supported!${NC}"
+      exit 1
+    fi
+    if command -v docker-compose > /dev/null ; then
+      echo -e "\n${RED}""${BOLD}""Old docker-compose version found remove it please""${NC}"
+      exit 1
+    fi
+    if ! command -v docker > /dev/null || ! command -v docker compose > /dev/null ; then
+        dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+        dnf install -y --allowerasing docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+        systemctl start docker
+        systemctl enable docker
+    fi
+    # python3-devel
+    dnf install -y python3.11-devel python3.11
+    # ansifilter
+    if ! command -v ansifilter > /dev/null ; then
+      dnf install -y ansifilter
+    fi
+    # sshpass
+    if ! command -v sshpass > /dev/null ; then
+      dnf install -y sshpass
+    fi
+  else
+    echo -e "\n${RED}""${BOLD}""Unsupported operating system: $ID""${NC}"
+    exit 1
   fi
 }
 
@@ -306,6 +365,7 @@ install_daemon(){
   if ! [[ -e /etc/systemd/system/embark.service ]] ; then
     ln -s "${PWD}"/embark.service /etc/systemd/system/embark.service
   fi
+  systemctl daemon-reload
 }
 
 uninstall_daemon(){
@@ -325,12 +385,24 @@ install_embark_default(){
     echo -e "${RED}""${BOLD}""EMBArk currently does not support WSL in default mode. (only in Dev-mode)""${NC}"
   fi
 
-  #debs
-  apt-get install -y -q default-libmysqlclient-dev build-essential mysql-client-core-8.0
+  # shellcheck source=/dev/null
+  source /etc/os-release
+  if [[ "$ID" == "ubuntu" ]] || [[ "$ID" == "debian" ]]; then
+    #debs
+    apt-get install -y -q default-libmysqlclient-dev build-essential mysql-client-core-8.0
+    (cd /var/www && MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv install)
+  elif [[ "$ID" == "rhel" ]] || [[ "$ID" == "rocky" ]]; then
+    #rpms
+    dnf module enable -y mysql:8.0
+    dnf install -y mysql mysql-devel
+    dnf install -y expat expat-devel
+    # Pipenv not found because /usr/bin/local not in $PATH, call via python3 -m instead
+    (cd /var/www && PIPENV_VENV_IN_PROJECT=1 python3.11 -m pipenv install --python $(which python3.11))
+  fi
 
   #Add user for server
   if ! cut -d: -f1 /etc/passwd | grep -E www-embark ; then
-    useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /var/www/embark
+    useradd www-embark -G wheel -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /var/www/embark
   fi
   # emba nopw
   if ! grep 'www-embark ALL=(ALL) NOPASSWD:SETENV: /var/www/emba/emba' /etc/sudoers ; then
@@ -378,7 +450,6 @@ install_embark_default(){
   #install packages
   echo -e "\n${GREEN}""${BOLD}""Install embark python environment""${NC}"
   cp ./Pipfile* /var/www/
-  (cd /var/www && MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv install)
 
   # download externals
   if ! [[ -d ./embark/static/external ]]; then
@@ -419,13 +490,25 @@ install_embark_default(){
 
 install_embark_dev(){
   echo -e "\n${GREEN}""${BOLD}""Building Development-Environment for EMBArk""${NC}"
-  # apt packages
-  apt-get install -y npm pylint pycodestyle default-libmysqlclient-dev build-essential bandit yamllint mysql-client-core-8.0
 
-  # apache2 apache2-dev
-  # if ! command -v apache2 > /dev/null ; then
-  #   apt-get install -y apache2 apache2-dev
-  # fi
+  # shellcheck source=/dev/null
+  source /etc/os-release
+  if [[ "$ID" == "ubuntu" ]] || [[ "$ID" == "debian" ]]; then
+    # apt packages
+    apt-get install -y npm pylint pycodestyle default-libmysqlclient-dev build-essential bandit yamllint mysql-client-core-8.0
+    # apache2 apache2-dev
+    # if ! command -v apache2 > /dev/null ; then
+    #   apt-get install -y apache2 apache2-dev
+    # fi
+    MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
+  elif [[ "$ID" == "rhel" ]] || [[ "$ID" == "rocky" ]]; then
+    # dnf packages
+    dnf install -y npm bandit yamllint
+    pip3 install pylint pycodestyle
+    dnf module enable -y mysql:8.0
+    dnf install -y mysql mysql-devel
+    PIPENV_VENV_IN_PROJECT=1 python3.11 -m pipenv install --dev --python $(which python3.11)
+  fi
 
   # get geckodriver
   if ! command -v geckodriver > /dev/null ; then
@@ -451,7 +534,6 @@ install_embark_dev(){
 
   # pipenv
   echo -e "\n${GREEN}""${BOLD}""Install embark python environment""${NC}"
-  MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
 
   # Server-Dir
   if ! [[ -d media ]]; then
@@ -735,7 +817,7 @@ elif [[ ${UNINSTALL} -eq 1 ]]; then
   exit 0
 fi
 
-install_debs
+install_deps
 
 # mark dir as safe for git
 sudo -u "${SUDO_USER:-${USER}}" git config --global --add safe.directory "${PWD}"
