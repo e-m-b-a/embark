@@ -316,6 +316,8 @@ install_deps(){
     # Python3 & Pip
     if ! command -v python3.11 > /dev/null ; then
       dnf install -y python3.11
+      alternatives --set python /usr/bin/python3.11
+      alternatives --set python3 /usr/bin/python3.11
     fi
     if ! command -v pip3.11 > /dev/null ; then
       dnf install -y python3.11-pip
