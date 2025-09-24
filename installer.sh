@@ -443,9 +443,9 @@ install_embark_default(){
   #install packages
   echo -e "\n${GREEN}""${BOLD}""Install embark python environment""${NC}"
   cp ./Pipfile* /var/www/
-  if [[ "$ID" == "ubuntu" ]] || [[ "$ID" == "debian" ]]; then
+  if [[ "$OS_TYPE" == "debian" ]]; then
     (cd /var/www && MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv install)
-  elif [[ "$ID" == "rhel" ]] || [[ "$ID" == "rocky" ]]; then
+  elif [[ "$OS_TYPE" == "rhel" ]]; then
     # Pipenv not found because /usr/bin/local not in $PATH, call via python3 -m instead
     (cd /var/www && MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 python3.11 -m pipenv install --python $(which python3.11))
   fi
@@ -490,23 +490,19 @@ install_embark_default(){
 install_embark_dev(){
   echo -e "\n${GREEN}""${BOLD}""Building Development-Environment for EMBArk""${NC}"
 
-  # shellcheck source=/dev/null
-  source /etc/os-release
-  if [[ "$ID" == "ubuntu" ]] || [[ "$ID" == "debian" ]]; then
+  if [[ "$OS_TYPE" == "debian" ]]; then
     # apt packages
     apt-get install -y npm pylint pycodestyle default-libmysqlclient-dev build-essential bandit yamllint mysql-client-core-8.0
     # apache2 apache2-dev
     # if ! command -v apache2 > /dev/null ; then
     #   apt-get install -y apache2 apache2-dev
     # fi
-    MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
-  elif [[ "$ID" == "rhel" ]] || [[ "$ID" == "rocky" ]]; then
+  elif [[ "$OS_TYPE" == "rhel" ]]; then
     # dnf packages
     dnf install -y npm bandit yamllint
     pip3 install pylint pycodestyle
     dnf module enable -y mysql:8.0
     dnf install -y mysql mysql-devel
-    PIPENV_VENV_IN_PROJECT=1 python3.11 -m pipenv install --dev --python $(which python3.11)
   fi
 
   # get geckodriver
@@ -533,6 +529,11 @@ install_embark_dev(){
 
   # pipenv
   echo -e "\n${GREEN}""${BOLD}""Install embark python environment""${NC}"
+  if [[ "$OS_TYPE" == "debian" ]]; then
+    MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
+  elif [[ "$OS_TYPE" == "rhel" ]]; then
+    MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 python3.11 -m pipenv install --dev --python $(which python3.11)
+  fi
 
   # Server-Dir
   if ! [[ -d media ]]; then
