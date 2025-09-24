@@ -390,6 +390,7 @@ install_embark_default(){
   elif [[ "$OS_TYPE" == "rhel" ]]; then
     dnf module enable -y mysql:8.0
     dnf install -y mysql mysql-devel
+    ln -s /usr/lib64/mysql/libmysqlclient.so /usr/lib64/libmysqlclient.so
     dnf install -y expat expat-devel
   fi
 
@@ -491,18 +492,17 @@ install_embark_dev(){
   echo -e "\n${GREEN}""${BOLD}""Building Development-Environment for EMBArk""${NC}"
 
   if [[ "$OS_TYPE" == "debian" ]]; then
-    # apt packages
     apt-get install -y npm pylint pycodestyle default-libmysqlclient-dev build-essential bandit yamllint mysql-client-core-8.0
     # apache2 apache2-dev
     # if ! command -v apache2 > /dev/null ; then
     #   apt-get install -y apache2 apache2-dev
     # fi
   elif [[ "$OS_TYPE" == "rhel" ]]; then
-    # dnf packages
     dnf install -y npm bandit yamllint
     pip3 install pylint pycodestyle
     dnf module enable -y mysql:8.0
     dnf install -y mysql mysql-devel
+    ln -s /usr/lib64/mysql/libmysqlclient.so /usr/lib64/libmysqlclient.so
   fi
 
   # get geckodriver
