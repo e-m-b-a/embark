@@ -365,7 +365,7 @@ install_daemon(){
   echo -e "\n${GREEN}""${BOLD}""Install embark daemon""${NC}"
   sed -i "s|{\$EMBARK_ROOT_DIR}|${PWD}|g" embark.service
   if ! [[ -e /etc/systemd/system/embark.service ]] ; then
-    ln -s "${PWD}"/embark.service /etc/systemd/system/embark.service
+    cp "${PWD}"/embark.service /etc/systemd/system/embark.service
   fi
   systemctl daemon-reload
 }
