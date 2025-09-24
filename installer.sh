@@ -30,6 +30,7 @@ export NO_EMBA=0
 export NO_GIT=0
 
 export WSL=0
+export OS_TYPE="debian"
 
 export RED='\033[0;31m'
 export GREEN='\033[0;32m'
@@ -111,10 +112,9 @@ write_env(){
 
   if [[ -z ${DJANGO_SECRET_KEY} ]] || [[ -z ${DJANGO_SECRET_KEY} ]]; then
     echo -e "${ORANGE}""${BOLD}""Did not find saved passwords""${NC}"
-    source /etc/os-release
-    if [[ "$ID" == "ubuntu" ]] || [[ "$ID" == "debian" ]]; then
+    if [[ "$OS_TYPE" == "debian" ]]; then
       DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
-    elif [[ "$ID" == "rhel" ]] || [[ "$ID" == "rocky" ]]; then
+    elif [[ "$OS_TYPE" == "rhel" ]]; then
       DJANGO_SECRET_KEY=$(cd /var/www && python3.11 -m pipenv run python3.11 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
     fi
     RANDOM_PW=$(openssl rand -base64 12)
@@ -234,9 +234,7 @@ reset_docker(){
 }
 
 install_deps(){
-  # shellcheck source=/dev/null
-  source /etc/os-release
-  if [[ "$ID" == "ubuntu" ]] || [[ "$ID" == "debian" ]]; then
+  if [[ "$OS_TYPE" == "debian" ]]; then
     echo -e "\n${GREEN}""${BOLD}""Install debian packages for EMBArk installation""${NC}"
     apt-get update -y
     # Git
@@ -306,7 +304,7 @@ install_deps(){
     if ! pipenv --version ; then
       pip install --upgrade pipenv
     fi
-  elif [[ "$ID" == "rhel" ]] || [[ "$ID" == "rocky" ]]; then
+  elif [[ "$OS_TYPE" == "rhel" ]]; then
     echo -e "\n${GREEN}""${BOLD}""Install rpm packages for EMBArk installation""${NC}"
     dnf install -y 'dnf-command(config-manager)' epel-release
     # Git
@@ -387,19 +385,12 @@ install_embark_default(){
     echo -e "${RED}""${BOLD}""EMBArk currently does not support WSL in default mode. (only in Dev-mode)""${NC}"
   fi
 
-  # shellcheck source=/dev/null
-  source /etc/os-release
-  if [[ "$ID" == "ubuntu" ]] || [[ "$ID" == "debian" ]]; then
-    #debs
+  if [[ "$OS_TYPE" == "debian" ]]; then
     apt-get install -y -q default-libmysqlclient-dev build-essential mysql-client-core-8.0
-    (cd /var/www && MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv install)
-  elif [[ "$ID" == "rhel" ]] || [[ "$ID" == "rocky" ]]; then
-    #rpms
+  elif [[ "$OS_TYPE" == "rhel" ]]; then
     dnf module enable -y mysql:8.0
     dnf install -y mysql mysql-devel
     dnf install -y expat expat-devel
-    # Pipenv not found because /usr/bin/local not in $PATH, call via python3 -m instead
-    (cd /var/www && PIPENV_VENV_IN_PROJECT=1 python3.11 -m pipenv install --python $(which python3.11))
   fi
 
   #Add user for server
@@ -452,6 +443,12 @@ install_embark_default(){
   #install packages
   echo -e "\n${GREEN}""${BOLD}""Install embark python environment""${NC}"
   cp ./Pipfile* /var/www/
+  if [[ "$ID" == "ubuntu" ]] || [[ "$ID" == "debian" ]]; then
+    (cd /var/www && MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv install)
+  elif [[ "$ID" == "rhel" ]] || [[ "$ID" == "rocky" ]]; then
+    # Pipenv not found because /usr/bin/local not in $PATH, call via python3 -m instead
+    (cd /var/www && MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 python3.11 -m pipenv install --python $(which python3.11))
+  fi
 
   # download externals
   if ! [[ -d ./embark/static/external ]]; then
@@ -804,6 +801,13 @@ if [[ ${EUID} -ne 0 ]]; then
   echo -e "\\n${RED}""Run EMBArk installation script with root permissions!""${NC}\\n"
   print_help
   exit 1
+fi
+
+OS_ID=$(source /etc/os-release; echo "$ID")
+if [[ "$OS_ID" == "ubuntu" ]] || [[ "$OS_ID" == "kali" ]] || [[ "$OS_ID" == "debian" ]]; then
+  OS_TYPE="debian"
+elif [[ "$OS_ID" == "rhel" ]] || [[ "$OS_ID" == "rocky" ]] || [[ "$OS_ID" == "centos" ]] || [[ "$OS_ID" == "fedora" ]]; then
+  OS_TYPE="rhel"
 fi
 
 if ! [[ -d .git ]]; then
