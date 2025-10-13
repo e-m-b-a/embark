@@ -381,9 +381,6 @@ uninstall_daemon(){
 install_embark_default(){
   echo -e "\n${GREEN}""${BOLD}""Installation of the firmware scanning environment EMBArk""${NC}"
 
-  if ! [[ -d /var/www ]]; then
-    mkdir /var/www/
-  fi
   if [[ "${WSL}" -eq 1 ]]; then
     echo -e "${RED}""${BOLD}""EMBArk currently does not support WSL in default mode. (only in Dev-mode)""${NC}"
   fi
@@ -398,6 +395,9 @@ install_embark_default(){
   fi
 
   #Add user for server
+  if ! [[ -d /var/www ]]; then
+    mkdir /var/www/
+  fi
   if ! cut -d: -f1 /etc/passwd | grep -E www-embark ; then
     useradd www-embark -G wheel -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /var/www/embark
   fi
