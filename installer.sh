@@ -137,6 +137,7 @@ write_env(){
     echo "DJANGO_SUPERUSER_EMAIL=${SUPER_EMAIL}"
     echo "DJANGO_SUPERUSER_PASSWORD=${SUPER_PW}"
     echo "PYTHONPATH=${PWD}:${PWD}/embark:/var/www/:/var/www/embark"
+    echo "TIME_ZONE=$(date +%Z)"
   } > .env
   chmod 600 .env
 }
@@ -448,7 +449,7 @@ install_embark_default(){
     (cd /var/www && MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv install)
   elif [[ "$OS_TYPE" == "rhel" ]]; then
     # Pipenv not found because /usr/bin/local not in $PATH, call via python3 -m instead
-    (cd /var/www && MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 python3.11 -m pipenv install --python $(which python3.11))
+    (cd /var/www && MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 python3.11 -m pipenv install --python "$(which python3.11)")
   fi
 
   # download externals
@@ -532,7 +533,7 @@ install_embark_dev(){
   if [[ "$OS_TYPE" == "debian" ]]; then
     MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
   elif [[ "$OS_TYPE" == "rhel" ]]; then
-    MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 python3.11 -m pipenv install --dev --python $(which python3.11)
+    MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 python3.11 -m pipenv install --dev --python "$(which python3.11)"
   fi
 
   # Server-Dir
