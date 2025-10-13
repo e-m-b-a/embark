@@ -137,7 +137,7 @@ write_env(){
     echo "DJANGO_SUPERUSER_EMAIL=${SUPER_EMAIL}"
     echo "DJANGO_SUPERUSER_PASSWORD=${SUPER_PW}"
     echo "PYTHONPATH=${PWD}:${PWD}/embark:/var/www/:/var/www/embark"
-    echo "TIME_ZONE=$(date +%Z)"
+    echo "TIME_ZONE=$(timedatectl show -p Timezone --value 2>/dev/null || echo 'UTC')"
   } > .env
   chmod 600 .env
 }
