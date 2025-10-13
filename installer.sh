@@ -381,6 +381,9 @@ uninstall_daemon(){
 install_embark_default(){
   echo -e "\n${GREEN}""${BOLD}""Installation of the firmware scanning environment EMBArk""${NC}"
 
+  if ! [[ -d /var/www ]]; then
+    mkdir /var/www/
+  fi
   if [[ "${WSL}" -eq 1 ]]; then
     echo -e "${RED}""${BOLD}""EMBArk currently does not support WSL in default mode. (only in Dev-mode)""${NC}"
   fi
@@ -408,9 +411,6 @@ install_embark_default(){
   fi
 
   #Server-Dir
-  if ! [[ -d /var/www ]]; then
-    mkdir /var/www/
-  fi
   if ! [[ -d /var/www/media ]]; then
     mkdir /var/www/media
     touch /var/www/media/empty
