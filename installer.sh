@@ -809,10 +809,10 @@ if [[ ${EUID} -ne 0 ]]; then
   exit 1
 fi
 
-OS_ID=$(source /etc/os-release; echo "$ID")
-if [[ "$OS_ID" == "ubuntu" ]] || [[ "$OS_ID" == "kali" ]] || [[ "$OS_ID" == "debian" ]]; then
+lOS_ID=$(source /etc/os-release; echo "$ID")
+if [[ "$lOS_ID" == "ubuntu" ]] || [[ "$lOS_ID" == "kali" ]] || [[ "$lOS_ID" == "debian" ]]; then
   OS_TYPE="debian"
-elif [[ "$OS_ID" == "rhel" ]] || [[ "$OS_ID" == "rocky" ]] || [[ "$OS_ID" == "centos" ]] || [[ "$OS_ID" == "fedora" ]]; then
+elif [[ "$lOS_ID" == "rhel" ]] || [[ "$lOS_ID" == "rocky" ]] || [[ "$lOS_ID" == "centos" ]] || [[ "$lOS_ID" == "fedora" ]]; then
   OS_TYPE="rhel"
 fi
 
