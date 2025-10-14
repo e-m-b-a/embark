@@ -393,6 +393,10 @@ install_embark_default(){
     dnf install -y mysql mysql-devel
     ln -s /usr/lib64/mysql/libmysqlclient.so /usr/lib64/libmysqlclient.so
     dnf install -y expat expat-devel
+    # Since the script expects a "sudo" group to exist,
+    # make a new group called sudo with the same permissions as wheel
+    sudo groupadd sudo
+    sudo sh -c "echo '%sudo ALL=(ALL) ALL' > /etc/sudoers.d/sudo-group" 
   fi
 
   #Add user for server
@@ -400,7 +404,7 @@ install_embark_default(){
     mkdir /var/www/
   fi
   if ! cut -d: -f1 /etc/passwd | grep -E www-embark ; then
-    useradd www-embark -G wheel -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /var/www/embark
+    useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /var/www/embark
   fi
   # emba nopw
   if ! grep 'www-embark ALL=(ALL) NOPASSWD:SETENV: /var/www/emba/emba' /etc/sudoers ; then
