@@ -354,9 +354,6 @@ install_deps(){
     if ! command -v sshpass > /dev/null ; then
       dnf install -y sshpass
     fi
-  else
-    echo -e "\n${RED}""${BOLD}""Unsupported operating system: $ID""${NC}"
-    exit 1
   fi
 }
 
