@@ -165,6 +165,7 @@ if [[ ${#SERVER_ALIAS[@]} -ne 0 ]]; then
   done
 fi
 
+# shellcheck disable=SC1091 # No need to validate /etc/os-release
 lOS_ID=$(source /etc/os-release; echo "$ID")
 if [[ "$lOS_ID" == "ubuntu" ]] || [[ "$lOS_ID" == "kali" ]] || [[ "$lOS_ID" == "debian" ]]; then
   OS_TYPE="debian"
