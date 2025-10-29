@@ -28,6 +28,7 @@ paramiko = "*"
 celery = {extras = ["redis"], version = "*"}
 django-celery-beat = "*"
 pycryptodome = "*"
+flower = "*"
 
 [dev-packages]
 pycodestyle = "*"

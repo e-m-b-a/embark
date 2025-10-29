@@ -2,43 +2,20 @@
 {% block style %}
 <link rel="stylesheet" type="text/css" href="{% static 'content/css/settings.css' %}" />
 {% endblock style %}
-
-{% if user.is_staff or user.is_superuser %}
+{% block js %}<script type="text/javascript" src="{% static 'scripts/settings.js' %}"></script>{% endblock js %}
 <div class="overview-container">
   <div class="configuration-container">
     <h2>Global Settings</h2>
       <div class="setting-row">
         <label for="orchestrator-toggle" class="setting-label">Enable Orchestrator</label>
         <label class="switch">
-            <input type="checkbox" id="orchestrator-toggle" {% if app_settings.orchestrator %}checked{% endif %}/>
-            <span class="slider round"></span>
+          {% if user.is_staff or user.is_superuser %}
+            <input type="checkbox" id="orchestrator-toggle" {% if app_settings.orchestrator %}checked{% endif %} />
+          {% else %}
+            <input type="checkbox" id="orchestrator-toggle" {% if app_settings.orchestrator %}checked{% endif %} disabled/>
+          {% endif %}  
+          <span class="slider round"></span>
         </label>
       </div>
   </div>
 </div>
-
-<script>
-    document.getElementById("orchestrator-toggle").addEventListener("change", async (e) => {
-      try {
-        const response = await fetch("toggle-orchestrator/", {
-          method: "GET",
-          credentials: "same-origin",
-        });
-        if (!response.ok) {
-          const data = await response.json();
-          console.error("Failed to save orchestrator setting:", data.message);
-        }
-      } catch (error) {
-        console.error("Error saving orchestrator setting:", error);
-      }
-    });
-</script>
-
-{% else %}
-<div class="overview-container">
-  <div class="configuration-container">
-    <p class="text-center">This is the global application settings page. These settings may only be modified by administrators.</p>
-    <p class="text-center">If you need help, please contact your administrator.</p>
-  </div>
-</div>
-{% endif %}

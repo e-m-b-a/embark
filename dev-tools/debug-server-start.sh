@@ -166,6 +166,9 @@ python3 ./manage.py runapscheduler | tee -a ../logs/scheduler.log &
 celery -A embark worker --beat --scheduler django -l INFO --logfile=../logs/celery.log &
 CELERY_PID=$!
 
+# start flower for celery monitoring
+celery -A embark flower --address="${IP}" --port=5555 --logfile=../logs/flower.log &
+
 echo -e "${ORANGE}""${BOLD}""start EMBArk server(ASGI only) on port ${PORT}""${NC}"
 python3 ./manage.py runserver "${IP}":"${PORT}" |& tee -a ../logs/debug-server.log
 

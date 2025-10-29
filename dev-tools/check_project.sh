@@ -32,30 +32,12 @@ if [[ ${EUID} -eq 0 ]]; then
   echo -e "\\n${RED}""Running this script as root is not supported""${NC}\\n"
 fi
 
-declare -A LAST_CHECKED_CACHE
-declare -A UPDATED_LAST_CHECKED_CACHE
-
-FAST_EXECUTION=$([[ "$*" == *"--fast"* ]] && echo true || echo false)
-
-# Load cache
-CACHE_FILE=".last_checked"
-if [ -f "$CACHE_FILE" ] && $FAST_EXECUTION; then
-  # shellcheck source=/dev/null
-  source -- "$CACHE_FILE" || rm "$CACHE_FILE"
-  "${UPDATED_LAST_CHECKED_CACHE[@]@A}" && declare -A LAST_CHECKED_CACHE="${_#*=}"
-  echo -e "\\n${GREEN}""Found and loaded cache""${NC}\\n"
+if [[ "$*" == *"--fast"* ]]; then
+  FAST_EXECUTION=1
+elif [[ "$*" == *"--help"* ]]; then
+  echo "Usage: ${0} [--fast]"
+  exit 0
 fi
-
-hasChanged(){
-  modTime=$(stat -c %Y "$1")
-  UPDATED_LAST_CHECKED_CACHE["$1"]="$modTime"
-
-  # hasChanged if no entry exists
-  if [[ -z ${LAST_CHECKED_CACHE["$1"]+_} ]]; then return 0; fi
-
-  # hasChanged if mod time is newer than cached
-  [[ "$modTime" -gt ${LAST_CHECKED_CACHE["$1"]} ]]
-}
 
 # check that all tools are installed
 check_tools(){
@@ -90,26 +72,28 @@ check_django(){
 # config @ .jshintrc
 jscheck(){
   echo -e "\\n""${ORANGE}""${BOLD}""EMBArk javascript-files check""${NC}""\\n""${BOLD}""=================================================================""${NC}"
-  mapfile -t JS_SCRIPTS < <(find ./embark -iname "*.js")
+  if [[ "${FAST_EXECUTION:-0}" -eq 1 ]]; then
+     mapfile -t JS_SCRIPTS < <(git status -s | grep ".*.js$" | awk '{print $2}' | sort -u)
+  else
+    mapfile -t JS_SCRIPTS < <(find ./embark -iname "*.js")
+  fi
   for JS_SCRIPT in "${JS_SCRIPTS[@]}"; do
-    if hasChanged "$JS_SCRIPT"; then
-      echo -e "\\n""${GREEN}""Run jshint on ${JS_SCRIPT}:""${NC}""\\n"
-      # mapfile -t JS_RESULT < <(jshint "${JS_SCRIPT}")
-      jshint -c ./.jshintrc "${JS_SCRIPT}"
-      RES=$?
-      if [[ ${RES} -eq 2 ]] ; then
-        echo -e "\\n""${RED}${BOLD}==> FIX ERRORS""${NC}""\\n"
-        ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
-        MODULES_TO_CHECK_ARR+=( "${JS_SCRIPT}" )
-      elif [[ ${RES} -eq 1 ]]; then
-        echo -e "\\n""${ORANGE}${BOLD}==> FIX WARNINGS""${NC}""\\n"
-        ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
-        MODULES_TO_CHECK_ARR+=( "${JS_SCRIPT}" )
-      elif [[ ${RES} -eq 0 ]]; then
-        echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
-      else
-        echo -e "\\n""${RED}${BOLD}""[jshint]ERRORS in SCRIPT""${NC}""\\n"
-      fi
+    echo -e "\\n""${GREEN}""Run jshint on ${JS_SCRIPT}:""${NC}""\\n"
+    # mapfile -t JS_RESULT < <(jshint "${JS_SCRIPT}")
+    jshint -c ./.jshintrc "${JS_SCRIPT}"
+    RES=$?
+    if [[ ${RES} -eq 2 ]] ; then
+      echo -e "\\n""${RED}${BOLD}==> FIX ERRORS""${NC}""\\n"
+      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+      MODULES_TO_CHECK_ARR+=( "${JS_SCRIPT}" )
+    elif [[ ${RES} -eq 1 ]]; then
+      echo -e "\\n""${ORANGE}${BOLD}==> FIX WARNINGS""${NC}""\\n"
+      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+      MODULES_TO_CHECK_ARR+=( "${JS_SCRIPT}" )
+    elif [[ ${RES} -eq 0 ]]; then
+      echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
+    else
+      echo -e "\\n""${RED}${BOLD}""[jshint]ERRORS in SCRIPT""${NC}""\\n"
     fi
   done
 }
@@ -118,66 +102,43 @@ jscheck(){
 # no config
 templatechecker(){
   echo -e "\\n""${ORANGE}""${BOLD}""EMBArk html-templates check""${NC}""\\n""${BOLD}""=================================================================""${NC}"
-  mapfile -t HTML_FILE < <(find ./embark -iname "*.html")
-  for HTML_FILE in "${HTML_FILE[@]}"; do
-    if hasChanged "$HTML_FILE"; then
-      echo -e "\\n""${GREEN}""Run djlint on ${HTML_FILE}:""${NC}""\\n"
-      pipenv run djlint "${HTML_FILE}"
-      RES=$?
-      if [[ ${RES} -eq 1 ]]; then
-        echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
-        ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
-        MODULES_TO_CHECK_ARR+=( "${HTML_FILE}" )
-      elif [[ ${RES} -eq 0 ]]; then
-        echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
-      else
-        echo -e "\\n""${RED}${BOLD}""[html-check(tidy)]ERRORS in SCRIPT""${NC}""\\n"
-      fi
+  if [[ "${FAST_EXECUTION:-0}" -eq 1 ]]; then
+     mapfile -t HTML_FILES < <(git status -s | grep ".*.html$" | awk '{print $2}' | sort -u)
+  else
+    mapfile -t HTML_FILES < <(find ./embark -iname "*.html")
+  fi
+  for HTML_FILE in "${HTML_FILES[@]}"; do
+    echo -e "\\n""${GREEN}""Run djlint on ${HTML_FILE}:""${NC}""\\n"
+    pipenv run djlint "${HTML_FILE}"
+    RES=$?
+    if [[ ${RES} -eq 1 ]]; then
+      echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
+      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+      MODULES_TO_CHECK_ARR+=( "${HTML_FILE}" )
+    elif [[ ${RES} -eq 0 ]]; then
+      echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
+    else
+      echo -e "\\n""${RED}${BOLD}""[html-check(tidy)]ERRORS in SCRIPT""${NC}""\\n"
     fi
   done
 }
 
 shellchecker() {
   echo -e "\\n""${ORANGE}""${BOLD}""EMBArk Shellcheck""${NC}""\\n""${BOLD}""=================================================================""${NC}"
-  if ! command -v shellcheck >/dev/null 2>&1; then
-    echo -e "\\n""${ORANGE}""Shellcheck not found!""${NC}""\\n""${ORANGE}""Install shellcheck via 'apt-get install shellcheck'!""${NC}\\n"
-    exit 1
-  fi
-
-  if hasChanged "installer.sh"; then
-    echo -e "\\n""${GREEN}""Run shellcheck on installer:""${NC}""\\n"
-    if shellcheck ./installer.sh || [[ $? -ne 1 && $? -ne 2 ]]; then
-      echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
-    else
-      echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
-      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
-      MODULES_TO_CHECK_ARR+=( "installer.sh" )
-    fi
-  fi
-
-  if hasChanged "dev-tools/check_project.sh"; then
-    echo -e "\\n""${GREEN}""Run shellcheck on this script:""${NC}""\\n"
-    if shellcheck ./dev-tools/check_project.sh || [[ $? -ne 1 && $? -ne 2 ]]; then
-      echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
-    else
-      echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
-      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
-      MODULES_TO_CHECK_ARR+=( "dev-tools/check_project.sh" )
-    fi
-  fi
-
   echo -e "\\n""${GREEN}""Find shell scripts and run shellcheck on them:""${NC}""\\n"
-  mapfile -t SH_SCRIPTS < <(find embark -iname "*.sh")
+   if [[ "${FAST_EXECUTION:-0}" -eq 1 ]]; then
+     mapfile -t SH_SCRIPTS < <(git status -s | grep ".*.sh$" | awk '{print $2}' | sort -u)
+  else
+    mapfile -t SH_SCRIPTS < <(find . -not -path "./emba/*" -not -path "./.*" -not -path "./embark_db/*" -iname "*.sh" 2> /dev/null)
+  fi
   for SH_SCRIPT in "${SH_SCRIPTS[@]}"; do
-    if hasChanged "$SH_SCRIPT"; then
-      echo -e "\\n""${GREEN}""Run shellcheck on ${SH_SCRIPT}:""${NC}""\\n"
-      if shellcheck -x -o require-variable-braces "${SH_SCRIPT}" || [[ $? -ne 1 && $? -ne 2 ]]; then
-        echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
-      else
-        echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
-        ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
-        MODULES_TO_CHECK_ARR+=( "${SH_SCRIPT}" )
-      fi
+    echo -e "\\n""${GREEN}""Run shellcheck on ${SH_SCRIPT}:""${NC}""\\n"
+    if shellcheck -x -o require-variable-braces "${SH_SCRIPT}" || [[ $? -ne 1 && $? -ne 2 ]]; then
+      echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
+    else
+      echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
+      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+      MODULES_TO_CHECK_ARR+=( "${SH_SCRIPT}" )
     fi
   done
 }
@@ -197,17 +158,19 @@ pycodestyle_check(){
   fi
 
   echo -e "\\n""${GREEN}""Find python scripts and run pycodestyle on them:""${NC}""\\n"
-  mapfile -t PY_SCRIPTS < <(find embark -iname "*.py")
+  if [[ "${FAST_EXECUTION:-0}" -eq 1 ]]; then
+    mapfile -t PY_SCRIPTS < <(git status -s | grep ".*.py$" | awk '{print $2}' | sort -u)
+  else
+    mapfile -t PY_SCRIPTS < <(find ./embark -type d -name migrations -prune -false -o -iname "*.py$")
+  fi
   for PY_SCRIPT in "${PY_SCRIPTS[@]}"; do
-    if hasChanged "$PY_SCRIPT"; then
-      echo -e "\\n""${GREEN}""Run pycodestyle on ${PY_SCRIPT}:""${NC}""\\n"
-      if pipenv run "${PYCODESTYLE}" --config=./.pycodestylerc --first "${PY_SCRIPT}" 2> >(grep -v "Courtesy Notice\|Loading .env" >&2) || [[ $? -ne 1 && $? -ne 2 ]]; then
-        echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
-      else
-        echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
-        ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
-        MODULES_TO_CHECK_ARR+=( "${PY_SCRIPT}" )
-      fi
+    echo -e "\\n""${GREEN}""Run pycodestyle on ${PY_SCRIPT}:""${NC}""\\n"
+    if pipenv run "${PYCODESTYLE}" --config=./.pycodestylerc --first "${PY_SCRIPT}" 2> >(grep -v "Courtesy Notice\|Loading .env" >&2) || [[ $? -ne 1 && $? -ne 2 ]]; then
+      echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
+    else
+      echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
+      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+      MODULES_TO_CHECK_ARR+=( "${PY_SCRIPT}" )
     fi
   done
 }
@@ -221,19 +184,21 @@ banditer() {
     exit 1
   fi
 
-  mapfile -t PY_SCRIPTS < <(find . -type d -name migrations -prune -false -o -iname "*.py" -not -path "./.venv/*" -not -path "./emba/*" -not -path "./emba_logs/*")
+  if [[ "${FAST_EXECUTION:-0}" -eq 1 ]]; then
+    mapfile -t PY_SCRIPTS < <(git status -s | grep ".*.py$" | awk '{print $2}' | sort -u)
+  else
+    mapfile -t PY_SCRIPTS < <(find ./embark -type d -name migrations -prune -false -o -iname "*.py$")
+  fi
 
   for PY_SCRIPT in "${PY_SCRIPTS[@]}"; do
-    if hasChanged "$PY_SCRIPT"; then
-      echo -e "\\n""${GREEN}""Run bandit on ${PY_SCRIPT}:""${NC}""\\n"
-      if bandit -c .banditrc "${PY_SCRIPT}" 2> /dev/null | grep -q "No issues identified."; then
-        echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
-      else
-        bandit -c .banditrc "${PY_SCRIPT}"
-        echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
-        ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
-        MODULES_TO_CHECK_ARR+=( "${PY_SCRIPT}" )
-      fi
+    echo -e "\\n""${GREEN}""Run bandit on ${PY_SCRIPT}:""${NC}""\\n"
+    if bandit -c .banditrc "${PY_SCRIPT}" 2> /dev/null | grep -q "No issues identified."; then
+      echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
+    else
+      bandit -c .banditrc "${PY_SCRIPT}"
+      echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
+      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+      MODULES_TO_CHECK_ARR+=( "${PY_SCRIPT}" )
     fi
   done
 
@@ -242,30 +207,32 @@ banditer() {
 pylinter(){
   cd ./embark || exit 1
   echo -e "\\n""${ORANGE}""${BOLD}""EMBArk pylint check""${NC}""\\n""${BOLD}""=================================================================""${NC}"
-  mapfile -t PY_SCRIPTS < <(find . -type d -name migrations -prune -false -o -iname "*.py")
+  if [[ "${FAST_EXECUTION:-0}" -eq 1 ]]; then
+    mapfile -t PY_SCRIPTS < <(git status -s | grep ".*.py$" | awk '{print $2}' | sort -u)
+  else
+    mapfile -t PY_SCRIPTS < <(find ./embark -type d -name migrations -prune -false -o -iname "*.py$")
+  fi
   for PY_SCRIPT in "${PY_SCRIPTS[@]}"; do
-    if hasChanged "$PY_SCRIPT"; then
-      echo -e "\\n""${GREEN}""Run pylint on ${PY_SCRIPT}:""${NC}""\\n"
-      mapfile -t PY_RESULT < <(pipenv run pylint --load-plugins pylint_django --rcfile=../.pylintrc "${PY_SCRIPT}" 2> >(grep -v "Courtesy Notice\|Loading .env" >&2) )
-      local RATING_10=0
-      if [[ "${#PY_RESULT[@]}" -gt 0 ]]; then
-        if ! printf '%s\n' "${PY_RESULT[@]}" | grep -q -P '^Your code has been rated at 10'; then
-          for LINE in "${PY_RESULT[@]}"; do
-            echo "${LINE}"
-          done
-        else
-          RATING_10=1
-        fi
-        if [[ "${RATING_10}" -ne 1 ]]; then
-          echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
-          ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
-          MODULES_TO_CHECK_ARR+=( "${PY_SCRIPT}" )
-        else
-          echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
-        fi
+    echo -e "\\n""${GREEN}""Run pylint on ${PY_SCRIPT}:""${NC}""\\n"
+    mapfile -t PY_RESULT < <(pipenv run pylint --load-plugins pylint_django --rcfile=../.pylintrc "${PY_SCRIPT}" 2> >(grep -v "Courtesy Notice\|Loading .env" >&2) )
+    local RATING_10=0
+    if [[ "${#PY_RESULT[@]}" -gt 0 ]]; then
+      if ! printf '%s\n' "${PY_RESULT[@]}" | grep -q -P '^Your code has been rated at 10'; then
+        for LINE in "${PY_RESULT[@]}"; do
+          echo "${LINE}"
+        done
+      else
+        RATING_10=1
+      fi
+      if [[ "${RATING_10}" -ne 1 ]]; then
+        echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
+        ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+        MODULES_TO_CHECK_ARR+=( "${PY_SCRIPT}" )
       else
         echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
       fi
+    else
+      echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
     fi
   done
 
@@ -280,17 +247,20 @@ dockerchecker(){
     ENV=0
   fi
   echo -e "\\n""${ORANGE}""${BOLD}""EMBArk docker-files check""${NC}""\\n""${BOLD}""=================================================================""${NC}"
-  mapfile -t DOCKER_COMPS < <(find . -maxdepth 1 -type d -name migrations -prune -false -o -iname "docker-compose*.yml")
+  if [[ "${FAST_EXECUTION:-0}" -eq 1 ]]; then
+    mapfile -t DOCKER_COMPS < <(git status -s | grep ".*docker-compose.*.yml$" | awk '{print $2}' | sort -u)
+  else
+    mapfile -t DOCKER_COMPS < <(find . -maxdepth 1 -type d -name migrations -prune -false -o -iname "docker-compose*.yml")
+  fi
+
   for DOCKER_COMP in "${DOCKER_COMPS[@]}"; do
-    if hasChanged "$DOCKER_COMP"; then
-      echo -e "\\n""${GREEN}""Run docker check on ${DOCKER_COMP}:""${NC}""\\n"
-      if docker compose -f "${DOCKER_COMP}" config 1>/dev/null || [[ $? -ne 1 ]]; then
-        echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
-      else
-        echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
-        ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
-        MODULES_TO_CHECK_ARR+=( "${DOCKER_COMP}" )
-      fi
+    echo -e "\\n""${GREEN}""Run docker check on ${DOCKER_COMP}:""${NC}""\\n"
+    if docker compose -f "${DOCKER_COMP}" config 1>/dev/null || [[ $? -ne 1 ]]; then
+      echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
+    else
+      echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
+      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+      MODULES_TO_CHECK_ARR+=( "${DOCKER_COMP}" )
     fi
   done
   #TODO dockerlinter -f ./Dockerfile
@@ -301,31 +271,31 @@ dockerchecker(){
 
 yamlchecker(){
   echo -e "\\n""${ORANGE}""${BOLD}""EMBArk yaml-files check""${NC}""\\n""${BOLD}""=================================================================""${NC}"
-  mapfile -t YAML_COMPS < <(find . -maxdepth 1 -type d -name migrations -prune -false -o -iname "*.yml")
+  if [[ "${FAST_EXECUTION:-0}" -eq 1 ]]; then
+    mapfile -t YAML_COMPS < <(git status -s | grep ".*.yml$" | awk '{print $2}' | sort -u)
+  else
+    mapfile -t YAML_COMPS < <(find . -maxdepth 1 -type d -name migrations -prune -false -o -iname "*.yml")
+  fi
   for YAML_COMP_ in "${YAML_COMPS[@]}"; do
-    if hasChanged "$YAML_COMP_"; then
-      echo -e "\\n""${GREEN}""Run docker check on ${YAML_COMP_}:""${NC}""\\n"
-      if yamllint "${YAML_COMP_}" ; then
-        echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
-      else
-        echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
-        ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
-        MODULES_TO_CHECK_ARR+=( "${YAML_COMP_}" )
-      fi
+    echo -e "\\n""${GREEN}""Run docker check on ${YAML_COMP_}:""${NC}""\\n"
+    if yamllint "${YAML_COMP_}" ; then
+      echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
+    else
+      echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
+      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+      MODULES_TO_CHECK_ARR+=( "${YAML_COMP_}" )
     fi
   done
 }
 
 openapichecker(){
-  if hasChanged "./docs/openapi.yaml"; then
-    echo -e "\\n""${ORANGE}""${BOLD}""EMBArk openapi spec check""${NC}""\\n""${BOLD}""=================================================================""${NC}"
-    if spectral lint ./docs/openapi.yaml ; then
-      echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
-    else
-      echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
-        ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
-        MODULES_TO_CHECK_ARR+=( "./docs/openapi.yaml" )
-    fi
+  echo -e "\\n""${ORANGE}""${BOLD}""EMBArk openapi spec check""${NC}""\\n""${BOLD}""=================================================================""${NC}"
+  if spectral lint ./docs/openapi.yaml ; then
+    echo -e "${GREEN}""${BOLD}""==> SUCCESS""${NC}""\\n"
+  else
+    echo -e "\\n""${ORANGE}${BOLD}==> FIX ERRORS""${NC}""\\n"
+      ((MODULES_TO_CHECK=MODULES_TO_CHECK+1))
+      MODULES_TO_CHECK_ARR+=( "./docs/openapi.yaml" )
   fi
 }
 
@@ -420,16 +390,9 @@ list_linter_exceptions "pylint" "$PWD/embark"
 check_django
 yamlchecker
 openapichecker
-copy_right_check 2025 "${PWD}" "${PWD}/emba_logs"
 
-if $FAST_EXECUTION; then
-  # Enable recheck of failed files
-  for MODULE in "${MODULES_TO_CHECK_ARR[@]}"; do
-    unset 'UPDATED_LAST_CHECKED_CACHE[$MODULE]'
-  done
-
-  # Store cache
-  declare -p UPDATED_LAST_CHECKED_CACHE > "$CACHE_FILE"
+if [[ "$(date +%Y)" -ne 2025 ]]; then
+  copy_right_check 2025 "${PWD}" "${PWD}/emba_logs"
 fi
 
 if [[ "${#MODULES_TO_CHECK_ARR[@]}" -gt 0 ]]; then
