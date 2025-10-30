@@ -166,15 +166,15 @@ if [[ ${#SERVER_ALIAS[@]} -ne 0 ]]; then
 fi
 
 # shellcheck disable=SC1091 # No need to validate /etc/os-release
-lOS_ID=$(source /etc/os-release; echo "$ID")
-if [[ "$lOS_ID" == "ubuntu" ]] || [[ "$lOS_ID" == "kali" ]] || [[ "$lOS_ID" == "debian" ]]; then
+lOS_ID=$(source /etc/os-release; echo "${ID}")
+if [[ "${lOS_ID}" == "ubuntu" ]] || [[ "${lOS_ID}" == "kali" ]] || [[ "${lOS_ID}" == "debian" ]]; then
   OS_TYPE="debian"
-elif [[ "$lOS_ID" == "rhel" ]] || [[ "$lOS_ID" == "rocky" ]] || [[ "$lOS_ID" == "centos" ]] || [[ "$lOS_ID" == "fedora" ]]; then
+elif [[ "${lOS_ID}" == "rhel" ]] || [[ "${lOS_ID}" == "rocky" ]] || [[ "${lOS_ID}" == "centos" ]] || [[ "${lOS_ID}" == "fedora" ]]; then
   OS_TYPE="rhel"
 fi
 
 PIPENV_COMMAND="pipenv"
-if [[ "$OS_TYPE" == "rhel" ]]; then
+if [[ "${OS_TYPE}" == "rhel" ]]; then
   PIPENV_COMMAND="$(which python3.11) -m pipenv"
 fi
 
@@ -221,10 +221,10 @@ fi
 rsync -r -u --progress --chown="${SUDO_USER}" "${EMBARK_BASEDIR}"/Pipfile* /var/www/
 
 if ! nc -zw1 pypi.org 443 &>/dev/null ; then
-  if ! (cd /var/www && $PIPENV_COMMAND verify) ; then
-    (cd /var/www && MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 $PIPENV_COMMAND update)
+  if ! (cd /var/www && "${PIPENV_COMMAND}" verify) ; then
+    (cd /var/www && MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 "${PIPENV_COMMAND}" update)
   fi
-  (cd /var/www && $PIPENV_COMMAND check)
+  (cd /var/www && "${PIPENV_COMMAND}" check)
 fi
 
 # check db and start container
@@ -356,29 +356,29 @@ fi
 
 # db_init
 echo -e "\n[""${BLUE} JOB""${NC}""] Starting migrations - log to embark/logs/migration.log"
-$PIPENV_COMMAND run ./manage.py makemigrations | tee -a /var/www/logs/migration.log
-$PIPENV_COMMAND run ./manage.py migrate | tee -a /var/www/logs/migration.log
+"${PIPENV_COMMAND}" run ./manage.py makemigrations | tee -a /var/www/logs/migration.log
+"${PIPENV_COMMAND}" run ./manage.py migrate | tee -a /var/www/logs/migration.log
 
 # collect staticfiles and make accesable for server
 echo -e "\n[""${BLUE} JOB""${NC}""] Collecting static files"
-$PIPENV_COMMAND run ./manage.py collectstatic --no-input
+"${PIPENV_COMMAND}" run ./manage.py collectstatic --no-input
 chown www-embark /var/www/ -R
 chmod 760 /var/www/media/ -R
 
 echo -e "\n[""${BLUE} JOB""${NC}""] Starting runapscheduler"
-$PIPENV_COMMAND run ./manage.py runapscheduler | tee -a /var/www/logs/scheduler.log &
+"${PIPENV_COMMAND}" run ./manage.py runapscheduler | tee -a /var/www/logs/scheduler.log &
 sleep 5
 
 # create admin superuser
 echo -e "\n[""${BLUE} JOB""${NC}""] Creating Admin account"
-$PIPENV_COMMAND run ./manage.py createsuperuser --noinput 2>/dev/null
+"${PIPENV_COMMAND}" run ./manage.py createsuperuser --noinput 2>/dev/null
 
 # load default groups
 echo -e "\n[""${BLUE} JOB""${NC}""] Creating default permission groups"
-$PIPENV_COMMAND run ./manage.py loaddata ./*/fixtures/*.json 2>/dev/null
+"${PIPENV_COMMAND}" run ./manage.py loaddata ./*/fixtures/*.json 2>/dev/null
 
 echo -e "\n[""${BLUE} JOB""${NC}""] Starting Apache"
-$PIPENV_COMMAND run ./manage.py runmodwsgi --user www-embark --group sudo \
+"${PIPENV_COMMAND}" run ./manage.py runmodwsgi --user www-embark --group sudo \
 --host "${BIND_IP}" --port="${HTTP_PORT}" --limit-request-body "${FILE_SIZE}" \
 --url-alias /static/ /var/www/static/ \
 --url-alias /media/ /var/www/media/ \
@@ -396,11 +396,11 @@ $PIPENV_COMMAND run ./manage.py runmodwsgi --user www-embark --group sudo \
 sleep 5
 
 echo -e "\n[""${BLUE} JOB""${NC}""] Starting daphne(ASGI) - log to /embark/logs/daphne.log"
-cd /var/www/embark && sudo -u www-embark $PIPENV_COMMAND run daphne --access-log /var/www/logs/daphne.log -e ssl:8000:privateKey=/var/www/conf/cert/embark-ws.local.key:certKey=/var/www/conf/cert/embark-ws.local.crt -b "${BIND_IP}" -p 8001 -s embark-ws.local embark.asgi:application &
+cd /var/www/embark && sudo -u www-embark "${PIPENV_COMMAND}" run daphne --access-log /var/www/logs/daphne.log -e ssl:8000:privateKey=/var/www/conf/cert/embark-ws.local.key:certKey=/var/www/conf/cert/embark-ws.local.crt -b "${BIND_IP}" -p 8001 -s embark-ws.local embark.asgi:application &
 sleep 5
 
 # Start celery worker
-sudo -u www-embark $PIPENV_COMMAND run python -m celery -A embark worker --beat --scheduler django -l INFO --logfile=../logs/celery.log &
+sudo -u www-embark "${PIPENV_COMMAND}" run python -m celery -A embark worker --beat --scheduler django -l INFO --logfile=../logs/celery.log &
 CELERY_PID=$!
 
 echo -e "\n""${ORANGE}${BOLD}""=============================================================""${NC}"
@@ -409,7 +409,7 @@ echo -e "\n""${ORANGE}${BOLD}""EMBA logs are under /var/www/emba_logs/<id> ""${N
 if [[ ${#SERVER_ALIAS[@]} -ne 0 ]]; then
   echo -e "\n""${ORANGE}${BOLD}""Server started on http://embark.local with aliases:""${NC}"
   for _alias in "${!SERVER_ALIAS[@]}" ; do
-    echo -e "\n${ORANGE}http://${SERVER_ALIAS[$_alias]}:${HTTP_PORT}${NC}"
+    echo -e "\n${ORANGE}http://${SERVER_ALIAS["${_alias}"]}:${HTTP_PORT}${NC}"
   done
 else
   echo -e "\n""${ORANGE}${BOLD}""Server started on http://embark.local"":""${HTTP_PORT}""${NC}"
