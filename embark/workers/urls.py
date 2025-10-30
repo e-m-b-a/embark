@@ -33,4 +33,6 @@ urlpatterns = [
 
     path('worker/dependencies/state/', views.dependency_state, name='embark-worker-dependency-state'),
     path('worker/dependencies/reset/', views.dependency_state_reset, name='embark-worker-dependency-reset'),
+
+    path('worker/log/<int:worker_id>/', views.show_worker_log, name='embark-worker-show-log'),
 ]

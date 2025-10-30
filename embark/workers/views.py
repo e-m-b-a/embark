@@ -466,6 +466,9 @@ def update_queue_state(request, worker_id):
     return JsonResponse({"update_queue": update_queue})
 
 
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
 def dependency_state_reset(request):
     """
     Reset the 'used_by' field for all DependencyState instances.
@@ -501,3 +504,33 @@ def safe_redirect(request, default):
     if not url_has_allowed_host_and_scheme(referer, allowed_hosts={request.get_host()}):
         referer = default
     return HttpResponseRedirect(referer)
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def show_worker_log(request, worker_id):
+    """
+    Show the log of a specific worker.
+    :params worker_id: The worker id
+    """
+    user = get_user(request)
+    try:
+        worker = Worker.objects.get(id=worker_id)
+        configuration = worker.configurations.filter(user=user).first()
+
+        if not user_is_auth(user, configuration.user):
+            messages.error(request, 'You are not allowed to access this worker.')
+            return safe_redirect(request, '/worker/')
+
+        log_content = worker.get_log_content()
+        return render(request, 'workers/worker_log.html', {
+            'worker': worker,
+            'log_content': log_content
+        })
+    except Worker.DoesNotExist:
+        messages.error(request, 'Worker or configuration not found.')
+    except Configuration.DoesNotExist:
+        messages.error(request, 'You are not allowed to access this worker.')
+
+    return safe_redirect(request, '/worker/')
