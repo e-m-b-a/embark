@@ -305,8 +305,6 @@ list_linter_exceptions(){
   # $2 directory
   # $3 excluded dir for find
 
-  if $FAST_EXECUTION; then return 0; fi
-
   local TOOL_NAME_="${1:-}"
   local DIR_="${2:-}"
   local EXCLUDE_="${3:-}"
@@ -376,17 +374,17 @@ MODULES_TO_CHECK=0
 MODULES_TO_CHECK_ARR=()
 EXCEPTIONS_TO_CHECK_ARR=()
 shellchecker
-list_linter_exceptions "shellcheck" "$PWD"
+list_linter_exceptions "shellcheck" "${PWD}"
 dockerchecker
 jscheck
-list_linter_exceptions "jshint" "$PWD/embark"
+list_linter_exceptions "jshint" "${PWD}/embark"
 templatechecker
-list_linter_exceptions "djlint" "$PWD/embark"
+list_linter_exceptions "djlint" "${PWD}/embark"
 pycodestyle_check
 banditer
-list_linter_exceptions "bandit" "$PWD/embark"
+list_linter_exceptions "bandit" "${PWD}/embark"
 pylinter
-list_linter_exceptions "pylint" "$PWD/embark"
+list_linter_exceptions "pylint" "${PWD}/embark"
 check_django
 yamlchecker
 openapichecker
