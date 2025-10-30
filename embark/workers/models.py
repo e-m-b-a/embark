@@ -27,10 +27,10 @@ class Configuration(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='configuration')
     name = models.CharField(max_length=150)
     ssh_user = models.CharField(max_length=150)
-    ssh_password = models.CharField(max_length=150)
+    ssh_password = models.CharField(max_length=150, help_text="Allowed special characters: @ # $ % ^ & + = ! ( ) { } [ ] _ - | \\")
     ssh_private_key = models.TextField()
     ssh_public_key = models.TextField()
-    ip_range = models.CharField(max_length=150)
+    ip_range = models.CharField(max_length=20, help_text="CIDR notation (e.g., 192.168.1.0/24)")
     created_at = models.DateTimeField(auto_now_add=True)
     scan_status = models.CharField(max_length=1, choices=ScanStatus, default=ScanStatus.NEW)
 

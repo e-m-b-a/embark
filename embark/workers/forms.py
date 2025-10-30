@@ -4,7 +4,7 @@ __license__ = 'MIT'
 
 import re
 
-from django.forms import ModelForm
+from django.forms import ModelForm, PasswordInput
 from django.core.exceptions import ValidationError
 from workers.models import Configuration
 
@@ -13,6 +13,9 @@ class ConfigurationForm(ModelForm):
     class Meta:
         model = Configuration
         fields = ['name', 'ssh_user', 'ssh_password', 'ip_range']
+        widgets = {
+            'password': PasswordInput(),
+        }
 
     def clean_ip_range(self):
         import ipaddress
