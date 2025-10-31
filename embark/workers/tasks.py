@@ -727,7 +727,7 @@ def _update_or_create_worker(config: Configuration, ip_address: str):
             system_info={},
             reachable=True
         )
-        os.mkdir(Path(worker.log_location), exist_ok=True)
+        os.mkdir(Path(worker.log_location), exist_ok=True, parents=True)
         worker.save()
         worker.configurations.set([config])
     finally:

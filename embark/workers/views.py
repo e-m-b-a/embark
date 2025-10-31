@@ -5,6 +5,7 @@ __license__ = 'MIT'
 import logging
 from io import StringIO
 import os
+from pathlib import Path
 from Crypto.PublicKey import RSA  # nosec
 
 from django.shortcuts import render
@@ -130,6 +131,8 @@ def create_config(request):
     # Fix paramiko RSA peculiarity
     new_config.ssh_private_key = new_config.ssh_private_key.replace("PRIVATE KEY", "RSA PRIVATE KEY")
 
+    # create log dir + files
+    os.mkdir(Path(new_config.log_location), exist_ok=True, parents=True)
     new_config.save()
 
     messages.success(request, 'Configuration created successfully.')

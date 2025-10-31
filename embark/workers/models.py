@@ -35,6 +35,27 @@ class Configuration(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     scan_status = models.CharField(max_length=1, choices=ScanStatus, default=ScanStatus.NEW)
 
+    def get_log_path(self):
+        """
+        Returns the log path for this worker
+        :return: log path
+        """
+        return f"{settings.WORKER_LOG_PATH}/configuration/{self.pk}.log"
+
+    log_location = models.FileField(upload_to=get_log_path, null=True, blank=True)
+
+    def write_log(self, string):
+        """
+        Writes into self.log_location
+        :returns: None
+        """
+        if not Path(self.log_location).is_file():
+            with open(self.log_location, 'x') as log_file:
+                log_file.write(string)
+        else:
+            with open(self.log_location, 'a') as log_file:
+                log_file.write(string)
+
     def _ssh_key_paths(self):
         """
         Returns ssh key paths
@@ -128,7 +149,7 @@ class Worker(models.Model):
         Returns the log path for this worker
         :return: log path
         """
-        return f"{settings.WORKER_LOG_PATH}/{self.pk}.log"
+        return f"{settings.WORKER_LOG_PATH}/worker/{self.pk}.log"
 
     log_location = models.FileField(upload_to=get_log_path, null=True, blank=True)
 
