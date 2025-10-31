@@ -16,7 +16,7 @@ from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
 
-from workers.forms import ConfigurationForm, LogFileSelectForm
+from workers.forms import ConfigurationForm
 from workers.models import DependencyState, Worker, Configuration, DependencyVersion, DependencyType, WorkerUpdate
 from workers.update.update import queue_update
 from workers.tasks import fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, config_worker_scan_task, delete_config_task
