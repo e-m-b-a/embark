@@ -141,13 +141,14 @@ class Worker(models.Model):
     def write_log(self, string):
         """
         Writes into self.log_location
-        :returns: True/False
+        :returns: None
         """
         if not Path(self.log_location).is_file():
-            return False
-        with open(self.log_location,'w') as log_file:
-            log_file.writeln(string)
-        return True
+            with open(self.log_location, 'x') as log_file:
+                log_file.write(string)
+        else:
+            with open(self.log_location, 'a') as log_file:
+                log_file.write(string)
 
     def clean(self):
         super().clean()

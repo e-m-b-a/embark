@@ -120,7 +120,7 @@ def create_config(request):
         messages.error(request, 'Invalid configuration data.')
         return safe_redirect(request, '/worker/')
 
-    new_config = config_form.save(commit=False)
+    new_config = config_form.save(commit=False)     # create new configuration
     new_config.user = user
 
     key = RSA.generate(settings.WORKER_SSH_KEY_SIZE)
