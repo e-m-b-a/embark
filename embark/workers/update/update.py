@@ -18,7 +18,7 @@ from workers.orchestrator import get_orchestrator
 logger = logging.getLogger(__name__)
 
 
-def exec_blocking_ssh(client: SSHClient, command: str, log_write: function = None) -> str:
+def exec_blocking_ssh(client: SSHClient, command: str, log_write: callable = None) -> str:
     """
     Executes ssh command blocking, as exec_command is non-blocking
     Warning: This command might block forever, if the output is too large (based on recv_exit_status). Thus redirect to file
