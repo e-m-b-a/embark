@@ -270,13 +270,14 @@ def config_worker_scan(request, configuration_id):
     :params configuration_id: The configuration id
     """
     user = get_user(request)
-    if not user_is_auth(user, config.user):
-        messages.error(request, 'You are not allowed to access this configuration.')
-        return safe_redirect(request, '/worker/')
     try:
         config = Configuration.objects.get(id=configuration_id)
     except Configuration.DoesNotExist:
         messages.error(request, 'Configuration not found.')
+        return safe_redirect(request, '/worker/')
+
+    if not user_is_auth(user, config.user):
+        messages.error(request, 'You are not allowed to access this configuration.')
         return safe_redirect(request, '/worker/')
 
     config_worker_scan_task.delay(config.id)
