@@ -18,7 +18,7 @@ from workers.orchestrator import get_orchestrator
 logger = logging.getLogger(__name__)
 
 
-def exec_blocking_ssh(client: SSHClient, command: str) -> str:
+def exec_blocking_ssh(client: SSHClient, command: str, log_write: function = None) -> str:
     """
     Executes ssh command blocking, as exec_command is non-blocking
     Warning: This command might block forever, if the output is too large (based on recv_exit_status). Thus redirect to file
@@ -33,6 +33,9 @@ def exec_blocking_ssh(client: SSHClient, command: str) -> str:
     status = stdout.channel.recv_exit_status()
     if status != 0:
         raise paramiko.ssh_exception.SSHException(f"Command failed with status {status}: {command}")
+
+    if log_write:
+        log_write(f"\nInput: {command} \nOutput: {stdout.read().decode().strip()} \nStatus: {str(status)}\n")
 
     return stdout.read().decode().strip()
 

@@ -68,7 +68,7 @@ def update_system_info(worker: Worker):
     try:
         ssh_client = worker.ssh_connect(timeout=10)
 
-        os_info = exec_blocking_ssh(ssh_client, 'grep PRETTY_NAME /etc/os-release')
+        os_info = exec_blocking_ssh(ssh_client, 'grep PRETTY_NAME /etc/os-release', worker.write_log)
         os_info = os_info[len('PRETTY_NAME='):-1].strip('"')
 
         cpu_info = exec_blocking_ssh(ssh_client, 'nproc')
