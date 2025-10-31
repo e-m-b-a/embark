@@ -269,11 +269,11 @@ def config_worker_scan(request, configuration_id):
     gives information about the number of reachable workers out of the registered ones.
     :params configuration_id: The configuration id
     """
+    user = get_user(request)
     if not user_is_auth(user, config.user):
         messages.error(request, 'You are not allowed to access this configuration.')
         return safe_redirect(request, '/worker/')
     try:
-        user = get_user(request)
         config = Configuration.objects.get(id=configuration_id)
     except Configuration.DoesNotExist:
         messages.error(request, 'Configuration not found.')
