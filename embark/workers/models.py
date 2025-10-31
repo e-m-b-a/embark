@@ -122,6 +122,15 @@ class Worker(models.Model):
     analysis_id = models.UUIDField(blank=True, null=True, help_text="ID of the analysis currently running on this worker")
     last_reached = models.DateTimeField(auto_now_add=True)
 
+    def get_log_path(self):
+        """
+        Returns the log path for this worker
+        :return: log path
+        """
+        return f"{settings.WORKER_LOG_PATH}/{self.pk}.log"
+
+    log_location = models.FileField(upload_to=get_log_path, null=True, blank=True)
+
     dependency_version = models.OneToOneField(
         WorkerDependencyVersion,
         on_delete=models.CASCADE,

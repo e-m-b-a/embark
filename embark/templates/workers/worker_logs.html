@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load static %}
+{% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/menu.css' %}"/>{% endblock style %}
+{% block title %}EMBArk Workers{% endblock title %}
+
+{% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
+{% block maincontent %}
+<div class="overflow-auto">
+    {{ log_content|safe }}
+</div>
+{% endblock maincontent %}
+
+   

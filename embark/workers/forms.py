@@ -6,7 +6,7 @@ import re
 
 from django.forms import ModelForm, PasswordInput
 from django.core.exceptions import ValidationError
-from workers.models import Configuration
+from workers.models import Configuration, Worker
 
 
 class ConfigurationForm(ModelForm):

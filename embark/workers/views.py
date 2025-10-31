@@ -4,6 +4,7 @@ __license__ = 'MIT'
 
 import logging
 from io import StringIO
+import os
 from Crypto.PublicKey import RSA  # nosec
 
 from django.shortcuts import render
@@ -15,7 +16,7 @@ from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
 
-from workers.forms import ConfigurationForm
+from workers.forms import ConfigurationForm, LogFileSelectForm
 from workers.models import DependencyState, Worker, Configuration, DependencyVersion, DependencyType, WorkerUpdate
 from workers.update.update import queue_update
 from workers.tasks import fetch_dependency_updates, worker_hard_reset_task, worker_soft_reset_task, config_worker_scan_task, delete_config_task
@@ -511,19 +512,26 @@ def safe_redirect(request, default):
 @permission_required("users.worker_permission", login_url='/')
 def show_worker_log(request, worker_id):
     """
-    Show the log of a specific worker.
+    Show the logs of a specific worker.
     :params worker_id: The worker id
     """
     user = get_user(request)
+
+    if not user_is_auth(user, configuration.user):
+        messages.error(request, 'You are not allowed to access this worker.')
+        return safe_redirect(request, '/worker/')
+
     try:
         worker = Worker.objects.get(id=worker_id)
         configuration = worker.configurations.filter(user=user).first()
 
-        if not user_is_auth(user, configuration.user):
-            messages.error(request, 'You are not allowed to access this worker.')
+        log_file = worker.log_location
+        if not log_file or not os.path.isfile(log_file.path):
+            messages.error(request, 'Log file not found for this worker.')
             return safe_redirect(request, '/worker/')
+        with open(log_file.path, 'r') as file:
+            log_content = file.read()
 
-        log_content = worker.get_log_content()
         return render(request, 'workers/worker_log.html', {
             'worker': worker,
             'log_content': log_content
