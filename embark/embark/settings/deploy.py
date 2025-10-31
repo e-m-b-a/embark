@@ -317,14 +317,19 @@ VERSION = get_version_strings()
 WORKER_FILES_PATH = os.path.join(BASE_DIR.parent, "WORKER_FILES")
 WORKER_UPDATE_CHECK = os.path.join(WORKER_FILES_PATH, "update_check")
 WORKER_KEY_LOCATION = os.path.join(WORKER_FILES_PATH, "ssh_keys")
-WORKER_LOG_PATH = os.path.join(WORKER_FILES_PATH, "logs")
-WORKER_SETUP_LOGS = os.path.join(WORKER_LOG_PATH, "worker_setup_{timestamp}.log")
 WORKER_EMBA_ROOT = "/root/emba/"
 WORKER_FIRMWARE_DIR = "/root/firmware/"
 WORKER_EMBA_LOGS = "/root/emba_logs/"
 WORKER_UPDATE_QUEUE_SIZE = 50
 WORKER_SSH_KEY_SIZE = 2048
 WORKER_REACHABLE_TIMEOUT = 10
+
+# worker logs
+WORKER_LOG_ROOT_ABS = os.path.join(MEDIA_ROOT, "WORKER_FILES")
+WORKER_LOG_ROOT = os.path("worker-logs")
+WORKER_CONFIGURATION_LOGS = os.path.join(WORKER_LOG_ROOT, "configurations")
+WORKER_WORKER_LOGS = os.path.join(WORKER_LOG_ROOT, "worker")
+WORKER_SETUP_LOGS = os.path.join(WORKER_LOG_ROOT, "worker_setup_{timestamp}.log")
 
 # Celery task queue
 CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"

@@ -34,15 +34,7 @@ class Configuration(models.Model):
     ip_range = models.CharField(max_length=20, help_text="CIDR notation (e.g., 192.168.1.0/24)")
     created_at = models.DateTimeField(auto_now_add=True)
     scan_status = models.CharField(max_length=1, choices=ScanStatus, default=ScanStatus.NEW)
-
-    def get_log_path(self):
-        """
-        Returns the log path for this worker
-        :return: log path
-        """
-        return f"{settings.WORKER_LOG_PATH}/configuration/{self.pk}.log"
-
-    log_location = models.FileField(upload_to=get_log_path, null=True, blank=True)
+    log_location = models.FilePathField(path=f"{settings.WORKER_CONFIGURATION_LOGS}")
 
     def write_log(self, string):
         """
@@ -143,15 +135,7 @@ class Worker(models.Model):
     status = models.CharField(max_length=1, choices=ConfigStatus, default=ConfigStatus.UNCONFIGURED)
     analysis_id = models.UUIDField(blank=True, null=True, help_text="ID of the analysis currently running on this worker")
     last_reached = models.DateTimeField(auto_now_add=True)
-
-    def get_log_path(self):
-        """
-        Returns the log path for this worker
-        :return: log path
-        """
-        return f"{settings.WORKER_LOG_PATH}/worker/{self.pk}.log"
-
-    log_location = models.FileField(upload_to=get_log_path, null=True, blank=True)
+    log_location = models.FilePathField(path=f"{settings.WORKER_WORKER_LOGS}/")
 
     dependency_version = models.OneToOneField(
         WorkerDependencyVersion,

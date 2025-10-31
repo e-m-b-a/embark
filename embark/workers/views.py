@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 from Crypto.PublicKey import RSA  # nosec
 
+from django.core.files import File
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import get_user
@@ -131,8 +132,11 @@ def create_config(request):
     # Fix paramiko RSA peculiarity
     new_config.ssh_private_key = new_config.ssh_private_key.replace("PRIVATE KEY", "RSA PRIVATE KEY")
 
-    # create log dir + files
-    os.mkdir(Path(new_config.log_location), exist_ok=True, parents=True)
+    # create log file
+    if not Path(settings.WORKER_LOG_ROOT_ABS).exists():
+        Path(os.path.join(settings.WORKER_LOG_ROOT_ABS, settings.WORKER_CONFIGURATION_LOGS)).mkdir(parents=True, exist_ok=True)
+    new_config.log_location.path = Path(f"{os.path.join(settings.WORKER_LOG_ROOT_ABS, settings.WORKER_CONFIGURATION_LOGS)}/{new_config.pk}.log")
+
     new_config.save()
 
     messages.success(request, 'Configuration created successfully.')
