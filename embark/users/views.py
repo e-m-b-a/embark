@@ -112,6 +112,7 @@ def embark_login(request):
         except builtins.Exception as error:
             logger.exception('Wide exception in Signup: %s', error)
             messages.error(request, 'Something went wrong when logging in the user.')
+        return redirect('embark-login')
     login_form = LoginForm()
     return render(request, 'user/login.html', {'form': login_form})
 
