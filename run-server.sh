@@ -356,7 +356,7 @@ cd /var/www/embark/ || exit 1
 source /var/www/.venv/bin/activate || exit 1
 export PIPENV_VERBOSITY=-1
 
-if [[ "${PIPENV_CHANGED}" -eq 1]]; then
+if [[ "${PIPENV_CHANGED}" -eq 1 ]]; then
   "${PIPENV_COMMAND}" update
 fi
 
@@ -426,4 +426,8 @@ else
   echo -e "\n""${ORANGE}${BOLD}""Server started on http://embark.local"":""${HTTP_PORT}""${NC}"
 fi
 # echo -e "\n""${ORANGE}${BOLD}""For SSL you may use https://embark.local (Not recommended for local use)""${NC}"
+
+# periodically sync the 2 EMBA repos while the server is running
+sync_emba_backward && sleep 10 &
+
 wait

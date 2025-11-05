@@ -164,7 +164,10 @@ install_emba(){
 install_emba_src(){
   local TARBALL_URL_="https://github.com/e-m-b-a/emba/tarball/master/"
 
-  echo -e "\n${GREEN}""${BOLD}""Installation of the firmware scanner EMBA on host""${NC}"
+  echo -e "\n${GREEN}""${BOLD}""Installation of the firmware scanner EMBA on host from release""${NC}"
+  if ! [[ -d ./emba ]]; then
+    mkdir emba
+  fi
   if ! [[ -f ./emba/installer.sh ]]; then
     if [[ -n "${TARBALL_URL_}" ]]; then
       wget -O emba.tar.gz "${TARBALL_URL_}"

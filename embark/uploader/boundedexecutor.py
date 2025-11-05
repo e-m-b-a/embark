@@ -395,21 +395,30 @@ class BoundedExecutor:
         # 4. sync server dir
         """
         logger.debug("Update EMBA with: %s", option)
-        # git update
-        try:
-            cmd = f"cd {settings.EMBA_ROOT} && git pull origin master"
+        # update using diffrent methods
+        if os.environ.get('EMBA_INSTALL') != "no":
+            # git update
+           if os.path.exists(os.path.join(settings.EMBA_ROOT),'.git'):
+                try:
+                    cmd = f"cd {settings.EMBA_ROOT} && git pull origin master"
 
-            with open(f"{settings.EMBA_LOG_ROOT}/emba_update.log", "w+", encoding="utf-8") as file:
-                proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
-                # wait for completion
-                proc.communicate()
-                return_code = proc.wait()
-            # success
-            logger.info("Git pull Successful: %s", cmd)
-            if return_code != 0:
-                raise BoundedException("Git has non zero exit-code")
-        except (BaseException, BoundedException) as exce:
-            logger.error("emba update error: %s", exce)
+                    with open(f"{settings.EMBA_LOG_ROOT}/emba_update.log", "w+", encoding="utf-8") as file:
+                        proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
+                        # wait for completion
+                        proc.communicate()
+                        return_code = proc.wait()
+                    # success
+                    logger.info("Git pull Successful: %s", cmd)
+                    if return_code != 0:
+                        raise BoundedException("Git has non zero exit-code")
+                except (BaseException, BoundedException) as exce:
+                    logger.error("emba update error: %s", exce)
+            # src
+            else:
+               # rm emba
+               # call installer.sh -e
+               # TODO
+               
 
         # emba update
         try:

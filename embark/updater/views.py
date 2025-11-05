@@ -15,7 +15,7 @@ from django.contrib import messages
 from django.shortcuts import redirect
 
 from embark.helper import disk_space_check, get_emba_version
-from updater.forms import CheckForm, EmbaUpdateForm
+from updater.forms import CheckForm, UpdateForm
 from uploader.boundedexecutor import BoundedExecutor
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ req_logger = logging.getLogger("requests")
 @require_http_methods(["GET"])
 def updater_home(request):
     req_logger.info("User %s called updater_home", request.user.username)
-    emba_update_form = EmbaUpdateForm()
+    emba_update_form = UpdateForm()
     emba_check_form = CheckForm()
     emba_version, stable_emba_version, container_version, nvd_version, github_emba_version = get_emba_version()
     return render(request, 'updater/index.html', {
@@ -88,7 +88,7 @@ def update_emba(request):
     :return: HttpResponse including the status
     """
     req_logger.info("User %s called update_emba", request.user.username)
-    form = EmbaUpdateForm(request.POST)
+    form = UpdateForm(request.POST)
     if form.is_valid():
         logger.info("User %s tryied to update emba", request.user.username)
         option = form.cleaned_data['option']

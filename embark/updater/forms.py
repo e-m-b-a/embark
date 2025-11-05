@@ -8,10 +8,10 @@ from django import forms
 logger = logging.getLogger(__name__)
 
 
-class EmbaUpdateForm(forms.Form):
+class UpdateForm(forms.Form):
     option = forms.MultipleChoiceField(choices=[
-        ('GIT', 'Git Update'), ('DOCKER', 'Docker Update'), ('NVD', 'CVE Update')
-    ], help_text='Update EMBA', widget=forms.CheckboxSelectMultiple, required=False)
+        ('PULL', 'Git Pull origin/master'), ('DOCKER', 'Docker Update'), ('NVD', 'CVE Update')
+    ], help_text='Update EMBA components', widget=forms.CheckboxSelectMultiple, required=False)
 
 
 class CheckForm(forms.Form):
