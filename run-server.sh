@@ -37,6 +37,7 @@ STRICT_MODE=0
 EMBARK_BASEDIR="$(realpath "$(dirname "${0}")")"
 
 CELERY_PID=0
+PIPENV_CHANGED=0
 
 import_helper()
 {
@@ -218,7 +219,12 @@ if ! [[ -d /var/www/.venv ]]; then
 fi
 
 # sync pipfile
-rsync -r -u --progress --chown="${SUDO_USER}" "${EMBARK_BASEDIR}"/Pipfile* /var/www/
+if [[ -n "$(rsync -r -u --progress --chown="${SUDO_USER}" "${EMBARK_BASEDIR}"/Pipfile* /var/www/)" ]]; then
+  # update if changes
+  PIPENV_CHANGED=1
+fi
+
+
 
 if ! nc -zw1 pypi.org 443 &>/dev/null ; then
   if ! (cd /var/www && "${PIPENV_COMMAND}" verify) ; then
@@ -349,6 +355,11 @@ cd /var/www/embark/ || exit 1
 # shellcheck disable=SC1091
 source /var/www/.venv/bin/activate || exit 1
 export PIPENV_VERBOSITY=-1
+
+if [[ "${PIPENV_CHANGED}" -eq 1]]; then
+  "${PIPENV_COMMAND}" update
+fi
+
 # logs
 if ! [[ -d /var/www/logs ]]; then
   mkdir /var/www/logs
