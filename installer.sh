@@ -242,6 +242,10 @@ install_deps(){
     if ! command -v git > /dev/null ; then
       apt-get install -y git
     fi
+    # Wget 
+    if ! command -v wget > /dev/null ; then
+      apt-get install -y wget
+    fi
     # Python3
     if ! command -v python3 > /dev/null ; then
       apt-get install -y python3
@@ -311,6 +315,10 @@ install_deps(){
     # Git
     if ! command -v git > /dev/null ; then
       dnf install -y git
+    fi
+    # Wget 
+    if ! command -v wget > /dev/null ; then
+      dnf install -y wget
     fi
     # Python3 & Pip
     if ! command -v python3.11 > /dev/null ; then
