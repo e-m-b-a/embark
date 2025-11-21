@@ -28,12 +28,11 @@ req_logger = logging.getLogger("requests")
 @require_http_methods(["GET"])
 def updater_home(request):
     req_logger.info("User %s called updater_home", request.user.username)
-    emba_update_form = UpdateForm()
-    emba_check_form = CheckForm()
     emba_version, stable_emba_version, container_version, nvd_version, github_emba_version = get_emba_version()
     return render(request, 'updater/index.html', {
-        'emba_update_form': emba_update_form,
-        'emba_check_form': emba_check_form,
+        'updater_update_form': UpdateForm(),
+        'updater_check_form': CheckForm(),
+        'updater_upgrade_form': UpgradeForm(),
         'emba_version': emba_version,
         'stable_emba_version': stable_emba_version,
         'container_version': container_version,
