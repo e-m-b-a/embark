@@ -43,10 +43,10 @@ class Configuration(models.Model):
         """
         if not Path(self.log_location).is_file():
             with open(self.log_location, 'x') as log_file:
-                log_file.write(string)
+                log_file.write(string + "\n")
         else:
             with open(self.log_location, 'a') as log_file:
-                log_file.write(string)
+                log_file.write(string + "\n")
 
     def _ssh_key_paths(self):
         """

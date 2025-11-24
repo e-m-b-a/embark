@@ -116,7 +116,6 @@ if [[ "${AVAILABLE_SIZE}" -lt 4000000 ]]; then
   exit 1
 fi
 
-
 # check emba
 if [[ "${IGNORE_EMBA}" -eq 1 ]] || grep -q "EMBA_INSTALL=no" ./.env; then
   echo -e "${BLUE}""${BOLD}""ignoring EMBA""${NC}"

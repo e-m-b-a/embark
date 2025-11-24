@@ -27,6 +27,7 @@ from embark.helper import user_is_auth
 
 logger = logging.getLogger(__name__)
 
+req_logger = logging.getLogger("requests")
 
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -120,6 +121,7 @@ def create_config(request):
     config_form = ConfigurationForm(request.POST)
     if not config_form.is_valid():
         messages.error(request, 'Invalid configuration data.')
+        messages.error(request, config_form.errors.as_text())
         return safe_redirect(request, '/worker/')
 
     new_config = config_form.save(commit=False)     # create new configuration
@@ -135,7 +137,7 @@ def create_config(request):
     # create log file
     if not Path(settings.WORKER_LOG_ROOT_ABS).exists():
         Path(os.path.join(settings.WORKER_LOG_ROOT_ABS, settings.WORKER_CONFIGURATION_LOGS)).mkdir(parents=True, exist_ok=True)
-    new_config.log_location.path = Path(f"{os.path.join(settings.WORKER_LOG_ROOT_ABS, settings.WORKER_CONFIGURATION_LOGS)}/{new_config.pk}.log")
+    new_config.log_location = Path(f"{os.path.join(settings.WORKER_LOG_ROOT_ABS, settings.WORKER_CONFIGURATION_LOGS)}/{new_config.id}.log")
 
     new_config.save()
 
@@ -525,13 +527,12 @@ def show_worker_log(request, worker_id):
     """
     user = get_user(request)
 
-    if not user_is_auth(user, configuration.user):
-        messages.error(request, 'You are not allowed to access this worker.')
-        return safe_redirect(request, '/worker/')
-
     try:
         worker = Worker.objects.get(id=worker_id)
         configuration = worker.configurations.filter(user=user).first()
+        if not user_is_auth(user, configuration.user):
+                messages.error(request, 'You are not allowed to access this worker.')
+                return safe_redirect(request, '/worker/')
 
         log_file = worker.log_location
         if not log_file or not os.path.isfile(log_file.path):
@@ -550,3 +551,35 @@ def show_worker_log(request, worker_id):
         messages.error(request, 'You are not allowed to access this worker.')
 
     return safe_redirect(request, '/worker/')
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def show_configuration_logs(request, configuration_id):
+    """
+    Show the logs of a specific configuration.
+    :params configuration_id: The configuration id
+    """
+    req_logger.info(f"User {request.user.username} requested logs for configuration {configuration_id}")
+    user = get_user(request)
+    
+    try:
+        config = Configuration.objects.get(id=configuration_id)
+        if not user_is_auth(user, config.user):
+                messages.error(request, 'You are not allowed to access this configuration.')
+                return safe_redirect(request, '/worker/')
+        log_file = config.log_location
+        if not log_file or not os.path.isfile(log_file):
+            messages.error(request, 'Log file not found for this configuration.')
+            return safe_redirect(request, '/worker/')
+        with open(log_file, 'r') as file:
+            log_content = file.read()
+
+        return render(request, 'workers/configuration_logs.html', {
+            'configuration': config,
+            'log_content': log_content
+        })
+    except Configuration.DoesNotExist:
+        messages.error(request, 'Configuration not found.')
+        return safe_redirect(request, '/worker/')

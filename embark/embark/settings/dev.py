@@ -154,6 +154,10 @@ LOGGING = {
             'level': 'WARNING',
             'handlers': ['info_handler', 'console_handler'],
         },
+        'workers': {
+            'handlers': ['debug_handler', 'info_handler', 'console_handler'],
+            'level': 'DEBUG',
+        },
         'updater': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
             'level': 'DEBUG',

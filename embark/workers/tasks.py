@@ -701,6 +701,9 @@ def delete_config_task(config_id):
         worker.dependency_version.delete()
         worker.delete()
 
+    if os.path.exists(config.log_location):
+        os.remove(config.log_location)
+
     config.delete()
 
 
@@ -810,15 +813,21 @@ def config_worker_scan_task(configuration_id: int):
     """
     try:
         config = Configuration.objects.get(id=configuration_id)
+        logger.info("config_worker_scan_task: Starting scan for configuration %s", config.name)
+        config.write_log("Starting worker scan task.")
         ssh_auth_check = not config.scan_status == Configuration.ScanStatus.FINISHED
         config.scan_status = Configuration.ScanStatus.SCANNING
         config.save()
 
         ip_network = ipaddress.ip_network(config.ip_range, strict=False)
-        ip_addresses = [str(ip) for ip in ip_network.hosts() if not is_ip_local_host(ip)]  # filter out local host IPs
+        ip_addresses = [str(ip) for ip in ip_network.hosts() if not is_ip_local_host(str(ip))]  # filter out local host IPs
+        logger.info("Scanning IPs: %s", ip_addresses)
+        config.write_log(f"Scanning IPs: {ip_addresses}")
         # remove special addresses
-        ip_addresses.remove(ip_network.broadcast_address)  # remove broadcast address
-        ip_addresses.remove(ip_network.network_address)  # remove network address
+        if str(ip_network.broadcast_address) in ip_addresses:
+            ip_addresses.remove(str(ip_network.broadcast_address))  # remove broadcast address
+        if str(ip_network.network_address) in ip_addresses:
+            ip_addresses.remove(str(ip_network.network_address))  # remove network address
         with ThreadPoolExecutor(max_workers=50) as executor:
             results = executor.map(partial(_scan_for_worker, config, ssh_auth_check=ssh_auth_check), ip_addresses)
             reachable = set(results) - {None}
@@ -827,13 +836,19 @@ def config_worker_scan_task(configuration_id: int):
         for worker in unreachable_workers:
             _handle_unreachable_worker(worker)
 
+        config.write_log(f"Worker scan task finished. {len(reachable)} reachable workers found.")
         config.scan_status = Configuration.ScanStatus.FINISHED
-        logger.info("config_worker_scan_task: Scan finished for configuration %s", config.name)
+        logger.info("config_worker_scan_task: Scan finished for configuration %s. %d reachable", config.name, len(reachable))
+    except ValueError as ve:
+        logger.error("config_worker_scan_task: Invalid IP range specified: %s", ve)
+        config.write_log(f"Worker scan task failed: Invalid IP range specified: {ve}")
+        config.scan_status = Configuration.ScanStatus.ERROR
     except Configuration.DoesNotExist:
         logger.error("config_worker_scan_task: Invalid configuration id")
-        config.scan_status = Configuration.ScanStatus.ERROR
+        # config is not defined here, so skip write_log and scan_status
     except BaseException as error:
         logger.error("config_worker_scan_task: An error occurred while scanning workers: %s", error)
+        config.write_log(f"Worker scan task failed: {error}")
         config.scan_status = Configuration.ScanStatus.ERROR
     finally:
         config.save()

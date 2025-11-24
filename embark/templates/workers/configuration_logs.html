@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load static %}
+{% block style %}<link rel="stylesheet" type="text/css" href="{% static 'content/css/menu.css' %}"/>{% endblock style %}
+{% block title %}EMBArk Workers{% endblock title %}
+
+{% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
+{% block maincontent %}
+
+<span class="font-weight-bold">Configuration Logs</span>
+
+<h2>{{ configuration.name }} (ID: {{ configuration.id }})</h2>
+
+<div class="overflow-auto">
+    {{ log_content|safe }}
+</div>
+{% endblock maincontent %}
+
+   

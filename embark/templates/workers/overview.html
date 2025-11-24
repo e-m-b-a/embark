@@ -72,6 +72,10 @@
                             {% csrf_token %}
                             <input type="submit" value="SSH Key download">
                         </form>
+                        <form action="{% url 'embark-configuration-logs' config.id %}">
+                            {% csrf_token %}
+                            <input type="submit" value="Show logs">
+                        </form>
                     </div>
                 </div>
             </div>
