@@ -201,17 +201,20 @@ def is_ip_local_host(ip_address: str) -> bool:
     Returns True if it is a local host address, otherwise False.
     inspired by https://gist.github.com/bennr01/7043a460155e8e763b3a9061c95faaa0
     """
-    hostname = socket.getfqdn(ip_address)
-    if hostname in ("localhost", "0.0.0.0"):
-        return True
-    localhost = socket.gethostname()
-    localaddrs = socket.getaddrinfo(localhost, 22)  # port 22 is arbitrary here
-    targetaddrs = socket.getaddrinfo(hostname, 22)
-    for (family, socktype, proto, canonname, sockaddr) in localaddrs:
-        for (rfamily, rsocktype, rproto, rcanonname, rsockaddr) in targetaddrs:
-            if rsockaddr[0] == sockaddr[0]:
-                return True
-    return False
+    try:
+        hostname = socket.getfqdn(ip_address)
+        if hostname in ("localhost", "0.0.0.0"):
+            return True
+        localhost = socket.gethostname()
+        localaddrs = socket.getaddrinfo(localhost, 22)  # port 22 is arbitrary here
+        targetaddrs = socket.getaddrinfo(hostname, 22)
+        for (family, socktype, proto, canonname, sockaddr) in localaddrs:
+            for (rfamily, rsocktype, rproto, rcanonname, rsockaddr) in targetaddrs:
+                if rsockaddr[0] == sockaddr[0]:
+                    return True
+        return False
+    except socket.error:
+        return False
 
 
 if __name__ == '__main__':
