@@ -767,6 +767,7 @@ def _scan_for_worker(config: Configuration, ip_address: str, port: int = 22, tim
         return None
     except Exception as exc:
         logger.error("[%s@%s] Cannot connect to host: %s", config.ssh_user, ip_address, exc)
+        config.write_log(f"Cannot connect to host {config.ssh_user}@{ip_address}: {exc}")
         return None
 
     client = None
@@ -782,6 +783,7 @@ def _scan_for_worker(config: Configuration, ip_address: str, port: int = 22, tim
             )
 
             logger.info("[%s@%s] Connected via SSH. Now testing for sudo privileges.", config.ssh_user, ip_address)
+            config.write_log(f"[{config.ssh_user}@{ip_address}] Connected via SSH. Now testing for sudo privileges.")
 
             stdin, stdout, _ = client.exec_command("sudo -v", get_pty=True)  # nosec
             stdin.write(config.ssh_password + "\n")
