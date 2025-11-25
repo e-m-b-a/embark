@@ -760,10 +760,12 @@ def _scan_for_worker(config: Configuration, ip_address: str, port: int = 22, tim
     :param ssh_auth_check: If True, tries to connect to the ip address with the config's ssh credentials and checks whether the user has sudo privileges
     :return: ip_address on success, None otherwise
     """
+    config.write_log(f"Scanning IP address: {ip_address}")
     try:  # Check TCP socket first before trying SSH
         with socket.create_connection((ip_address, port), timeout):
             pass
     except TimeoutError:
+        config.write_log(f"Host {ip_address} is not reachable (timeout).")
         return None
     except Exception as exc:
         logger.error("[%s@%s] Cannot connect to host: %s", config.ssh_user, ip_address, exc)
@@ -790,16 +792,19 @@ def _scan_for_worker(config: Configuration, ip_address: str, port: int = 22, tim
             stdin.flush()
             if stdout.channel.recv_exit_status():
                 logger.info("[%s@%s] Can't register worker: No sudo permission.", config.ssh_user, ip_address)
+                config.write_log(f"[{config.ssh_user}@{ip_address}] Can't register worker: No sudo permission.")
                 # Delete worker if SSH configuration changed
                 Worker.objects.filter(ip_address=ip_address).delete()
                 return None
 
         _update_or_create_worker(config, ip_address)
         logger.info("[%s@%s] Worker is reachable via SSH.", config.ssh_user, ip_address)
+        config.write_log(f"[{config.ssh_user}@{ip_address}] Worker is reachable via SSH.")
         return ip_address
 
     except Exception as exc:
         logger.error("[%s@%s] Exception while scanning worker: %s", config.ssh_user, ip_address, exc)
+        config.write_log(f"[{config.ssh_user}@{ip_address}] Exception while scanning worker: {exc}")
         return None
     finally:
         if client is not None:
