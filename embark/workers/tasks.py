@@ -733,7 +733,7 @@ def _update_or_create_worker(config: Configuration, ip_address: str):
         # create log file
         if not Path(settings.WORKER_LOG_ROOT_ABS).exists():
             Path(os.path.join(settings.WORKER_LOG_ROOT_ABS, settings.WORKER_WORKER_LOGS)).mkdir(parents=True, exist_ok=True)
-        worker.log_location.path = Path(f"{os.path.join(settings.WORKER_LOG_ROOT_ABS, settings.WORKER_WORKER_LOGS)}/{worker.pk}.log")
+        worker.log_location = Path(f"{os.path.join(settings.WORKER_LOG_ROOT_ABS, settings.WORKER_WORKER_LOGS)}/{worker.pk}.log")
         worker.save()
         worker.configurations.set([config])
     finally:
