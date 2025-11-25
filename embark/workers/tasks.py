@@ -828,9 +828,6 @@ def config_worker_scan_task(configuration_id: int):
 
         ip_network = ipaddress.ip_network(config.ip_range, strict=False)
         ip_addresses = [str(ip) for ip in ip_network.hosts() if not is_ip_local_host(str(ip))]  # filter out local host IPs
-        # remove special addresses
-        if str(ip_network.broadcast_address) in ip_addresses:
-            ip_addresses.remove(str(ip_network.broadcast_address))  # remove broadcast address
         logger.info("Scanning IPs: %s", ip_addresses)
         config.write_log(f"Scanning IPs: {ip_addresses}")
         with ThreadPoolExecutor(max_workers=50) as executor:
