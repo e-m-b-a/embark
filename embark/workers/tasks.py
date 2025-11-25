@@ -678,6 +678,7 @@ def worker_hard_reset_task(worker_id):
         worker = Worker.objects.get(id=worker_id)
     except Worker.DoesNotExist:
         logger.error("Worker Hard Reset: Invalid worker id")
+        worker.write_log(f"\nWorker Hard Reset: Invalid worker id\n")
         return
 
     orchestrator = get_orchestrator()
@@ -762,9 +763,10 @@ def _update_or_create_worker(config: Configuration, ip_address: str):
         # create log file
         if not Path(settings.WORKER_LOG_ROOT_ABS).exists():
             Path(os.path.join(settings.WORKER_LOG_ROOT_ABS, settings.WORKER_WORKER_LOGS)).mkdir(parents=True, exist_ok=True)
-        worker.log_location = Path(f"{os.path.join(settings.WORKER_LOG_ROOT_ABS, settings.WORKER_WORKER_LOGS)}/{worker.pk}.log")
+        worker.log_location = Path(f"{os.path.join(settings.WORKER_LOG_ROOT_ABS, settings.WORKER_WORKER_LOGS)}/{worker.id}.log")
         worker.save()
         worker.configurations.set([config])
+        worker.write_log(f"\nCreated new worker for IP address {ip_address}\n")
     finally:
         try:
             # TODO: The first two function calls may cause issues when a config
