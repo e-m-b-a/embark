@@ -137,6 +137,7 @@ class DependencyLock:
 
                         used_by[worker.ip_address] = worker
                         self._set_db_data(used_by=used_by)
+                        worker.write_log(f"\nUsing dependency {self.dependency.name} version {version}\n")
                         break
 
                     # Else: Trigger dependency setup, as newer version was found
@@ -163,6 +164,7 @@ class DependencyLock:
             if worker.ip_address in used_by:
                 del used_by[worker.ip_address]
                 self._set_db_data(used_by=used_by)
+                worker.write_log(f"\nReleased dependency {self.dependency.name}\n")
 
     def is_not_in_use(self):
         """
@@ -271,6 +273,7 @@ def eval_outdated_dependencies(worker: Worker):
 
     worker.dependency_version.save()
     logger.info("Outdated dependencies evaluated for worker %s", worker.ip_address)
+    worker.write_log(f"\nOutdated dependencies evaluated\n")
 
 
 def setup_dependency(dependency: DependencyType, version: str):
