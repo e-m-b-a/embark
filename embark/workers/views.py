@@ -133,7 +133,8 @@ def create_config(request):
 
     # Fix paramiko RSA peculiarity
     new_config.ssh_private_key = new_config.ssh_private_key.replace("PRIVATE KEY", "RSA PRIVATE KEY")
-
+    new_config.save()
+    
     # create log file
     if not Path(settings.WORKER_LOG_ROOT_ABS).exists():
         Path(os.path.join(settings.WORKER_LOG_ROOT_ABS, settings.WORKER_CONFIGURATION_LOGS)).mkdir(parents=True, exist_ok=True)
