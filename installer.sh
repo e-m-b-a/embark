@@ -811,7 +811,7 @@ if [[ ${EUID} -ne 0 ]]; then
 fi
 
 # shellcheck disable=SC1091 # No need to validate /etc/os-release
-lOS_ID=$(source /etc/os-release; echo "${ID}")")
+lOS_ID=$(source /etc/os-release; echo "${ID}")
 if [[ "${lOS_ID}" == "ubuntu" ]] || [[ "${lOS_ID}" == "kali" ]] || [[ "${lOS_ID}" == "debian" ]]; then
   OS_TYPE="debian"
 elif [[ "${lOS_ID}" == "rhel" ]] || [[ "${lOS_ID}" == "rocky" ]] || [[ "${lOS_ID}" == "centos" ]] || [[ "${lOS_ID}" == "fedora" ]]; then

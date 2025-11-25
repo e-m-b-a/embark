@@ -24,7 +24,7 @@ export DJANGO_SETTINGS_MODULE=embark.settings.dev
 export EMBARK_DEBUG=True
 export PIPENV_VENV_IN_PROJECT="True"
 
-# shellcheck disable=SC2329
+# shellcheck disable=SC2329,SC2317
 cleaner() {
   if [[ -f ./embark/embark.log ]]; then
     rm ./embark/embark.log -f
