@@ -8,7 +8,7 @@
 
 <span class="font-weight-bold">Worker Logs</span>
 
-<h2>{{ worker.name }} (ID: {{ worker.id }})</h2>
+<h2>{{ worker.name }} (ID: {{ worker.id }}, IP {{ worker.ip_address }})</h2>
 <div class="overflow-auto box">
     {{ log_content|safe }}
 </div>
