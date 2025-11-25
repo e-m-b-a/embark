@@ -177,7 +177,7 @@
                             {% csrf_token %}
                             <input type="submit" value="Soft Reset">
                         </form>
-                        <form action="{% url 'embark-worker-show-log' worker.id %}" method="post">
+                        <form action="{% url 'embark-worker-show-log' worker.id %}" method="get">
                             {% csrf_token %}
                             <input type="submit" value="Show Log">
                         </form>

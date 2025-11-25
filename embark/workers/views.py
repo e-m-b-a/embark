@@ -553,7 +553,7 @@ def show_worker_log(request, worker_id):
     return safe_redirect(request, '/worker/')
 
 
-@require_http_methods(["POST"])
+@require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
 def show_configuration_logs(request, configuration_id):
