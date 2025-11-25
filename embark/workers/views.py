@@ -535,10 +535,10 @@ def show_worker_log(request, worker_id):
             return safe_redirect(request, '/worker/')
 
         log_file = worker.log_location
-        if not log_file or not os.path.isfile(log_file.path):
+        if not log_file or not os.path.isfile(log_file):
             messages.error(request, 'Log file not found for this worker.')
             return safe_redirect(request, '/worker/')
-        with open(log_file.path, 'r') as file:
+        with open(log_file, 'r') as file:
             log_content = file.read()
 
         return render(request, 'workers/worker_log.html', {
