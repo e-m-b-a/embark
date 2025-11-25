@@ -65,6 +65,7 @@ def update_system_info(worker: Worker):
     """
     system_info = {}
     ssh_client = None
+    worker.write_log(f"\nUpdating system info...\n")
     try:
         ssh_client = worker.ssh_connect(timeout=10)
 
