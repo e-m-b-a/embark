@@ -284,7 +284,7 @@ install_deps(){
         # Add the repository to Apt sources:
         # shellcheck source=/dev/null
         echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-        $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+        $(. /etc/os-release && echo "${VERSION_CODENAME}") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
         apt-get update -y
         apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
       fi
@@ -811,10 +811,10 @@ if [[ ${EUID} -ne 0 ]]; then
 fi
 
 # shellcheck disable=SC1091 # No need to validate /etc/os-release
-lOS_ID=$(source /etc/os-release; echo "$ID")
-if [[ "$lOS_ID" == "ubuntu" ]] || [[ "$lOS_ID" == "kali" ]] || [[ "$lOS_ID" == "debian" ]]; then
+lOS_ID=$(source /etc/os-release; echo "${ID}")")
+if [[ "${lOS_ID}" == "ubuntu" ]] || [[ "${lOS_ID}" == "kali" ]] || [[ "${lOS_ID}" == "debian" ]]; then
   OS_TYPE="debian"
-elif [[ "$lOS_ID" == "rhel" ]] || [[ "$lOS_ID" == "rocky" ]] || [[ "$lOS_ID" == "centos" ]] || [[ "$lOS_ID" == "fedora" ]]; then
+elif [[ "${lOS_ID}" == "rhel" ]] || [[ "${lOS_ID}" == "rocky" ]] || [[ "${lOS_ID}" == "centos" ]] || [[ "${lOS_ID}" == "fedora" ]]; then
   OS_TYPE="rhel"
 fi
 
