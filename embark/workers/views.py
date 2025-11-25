@@ -531,8 +531,8 @@ def show_worker_log(request, worker_id):
         worker = Worker.objects.get(id=worker_id)
         configuration = worker.configurations.filter(user=user).first()
         if not user_is_auth(user, configuration.user):
-                messages.error(request, 'You are not allowed to access this worker.')
-                return safe_redirect(request, '/worker/')
+            messages.error(request, 'You are not allowed to access this worker.')
+            return safe_redirect(request, '/worker/')
 
         log_file = worker.log_location
         if not log_file or not os.path.isfile(log_file.path):
@@ -553,7 +553,7 @@ def show_worker_log(request, worker_id):
     return safe_redirect(request, '/worker/')
 
 
-@require_http_methods(["GET"])
+@require_http_methods(["POST"])
 @login_required(login_url='/' + settings.LOGIN_URL)
 @permission_required("users.worker_permission", login_url='/')
 def show_configuration_logs(request, configuration_id):
