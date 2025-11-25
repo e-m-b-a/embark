@@ -831,8 +831,6 @@ def config_worker_scan_task(configuration_id: int):
         # remove special addresses
         if str(ip_network.broadcast_address) in ip_addresses:
             ip_addresses.remove(str(ip_network.broadcast_address))  # remove broadcast address
-        if str(ip_network.network_address) in ip_addresses:
-            ip_addresses.remove(str(ip_network.network_address))  # remove network address
         logger.info("Scanning IPs: %s", ip_addresses)
         config.write_log(f"Scanning IPs: {ip_addresses}")
         with ThreadPoolExecutor(max_workers=50) as executor:
