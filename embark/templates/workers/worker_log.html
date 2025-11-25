@@ -5,7 +5,11 @@
 
 {% block navigation %}{% include "navigation.html" %}{% endblock navigation %}
 {% block maincontent %}
-<div class="overflow-auto">
+
+<span class="font-weight-bold">Worker Logs</span>
+
+<h2>{{ worker.name }} (ID: {{ worker.id }})</h2>
+<div class="overflow-auto box">
     {{ log_content|safe }}
 </div>
 {% endblock maincontent %}
