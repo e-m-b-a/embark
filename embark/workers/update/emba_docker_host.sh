@@ -10,14 +10,20 @@
 # EMBArk is licensed under MIT
 #
 # Author(s): ClProsser, SirGankalot
+# Contributor(s): Benedikt Kuehne
 
 set -e
 cd "$(dirname "$0")"
 
 if [[ ${EUID} -ne 0 ]]; then
-	echo "This script has to be run as root"
+	echo -e "\n[!!] ERROR: This script has to be run as root\n"
 	exit 1
 fi
+
+echo -e "\n[+] Starting EMBA Docker image preparation script"
+echo -e "[*] Output Directory: $1"
+echo -e "[*] ZIP Output Path: $2"
+echo -e "[*] Version: $3\n"
 
 FILEPATH="$1"
 ZIPPATH="$2"
@@ -25,57 +31,173 @@ VERSION="$3"
 IS_UBUNTU=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
 [[ ${IS_UBUNTU} == "Ubuntu" ]] && IS_UBUNTU=true || IS_UBUNTU=false
 
+echo -e "[*] Detected OS: ${IS_UBUNTU}"
+
 ### Reset
-rm -rf "${FILEPATH}"
-rm -f "${ZIPPATH}"
-mkdir -p "${FILEPATH}"
+echo -e "\n[*] Cleaning up previous EMBA Docker files"
+if rm -rf "${FILEPATH}" ; then
+  echo -e "[✓] Removed old directory"
+else
+  echo -e "[!!] Warning: Could not remove old directory"
+fi
+if rm -f "${ZIPPATH}" ; then
+  echo -e "[✓] Removed old ZIP file"
+else
+  echo -e "[!!] Warning: Could not remove old ZIP file"
+fi
+if mkdir -p "${FILEPATH}" ; then
+  echo -e "[✓] Created output directory\n"
+else
+  echo -e "[!!] ERROR: Failed to create output directory"
+  exit 1
+fi
 
 ### Copy scripts
-cp "emba_docker_installer.sh" "${FILEPATH}/installer.sh"
+echo -e "[*] Copying installer script"
+if cp "emba_docker_installer.sh" "${FILEPATH}/installer.sh" ; then
+  echo -e "[✓] Installer script copied\n"
+else
+  echo -e "[!!] ERROR: Failed to copy installer script"
+  exit 1
+fi
 
 ### Install needed tools
 if ! which curl &> /dev/null; then
-  apt-get update -y
-  apt-get install -y curl
+  echo -e "[*] Installing curl"
+  if apt-get update -y ; then
+    echo -e "[✓] Package list updated"
+  else
+    echo -e "[!!] ERROR: Failed to update package list"
+    exit 1
+  fi
+  if apt-get install -y curl ; then
+    echo -e "[✓] curl installed"
+  else
+    echo -e "[!!] ERROR: Failed to install curl"
+    exit 1
+  fi
+else
+  echo -e "[*] curl already installed"
 fi
 
 if ! which docker &> /dev/null; then
-  apt-get install -y ca-certificates
+  echo -e "\n[*] Installing Docker"
+  apt-get install -y ca-certificates && echo -e "[✓] ca-certificates installed" || { echo -e "[!!] ERROR: Failed to install ca-certificates"; exit 1; }
   install -m 0755 -d /etc/apt/keyrings
 
   if [ ! -f /etc/apt/sources.list.d/docker.list ]; then
+    echo -e "[*] Adding Docker repository"
     if [ "${IS_UBUNTU}" = true ] ; then
-      curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+      echo -e "[*] Downloading Ubuntu Docker GPG key"
+        if curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc ; then
+          echo -e "[✓] Docker GPG key downloaded"
+        else
+          echo -e "[!!] ERROR: Failed to download Docker GPG key"
+          exit 1
+        fi
       # shellcheck source=/dev/null
+      echo -e "[*] Adding Ubuntu Docker repository"
       echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
 	$(. /etc/os-release && echo "${UBUNTU_CODENAME}:-${VERSION_CODENAME}") stable" | \
-	tee /etc/apt/sources.list.d/docker.list > /dev/null
+    if tee /etc/apt/sources.list.d/docker.list > /dev/null ; then
+      echo -e "[✓] Docker repository added"
     else
-      curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+      echo -e "[!!] ERROR: Failed to add Docker repository"
+      exit 1
+    fi
+    else
+      echo -e "[*] Downloading Debian Docker GPG key"
+      curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc && echo -e "[✓] Docker GPG key downloaded" || { echo -e "[!!] ERROR: Failed to download Docker GPG key"; exit 1; }
+      echo -e "[*] Adding Debian Docker repository"
       echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian bookworm stable" | \
-	tee /etc/apt/sources.list.d/docker.list > /dev/null
+	tee /etc/apt/sources.list.d/docker.list > /dev/null && echo -e "[✓] Docker repository added" || { echo -e "[!!] ERROR: Failed to add Docker repository"; exit 1; }
     fi
 
     chmod a+r /etc/apt/keyrings/docker.asc
-    apt-get update -y
+    echo -e "[*] Updating package list for Docker"
+    if apt-get update -y ; then
+      echo -e "[✓] Package list updated"
+    else
+      echo -e "[!!] ERROR: Failed to update package list"
+      exit 1
+    fi
+  else
+    echo -e "[*] Docker repository already configured"
   fi
 
-  apt install -y docker-ce
+  echo -e "[*] Installing Docker packages"
+  if apt install -y docker-ce ; then
+    echo -e "[✓] Docker installed"
+  else
+    echo -e "[!!] ERROR: Failed to install Docker"
+    exit 1
+  fi
+else
+  echo -e "\n[*] Docker already installed"
 fi
-systemctl is-active --quiet docker || systemctl start docker
+
+echo -e "[*] Ensuring Docker service is running"
+if ! systemctl is-active --quiet docker ; then
+  if systemctl start docker ; then
+    echo -e "[✓] Docker service started"
+  else
+    echo -e "[!!] ERROR: Failed to start Docker service"
+    exit 1
+  fi
+fi
 
 if [ "${VERSION}" = "latest" ]; then
+  echo -e "\n[*] Fetching latest EMBA version from GitHub"
   ### Find image
-  EMBAVERSION=$(curl -sL https://raw.githubusercontent.com/e-m-b-a/emba/refs/heads/master/docker-compose.yml \
-    | awk -F: '/image:/ {print $NF; exit}')
+  if EMBAVERSION=$(curl -sL https://raw.githubusercontent.com/e-m-b-a/emba/refs/heads/master/docker-compose.yml \
+    | awk -F: '/image:/ {print $NF; exit}'); then
+    echo -e "[✓] Latest version detected: ${EMBAVERSION}"
+  else
+    echo -e "[!!] ERROR: Failed to fetch latest version"
+    exit 1
+  fi
 else
+  echo -e "\n[*] Using specified version: ${VERSION}"
   EMBAVERSION="${VERSION}"
 fi
 
-### Export EMBA image
-docker pull "embeddedanalyzer/emba:${EMBAVERSION}"
-docker save -o "${FILEPATH}/emba-docker-image.tar" "embeddedanalyzer/emba:${EMBAVERSION}"
-chmod 755 "${FILEPATH}/emba-docker-image.tar"
-docker image rm "embeddedanalyzer/emba:${EMBAVERSION}"
+echo -e "\n[*] Pulling EMBA Docker image: embeddedanalyzer/emba:${EMBAVERSION}"
+if docker pull "embeddedanalyzer/emba:${EMBAVERSION}" ; then
+  echo -e "[✓] Docker image pulled successfully"
+else
+  echo -e "[!!] ERROR: Failed to pull Docker image"
+  exit 1
+fi
 
-tar czf "${ZIPPATH}" -C "${FILEPATH}" .
+echo -e "\n[*] Exporting Docker image to tar archive"
+if docker save -o "${FILEPATH}/emba-docker-image.tar" "embeddedanalyzer/emba:${EMBAVERSION}" ; then
+  echo -e "[✓] Image exported to tar archive"
+else
+  echo -e "[!!] ERROR: Failed to export image"
+  exit 1
+fi
+echo -e "[*] Setting tar archive permissions"
+if chmod 755 "${FILEPATH}/emba-docker-image.tar" ; then
+  echo -e "[✓] Permissions set"
+else
+  echo -e "[!!] ERROR: Failed to set permissions"
+  exit 1
+fi
+
+echo -e "[*] Cleaning up local Docker image"
+if docker image rm "embeddedanalyzer/emba:${EMBAVERSION}" ; then
+  echo -e "[✓] Local image removed"
+else
+  echo -e "[!!] ERROR: Failed to remove local image"
+  exit 1
+fi
+
+echo -e "\n[*] Creating compressed archive at: ${ZIPPATH}"
+if tar czf "${ZIPPATH}" -C "${FILEPATH}" . ; then
+  echo -e "[✓] Archive created successfully\n"
+else
+  echo -e "[!!] ERROR: Failed to create archive"
+  exit 1
+fi
+
+echo -e "[✓] EMBA Docker image preparation completed successfully\n"
