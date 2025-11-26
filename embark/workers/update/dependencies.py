@@ -283,8 +283,7 @@ def setup_dependency(dependency: DependencyType, version: str):
     :params dependency: Dependency type
     :params version: The desired version
     """
-    Path(settings.WORKER_FILES_PATH).mkdir(parents=True, exist_ok=True)
-    Path(os.path.join(settings.WORKER_FILES_PATH, "logs")).mkdir(parents=True, exist_ok=True)
+    Path(settings.WORKER_LOG_ROOT).mkdir(parents=True, exist_ok=True)
 
     script_path = os.path.join(os.path.dirname(__file__), get_script_name(dependency))
     folder_path, zip_path = get_dependency_path(dependency)

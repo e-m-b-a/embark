@@ -365,6 +365,11 @@ if ! [[ -d /var/www/logs ]]; then
   mkdir /var/www/logs
 fi
 
+# ssh dir
+if ! [[ -d /var/www/.ssh ]]; then
+  mkdir /var/www/.ssh
+fi
+
 # db_init
 echo -e "\n[""${BLUE} JOB""${NC}""] Starting migrations - log to embark/logs/migration.log"
 "${PIPENV_COMMAND}" run ./manage.py makemigrations | tee -a /var/www/logs/migration.log
