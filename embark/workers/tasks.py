@@ -586,10 +586,9 @@ def fetch_dependency_updates():
     version.epss_head, version.epss_time = _get_head_time("EMBA-support-repos/EPSS-data")
 
     # Fetch APT
-    Path(settings.WORKER_FILES_PATH).mkdir(parents=True, exist_ok=True)
-    Path(os.path.join(settings.WORKER_FILES_PATH, "logs")).mkdir(parents=True, exist_ok=True)
+    Path(settings.WORKER_SETUP_LOGS_ABS).mkdir(parents=True, exist_ok=True)
 
-    log_file = settings.WORKER_SETUP_LOGS.format(timestamp=int(time.time()))
+    log_file = settings.WORKER_SETUP_LOGS_ABS.format(timestamp=int(time.time()))
     logger.info("APT dependency update check started. Logs: %s", log_file)
     try:
         script_path = os.path.join(os.path.dirname(__file__), "update", get_script_name(DependencyType.DEPS))
@@ -764,8 +763,8 @@ def _update_or_create_worker(config: Configuration, ip_address: str):
         )
         worker.save()
         # create log file
-        if not Path(os.path.join(settings.WORKER_LOG_ROOT_ABS, settings.WORKER_WORKER_LOGS)).exists():
-            Path(os.path.join(settings.WORKER_LOG_ROOT_ABS, settings.WORKER_WORKER_LOGS)).mkdir(parents=True, exist_ok=True)
+        if not Path(os.path(settings.WORKER_LOG_ROOT_ABS)).exists():
+            Path(os.path(settings.WORKER_LOG_ROOT_ABS)).mkdir(parents=True, exist_ok=True)
         worker.log_location = Path(f"{os.path.join(settings.WORKER_LOG_ROOT_ABS, settings.WORKER_WORKER_LOGS)}/{worker.id}.log")
         worker.write_log(f"\nCreated new worker for IP address {ip_address}\n")
         worker.configurations.set([config])

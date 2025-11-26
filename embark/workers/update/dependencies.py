@@ -283,12 +283,12 @@ def setup_dependency(dependency: DependencyType, version: str):
     :params dependency: Dependency type
     :params version: The desired version
     """
-    Path(settings.WORKER_LOG_ROOT).mkdir(parents=True, exist_ok=True)
+    Path(settings.WORKER_LOG_ROOT_ABS).mkdir(parents=True, exist_ok=True)
 
     script_path = os.path.join(os.path.dirname(__file__), get_script_name(dependency))
     folder_path, zip_path = get_dependency_path(dependency)
 
-    log_file = settings.WORKER_SETUP_LOGS.format(timestamp=int(time.time()))
+    log_file = settings.WORKER_SETUP_LOGS_ABS.format(timestamp=int(time.time()))
 
     logger.info("Worker dependencies setup started with script %s. Logs: %s", get_script_name(dependency), log_file)
     try:

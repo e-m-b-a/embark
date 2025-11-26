@@ -11,6 +11,8 @@
 #
 # Author(s): ClProsser, SirGankalot
 # Contributor(s): Luka Dekanozishvili, ashiven
+#
+# Description: Prepares dependency packages on the host system for worker update
 
 set -e
 cd "$(dirname "$0")"
@@ -20,10 +22,10 @@ if [[ ${EUID} -ne 0 ]]; then
 	exit 1
 fi
 
-FILEPATH="$1"
-ZIPPATH="$2"
-VERSION="$3"
-DEPSCACHE="$4"
+FILEPATH="$1"   # Directory to store dependency packages
+ZIPPATH="$2"  # Optional: Path to store tar.gz of dependency packages
+VERSION="$3"  # Version of dependencies to download (or "latest")
+DEPSCACHE="$4"  # Optional: Path to cache previously downloaded dependencies
 
 PKGPATH="${FILEPATH}/pkg"
 IS_UBUNTU=$(awk -F= '/^NAME/{gsub(/"/, "", $2); print $2}' /etc/os-release)

@@ -296,11 +296,12 @@ WORKER_SSH_KEY_SIZE = 2048
 WORKER_REACHABLE_TIMEOUT = 10
 
 # worker logs
-WORKER_LOG_ROOT_ABS = os.path.join(MEDIA_ROOT, "WORKER_FILES")
+WORKER_LOG_ROOT_ABS = os.path.join(MEDIA_ROOT, "worker-logs")
+WORKER_SETUP_LOGS_ABS = os.path.join(WORKER_LOG_ROOT_ABS, "worker_setup_{timestamp}.log")
 WORKER_LOG_ROOT = "worker-logs"
-WORKER_CONFIGURATION_LOGS = os.path.join(WORKER_LOG_ROOT, "configurations")
-WORKER_WORKER_LOGS = os.path.join(WORKER_LOG_ROOT, "worker")
-WORKER_SETUP_LOGS = os.path.join(WORKER_LOG_ROOT, "worker_setup_{timestamp}.log")
+WORKER_CONFIGURATION_LOGS = "configurations"
+WORKER_WORKER_LOGS = "worker"
+WORKER_SETUP_LOGS = "worker_setup_{timestamp}.log"
 
 # Celery task queue
 CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"

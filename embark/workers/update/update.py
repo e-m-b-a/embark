@@ -200,6 +200,8 @@ def perform_update(worker: Worker, client: SSHClient, worker_update: WorkerUpdat
     """
     dependency = worker_update.get_type()
 
+    worker.write_log(f"\nStarting update of {dependency.name} to version {worker_update.version}\n")
+
     if _is_version_installed(worker, worker_update):
         logger.info("Skip update of %s on worker %s as already installed", worker_update.get_type().name, worker.name)
         worker.write_log(f"\nSkipping update of {worker_update.get_type().name} - already installed\n")
