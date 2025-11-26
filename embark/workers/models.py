@@ -34,7 +34,7 @@ class Configuration(models.Model):
     ip_range = models.CharField(max_length=20, help_text="CIDR notation (e.g., 192.168.1.0/24)")
     created_at = models.DateTimeField(auto_now_add=True)
     scan_status = models.CharField(max_length=1, choices=ScanStatus, default=ScanStatus.NEW)
-    log_location = models.FilePathField(path=f"{settings.WORKER_CONFIGURATION_LOGS}")
+    log_location = models.FilePathField(path=f"{settings.WORKER_LOG_ROOT_ABS}/{settings.WORKER_CONFIGURATION_LOGS}")
 
     def write_log(self, string):
         """

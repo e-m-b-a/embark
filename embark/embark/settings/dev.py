@@ -299,7 +299,7 @@ WORKER_REACHABLE_TIMEOUT = 10
 WORKER_LOG_ROOT_ABS = os.path.join(MEDIA_ROOT, "worker-logs")
 WORKER_SETUP_LOGS_ABS = os.path.join(WORKER_LOG_ROOT_ABS, "worker_setup_{timestamp}.log")
 WORKER_LOG_ROOT = "worker-logs"
-WORKER_CONFIGURATION_LOGS = "configurations"
+WORKER_CONFIGURATION_LOGS = "configuration"
 WORKER_WORKER_LOGS = "worker"
 WORKER_SETUP_LOGS = "worker_setup_{timestamp}.log"
 
