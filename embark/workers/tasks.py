@@ -763,8 +763,8 @@ def _update_or_create_worker(config: Configuration, ip_address: str):
         )
         worker.save()
         # create log file
-        if not Path(os.path(settings.WORKER_LOG_ROOT_ABS)).exists():
-            Path(os.path(settings.WORKER_LOG_ROOT_ABS)).mkdir(parents=True, exist_ok=True)
+        if not Path(os.path.join(settings.WORKER_LOG_ROOT_ABS,settings.WORKER_WORKER_LOGS)).exists():
+            Path(os.path.join(settings.WORKER_LOG_ROOT_ABS,settings.WORKER_WORKER_LOGS)).mkdir(parents=True, exist_ok=True)
         worker.log_location = Path(f"{os.path.join(settings.WORKER_LOG_ROOT_ABS, settings.WORKER_WORKER_LOGS)}/{worker.id}.log")
         worker.write_log(f"\nCreated new worker for IP address {ip_address}\n")
         worker.configurations.set([config])

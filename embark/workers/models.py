@@ -135,7 +135,7 @@ class Worker(models.Model):
     status = models.CharField(max_length=1, choices=ConfigStatus, default=ConfigStatus.UNCONFIGURED)
     analysis_id = models.UUIDField(blank=True, null=True, help_text="ID of the analysis currently running on this worker")
     last_reached = models.DateTimeField(auto_now_add=True)
-    log_location = models.FilePathField(path=f"{settings.WORKER_WORKER_LOGS}/")
+    log_location = models.FilePathField(path=f"{settings.WORKER_LOG_ROOT_ABS}/{settings.WORKER_WORKER_LOGS}")
 
     dependency_version = models.OneToOneField(
         WorkerDependencyVersion,
