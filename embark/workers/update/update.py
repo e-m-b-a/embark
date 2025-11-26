@@ -334,6 +334,7 @@ def setup_ssh_key(configuration: Configuration, worker: Worker):
 
     if failed:
         logger.error("setup_ssh_key: SSH key could not be copied on worker %s: STDOUT: %s, STDERR: %s", worker.ip_address, stdout, stderr)
+        worker.write_log(f"\nFailed to copy SSH key: {stdout}\n")
         configuration.write_log(f"Failed to copy SSH key on worker {worker.ip_address}\n")
         return
 

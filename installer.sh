@@ -405,7 +405,7 @@ install_embark_default(){
     mkdir /var/www/
   fi
   if ! cut -d: -f1 /etc/passwd | grep -E www-embark ; then
-    useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /var/www/embark
+    useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /var/www
   fi
   # emba nopw
   if ! grep 'www-embark ALL=(ALL) NOPASSWD:SETENV: /var/www/emba/emba' /etc/sudoers ; then
