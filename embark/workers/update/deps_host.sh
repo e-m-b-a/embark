@@ -40,7 +40,7 @@ IS_UBUNTU=$(awk -F= '/^NAME/{gsub(/"/, "", $2); print $2}' /etc/os-release)
 echo -e "[*] Detected OS: ${IS_UBUNTU}"
 
 function downloadPackage() {
-  echo -e "[*] Downloading packages: $@"
+  echo -e "[*] Downloading packages:" "$@"
   # shellcheck disable=SC2046
   if ( cd "${PKGPATH}" && apt-get download $(apt-cache depends --recurse --no-recommends --no-suggests \
     --no-conflicts --no-breaks --no-replaces --no-enhances \
@@ -138,56 +138,26 @@ if [ "${VERSION}" = "latest" ] || [ ! -d "${DEPSCACHE}/pkg" ]; then
 
   if ! which docker &> /dev/null; then
     echo -e "\n[*] Installing Docker"
-    apt-get install -y ca-certificates && echo -e "[✓] ca-certificates installed" || { echo -e "[!!] ERROR: Failed to install ca-certificates"; exit 1; }
+    apt-get install -y ca-certificates
     install -m 0755 -d /etc/apt/keyrings
 
     if [ ! -f /etc/apt/sources.list.d/docker.list ]; then
-      echo -e "[*] Adding Docker repository"
       if [ "${IS_UBUNTU}" = true ] ; then
-        echo -e "[*] Downloading Ubuntu Docker GPG key"
-    if curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc ; then
-      echo -e "[✓] Docker GPG key downloaded"
-    else
-      echo -e "[!!] ERROR: Failed to download Docker GPG key"
-      exit 1
-    fi
-	# shellcheck source=/dev/null
-	echo -e "[*] Adding Ubuntu Docker repository"
-	echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-	  $(. /etc/os-release && echo "${UBUNTU_CODENAME}:-${VERSION_CODENAME}") stable" | \
-      if tee /etc/apt/sources.list.d/docker.list > /dev/null ; then
-        echo -e "[✓] Docker repository added"
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+        # shellcheck source=/dev/null
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+        $(. /etc/os-release && echo "${UBUNTU_CODENAME}:-${VERSION_CODENAME}") stable" | \
+        tee /etc/apt/sources.list.d/docker.list > /dev/null
       else
-        echo -e "[!!] ERROR: Failed to add Docker repository"
-        exit 1
-      fi
-      else
-        echo -e "[*] Downloading Debian Docker GPG key"
-	curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc && echo -e "[✓] Docker GPG key downloaded" || { echo -e "[!!] ERROR: Failed to download Docker GPG key"; exit 1; }
-	echo -e "[*] Adding Debian Docker repository"
-	echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian bookworm stable" | \
-	  tee /etc/apt/sources.list.d/docker.list > /dev/null && echo -e "[✓] Docker repository added" || { echo -e "[!!] ERROR: Failed to add Docker repository"; exit 1; }
+        curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+        echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian bookworm stable" | \
+        tee /etc/apt/sources.list.d/docker.list > /dev/null
       fi
 
       chmod a+r /etc/apt/keyrings/docker.asc
-      echo -e "[*] Updating package list for Docker"
-      if apt-get update -y ; then
-        echo -e "[✓] Package list updated"
-      else
-        echo -e "[!!] ERROR: Failed to update package list"
-        exit 1
-      fi
-    else
-      echo -e "[*] Docker repository already configured"
+      apt-get update -y
     fi
-
-    echo -e "[*] Installing Docker packages"
-    if apt-get install -y docker-ce ; then
-      echo -e "[✓] Docker installed"
-    else
-      echo -e "[!!] ERROR: Failed to install Docker"
-      exit 1
-    fi
+    apt-get install -y docker-ce
   else
     echo -e "[*] Docker already installed"
   fi

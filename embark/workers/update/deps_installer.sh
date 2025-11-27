@@ -92,7 +92,6 @@ if apt-get update -y ; then
   echo -e "[✓] Package index updated\n"
 else
   echo -e "[!!] ERROR: Failed to update package index"
-  exit 1
 fi
 
 echo -e "[*] Installing Docker packages (docker-ce, docker-ce-cli, containerd.io, docker-buildx-plugin, docker-compose-plugin)"
@@ -100,7 +99,6 @@ if apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin
   echo -e "[✓] Docker packages installed"
 else
   echo -e "[!!] ERROR: Failed to install Docker packages"
-  exit 1
 fi
 
 echo -e "[*] Installing inotify-tools"
@@ -108,7 +106,6 @@ if apt-get install -y inotify-tools ; then
   echo -e "[✓] inotify-tools installed"
 else
   echo -e "[!!] ERROR: Failed to install inotify-tools"
-  exit 1
 fi
 
 echo -e "[*] Installing libnotify-bin"
@@ -116,7 +113,6 @@ if apt-get install -y libnotify-bin ; then
   echo -e "[✓] libnotify-bin installed"
 else
   echo -e "[!!] ERROR: Failed to install libnotify-bin"
-  exit 1
 fi
 
 echo -e "[*] Installing p7zip-full"
@@ -124,7 +120,6 @@ if apt-get install -y p7zip-full ; then
   echo -e "[✓] p7zip-full installed"
 else
   echo -e "[!!] ERROR: Failed to install p7zip-full"
-  exit 1
 fi
 
 echo -e "\n[*] Configuring Docker service"
@@ -132,13 +127,11 @@ if systemctl enable docker ; then
   echo -e "[✓] Docker enabled at boot"
 else
   echo -e "[!!] ERROR: Failed to enable Docker"
-  exit 1
 fi
 if systemctl start docker ; then
   echo -e "[✓] Docker service started"
 else
   echo -e "[!!] ERROR: Failed to start Docker service"
-  exit 1
 fi
 
 echo -e "\n[✓] Dependency installation completed successfully\n"

@@ -84,7 +84,7 @@ else
 	exit 1
 fi
 echo -e "[*] Checking out NVD version: ${NVD_VERSION}"
-if [ "${NVD_VERSION}" = "latest" ]; then
+if [[ "${NVD_VERSION}" == "latest" ]]; then
 	git -C "${EXTERNALPATH}/nvd-json-data-feeds" checkout main
 	if [ $? -eq 0 ] ; then
 		echo -e "[✓] Checked out main branch"
@@ -123,7 +123,7 @@ else
 	exit 1
 fi
 echo -e "[*] Checking out EPSS version: ${EPSS_VERSION}"
-if [ "${EPSS_VERSION}" = "latest" ]; then
+if [[ "${EPSS_VERSION}" == "latest" ]]; then
 	git -C "${EXTERNALPATH}/EPSS-data" checkout main
 	if [ $? -eq 0 ] ; then
 		echo -e "[✓] Checked out main branch"
@@ -156,10 +156,25 @@ fi
 
 ### Fake venv (packages are broken)
 echo -e "[*] Creating fake Python virtual environment structure"
-mkdir -p "${EXTERNALPATH}/emba_venv/bin" && echo -e "[✓] venv directories created" || { echo -e "[!!] ERROR: Failed to create venv directories"; exit 1; }
-touch "${EXTERNALPATH}/emba_venv/bin/activate" && echo -e "[✓] Activation script created\n" || { echo -e "[!!] ERROR: Failed to create activation script"; exit 1; }
+if mkdir -p "${EXTERNALPATH}/emba_venv/bin" ; then
+	echo -e "[✓] venv directories created"
+else
+	echo -e "[!!] ERROR: Failed to create venv directories"
+	exit 1
+fi
+if touch "${EXTERNALPATH}/emba_venv/bin/activate" ; then
+	echo -e "[✓] Activation script created\n"
+else
+	echo -e "[!!] ERROR: Failed to create activation script"
+	exit 1
+fi
 
 echo -e "[*] Creating compressed archive at: ${ZIPPATH}"
-tar czf "${ZIPPATH}" -C "${FILEPATH}" . && echo -e "[✓] Archive created successfully\n" || { echo -e "[!!] ERROR: Failed to create archive"; exit 1; }
+if tar czf "${ZIPPATH}" -C "${FILEPATH}" . ; then
+	echo -e "[✓] Archive created successfully\n"
+else
+	echo -e "[!!] ERROR: Failed to create archive"
+	exit 1
+fi
 
 echo -e "[✓] External data preparation completed successfully\n"

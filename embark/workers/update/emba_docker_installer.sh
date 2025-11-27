@@ -34,7 +34,6 @@ if ! systemctl is-active --quiet docker ; then
 		echo -e "[✓] Docker service started"
 	else
 		echo -e "[!!] ERROR: Failed to start Docker service"
-		exit 1
 	fi
 fi
 
@@ -43,7 +42,6 @@ if docker system prune -af ; then
 	echo -e "[✓] Docker system cleaned\n"
 else
 	echo -e "[!!] ERROR: Failed to clean Docker system"
-	exit 1
 fi
 
 # Load EMBA image

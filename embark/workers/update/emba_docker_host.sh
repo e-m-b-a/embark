@@ -49,7 +49,6 @@ if mkdir -p "${FILEPATH}" ; then
   echo -e "[✓] Created output directory\n"
 else
   echo -e "[!!] ERROR: Failed to create output directory"
-  exit 1
 fi
 
 ### Copy scripts
@@ -64,12 +63,7 @@ fi
 ### Install needed tools
 if ! which curl &> /dev/null; then
   echo -e "[*] Installing curl"
-  if apt-get update -y ; then
-    echo -e "[✓] Package list updated"
-  else
-    echo -e "[!!] ERROR: Failed to update package list"
-    exit 1
-  fi
+  apt-get update -y
   if apt-get install -y curl ; then
     echo -e "[✓] curl installed"
   else
@@ -82,55 +76,33 @@ fi
 
 if ! which docker &> /dev/null; then
   echo -e "\n[*] Installing Docker"
-  apt-get install -y ca-certificates && echo -e "[✓] ca-certificates installed" || { echo -e "[!!] ERROR: Failed to install ca-certificates"; exit 1; }
+  if apt-get install -y ca-certificates; then
+    echo -e "[✓] ca-certificates installed"
+  else
+    echo -e "[!!] ERROR: Failed to install ca-certificates"
+  fi
   install -m 0755 -d /etc/apt/keyrings
-
+  
   if [ ! -f /etc/apt/sources.list.d/docker.list ]; then
-    echo -e "[*] Adding Docker repository"
     if [ "${IS_UBUNTU}" = true ] ; then
-      echo -e "[*] Downloading Ubuntu Docker GPG key"
-        if curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc ; then
-          echo -e "[✓] Docker GPG key downloaded"
-        else
-          echo -e "[!!] ERROR: Failed to download Docker GPG key"
-          exit 1
-        fi
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
       # shellcheck source=/dev/null
-      echo -e "[*] Adding Ubuntu Docker repository"
       echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-	$(. /etc/os-release && echo "${UBUNTU_CODENAME}:-${VERSION_CODENAME}") stable" | \
-    if tee /etc/apt/sources.list.d/docker.list > /dev/null ; then
-      echo -e "[✓] Docker repository added"
+	    $(. /etc/os-release && echo "${UBUNTU_CODENAME}:-${VERSION_CODENAME}") stable" | \
+	    tee /etc/apt/sources.list.d/docker.list > /dev/null
     else
-      echo -e "[!!] ERROR: Failed to add Docker repository"
-      exit 1
-    fi
-    else
-      echo -e "[*] Downloading Debian Docker GPG key"
-      curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc && echo -e "[✓] Docker GPG key downloaded" || { echo -e "[!!] ERROR: Failed to download Docker GPG key"; exit 1; }
-      echo -e "[*] Adding Debian Docker repository"
+      curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
       echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian bookworm stable" | \
-	tee /etc/apt/sources.list.d/docker.list > /dev/null && echo -e "[✓] Docker repository added" || { echo -e "[!!] ERROR: Failed to add Docker repository"; exit 1; }
+	    tee /etc/apt/sources.list.d/docker.list > /dev/null
     fi
 
     chmod a+r /etc/apt/keyrings/docker.asc
-    echo -e "[*] Updating package list for Docker"
-    if apt-get update -y ; then
-      echo -e "[✓] Package list updated"
-    else
-      echo -e "[!!] ERROR: Failed to update package list"
-      exit 1
-    fi
-  else
-    echo -e "[*] Docker repository already configured"
+    apt-get update -y
   fi
-
-  echo -e "[*] Installing Docker packages"
-  if apt install -y docker-ce ; then
-    echo -e "[✓] Docker installed"
+  if apt install -y docker-ce; then
+    echo -e "[✓] Docker-ce installed"
   else
-    echo -e "[!!] ERROR: Failed to install Docker"
-    exit 1
+    echo -e "[!!] ERROR: Failed to install Docker-ce"
   fi
 else
   echo -e "\n[*] Docker already installed"
@@ -142,20 +114,13 @@ if ! systemctl is-active --quiet docker ; then
     echo -e "[✓] Docker service started"
   else
     echo -e "[!!] ERROR: Failed to start Docker service"
-    exit 1
   fi
 fi
 
-if [ "${VERSION}" = "latest" ]; then
+if [[ "${VERSION}" == "latest" ]]; then
   echo -e "\n[*] Fetching latest EMBA version from GitHub"
   ### Find image
-  if EMBAVERSION=$(curl -sL https://raw.githubusercontent.com/e-m-b-a/emba/refs/heads/master/docker-compose.yml \
-    | awk -F: '/image:/ {print $NF; exit}'); then
-    echo -e "[✓] Latest version detected: ${EMBAVERSION}"
-  else
-    echo -e "[!!] ERROR: Failed to fetch latest version"
-    exit 1
-  fi
+  EMBAVERSION=$(curl -sL https://raw.githubusercontent.com/e-m-b-a/emba/refs/heads/master/docker-compose.yml | awk -F: '/image:/ {print $NF; exit}')
 else
   echo -e "\n[*] Using specified version: ${VERSION}"
   EMBAVERSION="${VERSION}"

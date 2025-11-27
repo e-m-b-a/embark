@@ -70,12 +70,7 @@ fi
 ### Install needed tools
 if ! which curl &> /dev/null; then
   echo -e "[*] Installing curl"
-  if apt-get update -y ; then
-    echo -e "[✓] Package list updated"
-  else
-    echo -e "[!!] ERROR: Failed to update package list"
-    exit 1
-  fi
+  apt-get update -y
   if apt-get install -y curl ; then
     echo -e "[✓] curl installed"
   else
@@ -87,7 +82,7 @@ else
 fi
 
 ### Download EMBA
-if [ "${VERSION}" = "latest" ]; then
+if [[ "${VERSION}" == "latest" ]]; then
   echo -e "\n[*] Downloading latest EMBA repository from GitHub"
   if curl -L --url https://github.com/e-m-b-a/emba/archive/refs/heads/master.tar.gz --output "${FILEPATH}/emba.tar.gz" ; then
     echo -e "[✓] Repository downloaded"

@@ -34,20 +34,20 @@ echo -e "[*] External path: ${EXTERNALPATH}"
 echo -e "[*] Temporary master path: ${EMBAMASTER}\n"
 
 echo -e "[*] Cleaning up previous EMBA master directory"
-if rm -rf "${EMBAMMASTER}" ; then
+if rm -rf "${EMBAMASTER}" ; then
   echo -e "[✓] Previous directory removed"
 else
   echo -e "[!!] Warning: Could not remove previous directory"
 fi
 echo -e "[*] Creating temporary EMBA master directory"
-if mkdir "${EMBAMMASTER}" ; then
+if mkdir "${EMBAMASTER}" ; then
   echo -e "[✓] Directory created"
 else
   echo -e "[!!] ERROR: Failed to create directory"
   exit 1
 fi
 echo -e "[*] Extracting EMBA repository archive"
-if tar -xvzf "${FILEPATH}/emba.tar.gz" -C "${EMBAMMASTER}" --strip-components 1 ; then
+if tar -xvzf "${FILEPATH}/emba.tar.gz" -C "${EMBAMASTER}" --strip-components 1 ; then
   echo -e "[✓] Archive extracted successfully\n"
 else
   echo -e "[!!] ERROR: Failed to extract archive"
@@ -55,7 +55,7 @@ else
 fi
 if [ -d "${EXTERNALPATH}" ]; then
   echo -e "[*] Copying external files from previous EMBA installation"
-  if cp -r "${EXTERNALPATH}" "${EMBAMMASTER}" ; then
+  if cp -r "${EXTERNALPATH}" "${EMBAMASTER}" ; then
     echo -e "[✓] External files copied\n"
   else
     echo -e "[!!] ERROR: Failed to copy external files"
@@ -72,7 +72,7 @@ else
   echo -e "[!!] Warning: Could not remove old installation"
 fi
 echo -e "[*] Moving EMBA master to final location"
-if mv "${EMBAMMASTER}" "${INSTALLPATH}/emba" ; then
+if mv "${EMBAMASTER}" "${INSTALLPATH}/emba" ; then
   echo -e "[✓] EMBA moved to ${INSTALLPATH}/emba"
 else
   echo -e "[!!] ERROR: Failed to move EMBA directory"
