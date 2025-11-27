@@ -85,16 +85,14 @@ else
 fi
 echo -e "[*] Checking out NVD version: ${NVD_VERSION}"
 if [[ "${NVD_VERSION}" == "latest" ]]; then
-	git -C "${EXTERNALPATH}/nvd-json-data-feeds" checkout main
-	if [ $? -eq 0 ] ; then
+	if git -C "${EXTERNALPATH}/nvd-json-data-feeds" checkout main; then
 		echo -e "[✓] Checked out main branch"
 	else
 		echo -e "[!!] ERROR: Failed to checkout main branch"
 		exit 1
 	fi
 else
-	git -C "${EXTERNALPATH}/nvd-json-data-feeds" checkout "${NVD_VERSION}"
-	if [ $? -eq 0 ] ; then
+	if git -C "${EXTERNALPATH}/nvd-json-data-feeds" checkout "${NVD_VERSION}"; then
 		echo -e "[✓] Checked out version ${NVD_VERSION}"
 	else
 		echo -e "[!!] ERROR: Failed to checkout version ${NVD_VERSION}"
@@ -124,16 +122,14 @@ else
 fi
 echo -e "[*] Checking out EPSS version: ${EPSS_VERSION}"
 if [[ "${EPSS_VERSION}" == "latest" ]]; then
-	git -C "${EXTERNALPATH}/EPSS-data" checkout main
-	if [ $? -eq 0 ] ; then
+	if git -C "${EXTERNALPATH}/EPSS-data" checkout main; then
 		echo -e "[✓] Checked out main branch"
 	else
 		echo -e "[!!] ERROR: Failed to checkout main branch"
 		exit 1
 	fi
 else
-	git -C "${EXTERNALPATH}/EPSS-data" checkout "${EPSS_VERSION}"
-	if [ $? -eq 0 ] ; then
+	if git -C "${EXTERNALPATH}/EPSS-data" checkout "${EPSS_VERSION}"; then
 		echo -e "[✓] Checked out version ${EPSS_VERSION}"
 	else
 		echo -e "[!!] ERROR: Failed to checkout version ${EPSS_VERSION}"
