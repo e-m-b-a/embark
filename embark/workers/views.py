@@ -8,7 +8,6 @@ import os
 from pathlib import Path
 from Crypto.PublicKey import RSA  # nosec
 
-from django.core.files import File
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import get_user
