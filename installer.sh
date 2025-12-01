@@ -531,8 +531,10 @@ install_embark_dev(){
   # Add user nosudo
   echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD:SETENV: ""${PWD}""/emba/emba" | EDITOR='tee -a' visudo
   echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD: /bin/pkill" | EDITOR='tee -a' visudo
+  echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD: ""${PWD}""/embark/workers/update/" | EDITOR='tee -a' visudo
   echo "root ALL=(ALL) NOPASSWD:SETENV: ""${PWD}""/emba/emba" | EDITOR='tee -a' visudo
   echo "root ALL=(ALL) NOPASSWD: /bin/pkill" | EDITOR='tee -a' visudo
+  echo "root ALL=(ALL) NOPASSWD: ""${PWD}""/embark/workers/update/" | EDITOR='tee -a' visudo
 
   # Set some globals
   echo "NO_UPDATE_CHECK=1" >> /etc/environment
@@ -668,6 +670,10 @@ uninstall(){
   if grep -qE "NOPASSWD\:.*\/bin\/pkill" /etc/sudoers ; then
     echo -e "${ORANGE}""${BOLD}""Deleting pkill NOPASSWD entries""${NC}"
     sed -i '/NOPASSWD\:.*\/bin\/pkill/d' /etc/sudoers
+  fi
+  if grep -qE "NOPASSWD\:.*""${PWD}""\/embark\/workers\/update\/" /etc/sudoers ; then
+    echo -e "${ORANGE}""${BOLD}""Deleting pkill NOPASSWD entries""${NC}"
+    sed -i '/NOPASSWD\:.*'"${PWD}"'\/embark\/workers\/update\//d' /etc/sudoers
   fi
 
   # delete .env
