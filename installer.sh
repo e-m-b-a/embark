@@ -415,6 +415,10 @@ install_embark_default(){
   if ! grep 'www-embark ALL=(ALL) NOPASSWD: /bin/pkill' /etc/sudoers ; then
     echo 'www-embark ALL=(ALL) NOPASSWD: /bin/pkill' | EDITOR='tee -a' visudo
   fi
+  # task-scripts nopw
+  if ! grep 'www-embark ALL=(ALL) NOPASSWD: /var/www/embark/workers/update/' /etc/sudoers ; then
+    echo 'www-embark ALL=(ALL) NOPASSWD: /var/www/embark/workers/update/' | EDITOR='tee -a' visudo
+  fi
 
   #Server-Dir
   if ! [[ -d /var/www/media ]]; then
