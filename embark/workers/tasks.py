@@ -336,7 +336,7 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
                 logger.info("[Worker %s] Analysis finished.", worker.id)
                 worker.write_log(f"\nAnalysis finished\n")
                 return
-            time.sleep(2)
+            time.sleep(1)
     except paramiko.SSHException as ssh_error:
         logger.error("[Worker %s] SSH connection failed while monitoring: %s", worker.id, ssh_error)
         worker.write_log(f"\nSSH connection failed while monitoring: {ssh_error}\n")
