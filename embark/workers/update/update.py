@@ -216,8 +216,11 @@ def perform_update(worker: Worker, client: SSHClient, worker_update: WorkerUpdat
     folder_path = f"/root/{dependency.name}"
     zip_path = f"{folder_path}.tar.gz"
 
+    worker.write_log(f"\nAcquiring {dependency.name} for update...\n")
     use_dependency(dependency, worker_update.version, worker)
+    worker.write_log(f"\nCopying {dependency.name} files to worker...\n")
     _copy_files(client, dependency, log_write=worker.write_log)
+    worker.write_log(f"\nReleasing {dependency.name} after update...\n")
     release_dependency(dependency, worker)
 
     try:
