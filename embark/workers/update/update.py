@@ -40,25 +40,31 @@ def exec_blocking_ssh(client: SSHClient, command: str, log_write: callable = Non
     return stdout.read().decode().strip()
 
 
-def _copy_files(client: SSHClient, dependency: DependencyType):
+def _copy_files(client: SSHClient, dependency: DependencyType, log_write: callable = None):
     """
     Copy zipped dependency file to remote
 
     :params client: paramiko ssh client
     :params dependency: Dependency type
     """
+    
     folder_path = f"/root/{dependency.name}"
     zip_path = f"{folder_path}.tar.gz"
-    zip_path_user = zip_path if client.ssh_user == "root" else f"/home/{client.ssh_user}/{dependency.name}.tar.gz"
+    try:    
+        zip_path_user = zip_path if client.ssh_user == "root" else f"/home/{client.ssh_user}/{dependency.name}.tar.gz"
+    except AttributeError as ssh_user_error:
+        if log_write:
+            log_write(f"\nSSH user attribute missing in SSH client: {ssh_user_error}\n")
+        zip_path_user = zip_path  # Fallback to root path
 
-    exec_blocking_ssh(client, f"sudo rm -f {zip_path}; sudo rm -rf {folder_path}")
+    exec_blocking_ssh(client, f"sudo rm -f {zip_path}; sudo rm -rf {folder_path}", log_write)
 
     sftp_client = client.open_sftp()
     sftp_client.put(get_dependency_path(dependency)[1], zip_path_user)
     sftp_client.close()
 
-    if client.ssh_user != "root":
-        exec_blocking_ssh(client, f"sudo mv {zip_path_user} {zip_path}")
+    if zip_path_user != zip_path:
+        exec_blocking_ssh(client, f"sudo mv {zip_path_user} {zip_path}", log_write)
 
 
 def _get_available_version(dependency: DependencyType) -> str:
@@ -211,7 +217,7 @@ def perform_update(worker: Worker, client: SSHClient, worker_update: WorkerUpdat
     zip_path = f"{folder_path}.tar.gz"
 
     use_dependency(dependency, worker_update.version, worker)
-    _copy_files(client, dependency)
+    _copy_files(client, dependency, log_write=worker.write_log)
     release_dependency(dependency, worker)
 
     try:
