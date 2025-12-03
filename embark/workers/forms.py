@@ -14,7 +14,7 @@ class ConfigurationForm(ModelForm):
         model = Configuration
         fields = ['name', 'ssh_user', 'ssh_password', 'ip_range']
         widgets = {
-            'password': PasswordInput(),
+            'ssh_password': PasswordInput(),
         }
 
     def clean_ip_range(self):
