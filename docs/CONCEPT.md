@@ -6,6 +6,6 @@ Meaning running the run-server.sh script deploys the server in that directotry a
 
 
 
-Orchistrator:
+Orchestrator:
 
 Worker and host should have same OS else we can't use updater properly
