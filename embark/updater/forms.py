@@ -22,4 +22,4 @@ class CheckForm(forms.Form):
 class UpgradeForm(forms.Form):
     option = forms.ChoiceField(choices=[
         ('EMBA', 'Upgrade EMBA'), ('DOCKER', 'Upgrade docker image')
-    ], help_text='Upgarde the different components', widget=forms.Select, required=True)
+    ], help_text='Upgrade the different components', widget=forms.Select, required=True)
