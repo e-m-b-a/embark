@@ -40,6 +40,6 @@ class ConfigurationForm(ModelForm):
     
     def clean_ssh_password(self):
         ssh_password = self.cleaned_data.get('ssh_password')
-        if not re.match(r'^[\w@#$%^&+=!(){}\[\]_\-|\\]+$', ssh_password):
+        if not re.match(r'^[\w@#$%^&+=!(){}\[\]\-|\\]+$', ssh_password):
             raise ValidationError("SSH Password contains invalid characters. Probably you used a space or quotes.")
         return ssh_password
