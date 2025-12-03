@@ -394,7 +394,7 @@ class BoundedExecutor:
         # update using diffrent methods
         if os.environ.get('EMBA_INSTALL') != "no":
             # git update
-           if os.path.exists(os.path.join(settings.EMBA_ROOT),'.git'):
+           if os.path.exists(os.path.join(settings.EMBA_ROOT, '.git')):
                 try:
                     cmd = f"cd {settings.EMBA_ROOT} && git pull origin master"
 
