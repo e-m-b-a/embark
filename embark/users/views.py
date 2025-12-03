@@ -91,7 +91,7 @@ def register(request):
 @require_http_methods(["GET", "POST"])
 def embark_login(request):
     """
-    Login handeled via POST
+    Login handled via POST
     """
     if request.method == "POST":
         try:
