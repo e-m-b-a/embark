@@ -15,7 +15,7 @@ from django.contrib import messages
 from django.shortcuts import redirect
 
 from embark.helper import disk_space_check, get_emba_version
-from updater.forms import CheckForm, EmbaUpdateForm
+from updater.forms import CheckForm, UpdateForm, UpgradeForm
 from uploader.boundedexecutor import BoundedExecutor
 
 logger = logging.getLogger(__name__)
@@ -28,12 +28,11 @@ req_logger = logging.getLogger("requests")
 @require_http_methods(["GET"])
 def updater_home(request):
     req_logger.info("User %s called updater_home", request.user.username)
-    emba_update_form = EmbaUpdateForm()
-    emba_check_form = CheckForm()
     emba_version, stable_emba_version, container_version, nvd_version, github_emba_version = get_emba_version()
     return render(request, 'updater/index.html', {
-        'emba_update_form': emba_update_form,
-        'emba_check_form': emba_check_form,
+        'updater_update_form': UpdateForm(),
+        'updater_check_form': CheckForm(),
+        'updater_upgrade_form': UpgradeForm(),
         'emba_version': emba_version,
         'stable_emba_version': stable_emba_version,
         'container_version': container_version,
@@ -88,14 +87,14 @@ def update_emba(request):
     :return: HttpResponse including the status
     """
     req_logger.info("User %s called update_emba", request.user.username)
-    form = EmbaUpdateForm(request.POST)
+    form = UpdateForm(request.POST)
     if form.is_valid():
         logger.info("User %s tryied to update emba", request.user.username)
         option = form.cleaned_data['option']
         # do something with it
         logger.debug("Option was: %s", option)
         # check if disk space is sufficient
-        if not disk_space_check(str(settings.EMBA_ROOT)):
+        if not disk_space_check(str(settings.EMBA_ROOT), 20000):
             messages.error(request, 'Disk space is not sufficient for update.')
             return redirect('embark-updater-home')
         logger.debug("Disk space is sufficient for update.")
@@ -113,6 +112,47 @@ def update_emba(request):
         return redirect('embark-updater-home')
     logger.error("update form invalid %s with error: %s", request.POST, form.errors)
     messages.error(request, 'update not successful')
+    return redirect('embark-updater-home')
+
+
+@permission_required("users.updater_permission", login_url='/')
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@staff_member_required
+def upgrade_emba(request):
+    """
+    upgrade  emba
+
+    :params request: HTTP request
+
+    :return: HttpResponse including the status
+    """
+    req_logger.info("User %s called update_emba", request.user.username)
+    form = UpgradeForm(request.POST)
+    if form.is_valid():
+        logger.info("User %s tryied to upgrade emba", request.user.username)
+        option = form.cleaned_data['option']
+        # do something with it
+        logger.debug("Option was: %s", option)
+        # check if disk space is sufficient
+        if not disk_space_check(str(settings.EMBA_ROOT)):
+            messages.error(request, 'Disk space is not sufficient for upgrade.')
+            return redirect('embark-updater-home')
+        logger.debug("Disk space is sufficient for upgrade.")
+        for option_ in option:
+            # inject into bounded Executor
+            if BoundedExecutor.submit_emba_upgrade(option=option_):
+                messages.info(request, "Upgrade now")
+                return redirect('embark-updater-home')
+            logger.error("Server Queue full, or other boundenexec error")
+            messages.error(request, 'Queue full')
+            return redirect('embark-updater-home')
+
+        # upgrade version shown on site
+        messages.info(request, "Upgrading now")
+        return redirect('embark-updater-home')
+    logger.error("upgrade form invalid %s with error: %s", request.POST, form.errors)
+    messages.error(request, 'upgrade not successful')
     return redirect('embark-updater-home')
 
 

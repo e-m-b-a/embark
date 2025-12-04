@@ -112,9 +112,9 @@ write_env(){
 
   if [[ -z ${DJANGO_SECRET_KEY} ]] || [[ -z ${DJANGO_SECRET_KEY} ]]; then
     echo -e "${ORANGE}""${BOLD}""Did not find saved passwords""${NC}"
-    if [[ "$OS_TYPE" == "debian" ]]; then
+    if [[ "${OS_TYPE}" == "debian" ]]; then
       DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
-    elif [[ "$OS_TYPE" == "rhel" ]]; then
+    elif [[ "${OS_TYPE}" == "rhel" ]]; then
       DJANGO_SECRET_KEY=$(cd /var/www && python3.11 -m pipenv run python3.11 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
     fi
     RANDOM_PW=$(openssl rand -base64 12)
@@ -136,6 +136,7 @@ write_env(){
     echo "DJANGO_SUPERUSER_USERNAME=${SUPER_USER}"
     echo "DJANGO_SUPERUSER_EMAIL=${SUPER_EMAIL}"
     echo "DJANGO_SUPERUSER_PASSWORD=${SUPER_PW}"
+    echo "FLOWER_BASIC_AUTH=${SUPER_USER}:${SUPER_PW}"
     echo "PYTHONPATH=${PWD}:${PWD}/embark:/var/www/:/var/www/embark"
     echo "TIME_ZONE=$(timedatectl show -p Timezone --value 2>/dev/null || echo 'UTC')"
   } > .env
@@ -163,7 +164,10 @@ install_emba(){
 install_emba_src(){
   local TARBALL_URL_="https://github.com/e-m-b-a/emba/tarball/master/"
 
-  echo -e "\n${GREEN}""${BOLD}""Installation of the firmware scanner EMBA on host""${NC}"
+  echo -e "\n${GREEN}""${BOLD}""Installation of the firmware scanner EMBA on host from release""${NC}"
+  if ! [[ -d ./emba ]]; then
+    mkdir emba
+  fi
   if ! [[ -f ./emba/installer.sh ]]; then
     if [[ -n "${TARBALL_URL_}" ]]; then
       wget -O emba.tar.gz "${TARBALL_URL_}"
@@ -235,7 +239,7 @@ reset_docker(){
 }
 
 install_deps(){
-  if [[ "$OS_TYPE" == "debian" ]]; then
+  if [[ "${OS_TYPE}" == "debian" ]]; then
     echo -e "\n${GREEN}""${BOLD}""Install debian packages for EMBArk installation""${NC}"
     apt-get update -y
     # Git
@@ -284,7 +288,7 @@ install_deps(){
         # Add the repository to Apt sources:
         # shellcheck source=/dev/null
         echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-        $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+        $(. /etc/os-release && echo "${VERSION_CODENAME}") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
         apt-get update -y
         apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
       fi
@@ -309,7 +313,7 @@ install_deps(){
     if ! pipenv --version ; then
       pip install --upgrade pipenv
     fi
-  elif [[ "$OS_TYPE" == "rhel" ]]; then
+  elif [[ "${OS_TYPE}" == "rhel" ]]; then
     echo -e "\n${GREEN}""${BOLD}""Install rpm packages for EMBArk installation""${NC}"
     dnf install -y 'dnf-command(config-manager)' epel-release
     # Git
@@ -391,9 +395,9 @@ install_embark_default(){
     echo -e "${RED}""${BOLD}""EMBArk currently does not support WSL in default mode. (only in Dev-mode)""${NC}"
   fi
 
-  if [[ "$OS_TYPE" == "debian" ]]; then
+  if [[ "${OS_TYPE}" == "debian" ]]; then
     apt-get install -y -q default-libmysqlclient-dev build-essential mysql-client-core-8.0
-  elif [[ "$OS_TYPE" == "rhel" ]]; then
+  elif [[ "${OS_TYPE}" == "rhel" ]]; then
     dnf module enable -y mysql:8.0
     dnf install -y mysql mysql-devel
     ln -s /usr/lib64/mysql/libmysqlclient.so /usr/lib64/libmysqlclient.so
@@ -409,7 +413,7 @@ install_embark_default(){
     mkdir /var/www/
   fi
   if ! cut -d: -f1 /etc/passwd | grep -E www-embark ; then
-    useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /var/www/embark
+    useradd www-embark -G sudo -c "embark-server-user" -M -r --shell=/usr/sbin/nologin -d /var/www
   fi
   # emba nopw
   if ! grep 'www-embark ALL=(ALL) NOPASSWD:SETENV: /var/www/emba/emba' /etc/sudoers ; then
@@ -418,6 +422,10 @@ install_embark_default(){
   # pkill nopw
   if ! grep 'www-embark ALL=(ALL) NOPASSWD: /bin/pkill' /etc/sudoers ; then
     echo 'www-embark ALL=(ALL) NOPASSWD: /bin/pkill' | EDITOR='tee -a' visudo
+  fi
+  # task-scripts nopw
+  if ! grep 'www-embark ALL=(ALL) NOPASSWD: /var/www/embark/workers/update/' /etc/sudoers ; then
+    echo 'www-embark ALL=(ALL) NOPASSWD: /var/www/embark/workers/update/' | EDITOR='tee -a' visudo
   fi
 
   #Server-Dir
@@ -454,9 +462,9 @@ install_embark_default(){
   #install packages
   echo -e "\n${GREEN}""${BOLD}""Install embark python environment""${NC}"
   cp ./Pipfile* /var/www/
-  if [[ "$OS_TYPE" == "debian" ]]; then
+  if [[ "${OS_TYPE}" == "debian" ]]; then
     (cd /var/www && MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv install)
-  elif [[ "$OS_TYPE" == "rhel" ]]; then
+  elif [[ "${OS_TYPE}" == "rhel" ]]; then
     # Pipenv not found because /usr/bin/local not in $PATH, call via python3 -m instead
     (cd /var/www && MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 python3.11 -m pipenv install --python "$(which python3.11)")
   fi
@@ -501,13 +509,13 @@ install_embark_default(){
 install_embark_dev(){
   echo -e "\n${GREEN}""${BOLD}""Building Development-Environment for EMBArk""${NC}"
 
-  if [[ "$OS_TYPE" == "debian" ]]; then
+  if [[ "${OS_TYPE}" == "debian" ]]; then
     apt-get install -y npm pylint pycodestyle default-libmysqlclient-dev build-essential bandit yamllint mysql-client-core-8.0
     # apache2 apache2-dev
     # if ! command -v apache2 > /dev/null ; then
     #   apt-get install -y apache2 apache2-dev
     # fi
-  elif [[ "$OS_TYPE" == "rhel" ]]; then
+  elif [[ "${OS_TYPE}" == "rhel" ]]; then
     dnf install -y npm bandit yamllint
     pip3 install pylint pycodestyle
     dnf module enable -y mysql:8.0
@@ -531,17 +539,19 @@ install_embark_dev(){
   # Add user nosudo
   echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD:SETENV: ""${PWD}""/emba/emba" | EDITOR='tee -a' visudo
   echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD: /bin/pkill" | EDITOR='tee -a' visudo
+  echo "${SUDO_USER:-${USER}}"" ALL=(ALL) NOPASSWD: ""${PWD}""/embark/workers/update/" | EDITOR='tee -a' visudo
   echo "root ALL=(ALL) NOPASSWD:SETENV: ""${PWD}""/emba/emba" | EDITOR='tee -a' visudo
   echo "root ALL=(ALL) NOPASSWD: /bin/pkill" | EDITOR='tee -a' visudo
+  echo "root ALL=(ALL) NOPASSWD: ""${PWD}""/embark/workers/update/" | EDITOR='tee -a' visudo
 
   # Set some globals
   echo "NO_UPDATE_CHECK=1" >> /etc/environment
 
   # pipenv
   echo -e "\n${GREEN}""${BOLD}""Install embark python environment""${NC}"
-  if [[ "$OS_TYPE" == "debian" ]]; then
+  if [[ "${OS_TYPE}" == "debian" ]]; then
     MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
-  elif [[ "$OS_TYPE" == "rhel" ]]; then
+  elif [[ "${OS_TYPE}" == "rhel" ]]; then
     MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv' MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/' PIPENV_VENV_IN_PROJECT=1 python3.11 -m pipenv install --dev --python "$(which python3.11)"
   fi
 
@@ -668,6 +678,10 @@ uninstall(){
   if grep -qE "NOPASSWD\:.*\/bin\/pkill" /etc/sudoers ; then
     echo -e "${ORANGE}""${BOLD}""Deleting pkill NOPASSWD entries""${NC}"
     sed -i '/NOPASSWD\:.*\/bin\/pkill/d' /etc/sudoers
+  fi
+  if grep -qE "NOPASSWD\:.*""${PWD}""\/embark\/workers\/update\/" /etc/sudoers ; then
+    echo -e "${ORANGE}""${BOLD}""Deleting pkill NOPASSWD entries""${NC}"
+    sed -i '/NOPASSWD\:.*'"${PWD}"'\/embark\/workers\/update\//d' /etc/sudoers
   fi
 
   # delete .env
@@ -815,10 +829,10 @@ if [[ ${EUID} -ne 0 ]]; then
 fi
 
 # shellcheck disable=SC1091 # No need to validate /etc/os-release
-lOS_ID=$(source /etc/os-release; echo "$ID")
-if [[ "$lOS_ID" == "ubuntu" ]] || [[ "$lOS_ID" == "kali" ]] || [[ "$lOS_ID" == "debian" ]]; then
+lOS_ID=$(source /etc/os-release; echo "${ID}")
+if [[ "${lOS_ID}" == "ubuntu" ]] || [[ "${lOS_ID}" == "kali" ]] || [[ "${lOS_ID}" == "debian" ]]; then
   OS_TYPE="debian"
-elif [[ "$lOS_ID" == "rhel" ]] || [[ "$lOS_ID" == "rocky" ]] || [[ "$lOS_ID" == "centos" ]] || [[ "$lOS_ID" == "fedora" ]]; then
+elif [[ "${lOS_ID}" == "rhel" ]] || [[ "${lOS_ID}" == "rocky" ]] || [[ "${lOS_ID}" == "centos" ]] || [[ "${lOS_ID}" == "fedora" ]]; then
   OS_TYPE="rhel"
 fi
 
@@ -864,5 +878,7 @@ elif [[ "${NO_EMBA}" -eq 1 ]]; then
 else
   echo "EMBA_INSTALL=git" >> .env
 fi
+chmod 640 .env
 
+chown "${SUDO_USER:-${USER}}" -R ./
 exit 0

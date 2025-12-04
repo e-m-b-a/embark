@@ -72,6 +72,10 @@
                             {% csrf_token %}
                             <input type="submit" value="SSH Key download">
                         </form>
+                        <form action="{% url 'embark-configuration-logs' config.id %}">
+                            {% csrf_token %}
+                            <input type="submit" value="Show logs">
+                        </form>
                     </div>
                 </div>
             </div>
@@ -172,6 +176,10 @@
                         <form action="{% url 'embark-worker-soft-reset' worker.id %}" method="post">
                             {% csrf_token %}
                             <input type="submit" value="Soft Reset">
+                        </form>
+                        <form action="{% url 'embark-worker-show-log' worker.id %}" method="get">
+                            {% csrf_token %}
+                            <input type="submit" value="Show Log">
                         </form>
                     </div>
                 </div>

@@ -4,6 +4,8 @@ __license__ = 'MIT'
 
 import logging
 from io import StringIO
+import os
+from pathlib import Path
 from Crypto.PublicKey import RSA  # nosec
 
 from django.shortcuts import render
@@ -24,6 +26,7 @@ from embark.helper import user_is_auth
 
 logger = logging.getLogger(__name__)
 
+req_logger = logging.getLogger("requests")
 
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
@@ -117,9 +120,10 @@ def create_config(request):
     config_form = ConfigurationForm(request.POST)
     if not config_form.is_valid():
         messages.error(request, 'Invalid configuration data.')
+        messages.error(request, config_form.errors.as_text())
         return safe_redirect(request, '/worker/')
 
-    new_config = config_form.save(commit=False)
+    new_config = config_form.save(commit=False)     # create new configuration
     new_config.user = user
 
     key = RSA.generate(settings.WORKER_SSH_KEY_SIZE)
@@ -128,6 +132,12 @@ def create_config(request):
 
     # Fix paramiko RSA peculiarity
     new_config.ssh_private_key = new_config.ssh_private_key.replace("PRIVATE KEY", "RSA PRIVATE KEY")
+    new_config.save()
+    
+    # create log file
+    if not Path(os.path.join(settings.WORKER_LOG_ROOT_ABS, settings.WORKER_CONFIGURATION_LOGS)).exists():
+        Path(os.path.join(settings.WORKER_LOG_ROOT_ABS, settings.WORKER_CONFIGURATION_LOGS)).mkdir(parents=True, exist_ok=True)
+    new_config.log_location = Path(f"{os.path.join(settings.WORKER_LOG_ROOT_ABS, settings.WORKER_CONFIGURATION_LOGS)}/{new_config.id}.log")
 
     new_config.save()
 
@@ -268,14 +278,15 @@ def config_worker_scan(request, configuration_id):
     gives information about the number of reachable workers out of the registered ones.
     :params configuration_id: The configuration id
     """
+    user = get_user(request)
     try:
-        user = get_user(request)
         config = Configuration.objects.get(id=configuration_id)
-        if not user_is_auth(user, config.user):
-            messages.error(request, 'You are not allowed to access this configuration.')
-            return safe_redirect(request, '/worker/')
     except Configuration.DoesNotExist:
         messages.error(request, 'Configuration not found.')
+        return safe_redirect(request, '/worker/')
+
+    if not user_is_auth(user, config.user):
+        messages.error(request, 'You are not allowed to access this configuration.')
         return safe_redirect(request, '/worker/')
 
     config_worker_scan_task.delay(config.id)
@@ -466,6 +477,9 @@ def update_queue_state(request, worker_id):
     return JsonResponse({"update_queue": update_queue})
 
 
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
 def dependency_state_reset(request):
     """
     Reset the 'used_by' field for all DependencyState instances.
@@ -501,3 +515,71 @@ def safe_redirect(request, default):
     if not url_has_allowed_host_and_scheme(referer, allowed_hosts={request.get_host()}):
         referer = default
     return HttpResponseRedirect(referer)
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def show_worker_log(request, worker_id):
+    """
+    Show the logs of a specific worker.
+    :params worker_id: The worker id
+    """
+    user = get_user(request)
+
+    try:
+        worker = Worker.objects.get(id=worker_id)
+        configuration = worker.configurations.filter(user=user).first()
+        if not user_is_auth(user, configuration.user):
+            messages.error(request, 'You are not allowed to access this worker.')
+            return safe_redirect(request, '/worker/')
+
+        log_file = worker.log_location
+        if not log_file or not os.path.isfile(log_file):
+            messages.error(request, 'Log file not found for this worker.')
+            return safe_redirect(request, '/worker/')
+        with open(log_file, 'r') as file:
+            log_content = file.read()
+
+        return render(request, 'workers/worker_log.html', {
+            'worker': worker,
+            'log_content': log_content
+        })
+    except Worker.DoesNotExist:
+        messages.error(request, 'Worker or configuration not found.')
+    except Configuration.DoesNotExist:
+        messages.error(request, 'You are not allowed to access this worker.')
+
+    return safe_redirect(request, '/worker/')
+
+
+@require_http_methods(["GET"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+@permission_required("users.worker_permission", login_url='/')
+def show_configuration_logs(request, configuration_id):
+    """
+    Show the logs of a specific configuration.
+    :params configuration_id: The configuration id
+    """
+    req_logger.info(f"User {request.user.username} requested logs for configuration {configuration_id}")
+    user = get_user(request)
+    
+    try:
+        config = Configuration.objects.get(id=configuration_id)
+        if not user_is_auth(user, config.user):
+                messages.error(request, 'You are not allowed to access this configuration.')
+                return safe_redirect(request, '/worker/')
+        log_file = config.log_location
+        if not log_file or not os.path.isfile(log_file):
+            messages.error(request, 'Log file not found for this configuration.')
+            return safe_redirect(request, '/worker/')
+        with open(log_file, 'r') as file:
+            log_content = file.read()
+
+        return render(request, 'workers/configuration_logs.html', {
+            'configuration': config,
+            'log_content': log_content
+        })
+    except Configuration.DoesNotExist:
+        messages.error(request, 'Configuration not found.')
+        return safe_redirect(request, '/worker/')

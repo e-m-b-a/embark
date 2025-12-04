@@ -137,6 +137,7 @@ class DependencyLock:
 
                         used_by[worker.ip_address] = worker
                         self._set_db_data(used_by=used_by)
+                        worker.write_log(f"\nUsing dependency {self.dependency.name} version {version}\n")
                         break
 
                     # Else: Trigger dependency setup, as newer version was found
@@ -163,6 +164,7 @@ class DependencyLock:
             if worker.ip_address in used_by:
                 del used_by[worker.ip_address]
                 self._set_db_data(used_by=used_by)
+                worker.write_log(f"\nReleased dependency {self.dependency.name}\n")
 
     def is_not_in_use(self):
         """
@@ -271,6 +273,7 @@ def eval_outdated_dependencies(worker: Worker):
 
     worker.dependency_version.save()
     logger.info("Outdated dependencies evaluated for worker %s", worker.ip_address)
+    worker.write_log(f"\nOutdated dependencies evaluated\n")
 
 
 def setup_dependency(dependency: DependencyType, version: str):
@@ -280,13 +283,12 @@ def setup_dependency(dependency: DependencyType, version: str):
     :params dependency: Dependency type
     :params version: The desired version
     """
-    Path(settings.WORKER_FILES_PATH).mkdir(parents=True, exist_ok=True)
-    Path(os.path.join(settings.WORKER_FILES_PATH, "logs")).mkdir(parents=True, exist_ok=True)
+    Path(settings.WORKER_LOG_ROOT_ABS).mkdir(parents=True, exist_ok=True)
 
     script_path = os.path.join(os.path.dirname(__file__), get_script_name(dependency))
     folder_path, zip_path = get_dependency_path(dependency)
 
-    log_file = settings.WORKER_SETUP_LOGS.format(timestamp=int(time.time()))
+    log_file = settings.WORKER_SETUP_LOGS_ABS.format(timestamp=int(time.time()))
 
     logger.info("Worker dependencies setup started with script %s. Logs: %s", get_script_name(dependency), log_file)
     try:

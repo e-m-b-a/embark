@@ -1,0 +1,12 @@
+{% load django_bootstrap5 %}
+<p class="subText">Upgrade EMBA</p>
+<div class="buttonRow">
+    <form action="{% url 'embark-updater-upgrade' %}" method="post" id="form">
+        {% csrf_token %}
+        <div class="innerBlock">
+            {% load filters %}
+            {% bootstrap_form updater_upgrade_form %}
+            <button type="submit" class="btn buttonRowElem btn-primary" data-bs-toggle="collapse.show" data-bs-target="collapseStart">Upgrade</button>
+        </div>
+    </form>
+</div>

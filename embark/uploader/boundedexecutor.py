@@ -389,29 +389,55 @@ class BoundedExecutor:
         Args:
             option GIT / DOCKER / NVD
 
+        """
+        logger.debug("Update EMBA with: %s", option)
+        # update using diffrent methods
+        if os.environ.get('EMBA_INSTALL') != "no":
+            # git update
+           if os.path.exists(os.path.join(settings.EMBA_ROOT, '.git')):
+                try:
+                    cmd = f"cd {settings.EMBA_ROOT} && git pull origin master"
+
+                    with open(f"{settings.EMBA_LOG_ROOT}/emba_update.log", "w+", encoding="utf-8") as file:
+                        proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
+                        # wait for completion
+                        proc.communicate()
+                        return_code = proc.wait()
+                    # success
+                    logger.info("Git pull Successful: %s", cmd)
+                    if return_code != 0:
+                        raise BoundedException("Git has non zero exit-code")
+                except (BaseException, BoundedException) as exce:
+                    logger.error("emba update error: %s", exce)
+        # src
+        else:
+            # rm emba
+            # call installer.sh -e
+            # TODO
+            pass
+        room_group_name = "versions"
+        channel_layer = get_channel_layer()
+        # send ws message
+        async_to_sync(channel_layer.group_send)(
+            room_group_name, {
+                "type": 'send.message',
+                "message": {f"EMBA update {option}": return_code}
+            }
+        )
+
+    @classmethod
+    def emba_upgrade(cls):
+        """
+        Reinstalls dependency
+        
         # 1. Update state of original emba dir (not the servers)
         # 2. remove external dir
         # 3. re-install emba through script + docker pull
         # 4. sync server dir
         """
-        logger.debug("Update EMBA with: %s", option)
-        # git update
-        try:
-            cmd = f"cd {settings.EMBA_ROOT} && git pull origin master"
-
-            with open(f"{settings.EMBA_LOG_ROOT}/emba_update.log", "w+", encoding="utf-8") as file:
-                proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
-                # wait for completion
-                proc.communicate()
-                return_code = proc.wait()
-            # success
-            logger.info("Git pull Successful: %s", cmd)
-            if return_code != 0:
-                raise BoundedException("Git has non zero exit-code")
-        except (BaseException, BoundedException) as exce:
-            logger.error("emba update error: %s", exce)
-
-        # emba update
+        # TODO missing docker and NVD
+        # TODO best way to upgrade EMBA?
+        # emba upgrade
         try:
             cmd = f"cd {settings.EMBA_ROOT} && {get_emba_base_cmd()} -U"
 
@@ -433,7 +459,7 @@ class BoundedExecutor:
         async_to_sync(channel_layer.group_send)(
             room_group_name, {
                 "type": 'send.message',
-                "message": {f"EMBA update {option}": return_code}
+                "message": {f"EMBA upgrade ": return_code}
             }
         )
 
@@ -459,6 +485,12 @@ class BoundedExecutor:
     def submit_emba_update(cls, option):
         # submit update to executor threadpool
         emba_fut = BoundedExecutor.submit(cls.emba_update, option)
+        return emba_fut
+
+    @classmethod
+    def submit_emba_upgrade(cls, option):
+        # submit upgrade to executor threadpool
+        emba_fut = BoundedExecutor.submit(cls.emba_upgrade, option)
         return emba_fut
 
     @staticmethod

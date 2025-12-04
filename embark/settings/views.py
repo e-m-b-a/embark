@@ -18,7 +18,6 @@ def settings_main(request):
     """
     Render the main settings page.
     """
-    # the template will only render the settings menu if the user has the is_staff flag set to True
     return render(request, 'settings/index.html', {
         'user': get_user(request),
         'app_settings': get_settings()

@@ -8,13 +8,18 @@ from django import forms
 logger = logging.getLogger(__name__)
 
 
-class EmbaUpdateForm(forms.Form):
+class UpdateForm(forms.Form):
     option = forms.MultipleChoiceField(choices=[
-        ('GIT', 'Git Update'), ('DOCKER', 'Docker Update'), ('NVD', 'CVE Update')
-    ], help_text='Update EMBA', widget=forms.CheckboxSelectMultiple, required=False)
+        ('PULL', 'Git Pull origin/master'), ('DOCKER', 'Docker Update'), ('NVD', 'CVE Update')
+    ], help_text='Update EMBA components', widget=forms.CheckboxSelectMultiple, required=False)
 
 
 class CheckForm(forms.Form):
     option = forms.ChoiceField(choices=[
         ('BOTH', 'Host and container'), ('CONTAINER', 'Only Container')
     ], help_text='Check EMBA', widget=forms.Select, required=True)
+
+class UpgradeForm(forms.Form):
+    option = forms.ChoiceField(choices=[
+        ('EMBA', 'Upgrade EMBA'), ('DOCKER', 'Upgrade docker image')
+    ], help_text='Upgrade the different components', widget=forms.Select, required=True)

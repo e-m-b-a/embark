@@ -25,6 +25,7 @@ from django.utils.timezone import make_aware
 from django.utils import timezone
 from django.conf import settings
 
+from embark.helper import is_ip_local_host
 from workers.models import Worker, Configuration, DependencyVersion, DependencyType, WorkerDependencyVersion
 from workers.update.dependencies import eval_outdated_dependencies, get_script_name, update_dependency, setup_dependency
 from workers.update.update import exec_blocking_ssh, parse_deb_list, process_update_queue, init_sudoers_file, update_dependencies_info, setup_ssh_key, undo_ssh_key, undo_sudoers_file
@@ -64,10 +65,11 @@ def update_system_info(worker: Worker):
     """
     system_info = {}
     ssh_client = None
+    worker.write_log(f"\nUpdating system info...\n")
     try:
         ssh_client = worker.ssh_connect(timeout=10)
 
-        os_info = exec_blocking_ssh(ssh_client, 'grep PRETTY_NAME /etc/os-release')
+        os_info = exec_blocking_ssh(ssh_client, 'grep PRETTY_NAME /etc/os-release', worker.write_log)
         os_info = os_info[len('PRETTY_NAME='):-1].strip('"')
 
         cpu_info = exec_blocking_ssh(ssh_client, 'nproc')
@@ -95,6 +97,7 @@ def update_system_info(worker: Worker):
         raise paramiko.SSHException(f"Failed to connect while updating system info for worker: {worker.name}: {ssh_error}") from ssh_error
     except BaseException as error:
         logger.error("An error occurred while updating system info for worker %s: %s", worker.name, error)
+        worker.write_log(f"\nError: An error occurred while updating system info: {error}\n")
         raise BaseException("Failed to update system info") from error
     finally:
         if ssh_client:
@@ -165,6 +168,7 @@ def setup_reconnected_worker_task(worker_id):
         return
 
     logger.info("Reconnecting worker: %s", worker.name)
+    worker.write_log(f"\nReconnecting worker...\n")
 
     worker_soft_reset_task(worker.id)
     process_update_queue(worker)
@@ -176,6 +180,7 @@ def setup_reconnected_worker_task(worker_id):
             orchestrator.assign_tasks()
         except ValueError:
             logger.error("Reconnected worker: %s already registered in the orchestrator", worker.name)
+            worker.write_log(f"\nWarning: Worker already registered in the orchestrator\n")
 
 
 def _handle_unreachable_worker(worker: Worker, force: bool = False):
@@ -194,12 +199,14 @@ def _handle_unreachable_worker(worker: Worker, force: bool = False):
             return
 
         logger.info("Handling unreachable worker: %s", worker.name)
+        worker.write_log(f"\nHandling unreachable worker...\n")
 
         try:
             reachable_threshold = make_aware(datetime.now()) - timedelta(minutes=settings.WORKER_REACHABLE_TIMEOUT)
             if worker.last_reached < reachable_threshold or force:
                 worker.reachable = False
                 logger.info("Failed to reach worker %s for the last %d minutes, setting status to unreachable.", worker.name, settings.WORKER_REACHABLE_TIMEOUT)
+                worker.write_log(f"\nWorker failed to reach timeout threshold, marking as unreachable\n")
 
                 # We need this because the analysis_id will be set to None in orchestrator.remove_worker
                 # We also have to remove the worker before reassigning the analysis
@@ -210,12 +217,14 @@ def _handle_unreachable_worker(worker: Worker, force: bool = False):
 
                 if reassign_analysis_id:
                     logger.info("Reassigning analysis %s of unreachable worker %s", reassign_analysis_id, worker.name)
+                    worker.write_log(f"\nReassigning analysis {reassign_analysis_id} to another worker\n")
                     firmware_analysis = FirmwareAnalysis.objects.get(id=reassign_analysis_id)
                     firmware_file = FirmwareFile.objects.get(id=firmware_analysis.firmware.id)
                     new_analysis = _new_analysis_from(firmware_analysis)
                     submit_firmware(new_analysis, firmware_file)
         except BaseException as error:
             logger.error("An error occurred while handling unreachable worker %s: %s", worker.name, error)
+            worker.write_log(f"\nError occurred while handling unreachable worker: {error}\n")
         finally:
             worker.save()
 
@@ -235,6 +244,7 @@ def update_worker_info():
         for worker in workers:
             try:
                 logger.info("Updating system info: %s", worker.name)
+                worker.write_log(f"\nUpdating system info...\n")
                 update_system_info(worker)
 
                 # The worker was previously set to unreachable and is now reachable again
@@ -247,6 +257,7 @@ def update_worker_info():
                 _handle_unreachable_worker(worker)
             except BaseException as error:
                 logger.error("An error occurred while updating worker %s: %s", worker.name, error)
+                worker.write_log(f"\nError occurred while updating worker: {error}\n")
                 continue
             finally:
                 worker.save()
@@ -267,6 +278,7 @@ def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
         logger.error("start_analysis: Invalid worker id")
         return
 
+    worker.write_log(f"\nStarting firmware analysis...\n")
     client = worker.ssh_connect()
 
     exec_blocking_ssh(client, f"sudo rm -rf {settings.WORKER_FIRMWARE_DIR}")
@@ -285,6 +297,7 @@ def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
     exec_blocking_ssh(client, "sudo rm -rf /root/emba_run.log")
     client.exec_command(f"sudo sh -c '{emba_cmd}' >./emba_run.log 2>&1")  # nosec
     logger.info("Firmware analysis has been started on the worker.")
+    worker.write_log(f"\nFirmware analysis has been started on the worker.\n")
 
     # Create file to suppress errors
     os.makedirs(f"{settings.EMBA_LOG_ROOT}/{worker.analysis_id}/emba_logs/", exist_ok=True)
@@ -321,15 +334,18 @@ def monitor_worker_and_fetch_logs(worker_id) -> None:
 
             if not is_running or analysis_finished or not orchestrator.is_busy(worker):
                 logger.info("[Worker %s] Analysis finished.", worker.id)
+                worker.write_log(f"\nAnalysis finished\n")
                 return
-            time.sleep(2)
+            time.sleep(1)
     except paramiko.SSHException as ssh_error:
         logger.error("[Worker %s] SSH connection failed while monitoring: %s", worker.id, ssh_error)
+        worker.write_log(f"\nSSH connection failed while monitoring: {ssh_error}\n")
         _handle_unreachable_worker(worker, force=True)
         analysis.failed = True
         ssh_failed = True
     except Exception as exception:
         logger.error("[Worker %s] Monitoring failed, stopping the task. Exception: %s", worker.id, exception)
+        worker.write_log(f"\nMonitoring failed: {exception}\n")
         analysis.failed = True
     finally:
         analysis.finished = True
@@ -372,6 +388,7 @@ def _fetch_analysis_logs(worker) -> None:
         remote_zip_path = f"{homedir}/emba_logs.zip"
 
         logger.info("[Worker %s] Zipping logs on remote...", worker.id)
+        worker.write_log(f"\nZipping logs on remote...\n")
         zip_cmd = (
             f'sudo bash -c "cd /root && '
             f"7z u -t7z -y {remote_zip_path} {settings.WORKER_EMBA_LOGS} -uq3; "
@@ -379,6 +396,7 @@ def _fetch_analysis_logs(worker) -> None:
         )
         exec_blocking_ssh(client, zip_cmd)
         logger.info("[Worker %s] Zipping logs on remote complete.", worker.id)
+        worker.write_log(f"\nZipping logs on remote complete.\n")
 
         # Ensure dirs exists locally
         local_log_dir = f"{settings.EMBA_LOG_ROOT}/{worker.analysis_id}"
@@ -390,6 +408,7 @@ def _fetch_analysis_logs(worker) -> None:
         sftp_client = client.open_sftp()
         sftp_client.get(f"{homedir}/emba_logs.zip", local_zip_path)
         logger.info("[Worker %s] Downloaded the log zip.", worker.id)
+        worker.write_log(f"\nDownloaded the log zip.\n")
 
         # Ensure emba_run.log can be accessed by the user
         if client.ssh_user != "root":
@@ -399,6 +418,7 @@ def _fetch_analysis_logs(worker) -> None:
         sftp_client.get(f"{homedir}/emba_run.log", f"{local_log_dir}/emba_run.log")
 
         logger.info("[Worker %s] Downloaded emba_run.log.", worker.id)
+        worker.write_log(f"\nDownloaded emba_run.log.\n")
 
         # Note: The LogReader.read_loop() will look for logfiles in <analysis.path_to_logs>/emba.log
         #       where path_to_logs will be set to settings.EMBA_LOG_ROOT/<analysis.id>/emba_logs/
@@ -406,6 +426,7 @@ def _fetch_analysis_logs(worker) -> None:
         subprocess.run(unzip_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)  # nosec
 
         logger.info("[Worker %s] Unzipped the log zip to: %s/emba_logs/", worker.id, local_log_dir)
+        worker.write_log(f"\nUnzipped the log zip.\n")
 
     finally:
         if sftp_client is not None:
@@ -430,12 +451,14 @@ def _is_emba_running(worker) -> bool:
         output = exec_blocking_ssh(client, cmd)
         if not output:
             logger.info("[Worker %s] EMBA Docker container is no longer running.", worker.id)
+            worker.write_log(f"\nEMBA Docker container is no longer running.\n")
             return False
 
         return True
 
     except Exception as exception:
         logger.error("[Worker %s] Unexpected exception: %s", worker.id, exception)
+        worker.write_log(f"\nUnexpected exception while checking if EMBA is running: {exception}\n")
         return False
     finally:
         if client is not None:
@@ -455,11 +478,13 @@ def stop_remote_analysis(worker_id) -> None:
         worker = Worker.objects.get(id=worker_id)
         if not _is_emba_running(worker):
             logger.error("[Worker %s] Failed to stop analysis: EMBA container isn't running.", worker.id)
+            worker.write_log(f"\nFailed to stop analysis: EMBA container isn't running.\n")
             return
 
         client = worker.ssh_connect()
 
         logger.info("[Worker %s] Trying to stop the analysis.", worker.id)
+        worker.write_log(f"\nTrying to stop the analysis.\n")
 
         docker_cmd = "sudo docker ps | grep emba | awk '{print $1;}' | xargs -I {} sudo docker stop {}"
         exec_blocking_ssh(client, docker_cmd)
@@ -475,9 +500,11 @@ def stop_remote_analysis(worker_id) -> None:
         analysis.save()
 
         logger.info("[Worker %s] Successfully stopped the analysis.", worker.id)
+        worker.write_log(f"\nSuccessfully stopped the analysis.\n")
 
     except Exception as exception:
         logger.error("[Worker %s] Error while stopping analysis: %s", worker.id, exception)
+        worker.write_log(f"\nError while stopping analysis: {exception}\n")
     finally:
         if client is not None:
             client.close()
@@ -510,6 +537,7 @@ def update_worker(worker_id):
             orchestrator.assign_tasks()
         except ValueError:
             logger.error("Worker: %s already exists in orchestrator", worker.name)
+            worker.write_log(f"\nWarning: Worker already exists in orchestrator\n")
 
 
 @shared_task
@@ -558,10 +586,9 @@ def fetch_dependency_updates():
     version.epss_head, version.epss_time = _get_head_time("EMBA-support-repos/EPSS-data")
 
     # Fetch APT
-    Path(settings.WORKER_FILES_PATH).mkdir(parents=True, exist_ok=True)
-    Path(os.path.join(settings.WORKER_FILES_PATH, "logs")).mkdir(parents=True, exist_ok=True)
+    Path(settings.WORKER_SETUP_LOGS_ABS).mkdir(parents=True, exist_ok=True)
 
-    log_file = settings.WORKER_SETUP_LOGS.format(timestamp=int(time.time()))
+    log_file = settings.WORKER_SETUP_LOGS_ABS.format(timestamp=int(time.time()))
     logger.info("APT dependency update check started. Logs: %s", log_file)
     try:
         script_path = os.path.join(os.path.dirname(__file__), "update", get_script_name(DependencyType.DEPS))
@@ -639,6 +666,7 @@ def worker_soft_reset_task(worker_id, only_reset=False):
         logger.error("Worker Soft Reset: Invalid worker id")
     except (paramiko.SSHException, socket.error):
         logger.error("[Worker %s] SSH Connection failed while soft resetting.", worker.id)
+        worker.write_log(f"\nSSH Connection failed while soft resetting.\n")
     finally:
         if ssh_client is not None:
             ssh_client.close()
@@ -650,6 +678,7 @@ def worker_hard_reset_task(worker_id):
         worker = Worker.objects.get(id=worker_id)
     except Worker.DoesNotExist:
         logger.error("Worker Hard Reset: Invalid worker id")
+        worker.write_log(f"\nWorker Hard Reset: Invalid worker id\n")
         return
 
     orchestrator = get_orchestrator()
@@ -669,6 +698,7 @@ def worker_hard_reset_task(worker_id):
         update_dependencies_info(worker)
     except paramiko.SSHException:
         logger.error("SSH Connection didnt work for: %s", worker.name)
+        worker.write_log(f"\nSSH Connection didnt work for hard reset.\n")
         if ssh_client:
             ssh_client.close()
 
@@ -681,6 +711,7 @@ def delete_config_task(config_id):
     """
     try:
         config = Configuration.objects.get(id=config_id)
+        config.write_log(f"\nDeleting configuration...\n")
     except Configuration.DoesNotExist:
         logger.error("delete_config: Configuration %s not found", config_id)
 
@@ -700,6 +731,9 @@ def delete_config_task(config_id):
         worker.dependency_version.delete()
         worker.delete()
 
+    if os.path.exists(config.log_location):
+        os.remove(config.log_location)
+
     config.delete()
 
 
@@ -717,6 +751,7 @@ def _update_or_create_worker(config: Configuration, ip_address: str):
             worker.configurations.add(config)
             worker.save()
     except Worker.DoesNotExist:
+        config.write_log(f"Creating new worker for IP address {ip_address}\n")
         version = WorkerDependencyVersion()
         version.save()
         worker = Worker(
@@ -727,7 +762,14 @@ def _update_or_create_worker(config: Configuration, ip_address: str):
             reachable=True
         )
         worker.save()
+        # create log file
+        if not Path(os.path.join(settings.WORKER_LOG_ROOT_ABS,settings.WORKER_WORKER_LOGS)).exists():
+            Path(os.path.join(settings.WORKER_LOG_ROOT_ABS,settings.WORKER_WORKER_LOGS)).mkdir(parents=True, exist_ok=True)
+        worker.log_location = Path(f"{os.path.join(settings.WORKER_LOG_ROOT_ABS, settings.WORKER_WORKER_LOGS)}/{worker.id}.log")
+        worker.write_log(f"\nCreated new worker for IP address {ip_address}\n")
         worker.configurations.set([config])
+        worker.save()
+        config.write_log(f"New worker created with ID {worker.id} for IP address {ip_address}\n")
     finally:
         try:
             # TODO: The first two function calls may cause issues when a config
@@ -752,13 +794,17 @@ def _scan_for_worker(config: Configuration, ip_address: str, port: int = 22, tim
     :param ssh_auth_check: If True, tries to connect to the ip address with the config's ssh credentials and checks whether the user has sudo privileges
     :return: ip_address on success, None otherwise
     """
+    config.write_log(f"Scanning IP address: {ip_address}")
     try:  # Check TCP socket first before trying SSH
         with socket.create_connection((ip_address, port), timeout):
             pass
     except TimeoutError:
+        config.write_log(f"Host {ip_address} is not reachable (timeout).")
+        logger.error("[%s@%s] Host is not reachable (timeout).", config.ssh_user, ip_address)
         return None
     except Exception as exc:
         logger.error("[%s@%s] Cannot connect to host: %s", config.ssh_user, ip_address, exc)
+        config.write_log(f"Cannot connect to host {config.ssh_user}@{ip_address}: {exc}")
         return None
 
     client = None
@@ -774,22 +820,26 @@ def _scan_for_worker(config: Configuration, ip_address: str, port: int = 22, tim
             )
 
             logger.info("[%s@%s] Connected via SSH. Now testing for sudo privileges.", config.ssh_user, ip_address)
+            config.write_log(f"[{config.ssh_user}@{ip_address}] Connected via SSH. Now testing for sudo privileges.")
 
             stdin, stdout, _ = client.exec_command("sudo -v", get_pty=True)  # nosec
             stdin.write(config.ssh_password + "\n")
             stdin.flush()
             if stdout.channel.recv_exit_status():
                 logger.info("[%s@%s] Can't register worker: No sudo permission.", config.ssh_user, ip_address)
+                config.write_log(f"[{config.ssh_user}@{ip_address}] Can't register worker: No sudo permission.")
                 # Delete worker if SSH configuration changed
                 Worker.objects.filter(ip_address=ip_address).delete()
                 return None
 
         _update_or_create_worker(config, ip_address)
         logger.info("[%s@%s] Worker is reachable via SSH.", config.ssh_user, ip_address)
+        config.write_log(f"[{config.ssh_user}@{ip_address}] Worker is reachable via SSH.")
         return ip_address
 
     except Exception as exc:
         logger.error("[%s@%s] Exception while scanning worker: %s", config.ssh_user, ip_address, exc)
+        config.write_log(f"[{config.ssh_user}@{ip_address}] Exception while scanning worker: {exc}")
         return None
     finally:
         if client is not None:
@@ -805,12 +855,16 @@ def config_worker_scan_task(configuration_id: int):
     """
     try:
         config = Configuration.objects.get(id=configuration_id)
+        logger.info("config_worker_scan_task: Starting scan for configuration %s", config.name)
+        config.write_log("Starting worker scan task.")
         ssh_auth_check = not config.scan_status == Configuration.ScanStatus.FINISHED
         config.scan_status = Configuration.ScanStatus.SCANNING
         config.save()
 
         ip_network = ipaddress.ip_network(config.ip_range, strict=False)
-        ip_addresses = [str(ip) for ip in ip_network.hosts()]
+        ip_addresses = [str(ip) for ip in ip_network.hosts() if not is_ip_local_host(str(ip))]  # filter out local host IPs
+        logger.info("Scanning IPs: %s", ip_addresses)
+        config.write_log(f"Scanning IPs: {ip_addresses}")
         with ThreadPoolExecutor(max_workers=50) as executor:
             results = executor.map(partial(_scan_for_worker, config, ssh_auth_check=ssh_auth_check), ip_addresses)
             reachable = set(results) - {None}
@@ -819,13 +873,19 @@ def config_worker_scan_task(configuration_id: int):
         for worker in unreachable_workers:
             _handle_unreachable_worker(worker)
 
+        config.write_log(f"Worker scan task finished. {len(reachable)} reachable workers found.")
         config.scan_status = Configuration.ScanStatus.FINISHED
-        logger.info("config_worker_scan_task: Scan finished for configuration %s", config.name)
+        logger.info("config_worker_scan_task: Scan finished for configuration %s. %d reachable", config.name, len(reachable))
+    except ValueError as ve:
+        logger.error("config_worker_scan_task: Invalid IP range specified: %s", ve)
+        config.write_log(f"Worker scan task failed: Invalid IP range specified: {ve}")
+        config.scan_status = Configuration.ScanStatus.ERROR
     except Configuration.DoesNotExist:
         logger.error("config_worker_scan_task: Invalid configuration id")
-        config.scan_status = Configuration.ScanStatus.ERROR
+        # config is not defined here, so skip write_log and scan_status
     except BaseException as error:
         logger.error("config_worker_scan_task: An error occurred while scanning workers: %s", error)
+        config.write_log(f"Worker scan task failed: {error}")
         config.scan_status = Configuration.ScanStatus.ERROR
     finally:
         config.save()

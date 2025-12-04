@@ -154,6 +154,10 @@ LOGGING = {
             'level': 'WARNING',
             'handlers': ['info_handler', 'console_handler'],
         },
+        'workers': {
+            'handlers': ['debug_handler', 'info_handler', 'console_handler'],
+            'level': 'DEBUG',
+        },
         'updater': {
             'handlers': ['debug_handler', 'info_handler', 'console_handler'],
             'level': 'DEBUG',
@@ -284,13 +288,20 @@ VERSION = get_version_strings()
 WORKER_FILES_PATH = os.path.join(BASE_DIR.parent, "WORKER_FILES")
 WORKER_UPDATE_CHECK = os.path.join(WORKER_FILES_PATH, "update_check")
 WORKER_KEY_LOCATION = os.path.join(WORKER_FILES_PATH, "ssh_keys")
-WORKER_SETUP_LOGS = os.path.join(WORKER_FILES_PATH, "logs/worker_setup_{timestamp}.log")
 WORKER_EMBA_ROOT = "/root/emba/"
 WORKER_FIRMWARE_DIR = "/root/firmware/"
 WORKER_EMBA_LOGS = "/root/emba_logs/"
 WORKER_UPDATE_QUEUE_SIZE = 50
 WORKER_SSH_KEY_SIZE = 2048
 WORKER_REACHABLE_TIMEOUT = 10
+
+# worker logs
+WORKER_LOG_ROOT_ABS = os.path.join(MEDIA_ROOT, "worker-logs")
+WORKER_SETUP_LOGS_ABS = os.path.join(WORKER_LOG_ROOT_ABS, "worker_setup_{timestamp}.log")
+WORKER_LOG_ROOT = "worker-logs"
+WORKER_CONFIGURATION_LOGS = "configuration"
+WORKER_WORKER_LOGS = "worker"
+WORKER_SETUP_LOGS = "worker_setup_{timestamp}.log"
 
 # Celery task queue
 CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"

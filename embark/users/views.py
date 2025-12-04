@@ -90,6 +90,9 @@ def register(request):
 
 @require_http_methods(["GET", "POST"])
 def embark_login(request):
+    """
+    Login handled via POST
+    """
     if request.method == "POST":
         try:
             login_form = LoginForm(request=request, data=request.POST)
@@ -104,14 +107,19 @@ def embark_login(request):
                     request.session["django_timezone"] = user.timezone
                     # messages.success(request, str(user.username) + ' timezone set to : ' + str(user.timezone))
                     return redirect('embark-uploader-home')
-                logger.debug('User could not be authenticated')
-            logger.debug('Form errors: %s', str(login_form.errors))
+                logger.debug('User could not be authenticated - backend error?')
+                messages.error(request, 'User could not be authenticated at this time')
+                return redirect('embark-login')
+            logger.debug('Form errors: %s', login_form.errors.as_text())
+            return render(request, 'user/login.html', {'form': login_form})
         except ValidationError as valid_error:
             logger.error("Exception in value: %s ", valid_error)
             messages.error(request, 'User is deactivated')
+            return redirect('embark-login')
         except builtins.Exception as error:
             logger.exception('Wide exception in Signup: %s', error)
             messages.error(request, 'Something went wrong when logging in the user.')
+            return redirect('embark-login')
     login_form = LoginForm()
     return render(request, 'user/login.html', {'form': login_form})
 

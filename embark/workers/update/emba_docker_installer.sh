@@ -10,20 +10,47 @@
 # EMBArk is licensed under MIT
 #
 # Author(s): ClProsser, SirGankalot
+# Contributor(s): Benedikt Kuehne
 
 set -e
 cd "$(dirname "$0")"
 
 if [[ ${EUID} -ne 0 ]]; then
-	echo "This script has to be run as root"
+	echo -e "\n[!!] ERROR: This script has to be run as root\n"
 	exit 1
 fi
 
+echo -e "\n[+] Starting EMBA Docker image installation on offline worker"
+echo -e "[*] Current directory: $(pwd)\n"
+
 FILEPATH="."
 
+echo -e "[*] Image file path: ${FILEPATH}\n"
+
 # Reset
-systemctl is-active --quiet docker || systemctl start docker
-docker system prune -af
+echo -e "[*] Ensuring Docker service is running"
+if ! systemctl is-active --quiet docker ; then
+	if systemctl start docker ; then
+		echo -e "[✓] Docker service started"
+	else
+		echo -e "[!!] ERROR: Failed to start Docker service"
+	fi
+fi
+
+echo -e "[*] Cleaning up Docker system (removing unused images and containers)"
+if docker system prune -af ; then
+	echo -e "[✓] Docker system cleaned\n"
+else
+	echo -e "[!!] ERROR: Failed to clean Docker system"
+fi
 
 # Load EMBA image
-docker image load -i "${FILEPATH}/emba-docker-image.tar"
+echo -e "[*] Loading EMBA Docker image from: ${FILEPATH}/emba-docker-image.tar"
+if docker image load -i "${FILEPATH}/emba-docker-image.tar" ; then
+	echo -e "[✓] Docker image loaded successfully\n"
+else
+	echo -e "[!!] ERROR: Failed to load Docker image"
+	exit 1
+fi
+
+echo -e "[✓] EMBA Docker image installation completed successfully\n"

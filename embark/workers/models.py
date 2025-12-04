@@ -4,6 +4,7 @@ __license__ = 'MIT'
 
 import os
 import ipaddress
+from pathlib import Path
 import socket
 import paramiko
 
@@ -27,12 +28,25 @@ class Configuration(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='configuration')
     name = models.CharField(max_length=150)
     ssh_user = models.CharField(max_length=150)
-    ssh_password = models.CharField(max_length=150)
+    ssh_password = models.CharField(max_length=150, help_text="Allowed special characters: @ # $ % ^ & + = ! ( ) { } [ ] _ - | \\")
     ssh_private_key = models.TextField()
     ssh_public_key = models.TextField()
-    ip_range = models.CharField(max_length=150)
+    ip_range = models.CharField(max_length=20, help_text="CIDR notation (e.g., 192.168.1.0/24)")
     created_at = models.DateTimeField(auto_now_add=True)
     scan_status = models.CharField(max_length=1, choices=ScanStatus, default=ScanStatus.NEW)
+    log_location = models.FilePathField(path=f"{settings.WORKER_LOG_ROOT_ABS}/{settings.WORKER_CONFIGURATION_LOGS}")
+
+    def write_log(self, string):
+        """
+        Writes into self.log_location
+        :returns: None
+        """
+        if not Path(self.log_location).is_file():
+            with open(self.log_location, 'x') as log_file:
+                log_file.write(string + "\n")
+        else:
+            with open(self.log_location, 'a') as log_file:
+                log_file.write(string + "\n")
 
     def _ssh_key_paths(self):
         """
@@ -121,12 +135,25 @@ class Worker(models.Model):
     status = models.CharField(max_length=1, choices=ConfigStatus, default=ConfigStatus.UNCONFIGURED)
     analysis_id = models.UUIDField(blank=True, null=True, help_text="ID of the analysis currently running on this worker")
     last_reached = models.DateTimeField(auto_now_add=True)
+    log_location = models.FilePathField(path=f"{settings.WORKER_LOG_ROOT_ABS}/{settings.WORKER_WORKER_LOGS}")
 
     dependency_version = models.OneToOneField(
         WorkerDependencyVersion,
         on_delete=models.CASCADE,
         null=True
     )
+
+    def write_log(self, string):
+        """
+        Writes into self.log_location
+        :returns: None
+        """
+        if not Path(self.log_location).is_file():
+            with open(self.log_location, 'x') as log_file:
+                log_file.write(string)
+        else:
+            with open(self.log_location, 'a') as log_file:
+                log_file.write(string)
 
     def clean(self):
         super().clean()
@@ -168,7 +195,7 @@ class Worker(models.Model):
 
         if ssh_client.get_transport() is None or not ssh_client.get_transport().is_active():
             raise paramiko.SSHException("Failed to connect to worker with any configuration.")
-
+        self.write_log(f"SSH Connection to {self.ip_address} established")
         return ssh_client
 
 

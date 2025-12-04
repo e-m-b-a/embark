@@ -24,6 +24,7 @@ urlpatterns = [
     path('worker/updates/', views.check_updates, name='embark-worker-check-updates'),
 
     path('worker/configuration/<int:configuration_id>/ssh', views.download_ssh_private_key, name='embark-configuration-sshkey-download'),
+    path('worker/configuration/<int:configuration_id>/logs', views.show_configuration_logs, name='embark-configuration-logs'),
 
     path('worker/orchestrator/state/', views.orchestrator_state, name='embark-orchestrator-state'),
     path('worker/orchestrator/reset/', views.orchestrator_reset, name='embark-orchestrator-reset'),
@@ -33,4 +34,6 @@ urlpatterns = [
 
     path('worker/dependencies/state/', views.dependency_state, name='embark-worker-dependency-state'),
     path('worker/dependencies/reset/', views.dependency_state_reset, name='embark-worker-dependency-reset'),
+
+    path('worker/log/<int:worker_id>/', views.show_worker_log, name='embark-worker-show-log'),
 ]
