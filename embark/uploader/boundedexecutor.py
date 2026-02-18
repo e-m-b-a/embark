@@ -22,6 +22,8 @@ from django.conf import settings
 from django.db import close_old_connections
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+import docker
+import git
 
 from uploader import finish_execution
 from uploader.archiver import Archiver

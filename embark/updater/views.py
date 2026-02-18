@@ -13,10 +13,13 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.shortcuts import redirect
+import docker
+import git
 
 from embark.helper import disk_space_check, get_emba_version
 from updater.forms import CheckForm, UpdateForm, UpgradeForm
 from uploader.boundedexecutor import BoundedExecutor
+from updater.tasks import check_for_updates, emba_update
 
 logger = logging.getLogger(__name__)
 
@@ -28,16 +31,13 @@ req_logger = logging.getLogger("requests")
 @require_http_methods(["GET"])
 def updater_home(request):
     req_logger.info("User %s called updater_home", request.user.username)
-    emba_version, stable_emba_version, container_version, nvd_version, github_emba_version = get_emba_version()
+    emba_version = get_emba_version()
+    logger.debug("emba_versions: %s", emba_version)
     return render(request, 'updater/index.html', {
         'updater_update_form': UpdateForm(),
         'updater_check_form': CheckForm(),
         'updater_upgrade_form': UpgradeForm(),
-        'emba_version': emba_version,
-        'stable_emba_version': stable_emba_version,
-        'container_version': container_version,
-        'nvd_version': nvd_version,
-        'github_emba_version': github_emba_version})
+       } | emba_version)
 
 
 @permission_required("users.updater_permission", login_url='/')
@@ -45,7 +45,8 @@ def updater_home(request):
 @login_required(login_url='/' + settings.LOGIN_URL)
 def check_update(request):
     """
-    checks if components are updateable
+    checks if components are updateable via onlinecheck repo inside emba
+    this is done by running emba -d1
 
     :params request: HTTP request
 
@@ -62,12 +63,9 @@ def check_update(request):
         elif option == 'CONTAINER':
             check_option = 2
         logger.debug("Got option %d for emba dep check", check_option)
-        # inject into bounded Executor
-        if BoundedExecutor.submit_emba_check(option=check_option):
-            messages.info(request, "Checking now")
-            return redirect('embark-updater-home')
-        logger.error("Server Queue full, or other boundenexec error")
-        messages.error(request, 'Queue full')
+        # start task
+        check_for_updates(check_option)
+        messages.success(request, 'Starting finished checking for updates')
         return redirect('embark-updater-home')
     logger.error("Form invalid")
     messages.error(request, 'Form invalid')
@@ -99,16 +97,11 @@ def update_emba(request):
             return redirect('embark-updater-home')
         logger.debug("Disk space is sufficient for update.")
         for option_ in option:
-            # inject into bounded Executor
-            if BoundedExecutor.submit_emba_update(option=option_):
-                messages.info(request, "Updating now")
-                return redirect('embark-updater-home')
-            logger.error("Server Queue full, or other boundenexec error")
-            messages.error(request, 'Queue full')
-            return redirect('embark-updater-home')
-
-        # update version shown on site
-        messages.info(request, "Updating now")
+            if emba_update(option_) == 0:
+                logger.info("starting emba update task with option %s", option_)
+                messages.success(request, f"Did update for {option_}")
+            logger.error("error in update with %s", {option_})
+            messages.error(request, f"Wasn't able to update {option_}")
         return redirect('embark-updater-home')
     logger.error("update form invalid %s with error: %s", request.POST, form.errors)
     messages.error(request, 'update not successful')

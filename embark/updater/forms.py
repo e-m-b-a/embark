@@ -10,9 +10,8 @@ logger = logging.getLogger(__name__)
 
 class UpdateForm(forms.Form):
     option = forms.MultipleChoiceField(choices=[
-        ('PULL', 'Git Pull origin/master'), ('DOCKER', 'Docker Update'), ('NVD', 'CVE Update')
+        ('PULL', 'Git Pull origin/master'), ('DOCKER', 'Docker Update'), ('NVD', 'NVD Update')
     ], help_text='Update EMBA components', widget=forms.CheckboxSelectMultiple, required=False)
-
 
 class CheckForm(forms.Form):
     option = forms.ChoiceField(choices=[
@@ -21,5 +20,5 @@ class CheckForm(forms.Form):
 
 class UpgradeForm(forms.Form):
     option = forms.ChoiceField(choices=[
-        ('EMBA', 'Upgrade EMBA'), ('DOCKER', 'Upgrade docker image')
+        ('EMBA', 'Upgrade EMBA')
     ], help_text='Upgrade the different components', widget=forms.Select, required=True)

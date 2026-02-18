@@ -12,6 +12,8 @@
 # Author(s): ClProsser, SirGankalot
 # Contributor(s): Benedikt Kuehne
 
+# TODO implement seperate update mechanism for this by packing the external changes as patch file
+
 set -e
 cd "$(dirname "$0")"
 
@@ -32,7 +34,10 @@ echo -e "[*] External data path: ${EXTERNALPATH}"
 echo -e "[*] EMBA installation path: ${EMBAPATH}\n"
 
 echo -e "[*] Checking if EMBA directory exists"
-[ -d "${EMBAPATH}" ] || { echo -e "[!!] ERROR: EMBA directory not found at ${EMBAPATH}"; exit 1; }
+if [ ! -d "${EMBAPATH}" ]; then
+  echo -e "[!!] ERROR: EMBA directory not found at ${EMBAPATH}"
+  exit 1
+fi
 echo -e "[✓] EMBA directory found\n"
 
 echo -e "[*] Removing old external data from EMBA installation"
