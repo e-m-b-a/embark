@@ -47,7 +47,7 @@ def check_for_updates(option):
     # This could involve checking git repositories, Docker images, etc.
     logger.debug("Checking EMBA with: %s", option)
     try:
-        cmd = f"cd {settings.EMBA_ROOT} && {get_emba_base_cmd()} -d{option}"
+        cmd = f"cd {settings.EMBA_ROOT} && {get_emba_base_cmd(overwrite=True)} -d{option}"
 
         with open(f"{settings.EMBA_LOG_ROOT}/emba_update.log", "w+", encoding="utf-8") as file:
             proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
@@ -107,7 +107,8 @@ def emba_update(option):
             logger.info(f"EMBA repository updated: {output}")
 
             # update external dir
-            cmd = f"cd {settings.EMBA_ROOT} && {get_emba_base_cmd()} -u{option}"
+            cmd = f"cd {settings.EMBA_ROOT} && {get_emba_base_cmd(overwrite=True)} -u{option}"
+            logger.debug("Updating EMBA external data with: %s", cmd)
             with open(f"{settings.EMBA_LOG_ROOT}/emba_update.log", "w+", encoding="utf-8") as file:
                 proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
                 # wait for completion
