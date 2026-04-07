@@ -287,12 +287,13 @@ def setup_dependency(dependency: DependencyType, version: str):
 
     script_path = os.path.join(os.path.dirname(__file__), get_script_name(dependency))
     folder_path, zip_path = get_dependency_path(dependency)
+    external_dir_path(settings.EMBA_ROOT)
 
     log_file = settings.WORKER_SETUP_LOGS_ABS.format(timestamp=int(time.time()))
 
     logger.info("Worker dependencies setup started with script %s. Logs: %s", get_script_name(dependency), log_file)
     try:
-        cmd = ["sudo", script_path, folder_path, zip_path, version]
+        cmd = ["sudo", script_path, folder_path, zip_path, version, external_dir_path]  # this is where the update scripts are called (external_host.sh, emba_repo_host.sh, etc.)
 
         if dependency == DependencyType.DEPS and version == 'cached':
             # Add path, as DEPS are cached here

@@ -23,12 +23,13 @@ fi
 echo -e "\n[+] Starting external data preparation script"
 echo -e "[*] Output Directory: ${1}"
 echo -e "[*] ZIP Output Path: ${2}"
-echo -e "[*] Version: ${3}\n"
+echo -e "[*] Version: ${3}"
+echo -e "[*] EMBAs External-Dir Path : ${4}\n"
 
 FILEPATH="${1}"
 ZIPPATH="${2}"
 VERSION="${3}"
-EXTERNALPATH="${FILEPATH}/external"
+EXTERNALPATH="${4}"
 
 NVD_VERSION="$(echo "${VERSION}" | cut -d \, -f 1)"
 EPSS_VERSION="$(echo "${VERSION}" | cut -d \, -f 2)"
@@ -67,22 +68,15 @@ else
 	exit 1
 fi
 
-### Download external data
+### check exists external data
 echo -e "[*] Creating external data directory"
-if mkdir -p "${EXTERNALPATH}" ; then
-	echo -e "[✓] Directory created\n"
-else
-	echo -e "[!!] ERROR: Failed to create directory"
+if ! [ -d "${EXTERNALPATH}" ]; then
+	echo -e "[!!] ERROR: EMBA not installed correctly (external dir missing)\n"
 	exit 1
 fi
 
-echo -e "[*] Cloning NVD JSON data feeds repository"
-if git clone https://github.com/EMBA-support-repos/nvd-json-data-feeds.git "${EXTERNALPATH}/nvd-json-data-feeds" ; then
-	echo -e "[✓] Repository cloned"
-else
-	echo -e "[!!] ERROR: Failed to clone NVD repository"
-	exit 1
-fi
+# TODO instead of cloning we use EMBA_ROOT and copy the data from there, this way we can also include the git metadata without having to clone the repos
+# 1 checkout 
 echo -e "[*] Checking out NVD version: ${NVD_VERSION}"
 if [[ "${NVD_VERSION}" == "latest" ]]; then
 	if git -C "${EXTERNALPATH}/nvd-json-data-feeds" checkout main; then
@@ -106,20 +100,7 @@ else
 	echo -e "[!!] ERROR: Failed to save metadata"
 	exit 1
 fi
-echo -e "[*] Removing NVD git directory"
-if rm -rf "${EXTERNALPATH}/nvd-json-data-feeds/.git" ; then
-	echo -e "[✓] Git directory removed\n"
-else
-	echo -e "[!!] Warning: Could not remove git directory\n"
-fi
 
-echo -e "[*] Cloning EPSS data repository"
-if git clone https://github.com/EMBA-support-repos/EPSS-data.git "${EXTERNALPATH}/EPSS-data" ; then
-	echo -e "[✓] Repository cloned"
-else
-	echo -e "[!!] ERROR: Failed to clone EPSS repository"
-	exit 1
-fi
 echo -e "[*] Checking out EPSS version: ${EPSS_VERSION}"
 if [[ "${EPSS_VERSION}" == "latest" ]]; then
 	if git -C "${EXTERNALPATH}/EPSS-data" checkout main; then
@@ -143,30 +124,11 @@ else
 	echo -e "[!!] ERROR: Failed to save metadata"
 	exit 1
 fi
-echo -e "[*] Removing EPSS git directory"
-if rm -rf "${EXTERNALPATH}/EPSS-data/.git" ; then
-	echo -e "[✓] Git directory removed\n"
-else
-	echo -e "[!!] Warning: Could not remove git directory\n"
-fi
 
-### Fake venv (packages are broken)
-echo -e "[*] Creating fake Python virtual environment structure"
-if mkdir -p "${EXTERNALPATH}/emba_venv/bin" ; then
-	echo -e "[✓] venv directories created"
-else
-	echo -e "[!!] ERROR: Failed to create venv directories"
-	exit 1
-fi
-if touch "${EXTERNALPATH}/emba_venv/bin/activate" ; then
-	echo -e "[✓] Activation script created\n"
-else
-	echo -e "[!!] ERROR: Failed to create activation script"
-	exit 1
-fi
 
 echo -e "[*] Creating compressed archive at: ${ZIPPATH}"
-if tar czf "${ZIPPATH}" -C "${FILEPATH}" . ; then
+# if tar --update -f "${ZIPPATH}" "${FILEPATH}"; then  # skip compression in favor for speed since we are operating in ideal networking conditions
+if tar czf "${ZIPPATH}" "${EXTERNALPATH}" ; then	# from 2.9 GiB to 
 	echo -e "[✓] Archive created successfully\n"
 else
 	echo -e "[!!] ERROR: Failed to create archive"

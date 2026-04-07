@@ -293,7 +293,7 @@ def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
 
     target_path_user = target_path if client.ssh_user == "root" else f"/home/{client.ssh_user}/temp"
 
-    sftp_client = client.open_sftp()
+    sftp_client = client.open_sftp()    # transfer using sftp
     sftp_client.put(src_path, target_path_user)
     sftp_client.close()
 

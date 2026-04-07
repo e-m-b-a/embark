@@ -20,18 +20,21 @@ if [[ "${EUID}" -ne 0 ]]; then
 	exit 1
 fi
 
-echo -e "\n[+] Starting EMBA repository download script"
+echo -e "\n[+] Starting EMBA repository archive creationscript"
 echo -e "[*] Output Directory: ${1}"
 echo -e "[*] ZIP Output Path: ${2}"
 echo -e "[*] Version: ${3}\n"
+echo -e "[*] EMBA location: ${4}\n"
 
 FILEPATH="${1}"
 ZIPPATH="${2}"
 VERSION="${3}"
+LOCATION="${4}"
 
 echo -e "[*] File path: ${FILEPATH}"
 echo -e "[*] ZIP path: ${ZIPPATH}"
 echo -e "[*] Version: ${VERSION}\n"
+echo -e "[*] Location: ${LOCATION}\n"
 
 ### Reset
 echo -e "[*] Cleaning up previous EMBA repository files"
@@ -67,64 +70,28 @@ else
   exit 1
 fi
 
-### Install needed tools
-if ! which curl &> /dev/null; then
-  echo -e "[*] Installing curl"
-  apt-get update -y
-  if apt-get install -y curl ; then
-    echo -e "[✓] curl installed"
-  else
-    echo -e "[!!] ERROR: Failed to install curl"
-    exit 1
-  fi
-else
-  echo -e "[*] curl already installed"
-fi
-
-### Download EMBA
-if [[ "${VERSION}" == "latest" ]]; then
-  echo -e "\n[*] Downloading latest EMBA repository from GitHub"
-  if curl -L --url https://github.com/e-m-b-a/emba/archive/refs/heads/master.tar.gz --output "${FILEPATH}/emba.tar.gz" ; then
-    echo -e "[✓] Repository downloaded"
-  else
-    echo -e "[!!] ERROR: Failed to download repository"
-    exit 1
-  fi
-  echo -e "[*] Fetching latest commit hash"
-  if sha=$(git ls-remote https://github.com/e-m-b-a/emba HEAD | awk '{print $1}') ; then
-    echo -e "[✓] Commit hash retrieved: ${sha}"
-  else
-    echo -e "[!!] ERROR: Failed to fetch commit hash"
-    exit 1
-  fi
-  if echo "${sha} N/A" > "${FILEPATH}/git-head-meta" ; then
-    echo -e "[✓] Metadata saved"
-  else
-    echo -e "[!!] ERROR: Failed to save metadata"
-    exit 1
-  fi
-else
-  echo -e "\n[*] Downloading EMBA version: ${VERSION}"
-  if curl -L --url "https://github.com/e-m-b-a/emba/archive/${VERSION}.tar.gz" --output "${FILEPATH}/emba.tar.gz" ; then
-    echo -e "[✓] Repository downloaded"
-  else
-    echo -e "[!!] ERROR: Failed to download repository"
-    exit 1
-  fi
-  if echo "${VERSION} N/A" > "${FILEPATH}/git-head-meta" ; then
-    echo -e "[✓] Version metadata saved"
-  else
-    echo -e "[!!] ERROR: Failed to save metadata"
-    exit 1
-  fi
-fi
-
-echo -e "\n[*] Creating compressed archive at: ${ZIPPATH}"
-if tar czf "${ZIPPATH}" -C "${FILEPATH}" . ; then
+### Create archive
+echo -e "\n[*] Create archive of EMBA repository from ${VERSION}"
+if tar --exclude="${LOCATION}/external" -czf "${FILEPATH}/emba.tar.gz" "${LOCATION}" ; then  # TODO check implement propper tar with errorhandling # maybe exclude external dir
   echo -e "[✓] Archive created successfully\n"
 else
   echo -e "[!!] ERROR: Failed to create archive"
   exit 1
 fi
+echo -e "[✓] Repository archived\n"
 
-echo -e "[✓] EMBA repository download completed successfully\n"
+echo -e "[*] Fetching latest commit hash"
+if sha="$(git rev-parse HEAD)" ; then
+  echo -e "[✓] Commit hash retrieved: ${sha}"
+else
+  echo -e "[!!] ERROR: Failed to fetch commit hash"
+  exit 1
+fi
+if echo "${sha} N/A" > "${FILEPATH}/git-head-meta" ; then
+  echo -e "[✓] Metadata saved"
+else
+  echo -e "[!!] ERROR: Failed to save metadata"
+  exit 1
+fi
+
+echo -e "[✓] EMBA repository ready for transfer\n"

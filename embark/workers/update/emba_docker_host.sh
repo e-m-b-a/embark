@@ -12,6 +12,8 @@
 # Author(s): ClProsser, SirGankalot
 # Contributor(s): Benedikt Kuehne
 
+# TODO here we just take the image id from the updater and put it into emba-docker-image.tar , remove the rest when switching to updater
+
 set -e
 cd "$(dirname "${0}")"
 
@@ -23,25 +25,15 @@ fi
 echo -e "\n[+] Starting EMBA Docker image preparation script"
 echo -e "[*] Output Directory: ${1}"
 echo -e "[*] ZIP Output Path: ${2}"
-echo -e "[*] Version: ${3}\n"
+echo -e "[*] Image id: ${3}\n"
 
 FILEPATH="${1}"
 ZIPPATH="${2}"
-VERSION="${3}"
+IMAGE_ID="${3}"
 
-# shellcheck source=/etc/os-release
-lOS_ID="$(source /etc/os-release; echo "${ID}")"
-echo -e "[*] Detected OS: ${lOS_ID}"
-IS_UBUNTU=false
-if [[ "${lOS_ID}" == "ubuntu" ]]; then
-  IS_UBUNTU=true
-  # shellcheck source=/etc/os-release
-  UBUNTU_CODENAME="$(source /etc/os-release; echo "${UBUNTU_CODENAME}")"
-  # shellcheck source=/etc/os-release
-  VERSION_CODENAME="$(source /etc/os-release; echo "${VERSION_CODENAME}")"
-  echo -e "[*] Detected Ubuntu Codename: ${UBUNTU_CODENAME}"
-  echo -e "[*] Detected Version Codename: ${VERSION_CODENAME}"
-fi
+echo -e "[*] File path: ${FILEPATH}\n"
+echo -e "[*] ZIP path: ${ZIPPATH}\n"
+echo -e "[*] Image ID: ${IMAGE_ID}\n"
 
 ### Reset
 echo -e "\n[*] Cleaning up previous EMBA Docker files"
@@ -70,54 +62,6 @@ else
   exit 1
 fi
 
-### Install needed tools
-if ! which curl &> /dev/null; then
-  echo -e "[*] Installing curl"
-  apt-get update -y
-  if apt-get install -y curl ; then
-    echo -e "[✓] curl installed"
-  else
-    echo -e "[!!] ERROR: Failed to install curl"
-    exit 1
-  fi
-else
-  echo -e "[*] curl already installed"
-fi
-
-if ! which docker &> /dev/null; then
-  echo -e "\n[*] Installing Docker"
-  if apt-get install -y ca-certificates; then
-    echo -e "[✓] ca-certificates installed"
-  else
-    echo -e "[!!] ERROR: Failed to install ca-certificates"
-  fi
-  install -m 0755 -d /etc/apt/keyrings
-  
-  if [ ! -f /etc/apt/sources.list.d/docker.list ]; then
-    if [ "${IS_UBUNTU}" = true ] ; then
-      curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-      # shellcheck source=/dev/null
-      echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-	    ${UBUNTU_CODENAME}:-${VERSION_CODENAME} stable" | \
-	    tee /etc/apt/sources.list.d/docker.list > /dev/null
-    else
-      curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
-      echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian bookworm stable" | \
-	    tee /etc/apt/sources.list.d/docker.list > /dev/null
-    fi
-
-    chmod a+r /etc/apt/keyrings/docker.asc
-    apt-get update -y
-  fi
-  if apt install -y docker-ce; then
-    echo -e "[✓] Docker-ce installed"
-  else
-    echo -e "[!!] ERROR: Failed to install Docker-ce"
-  fi
-else
-  echo -e "\n[*] Docker already installed"
-fi
-
 echo -e "[*] Ensuring Docker service is running"
 if ! systemctl is-active --quiet docker ; then
   if systemctl start docker ; then
@@ -127,25 +71,8 @@ if ! systemctl is-active --quiet docker ; then
   fi
 fi
 
-if [[ "${VERSION}" == "latest" ]]; then
-  echo -e "\n[*] Fetching latest EMBA version from GitHub"
-  ### Find image
-  EMBAVERSION=$(curl -sL https://raw.githubusercontent.com/e-m-b-a/emba/refs/heads/master/docker-compose.yml | awk -F: '/image:/ {print $NF; exit}')
-else
-  echo -e "\n[*] Using specified version: ${VERSION}"
-  EMBAVERSION="${VERSION}"
-fi
-
-echo -e "\n[*] Pulling EMBA Docker image: embeddedanalyzer/emba:${EMBAVERSION}"
-if docker pull "embeddedanalyzer/emba:${EMBAVERSION}" ; then
-  echo -e "[✓] Docker image pulled successfully"
-else
-  echo -e "[!!] ERROR: Failed to pull Docker image"
-  exit 1
-fi
-
 echo -e "\n[*] Exporting Docker image to tar archive"
-if docker save -o "${FILEPATH}/emba-docker-image.tar" "embeddedanalyzer/emba:${EMBAVERSION}" ; then
+if docker save -o "${FILEPATH}/emba-docker-image.tar" "${IMAGE_ID}" ; then
   echo -e "[✓] Image exported to tar archive"
 else
   echo -e "[!!] ERROR: Failed to export image"
@@ -156,14 +83,6 @@ if chmod 755 "${FILEPATH}/emba-docker-image.tar" ; then
   echo -e "[✓] Permissions set"
 else
   echo -e "[!!] ERROR: Failed to set permissions"
-  exit 1
-fi
-
-echo -e "[*] Cleaning up local Docker image"
-if docker image rm "embeddedanalyzer/emba:${EMBAVERSION}" ; then
-  echo -e "[✓] Local image removed"
-else
-  echo -e "[!!] ERROR: Failed to remove local image"
   exit 1
 fi
 
