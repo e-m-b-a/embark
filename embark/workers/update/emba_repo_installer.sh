@@ -25,10 +25,9 @@ fi
 echo -e "\n[+] Starting EMBA repository installation on offline worker"
 echo -e "[*] Current directory: $(pwd)\n"
 
-FILEPATH="."
+FILEPATH="${PWD}"
 INSTALLPATH="/root"
 EXTERNALPATH="${INSTALLPATH}/emba/external"
-EMBAMASTER="${INSTALLPATH}/emba-master"
 
 echo -e "[*] File path: ${FILEPATH}"
 echo -e "[*] Installation path: ${INSTALLPATH}"
