@@ -275,7 +275,7 @@ def perform_update(worker: Worker, client: SSHClient, worker_update: WorkerUpdat
         # Extract archive with detected format
         worker.write_log(f"\nExtracting {dependency.name} archive...\n")
         try:
-            exec_blocking_ssh(client, f"sudo tar {tar_flags}f {archive_path} -C {folder_path} >/dev/null 2>&1", worker.write_log)
+            exec_blocking_ssh(client, f"sudo tar -{tar_flags}f {archive_path} -C {folder_path} >/dev/null 2>&1", worker.write_log)
             worker.write_log(f"[✓] Archive extracted successfully\n")
         except paramiko.SSHException as error:
             raise Exception(f"Failed to extract archive {archive_path}") from error

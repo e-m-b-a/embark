@@ -170,8 +170,8 @@ fi
 echo -e "[*] Creating compressed archive at: ${ZIPPATH}"
 
 # Create gzip-compressed TAR archive (from ~2.9 GiB to compressed size)
-# Alternative: tar --update -f "${ZIPPATH}" "${FILEPATH}" would skip compression for speed
-if tar -czf "${ZIPPATH}" "${EXTERNALPATH}" ; then
+if tar --update -f "${ZIPPATH}" "${FILEPATH}" ; then	# skip compression for comp speed
+# Alternative: if tar -czf "${ZIPPATH}" "${EXTERNALPATH}" ; then	# compress too
 	echo -e "[✓] Archive created successfully\n"
 else
 	echo -e "[!!] ERROR: Failed to create archive"
