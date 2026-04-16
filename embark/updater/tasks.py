@@ -86,25 +86,36 @@ def emba_update(option):
         if option == 'NVD':
             logger.debug("NVD update selected, pulling latest changes from git")
             nvd_repo = git.Repo(settings.NVD_ROOT)
-            head_before = nvd_repo.head.commit
             output = nvd_repo.remotes.origin.pull('main')
-            assert head_before != nvd_repo.head.commit
-            logger.info(f"NVD repository updated: {output}")
+            # Check if any new commits were fetched
+            if not output:
+                logger.info("NVD repository already up to date")
+            else:
+                logger.info(f"NVD repository updated: {output}")
             return_code = 0
         elif option == 'DOCKER':
-            logger.debug("Docker update selected, cleaning old docker image")
-            client = docker.from_env(timeout=5)
-            pulled_image = client.images.pull('embeddedanalyzer/emba:latest')
-            # TODO add assert here
-            logger.info(f"EMBA docker image repository pulled: {pulled_image}")
-            return_code = 0
+            logger.debug("Docker update selected, pulling latest docker image")
+            try:
+                client = docker.from_env(timeout=5)
+                # Old images are removed via a seperate task
+                pulled_image = client.images.pull('embeddedanalyzer/emba:latest')
+                logger.info(f"EMBA docker image repository pulled: {pulled_image.tags}")
+                return_code = 0
+            except docker.errors.APIError as docker_exce:
+                logger.error("Docker API error during update: %s", docker_exce)
+                return_code = 1
+            except docker.errors.DockerException as docker_exce:
+                logger.error("Docker connection error during update: %s", docker_exce)
+                return_code = 1
         elif option == 'PULL':
             logger.debug("Git pull update selected, pulling latest changes from git")
             emba_repo = git.Repo(settings.EMBA_ROOT)
-            head_before = emba_repo.head.commit
             output = emba_repo.remotes.origin.pull('master')
-            assert head_before != emba_repo.head.commit
-            logger.info(f"EMBA repository updated: {output}")
+            # Check if any new commits were fetched
+            if not output:
+                logger.info("EMBA repository already up to date")
+            else:
+                logger.info(f"EMBA repository updated: {output}")
 
             # update external dir
             cmd = f"cd {settings.EMBA_ROOT} && {get_emba_base_cmd(overwrite=True)} -u{option}"
@@ -120,8 +131,8 @@ def emba_update(option):
                 raise BaseException("EMBA update has non zero exit-code")
         else:
             logger.error("Unknown update option selected: %s", option)
-            raise BaseException(f"Unknown update option selected: {option}")
-    except (BaseException, AssertionError, docker.errors.APIError) as exce:
+            raise Exception(f"Unknown update option selected: {option}")
+    except (Exception, AssertionError, docker.errors.APIError) as exce:
         logger.error("emba update error: %s", exce)
         return_code = 1
 
