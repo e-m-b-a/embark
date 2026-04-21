@@ -116,7 +116,6 @@ def emba_update(option):
                 logger.info("EMBA repository already up to date")
             else:
                 logger.info(f"EMBA repository updated: {output}")
-
             # update external dir
             cmd = f"cd {settings.EMBA_ROOT} && {get_emba_base_cmd(overwrite=True)} -u{option}"
             logger.debug("Updating EMBA external data with: %s", cmd)
