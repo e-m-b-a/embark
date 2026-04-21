@@ -46,7 +46,13 @@ def create_periodic_tasks(**kwargs):
     Create periodic tasks with the start of the application. (called in ready() method of the app config)
     """
     schedule_2m, _ = IntervalSchedule.objects.get_or_create(
-        every=2, period=IntervalSchedule.MINUTES
+        every=2,
+        period=IntervalSchedule.MINUTES
+    )
+
+    schedule_log_rotate, _ = IntervalSchedule.objects.get_or_create(
+        every=settings.WORKER_LOG_MAX_AGE_DAYS * 24 * 60,   # Convert days to minutes
+        period=IntervalSchedule.MINUTES
     )
 
     PeriodicTask.objects.get_or_create(
@@ -55,7 +61,7 @@ def create_periodic_tasks(**kwargs):
         task="workers.tasks.update_worker_info",
     )
     PeriodicTask.objects.get_or_create(
-        interval=settings.WORKER_LOG_MAX_AGE_DAYS * 24 * 60,  # Convert days to minutes
+        interval=schedule_log_rotate,
         name="Rotate All worker logs",
         task="workers.tasks.worker_log_rotate"
     )
