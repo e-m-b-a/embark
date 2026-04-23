@@ -31,8 +31,13 @@ req_logger = logging.getLogger("requests")
 @require_http_methods(["GET"])
 def updater_home(request):
     req_logger.info("User %s called updater_home", request.user.username)
-    emba_version = get_emba_version()
-    logger.debug("emba_versions: %s", emba_version)
+    try:
+        emba_version = get_emba_version()
+        logger.debug("emba_versions: %s", emba_version)
+    except Exception as exception:
+        logger.error("Failed to get EMBA version: %s", exception)
+        messages.error(request, 'Unable to retrieve EMBA version. Please check the environment setup.')
+        emba_version = {}
     return render(request, 'updater/index.html', {
         'updater_update_form': UpdateForm(),
         'updater_check_form': CheckForm(),
