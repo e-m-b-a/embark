@@ -35,6 +35,7 @@ def setup_periodic_tasks():
         task='updater.tasks.check_for_updates',
     )
 
+@shared_task
 def check_for_updates(option):
     """
     Task to check for updates

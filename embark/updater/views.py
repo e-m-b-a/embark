@@ -64,7 +64,7 @@ def check_update(request):
             check_option = 2
         logger.debug("Got option %d for emba dep check", check_option)
         # start task
-        check_for_updates(check_option)
+        check_for_updates.delay(check_option)
         messages.success(request, 'Starting finished checking for updates')
         return redirect('embark-updater-home')
     logger.error("Form invalid")
