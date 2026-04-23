@@ -13,8 +13,6 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.shortcuts import redirect
-import docker
-import git
 
 from embark.helper import disk_space_check, get_emba_version
 from updater.forms import CheckForm, UpdateForm, UpgradeForm
