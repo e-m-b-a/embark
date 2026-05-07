@@ -41,7 +41,7 @@ jobs:
 
       - name: Restore Pipenv cache
         id: pipenv-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .venv
           key: pipenv-${{ hashFiles('Pipfile.lock') }}
