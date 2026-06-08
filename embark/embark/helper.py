@@ -8,8 +8,10 @@ from random import randrange
 import os
 from pathlib import Path
 import subprocess
-import git
+from git import Repo, GitError
 import docker
+from docker.errors import ImageNotFound, DockerException
+import logging
 
 from django.conf import settings
 
@@ -151,20 +153,59 @@ def get_emba_version() -> dict:
             emba_version = ""
     else:
         # 1 emba version from git tags
-        emba_repo = git.Repo(settings.EMBA_ROOT)
-        emba_version = str(emba_repo.tags[-1])   # latest tag
+        try:
+            emba_repo = Repo(settings.EMBA_ROOT)
+            try:
+                emba_version = str(emba_repo.tags[-1])
+            except (IndexError, TypeError):
+                logging.warning("No tags found in emba repo at %s", settings.EMBA_ROOT)
+                emba_version = ""
+        except GitError as git_error:
+            logging.exception("Failed to open emba repo at %s: %s", settings.EMBA_ROOT, git_error)
+            emba_repo = None
+            emba_version = ""
+
         # 2 container version and tag from docker image
-        client = docker.from_env()
-        image_id = client.images.get('embeddedanalyzer/emba:latest').short_id.split(':')[1]
-        image_tags = client.images.get(image_id).tags
-        image_digest = client.images.get(image_id).attrs['RepoDigests'][0]
-        image_sha = re.search(r'@sha256:(\w+)', image_digest).group(1)
-        container_version = f"{image_tags[0]} - {image_sha}"
+        try:
+            client = docker.from_env()
+            try:
+                image = client.images.get('embeddedanalyzer/emba:latest')
+                # prefer the resolved image object for further attrs
+                image_id = image.short_id.split(':')[1]
+                image = client.images.get(image_id)
+                image_tags = image.tags or []
+                image_digest = (image.attrs.get('RepoDigests') or [None])[0]
+                if image_digest:
+                    m = re.search(r'@sha256:(\w+)', image_digest)
+                    image_sha = m.group(1) if m else ""
+                else:
+                    image_sha = ""
+                container_version = f"{image_tags[0]} - {image_sha}" if image_tags else image_sha
+            except ImageNotFound:
+                logging.warning("Docker image embeddedanalyzer/emba:latest not found")
+                container_version = ""
+            except DockerException as docker_error:
+                logging.exception("Error getting docker image info: %s", docker_error)
+                container_version = ""
+        except Exception as exc:
+            logging.exception("Failed to initialize Docker client: %s", exc)
+            container_version = ""
+
         # 3 nvd version from git tags
-        nvd_repo = git.Repo(settings.NVD_ROOT)
-        nvd_version = str(nvd_repo.head.commit.hexsha)
+        try:
+            nvd_repo = Repo(settings.NVD_ROOT)
+            nvd_version = str(nvd_repo.head.commit.hexsha)
+        except GitError as git_error:
+            logging.exception("Failed to open NVD repo at %s: %s", settings.NVD_ROOT, git_error)
+            nvd_repo = None
+            nvd_version = ""
+
         # 4 github emba version from git commit hash
-        github_emba_version = str(emba_repo.head.commit.hexsha)
+        try:
+            github_emba_version = str(emba_repo.head.commit.hexsha) if emba_repo else ""
+        except Exception as exc:
+            logging.exception("Failed to read emba repo head commit: %s", exc)
+            github_emba_version = ""
 
     # latest from onlinechecker
     if Path(settings.EMBA_ROOT + "/external/onlinechecker").exists():
