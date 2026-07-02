@@ -12,13 +12,13 @@ def export_results(analysis_id, zip_path):
     """
     export.zip
     ├── csv_logs/
-    │   ├── f50_base_aggregator.csv
-    │   └── f20_vul_aggregator.csv
+    │   ├── f50_base_aggregator.csv     
+    │   └── f14_tag_builder.csv
     ├── SBOM/
     │   └── EMBA_cyclonedx_sbom.json
     ├── logger/
-    │   ├── emba_run.log
-    │   └── logreader.log
+    │   ├── emba.log
+    │   └── emba_error.log
     └── html-report/
         ├── index.html
         ├── emba.html
@@ -37,7 +37,7 @@ def export_results(analysis_id, zip_path):
     emba_logs_dir = base_dir / "emba_logs"
 
     files_to_export = [
-        base_dir / "emba_logs" / "csv_logs" / "f50_base_aggregator.csv",
+        base_dir / "emba_logs" / "csv_logs" / "f50_base_aggregator.csv",    # TODO: update necessary files. add file_search for name/numberID instead of hardcoded file names.
         base_dir / "emba_logs" / "csv_logs" / "f14_tag_builder.csv",
         base_dir / "emba_logs" / "SBOM" / "EMBA_cyclonedx_sbom.json",
         base_dir / "emba_logs" / "emba.log",
@@ -87,7 +87,7 @@ def export_results(analysis_id, zip_path):
                     file_path,
                 )
                 
-            html_report_dir = emba_logs_dir / "html-report"
+            html_report_dir = emba_logs_dir / "html-report"     # TODO: remove html-report hardcode for directories_to_export for easier inputting
 
             if html_report_dir.is_dir():
                 for file_path in html_report_dir.rglob("*"):

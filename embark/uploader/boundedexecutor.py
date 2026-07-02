@@ -253,8 +253,6 @@ class BoundedExecutor:
         Zipps the logs produced by emba
         :param analysis_id: primary key for firmware-analysis entry
         """
-        print("PRINT: zip_log entered")
-        logger.error("LOGGER: zip_log entered")        
         logger.debug("Zipping ID: %s", analysis_id)
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         analysis_id = str(analysis_id)
@@ -481,7 +479,6 @@ class BoundedExecutor:
     @classmethod
     def submit_zip(cls, uuid):
         # submit zip req to executor threadpool
-        logger.error("SUBMIT ZIP CALLED %s", str(uuid))
         emba_fut = BoundedExecutor.submit(cls.zip_log, uuid)
         return emba_fut
 

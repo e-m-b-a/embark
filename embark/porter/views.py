@@ -217,7 +217,6 @@ def make_zip(request, analysis_id):
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         # check that the user is authorized
         if user_is_auth(request.user, analysis.user):
-            logger.error("PORTER MAKE_ZIP HIT")
             if BoundedExecutor.submit_zip(uuid=analysis_id) is not None:
                 # success
                 logger.info("Successfully submitted zip request %s", str(analysis_id))
