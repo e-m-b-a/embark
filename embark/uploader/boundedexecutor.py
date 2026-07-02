@@ -9,6 +9,7 @@ import os
 import shutil
 from subprocess import Popen, PIPE
 import zipfile
+import tempfile
 
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
@@ -16,6 +17,7 @@ from threading import BoundedSemaphore
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
+from django.core.files import File
 from django.dispatch import receiver
 from django.utils import timezone
 from django.conf import settings
@@ -30,6 +32,7 @@ from uploader.settings import get_emba_base_cmd
 from embark.helper import get_size, zip_check
 from porter.models import LogZipFile
 from porter.importer import result_read_in
+from porter.exporter import export_results
 from users.models import User
 
 logger = logging.getLogger(__name__)
@@ -250,8 +253,11 @@ class BoundedExecutor:
         Zipps the logs produced by emba
         :param analysis_id: primary key for firmware-analysis entry
         """
+        print("PRINT: zip_log entered")
+        logger.error("LOGGER: zip_log entered")        
         logger.debug("Zipping ID: %s", analysis_id)
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+        analysis_id = str(analysis_id)
         analysis.finished = False
         analysis.status['finished'] = False
         analysis.status['work'] = True
@@ -269,12 +275,21 @@ class BoundedExecutor:
             }
         )
         try:
-            archive = Archiver.make_zipfile(f"{settings.MEDIA_ROOT}/log_zip/{analysis_id}.zip", analysis.path_to_logs)
+            fd, zip_path = tempfile.mkstemp(suffix=".zip")
+            os.close(fd)
 
-            # create a LogZipFile obj
-            analysis.zip_file = LogZipFile.objects.create(file=archive, user=analysis.user)
+            export_results(analysis_id, zip_path)
+
+            with open(zip_path, "rb") as f:
+                analysis.zip_file = LogZipFile.objects.create(
+                    file=File(f, name=f"{analysis_id}.zip"),
+                    user=analysis.user,
+                )
+
+            os.remove(zip_path)
         except builtins.Exception as exce:
             logger.error("Zipping failed: %s", exce)
+
         analysis.finished = True
         analysis.status['finished'] = True
         analysis.status['work'] = False
@@ -466,6 +481,7 @@ class BoundedExecutor:
     @classmethod
     def submit_zip(cls, uuid):
         # submit zip req to executor threadpool
+        logger.error("SUBMIT ZIP CALLED %s", str(uuid))
         emba_fut = BoundedExecutor.submit(cls.zip_log, uuid)
         return emba_fut
 

@@ -7,7 +7,7 @@ import logging
 import os
 from pathlib import Path
 
-from django.http import HttpResponseBadRequest, JsonResponse
+from django.http import HttpResponseBadRequest, JsonResponse, FileResponse
 from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.http import require_http_methods
 
@@ -19,7 +19,7 @@ from embark.helper import user_is_auth
 from uploader.boundedexecutor import BoundedExecutor
 from uploader.forms import DeviceForm, LabelForm, VendorForm
 from uploader.models import FirmwareAnalysis
-from porter.exporter import result_json
+from porter.exporter import export_results
 from porter.importer import result_read_in
 from porter.models import LogZipFile
 from porter.forms import FirmwareAnalysisImportForm, FirmwareAnalysisExportForm, DeleteZipForm, RetryImportForm
@@ -182,10 +182,27 @@ def export_analysis(request):
         if not user_is_auth(request.user, analysis_obj.user):
             messages.error(request=request, message='Unauthorized')
             return redirect('..')
-        response_data = result_json(analysis_obj.id)
-        return JsonResponse(data=response_data, status=HTTPStatus.OK)
-    messages.error(request=request, message='form invalid')
-    return redirect('..')
+        
+        # call exporter
+        temp_file = NamedTemporaryFile(
+        suffix=".zip",
+        delete=False,
+        )
+
+        export_results(
+            analysis_obj.id,
+            temp_file.name,
+        )
+
+        return FileResponse(
+            open(temp_file.name, "rb"),
+            as_attachment=True,
+            filename=f"analysis_{analysis_obj.id}.zip",
+        )
+
+    else:
+        messages.error(request=request, message='Form invalid')
+        return redirect('..')
 
 
 @permission_required('users.porter_permission', login_url='/')
@@ -200,6 +217,7 @@ def make_zip(request, analysis_id):
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         # check that the user is authorized
         if user_is_auth(request.user, analysis.user):
+            logger.error("PORTER MAKE_ZIP HIT")
             if BoundedExecutor.submit_zip(uuid=analysis_id) is not None:
                 # success
                 logger.info("Successfully submitted zip request %s", str(analysis_id))
