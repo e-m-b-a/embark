@@ -271,6 +271,7 @@ fi
 {
   echo -e "LoadModule auth_basic_module \${MOD_WSGI_MODULES_DIRECTORY}/mod_auth_basic.so"
   echo -e "LoadModule authz_user_module \${MOD_WSGI_MODULES_DIRECTORY}/mod_authz_user.so"
+  echo -e "LoadModule version_module \${MOD_WSGI_MODULES_DIRECTORY}/mod_version.so"
   echo -e "WSGIPythonHome /var/www/.venv"
   echo -e "WSGIPythonPath /var/www/embark/embark"
   echo -e ""
