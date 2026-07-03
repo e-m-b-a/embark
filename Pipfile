@@ -31,7 +31,6 @@ pycryptodome = "*"
 flower = "*"
 gitpython = "*"
 docker = "*"
-list = "*"
 
 [dev-packages]
 pycodestyle = "*"
