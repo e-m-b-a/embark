@@ -433,6 +433,9 @@ fi
 # echo -e "\n""${ORANGE}${BOLD}""For SSL you may use https://embark.local (Not recommended for local use)""${NC}"
 
 # periodically sync the 2 EMBA repos while the server is running
-sync_emba_backward && sleep 10 &
+while true; do
+  sleep 100
+  sync_emba_backward
+done &
 
 wait

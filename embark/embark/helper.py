@@ -165,7 +165,7 @@ def get_emba_version() -> dict:
             emba_repo = None
             emba_version = ""
 
-        # 2 container version and tag from docker image
+        # 2 container version and tag from LATEST docker image
         try:
             client = docker.from_env()
             try:
