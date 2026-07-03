@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     'django_bootstrap5',
     'django_tables2',
     'django_celery_beat',
-    'mod_wsgi.server',
+    'mod_wsgi.express',
     'uploader',
     'users',
     'reporter',
