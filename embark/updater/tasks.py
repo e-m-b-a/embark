@@ -2,6 +2,7 @@ __copyright__ = 'Copyright 2026 Siemens Energy AG'
 __author__ = 'Benedikt Kuehne'
 __license__ = 'MIT'
 
+import os
 from pyexpat.errors import messages
 from subprocess import Popen, PIPE
 from celery import shared_task
@@ -15,7 +16,9 @@ import docker
 import git
 from requests import RequestException
 
+from settings.helper import get_settings
 from uploader.settings import get_emba_base_cmd
+from embark.helper import get_emba_version
 
 logger = get_task_logger(__name__)
 
@@ -147,3 +150,80 @@ def emba_update(option):
     )
 
     return return_code
+
+
+@shared_task
+def health_check_emba(host=True):
+    """
+    Task to perform health check on EMBA components
+    :param host: If True, check EMBA on host, otherwise check on workers
+    :return: success status as int (0 for success, 1 for failure)
+    """
+    logger.info("Performing EMBA health check...")
+    return_status = ""
+
+    # 1 check important directories and files
+    # 2 check that the docker image is available according to the EMBA configuration
+    # 3 check that EMBA can be executed and returns the expected version
+    if host:
+        logger.debug("Performing EMBA health check on host")
+
+        if os.path.exists(f"{settings.EMBA_ROOT}/external") is False:
+            return_status = "EMBA health check failed: EMBA root directory does not exist"
+
+        emba_version = get_emba_version()['emba_version']
+        container_version = get_emba_version()['container_version']
+        if emba_version != container_version:
+            return_status = f"EMBA health check failed: EMBA version ({emba_version}) does not match container version ({container_version})"
+        
+        try:
+            cmd = f"cd {settings.EMBA_ROOT} && {get_emba_base_cmd()} -d1"
+
+            with open(f"{settings.EMBA_LOG_ROOT}/emba_health.log", "w+", encoding="utf-8") as file:
+                proc = Popen(cmd, stdin=PIPE, stdout=file, stderr=file, shell=True)   # nosec
+                # wait for completion
+                proc.communicate()
+                return_code = proc.wait()
+            # success
+            logger.info("Check Successful: %s", cmd)
+            if return_code != 0:
+                return_status = "EMBA health check failed on host"
+        except BaseException as exce:
+            logger.error("emba health check error: %s", exce)
+
+    else:
+        logger.debug("Scheduling EMBA health check on ALL workers")
+        # TODO: Implement logic to schedule health check on workers and aggregate results, set return_status accordingly
+
+    if return_status == "":
+        return_status = "EMBA health check returned without issues"
+    room_group_name = "versions"
+    channel_layer = get_channel_layer()
+    # send ws message
+    async_to_sync(channel_layer.group_send)(
+        room_group_name, {
+            "type": 'send.message',
+            "message": {"EMBA health check": return_status}
+        }
+    )
+
+
+@shared_task
+def system_health_check():
+    """
+    Task to perform overall system health check
+
+    :return: None
+    """
+    logger.info("Performing overall system health check...")
+   
+    # 1 check that all critical services are running (e.g. database, message broker)
+    # TODO: check db
+    # 2 EMBA backend
+    settings = get_settings()
+    if settings.orchestrator is False:
+        # check EMBA backend on host
+        health_check_emba.delay(host=True)
+    else:
+        # check EMBA backend on the configured workers
+        health_check_emba.delay(host=False)
