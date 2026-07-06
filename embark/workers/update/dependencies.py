@@ -287,7 +287,7 @@ def setup_dependency(dependency: DependencyType, version: str):
 
     script_path = os.path.join(os.path.dirname(__file__), get_script_name(dependency))
     folder_path, zip_path = get_dependency_path(dependency)
-    external_dir_path(settings.EMBA_ROOT)
+    external_dir_path = os.path.join(settings.EMBA_ROOT, 'external')
 
     log_file = settings.WORKER_SETUP_LOGS_ABS.format(timestamp=int(time.time()))
 
