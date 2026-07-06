@@ -129,11 +129,9 @@ class BoundedExecutor:
             logger.error("EMBA run was probably not successful!")
             logger.error("run_emba_cmd error: %s", exce)
             exit_fail = True
-            logger.debug("sending email to admin")
-            admin_email = User.objects.get(name="admin").email
-            send_mail(subject="Failed EMBA run", message=f"analysis {analysis_id} failed @{timezone.now()}", from_email='system@' + settings.DOMAIN, recipient_list=[admin_email])
 
         # finalize db entry
+        logger.debug("saving the results for %s", analysis_id)
         if analysis:
             analysis.end_date = timezone.now()
             analysis.scan_time = timezone.now() - analysis.start_date
@@ -153,6 +151,9 @@ class BoundedExecutor:
                     'domain': domain,
                     'analysis_id': analysis_id
                 })
+                logger.debug("sending email to admin since we had a failure")
+                admin_email = User.objects.get(username=os.environ.get("DJANGO_SUPERUSER_USERNAME","admin")).email
+                send_mail(subject="Failed EMBA run", message=f"analysis {analysis_id} failed @{timezone.now()}", from_email='system@' + settings.DOMAIN, recipient_list=[admin_email])
             else:
                 message = render_to_string('uploader/email_run_success.html', context={
                     'username': user.username,
