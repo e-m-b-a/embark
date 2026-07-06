@@ -390,8 +390,8 @@ sleep 5
 echo -e "\n[""${BLUE} JOB""${NC}""] Creating Admin account"
 "${PIPENV_COMMAND}" run ./manage.py createsuperuser --noinput 2>/dev/null
 
-# load default groups
-echo -e "\n[""${BLUE} JOB""${NC}""] Creating default permission groups"
+# load fixtures e.g default groups
+echo -e "\n[""${BLUE} JOB""${NC}""] Creating default model-instances"
 "${PIPENV_COMMAND}" run ./manage.py loaddata ./*/fixtures/*.json 2>/dev/null
 
 echo -e "\n[""${BLUE} JOB""${NC}""] Starting Apache"

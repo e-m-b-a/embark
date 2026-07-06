@@ -18,7 +18,7 @@ from requests import RequestException
 
 from settings.helper import get_settings
 from uploader.settings import get_emba_base_cmd
-from embark.helper import get_emba_version
+from embark.helper import get_emba_version, disk_space_check
 
 logger = get_task_logger(__name__)
 
@@ -26,17 +26,26 @@ def setup_periodic_tasks():
     """
     Setup periodic tasks for the updater
     """
-    # Example: Setup a periodic task to check for updates every day
+    # TODO : put this in a fixture
     schedule, created = IntervalSchedule.objects.get_or_create(
         every=1,
         period=IntervalSchedule.DAYS,
     )
 
-    PeriodicTask.objects.get_or_create(
+    _, update_job_created = PeriodicTask.objects.get_or_create(
         interval=schedule,
         name='Check for EMBA updates',
         task='updater.tasks.check_for_updates',
     )
+    _, sys_check_job_created = PeriodicTask.objects.get_or_create(
+        interval=schedule,
+        name='Perform system health check',
+        task='updater.tasks.system_health_check',
+    )
+    if created and update_job_created and sys_check_job_created:
+        logger.info("Periodic tasks for updater have been set up successfully.")
+    else:
+        logger.info("Periodic tasks already created")
 
 @shared_task
 def check_for_updates(option):
@@ -213,12 +222,13 @@ def system_health_check():
     """
     Task to perform overall system health check
 
-    :return: None
+    :return: string - status
     """
+    return_status = ""
     logger.info("Performing overall system health check...")
-   
-    # 1 check that all critical services are running (e.g. database, message broker)
-    # TODO: check db
+    # 1 check that we havespace to continue
+    if not disk_space_check():
+        return_status += "System is running out of disk space\n"
     # 2 EMBA backend
     settings = get_settings()
     if settings.orchestrator is False:
@@ -227,3 +237,13 @@ def system_health_check():
     else:
         # check EMBA backend on the configured workers
         health_check_emba.delay(host=False)
+    
+    room_group_name = "versions"
+    channel_layer = get_channel_layer()
+    # send ws message
+    async_to_sync(channel_layer.group_send)(
+        room_group_name, {
+            "type": 'send.message',
+            "message": {"EMBA health check": return_status}
+        }
+    )
