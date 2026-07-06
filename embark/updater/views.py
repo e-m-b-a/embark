@@ -167,10 +167,15 @@ def raw_progress(request):
     """
     logger.info("showing log for update")
     # get the file path
-    log_file_path_ = f"{Path(settings.EMBA_LOG_ROOT)}/emba_update.log"
+    log_file_path_ = Path(settings.EMBA_LOG_ROOT) / "emba_update.log"
     logger.debug("Taking file at %s and render it", log_file_path_)
     try:
-        with open(log_file_path_, 'rb') as log_file_:
-            return HttpResponse(content=log_file_, content_type="text/plain")
-    except FileNotFoundError:
-        return HttpResponseServerError(content="File is not yet available")
+        if not log_file_path_.exists():
+            return HttpResponse("File is not yet available", status=202)
+        
+        return HttpResponse(log_file_path_.read_text(), content_type="text/plain")
+        
+    except Exception as e:
+        logger.exception("raw-progress failed: %s", e)
+        return HttpResponseServerError("Internal Log Error")
+        

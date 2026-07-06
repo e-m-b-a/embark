@@ -55,13 +55,18 @@ def create_periodic_tasks(**kwargs):
         period=IntervalSchedule.MINUTES
     )
 
+    rotate_schedule, _ = IntervalSchedule.objects.get_or_create(
+        every=settings.WORKER_LOG_MAX_AGE_DAYS,
+        period=IntervalSchedule.DAYS,
+    )
+
     PeriodicTask.objects.get_or_create(
         interval=schedule_2m,
         name="Update Worker Information",
         task="workers.tasks.update_worker_info",
     )
     PeriodicTask.objects.get_or_create(
-        interval=schedule_log_rotate,
+        interval=rotate_schedule,
         name="Rotate All worker logs",
         task="workers.tasks.worker_log_rotate"
     )

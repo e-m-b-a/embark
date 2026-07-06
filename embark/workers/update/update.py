@@ -34,10 +34,12 @@ def exec_blocking_ssh(client: SSHClient, command: str, log_write: callable = Non
     if status != 0:
         raise paramiko.ssh_exception.SSHException(f"Command failed with status {status}: {command}")
 
-    if log_write:
-        log_write(f"\nInput: {command} \nOutput: {stdout.read().decode().strip()} \nStatus: {str(status)}\n")
+    stdout_str = stdout.read().decode().strip()
 
-    return stdout.read().decode().strip()
+    if log_write:
+        log_write(f"\nInput: {command} \nOutput: {stdout_str} \nStatus: {str(status)}\n")
+
+    return stdout_str
 
 
 def _copy_files(client: SSHClient, dependency: DependencyType, log_write: callable = None):

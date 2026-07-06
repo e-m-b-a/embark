@@ -4,6 +4,7 @@ __license__ = 'MIT'
 
 import os
 import ipaddress
+import logging
 from pathlib import Path
 import socket
 import paramiko
@@ -16,6 +17,7 @@ from django.conf import settings
 from users.models import User
 from workers.codeql_ignore import new_autoadd_client
 
+logger = logging.getLogger(__name__)
 
 class Configuration(models.Model):
 
@@ -41,6 +43,10 @@ class Configuration(models.Model):
         Writes into self.log_location
         :returns: None
         """
+        if not self.log_location:
+            logger.error("No log_location configured")
+            return
+    
         if not Path(self.log_location).is_file():
             with open(self.log_location, 'x') as log_file:
                 log_file.write(string + "\n")
