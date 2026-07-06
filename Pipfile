@@ -37,6 +37,6 @@ pycodestyle = "*"
 djlint = "*"
 pylint-django = "*"
 selenium = "*"
-semgrep = "*"
+semgrep = "1.167.0"
 
 [requires]
