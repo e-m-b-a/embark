@@ -100,12 +100,9 @@ def update_emba(request):
             return redirect('embark-updater-home')
         logger.debug("Disk space is sufficient for update.")
         for option_ in option:
-            if emba_update.delay(option_) == 0:
-                logger.info("starting emba update task with option %s", option_)
-                messages.success(request, f"Did update for {option_}")
-            else:
-                logger.error("error in update with %s", {option_})
-                messages.error(request, f"Wasn't able to update {option_}")
+            emba_update.delay(option_)
+            logger.info("starting emba update task with option %s", option_)
+            messages.success(request, f"Did update for {option_}")
         return redirect('embark-updater-home')
     logger.error("update form invalid %s with error: %s", request.POST, form.errors)
     messages.error(request, 'update not successful')
