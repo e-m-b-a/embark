@@ -75,9 +75,8 @@ class BoundedExecutor:
         # get return code to evaluate: 0 = success, 1 = failure,
         # see emba for further information
         exit_fail = False
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         try:
-
-            analysis = FirmwareAnalysis.objects.get(id=analysis_id)
             return_code = 0
 
             # The os.setsid() is passed in the argument preexec_fn so it's run after the fork() and before  exec() to run the shell.
@@ -115,11 +114,11 @@ class BoundedExecutor:
                 cls.csv_read(analysis_id=analysis_id, _path=csv_log_location, _cmd=cmd)
             elif Path(error_log_location).is_file():
                 logger.error("No importable log file %s for report: %s generated", csv_log_location, analysis_id)
-                logger.error("EMBA run was not successful!")
-                exit_fail = True
+                logger.error("EMBA run had errors!")
             else:
                 logger.error("EMBA run was probably not successful!")
                 logger.error("Please check this manually and create a bug report!!")
+                exit_fail = True
 
             # take care of cleanup
             if active_analyzer_dir:
