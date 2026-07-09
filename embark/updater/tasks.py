@@ -203,6 +203,7 @@ def health_check_emba(host=True):
     else:
         logger.debug("Scheduling EMBA health check on ALL workers")
         # TODO: Implement logic to schedule health check on workers and aggregate results, set return_status accordingly
+        
 
     if return_status == "":
         return_status = "EMBA health check returned without issues"
