@@ -305,7 +305,7 @@ def archive_analysis(request, analysis_id):
         # make archive for uuid
         _ = make_zip(request, analysis_id)
     # TODO is this ever reached??
-    analysis.do_archive()
+    analysis.do_archive() # TODO: reached and faulty
     analysis.archived = True
     analysis.save(update_fields=["archived"])
     messages.success(request, 'Analysis: ' + str(analysis_id) + ' successfully archived')
