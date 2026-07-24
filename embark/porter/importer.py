@@ -8,6 +8,8 @@ import logging
 import csv
 import json
 import os
+import zipfile
+import difflib
 
 from pathlib import Path
 import re
@@ -21,46 +23,165 @@ from uploader.models import FirmwareAnalysis
 logger = logging.getLogger(__name__)
 
 
+def import_results(zip_path, analysis_id):
+
+    logger.info("Importing %s", zip_path)
+
+    with zipfile.ZipFile(zip_path, "r") as archive:
+
+        files = index_zip(archive)
+        classified = classify_files(files)
+
+        csv_by_number, csv_by_name = index_csv_modules(classified["csv"])
+
+        # -------------------------
+        # extract CSVs dynamically
+        # -------------------------
+
+        extract_root = Path(settings.EMBA_LOG_ROOT) / str(analysis_id) / "emba_logs"
+
+        for entry in csv_by_number.values():
+
+            source = entry["file"]
+
+            target = (
+                extract_root
+                / "csv_logs"
+                / Path(source).name
+            )
+
+            target.parent.mkdir(
+                parents=True,
+                exist_ok=True,
+            )
+
+            with archive.open(source) as src:
+                with open(target, "wb") as dst:
+                    dst.write(src.read())
+
+        # -------------------------
+        # SBOM
+        # -------------------------
+
+        sbom_file = next(
+            (f for f in classified["sbom"] if f.endswith(".json")),
+            None
+        )
+
+        if not sbom_file:
+            raise ValueError("SBOM missing")
+        sbom_target = extract_root / "SBOM" / "EMBA_cyclonedx_sbom.json"
+        sbom_target.parent.mkdir(parents=True, exist_ok=True)
+
+        with archive.open(sbom_file) as src, open(sbom_target, "wb") as dst:
+            dst.write(src.read())
+
+        # -------------------------
+        # HTML
+        # -------------------------
+
+        for f in classified["html"]:
+            rel = Path(*Path(f).parts[Path(f).parts.index("html-report"):])
+            target = extract_root / rel
+
+            target.parent.mkdir(parents=True, exist_ok=True)
+
+            with archive.open(f) as src, open(target, "wb") as dst:
+                dst.write(src.read())
+
+        # -------------------------
+        # LOGS
+        # -------------------------
+
+        for log_file in classified["logs"]:
+
+            target = (
+                extract_root
+                / "logger"
+                / Path(log_file).name
+            )
+
+            target.parent.mkdir(
+                parents=True,
+                exist_ok=True,
+            )
+
+            with archive.open(log_file) as src:
+                with open(target, "wb") as dst:
+                    dst.write(src.read())
+
+    logger.info("Import complete")
+
+    return result_read_in(analysis_id)
+
+
+
 def result_read_in(analysis_id):
+
     """
-    calls read for all files inside csv_logs and stores its contents into the Result model
-    :return: success->result_obj fail->None
+    Read imported CSVs and populate the database.
     """
-    logger.debug("starting read-in of %s", analysis_id)
+
+    logger.debug("Starting read-in of %s", analysis_id)
+
     res = None
-    csv_directory = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/csv_logs/"
-    csv_list = [os.path.join(csv_directory, file_) for file_ in os.listdir(csv_directory)]
-    for file_ in csv_list:
-        logger.debug("trying to read: %s", file_)
-        if os.path.isfile(file_):      # TODO change check. > if valid EMBA csv file
-            logger.debug("File %s found and attempting to read", file_)
-            if file_.endswith('f50_base_aggregator.csv'):
-                res = f50_csv(file_, analysis_id)
-                logger.debug("Result for %s created or updated", analysis_id)
-            elif file_.endswith('f20_vul_aggregator.csv'):
-                logger.info("f20 readin for %s skipped", analysis_id)
-                # FIXME f20 in emba is broken!
-                # res = f20_csv(file_, analysis_id)
-                # logger.debug("Result for %s created or updated", analysis_id)
-    # json_directory = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/json_logs/"
-    # json_list = [os.path.join(json_directory, file_) for file_ in os.listdir(json_directory)]
-    # for file_ in json_list:
-    #     logger.debug("trying to read: %s", file_)
-    #     if os.path.isfile(file_):      # TODO change check. > if valid EMBA json file
-    #         logger.debug("File %s found and attempting to read", file_)
-    #         if file_.endswith('f15_cyclonedx_sbom.json'):
-    #             logger.info("f15 readin for %s skipped", analysis_id)
-    #             # f21_cyclonedx_sbom_json.json move into db object
-    #             res = f15_json(file_, analysis_id)
-    sbom_file = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/SBOM/EMBA_cyclonedx_sbom.json"
+    csv_directory = (
+        Path(settings.EMBA_LOG_ROOT)
+        / str(analysis_id)
+        / "emba_logs"
+        / "csv_logs"
+    )
+
+    for file_path in csv_directory.glob("*.csv"):
+                        
+        module_number, module_name = parse_csv_identity(file_path.name)
+    
+        logger.debug(
+            "Importing module %s_%s",
+            module_number,
+            module_name,
+        )
+
+        if module_name == "base_aggregator":            # TODO: replace hardcoded if-elif of csv importers with registry
+            res = f50_csv(str(file_path), analysis_id)
+
+        # elif module_name == "example_name":
+        #     res = xx_csv(str(file_path), analysis_id)
+        
+        # elif module_number == "f00":
+        #     res = xx_csv(str(file_path), analysis_id)
+
+        else:
+            logger.info(
+                "Skipping unsupported module %s_%s",
+                module_number,
+                module_name,
+            )                
+
+    sbom_file = (
+        Path(settings.EMBA_LOG_ROOT)
+        / str(analysis_id)
+        / "emba_logs"
+        / "SBOM"
+        / "EMBA_cyclonedx_sbom.json"
+    )
+
     if os.path.isfile(sbom_file):
-        logger.debug("File %s found and attempting to read", sbom_file)
+
+        logger.debug("Importing SBOM")
+
         try:
             res = sbom_json(sbom_file, analysis_id)
-        except DatabaseError as error:
-            logger.error("DB error in f15_json: %s", error, exc_info=1)
-    return res
 
+        except DatabaseError as error:
+            logger.error(
+                "DB error while importing SBOM: %s",
+                error,
+                exc_info=True,
+            )
+
+
+    return res
 
 def read_csv(path):
     """
@@ -94,8 +215,6 @@ def read_csv(path):
 
     logger.info("result dict: %s", res_dict)
     return res_dict
-
-
 def f50_csv(file_path, analysis_id):
     """
     return: result object/ None
@@ -155,8 +274,6 @@ def f50_csv(file_path, analysis_id):
             logger.error("Error in f50_csv: %s", error)
         res.save()
     return res
-
-
 def f20_csv(file_path, analysis_id=None):
     """
     csv read for f20 (where every line is a CVE)
@@ -204,8 +321,6 @@ def f20_csv(file_path, analysis_id=None):
             logger.error("Key is %s ; Was new? %s; Info is %s", key_, add_, value_)
     logger.debug("read f20 csv done")
     return res
-
-
 def f10_csv(_file_path, _analysis_id):
     """
     return: result object/ None
@@ -213,8 +328,6 @@ def f10_csv(_file_path, _analysis_id):
     logger.debug("starting f10 csv import")
     # FIXME needs implementation
     logger.debug("read f10 csv done")
-
-
 def sbom_json(_file_path, _analysis_id):
     """
     return: result obj/ None
@@ -259,8 +372,6 @@ def sbom_json(_file_path, _analysis_id):
     res.save()
     logger.debug("read f15 json done")
     return res
-
-
 def read_cyclone_dx_json(_file_path):
     """
     returns json
@@ -268,7 +379,49 @@ def read_cyclone_dx_json(_file_path):
     with open(_file_path, 'r', encoding='utf-8') as json_file:
         # TODO validate the sbom
         return json.load(json_file)
+def index_zip(archive):
+    return archive.namelist()
+def classify_files(files):
+    return {
+        "csv": [f for f in files if f.startswith("csv_logs/") and f.endswith(".csv")],
+        "sbom": [f for f in files if f.startswith("SBOM/")],
+        "logs": [f for f in files if f.startswith("logger/")],
+        "html": [f for f in files if "html-report/" in f],
+    }
+def parse_csv_identity(filename):
+    """
+    f03_base_aggregator.csv → (f03, base_aggregator)
+    """
 
+    name = Path(filename).stem
+
+    match = re.match(r"(f\d+)_([A-Za-z0-9_]+)", name)
+    if not match:
+        return None, None
+
+    return match.group(1), match.group(2)
+
+def index_csv_modules(csv_files):
+    index_by_number = {}
+    index_by_name = {}
+
+    for f in csv_files:
+        num, name = parse_csv_identity(f)
+        if not num:
+            continue
+
+        entry = {"number": num, "name": name, "file": f}
+
+        index_by_number[num] = entry
+        index_by_name[name] = entry
+
+    return index_by_number, index_by_name
+
+def resolve_module(query, by_number, by_name):
+    if query.startswith("f") and query[1:].isdigit():
+        return by_number.get(query)
+
+    return by_name.get(query)
 
 if __name__ == "__main__":
     BASE_DIR = Path(__file__).resolve().parent.parent.parent
