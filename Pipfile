@@ -29,12 +29,14 @@ celery = {extras = ["redis"], version = "*"}
 django-celery-beat = "*"
 pycryptodome = "*"
 flower = "*"
+gitpython = "*"
+docker = "*"
 
 [dev-packages]
 pycodestyle = "*"
 djlint = "*"
 pylint-django = "*"
 selenium = "*"
-semgrep = "*"
+semgrep = "1.167.0"
 
 [requires]

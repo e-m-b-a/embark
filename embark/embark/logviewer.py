@@ -113,7 +113,10 @@ class LineCache:
         # Intentionally not using with to save resources
         # because we don't have to open the file as often
         # pylint: disable-next=consider-using-with
-        self.filehandle = open(filepath, "rb")
+        try:
+            self.filehandle = open(filepath, "rb")
+        except FileNotFoundError:
+            raise FileNotFoundError(f"The file {filepath} does not exist.")
         self.refresh()
 
     def refresh(self) -> None:

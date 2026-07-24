@@ -273,6 +273,7 @@ fi
 {
   echo -e "LoadModule auth_basic_module \${MOD_WSGI_MODULES_DIRECTORY}/mod_auth_basic.so"
   echo -e "LoadModule authz_user_module \${MOD_WSGI_MODULES_DIRECTORY}/mod_authz_user.so"
+  echo -e "LoadModule version_module \${MOD_WSGI_MODULES_DIRECTORY}/mod_version.so"
   echo -e "WSGIPythonHome /var/www/.venv"
   echo -e "WSGIPythonPath /var/www/embark/embark"
   echo -e ""
@@ -391,8 +392,8 @@ sleep 5
 echo -e "\n[""${BLUE} JOB""${NC}""] Creating Admin account"
 "${PIPENV_COMMAND}" run ./manage.py createsuperuser --noinput 2>/dev/null
 
-# load default groups
-echo -e "\n[""${BLUE} JOB""${NC}""] Creating default permission groups"
+# load fixtures e.g default groups
+echo -e "\n[""${BLUE} JOB""${NC}""] Creating default model-instances"
 "${PIPENV_COMMAND}" run ./manage.py loaddata ./*/fixtures/*.json 2>/dev/null
 
 echo -e "\n[""${BLUE} JOB""${NC}""] Starting Apache"
@@ -435,6 +436,9 @@ fi
 # echo -e "\n""${ORANGE}${BOLD}""For SSL you may use https://embark.local (Not recommended for local use)""${NC}"
 
 # periodically sync the 2 EMBA repos while the server is running
-sync_emba_backward && sleep 10 &
+while true; do
+  sleep 100
+  sync_emba_backward
+done &
 
 wait

@@ -46,7 +46,13 @@ def create_periodic_tasks(**kwargs):
     Create periodic tasks with the start of the application. (called in ready() method of the app config)
     """
     schedule_2m, _ = IntervalSchedule.objects.get_or_create(
-        every=2, period=IntervalSchedule.MINUTES
+        every=2,
+        period=IntervalSchedule.MINUTES
+    )
+
+    schedule_log_rotate, _ = IntervalSchedule.objects.get_or_create(
+        every=settings.WORKER_LOG_MAX_AGE_DAYS * 24 * 60,   # Convert days to minutes
+        period=IntervalSchedule.MINUTES
     )
 
     rotate_schedule, _ = IntervalSchedule.objects.get_or_create(
@@ -298,7 +304,7 @@ def start_analysis(worker_id, emba_cmd: str, src_path: str, target_path: str):
 
     target_path_user = target_path if client.ssh_user == "root" else f"/home/{client.ssh_user}/temp"
 
-    sftp_client = client.open_sftp()
+    sftp_client = client.open_sftp()    # transfer using sftp
     sftp_client.put(src_path, target_path_user)
     sftp_client.close()
 

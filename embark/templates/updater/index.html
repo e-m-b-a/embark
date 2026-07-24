@@ -29,11 +29,37 @@
     <p class="mainText"><span class="badge bg-danger-subtle">EMBA Configuration</span></p>
     <div class="update-check d-flex justify-content-center">
       <h3>
-        <span class="badge bg-primary">EMBA version</span>  {{ emba_version }}
+        {% if latest_emba_version in emba_version %}
+          <span class="badge bg-primary">EMBA version</span>  {{ emba_version }} <span class="badge bg-success">✓</span>
+        {% elif latest_emba_version == "unknown" %}
+          <span class="badge bg-primary">EMBA version</span>  {{ emba_version }} <span class="badge bg-warning text-dark">No connection</span>
+        {% else %}
+          <span class="badge bg-primary">EMBA version</span>  {{ emba_version }} <span class="badge bg-danger">Update available!</span> {{ latest_emba_version }}
+        {% endif %}
         <br>
-        <span class="badge bg-secondary">Container version</span>  {{ container_version }}
+        {% if latest_container_version in container_version %}
+          <span class="badge bg-secondary">Container version</span>  {{ container_version }} <span class="badge bg-success">✓</span>
+        {% elif latest_container_version == "unknown" %}
+          <span class="badge bg-secondary">Container version</span>  {{ container_version }} <span class="badge bg-warning text-dark">No connection</span>
+        {% else %}
+          <span class="badge bg-secondary">Container version</span>  {{ container_version }} <span class="badge bg-danger">Update available!</span> {{ latest_container_version }}
+        {% endif %}
         <br>
-        <span class="badge bg-secondary">Github hash</span>  {{ github_emba_version }}
+        {% if github_emba_version == latest_github_emba_version %}
+          <span class="badge bg-secondary">Github hash</span>  {{ github_emba_version }} <span class="badge bg-success">✓</span>
+        {% elif latest_github_emba_version == "unknown" %}
+          <span class="badge bg-secondary">Github hash</span>  {{ github_emba_version }} <span class="badge bg-warning text-dark">No connection</span>
+        {% else %}
+          <span class="badge bg-secondary">Github hash</span>  {{ github_emba_version }} <span class="badge bg-danger">Update available!</span> {{ latest_github_emba_version }}
+        {% endif %}
+        <br>
+        {% if nvd_version == latest_nvd_version %}
+          <span class="badge bg-secondary">NVD version</span>  {{ nvd_version }} <span class="badge bg-success">✓</span>
+        {% elif latest_nvd_version == "unknown" %}
+          <span class="badge bg-secondary">NVD version</span>  {{ nvd_version }} <span class="badge bg-warning text-dark">No connection</span>
+        {% else %}
+          <span class="badge bg-secondary">NVD version</span>  {{ nvd_version }} <span class="badge bg-danger">Update available!</span> {{ latest_nvd_version }}
+        {% endif %}
       </h3>
     </div>
     <div class="container-fluid">
@@ -46,9 +72,6 @@
         </div>
         <div class="col col-lg-2" id="update">
           {% block update %}{% include "updater/update.html" %}{% endblock update %}
-        </div>
-        <div class="col col-lg-2" id="upgrade">
-          {% block upgrade %}{% include "updater/upgrade.html" %}{% endblock upgrade %}
         </div>
       </div>
     </div>

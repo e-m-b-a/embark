@@ -129,7 +129,7 @@ shellchecker() {
   if [[ "${FAST_EXECUTION:-0}" -eq 1 ]]; then
      mapfile -t SH_SCRIPTS < <(git status -s | grep ".*.sh$" | awk '{print $2}' | sort -u)
   else
-    mapfile -t SH_SCRIPTS < <(find . -not -path "./emba/*" -not -path "./.*" -not -path "./embark_db/*" -iname "*.sh" 2> /dev/null)
+    mapfile -t SH_SCRIPTS < <(find . -not -path "./emba/*" -not -path "./.*" -not -path "./embark_db/*" -not -path "./emba_*" -iname "*.sh" 2> /dev/null)
   fi
   for SH_SCRIPT in "${SH_SCRIPTS[@]}"; do
     echo -e "\\n""${GREEN}""Run shellcheck on ${SH_SCRIPT}:""${NC}""\\n"

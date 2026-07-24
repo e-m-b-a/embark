@@ -14,6 +14,8 @@
 #
 # Description: Prepares dependency packages on the host system for worker update
 
+# TODO we can remove the docker thingy for the host when switching to updater
+
 set -e
 cd "$(dirname "${0}")"
 
@@ -144,6 +146,8 @@ if [ "${VERSION}" = "latest" ] || [ ! -d "${DEPSCACHE}/pkg" ]; then
   else
     echo -e "[*] dpkg-dev already installed"
   fi
+
+  # TODO remove this when switching to updater
 
   if ! which docker &> /dev/null; then
     echo -e "\n[*] Installing Docker"

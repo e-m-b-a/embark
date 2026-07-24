@@ -11,7 +11,9 @@
 #
 # Author(s): ClProsser, SirGankalot
 # Contributor(s): Benedikt Kuehne
-
+# Description: Script to install the EMBA repository on an offline worker. 
+#   This script is intended to be run on the offline worker after the EMBA repository archive has been transferred to it.
+# Note: Destination is $WORKER_EMBA_ROOT
 set -e
 cd "$(dirname "$0")"
 
@@ -23,61 +25,25 @@ fi
 echo -e "\n[+] Starting EMBA repository installation on offline worker"
 echo -e "[*] Current directory: $(pwd)\n"
 
-FILEPATH="."
+FILEPATH="${PWD}"
 INSTALLPATH="/root"
 EXTERNALPATH="${INSTALLPATH}/emba/external"
-EMBAMASTER="${INSTALLPATH}/emba-master"
 
 echo -e "[*] File path: ${FILEPATH}"
 echo -e "[*] Installation path: ${INSTALLPATH}"
 echo -e "[*] External path: ${EXTERNALPATH}"
-echo -e "[*] Temporary master path: ${EMBAMASTER}\n"
 
-echo -e "[*] Cleaning up previous EMBA master directory"
-if rm -rf "${EMBAMASTER}" ; then
-  echo -e "[✓] Previous directory removed"
-else
-  echo -e "[!!] Warning: Could not remove previous directory"
-fi
-echo -e "[*] Creating temporary EMBA master directory"
-if mkdir "${EMBAMASTER}" ; then
-  echo -e "[✓] Directory created"
-else
-  echo -e "[!!] ERROR: Failed to create directory"
-  exit 1
-fi
+cd "$(dirname "${INSTALLPATH}")"
+
+# overwrite all - no external dir
 echo -e "[*] Extracting EMBA repository archive"
-if tar -xvzf "${FILEPATH}/emba.tar.gz" -C "${EMBAMASTER}" --strip-components 1 ; then
+if tar -xvzf "${FILEPATH}/emba.tar.gz" --strip-components 1 --overwrite ; then
   echo -e "[✓] Archive extracted successfully\n"
 else
   echo -e "[!!] ERROR: Failed to extract archive"
   exit 1
 fi
-if [ -d "${EXTERNALPATH}" ]; then
-  echo -e "[*] Copying external files from previous EMBA installation"
-  if cp -r "${EXTERNALPATH}" "${EMBAMASTER}" ; then
-    echo -e "[✓] External files copied\n"
-  else
-    echo -e "[!!] ERROR: Failed to copy external files"
-    exit 1
-  fi
-else
-  echo -e "[*] No previous external files found\n"
-fi
 
-echo -e "[*] Removing old EMBA installation"
-if rm -rf "${INSTALLPATH}/emba" ; then
-  echo -e "[✓] Old installation removed"
-else
-  echo -e "[!!] Warning: Could not remove old installation"
-fi
-echo -e "[*] Moving EMBA master to final location"
-if mv "${EMBAMASTER}" "${INSTALLPATH}/emba" ; then
-  echo -e "[✓] EMBA moved to ${INSTALLPATH}/emba"
-else
-  echo -e "[!!] ERROR: Failed to move EMBA directory"
-  exit 1
-fi
 echo -e "[*] Copying uninstaller script"
 if cp "${FILEPATH}/full_uninstaller.sh" "${INSTALLPATH}/emba" ; then
   echo -e "[✓] Uninstaller copied"

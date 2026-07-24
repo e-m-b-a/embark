@@ -201,12 +201,15 @@ def perform_update(worker: Worker, client: SSHClient, worker_update: WorkerUpdat
     """
     Trigger file copy and installer.sh.
     After an update has been performed, the worker's dependency information is updated.
+    Supports both .tar and .tar.gz archive formats with comprehensive error handling.
 
     :params worker: The worker to update
     :params client: paramiko ssh client
     :params worker_update: The worker update to apply
     """
     dependency = worker_update.get_type()
+    folder_path = f"/root/{dependency.name}"
+    base_archive_path = f"{folder_path}"
 
     worker.write_log(f"\nStarting update of {dependency.name} to version {worker_update.version}\n")
 
@@ -215,24 +218,108 @@ def perform_update(worker: Worker, client: SSHClient, worker_update: WorkerUpdat
         worker.write_log(f"\nSkipping update of {worker_update.get_type().name} - already installed\n")
         return
 
-    folder_path = f"/root/{dependency.name}"
-    zip_path = f"{folder_path}.tar.gz"
-
-    worker.write_log(f"\nAcquiring {dependency.name} for update...\n")
-    use_dependency(dependency, worker_update.version, worker)
-    worker.write_log(f"\nCopying {dependency.name} files to worker...\n")
-    _copy_files(client, dependency, log_write=worker.write_log)
-    worker.write_log(f"\nReleasing {dependency.name} after update...\n")
-    release_dependency(dependency, worker)
-
+    # Prepare and copy files to worker
     try:
-        exec_blocking_ssh(client, f"sudo rm -rf {folder_path}", worker.write_log)
-        exec_blocking_ssh(client, f"sudo mkdir {folder_path} && sudo tar xvzf {zip_path} -C {folder_path} >/dev/null 2>&1", worker.write_log)
-        exec_blocking_ssh(client, f"sudo bash -c '{folder_path}/installer.sh >{folder_path}/installer.log 2>&1'", worker.write_log)
-        worker.write_log(f"\nSuccessfully updated {dependency.name}\n")
+        worker.write_log(f"\nAcquiring {dependency.name} for update...\n")
+        use_dependency(dependency, worker_update.version, worker)
+        
+        worker.write_log(f"\nCopying {dependency.name} files to worker...\n")
+        _copy_files(client, dependency, log_write=worker.write_log)
+        
+        worker.write_log(f"\nReleasing {dependency.name} after update...\n")
+        release_dependency(dependency, worker)
+    except Exception as error:
+        worker.write_log(f"\nError preparing {dependency.name} for update: {error}\n")
+        logger.error("Failed to prepare %s update on worker %s: %s", dependency.name, worker.name, error)
+        raise error
+
+    # Perform installation on the worker with error recovery
+    archive_path = None
+    tar_flags = None
+    
+    try:
+        # Detect which archive format exists on worker (support both .tar.gz and .tar)
+        worker.write_log(f"\nDetecting archive format for {dependency.name}...\n")
+        archive_formats = [
+            (f"{base_archive_path}.tar.gz", "xzf"),  # Try gzip compressed first
+            (f"{base_archive_path}.tar", "xf")       # Fall back to uncompressed
+        ]
+        
+        for test_path, flags in archive_formats:
+            try:
+                exec_blocking_ssh(client, f"test -f {test_path}", worker.write_log)
+                archive_path = test_path
+                tar_flags = flags
+                worker.write_log(f"[✓] Found archive: {test_path}\n")
+                break
+            except paramiko.SSHException:
+                logger.debug("Archive format not found at %s, trying next format", test_path)
+                worker.write_log(f"[*] Archive not found at {test_path}, trying next format...\n")
+                continue
+        
+        if not archive_path:
+            raise Exception(f"No archive file found (tried .tar.gz and .tar)")
+
+        # Clean up old installation
+        worker.write_log(f"\nCleaning up old {dependency.name} installation...\n")
+        try:
+            exec_blocking_ssh(client, f"sudo rm -rf {folder_path}", worker.write_log)
+        except paramiko.SSHException as error:
+            worker.write_log(f"[!] Warning: Could not remove old directory (may not exist): {error}\n")
+            logger.warning("Could not remove old %s directory on worker %s: %s", dependency.name, worker.name, error)
+
+        # Create fresh installation directory
+        try:
+            exec_blocking_ssh(client, f"sudo mkdir -p {folder_path}", worker.write_log)
+        except paramiko.SSHException as error:
+            raise Exception(f"Failed to create directory {folder_path}") from error
+
+        # Extract archive with detected format
+        worker.write_log(f"\nExtracting {dependency.name} archive...\n")
+        try:
+            exec_blocking_ssh(client, f"sudo tar -{tar_flags}f {archive_path} -C {folder_path} >/dev/null 2>&1", worker.write_log)
+            worker.write_log(f"[✓] Archive extracted successfully\n")
+        except paramiko.SSHException as error:
+            raise Exception(f"Failed to extract archive {archive_path}") from error
+
+        # Verify installer script exists
+        installer_path = f"{folder_path}/installer.sh"
+        worker.write_log(f"\nVerifying installer script exists...\n")
+        try:
+            exec_blocking_ssh(client, f"test -f {installer_path}", worker.write_log)
+            worker.write_log(f"[✓] Installer script found at {installer_path}\n")
+        except paramiko.SSHException as error:
+            raise Exception(f"Installer script not found at {installer_path}") from error
+
+        # Execute installer script
+        worker.write_log(f"\nExecuting {dependency.name} installer script...\n")
+        try:
+            exec_blocking_ssh(client, f"sudo bash {installer_path} >{folder_path}/installer.log 2>&1", worker.write_log)
+            worker.write_log(f"[✓] Installer script executed successfully\n")
+        except paramiko.SSHException as error:
+            # Attempt to retrieve installer log for diagnostics
+            try:
+                log_output = exec_blocking_ssh(client, f"sudo tail -50 {folder_path}/installer.log 2>/dev/null || echo 'Log file not accessible'", worker.write_log)
+                worker.write_log(f"\nInstaller log (last 50 lines):\n{log_output}\n")
+            except Exception as log_error:
+                logger.warning("Could not retrieve installer log: %s", log_error)
+            raise Exception(f"Installer script failed for {dependency.name}") from error
+
+        worker.write_log(f"\n[✓] Successfully updated {dependency.name} to version {worker_update.version}\n")
+        logger.info("Successfully updated %s on worker %s to version %s", dependency.name, worker.name, worker_update.version)
+
     except Exception as ssh_error:
-        worker.write_log(f"\nError updating {dependency.name}: {ssh_error}\n")
+        worker.write_log(f"\n[!!] Error updating {dependency.name}: {ssh_error}\n")
+        logger.error("Failed to update %s on worker %s: %s", dependency.name, worker.name, ssh_error)
         raise ssh_error
+    finally:
+        # Cleanup: Remove archive file to save storage space
+        if archive_path:
+            try:
+                exec_blocking_ssh(client, f"sudo rm -f {archive_path}", worker.write_log)
+                worker.write_log(f"\nCleaned up archive file\n")
+            except Exception as cleanup_error:
+                logger.warning("Failed to clean up archive file %s: %s", archive_path, cleanup_error)
 
     update_dependencies_info(worker)
 

@@ -25,7 +25,7 @@ export NC='\033[0m' # no color
 
 export DJANGO_SETTINGS_MODULE=embark.settings.dev
 
-export NO_UPDATE_CHECK=1
+export NO_UPDATE_CHECK=0
 export IGNORE_EMBA=${IGNORE_EMBA:=0}
 
 export WSL=0

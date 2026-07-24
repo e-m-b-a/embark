@@ -544,9 +544,6 @@ install_embark_dev(){
   echo "root ALL=(ALL) NOPASSWD: /bin/pkill" | EDITOR='tee -a' visudo
   echo "root ALL=(ALL) NOPASSWD: ""${PWD}""/embark/workers/update/" | EDITOR='tee -a' visudo
 
-  # Set some globals
-  echo "NO_UPDATE_CHECK=1" >> /etc/environment
-
   # pipenv
   echo -e "\n${GREEN}""${BOLD}""Install embark python environment""${NC}"
   if [[ "${OS_TYPE}" == "debian" ]]; then
@@ -761,7 +758,7 @@ if [[ "${STRICT_MODE}" -eq 1 ]]; then
   trap 'wickStrictModeFail $? | tee -a /tmp/embark_installer.log' ERR  # The ERR trap is triggered when a script catches an error
 fi
 
-if [ "$#" -ne 1 ]; then
+if [[ $# -eq 0 ]]; then
   echo -e "${RED}""${BOLD}""Invalid number of arguments""${NC}"
   print_help
   exit 1

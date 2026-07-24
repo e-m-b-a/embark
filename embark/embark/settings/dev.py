@@ -19,6 +19,7 @@ ALLOWED_HOSTS = ['*']
 EMBA_ROOT = os.path.join(BASE_DIR.parent, 'emba')
 EMBA_LOG_ROOT = os.path.join(BASE_DIR.parent, 'emba_logs')
 EMBA_LOG_URL = 'emba_logs/'
+NVD_ROOT = os.path.join(EMBA_ROOT, 'external/nvd-json-data-feeds')
 
 DEBUG = True
 DOMAIN = "embark.local"
@@ -39,7 +40,7 @@ INSTALLED_APPS = [
     'django_bootstrap5',
     'django_tables2',
     'django_celery_beat',
-    'mod_wsgi.server',
+    'mod_wsgi.express',
     'django_apscheduler',
     'uploader',
     'users',

@@ -22,6 +22,8 @@ from django.conf import settings
 from django.db import close_old_connections
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+import docker
+import git
 
 from uploader import finish_execution
 from uploader.archiver import Archiver
@@ -73,9 +75,8 @@ class BoundedExecutor:
         # get return code to evaluate: 0 = success, 1 = failure,
         # see emba for further information
         exit_fail = False
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         try:
-
-            analysis = FirmwareAnalysis.objects.get(id=analysis_id)
             return_code = 0
 
             # The os.setsid() is passed in the argument preexec_fn so it's run after the fork() and before  exec() to run the shell.
@@ -113,11 +114,11 @@ class BoundedExecutor:
                 cls.csv_read(analysis_id=analysis_id, _path=csv_log_location, _cmd=cmd)
             elif Path(error_log_location).is_file():
                 logger.error("No importable log file %s for report: %s generated", csv_log_location, analysis_id)
-                logger.error("EMBA run was not successful!")
-                exit_fail = True
+                logger.error("EMBA run had errors!")
             else:
                 logger.error("EMBA run was probably not successful!")
                 logger.error("Please check this manually and create a bug report!!")
+                exit_fail = True
 
             # take care of cleanup
             if active_analyzer_dir:
@@ -128,11 +129,9 @@ class BoundedExecutor:
             logger.error("EMBA run was probably not successful!")
             logger.error("run_emba_cmd error: %s", exce)
             exit_fail = True
-            logger.debug("sending email to admin")
-            admin_email = User.objects.get(name="admin").email
-            send_mail(subject="Failed EMBA run", message=f"analysis {analysis_id} failed @{timezone.now()}", from_email='system@' + settings.DOMAIN, recipient_list=[admin_email])
 
         # finalize db entry
+        logger.debug("saving the results for %s", analysis_id)
         if analysis:
             analysis.end_date = timezone.now()
             analysis.scan_time = timezone.now() - analysis.start_date
@@ -152,6 +151,9 @@ class BoundedExecutor:
                     'domain': domain,
                     'analysis_id': analysis_id
                 })
+                logger.debug("sending email to admin since we had a failure")
+                admin_email = User.objects.get(username=os.environ.get("DJANGO_SUPERUSER_USERNAME","admin")).email
+                send_mail(subject="Failed EMBA run", message=f"analysis {analysis_id} failed @{timezone.now()}", from_email='system@' + settings.DOMAIN, recipient_list=[admin_email])
             else:
                 message = render_to_string('uploader/email_run_success.html', context={
                     'username': user.username,
