@@ -32,6 +32,8 @@ export WSGI_FLAGS=()
 export ADMIN_HOST_RANGE=()
 export EMBARK_BASEDIR=""
 export OS_TYPE=""
+export MYSQLCLIENT_LDFLAGS='-L/usr/mysql/lib -lmysqlclient -lssl -lcrypto -lresolv'
+export MYSQLCLIENT_CFLAGS='-I/usr/include/mysql/'
 
 STRICT_MODE=0
 EMBARK_BASEDIR="$(realpath "$(dirname "${0}")")"
