@@ -195,12 +195,15 @@ fi
 # start container first (speedup?)
 docker compose -f ./docker-compose.yml up -d
 
+# sync emba
+sync_emba_forward
+
 # check emba
 echo -e "${BLUE}""${BOLD}""checking EMBA""${NC}"
-if ! [[ -d ./emba ]]; then
+if ! [[ -d /var/www/emba ]]; then
   echo -e "${RED}""${BOLD}""You are using the wrong installation and missing the EMBA subdirectory""${NC}"
 fi
-if ! (cd "${EMBARK_BASEDIR:-${PWD}}"/emba && ./emba -d 1); then
+if ! (cd "/var/www/emba" && ./emba -d 1); then
   echo -e "${RED}""EMBA is not configured correctly""${NC}"
   exit 1
 fi
@@ -237,14 +240,6 @@ fi
 
 # check db and start container
 check_db
-
-# update cves
-if [[ -d ./emba/external/nvd-json-data-feeds ]]; then
-  (cd ./emba/external/nvd-json-data-feeds && git pull)
-fi
-
-# sync emba
-sync_emba_forward
 
 # logs
 if ! [[ -d ./docker_logs ]]; then
