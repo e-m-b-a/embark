@@ -102,7 +102,7 @@ def update_system_info(worker: Worker):
         disk_free = disk_str[3].replace('G', 'GB').replace('M', 'MB')
         disk_info = f"Free: {disk_free}  Total: {disk_total}"
 
-        emba_info = exec_blocking_ssh(ssh_client, f"grep -E '^(\d+\.)?(\d+\.)?(\*|\d+)$' {settings.WORKER_EMBA_ROOT}", worker.write_log)
+        emba_info = exec_blocking_ssh(ssh_client, r"grep -E '^(\d+\.)?(\d+\.)?(\*|\d+)$' {settings.WORKER_EMBA_ROOT}", worker.write_log)
 
         system_info = {
             'os_info': os_info,
