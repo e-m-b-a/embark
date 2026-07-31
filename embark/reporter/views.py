@@ -42,14 +42,6 @@ logger = logging.getLogger(__name__)
 @permission_required("users.reporter_permission", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def reports(request):
-    html_body = get_template('uploader/reports.html')
-    return HttpResponse(html_body.render({'username': request.user.username}))
-
-
-@permission_required("users.reporter_permission", login_url='/')
-@require_http_methods(["GET"])
-@login_required(login_url='/' + settings.LOGIN_URL)
 def html_report(request, analysis_id, html_file):
     """
     Lets the user request any html in the html-report
@@ -62,7 +54,7 @@ def html_report(request, analysis_id, html_file):
     if FirmwareAnalysis.objects.filter(id=analysis_id).exists() and bool(re.match(html_file_pattern, html_file)):
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         if user_is_auth(request.user, analysis.user):
-            html_body = get_template(report_path)
+            html_body = get_template(str(report_path))
             logger.debug("html_report - analysis_id: %s html_file: %s", analysis_id, html_file)
             return HttpResponse(html_body.render({'embarkBackUrl': reverse('embark-ReportDashboard')}))
         messages.error(request, "User not authorized")
@@ -91,8 +83,8 @@ def html_report_path(request, analysis_id, html_path, file):
                     try:
                         with open(resource_path, 'rb') as requested_file:
                             response = HttpResponse(requested_file.read(), content_type=content_type)
-                            response['Content-Disposition'] = 'attachment; filename=' + requested_file
-                            logger.info("html_report - analysis_id: %s html_path: %s download_file: %s", analysis_id, html_path, requested_file)
+                            response['Content-Disposition'] = f'attachment; filename="{file}"'
+                            logger.info("html_report - analysis_id: %s html_path: %s download_file: %s", analysis_id, html_path, resource_path)
                             return response
                     except FileNotFoundError:
                         messages.error(request, "File not found on the server")
@@ -198,12 +190,14 @@ def get_individual_report(request, analysis_id):
                 return_dict['path_to_logs'] = analysis_object.path_to_logs
                 return_dict['strcpy_bin'] = json.loads(return_dict['strcpy_bin'])
                 # architecture
-                if isinstance(return_dict['architecture_verified'], dict):
-                    arch_ = json.loads(return_dict['architecture_verified'])
-                    for key_, value_ in arch_.items():
-                        return_dict['architecture_verified'] += f"{key_}-{value_} "
+                arch_val = return_dict.get('architecture_verified')
+                if isinstance(arch_val, dict):
+                    arch_str = ''
+                    for key_, value_ in arch_val.items():
+                        arch_str += f"{key_}-{value_} "
+                    return_dict['architecture_verified'] = arch_str.strip()
                 else:
-                    return_dict['architecture_verified'] = str(return_dict['architecture_verified'])
+                    return_dict['architecture_verified'] = str(arch_val)
 
                 return JsonResponse(data=return_dict, status=HTTPStatus.OK)
             except Result.DoesNotExist:
@@ -399,7 +393,7 @@ def status_report(request, analysis_id):
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
 
         # Unauthorized
-        if not analysis.user.id == request.api_user.id and not request.api_user.is_superuser:
+        if not analysis.user == request.api_user and not request.api_user.is_superuser:
             response_data = {
                 "status": "forbidden",
                 "error": "You're not allowed to access this resource.",
@@ -451,7 +445,11 @@ def status_report(request, analysis_id):
 
         # Zip is generated
         else:
-            formatted_time = analysis.duration.split(".")[0]
+            formatted_time = (
+                analysis.duration.split(".")[0]
+                if analysis.duration
+                else "unknown"
+            )
             response_data = {
                 "status": "finished",
                 "message": f"Analysis finished successfully in {formatted_time}.",
