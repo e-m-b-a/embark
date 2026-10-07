@@ -82,7 +82,11 @@ def delete_zip_pre_delete_post(sender, instance, **kwargs):
     callback function
     delete the zip file and folder structure in storage on recieve
     """
-    if sender.file:
-        os.remove(instance.get_abs_path())
-    else:
-        logger.error("No related file for delete request: %s", str(sender))
+    try:
+        path = instance.get_abs_path()
+        if os.path.exists(path):
+            os.remove(path)
+        else:
+            logger.debug("Zip file path does not exist: %s", path)
+    except Exception as exc:  # pragma: no cover - defensive cleanup
+        logger.exception("Failed to remove zip file: %s", exc)

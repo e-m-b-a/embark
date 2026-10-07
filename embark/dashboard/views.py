@@ -163,13 +163,30 @@ def show_log(request, analysis_id):
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
     except FirmwareAnalysis.DoesNotExist:
         analysis = None
+        # If there is no DB entry, but the user is a superuser, allow cleanup
+        # of orphaned log directories to prevent cluttering EMBA_LOG_ROOT.
+        if request.user.is_superuser:
+            orphan_path = Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}")
+            try:
+                if orphan_path.exists():
+                    import shutil as _sh
+
+                    _sh.rmtree(orphan_path)
+                    messages.success(request, f'Orphaned logs for {analysis_id} removed')
+                else:
+                    messages.error(request, "Analysis does not exist")
+            except builtins.Exception as _err:
+                logger.error("Failed to remove orphaned logs for %s: %s", analysis_id, _err)
+                messages.error(request, "Failed to remove orphaned logs")
+            return redirect('..')
         messages.error(request, "Analysis does not exist")
         return redirect('..')
     # check if user auth TODO change to group auth
     if not user_is_auth(request.user, analysis.user):
         return HttpResponseForbidden("You are not authorized!")
     # get the file path
-    log_file_path_ = f"{Path(analysis.path_to_logs).parent}/emba_run.log"
+    log_dir = Path(analysis.path_to_logs) if analysis.path_to_logs else Path(settings.EMBA_LOG_ROOT) / str(analysis_id)
+    log_file_path_ = Path(log_dir).parent / "emba_run.log" if Path(log_dir).name == "emba_logs" else Path(log_dir) / "emba_run.log"
     logger.debug("Taking file at %s and render it", log_file_path_)
     try:
         with open(log_file_path_, 'rb') as log_file_:
@@ -199,7 +216,8 @@ def show_error(request, analysis_id):
     if not user_is_auth(request.user, analysis.user):
         return HttpResponseForbidden("You are not authorized!")
     # get the file path
-    log_file_path_ = f"{Path(analysis.path_to_logs).parent}/emba_error.log"
+    log_dir = Path(analysis.path_to_logs) if analysis.path_to_logs else Path(settings.EMBA_LOG_ROOT) / str(analysis_id)
+    log_file_path_ = Path(log_dir).parent / "emba_error.log" if Path(log_dir).name == "emba_logs" else Path(log_dir) / "emba_error.log"
     logger.debug("Taking file at %s and render it", log_file_path_)
     try:
         with open(log_file_path_, 'rb') as log_file_:

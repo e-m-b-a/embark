@@ -54,6 +54,7 @@ def export_results(analysis_id, export_options, export_id):
 
     # MUST HAVE FILES FOR EXPORT
     # TODO: add stronger error/warning for missing files
+    # TODO: determine required files and fix module number/name problem
     files_to_export.extend([
         emba_logs_dir / "csv_logs" / "f50_base_aggregator.csv",
         emba_logs_dir / "csv_logs" / "f14_tag_builder.csv",
