@@ -464,25 +464,31 @@ def parse_module_identity(filename, file_type="sh"):
     """
 
     name = Path(filename).name
-    
-    if file_type == "csv":
-        pattern = r"^(f\d+)_([A-Za-z0-9_]+)\.csv$"
-    else:
-        pattern = r"^(f\d+)_([A-Za-z0-9_]+)\.sh$"
 
-    match = re.match(pattern, name)
+    if file_type == "csv":
+        pattern = r"^([A-Za-z]\d+)_([A-Za-z0-9_]+)\.csv$"
+    else:
+        pattern = r"^([A-Za-z]\d+)_([A-Za-z0-9_]+)\.sh$"
+
+    match = re.match(pattern, name, re.IGNORECASE)
 
     if not match:
         return None, None
 
-    return match.group(1), match.group(2)
+    module_number = match.group(1).upper()
+    module_name = match.group(2).lower()
+    return module_number, module_name
+
 
 def resolve_module(module_name, emba_modules):
     """
     Resolve an EMBA module by name.
     """
 
-    return emba_modules.get(module_name)
+    if module_name is None:
+        return None
+
+    return emba_modules.get(module_name.lower())
 
 
 # ---------------------------------------------------------------------------
