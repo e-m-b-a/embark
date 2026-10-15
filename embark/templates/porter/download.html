@@ -3,16 +3,54 @@
         <div class="col-sm">
             <div class="box">
                 <p class="mainText">Export Analysis Result</p>
-                <p class="subText">TODO currently only exports as json</p>
+                <p class="subText">Please choose your export options</p>
 
                 <form action="{% url 'embark-export-analysis' %}" method="post" id="form">
                     {% csrf_token %}
                     <div class="innerBlock">
                         {% load filters %}
                         {% bootstrap_form export_form %}
-                        {% bootstrap_button "Download" button_type="submit" button_class="btn-primary" %}
+                        {% bootstrap_button "Start Export" button_type="submit" button_class="btn-primary" %}
                     </div>
                 </form>
 
             </div>
+            {% if exports %}
+                <div class="box">
+                    <p class="mainText">Available Exports</p>
+                    <p class="subText">Previously generated analysis exports</p>
+
+                    <div class="innerBlock">
+                        {% for export in exports %}
+                            <div class="export-entry">
+
+                                <div class="export-info">
+                                    <strong>Analysis:</strong> {{ export.analysis.id }}<br>
+                                    <strong>Firmware:</strong> {{ export.analysis.firmware_name }}<br>
+                                    <strong>Created:</strong> {{ export.created_at|date:"d.m.Y H:i" }}<br>
+                                    <strong>Options:</strong> {{ export.export_options|join:", " }}
+                                </div>
+
+                                <div class="export-actions">
+                                    <a href="{% url 'embark-export-download' export.id %}"
+                                    class="btn btn-primary">
+                                        Download
+                                    </a>
+
+                                    <form method="post"
+                                        action="{% url 'embark-export-delete' export.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </div>
+
+                            </div>
+                        {% empty %}
+                            <p>No exports available.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
         </div>
