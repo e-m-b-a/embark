@@ -163,22 +163,6 @@ def show_log(request, analysis_id):
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
     except FirmwareAnalysis.DoesNotExist:
         analysis = None
-        # If there is no DB entry, but the user is a superuser, allow cleanup
-        # of orphaned log directories to prevent cluttering EMBA_LOG_ROOT.
-        if request.user.is_superuser:
-            orphan_path = Path(f"{settings.EMBA_LOG_ROOT}/{analysis_id}")
-            try:
-                if orphan_path.exists():
-                    import shutil as _sh
-
-                    _sh.rmtree(orphan_path)
-                    messages.success(request, f'Orphaned logs for {analysis_id} removed')
-                else:
-                    messages.error(request, "Analysis does not exist")
-            except builtins.Exception as _err:
-                logger.error("Failed to remove orphaned logs for %s: %s", analysis_id, _err)
-                messages.error(request, "Failed to remove orphaned logs")
-            return redirect('..')
         messages.error(request, "Analysis does not exist")
         return redirect('..')
     # check if user auth TODO change to group auth
