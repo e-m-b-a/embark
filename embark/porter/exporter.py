@@ -57,7 +57,7 @@ def export_results(analysis_id, export_options, export_id):
     # TODO: determine required files and fix module number/name problem
     files_to_export.extend([
         emba_logs_dir / "csv_logs" / "f50_base_aggregator.csv",
-        emba_logs_dir / "csv_logs" / "f14_tag_builder.csv",
+        #emba_logs_dir / "csv_logs" / "f14_tag_builder.csv",
         emba_logs_dir / "SBOM" / "EMBA_cyclonedx_sbom.json",
     ])
 
@@ -74,7 +74,6 @@ def export_results(analysis_id, export_options, export_id):
         "w",
         zipfile.ZIP_DEFLATED,
     ) as zipf:
-
         zipf.writestr(
             "manifest.json",
             json.dumps(
@@ -90,25 +89,18 @@ def export_results(analysis_id, export_options, export_id):
         )
 
         for file_path in files_to_export:
-
             if file_path.is_file():
-
                 if file_path.name.endswith(".log"):   
-
                     zipf.write(
                         file_path,
                         Path("logger") / file_path.name,
                     )
-
                 else:
-
                     zipf.write(
                         file_path,
                         file_path.relative_to(emba_logs_dir),
                     )
-            
             else:
-
                 logger.warning(
                     "Export file missing: %s",
                     file_path,
@@ -116,20 +108,14 @@ def export_results(analysis_id, export_options, export_id):
                 
         # HTML HANDLING
         if "html-report" in export_options:
-
             html_report_dir = emba_logs_dir / "html-report"
-
             if html_report_dir.is_dir():
-
                 for file_path in html_report_dir.rglob("*"):
-
                     if file_path.is_file():
-
                         zipf.write(
                             file_path,
                             file_path.relative_to(emba_logs_dir),
                         )
-
             else:
                 logger.warning(
                     "Export directory missing: %s",
