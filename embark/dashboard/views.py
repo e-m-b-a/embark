@@ -301,6 +301,68 @@ def delete_analysis(request, analysis_id):
     return redirect('..')
 
 
+@permission_required("users.dashboard_permission_advanced", login_url='/')
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def delete_selected_analyses(request):
+    """Delete a selected set of analyses, keeping the same authorization and cleanup logic as single deletes."""
+    selected_ids = request.POST.getlist("analysis_ids")
+    if not selected_ids:
+        messages.error(request, "No analysis selected for deletion")
+        return redirect('embark-ReportDashboard')
+
+    deleted_count = 0
+    skipped_count = 0
+    auth_denied_count = 0
+    running_count = 0
+    deletion_error_count = 0
+
+    for raw_id in selected_ids:
+        try:
+            analysis = FirmwareAnalysis.objects.get(id=raw_id)
+        except FirmwareAnalysis.DoesNotExist:
+            skipped_count += 1
+            continue
+
+        if not user_is_auth(request.user, analysis.user):
+            auth_denied_count += 1
+            skipped_count += 1
+            continue
+
+        if not analysis.finished:
+            try:
+                BoundedExecutor.submit_kill(analysis.id)
+                if analysis.pid:
+                    os.killpg(os.getpgid(analysis.pid), signal.SIGTERM)
+            except builtins.Exception as error:
+                logger.error("Error %s when stopping analysis %s for bulk delete", error, analysis.id)
+            running_count += 1
+            skipped_count += 1
+            continue
+
+        try:
+            analysis.delete(keep_parents=True)
+            deleted_count += 1
+        except builtins.Exception as error:
+            logger.error("Error %s when deleting analysis %s in bulk delete", error, analysis.id)
+            deletion_error_count += 1
+            skipped_count += 1
+
+    if deleted_count:
+        messages.success(request, f"Deleted {deleted_count} analysis record(s)")
+
+    if running_count:
+        messages.error(request, f"{running_count} analysis(es) failed to delete because they are still running")
+    if auth_denied_count:
+        messages.error(request, f"{auth_denied_count} analysis(es) could not be deleted because you are not authorized")
+    if deletion_error_count:
+        messages.error(request, f"{deletion_error_count} analysis(es) failed to delete due to an unexpected error")
+    if skipped_count == 0 and deleted_count == 0:
+        messages.error(request, "No analyses were deleted")
+
+    return redirect('embark-ReportDashboard')
+
+
 @permission_required("users.dashboard_permission_minimal", login_url='/')
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["GET"])
