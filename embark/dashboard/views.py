@@ -126,7 +126,7 @@ def report_dashboard(request):
     :return: rendered ReportDashboard
     """
     # show all not hidden by others and ALL of your own
-    firmwares = (FirmwareAnalysis.objects.filter(hidden=False) | FirmwareAnalysis.objects.filter(user=request.user)).distinct()
+    firmwares = (FirmwareAnalysis.objects.filter(hidden=False) | FirmwareAnalysis.objects.filter(user=request.user)).distinct().order_by('-start_date')
     label_form = LabelForm()
     label_select_form = LabelSelectForm()
     return render(request, 'dashboard/reportDashboard.html', {'firmwares': firmwares, 'username': request.user.username, 'label_form': label_form, 'label_select_form': label_select_form})
@@ -362,6 +362,10 @@ def create_label(request):
     req_logger.info("User %s called create label", request.user.username)
     form = LabelForm(request.POST)
     if form.is_valid():
+        requested_name = str(form.cleaned_data.get("label_name", "")).strip()
+        if requested_name.lower() == "imported":
+            messages.error(request, 'The imported label is reserved and cannot be created manually')
+            return redirect('..')
         logger.info("User %s tryied to create label %s", request.user.username, request.POST['label_name'])
         new_label = form.save()
         messages.info(request, 'creation successful of ' + str(new_label))
@@ -382,7 +386,7 @@ def add_label(request, analysis_id):
     form = LabelSelectForm(request.POST)
     if form.is_valid():
         new_label = form.cleaned_data["label"]
-        logger.info("User %s tryied to add label %s", request.user.username, new_label.label_name)
+        logger.info("User %s tried to add label %s", request.user.username, new_label.label_name)
         # get analysis obj
         try:
             analysis = FirmwareAnalysis.objects.get(id=analysis_id)
@@ -417,6 +421,9 @@ def rm_label(request, analysis_id, label_name):
         messages.error(request, "Analysis does not exist")
         return redirect('..')
     # get lobel obj
+    if str(label_name).lower() == "imported":
+        messages.error(request, 'The imported label is protected and cannot be removed')
+        return redirect('..')
     label_obj = Label.objects.get(label_name=label_name)
     # check auth
     if not user_is_auth(request.user, analysis.user):

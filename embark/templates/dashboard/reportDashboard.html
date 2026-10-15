@@ -60,6 +60,11 @@
                                         {% if firmware.label.all is not None %}
                                             {% for label in firmware.label.all %}
                                                 <div class="col-sm">
+                                                    {% if label.label_name|lower == 'imported' %}
+                                                        <span class="badge label bg-warning text-dark position-relative" role="button" title="Imported analysis">
+                                                            {{ label.label_name }}
+                                                        </span>
+                                                    {% else %}
                                                     <a onclick="onclick_label('label={{ label.label_name }}');" class="badge label bg-info position-relative" role="button">
                                                         {{ label.label_name }}
                                                         <form action={% url 'embark-dashboard-remove-label' firmware.id label.label_name %} method="post" id="remove-label-{{ label.label_name }}-{{ firmware.id }}">
@@ -67,6 +72,7 @@
                                                             <button type="submit" class="hidden position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">x</button>
                                                         </form>
                                                     </a>
+                                                    {% endif %}
                                                 </div>
                                             {% endfor %}
                                         {% endif %}

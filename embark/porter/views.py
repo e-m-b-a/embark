@@ -23,7 +23,7 @@ from django.utils import timezone
 
 from embark.helper import user_is_auth
 from uploader.forms import DeviceForm, LabelForm, VendorForm
-from uploader.models import FirmwareAnalysis
+from uploader.models import FirmwareAnalysis, Label
 from porter.exporter import export_results
 from porter.models import LogZipFile, AnalysisExport
 from porter.forms import FirmwareAnalysisImportForm, FirmwareAnalysisExportForm, DeleteZipForm, RetryImportForm
@@ -73,6 +73,14 @@ def _prepare_import_batch(analysis_id, archive_path):
     archive_copy = Path(archive_path)
 
     return str(import_id), str(import_dir), str(archive_copy), str(files_dir)
+
+
+def _attach_import_label(analysis):
+    """Tag imported analyses with the existing label system."""
+    if analysis is None:
+        return
+    label, _ = Label.objects.get_or_create(label_name="imported")
+    analysis.label.add(label)
 
 
 @permission_required('users.porter_permission', login_url='/')
@@ -166,6 +174,7 @@ def import_read(request):
         analysis.status["percentage"] = 0
         analysis.status["work"] = True
         analysis.save()
+        _attach_import_label(analysis)
 
         from porter.tasks import _write_import_log_entry
         _write_import_log_entry(analysis, "Queued", 0, "Import queued in dashboard")
