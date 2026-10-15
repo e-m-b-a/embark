@@ -323,7 +323,7 @@ def get_accumulated_reports(request):
 @permission_required("users.reporter_permission", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def download_zipped(request, analysis_id):
+def download_zipped(request, analysis_id): #TODO: bound to old zip function, remove it and occurences in archive functions
     """
     download zipped log directory
 
@@ -355,7 +355,7 @@ def download_zipped(request, analysis_id):
 @permission_required("users.reporter_permission", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def make_zip(request, analysis_id):
+def make_zip(request, analysis_id): # TODO: old zip function, remove it and occurences in archive functions
     """
     submit analysis for zipping log directory
     """

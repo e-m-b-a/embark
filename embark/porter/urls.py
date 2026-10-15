@@ -21,6 +21,6 @@ urlpatterns = [
 
     path('retry-import/', views.retry_import, name='embark-retry-import'),
 
-    path('export/zip/<uuid:analysis_id>/', views.make_zip, name='embark-make-zip'), #FIXME: Old function, "make_zip()" replaced by "export_analysis()"
+    #path('export/zip/<uuid:analysis_id>/', views.make_zip, name='embark-make-zip'), #FIXME: Old function, "make_zip()" replaced by "export_analysis()"
 
 ]

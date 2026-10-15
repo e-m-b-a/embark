@@ -88,12 +88,13 @@ def _attach_import_label(analysis):
 @require_http_methods(["GET"])
 def import_menu(request):
     retry_form = RetryImportForm()
-    import_read_form = FirmwareAnalysisImportForm()
+    latest_zip_file = LogZipFile.objects.filter(user=request.user).order_by('-upload_date').first()
+    import_read_form = FirmwareAnalysisImportForm(initial={'zip_log_file': latest_zip_file} if latest_zip_file else {})
     device_form = DeviceForm()
     vendor_form = VendorForm()
     label_form = LabelForm()
-    if LogZipFile.objects.all().count() > 0:
-        delete_form = DeleteZipForm(initial={'zip-file': LogZipFile.objects.latest('upload_date')})
+    if LogZipFile.objects.filter(user=request.user).exists():
+        delete_form = DeleteZipForm(initial={'zip-file': LogZipFile.objects.filter(user=request.user).latest('upload_date')})
     else:
         delete_form = DeleteZipForm()
     return render(request, 'porter/import.html', {'import_read_form': import_read_form, 'device_form': device_form, 'vendor_form': vendor_form, 'label_form': label_form, 'delete_form': delete_form, 'retry_form': retry_form})
@@ -183,7 +184,7 @@ def import_read(request):
         if import_analysis.delay(analysis.id, archive_path, files_dir) is not None:
             logger.info("Successfully submitted archive import for %s", analysis.id)
             messages.info(request, 'import submitted for ' + str(analysis.id))
-            return redirect('..')
+            return redirect("embark-ReportDashboard")
         messages.error(request, 'import failed')
         return redirect('..')
     messages.error(request, 'form invalid')
@@ -390,7 +391,7 @@ def delete_export(request, export_id):
 @permission_required('users.porter_permission', login_url='/')
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["GET"])
-def make_zip(request, analysis_id):
+def make_zip(request, analysis_id): #TODO: old zip function, remove it and occurences in archive functions
     """
     submits analysis for archiving
     """
@@ -414,7 +415,7 @@ def make_zip(request, analysis_id):
 @permission_required('users.porter_permission', login_url='/')
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["POST"])
-def retry_import(request):
+def retry_import(request): #TODO: decide if we want to keep this or not, maybe different use case
     """
     retry to read emba_log foler with the importer
 

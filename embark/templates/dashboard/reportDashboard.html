@@ -81,13 +81,13 @@
                                                             {{ label.label_name }}
                                                         </span>
                                                     {% else %}
-                                                    <a onclick="onclick_label('label={{ label.label_name }}');" class="badge label bg-info position-relative" role="button">
-                                                        {{ label.label_name }}
-                                                        <form action={% url 'embark-dashboard-remove-label' firmware.id label.label_name %} method="post" id="remove-label-{{ label.label_name }}-{{ firmware.id }}">
-                                                            {% csrf_token %}
-                                                            <button type="submit" class="hidden position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">x</button>
-                                                        </form>
-                                                    </a>
+                                                        <a onclick="onclick_label('label={{ label.label_name }}');" class="badge label bg-info position-relative" role="button">
+                                                            {{ label.label_name }}
+                                                            <form action={% url 'embark-dashboard-remove-label' firmware.id label.label_name %} method="post" id="remove-label-{{ label.label_name }}-{{ firmware.id }}">
+                                                                {% csrf_token %}
+                                                                <button type="submit" class="hidden position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">x</button>
+                                                            </form>
+                                                        </a>
                                                     {% endif %}
                                                 </div>
                                             {% endfor %}
@@ -128,15 +128,6 @@
                                     <!--menue-->
                                     <div class="dropdown-menu">
                                         {% if firmware.failed is False and firmware.finished is True %}
-                                            {% if firmware.zip_file is not None %}
-                                                <form action={% url 'embark-download' firmware.id %} method='get'>
-                                                    <button type="submit" class="btn buttonRowElem" >Download Logs</button>
-                                                </form>
-                                            {% elif firmware.archived is False %}
-                                                <form action={% url 'embark-make-zip' firmware.id %} method='get'>
-                                                    <button type="submit" class="btn buttonRowElem" >Make Zip of EMBA-logs</button>
-                                                </form>
-                                            {% endif %}
                                             <form action={% url 'embark-html-report-index' firmware.id 'index.html' %} method='get'>
                                                 <button type="submit" class="btn buttonRowElem" >Open Report</button>
                                             </form>
@@ -148,11 +139,6 @@
                                                 <!--We should try and pre-select the original scan settings-->
                                                 <button type="submit" class="btn buttonRowElem" >Rescan/delete</button>
                                             </form>
-                                            {% if firmware.archived is False %}
-                                                <form action={% url 'embark-dashboard-archive' firmware.id %} method='get'>
-                                                    <button type="submit" class="btn buttonRowElem" >Archive</button>
-                                                </form>
-                                            {% endif %}
                                             {% if firmware.result.sbom is not None %}
                                                 <form action={% url 'embark-dashboard-sbom' firmware.id %} method='get'>
                                                     <button type="submit" class="btn buttonRowElem" >Get SBOM</button>
