@@ -6,6 +6,7 @@ import builtins
 import json
 import logging
 import os
+from http import HTTPStatus
 from pathlib import Path
 import signal
 
@@ -515,15 +516,15 @@ def get_sbom_analysis(request, analysis_id):
         result = Result.objects.get(firmware_analysis=analysis)
         sbom = result.sbom
     except Result.DoesNotExist:
-        sbom = None
-        messages.error(request, "SBOM does not exist")
-        return redirect('..')
+        logger.warning("SBOM requested for analysis %s but no report result exists yet.", analysis_id)
+        messages.warning(request, "SBOM is not available yet for this analysis. The archive may be incomplete.")
+        return JsonResponse({"ERROR": "SBOM is not available yet for this analysis. The archive may be incomplete."}, status=HTTPStatus.OK)
     # check if user auth
     if not user_is_auth(request.user, analysis.user):
         return HttpResponseForbidden("You are not authorized!")
     if sbom is None:
-        messages.error(request, 'Analysis: ' + str(analysis_id) + ' can not find sbom')
-        return redirect('..')
+        messages.warning(request, 'Analysis: ' + str(analysis_id) + ' has no SBOM data available yet')
+        return JsonResponse({"ERROR": "No SBOM data is available for this analysis yet."}, status=HTTPStatus.OK)
     with open(sbom.file, "r", encoding='UTF-8') as sbom_file:
         response = JsonResponse(json.load(sbom_file))
         response['Content-Disposition'] = 'inline; filename=' + str(analysis_id) + '_sbom.json'
@@ -538,19 +539,23 @@ def api_sbom_analysis(request, analysis_id):
     exports sbom as raw json
     """
     logger.info("export sbom with analysis id: %s", analysis_id)
-    response = JsonResponse({"ERROR": "SBOM for this analysis-id does not exist"})
+    response = JsonResponse({"ERROR": "SBOM for this analysis-id does not exist"}, status=HTTPStatus.OK)
     try:
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         result = Result.objects.get(firmware_analysis=analysis)
         sbom = result.sbom
     except Result.DoesNotExist:
-        response = JsonResponse({"ERROR": "Result for this analysis-id does not exist"})
+        response = JsonResponse({"ERROR": "Result for this analysis-id does not exist yet. The archive may be incomplete."}, status=HTTPStatus.OK)
+        return response
     # check if user auth
     if not user_is_auth(request.user, analysis.user):
-        response = JsonResponse({"ERROR": "You are not authorized!"})
-    if sbom is not None:
-        with open(sbom.file, "r", encoding='UTF-8') as sbom_file:
-            response = JsonResponse(json.load(sbom_file))
-            logger.info("export sbom with analysis id: %s", analysis_id)
+        response = JsonResponse({"ERROR": "You are not authorized!"}, status=HTTPStatus.OK)
+        return response
+    if sbom is None:
+        response = JsonResponse({"ERROR": "No SBOM data is available for this analysis yet."}, status=HTTPStatus.OK)
+        return response
+    with open(sbom.file, "r", encoding='UTF-8') as sbom_file:
+        response = JsonResponse(json.load(sbom_file))
+        logger.info("export sbom with analysis id: %s", analysis_id)
     response['Content-Disposition'] = 'inline; filename=' + str(analysis_id) + '_sbom.json'
     return response

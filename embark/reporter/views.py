@@ -220,8 +220,13 @@ def get_individual_report(request, analysis_id):
 
                 return JsonResponse(data=return_dict, status=HTTPStatus.OK)
             except Result.DoesNotExist:
-                logger.error('Report for firmware_id: %s not found in database', analysis_id)
-                return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)
+                logger.warning('Report for firmware_id: %s is missing from the database; import data is incomplete.', analysis_id)
+                return JsonResponse(
+                    data={
+                        'error': 'This analysis has no imported report yet. The archive was incomplete or the import did not produce any supported results.',
+                    },
+                    status=HTTPStatus.OK,
+                )
     logger.error('Bad request for get_individual_report')
     return JsonResponse(data={'error': 'Bad request'}, status=HTTPStatus.BAD_REQUEST)
 

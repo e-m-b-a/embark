@@ -50,8 +50,19 @@
                                 <input class="form-check-input report-select" type="checkbox" name="analysis_ids" value="{{ firmware.id }}" form="bulk-delete-form" aria-label="Select {{ firmware.id }}">
                             </td>
                             <td>{{ firmware.id }}</td>
-                            <td>{{ firmware.firmware_name }}</td>
-                            <td>{{ firmware.notes }}</td>
+                            <td>
+                                <div class="d-flex flex-column align-items-start">
+                                    <span>{{ firmware.firmware_name }}</span>
+                                    {% if firmware.status and firmware.status.scan_profile_label %}
+                                        <span class="badge rounded-pill bg-secondary mt-1">{{ firmware.status.scan_profile_label|title }}</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                {% if firmware.notes %}
+                                    {{ firmware.notes }}
+                                {% endif %}
+                            </td>
                             <td>
                                 {% for device in firmware.device.all %}
                                     {{  device }}
@@ -92,9 +103,6 @@
                                                 </div>
                                             {% endfor %}
                                         {% endif %}
-                                        <div class="col-sm">
-                                            <a class="badge rounded-pill bg-primary" data-bs-toggle="modal" data-bs-target="#AddLabelModal-{{ firmware.id }}" role="button" aria-expanded="false">+</a>
-                                        </div>
                                     </div>
                                     <div class="row">
                                         {% if firmware.archived is True %}

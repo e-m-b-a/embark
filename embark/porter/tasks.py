@@ -10,7 +10,7 @@ from django.conf import settings
 from django.utils import timezone
 
 from porter.exporter import export_results
-from porter.importer import import_results
+from porter.importer import apply_emba_report_metadata, import_results
 from porter.models import AnalysisExport
 from uploader.models import FirmwareAnalysis
 
@@ -46,6 +46,14 @@ def _log_import_progress(analysis, phase, percentage, message, task=None):
     if message:
         status["last_module"] = message
         status["module_list"] = list(dict.fromkeys([*status.get("module_list", []), message]))
+    if "warning" in phase.lower() or "warn" in phase.lower():
+        warnings = list(status.get("import_warnings") or [])
+        if message and message not in warnings:
+            warnings.append(message)
+        status["import_warnings"] = warnings
+        status["last_error"] = "; ".join(warnings)
+    elif message and "failed" in phase.lower():
+        status["last_error"] = message
 
     analysis.status = status
     analysis.save(update_fields=["status"])
@@ -80,7 +88,7 @@ def import_analysis(self, analysis_id, zip_path, extract_root=None):
     _log_import_progress(analysis, "Import starting", 1, message, task=self)
 
     try:
-        import_results(
+        result = import_results(
             str(zip_path),
             analysis_id,
             status_callback=lambda phase, percentage, message: _log_import_progress(
@@ -115,6 +123,33 @@ def import_analysis(self, analysis_id, zip_path, extract_root=None):
         logger.exception("Import failed for analysis %s from %s", analysis_id, zip_path)
         raise
 
+    warnings = list((analysis.status or {}).get("import_warnings") or [])
+    if result is None:
+        warnings = warnings or ["Archive import processed but no supported CSV/SBOM data was found."]
+    if warnings:
+        analysis.failed = True
+        analysis.finished = True
+        analysis.end_date = timezone.now()
+        analysis.duration = ""
+        start_time = getattr(analysis, "start_date", None)
+        if start_time is not None and not hasattr(start_time, "__call__"):
+            try:
+                analysis.duration = str(analysis.end_date - start_time)
+            except TypeError:
+                analysis.duration = ""
+        analysis.status = dict(analysis.status or {})
+        analysis.status["warning"] = "; ".join(warnings)
+        analysis.status["import_warnings"] = warnings
+        analysis.status["last_error"] = "; ".join(warnings)
+        analysis.status["work"] = False
+        analysis.status["percentage"] = 100
+        _log_import_progress(analysis, "Import warning", 100, "; ".join(warnings), task=self)
+        analysis.save(update_fields=["failed", "finished", "end_date", "duration", "status"])
+        if getattr(self, "request", None) is not None and getattr(self.request, "id", None):
+            self.update_state(state="FAILURE", meta={"analysis_id": str(analysis_id), "error": "; ".join(warnings)})
+        logger.warning("Import completed with warnings for analysis %s from %s: %s", analysis_id, zip_path, warnings)
+        return analysis_id
+
     analysis.failed = False
     analysis.finished = True
     analysis.end_date = timezone.now()
@@ -130,7 +165,8 @@ def import_analysis(self, analysis_id, zip_path, extract_root=None):
     analysis.status["percentage"] = 100
     analysis.status["last_error"] = ""
     _log_import_progress(analysis, "Import completed", 100, "Archive extraction complete", task=self)
-    analysis.save(update_fields=["failed", "finished", "end_date", "duration", "status"])
+    apply_emba_report_metadata(analysis)
+    analysis.save(update_fields=["failed", "finished", "end_date", "duration", "status", "firmware_name", "notes"])
     if getattr(self, "request", None) is not None and getattr(self.request, "id", None):
         self.update_state(state="SUCCESS", meta={"analysis_id": str(analysis_id), "percentage": 100})
 

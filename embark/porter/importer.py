@@ -5,6 +5,7 @@ __license__ = 'MIT'
 
 import builtins
 import csv
+import html
 import json
 import logging
 import os
@@ -58,47 +59,63 @@ def import_results(zip_path, analysis_id, status_callback=None, extract_root=Non
     logger.info(message)
     report("Validating archive", 5, "Opening archive and checking contents")
 
-    with zipfile.ZipFile(zip_path, "r") as archive:
+    try:
+        with zipfile.ZipFile(zip_path, "r") as archive:
 
-        files = index_zip(archive)
-        if not files:
-            raise ValueError(f"Archive is empty or contains no readable files: {zip_path}")
-        report("Scanning archive", 15, f"Indexed {len(files)} files")
+            files = index_zip(archive)
+            if not files:
+                raise ValueError(f"Archive is empty or contains no readable files: {zip_path}")
+            report("Scanning archive", 15, f"Indexed {len(files)} files")
 
-        manifest = read_manifest(archive)
+            manifest = read_manifest(archive)
 
-        if manifest is not None:
-            logger.info(
-                "Detected EMBArk export archive (version %s)",
-                manifest.get("version"),
-            )
-            report("Importing export", 30, "Detected EMBArk export archive")
+            if manifest is not None:
+                logger.info(
+                    "Detected EMBArk export archive (version %s)",
+                    manifest.get("version"),
+                )
+                report("Importing export", 30, "Detected EMBArk export archive")
 
-            validate_manifest(manifest)
+                validate_manifest(manifest)
 
-            import_embark_export(
-                archive,
-                files,
-                analysis_id,
-                status_callback=status_callback,
-                extract_root=extract_root,
-            )
+                import_embark_export(
+                    archive,
+                    files,
+                    analysis_id,
+                    status_callback=status_callback,
+                    extract_root=extract_root,
+                )
 
-        else:
-            logger.info(
-                "No EMBArk manifest found. Treating archive as native EMBA output."
-            )
-            report("Importing native output", 30, "Detected native EMBA output archive")
-            import_emba_output(
-                archive,
-                files,
-                analysis_id,
-                status_callback=status_callback,
-                extract_root=extract_root,
-            )
+            else:
+                logger.info(
+                    "No EMBArk manifest found. Treating archive as native EMBA output."
+                )
+                report("Importing native output", 30, "Detected native EMBA output archive")
+                import_emba_output(
+                    archive,
+                    files,
+                    analysis_id,
+                    status_callback=status_callback,
+                    extract_root=extract_root,
+                )
+    except (OSError, ValueError, zipfile.BadZipFile, zipfile.LargeZipFile) as error:
+        logger.exception("Archive import failed for analysis %s: %s", analysis_id, error)
+        raise ValueError(f"Archive could not be imported: {error}") from error
 
+    base_root = Path(extract_root) if extract_root else (
+        Path(settings.EMBA_LOG_ROOT)
+        / str(analysis_id)
+        / "emba_logs"
+    )
+    warnings = collect_import_warnings(base_root)
 
     result = result_read_in(analysis_id, extract_root=extract_root)
+    if result is None or warnings:
+        missing_parts = "; ".join(warnings) if warnings else "no supported CSV/SBOM data was found"
+        report("Import warning", 100, f"Archive was processed, but the import is incomplete: {missing_parts}.")
+        logger.warning("Archive for analysis %s produced incomplete import payload: %s", analysis_id, missing_parts)
+        return result
+
     report("Import complete", 100, "Archive extraction complete")
     return result
 
@@ -491,9 +508,138 @@ def resolve_module(module_name, emba_modules):
     return emba_modules.get(module_name.lower())
 
 
+def extract_emba_report_metadata(html_content):
+    """
+    Extract firmware and scan-profile metadata from a native EMBA HTML report.
+    """
+    if not html_content:
+        return {}
+
+    if isinstance(html_content, bytes):
+        html_content = html_content.decode("utf-8", errors="replace")
+
+    text = html.unescape(html_content)
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+
+    firmware = ""
+    match = re.search(r"Tested firmware:\s*(?P<firmware>.*?)(?=\s+EMBA start command:|$)", text)
+    if match:
+        firmware = match.group("firmware").strip()
+    firmware_name = os.path.basename(firmware.rstrip("/")) if firmware else ""
+    firmware_name = re.sub(r"\s*\[\s*\+\s*\]\s*$", "", firmware_name)
+
+    scan_profile = ""
+    scan_label = ""
+    match = re.search(r"EMBA start command:\s*(?P<command>.*?)(?=\s+EMBA version:|$)", text)
+    if match:
+        command = match.group("command")
+        profile_match = re.search(r"-p\s+(?:\./)?scan-profiles/(?P<profile>[A-Za-z0-9_.-]+\.emba)", command)
+        if profile_match:
+            scan_profile = profile_match.group("profile")
+            lowered = scan_profile.lower()
+            if "quick" in lowered:
+                scan_label = "quick scan profile"
+            elif "default" in lowered or "default-scan" in lowered:
+                scan_label = "default scan profile"
+            else:
+                scan_label = scan_profile.replace(".emba", "").replace("-", " ")
+
+    logger.debug(
+        "EMBA metadata parsed: firmware=%r scan_profile=%r scan_label=%r",
+        firmware_name,
+        scan_profile,
+        scan_label,
+    )
+
+    return {
+        "firmware_name": firmware_name,
+        "scan_profile": scan_profile,
+        "scan_profile_label": scan_label,
+    }
+
+
+def apply_emba_report_metadata(analysis):
+    """Populate an imported analysis with real firmware and scan metadata from the report HTML."""
+    if analysis is None:
+        return {}
+
+    path = getattr(analysis, "path_to_logs", None)
+    if not path or not isinstance(path, (str, os.PathLike)):
+        return {}
+
+    report_root = Path(path)
+    candidates = sorted(report_root.glob("**/f50_base_aggregator.html")) + sorted(report_root.glob("**/F50_base_aggregator.html"))
+    if not candidates:
+        logger.debug("No f50 base aggregator report found under %s while applying EMBA metadata", report_root)
+        return {}
+
+    report_file = candidates[0]
+    logger.debug("Applying EMBA report metadata from %s for analysis %s", report_file, analysis.id)
+    try:
+        html_content = report_file.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return {}
+
+    metadata = extract_emba_report_metadata(html_content)
+    if not metadata or not metadata.get("firmware_name"):
+        logger.debug("No EMBA report firmware metadata found for analysis %s: %s", analysis.id, metadata)
+        return metadata
+
+    status = dict(getattr(analysis, "status", {}) or {})
+    status["firmware_name"] = analysis.firmware_name or metadata["firmware_name"]
+    if metadata.get("scan_profile"):
+        status["scan_profile"] = metadata["scan_profile"]
+        status["scan_profile_label"] = metadata.get("scan_profile_label", "")
+
+    if not getattr(analysis, "firmware_name", None) or analysis.firmware_name in {"", "File unknown"}:
+        analysis.firmware_name = metadata["firmware_name"]
+
+    logger.debug(
+        "Assigned EMBA metadata to analysis %s: firmware_name=%r scan_profile_label=%r status=%s",
+        analysis.id,
+        analysis.firmware_name,
+        status.get("scan_profile_label"),
+        status,
+    )
+
+    analysis.status = status
+    analysis.save(update_fields=["firmware_name", "status"])
+    return metadata
+
+
 # ---------------------------------------------------------------------------
 # Native EMBA file discovery
 # ---------------------------------------------------------------------------
+
+def collect_import_warnings(base_root):
+    """Return human-readable warnings for missing import payloads."""
+    warnings = []
+
+    csv_dir = Path(base_root) / "csv_logs"
+    if not csv_dir.is_dir() or not any(csv_dir.glob("*.csv")):
+        warnings.append("missing csv_logs")
+
+    sbom_file = Path(base_root) / "SBOM" / "EMBA_cyclonedx_sbom.json"
+    if not sbom_file.is_file():
+        warnings.append("missing SBOM")
+
+    logger_dir = Path(base_root) / "logger"
+    if not logger_dir.is_dir() or not any(logger_dir.glob("*.log")):
+        warnings.append("missing logs")
+
+    report_root = Path(base_root)
+    html_index_candidates = [
+        report_root / "index.html",
+        report_root / "html-report" / "index.html",
+        *list(report_root.glob("**/index.html")),
+    ]
+    html_report_present = any(candidate.is_file() for candidate in html_index_candidates)
+    if not html_report_present:
+        warnings.append("missing html report")
+
+    return warnings
+
 
 def discover_emba_files(archive, files):
     """
@@ -519,6 +665,7 @@ def discover_emba_files(archive, files):
     for archive_path in files:
 
         filename = Path(archive_path).name
+        path_parts = Path(archive_path).parts
 
         # ---------------------------------------------------------------
         # CSV
@@ -575,7 +722,7 @@ def discover_emba_files(archive, files):
         # HTML report
         # ---------------------------------------------------------------
 
-        if "html-report" in Path(archive_path).parts:
+        if filename == "index.html" or filename.endswith(".html") or "html-report" in path_parts:
             discovered["html"].append(archive_path)
             continue
 
@@ -608,7 +755,15 @@ def result_read_in(analysis_id, extract_root=None):
         analysis_id,
     )
 
-    res = None
+    try:
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    except FirmwareAnalysis.DoesNotExist:
+        logger.warning("Cannot import results for unknown analysis %s", analysis_id)
+        return None
+
+    res, _created = Result.objects.get_or_create(firmware_analysis=analysis)
+    if _created:
+        logger.info("Created empty Result record for analysis %s before data import", analysis_id)
 
     base_root = Path(extract_root) if extract_root else (
         Path(settings.EMBA_LOG_ROOT)
@@ -617,6 +772,7 @@ def result_read_in(analysis_id, extract_root=None):
     )
 
     csv_directory = base_root / "csv_logs"
+    imported_data = False
 
     if csv_directory.is_dir():
 
@@ -653,10 +809,13 @@ def result_read_in(analysis_id, extract_root=None):
                 importer_name,
             )
 
-            res = importer(
+            imported = importer(
                 str(file_path),
                 analysis_id,
             )
+            if imported is not None:
+                imported_data = True
+                res = imported
 
     # -------------------------------------------------------------------
     # SBOM
@@ -671,10 +830,13 @@ def result_read_in(analysis_id, extract_root=None):
         )
 
         try:
-            res = sbom_json(
+            imported = sbom_json(
                 sbom_file,
                 analysis_id,
             )
+            if imported is not None:
+                imported_data = True
+                res = imported
 
         except DatabaseError as error:
             logger.error(
@@ -683,6 +845,13 @@ def result_read_in(analysis_id, extract_root=None):
                 exc_info=True,
             )
             raise
+
+    if not imported_data:
+        logger.warning(
+            "No supported CSV or SBOM data was found for analysis %s under %s",
+            analysis_id,
+            base_root,
+        )
 
     return res
 
@@ -780,48 +949,47 @@ def f50_csv(file_path, analysis_id):
     res, _created = Result.objects.get_or_create(
         firmware_analysis=FirmwareAnalysis.objects.get(id=analysis_id)
     )
-    if _created:
-        try:
-            res.emba_command = res_dict.get("emba_command", '')
-            res.architecture_verified = res_dict.get("architecture_verified", '')
-            # res.os_unverified=res_dict.get("os_unverified", '')
-            res.os_verified = res_dict.get("os_verified", '')
-            res.files = int(res_dict.get("files", 0))
-            res.directories = int(res_dict.get("directories", 0))
-            res.entropy_value = float(entropy_value)
-            res.shell_scripts = int(res_dict.get("shell_scripts", 0))
-            res.shell_script_vulns = int(res_dict.get("shell_script_vulns", 0))
-            res.kernel_modules = int(res_dict.get("kernel_modules", 0))
-            res.kernel_modules_lic = int(res_dict.get("kernel_modules_lic", 0))
-            res.interesting_files = int(res_dict.get("interesting_files", 0))
-            res.post_files = int(res_dict.get("post_files", 0))
-            res.canary = int(res_dict.get("canary", 0))
-            res.canary_per = int(res_dict.get("canary_per", 0))
-            res.relro = int(res_dict.get("relro", 0))
-            res.relro_per = int(res_dict.get("relro_per", 0))
-            res.no_exec = int(res_dict.get("nx", 0))
-            res.no_exec_per = int(res_dict.get("nx_per", 0))
-            res.pie = int(res_dict.get("pie", 0))
-            res.pie_per = int(res_dict.get("pie_per", 0))
-            res.stripped = int(res_dict.get("stripped", 0))
-            res.stripped_per = int(res_dict.get("stripped_per", 0))
-            res.bins_checked = int(res_dict.get("bins_checked", 0))
-            res.strcpy = int(res_dict.get("strcpy", 0))
-            res.strcpy_bin = json.dumps(res_dict.get("strcpy_bin", {}))
-            res.system_bin = json.dumps(res_dict.get("system_bin", {}))
-            res.versions_identified = int(res_dict.get("versions_identified", 0))
-            # 'cve_high': {'614': '17'}, 'cve_medium': {'1247': '13'}, 'cve_low': {'20': '0'}
-            res.cve_critical = json.dumps(res_dict.get("cve_critical", {'0': '0'}).popitem())
-            res.cve_high = json.dumps(res_dict.get("cve_high", {'0': '0'}).popitem())
-            res.cve_medium = json.dumps(res_dict.get("cve_medium", {'0': '0'}).popitem())
-            res.cve_low = json.dumps(res_dict.get("cve_low", {'0': '0'}).popitem())
-            res.exploits = int(res_dict.get("exploits", 0))
-            res.metasploit_modules = int(res_dict.get("metasploit_modules", 0))
-            res.certificates = int(res_dict.get("certificates", 0))
-            res.certificates_outdated = int(res_dict.get("certificates_outdated", 0))
-        except builtins.Exception as error:
-            logger.error("Error in f50_csv: %s", error)
-        res.save()
+    try:
+        res.emba_command = res_dict.get("emba_command", '')
+        res.architecture_verified = res_dict.get("architecture_verified", '')
+        # res.os_unverified=res_dict.get("os_unverified", '')
+        res.os_verified = res_dict.get("os_verified", '')
+        res.files = int(res_dict.get("files", 0))
+        res.directories = int(res_dict.get("directories", 0))
+        res.entropy_value = float(entropy_value)
+        res.shell_scripts = int(res_dict.get("shell_scripts", 0))
+        res.shell_script_vulns = int(res_dict.get("shell_script_vulns", 0))
+        res.kernel_modules = int(res_dict.get("kernel_modules", 0))
+        res.kernel_modules_lic = int(res_dict.get("kernel_modules_lic", 0))
+        res.interesting_files = int(res_dict.get("interesting_files", 0))
+        res.post_files = int(res_dict.get("post_files", 0))
+        res.canary = int(res_dict.get("canary", 0))
+        res.canary_per = int(res_dict.get("canary_per", 0))
+        res.relro = int(res_dict.get("relro", 0))
+        res.relro_per = int(res_dict.get("relro_per", 0))
+        res.no_exec = int(res_dict.get("nx", 0))
+        res.no_exec_per = int(res_dict.get("nx_per", 0))
+        res.pie = int(res_dict.get("pie", 0))
+        res.pie_per = int(res_dict.get("pie_per", 0))
+        res.stripped = int(res_dict.get("stripped", 0))
+        res.stripped_per = int(res_dict.get("stripped_per", 0))
+        res.bins_checked = int(res_dict.get("bins_checked", 0))
+        res.strcpy = int(res_dict.get("strcpy", 0))
+        res.strcpy_bin = json.dumps(res_dict.get("strcpy_bin", {}))
+        res.system_bin = json.dumps(res_dict.get("system_bin", {}))
+        res.versions_identified = int(res_dict.get("versions_identified", 0))
+        # 'cve_high': {'614': '17'}, 'cve_medium': {'1247': '13'}, 'cve_low': {'20': '0'}
+        res.cve_critical = json.dumps(res_dict.get("cve_critical", {'0': '0'}).popitem())
+        res.cve_high = json.dumps(res_dict.get("cve_high", {'0': '0'}).popitem())
+        res.cve_medium = json.dumps(res_dict.get("cve_medium", {'0': '0'}).popitem())
+        res.cve_low = json.dumps(res_dict.get("cve_low", {'0': '0'}).popitem())
+        res.exploits = int(res_dict.get("exploits", 0))
+        res.metasploit_modules = int(res_dict.get("metasploit_modules", 0))
+        res.certificates = int(res_dict.get("certificates", 0))
+        res.certificates_outdated = int(res_dict.get("certificates_outdated", 0))
+    except builtins.Exception as error:
+        logger.error("Error in f50_csv: %s", error)
+    res.save()
     return res
 
 
