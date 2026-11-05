@@ -6,6 +6,7 @@ import builtins
 import json
 import logging
 import os
+from http import HTTPStatus
 from pathlib import Path
 import signal
 
@@ -126,7 +127,7 @@ def report_dashboard(request):
     :return: rendered ReportDashboard
     """
     # show all not hidden by others and ALL of your own
-    firmwares = (FirmwareAnalysis.objects.filter(hidden=False) | FirmwareAnalysis.objects.filter(user=request.user)).distinct()
+    firmwares = (FirmwareAnalysis.objects.filter(hidden=False) | FirmwareAnalysis.objects.filter(user=request.user)).distinct().order_by('-start_date')
     label_form = LabelForm()
     label_select_form = LabelSelectForm()
     return render(request, 'dashboard/reportDashboard.html', {'firmwares': firmwares, 'username': request.user.username, 'label_form': label_form, 'label_select_form': label_select_form})
@@ -169,7 +170,8 @@ def show_log(request, analysis_id):
     if not user_is_auth(request.user, analysis.user):
         return HttpResponseForbidden("You are not authorized!")
     # get the file path
-    log_file_path_ = f"{Path(analysis.path_to_logs).parent}/emba_run.log"
+    log_dir = Path(analysis.path_to_logs) if analysis.path_to_logs else Path(settings.EMBA_LOG_ROOT) / str(analysis_id)
+    log_file_path_ = Path(log_dir).parent / "emba_run.log" if Path(log_dir).name == "emba_logs" else Path(log_dir) / "emba_run.log"
     logger.debug("Taking file at %s and render it", log_file_path_)
     try:
         with open(log_file_path_, 'rb') as log_file_:
@@ -199,7 +201,8 @@ def show_error(request, analysis_id):
     if not user_is_auth(request.user, analysis.user):
         return HttpResponseForbidden("You are not authorized!")
     # get the file path
-    log_file_path_ = f"{Path(analysis.path_to_logs).parent}/emba_error.log"
+    log_dir = Path(analysis.path_to_logs) if analysis.path_to_logs else Path(settings.EMBA_LOG_ROOT) / str(analysis_id)
+    log_file_path_ = Path(log_dir).parent / "emba_error.log" if Path(log_dir).name == "emba_logs" else Path(log_dir) / "emba_error.log"
     logger.debug("Taking file at %s and render it", log_file_path_)
     try:
         with open(log_file_path_, 'rb') as log_file_:
@@ -283,10 +286,72 @@ def delete_analysis(request, analysis_id):
     return redirect('..')
 
 
+@permission_required("users.dashboard_permission_advanced", login_url='/')
+@require_http_methods(["POST"])
+@login_required(login_url='/' + settings.LOGIN_URL)
+def delete_selected_analyses(request):
+    """Delete a selected set of analyses, keeping the same authorization and cleanup logic as single deletes."""
+    selected_ids = request.POST.getlist("analysis_ids")
+    if not selected_ids:
+        messages.error(request, "No analysis selected for deletion")
+        return redirect('embark-ReportDashboard')
+
+    deleted_count = 0
+    skipped_count = 0
+    auth_denied_count = 0
+    running_count = 0
+    deletion_error_count = 0
+
+    for raw_id in selected_ids:
+        try:
+            analysis = FirmwareAnalysis.objects.get(id=raw_id)
+        except FirmwareAnalysis.DoesNotExist:
+            skipped_count += 1
+            continue
+
+        if not user_is_auth(request.user, analysis.user):
+            auth_denied_count += 1
+            skipped_count += 1
+            continue
+
+        if not analysis.finished:
+            try:
+                BoundedExecutor.submit_kill(analysis.id)
+                if analysis.pid:
+                    os.killpg(os.getpgid(analysis.pid), signal.SIGTERM)
+            except builtins.Exception as error:
+                logger.error("Error %s when stopping analysis %s for bulk delete", error, analysis.id)
+            running_count += 1
+            skipped_count += 1
+            continue
+
+        try:
+            analysis.delete(keep_parents=True)
+            deleted_count += 1
+        except builtins.Exception as error:
+            logger.error("Error %s when deleting analysis %s in bulk delete", error, analysis.id)
+            deletion_error_count += 1
+            skipped_count += 1
+
+    if deleted_count:
+        messages.success(request, f"Deleted {deleted_count} analysis record(s)")
+
+    if running_count:
+        messages.error(request, f"{running_count} analysis(es) failed to delete because they are still running")
+    if auth_denied_count:
+        messages.error(request, f"{auth_denied_count} analysis(es) could not be deleted because you are not authorized")
+    if deletion_error_count:
+        messages.error(request, f"{deletion_error_count} analysis(es) failed to delete due to an unexpected error")
+    if skipped_count == 0 and deleted_count == 0:
+        messages.error(request, "No analyses were deleted")
+
+    return redirect('embark-ReportDashboard')
+
+
 @permission_required("users.dashboard_permission_minimal", login_url='/')
 @login_required(login_url='/' + settings.LOGIN_URL)
 @require_http_methods(["GET"])
-def archive_analysis(request, analysis_id):
+def archive_analysis(request, analysis_id): # FIXME: Archiving non-functional
     """
     archives analysis, safes zip instead of normal log directory
     and sets analysis into archived state
@@ -304,8 +369,9 @@ def archive_analysis(request, analysis_id):
     if analysis.zip_file is None:
         # make archive for uuid
         _ = make_zip(request, analysis_id)
-    # TODO is this ever reached??
-    analysis.do_archive()
+
+    analysis.do_archive() # FIXME: reached and faulty
+    
     analysis.archived = True
     analysis.save(update_fields=["archived"])
     messages.success(request, 'Analysis: ' + str(analysis_id) + ' successfully archived')
@@ -343,6 +409,10 @@ def create_label(request):
     req_logger.info("User %s called create label", request.user.username)
     form = LabelForm(request.POST)
     if form.is_valid():
+        requested_name = str(form.cleaned_data.get("label_name", "")).strip()
+        if requested_name.lower() == "imported":
+            messages.error(request, 'The imported label is reserved and cannot be created manually')
+            return redirect('..')
         logger.info("User %s tryied to create label %s", request.user.username, request.POST['label_name'])
         new_label = form.save()
         messages.info(request, 'creation successful of ' + str(new_label))
@@ -363,7 +433,7 @@ def add_label(request, analysis_id):
     form = LabelSelectForm(request.POST)
     if form.is_valid():
         new_label = form.cleaned_data["label"]
-        logger.info("User %s tryied to add label %s", request.user.username, new_label.label_name)
+        logger.info("User %s tried to add label %s", request.user.username, new_label.label_name)
         # get analysis obj
         try:
             analysis = FirmwareAnalysis.objects.get(id=analysis_id)
@@ -398,6 +468,9 @@ def rm_label(request, analysis_id, label_name):
         messages.error(request, "Analysis does not exist")
         return redirect('..')
     # get lobel obj
+    if str(label_name).lower() == "imported":
+        messages.error(request, 'The imported label is protected and cannot be removed')
+        return redirect('..')
     label_obj = Label.objects.get(label_name=label_name)
     # check auth
     if not user_is_auth(request.user, analysis.user):
@@ -443,15 +516,15 @@ def get_sbom_analysis(request, analysis_id):
         result = Result.objects.get(firmware_analysis=analysis)
         sbom = result.sbom
     except Result.DoesNotExist:
-        sbom = None
-        messages.error(request, "SBOM does not exist")
-        return redirect('..')
+        logger.warning("SBOM requested for analysis %s but no report result exists yet.", analysis_id)
+        messages.warning(request, "SBOM is not available yet for this analysis. The archive may be incomplete.")
+        return JsonResponse({"ERROR": "SBOM is not available yet for this analysis. The archive may be incomplete."}, status=HTTPStatus.OK)
     # check if user auth
     if not user_is_auth(request.user, analysis.user):
         return HttpResponseForbidden("You are not authorized!")
     if sbom is None:
-        messages.error(request, 'Analysis: ' + str(analysis_id) + ' can not find sbom')
-        return redirect('..')
+        messages.warning(request, 'Analysis: ' + str(analysis_id) + ' has no SBOM data available yet')
+        return JsonResponse({"ERROR": "No SBOM data is available for this analysis yet."}, status=HTTPStatus.OK)
     with open(sbom.file, "r", encoding='UTF-8') as sbom_file:
         response = JsonResponse(json.load(sbom_file))
         response['Content-Disposition'] = 'inline; filename=' + str(analysis_id) + '_sbom.json'
@@ -466,19 +539,23 @@ def api_sbom_analysis(request, analysis_id):
     exports sbom as raw json
     """
     logger.info("export sbom with analysis id: %s", analysis_id)
-    response = JsonResponse({"ERROR": "SBOM for this analysis-id does not exist"})
+    response = JsonResponse({"ERROR": "SBOM for this analysis-id does not exist"}, status=HTTPStatus.OK)
     try:
         analysis = FirmwareAnalysis.objects.get(id=analysis_id)
         result = Result.objects.get(firmware_analysis=analysis)
         sbom = result.sbom
     except Result.DoesNotExist:
-        response = JsonResponse({"ERROR": "Result for this analysis-id does not exist"})
+        response = JsonResponse({"ERROR": "Result for this analysis-id does not exist yet. The archive may be incomplete."}, status=HTTPStatus.OK)
+        return response
     # check if user auth
     if not user_is_auth(request.user, analysis.user):
-        response = JsonResponse({"ERROR": "You are not authorized!"})
-    if sbom is not None:
-        with open(sbom.file, "r", encoding='UTF-8') as sbom_file:
-            response = JsonResponse(json.load(sbom_file))
-            logger.info("export sbom with analysis id: %s", analysis_id)
+        response = JsonResponse({"ERROR": "You are not authorized!"}, status=HTTPStatus.OK)
+        return response
+    if sbom is None:
+        response = JsonResponse({"ERROR": "No SBOM data is available for this analysis yet."}, status=HTTPStatus.OK)
+        return response
+    with open(sbom.file, "r", encoding='UTF-8') as sbom_file:
+        response = JsonResponse(json.load(sbom_file))
+        logger.info("export sbom with analysis id: %s", analysis_id)
     response['Content-Disposition'] = 'inline; filename=' + str(analysis_id) + '_sbom.json'
     return response

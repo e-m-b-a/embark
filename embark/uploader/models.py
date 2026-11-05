@@ -460,17 +460,38 @@ def delete_analysis_pre_delete(sender, instance, **kwargs):
     callback function
     delete the analysis and folder structure in storage on recieve
     """
-    # delete logs
     try:
-        if sender.archived is False:
-            if sender.path_to_logs != "/" and settings.EMBA_LOG_ROOT in sender.path_to_logs:
-                shutil.rmtree(instance.path_to_logs, ignore_errors=False)
-            logger.error("Can't delete log directory of: %s since it's %s", str(sender), instance.path_to_logs)
-        elif sender.archived is True:
-            # delete zip file
-            sender.zip_file.delete()
-        else:
-            pass
+        analysis_root = Path(settings.EMBA_LOG_ROOT) / str(instance.id)
+        log_path = Path(getattr(instance, "path_to_logs", "")) if getattr(instance, "path_to_logs", None) else None
+
+        # Delete the actual log tree first, then the parent analysis directory.
+        # This removes both the emba_logs folder and the leftover root directory
+        # that holds emba_run.log for imported analyses.
+        if log_path and str(log_path) != "/":
+            try:
+                resolved_log_path = log_path.resolve(strict=False)
+                if resolved_log_path.is_relative_to(Path(settings.EMBA_LOG_ROOT).resolve()):
+                    if resolved_log_path.exists() and resolved_log_path.is_dir():
+                        shutil.rmtree(resolved_log_path, ignore_errors=False)
+                        logger.info("Deleted log directory for analysis %s: %s", str(instance.id), resolved_log_path)
+            except builtins.Exception as _rmtree_error:
+                logger.error("Failed to delete log directory for %s: %s", str(instance.id), _rmtree_error)
+
+        if analysis_root.exists() and analysis_root.is_dir():
+            try:
+                if analysis_root.is_relative_to(Path(settings.EMBA_LOG_ROOT).resolve()):
+                    shutil.rmtree(analysis_root, ignore_errors=False)
+                    logger.info("Deleted analysis root directory for %s: %s", str(instance.id), analysis_root)
+            except builtins.Exception as _root_error:
+                logger.error("Failed to delete analysis root directory for %s: %s", str(instance.id), _root_error)
+
+        if getattr(instance, "archived", False) is True:
+            try:
+                if getattr(instance, "zip_file", None):
+                    instance.zip_file.delete()
+                    logger.info("Deleted archive for analysis %s", str(instance.id))
+            except builtins.Exception as _zip_err:
+                logger.error("Failed to delete zip for %s: %s", str(instance.id), _zip_err)
     except builtins.Exception as _error:
         logger.error("Error durring delete of: %s - %s", str(sender), _error)
 

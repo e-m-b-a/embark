@@ -1,0 +1,21 @@
+.export-entry {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 12px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.export-info {
+    line-height: 1.6;
+}
+
+.export-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.export-actions form {
+    margin: 0;
+}

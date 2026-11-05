@@ -1,5 +1,5 @@
 __copyright__ = 'Copyright 2022-2026 Siemens Energy AG'
-__author__ = 'Benedikt Kuehne'
+__author__ = 'Benedikt Kuehne, Eren Erguer'
 __license__ = 'MIT'
 
 import logging
@@ -11,6 +11,11 @@ from uploader.models import FirmwareAnalysis, FirmwareFile, Device
 
 logger = logging.getLogger(__name__)
 
+EXPORT_OPTIONS = (
+    ("html-report", "HTML report"),
+    ("logs", "Logs"),
+    ("firmware", "Firmware"),
+)
 
 class FirmwareAnalysisImportForm(forms.Form):
     zip_log_file = forms.ModelChoiceField(queryset=LogZipFile.objects.all(), empty_label='Select the zip-file for the import', required=True)
@@ -22,8 +27,22 @@ class FirmwareAnalysisImportForm(forms.Form):
 
 
 class FirmwareAnalysisExportForm(forms.Form):
-    analysis = forms.ModelChoiceField(queryset=FirmwareAnalysis.objects.filter(finished=True, failed=False))
+    analysis = forms.ModelChoiceField(
+        queryset=FirmwareAnalysis.objects.filter(finished=True, failed=False)
+    )
 
+    export_options = forms.MultipleChoiceField(
+        choices=EXPORT_OPTIONS,
+        widget=forms.CheckboxSelectMultiple,
+        required=True,
+        initial=["html-report"],
+    )
+
+    def clean_export_options(self):
+        selected = self.cleaned_data.get("export_options") or []
+        if "html-report" not in selected:
+            raise forms.ValidationError("The HTML report export option (html-report) is required.")
+        return selected
 
 class DeleteZipForm(forms.Form):
     zip_file = forms.ModelChoiceField(queryset=LogZipFile.objects, empty_label='Select zip-file to delete')

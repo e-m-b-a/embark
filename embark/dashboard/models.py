@@ -46,7 +46,7 @@ class SoftwareBillOfMaterial(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
     meta = models.CharField(verbose_name="meta data sbom", blank=False, editable=True, default="NA", max_length=1024)
     component = models.ManyToManyField(SoftwareInfo, help_text='Software Bill of Material', related_query_name='sbom', editable=True, blank=True)
-    file = models.FilePathField(verbose_name='sbom_file', editable=True, default=os.path.join(settings.EMBA_LOG_ROOT, 'empty.json'), max_length=110)
+    file = models.FilePathField(verbose_name='sbom_file', editable=True, default=os.path.join(settings.EMBA_LOG_ROOT, 'empty.json'), max_length=2048)
 
 
 class Result(models.Model):

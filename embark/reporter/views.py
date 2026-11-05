@@ -22,6 +22,7 @@ from django.shortcuts import redirect, render
 from django.contrib import messages
 from django.template.loader import get_template
 from django.http import HttpResponse, JsonResponse
+from django.utils import timezone
 from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.http import require_http_methods
 from django.urls import reverse
@@ -182,12 +183,30 @@ def get_individual_report(request, analysis_id):
                 else:
                     return_dict['id'] = "Firmware was deleted"
                 return_dict['device_list'] = [str(_device) for _device in analysis_object.device.all()]
-                return_dict['start_date'] = analysis_object.start_date
-                return_dict['end_date'] = analysis_object.end_date
+                import_files_dir = None
+                try:
+                    import_files_dir = (analysis_object.status or {}).get('import_files_dir')
+                except Exception:
+                    import_files_dir = None
+
+                if import_files_dir:
+                    return_dict['path_to_logs'] = import_files_dir
+                else:
+                    return_dict['path_to_logs'] = analysis_object.path_to_logs
+
+                def _local_iso(dt):
+                    if dt is None:
+                        return None
+                    try:
+                        return timezone.localtime(dt).isoformat()
+                    except Exception:
+                        return str(dt)
+
+                return_dict['start_date'] = _local_iso(analysis_object.start_date)
+                return_dict['end_date'] = _local_iso(analysis_object.end_date)
                 return_dict['duration'] = analysis_object.duration
                 return_dict['notes'] = analysis_object.notes
                 return_dict['version'] = analysis_object.version
-                return_dict['path_to_logs'] = analysis_object.path_to_logs
                 return_dict['strcpy_bin'] = json.loads(return_dict['strcpy_bin'])
                 # architecture
                 arch_val = return_dict.get('architecture_verified')
@@ -201,8 +220,13 @@ def get_individual_report(request, analysis_id):
 
                 return JsonResponse(data=return_dict, status=HTTPStatus.OK)
             except Result.DoesNotExist:
-                logger.error('Report for firmware_id: %s not found in database', analysis_id)
-                return JsonResponse(data={'error': 'Not Found'}, status=HTTPStatus.NOT_FOUND)
+                logger.warning('Report for firmware_id: %s is missing from the database; import data is incomplete.', analysis_id)
+                return JsonResponse(
+                    data={
+                        'error': 'This analysis has no imported report yet. The archive was incomplete or the import did not produce any supported results.',
+                    },
+                    status=HTTPStatus.OK,
+                )
     logger.error('Bad request for get_individual_report')
     return JsonResponse(data={'error': 'Bad request'}, status=HTTPStatus.BAD_REQUEST)
 
@@ -304,7 +328,7 @@ def get_accumulated_reports(request):
 @permission_required("users.reporter_permission", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def download_zipped(request, analysis_id):
+def download_zipped(request, analysis_id): #TODO: bound to old zip function, remove it and occurences in archive functions
     """
     download zipped log directory
 
@@ -336,7 +360,7 @@ def download_zipped(request, analysis_id):
 @permission_required("users.reporter_permission", login_url='/')
 @require_http_methods(["GET"])
 @login_required(login_url='/' + settings.LOGIN_URL)
-def make_zip(request, analysis_id):
+def make_zip(request, analysis_id): # TODO: old zip function, remove it and occurences in archive functions
     """
     submit analysis for zipping log directory
     """

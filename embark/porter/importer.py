@@ -1,16 +1,18 @@
 # pylint: disable=C0201
 __copyright__ = 'Copyright 2022-2026 Siemens Energy AG'
-__author__ = 'Benedikt Kuehne'
+__author__ = 'Benedikt Kuehne, Eren Erguer'
 __license__ = 'MIT'
 
 import builtins
-import logging
 import csv
+import html
 import json
+import logging
 import os
+import re
+import zipfile
 
 from pathlib import Path
-import re
 
 from django.conf import settings
 from django.db import DatabaseError
@@ -18,83 +20,918 @@ from django.db import DatabaseError
 from dashboard.models import SoftwareBillOfMaterial, SoftwareInfo, Vulnerability, Result
 from uploader.models import FirmwareAnalysis
 
+
 logger = logging.getLogger(__name__)
 
+EMBARK_EXPORT_FORMAT = "embark-export"
+EMBARK_EXPORT_VERSION = 1
 
-def result_read_in(analysis_id):
+CSV_IMPORTERS = {
+    "base_aggregator": "f50_csv",
+    "vul_aggregator": "f20_csv",
+}
+
+def import_results(zip_path, analysis_id, status_callback=None, extract_root=None):
     """
-    calls read for all files inside csv_logs and stores its contents into the Result model
-    :return: success->result_obj fail->None
+    Import an archive into an EMBArk analysis.
+
+    Two archive formats are supported:
+
+    1. EMBArk export
+       Identified through manifest.json.
+
+    2. Native EMBA output
+       No manifest required. Relevant files are discovered by searching
+       the archive and resolving EMBA module names against the installed
+       EMBA module architecture.
+
+    In both cases files are normalized into the provided extraction root.
+    By default this is <EMBA_LOG_ROOT>/<analysis_id>/emba_logs/, but import
+    batches may override it to keep staging and imported payloads separate.
     """
-    logger.debug("starting read-in of %s", analysis_id)
-    res = None
-    csv_directory = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/csv_logs/"
-    csv_list = [os.path.join(csv_directory, file_) for file_ in os.listdir(csv_directory)]
-    for file_ in csv_list:
-        logger.debug("trying to read: %s", file_)
-        if os.path.isfile(file_):      # TODO change check. > if valid EMBA csv file
-            logger.debug("File %s found and attempting to read", file_)
-            if file_.endswith('f50_base_aggregator.csv'):
-                res = f50_csv(file_, analysis_id)
-                logger.debug("Result for %s created or updated", analysis_id)
-            elif file_.endswith('f20_vul_aggregator.csv'):
-                logger.info("f20 readin for %s skipped", analysis_id)
-                # FIXME f20 in emba is broken!
-                # res = f20_csv(file_, analysis_id)
-                # logger.debug("Result for %s created or updated", analysis_id)
-    # json_directory = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/json_logs/"
-    # json_list = [os.path.join(json_directory, file_) for file_ in os.listdir(json_directory)]
-    # for file_ in json_list:
-    #     logger.debug("trying to read: %s", file_)
-    #     if os.path.isfile(file_):      # TODO change check. > if valid EMBA json file
-    #         logger.debug("File %s found and attempting to read", file_)
-    #         if file_.endswith('f15_cyclonedx_sbom.json'):
-    #             logger.info("f15 readin for %s skipped", analysis_id)
-    #             # f21_cyclonedx_sbom_json.json move into db object
-    #             res = f15_json(file_, analysis_id)
-    sbom_file = f"{settings.EMBA_LOG_ROOT}/{analysis_id}/emba_logs/SBOM/EMBA_cyclonedx_sbom.json"
-    if os.path.isfile(sbom_file):
-        logger.debug("File %s found and attempting to read", sbom_file)
+
+    def report(phase, percentage, message):
+        if status_callback is not None:
+            status_callback(phase, percentage, message)
+
+    message = f"Importing {zip_path}"
+    print(f"[importer] {message}")
+    logger.info(message)
+    report("Validating archive", 5, "Opening archive and checking contents")
+
+    try:
+        with zipfile.ZipFile(zip_path, "r") as archive:
+
+            files = index_zip(archive)
+            if not files:
+                raise ValueError(f"Archive is empty or contains no readable files: {zip_path}")
+            report("Scanning archive", 15, f"Indexed {len(files)} files")
+
+            manifest = read_manifest(archive)
+
+            if manifest is not None:
+                logger.info(
+                    "Detected EMBArk export archive (version %s)",
+                    manifest.get("version"),
+                )
+                report("Importing export", 30, "Detected EMBArk export archive")
+
+                validate_manifest(manifest)
+
+                import_embark_export(
+                    archive,
+                    files,
+                    analysis_id,
+                    status_callback=status_callback,
+                    extract_root=extract_root,
+                )
+
+            else:
+                logger.info(
+                    "No EMBArk manifest found. Treating archive as native EMBA output."
+                )
+                report("Importing native output", 30, "Detected native EMBA output archive")
+                import_emba_output(
+                    archive,
+                    files,
+                    analysis_id,
+                    status_callback=status_callback,
+                    extract_root=extract_root,
+                )
+    except (OSError, ValueError, zipfile.BadZipFile, zipfile.LargeZipFile) as error:
+        logger.exception("Archive import failed for analysis %s: %s", analysis_id, error)
+        raise ValueError(f"Archive could not be imported: {error}") from error
+
+    base_root = Path(extract_root) if extract_root else (
+        Path(settings.EMBA_LOG_ROOT)
+        / str(analysis_id)
+        / "emba_logs"
+    )
+    warnings = collect_import_warnings(base_root)
+
+    result = result_read_in(analysis_id, extract_root=extract_root)
+    if result is None or warnings:
+        missing_parts = "; ".join(warnings) if warnings else "no supported CSV/SBOM data was found"
+        report("Import warning", 100, f"Archive was processed, but the import is incomplete: {missing_parts}.")
+        logger.warning("Archive for analysis %s produced incomplete import payload: %s", analysis_id, missing_parts)
+        return result
+
+    report("Import complete", 100, "Archive extraction complete")
+    return result
+
+# ---------------------------------------------------------------------------
+# Manifest Functions
+# ---------------------------------------------------------------------------
+
+def read_manifest(archive):
+    """
+    Read manifest.json if it exists.
+
+    Returns:
+        dict: Parsed manifest.
+        None: No manifest exists.
+    """
+
+    try:
+        with archive.open("manifest.json") as manifest_file:
+            return json.load(manifest_file)
+
+    except KeyError:
+        return None
+
+    except json.JSONDecodeError as error:
+        raise ValueError("Invalid manifest.json") from error
+
+
+def validate_manifest(manifest):
+    """
+    Validate the EMBArk export manifest.
+    """
+
+    archive_format = manifest.get("format")
+    version = manifest.get("version")
+
+    if archive_format != EMBARK_EXPORT_FORMAT:
+        raise ValueError(
+            f"Unsupported archive format: {archive_format}"
+        )
+
+    if version != EMBARK_EXPORT_VERSION:
+        raise ValueError(
+            f"Unsupported EMBArk export version: {version}"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Importing EMBArk export format
+# ---------------------------------------------------------------------------
+
+def import_embark_export(archive, files, analysis_id, status_callback=None, extract_root=None):
+    """
+    Import an archive produced by the EMBArk exporter.
+    """
+
+    def report(phase, percentage, message):
+        if status_callback is not None:
+            status_callback(phase, percentage, message)
+
+    classified = classify_files(files)
+
+    extract_root = get_extract_root(analysis_id, extract_root)
+    total_files = sum(len(classified[key]) for key in ("csv", "sbom", "logs", "html"))
+    processed = 0
+
+    # CSV files
+    for archive_path in classified["csv"]:
+        target = extract_root / archive_path
+        extract_archive_file(
+            archive,
+            archive_path,
+            target,
+        )
+        processed += 1
+        report("Extracting export files", min(80, 35 + int((processed / max(total_files, 1)) * 45)), f"Extracted {processed}/{total_files} files")
+
+    # SBOM
+    for archive_path in classified["sbom"]:
+        target = extract_root / archive_path
+        extract_archive_file(
+            archive,
+            archive_path,
+            target,
+        )
+        processed += 1
+        report("Extracting export files", min(80, 35 + int((processed / max(total_files, 1)) * 45)), f"Extracted {processed}/{total_files} files")
+
+    # Logs
+    for archive_path in classified["logs"]:
+        target = extract_root / archive_path
+        extract_archive_file(
+            archive,
+            archive_path,
+            target,
+        )
+        processed += 1
+        report("Extracting export files", min(80, 35 + int((processed / max(total_files, 1)) * 45)), f"Extracted {processed}/{total_files} files")
+
+    # HTML report
+    for archive_path in classified["html"]:
+        target = extract_root / archive_path
+        extract_archive_file(
+            archive,
+            archive_path,
+            target,
+        )
+        processed += 1
+        report("Extracting export files", min(80, 35 + int((processed / max(total_files, 1)) * 45)), f"Extracted {processed}/{total_files} files")
+
+
+# ---------------------------------------------------------------------------
+# Native EMBA import
+# ---------------------------------------------------------------------------
+
+def import_emba_output(archive, files, analysis_id, status_callback=None, extract_root=None):
+    """
+    Import a native EMBA output archive.
+    """
+
+    def report(phase, percentage, message):
+        if status_callback is not None:
+            status_callback(phase, percentage, message)
+
+    discovered = discover_emba_files(
+        archive,
+        files,
+    )
+
+    extract_root = get_extract_root(analysis_id, extract_root)
+    total_files = sum(len(discovered[key]) for key in ("csv", "sbom", "logs", "html"))
+    processed = 0
+
+    # CSV files
+    for entry in discovered["csv"]:
+        archive_path = entry["file"]
+
+        target = (
+            extract_root
+            / "csv_logs"
+            / Path(archive_path).name
+        )
+
+        extract_archive_file(
+            archive,
+            archive_path,
+            target,
+        )
+        processed += 1
+        report("Extracting EMBA output", min(80, 35 + int((processed / max(total_files, 1)) * 45)), f"Extracted {processed}/{total_files} files")
+
+    # SBOM
+    for archive_path in discovered["sbom"]:
+        target = (
+            extract_root
+            / "SBOM"
+            / "EMBA_cyclonedx_sbom.json"
+        )
+
+        extract_archive_file(
+            archive,
+            archive_path,
+            target,
+        )
+        processed += 1
+        report("Extracting EMBA output", min(80, 35 + int((processed / max(total_files, 1)) * 45)), f"Extracted {processed}/{total_files} files")
+
+        break
+
+    # Logs
+    for archive_path in discovered["logs"]:
+        target = (
+            extract_root
+            / "logger"
+            / Path(archive_path).name
+        )
+
+        extract_archive_file(
+            archive,
+            archive_path,
+            target,
+        )
+        processed += 1
+        report("Extracting EMBA output", min(80, 35 + int((processed / max(total_files, 1)) * 45)), f"Extracted {processed}/{total_files} files")
+
+    # HTML report
+    for archive_path in discovered["html"]:
+        parts = Path(archive_path).parts
+
         try:
-            res = sbom_json(sbom_file, analysis_id)
+            html_index = parts.index("html-report")
+        except ValueError:
+            continue
+
+        relative_path = Path(*parts[html_index:])
+
+        target = extract_root / relative_path
+
+        extract_archive_file(
+            archive,
+            archive_path,
+            target,
+        )
+        processed += 1
+        report("Extracting EMBA output", min(80, 35 + int((processed / max(total_files, 1)) * 45)), f"Extracted {processed}/{total_files} files")
+
+
+# ---------------------------------------------------------------------------
+# Archive discovery
+# ---------------------------------------------------------------------------
+
+def index_zip(archive):
+    """
+    Return all files contained in an archive.
+    """
+
+    return [
+        name
+        for name in archive.namelist()
+        if not name.endswith("/")
+    ]
+
+
+def classify_files(files):
+    """
+    Classify files belonging to the known EMBArk export structure.
+    """
+
+    return {
+        "csv": [
+            file_path
+            for file_path in files
+            if file_path.startswith("csv_logs/")
+            and file_path.endswith(".csv")
+        ],
+
+        "sbom": [
+            file_path
+            for file_path in files
+            if file_path.startswith("SBOM/")
+            and file_path.endswith(".json")
+        ],
+
+        "logs": [
+            file_path
+            for file_path in files
+            if file_path.startswith("logger/")
+            and file_path.endswith(".log")
+        ],
+
+        "html": [
+            file_path
+            for file_path in files
+            if "html-report/" in file_path
+        ],
+    }
+
+
+def get_extract_root(analysis_id, extract_root=None):
+    """
+    Return the extraction root for an import.
+
+    The default remains the live analysis output tree, but import batches may
+    supply a dedicated root such as logroot/<analysis_id>/imports/<importid>/files.
+    """
+
+    if extract_root:
+        return Path(extract_root)
+
+    return (
+        Path(settings.EMBA_LOG_ROOT)
+        / str(analysis_id)
+        / "emba_logs"
+    )
+
+
+def extract_archive_file(archive, archive_path, target):
+    """
+    Safely extract one file from an archive.
+    """
+
+    target = Path(target)
+
+    target.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    with archive.open(archive_path) as source:
+        with open(target, "wb") as destination:
+            destination.write(source.read())
+
+
+# ---------------------------------------------------------------------------
+# EMBA module discovery
+# ---------------------------------------------------------------------------
+
+def get_emba_modules():
+    """
+    Discover installed EMBA modules as:
+        {
+            "name": "base_aggregator",
+            "number": "f50",
+            "path": ...
+        }
+    """
+
+    modules = {}
+
+    modules_root = Path(settings.EMBA_ROOT) / "modules"
+
+    if not modules_root.is_dir():
+        logger.warning(
+            "EMBA modules directory does not exist: %s",
+            modules_root,
+        )
+        return modules
+
+    for path in modules_root.iterdir():
+
+        if path.is_dir():
+            shell_files = list(path.glob("*.sh"))
+
+        elif path.is_file() and path.suffix == ".sh":
+            shell_files = [path]
+
+        else:
+            continue
+
+        for shell_file in shell_files:
+
+            module_number, module_name = parse_module_identity(
+                shell_file.name,
+                file_type="sh"
+            )
+
+            if module_name is None:
+                continue
+
+            modules[module_name] = {
+                "number": module_number,
+                "name": module_name,
+                "path": shell_file,
+            }
+
+    logger.debug(
+        "Discovered %d EMBA modules",
+        len(modules),
+    )
+
+    return modules
+
+def parse_module_identity(filename, file_type="sh"):
+    """
+    Parse an EMBA module filename by separating name and number.
+    Supports both .sh and .csv files.
+    
+    Args:
+        filename: The filename to parse
+        file_type: Either 'sh' or 'csv'
+    
+    Returns:
+        Tuple of (module_number, module_name) or (None, None) if not matched
+    """
+
+    name = Path(filename).name
+
+    if file_type == "csv":
+        pattern = r"^([A-Za-z]\d+)_([A-Za-z0-9_]+)\.csv$"
+    else:
+        pattern = r"^([A-Za-z]\d+)_([A-Za-z0-9_]+)\.sh$"
+
+    match = re.match(pattern, name, re.IGNORECASE)
+
+    if not match:
+        return None, None
+
+    module_number = match.group(1).upper()
+    module_name = match.group(2).lower()
+    return module_number, module_name
+
+
+def resolve_module(module_name, emba_modules):
+    """
+    Resolve an EMBA module by name.
+    """
+
+    if module_name is None:
+        return None
+
+    return emba_modules.get(module_name.lower())
+
+
+def extract_emba_report_metadata(html_content):
+    """
+    Extract firmware and scan-profile metadata from a native EMBA HTML report.
+    """
+    if not html_content:
+        return {}
+
+    if isinstance(html_content, bytes):
+        html_content = html_content.decode("utf-8", errors="replace")
+
+    text = html.unescape(html_content)
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+
+    firmware = ""
+    match = re.search(r"Tested firmware:\s*(?P<firmware>.*?)(?=\s+EMBA start command:|$)", text)
+    if match:
+        firmware = match.group("firmware").strip()
+    firmware_name = os.path.basename(firmware.rstrip("/")) if firmware else ""
+    firmware_name = re.sub(r"\s*\[\s*\+\s*\]\s*$", "", firmware_name)
+
+    scan_profile = ""
+    scan_label = ""
+    match = re.search(r"EMBA start command:\s*(?P<command>.*?)(?=\s+EMBA version:|$)", text)
+    if match:
+        command = match.group("command")
+        profile_match = re.search(r"-p\s+(?:\./)?scan-profiles/(?P<profile>[A-Za-z0-9_.-]+\.emba)", command)
+        if profile_match:
+            scan_profile = profile_match.group("profile")
+            lowered = scan_profile.lower()
+            if "quick" in lowered:
+                scan_label = "quick scan profile"
+            elif "default" in lowered or "default-scan" in lowered:
+                scan_label = "default scan profile"
+            else:
+                scan_label = scan_profile.replace(".emba", "").replace("-", " ")
+
+    logger.debug(
+        "EMBA metadata parsed: firmware=%r scan_profile=%r scan_label=%r",
+        firmware_name,
+        scan_profile,
+        scan_label,
+    )
+
+    return {
+        "firmware_name": firmware_name,
+        "scan_profile": scan_profile,
+        "scan_profile_label": scan_label,
+    }
+
+
+def apply_emba_report_metadata(analysis):
+    """Populate an imported analysis with real firmware and scan metadata from the report HTML."""
+    if analysis is None:
+        return {}
+
+    path = getattr(analysis, "path_to_logs", None)
+    if not path or not isinstance(path, (str, os.PathLike)):
+        return {}
+
+    report_root = Path(path)
+    candidates = sorted(report_root.glob("**/f50_base_aggregator.html")) + sorted(report_root.glob("**/F50_base_aggregator.html"))
+    if not candidates:
+        logger.debug("No f50 base aggregator report found under %s while applying EMBA metadata", report_root)
+        return {}
+
+    report_file = candidates[0]
+    logger.debug("Applying EMBA report metadata from %s for analysis %s", report_file, analysis.id)
+    try:
+        html_content = report_file.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return {}
+
+    metadata = extract_emba_report_metadata(html_content)
+    if not metadata or not metadata.get("firmware_name"):
+        logger.debug("No EMBA report firmware metadata found for analysis %s: %s", analysis.id, metadata)
+        return metadata
+
+    status = dict(getattr(analysis, "status", {}) or {})
+    status["firmware_name"] = analysis.firmware_name or metadata["firmware_name"]
+    if metadata.get("scan_profile"):
+        status["scan_profile"] = metadata["scan_profile"]
+        status["scan_profile_label"] = metadata.get("scan_profile_label", "")
+
+    if not getattr(analysis, "firmware_name", None) or analysis.firmware_name in {"", "File unknown"}:
+        analysis.firmware_name = metadata["firmware_name"]
+
+    logger.debug(
+        "Assigned EMBA metadata to analysis %s: firmware_name=%r scan_profile_label=%r status=%s",
+        analysis.id,
+        analysis.firmware_name,
+        status.get("scan_profile_label"),
+        status,
+    )
+
+    analysis.status = status
+    analysis.save(update_fields=["firmware_name", "status"])
+    return metadata
+
+
+# ---------------------------------------------------------------------------
+# Native EMBA file discovery
+# ---------------------------------------------------------------------------
+
+def collect_import_warnings(base_root):
+    """Return human-readable warnings for missing import payloads."""
+    warnings = []
+
+    csv_dir = Path(base_root) / "csv_logs"
+    if not csv_dir.is_dir() or not any(csv_dir.glob("*.csv")):
+        warnings.append("missing csv_logs")
+
+    sbom_file = Path(base_root) / "SBOM" / "EMBA_cyclonedx_sbom.json"
+    if not sbom_file.is_file():
+        warnings.append("missing SBOM")
+
+    logger_dir = Path(base_root) / "logger"
+    if not logger_dir.is_dir() or not any(logger_dir.glob("*.log")):
+        warnings.append("missing logs")
+
+    report_root = Path(base_root)
+    html_index_candidates = [
+        report_root / "index.html",
+        report_root / "html-report" / "index.html",
+        *list(report_root.glob("**/index.html")),
+    ]
+    html_report_present = any(candidate.is_file() for candidate in html_index_candidates)
+    if not html_report_present:
+        warnings.append("missing html report")
+
+    return warnings
+
+
+def discover_emba_files(archive, files):
+    """
+    Search a native EMBA archive for relevant output files.
+    Returns:
+        {
+            "csv": [...],
+            "sbom": [...],
+            "logs": [...],
+            "html": [...]
+        }
+    """
+
+    emba_modules = get_emba_modules()
+
+    discovered = {
+        "csv": [],
+        "sbom": [],
+        "logs": [],
+        "html": [],
+    }
+
+    for archive_path in files:
+
+        filename = Path(archive_path).name
+        path_parts = Path(archive_path).parts
+
+        # ---------------------------------------------------------------
+        # CSV
+        # ---------------------------------------------------------------
+
+        if filename.endswith(".csv"):
+
+            module_number, module_name = parse_module_identity(
+                filename,
+                file_type="csv"
+            )
+
+            if module_name is None:
+                continue
+
+            module = resolve_module(
+                module_name,
+                emba_modules,
+            )
+
+            if module is None:
+                logger.debug(
+                    "Ignoring CSV for unknown EMBA module: %s",
+                    filename,
+                )
+                continue
+
+            if module_number != module["number"]:
+                logger.info(
+                    "Module number differs for %s: "
+                    "archive=%s, installed=%s",
+                    module_name,
+                    module_number,
+                    module["number"],
+                )
+
+            discovered["csv"].append({
+                "file": archive_path,
+                "number": module_number,
+                "name": module_name,
+            })
+
+            continue
+
+        # ---------------------------------------------------------------
+        # SBOM
+        # ---------------------------------------------------------------
+
+        if filename == "EMBA_cyclonedx_sbom.json":
+            discovered["sbom"].append(archive_path)
+            continue
+
+        # ---------------------------------------------------------------
+        # HTML report
+        # ---------------------------------------------------------------
+
+        if filename == "index.html" or filename.endswith(".html") or "html-report" in path_parts:
+            discovered["html"].append(archive_path)
+            continue
+
+        # ---------------------------------------------------------------
+        # Logs
+        # ---------------------------------------------------------------
+
+        if filename.endswith(".log"):
+            discovered["logs"].append(archive_path)
+
+    logger.debug(
+        "Discovered native EMBA files: %s",
+        discovered,
+    )
+
+    return discovered
+
+
+# ---------------------------------------------------------------------------
+# Database read-in
+# ---------------------------------------------------------------------------
+
+def result_read_in(analysis_id, extract_root=None):
+    """
+    Read imported CSVs and SBOM and populate the database.
+    """
+
+    logger.debug(
+        "Starting read-in of %s",
+        analysis_id,
+    )
+
+    try:
+        analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    except FirmwareAnalysis.DoesNotExist:
+        logger.warning("Cannot import results for unknown analysis %s", analysis_id)
+        return None
+
+    res, _created = Result.objects.get_or_create(firmware_analysis=analysis)
+    if _created:
+        logger.info("Created empty Result record for analysis %s before data import", analysis_id)
+
+    base_root = Path(extract_root) if extract_root else (
+        Path(settings.EMBA_LOG_ROOT)
+        / str(analysis_id)
+        / "emba_logs"
+    )
+
+    csv_directory = base_root / "csv_logs"
+    imported_data = False
+
+    if csv_directory.is_dir():
+
+        for file_path in csv_directory.glob("*.csv"):
+
+            module_number, module_name = parse_module_identity(
+                file_path.name,
+                file_type="csv"
+            )
+
+            if module_name is None:
+                logger.warning(
+                    "Could not identify CSV module: %s",
+                    file_path.name,
+                )
+                continue
+
+            importer_name = CSV_IMPORTERS.get(module_name)
+
+            if importer_name is None:
+                logger.info(
+                    "Skipping unsupported module %s_%s",
+                    module_number,
+                    module_name,
+                )
+                continue
+
+            importer = globals()[importer_name]
+
+            logger.debug(
+                "Importing module %s_%s using %s",
+                module_number,
+                module_name,
+                importer_name,
+            )
+
+            imported = importer(
+                str(file_path),
+                analysis_id,
+            )
+            if imported is not None:
+                imported_data = True
+                res = imported
+
+    # -------------------------------------------------------------------
+    # SBOM
+    # -------------------------------------------------------------------
+
+    sbom_file = base_root / "SBOM" / "EMBA_cyclonedx_sbom.json"
+
+    if sbom_file.is_file():
+
+        logger.debug(
+            "Importing SBOM"
+        )
+
+        try:
+            imported = sbom_json(
+                sbom_file,
+                analysis_id,
+            )
+            if imported is not None:
+                imported_data = True
+                res = imported
+
         except DatabaseError as error:
-            logger.error("DB error in f15_json: %s", error, exc_info=1)
+            logger.error(
+                "DB error while importing SBOM: %s",
+                error,
+                exc_info=True,
+            )
+            raise
+
+    if not imported_data:
+        logger.warning(
+            "No supported CSV or SBOM data was found for analysis %s under %s",
+            analysis_id,
+            base_root,
+        )
+
     return res
 
 
+# ---------------------------------------------------------------------------
+# CSV helpers
+# ---------------------------------------------------------------------------
+
 def read_csv(path):
     """
-    This job reads the csv file
-    :return: result_dict
-    """
-    res_dict = {}
-    with open(path, mode='r', encoding='utf-8') as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=';')
-        csv_list = []
-        for row in csv_reader:
-            # remove NAs and other unwanted chars from csv
-            while row[-1] == '':
-                row.pop(-1)
-            while row[-1] == 'NA':
-                row.pop(-1)
-            csv_list.append(row)
-            for ele in csv_list:
-                if len(ele) == 2:
-                    if not ele[0] in res_dict.keys():
-                        res_dict[ele[0]] = ele[1]
-                elif len(ele) > 2:
-                    if not ele[0] in res_dict.keys():
-                        res_dict[ele[0]] = {}
-                    if len(ele[2:]) > 1:
-                        if not ele[1] in res_dict[ele[0]].keys():
-                            res_dict[ele[0]][ele[1]] = {}
-                        res_dict[ele[0]][ele[1]][ele[2]] = {ele[_info]: ele[_info + 1] for _info in range(1, len(ele[1:]), 2)}
-                    else:
-                        res_dict[ele[0]][ele[1]] = ele[2]
+    Read an EMBA semicolon-separated CSV.
 
-    logger.info("result dict: %s", res_dict)
+    Returns a nested dictionary matching the historical EMBArk importer
+    structure.
+    """
+
+    res_dict = {}
+
+    with open(
+        path,
+        mode="r",
+        encoding="utf-8",
+    ) as csv_file:
+
+        csv_reader = csv.reader(
+            csv_file,
+            delimiter=";",
+        )
+
+        for row in csv_reader:
+
+            if not row:
+                continue
+
+            # Remove empty / NA values from the end of the row.
+            while row and row[-1] in ("", "NA"):
+                row.pop()
+
+            if not row:
+                continue
+
+            if len(row) == 2:
+
+                if row[0] not in res_dict:
+                    res_dict[row[0]] = row[1]
+
+            elif len(row) > 2:
+
+                if row[0] not in res_dict:
+                    res_dict[row[0]] = {}
+
+                if len(row[2:]) > 1:
+
+                    if row[1] not in res_dict[row[0]]:
+                        res_dict[row[0]][row[1]] = {}
+
+                    res_dict[row[0]][row[1]].update(
+                        {
+                            row[index]: row[index + 1]
+                            for index in range(
+                                2,
+                                len(row) - 1,
+                                2,
+                            )
+                        }
+                    )
+
+                else:
+                    res_dict[row[0]][row[1]] = row[2]
+
+    logger.info(
+        "result dict: %s",
+        res_dict,
+    )
+
     return res_dict
 
+# ---------------------------------------------------------------------------
+# Old Functions
+# ---------------------------------------------------------------------------
 
 def f50_csv(file_path, analysis_id):
     """
@@ -112,48 +949,47 @@ def f50_csv(file_path, analysis_id):
     res, _created = Result.objects.get_or_create(
         firmware_analysis=FirmwareAnalysis.objects.get(id=analysis_id)
     )
-    if _created:
-        try:
-            res.emba_command = res_dict.get("emba_command", '')
-            res.architecture_verified = res_dict.get("architecture_verified", '')
-            # res.os_unverified=res_dict.get("os_unverified", '')
-            res.os_verified = res_dict.get("os_verified", '')
-            res.files = int(res_dict.get("files", 0))
-            res.directories = int(res_dict.get("directories", 0))
-            res.entropy_value = float(entropy_value)
-            res.shell_scripts = int(res_dict.get("shell_scripts", 0))
-            res.shell_script_vulns = int(res_dict.get("shell_script_vulns", 0))
-            res.kernel_modules = int(res_dict.get("kernel_modules", 0))
-            res.kernel_modules_lic = int(res_dict.get("kernel_modules_lic", 0))
-            res.interesting_files = int(res_dict.get("interesting_files", 0))
-            res.post_files = int(res_dict.get("post_files", 0))
-            res.canary = int(res_dict.get("canary", 0))
-            res.canary_per = int(res_dict.get("canary_per", 0))
-            res.relro = int(res_dict.get("relro", 0))
-            res.relro_per = int(res_dict.get("relro_per", 0))
-            res.no_exec = int(res_dict.get("nx", 0))
-            res.no_exec_per = int(res_dict.get("nx_per", 0))
-            res.pie = int(res_dict.get("pie", 0))
-            res.pie_per = int(res_dict.get("pie_per", 0))
-            res.stripped = int(res_dict.get("stripped", 0))
-            res.stripped_per = int(res_dict.get("stripped_per", 0))
-            res.bins_checked = int(res_dict.get("bins_checked", 0))
-            res.strcpy = int(res_dict.get("strcpy", 0))
-            res.strcpy_bin = json.dumps(res_dict.get("strcpy_bin", {}))
-            res.system_bin = json.dumps(res_dict.get("system_bin", {}))
-            res.versions_identified = int(res_dict.get("versions_identified", 0))
-            # 'cve_high': {'614': '17'}, 'cve_medium': {'1247': '13'}, 'cve_low': {'20': '0'}
-            res.cve_critical = json.dumps(res_dict.get("cve_critical", {'0': '0'}).popitem())
-            res.cve_high = json.dumps(res_dict.get("cve_high", {'0': '0'}).popitem())
-            res.cve_medium = json.dumps(res_dict.get("cve_medium", {'0': '0'}).popitem())
-            res.cve_low = json.dumps(res_dict.get("cve_low", {'0': '0'}).popitem())
-            res.exploits = int(res_dict.get("exploits", 0))
-            res.metasploit_modules = int(res_dict.get("metasploit_modules", 0))
-            res.certificates = int(res_dict.get("certificates", 0))
-            res.certificates_outdated = int(res_dict.get("certificates_outdated", 0))
-        except builtins.Exception as error:
-            logger.error("Error in f50_csv: %s", error)
-        res.save()
+    try:
+        res.emba_command = res_dict.get("emba_command", '')
+        res.architecture_verified = res_dict.get("architecture_verified", '')
+        # res.os_unverified=res_dict.get("os_unverified", '')
+        res.os_verified = res_dict.get("os_verified", '')
+        res.files = int(res_dict.get("files", 0))
+        res.directories = int(res_dict.get("directories", 0))
+        res.entropy_value = float(entropy_value)
+        res.shell_scripts = int(res_dict.get("shell_scripts", 0))
+        res.shell_script_vulns = int(res_dict.get("shell_script_vulns", 0))
+        res.kernel_modules = int(res_dict.get("kernel_modules", 0))
+        res.kernel_modules_lic = int(res_dict.get("kernel_modules_lic", 0))
+        res.interesting_files = int(res_dict.get("interesting_files", 0))
+        res.post_files = int(res_dict.get("post_files", 0))
+        res.canary = int(res_dict.get("canary", 0))
+        res.canary_per = int(res_dict.get("canary_per", 0))
+        res.relro = int(res_dict.get("relro", 0))
+        res.relro_per = int(res_dict.get("relro_per", 0))
+        res.no_exec = int(res_dict.get("nx", 0))
+        res.no_exec_per = int(res_dict.get("nx_per", 0))
+        res.pie = int(res_dict.get("pie", 0))
+        res.pie_per = int(res_dict.get("pie_per", 0))
+        res.stripped = int(res_dict.get("stripped", 0))
+        res.stripped_per = int(res_dict.get("stripped_per", 0))
+        res.bins_checked = int(res_dict.get("bins_checked", 0))
+        res.strcpy = int(res_dict.get("strcpy", 0))
+        res.strcpy_bin = json.dumps(res_dict.get("strcpy_bin", {}))
+        res.system_bin = json.dumps(res_dict.get("system_bin", {}))
+        res.versions_identified = int(res_dict.get("versions_identified", 0))
+        # 'cve_high': {'614': '17'}, 'cve_medium': {'1247': '13'}, 'cve_low': {'20': '0'}
+        res.cve_critical = json.dumps(res_dict.get("cve_critical", {'0': '0'}).popitem())
+        res.cve_high = json.dumps(res_dict.get("cve_high", {'0': '0'}).popitem())
+        res.cve_medium = json.dumps(res_dict.get("cve_medium", {'0': '0'}).popitem())
+        res.cve_low = json.dumps(res_dict.get("cve_low", {'0': '0'}).popitem())
+        res.exploits = int(res_dict.get("exploits", 0))
+        res.metasploit_modules = int(res_dict.get("metasploit_modules", 0))
+        res.certificates = int(res_dict.get("certificates", 0))
+        res.certificates_outdated = int(res_dict.get("certificates_outdated", 0))
+    except builtins.Exception as error:
+        logger.error("Error in f50_csv: %s", error)
+    res.save()
     return res
 
 
@@ -222,35 +1058,61 @@ def sbom_json(_file_path, _analysis_id):
     """
     logger.debug("starting SBOM json import")
     json_data = read_cyclone_dx_json(_file_path)
-    sbom_uuid = json_data['serialNumber'].split(":")[2]
-    logger.debug("Reading sbom uuid=%s", sbom_uuid)
-    sbom_obj, created_sbom = SoftwareBillOfMaterial.objects.get_or_create(id=sbom_uuid)
-    logger.debug("SBOM with uuid %s created", sbom_obj.id)
-    logger.debug("setting File path  to: %s", _file_path)
-    sbom_obj.file = _file_path
-    if created_sbom:
-        logger.debug("Trying to read %s", json_data['components'])
-        for component_ in json_data['components']:
-            logger.debug("Component is %s", component_)
+    serial = json_data.get('serialNumber')
+    logger.debug("Reading SBOM serial=%s", serial)
+
+    # Always create a fresh SBOM record for each import so a Result can
+    # reference a unique SBOM (avoids OneToOne conflicts when the same
+    # serial is imported multiple times).
+    sbom_obj = SoftwareBillOfMaterial.objects.create(
+        meta=serial or "NA",
+        file=_file_path,
+    )
+    logger.debug("Created SBOM record %s for serial %s", sbom_obj.id, serial)
+
+    # populate components if present
+    components = json_data.get('components', [])
+    if components:
+        logger.debug("Trying to read %s components", len(components))
+        for component_ in components:
             try:
-                new_sitem, add_sitem = SoftwareInfo.objects.get_or_create(
-                    id=component_['bom-ref'],
-                    name=component_['name'],
-                    type=component_['type'],
-                    supplier=component_['supplier'] or 'NA',
-                    license=json.dumps(component_['licenses']) or 'NA',
-                    group=component_['group'] or 'NA',
-                    version=component_['version'] or 'NA',
-                    hashes=[f"{json.dumps(entry)}" for entry in component_['hashes']],
-                    cpe=component_['cpe'] or 'NA',
-                    purl=component_['purl'] or 'NA',
-                    properties=component_['properties'] or 'NA'
-                )
-                logger.debug("Was new? %s", add_sitem)
+                # Reuse existing SoftwareInfo entries when the component
+                # has a stable `bom-ref`; otherwise create a new one.
+                comp_id = component_.get('bom-ref')
+                if comp_id:
+                    new_sitem, add_sitem = SoftwareInfo.objects.get_or_create(
+                        id=comp_id,
+                        defaults={
+                            'name': component_.get('name', 'NA'),
+                            'type': component_.get('type', 'NA'),
+                            'supplier': component_.get('supplier') or 'NA',
+                            'license': json.dumps(component_.get('licenses')) or 'NA',
+                            'group': component_.get('group') or 'NA',
+                            'version': component_.get('version') or 'NA',
+                            'hashes': [f"{json.dumps(entry)}" for entry in component_.get('hashes', [])],
+                            'cpe': component_.get('cpe') or 'NA',
+                            'purl': component_.get('purl') or 'NA',
+                            'properties': component_.get('properties') or 'NA',
+                        }
+                    )
+                else:
+                    new_sitem = SoftwareInfo.objects.create(
+                        name=component_.get('name', 'NA'),
+                        type=component_.get('type', 'NA'),
+                        supplier=component_.get('supplier') or 'NA',
+                        license=json.dumps(component_.get('licenses')) or 'NA',
+                        group=component_.get('group') or 'NA',
+                        version=component_.get('version') or 'NA',
+                        hashes=[f"{json.dumps(entry)}" for entry in component_.get('hashes', [])],
+                        cpe=component_.get('cpe') or 'NA',
+                        purl=component_.get('purl') or 'NA',
+                        properties=component_.get('properties') or 'NA',
+                    )
+
                 logger.debug("Adding SBOM item: %s to sbom %s", new_sitem, sbom_obj)
                 sbom_obj.component.add(new_sitem)
             except builtins.Exception as error_:
-                logger.error("Error in sbom readin: %s", error_)
+                logger.exception("Failed to import SBOM component: %s", component_)
     sbom_obj.save()
     res, _ = Result.objects.get_or_create(
         firmware_analysis=FirmwareAnalysis.objects.get(id=_analysis_id),
@@ -268,14 +1130,14 @@ def read_cyclone_dx_json(_file_path):
     with open(_file_path, 'r', encoding='utf-8') as json_file:
         # TODO validate the sbom
         return json.load(json_file)
-
+        
 
 if __name__ == "__main__":
     BASE_DIR = Path(__file__).resolve().parent.parent.parent
     TEST_DIR = os.path.join(BASE_DIR, 'test/porter')
-    # test print f50
-    # with open(os.path.join(TEST_DIR, 'f50_test.json'), 'w', encoding='utf-8') as json_file:
-    #     json_file.write(json.dumps(read_csv(os.path.join(TEST_DIR, 'f50_test.csv')), indent=4))
+    #test print f50
+    #with open(os.path.join(TEST_DIR, 'f50_test.json'), 'w', encoding='utf-8') as json_file:
+    #    json_file.write(json.dumps(read_csv(os.path.join(TEST_DIR, 'f50_test.csv')), indent=4))
     #
     # with open(os.path.join(TEST_DIR, 'f50_test.json'), 'w', encoding='utf-8') as output_file:
     #     json_data = read_cyclone_dx_json(os.path.join(TEST_DIR, 'EMBA_cyclonedx_sbom.json'))
