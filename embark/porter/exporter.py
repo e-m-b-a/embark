@@ -69,6 +69,11 @@ def export_results(analysis_id, export_options, export_id):
         ])
 
     analysis = FirmwareAnalysis.objects.get(id=analysis_id)
+    if "firmware" in export_options and analysis.firmware:
+        firmware_path = Path(analysis.firmware.file.path)
+        if firmware_path.is_file():
+            files_to_export.append(firmware_path)
+
     with zipfile.ZipFile(
         zip_path,
         "w",
@@ -94,6 +99,11 @@ def export_results(analysis_id, export_options, export_id):
                     zipf.write(
                         file_path,
                         Path("logger") / file_path.name,
+                    )
+                elif file_path == Path(analysis.firmware.file.path) if analysis.firmware else False:
+                    zipf.write(
+                        file_path,
+                        Path("firmware") / file_path.name,
                     )
                 else:
                     zipf.write(

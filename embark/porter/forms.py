@@ -35,7 +35,14 @@ class FirmwareAnalysisExportForm(forms.Form):
         choices=EXPORT_OPTIONS,
         widget=forms.CheckboxSelectMultiple,
         required=True,
+        initial=["html-report"],
     )
+
+    def clean_export_options(self):
+        selected = self.cleaned_data.get("export_options") or []
+        if "html-report" not in selected:
+            raise forms.ValidationError("The HTML report export option (html-report) is required.")
+        return selected
 
 class DeleteZipForm(forms.Form):
     zip_file = forms.ModelChoiceField(queryset=LogZipFile.objects, empty_label='Select zip-file to delete')
